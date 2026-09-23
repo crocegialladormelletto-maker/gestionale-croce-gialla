@@ -49,6 +49,7 @@
 @media(max-width:760px){.tablet-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.tablet-top .brand strong{font-size:20px}.tablet-toolbar{gap:6px}}
 @media(max-width:440px){.tablet-fields{grid-template-columns:1fr}.tablet-hour{font-size:24px}.tablet-top .brand strong{font-size:17px}.tablet-actions .btn{flex:1}.tablet-service-card{padding:10px}.tablet-vehicle{font-size:18px}}
 
+.as-service-list{padding:9px 13px 3px;background:#fff9dc;border-bottom:1px solid #eddf98}.as-service-card{line-height:1.55;break-inside:avoid-page}.as-service-card b{color:var(--n)}
 /* Turnario Emergenza 118: sola pianificazione equipaggi, nessun intervento programmato */
 .em-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.em-header img{width:54px;height:54px;border-radius:50%;background:#fff;border:3px solid #fff}.em-summary{display:flex;gap:7px;flex-wrap:wrap}.em-day{background:#fff;border:1px solid var(--l);border-radius:12px;margin:14px 0;overflow:hidden;break-inside:avoid-page}.em-day-head{background:#e9edf0;color:var(--n);font-size:17px;padding:11px 14px;font-weight:1000;display:flex;gap:9px;align-items:center;justify-content:space-between;flex-wrap:wrap}.em-day-head .muted{font-size:11px}.em-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.em-roster{border-collapse:separate;border-spacing:1px;width:100%;min-width:880px;background:#fff;table-layout:fixed}.em-roster thead th{position:static;background:#414449;color:white;text-align:center;font-size:12px;letter-spacing:.2px;padding:8px 4px;border:0}.em-roster thead th:first-child{width:90px}.em-roster tbody th{color:#fff;background:#414449;font-size:12px;text-align:left;padding:10px 7px;border:0;vertical-align:top;width:90px}.em-roster tbody td{border:0;background:#f8f9fa;padding:10px;vertical-align:top;min-height:95px;height:105px;overflow-wrap:anywhere}.em-roster tbody tr:nth-child(even) td{background:#f3f5f7}.em-entry{background:#fff;border-left:4px solid var(--n);border-radius:7px;padding:7px 8px;margin:0 0 7px;box-shadow:0 1px 4px #0000000d;font-size:12px;line-height:1.5}.em-entry.em-unavailable{border-left-color:var(--r);background:#fff0f0}.em-entry.em-pending{border-left-color:#c38c22}.em-entry strong{display:block;color:var(--n);font-size:13px;line-height:1.35}.em-entry small{color:var(--m);font-size:11px}.em-entry.em-unavailable strong{text-decoration:line-through;color:var(--r)}.em-empty{font-size:12px;color:#98a5b0;text-align:center;padding-top:8px}.em-shift-line{background:#fff9d5;border:1px solid #eddf98;border-radius:7px;padding:6px 9px;margin:0 0 9px;font-size:12px;font-weight:800;color:var(--n)}.em-head-week{font-size:20px;color:var(--n)}.em-note{padding:10px 13px;border-left:4px solid var(--y);background:#fffbdf;margin-top:8px;color:#68570c;font-size:12px}
 @media print{
@@ -145,7 +146,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.12</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.13</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -339,7 +340,7 @@
      <button id="asManage" type="button" class="btn yellow">✚ Gestisci turni</button>
     </div>
    </div>
-   <div class="em-note">Il calendario mostra solamente i turni ASSISTENZA. Indica nome e luogo della manifestazione nelle Note del turno, poi assegna l’equipaggio. Fasce: mattino, pomeriggio, sera e notte.</div>
+   <div class="em-note">Le assistenze salvate come servizi compaiono automaticamente qui, con orari, mezzo ed equipaggio assegnato. I turni ASSISTENZA restano visibili sotto i servizi, senza crearne copie. Fasce: mattino, pomeriggio, sera e notte.</div>
   </div>
   <div class="actions" style="justify-content:space-between">
    <b id="asPeriod" class="em-head-week"></b>
@@ -957,7 +958,7 @@ let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsReq
 let opCalCursor=new Date(),opCalSelected=todaySafe(),opCalEvents=[],opCalMode='month',opCalVehicle='';
 let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month';
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
-let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[];
+let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[];
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
 let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='';
 const $=x=>document.getElementById(x), today=()=>new Date().toISOString().slice(0,10);
@@ -1307,7 +1308,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.12</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.13</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1469,7 +1470,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.12'
+  versione_app:'V13.13'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -1553,6 +1554,16 @@ function turnCoverage(t,assignments){
  if(n===min)return {label:'MINIMO',cls:'turn-min',count:n};
  return {label:'COMPLETO',cls:'',count:n}
 }
+function calendarCrewMembers(assignments){
+ return (assignments||[]).map(a=>{
+  const name=people.find(p=>p.badge===a.badge_personale)?.nome_completo||a.badge_personale||'Operatore';
+  return name+' ('+(a.ruolo||'Ruolo non indicato').replaceAll('_',' ')+')';
+ });
+}
+function calendarCrewSummary(assignments){
+ const members=calendarCrewMembers(assignments);
+ return members.length?members.join(', '):'Equipaggio da assegnare';
+}
 function refreshOperationalCalendarView(){
  renderCalendarGrid('cal',opCalCursor,opCalSelected,opCalEvents,opCalMode);renderOperationalCalendarDay();
  const gap=opCalEvents.filter(e=>e.kind==='turn'&&e.coverage&&['SCOPERTO','INCOMPLETO'].includes(e.coverage.label)&&(!opCalVehicle||e.vehicle===opCalVehicle)).length;
@@ -1571,9 +1582,15 @@ async function loadOperationalCalendar(){
  const err=[sr.error,tr.error,ar.error].find(Boolean);if(err){msg('calMsg',err.message,'err');return}
  const turns=tr.data||[],services=sr.data||[],avs=ar.data||[];let assignments=[];
  if(turns.length){const rr=await sb.from('turni_personale').select('turno_id,badge_personale,ruolo,risposta,confermato').in('turno_id',turns.map(x=>x.id));if(rr.error){msg('calMsg',rr.error.message,'err');return}assignments=rr.data||[]}
+ let serviceAssignments=[];
+ if(services.length){
+  const srCrew=await sb.from('servizi_equipaggio').select('servizio_id,badge_personale,ruolo').in('servizio_id',services.map(x=>x.id));
+  if(srCrew.error){msg('calMsg','Errore lettura equipaggi servizi: '+srCrew.error.message,'err');return}
+  serviceAssignments=srCrew.data||[];
+ }
  opCalEvents=[];
  turns.forEach(t=>{const as=assignments.filter(x=>x.turno_id===t.id),cov=turnCoverage(t,as);opCalEvents.push({kind:'turn',date:t.data_turno,time:calTime(t.ora_inizio),vehicle:t.mezzo||'',coverage:cov,coverageClass:cov.cls,title:(t.tipo_turno||'Turno')+' · Mezzo '+(t.mezzo||'—'),subtitle:calTime(t.ora_inizio)+'–'+calTime(t.ora_fine)+' · '+cov.count+' operatori',raw:{...t,assignments:as}})});
- services.forEach(s=>opCalEvents.push({kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),vehicle:s.mezzo||'',title:(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+' · M'+(s.mezzo||'—'),subtitle:(s.luogo_partenza||'—')+' → '+(s.ospedale_destinazione||s.destinazione||'—'),raw:s}));
+ services.forEach(s=>opCalEvents.push({kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),vehicle:s.mezzo||'',title:(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+' · M'+(s.mezzo||'—'),subtitle:(s.luogo_partenza||'—')+' → '+(s.ospedale_destinazione||s.destinazione||'—'),raw:{...s,assignments:serviceAssignments.filter(a=>a.servizio_id===s.id)}}));
  calAddAvailabilityEvents(opCalEvents,avs,range,true);
  refreshOperationalCalendarView();msg('calMsg','')
 }
@@ -1582,7 +1599,7 @@ function renderOperationalCalendarDay(){
  const d=new Date(opCalSelected+'T12:00:00');title.textContent=new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d).replace(/^./,c=>c.toUpperCase());
  const rows=calendarFilteredEvents('cal',opCalEvents).filter(e=>e.date===opCalSelected).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
  box.innerHTML=rows.length?rows.map(e=>{
-  if(e.kind==='service')return '<div class="cal-detail-item service"><b>'+(e.time?esc(e.time)+' · ':'')+esc(e.title)+'</b><br>'+esc(e.subtitle||'')+'<br><span class="muted">Stato '+esc(e.raw.stato_gestionale||'—')+(e.raw.priorita?' · Priorità '+esc(e.raw.priorita):'')+'</span><div class="actions" style="margin-top:7px"><button class="btn secondary" data-cal-open-service="'+esc(e.raw.id)+'">Apri servizio</button></div></div>';
+  if(e.kind==='service')return '<div class="cal-detail-item service"><b>'+(e.time?esc(e.time)+' · ':'')+esc(e.title)+'</b><br>'+esc(e.subtitle||'')+'<br><span class="muted">Equipaggio: '+esc(calendarCrewSummary(e.raw.assignments))+'</span><br><span class="muted">Stato '+esc(e.raw.stato_gestionale||'—')+(e.raw.priorita?' · Priorità '+esc(e.raw.priorita):'')+'</span><div class="actions" style="margin-top:7px"><button class="btn secondary" data-cal-open-service="'+esc(e.raw.id)+'">Apri servizio</button></div></div>';
   if(e.kind==='turn'){const names=(e.raw.assignments||[]).map(a=>{const p=people.find(x=>x.badge===a.badge_personale);return (p?.nome_completo||a.badge_personale)+' ('+(a.ruolo||'—')+(String(a.risposta||'').toUpperCase()==='NON DISPONIBILE'?' · non disponibile':'')+')'}).join(', ');return '<div class="cal-detail-item turn"><b>'+esc(e.time||'')+' · '+esc(e.title)+'</b><br>'+esc(calTime(e.raw.ora_inizio))+'–'+esc(calTime(e.raw.ora_fine))+(names?'<br><span class="muted">'+esc(names)+'</span>':'<br><span class="muted">Nessun operatore assegnato</span>')+'<div class="actions" style="margin-top:7px"><button class="btn secondary" data-cal-open-shifts="1">Vai ai turni</button></div></div>'}
   return '<div class="cal-detail-item '+e.kind+'"><b>'+esc((e.time?e.time+' · ':'')+e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'</div>'
  }).join(''):'<div class="notice">Nessun elemento per questa giornata con i filtri selezionati.</div>';
@@ -2252,9 +2269,10 @@ function asEntry(t,a){
 }
 function asRenderDay(day){
  const y=calYmd(day),dayTurns=asTurns.filter(t=>t.data_turno===y&&(!asVehicle||t.mezzo===asVehicle)),
+ dayServices=asServices.filter(s=>s.data_servizio===y&&(!asVehicle||s.mezzo===asVehicle)),
  counts=dayTurns.map(asCover),bad=counts.filter(c=>['SCOPERTO','INCOMPLETO'].includes(c.label)).length,
  label=new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(day).replace(/^./,c=>c.toUpperCase()),
-  head='<div class="em-day-head"><span>'+esc(label)+'</span><span class="muted">'+dayTurns.length+' '+(dayTurns.length===1?'turno':'turni')+(asVehicle?' · Mezzo '+esc(asVehicle):'')+'</span></div>',
+  head='<div class="em-day-head"><span>'+esc(label)+'</span><span class="muted">'+dayServices.length+' '+(dayServices.length===1?'servizio':'servizi')+' · '+dayTurns.length+' '+(dayTurns.length===1?'turno':'turni')+(asVehicle?' · Mezzo '+esc(asVehicle):'')+'</span></div>',
  col='<thead><tr><th>FASCIA</th>'+EM_ROLES.map(x=>'<th>'+x[1]+'</th>').join('')+'</tr></thead>';
  const rows=EM_SLOTS.map(slot=>{
   const slotTurns=dayTurns.filter(t=>emSlotIds(t).includes(slot.id));
@@ -2264,10 +2282,20 @@ function asRenderDay(day){
     return '<td>'+(entries.join('')||'<div class="em-empty">—</div>')+'</td>'
    }).join('')+'</tr>'
  }).join('');
+ const cards=dayServices.length?dayServices.map(s=>{
+  const crew=asServiceAssignments.filter(a=>a.servizio_id===s.id);
+  const times='Partenza dalla sede '+(calTime(s.ora_partenza_prevista)||'—')+' · Inizio assistenza '+(calTime(s.ora_inizio_assistenza_prevista)||'—')+' · Fine assistenza '+(calTime(s.ora_fine_assistenza_prevista)||'—')+' · Rientro previsto '+(calTime(s.ora_rientro_previsto)||'—');
+  const eventName=s.ospedale_destinazione||s.tipo_servizio_altro||s.tipo_servizio||'Assistenza manifestazione';
+  return '<div class="cal-detail-item service as-service-card"><b>'+esc(eventName)+' · Mezzo '+esc(s.mezzo||'—')+'</b>'+
+   '<br><span class="muted">'+esc(s.destinazione||s.indirizzo_destinazione||'Luogo da indicare')+'</span>'+
+   '<br>'+esc(times)+
+   '<br><b>Equipaggio ('+crew.length+'):</b> '+esc(calendarCrewSummary(crew))+
+   '<div class="actions" style="margin-top:7px"><button type="button" class="btn secondary" data-as-open-service="'+esc(s.id)+'">Apri servizio / Assegna equipaggio</button></div></div>';
+ }).join(''):'<div class="muted" style="padding:7px 11px">Nessun servizio di assistenza programmato per questa data.</div>';
  const summary=dayTurns.length?dayTurns.map(t=>{const cov=asCover(t);
   return '<span class="muted" style="margin:3px">'+esc(calTime(t.ora_inizio))+'–'+esc(calTime(t.ora_fine))+' · M'+esc(t.mezzo||'—')+(t.note?' · '+esc(t.note):'')+'</span>'
  }).join(''):'<span class="muted">Nessun turno ASSISTENZA inserito in questa data.</span>';
- return '<div class="em-day">'+head+'<div class="em-table-wrap"><table class="em-roster">'+col+'<tbody>'+rows+'</tbody></table></div><div style="padding:7px 11px;background:#fff">'+summary+'</div></div>';
+ return '<div class="em-day">'+head+'<div class="as-service-list">'+cards+'</div><div class="em-table-wrap"><table class="em-roster">'+col+'<tbody>'+rows+'</tbody></table></div><div style="padding:7px 11px;background:#fff">'+summary+'</div></div>';
 }
 function asRender(){
  const range=asPeriodRange(),days=[];
@@ -2278,25 +2306,36 @@ function asRender(){
  $('asDate').value=calYmd(asCursor);
  $('asDayMode').className='btn '+(asView==='day'?'yellow':'secondary');
  $('asWeekMode').className='btn '+(asView==='week'?'yellow':'secondary');
- const shown=asTurns.filter(t=>!asVehicle||t.mezzo===asVehicle);
- $('asCount').textContent=shown.length+' '+(shown.length===1?'turno di assistenza':'turni di assistenza');
+ const shown=asTurns.filter(t=>!asVehicle||t.mezzo===asVehicle),
+ shownServices=asServices.filter(s=>!asVehicle||s.mezzo===asVehicle);
+ $('asCount').textContent=shownServices.length+' '+(shownServices.length===1?'servizio':'servizi')+' · '+shown.length+' '+(shown.length===1?'turno':'turni')+' di assistenza';
  $('asDays').innerHTML=days.map(asRenderDay).join('');
+ $('asDays').querySelectorAll('[data-as-open-service]').forEach(b=>b.onclick=()=>openService(b.dataset.asOpenService));
 }
 async function loadAssistanceRoster(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  msg('asMsg','Caricamento turnario Assistenze...');
  const range=asPeriodRange();
- const r=await sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note')
- .eq('tipo_turno','ASSISTENZA').gte('data_turno',calYmd(range.start)).lte('data_turno',calYmd(range.end))
- .order('data_turno').order('ora_inizio');
- if(r.error){msg('asMsg','Errore lettura turni: '+r.error.message,'err');return}
+ const [r,sv]=await Promise.all([
+  sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note')
+   .eq('tipo_turno','ASSISTENZA').gte('data_turno',calYmd(range.start)).lte('data_turno',calYmd(range.end))
+   .order('data_turno').order('ora_inizio'),
+  sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,ora_partenza_prevista,ora_inizio_assistenza_prevista,ora_fine_assistenza_prevista,ora_rientro_previsto,destinazione,indirizzo_destinazione,ospedale_destinazione,stato_gestionale')
+   .ilike('tipo_servizio','%assistenza%').gte('data_servizio',calYmd(range.start)).lte('data_servizio',calYmd(range.end))
+   .neq('stato_gestionale','ANNULLATO').order('data_servizio').order('ora_partenza_prevista')
+ ]);
+ const loadError=r.error||sv.error;
+ if(loadError){msg('asMsg','Errore lettura assistenze: '+loadError.message,'err');return}
  asTurns=(r.data||[]).filter(t=>!['ANNULLATO','CANCELLATO'].includes(String(t.stato||'').toUpperCase()));
- if(asTurns.length){
-  const a=await sb.from('turni_personale').select('turno_id,badge_personale,ruolo,risposta,confermato')
-  .in('turno_id',asTurns.map(t=>t.id));
-  if(a.error){msg('asMsg','Errore lettura equipaggi: '+a.error.message,'err');return}
-  asAssignments=a.data||[];
- }else asAssignments=[];
+ asServices=(sv.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio));
+ const [turnCrew,serviceCrew]=await Promise.all([
+  asTurns.length?sb.from('turni_personale').select('turno_id,badge_personale,ruolo,risposta,confermato').in('turno_id',asTurns.map(t=>t.id)):Promise.resolve({data:[],error:null}),
+  asServices.length?sb.from('servizi_equipaggio').select('servizio_id,badge_personale,ruolo').in('servizio_id',asServices.map(s=>s.id)):Promise.resolve({data:[],error:null})
+ ]);
+ const crewError=turnCrew.error||serviceCrew.error;
+ if(crewError){msg('asMsg','Errore lettura equipaggi: '+crewError.message,'err');return}
+ asAssignments=turnCrew.data||[];
+ asServiceAssignments=serviceCrew.data||[];
  msg('asMsg','');asRender()
 }
 $('asPrev').onclick=()=>{asCursor.setDate(asCursor.getDate()-(asView==='week'?7:1));loadAssistanceRoster()};
