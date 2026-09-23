@@ -145,7 +145,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.10</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.11</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -662,7 +662,13 @@
  <button id="paccesscreate" class="btn yellow">Crea / reset PIN</button>
  <button id="paccessstatus" class="btn secondary">Verifica accesso</button>
  <button id="paccessdisable" class="btn danger">Disattiva accesso</button>
-</div><div id="paccessmsg"></div></div></div>
+</div><div id="paccessmsg"></div></div>
+<div class="section hidden" id="pdocSection" style="margin-top:14px">
+ <h3>📁 Documenti della persona</h3>
+ <p class="muted">Archivio condiviso con l’app volontari: i documenti caricati dal titolare sono disponibili anche qui, nella sua scheda, senza duplicazioni. Accesso riservato all’Amministrazione.</p>
+ <div class="actions" style="justify-content:space-between;align-items:center"><b id="pdocPerson"></b><button type="button" class="btn secondary" id="pdocRefresh">Aggiorna documenti</button></div>
+ <div id="pdocMsg"></div><div id="pdocList"></div>
+</div></div>
 <div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Qualifiche</th><th>Ore mese</th><th>Ore trimestre</th><th>Telefono</th><th></th></tr></thead><tbody id="ptbody"></tbody></table></div></div></section>
 
 <section id="shifts" class="surface hidden"><div class="hero"><h2>Turni</h2></div><div class="pad">
@@ -947,6 +953,7 @@ document.querySelectorAll('.js-logo').forEach(img=>{img.src=LOGO_URL});
 let tariffViewCode='DEA_BORGOMANERO',tariffManagementRows=[];
 let patientSearchRows=[],servicePatientId=null,adminPatientId=null,adminPatientRecord=null,patientLookupRows=[];
 let prof=null,people=[],qualifications=[],pq=[],vehicles=[],tariffs=[],tariffDestinations=[],servicesCache=[],currentServiceId=null,currentService=null,currentFoglioId=null,currentFoglio=null,volunteerBadge=null;
+let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsRequest=0;
 let opCalCursor=new Date(),opCalSelected=todaySafe(),opCalEvents=[],opCalMode='month',opCalVehicle='';
 let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month';
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
@@ -1300,7 +1307,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.10</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.11</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1462,7 +1469,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.10'
+  versione_app:'V13.11'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -2045,7 +2052,7 @@ async function loadCrew(){
 $('add').onclick=async()=>{if(!$('cs').value||!$('cp').value)return msg('cmsg','Seleziona servizio e operatore.','warn');const r=await sb.from('servizi_equipaggio').insert({servizio_id:$('cs').value,badge_personale:$('cp').value,ruolo:$('cr').value});if(r.error)return msg('cmsg',r.error.message,'err');msg('cmsg','Operatore assegnato.','ok');loadCrew()};
 window.removeCrew=async id=>{if(!confirm('Rimuovere questo componente?'))return;const r=await sb.from('servizi_equipaggio').delete().eq('id',id);if(r.error)return alert(r.error.message);loadCrew()};
 
-function resetPerson(){$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pentry').value='';$('pdep').value='false';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
+function resetPerson(){adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';$('pdocSection').classList.add('hidden');msg('pdocMsg','');$('pdocList').innerHTML='';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pentry').value='';$('pdep').value='false';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
 $('pnew').onclick=resetPerson;
 async function loadPeopleView(){
  await refreshMaster();
@@ -2060,14 +2067,60 @@ async function loadPeopleView(){
  }).join('');
  document.querySelectorAll('[data-edit-person]').forEach(b=>b.onclick=()=>window.editPerson(b.dataset.editPerson));
 }
-window.editPerson=badge=>{const p=people.find(x=>x.badge===badge);if(!p)return;$('pb').value=p.badge;$('pb').disabled=true;$('pname').value=p.nome||'';$('psurname').value=p.cognome||'';$('pstate').value=p.stato_anagrafico||'ATTIVO';$('pphone').value=p.telefono||'';$('pemail').value=p.email||'';$('pentry').value=p.data_ingresso||'';$('pdep').value=String(!!p.dipendente);$('paccessbadge').value=p.badge;$('paccesspin').value='';renderQualChecks(pq.filter(x=>x.badge_personale===badge).map(x=>x.codice_qualifica));loadVolunteerAccessStatus(badge);window.scrollTo({top:0,behavior:'smooth'})};
+async function loadAdminPersonDocuments(badge){
+ const req=++adminPersonDocumentsRequest;
+ adminPersonDocuments=[];adminPersonDocumentsBadge='';
+ if(prof?.ruolo!=='AMMINISTRATORE'||!badge||!people.some(p=>p.badge===badge)){
+  $('pdocSection').classList.add('hidden');return;
+ }
+ $('pdocSection').classList.remove('hidden');
+ const person=people.find(p=>p.badge===badge);
+ $('pdocPerson').textContent=(person?.nome_completo||'Persona')+' · Badge '+badge;
+ $('pdocList').innerHTML='';
+ msg('pdocMsg','Caricamento documenti...');
+ const result=await sb.from('documenti_personale')
+  .select('id,badge_personale,categoria,titolo,nome_file_originale,storage_path,mime_type,dimensione_bytes,data_scadenza,note,created_at')
+  .eq('badge_personale',badge).order('created_at',{ascending:false});
+ if(req!==adminPersonDocumentsRequest)return;
+ if(result.error)return msg('pdocMsg','Impossibile leggere i documenti: '+result.error.message,'err');
+ adminPersonDocuments=result.data||[];adminPersonDocumentsBadge=badge;
+ msg('pdocMsg','');
+ const categories={CARTA_IDENTITA:"Carta d'identità",CODICE_FISCALE:'Codice fiscale',ATTESTATO:'Attestato',ALTRO:'Altro documento'};
+ $('pdocList').innerHTML=adminPersonDocuments.length?adminPersonDocuments.map(d=>{
+  const expired=d.data_scadenza&&d.data_scadenza<today();
+  const expiry=d.data_scadenza?' · Scadenza '+esc(d.data_scadenza)+(expired?' <span class="pill r">Scaduto</span>':''):'';
+  return '<div class="box" style="margin:8px 0"><b>'+esc(categories[d.categoria]||d.categoria)+'</b>'+
+   (d.titolo?' · '+esc(d.titolo):'')+'<br><span class="muted">'+esc(d.nome_file_originale)+expiry+
+   ' · Caricato '+esc(dt(d.created_at))+'</span>'+(d.note?'<br>'+esc(d.note):'')+
+   '<div class="actions" style="margin-top:8px"><button type="button" class="btn secondary" data-pdoc-open="'+esc(d.id)+'">Apri</button>'+
+   '<button type="button" class="btn blue" data-pdoc-download="'+esc(d.id)+'">Scarica</button></div></div>';
+ }).join(''):'<div class="notice">Nessun documento caricato per questa persona. I nuovi documenti inviati dall’app volontari compariranno qui.</div>';
+ $('pdocList').querySelectorAll('[data-pdoc-open]').forEach(b=>b.onclick=()=>adminOpenPersonDocument(b.dataset.pdocOpen,false));
+ $('pdocList').querySelectorAll('[data-pdoc-download]').forEach(b=>b.onclick=()=>adminOpenPersonDocument(b.dataset.pdocDownload,true));
+}
+async function adminOpenPersonDocument(id,download){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const d=adminPersonDocuments.find(x=>x.id===id&&x.badge_personale===adminPersonDocumentsBadge);
+ if(!d)return msg('pdocMsg','Documento non trovato. Aggiorna l’elenco.','warn');
+ const tab=window.open('about:blank','_blank');
+ if(!tab)return msg('pdocMsg','Il browser ha bloccato la nuova scheda. Consenti i popup per il gestionale e riprova.','warn');
+ tab.opener=null;
+ const r=await sb.storage.from('documenti-volontari').createSignedUrl(d.storage_path,120,download?{download:d.nome_file_originale}:{});
+ if(r.error){tab.close();return msg('pdocMsg','Impossibile aprire il documento: '+r.error.message,'err')}
+ tab.location.href=r.data.signedUrl;
+}
+$('pdocRefresh').onclick=()=>{
+ const badge=$('pb').value.trim();
+ if(badge)loadAdminPersonDocuments(badge);
+};
+window.editPerson=badge=>{const p=people.find(x=>x.badge===badge);if(!p)return;$('pb').value=p.badge;$('pb').disabled=true;$('pname').value=p.nome||'';$('psurname').value=p.cognome||'';$('pstate').value=p.stato_anagrafico||'ATTIVO';$('pphone').value=p.telefono||'';$('pemail').value=p.email||'';$('pentry').value=p.data_ingresso||'';$('pdep').value=String(!!p.dipendente);$('paccessbadge').value=p.badge;$('paccesspin').value='';renderQualChecks(pq.filter(x=>x.badge_personale===badge).map(x=>x.codice_qualifica));loadVolunteerAccessStatus(badge);loadAdminPersonDocuments(badge);window.scrollTo({top:0,behavior:'smooth'})};
 $('psave').onclick=async()=>{
  const badge=$('pb').value.trim();if(!badge||!$('pname').value.trim()||!$('psurname').value.trim())return msg('pmsg','Badge, nome e cognome sono obbligatori.','warn');
  const row={badge,nome:$('pname').value.trim(),cognome:$('psurname').value.trim(),nome_completo:$('pname').value.trim()+' '+$('psurname').value.trim(),telefono:$('pphone').value.trim()||null,email:$('pemail').value.trim()||null,data_ingresso:$('pentry').value||null,dipendente:$('pdep').value==='true',stato_anagrafico:$('pstate').value,attivo:$('pstate').value==='ATTIVO'};
  const r=await sb.from('personale').upsert(row,{onConflict:'badge'});if(r.error)return msg('pmsg',r.error.message,'err');
  const selected=[...document.querySelectorAll('[data-qual]:checked')].map(x=>x.dataset.qual);await sb.from('personale_qualifiche').delete().eq('badge_personale',badge);
  if(selected.length){const ins=await sb.from('personale_qualifiche').insert(selected.map(c=>({badge_personale:badge,codice_qualifica:c,attiva:true})));if(ins.error)return msg('pmsg','Anagrafica salvata, errore qualifiche: '+ins.error.message,'err')}
- msg('pmsg','Scheda volontario salvata.','ok');await loadPeopleView()
+ msg('pmsg','Scheda volontario salvata.','ok');await loadPeopleView();window.editPerson(badge)
 };
 
 
