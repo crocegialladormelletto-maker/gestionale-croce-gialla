@@ -592,7 +592,7 @@
 </section>
 
 <section id="new" class="surface hidden"><div class="hero"><h2>Nuovo servizio ordinario</h2><p id="newServiceTimesHelp">Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.</p></div><div class="pad"><form id="form">
-<div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data *</label><input id="d" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label>Partenza prevista *</label><input id="op" type="time" required></div><div class="field" id="newPatientLoadTime"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field"><label>Rientro previsto</label><input id="or" type="time"></div></div></div>
+<div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data *</label><input id="d" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label>Partenza prevista *</label><input id="op" type="time" required></div><div class="field hidden" id="newPatientLoadTime"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field"><label>Rientro previsto</label><input id="or" type="time"></div></div></div>
 <div class="section"><h3>Paziente / utente</h3>
 <div class="box" style="margin-bottom:12px">
  <h4 style="margin:0 0 6px">Richiama un paziente già registrato</h4>
@@ -964,6 +964,7 @@ function selectView(v){
 async function view(v){
  if(prof?.ruolo==='CENTRALINO'&&['people','accounting','accessi'].includes(v))v='dash';
  selectView(v);
+ if(v==='new')updateManifestationTimes();
  const loader=({dash:dashboard,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,services:loadServices,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,tariffs:loadTariffsView,accounting:loadAccounting,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
  const result=await loader();
  selectView(v);
@@ -1137,11 +1138,12 @@ $('tarNight').onchange=updateTariffQuote;
 // Le assistenze alle manifestazioni non prevedono il carico di un paziente.
 function isAssistanceManifestation(type){
  const t=String(type||'').toLowerCase();
- return t.includes('assistenza')&&t.includes('manifestazion');
+ return t.includes('assistenza') && (t.includes('manifestazion') || t.trim()==='assistenza');
 }
 function updateManifestationTimes(){
- const isEvent=isAssistanceManifestation($('t').value);
- $('newPatientLoadTime').classList.toggle('hidden',isEvent);
+ const type=$('t').value;
+ const isEvent=isAssistanceManifestation(type);
+ $('newPatientLoadTime').classList.toggle('hidden',!type||isEvent);
  $('newServiceTimesHelp').textContent=isEvent?
   'Orari assistenza: partenza, arrivo a destinazione e rientro previsto.':
   'Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.';
@@ -1152,6 +1154,7 @@ function updateDetailManifestationTimes(){
  $('detailPatientLoadActual').classList.toggle('hidden',isEvent);
 }
 $('t').addEventListener('change',updateManifestationTimes);
+$('t').addEventListener('input',updateManifestationTimes);
 $('dtype').addEventListener('input',updateDetailManifestationTimes);
 updateManifestationTimes();
 function fvTime(v){return (v||'').slice(0,5)}
