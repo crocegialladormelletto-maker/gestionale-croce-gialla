@@ -767,7 +767,7 @@
    <h3>Equipaggio a bordo</h3>
    <div class="grid2">
     <div class="field"><label>Badge autista *</label><input id="tabletAdDriver" required placeholder="Es. 02"></div>
-    <div class="field" id="tabletAdLeaderBox"><label>Badge capo servizio *</label><input id="tabletAdLeader" placeholder="Es. 04"></div>
+    <div class="field" id="tabletAdLeaderBox"><label>Badge capo servizio (facoltativo)</label><input id="tabletAdLeader" placeholder="Es. 04"></div>
     <div class="field" id="tabletAdRescuerBox"><label>Badge soccorritore <span id="tabletAdRescuerRequired">*</span></label><input id="tabletAdRescuer" placeholder="Badge"></div>
     <div class="field"><label>Badge secondo soccorritore (facoltativo)</label><input id="tabletAdSecond" placeholder="Badge"></div>
    </div>
@@ -1766,7 +1766,7 @@ $('detailForm').onsubmit=async e=>{
   importo_finale:finale,
   modalita_pagamento_prevista:$('dPayMode').value||null,
   note:$('dNotes').value.trim()||null,
-  capo_servizio_obbligatorio:['07','08','09'].includes($('dvehicle').value),
+  capo_servizio_obbligatorio:false,
   equipaggio_minimo:$('dvehicle').value==='06'?1:2
  };
  if(prof?.ruolo!=='CENTRALINO')row.note_amministrazione=$('dAdminNotes').value.trim()||null;
@@ -1854,7 +1854,7 @@ $('form').onsubmit=async e=>{
   if(pr.error)return msg('fmsg','Anagrafica non salvata: '+pr.error.message+' Se il paziente esiste già, cercalo e selezionalo.','err');
   linkedPatient=pr.data.id;servicePatientId=linkedPatient;
  }
- const p={paziente_id:linkedPatient||null,data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:$('oc').value||null,ora_arrivo_destinazione_prevista:$('odest').value||null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:$('pn').value.trim()||null,paziente_cognome:$('pc').value.trim()||null,codice_fiscale:$('cf').value.trim().toUpperCase()||null,data_nascita:$('dn').value||null,telefono:$('tel').value.trim()||null,paziente_indirizzo:$('patientAddress').value.trim()||null,paziente_email:$('patientEmail').value.trim().toLowerCase()||null,luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:$('note').value.trim()||null,tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?amount:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:['07','08','09'].includes($('m').value),equipaggio_minimo:$('m').value==='06'?1:2};
+ const p={paziente_id:linkedPatient||null,data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:$('oc').value||null,ora_arrivo_destinazione_prevista:$('odest').value||null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:$('pn').value.trim()||null,paziente_cognome:$('pc').value.trim()||null,codice_fiscale:$('cf').value.trim().toUpperCase()||null,data_nascita:$('dn').value||null,telefono:$('tel').value.trim()||null,paziente_indirizzo:$('patientAddress').value.trim()||null,paziente_email:$('patientEmail').value.trim().toLowerCase()||null,luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:$('note').value.trim()||null,tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?amount:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
  const r=await sb.from('servizi_giornalieri').insert(p).select('id').single();
  if(r.error)return msg('fmsg',r.error.message,'err');
  msg('fmsg','Servizio salvato. Ora puoi assegnare l’equipaggio.','ok');
@@ -2522,7 +2522,7 @@ async function startTabletArea(){
  stopTabletArea();$('tabletTitle').textContent='Tablet mezzo '+tabletMezzo;$('tabletWho').textContent='Solo servizi assegnati al mezzo '+tabletMezzo;
  $('tabletPriceVehicle').textContent=tabletMezzo;$('tabletImmediateVehicle').textContent=tabletMezzo;
  $('tabletAdLeaderBox').classList.toggle('hidden',tabletMezzo==='06');
- $('tabletAdLeader').required=tabletMezzo!=='06';
+ $('tabletAdLeader').required=false;
  $('tabletAdRescuer').required=false;
  $('tabletAdRescuerRequired').textContent='(facoltativo)';
  $('tabletPricePanel').classList.add('hidden');$('tabletImmediatePanel').classList.add('hidden');
