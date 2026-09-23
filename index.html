@@ -145,7 +145,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.11</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.12</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -648,7 +648,7 @@
 <div class="section"><div class="grid3"><div class="field"><label>Servizio</label><select id="cs"></select></div><div class="field"><label>Ruolo</label><select id="cr"><option>AUTISTA</option><option>CAPO_SERVIZIO</option><option>SOCCORRITORE</option><option>SECONDO_SOCCORRITORE</option><option>ACCOMPAGNATORE</option><option>AFFIANCATO</option></select></div><div class="field"><label>Operatore abilitato</label><select id="cp"></select></div></div><div class="toolbar"><button id="add" class="btn yellow">Assegna</button></div><div id="cmsg"></div></div><div id="clist"></div></div></section>
 
 <section id="people" class="surface hidden"><div class="hero"><h2>Volontari e personale</h2><p>Anagrafica e qualifiche gestite separatamente.</p></div><div class="pad">
-<div class="section"><h3>Scheda personale</h3><div class="grid4"><div class="field"><label>Badge *</label><input id="pb"></div><div class="field"><label>Nome *</label><input id="pname"></div><div class="field"><label>Cognome *</label><input id="psurname"></div><div class="field"><label>Stato</label><select id="pstate"><option>ATTIVO</option><option>ASPETTATIVA</option><option>SOSPESO</option><option>CESSATO</option></select></div><div class="field"><label>Telefono</label><input id="pphone"></div><div class="field"><label>Email</label><input id="pemail" type="email"></div><div class="field"><label>Data ingresso</label><input id="pentry" type="date"></div><div class="field"><label>Dipendente</label><select id="pdep"><option value="false">No</option><option value="true">Sì</option></select></div></div>
+<div class="section"><h3>Scheda personale</h3><div class="grid4"><div class="field"><label>Badge *</label><input id="pb"></div><div class="field"><label>Nome *</label><input id="pname"></div><div class="field"><label>Cognome *</label><input id="psurname"></div><div class="field"><label>Stato</label><select id="pstate"><option>ATTIVO</option><option>ASPETTATIVA</option><option>SOSPESO</option><option>CESSATO</option></select></div><div class="field"><label>Telefono</label><input id="pphone"></div><div class="field"><label>Email</label><input id="pemail" type="email"></div><div class="field"><label>Data di nascita</label><input id="pbirth" type="date"></div><div class="field"><label>Data ingresso</label><input id="pentry" type="date"></div><div class="field"><label>Dipendente</label><select id="pdep"><option value="false">No</option><option value="true">Sì</option></select></div></div>
 <div class="field" style="margin-top:10px"><label>Qualifiche</label><div id="pquals" class="inline-checks"></div></div>
 <div class="toolbar"><button id="pnew" class="btn secondary">Nuova scheda</button><button id="psave" class="btn yellow">Salva</button></div><div id="pmsg"></div>
 <div class="section" style="margin-top:14px"><h3>Accesso app volontario</h3>
@@ -1307,7 +1307,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.11</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.12</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1469,7 +1469,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.11'
+  versione_app:'V13.12'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -2052,7 +2052,7 @@ async function loadCrew(){
 $('add').onclick=async()=>{if(!$('cs').value||!$('cp').value)return msg('cmsg','Seleziona servizio e operatore.','warn');const r=await sb.from('servizi_equipaggio').insert({servizio_id:$('cs').value,badge_personale:$('cp').value,ruolo:$('cr').value});if(r.error)return msg('cmsg',r.error.message,'err');msg('cmsg','Operatore assegnato.','ok');loadCrew()};
 window.removeCrew=async id=>{if(!confirm('Rimuovere questo componente?'))return;const r=await sb.from('servizi_equipaggio').delete().eq('id',id);if(r.error)return alert(r.error.message);loadCrew()};
 
-function resetPerson(){adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';$('pdocSection').classList.add('hidden');msg('pdocMsg','');$('pdocList').innerHTML='';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pentry').value='';$('pdep').value='false';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
+function resetPerson(){adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';$('pdocSection').classList.add('hidden');msg('pdocMsg','');$('pdocList').innerHTML='';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pbirth').value='';$('pentry').value='';$('pdep').value='false';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
 $('pnew').onclick=resetPerson;
 async function loadPeopleView(){
  await refreshMaster();
@@ -2113,10 +2113,10 @@ $('pdocRefresh').onclick=()=>{
  const badge=$('pb').value.trim();
  if(badge)loadAdminPersonDocuments(badge);
 };
-window.editPerson=badge=>{const p=people.find(x=>x.badge===badge);if(!p)return;$('pb').value=p.badge;$('pb').disabled=true;$('pname').value=p.nome||'';$('psurname').value=p.cognome||'';$('pstate').value=p.stato_anagrafico||'ATTIVO';$('pphone').value=p.telefono||'';$('pemail').value=p.email||'';$('pentry').value=p.data_ingresso||'';$('pdep').value=String(!!p.dipendente);$('paccessbadge').value=p.badge;$('paccesspin').value='';renderQualChecks(pq.filter(x=>x.badge_personale===badge).map(x=>x.codice_qualifica));loadVolunteerAccessStatus(badge);loadAdminPersonDocuments(badge);window.scrollTo({top:0,behavior:'smooth'})};
+window.editPerson=badge=>{const p=people.find(x=>x.badge===badge);if(!p)return;$('pb').value=p.badge;$('pb').disabled=true;$('pname').value=p.nome||'';$('psurname').value=p.cognome||'';$('pstate').value=p.stato_anagrafico||'ATTIVO';$('pphone').value=p.telefono||'';$('pemail').value=p.email||'';$('pbirth').value=p.data_nascita||'';$('pentry').value=p.data_ingresso||'';$('pdep').value=String(!!p.dipendente);$('paccessbadge').value=p.badge;$('paccesspin').value='';renderQualChecks(pq.filter(x=>x.badge_personale===badge).map(x=>x.codice_qualifica));loadVolunteerAccessStatus(badge);loadAdminPersonDocuments(badge);window.scrollTo({top:0,behavior:'smooth'})};
 $('psave').onclick=async()=>{
  const badge=$('pb').value.trim();if(!badge||!$('pname').value.trim()||!$('psurname').value.trim())return msg('pmsg','Badge, nome e cognome sono obbligatori.','warn');
- const row={badge,nome:$('pname').value.trim(),cognome:$('psurname').value.trim(),nome_completo:$('pname').value.trim()+' '+$('psurname').value.trim(),telefono:$('pphone').value.trim()||null,email:$('pemail').value.trim()||null,data_ingresso:$('pentry').value||null,dipendente:$('pdep').value==='true',stato_anagrafico:$('pstate').value,attivo:$('pstate').value==='ATTIVO'};
+ const row={badge,nome:$('pname').value.trim(),cognome:$('psurname').value.trim(),nome_completo:$('pname').value.trim()+' '+$('psurname').value.trim(),telefono:$('pphone').value.trim()||null,email:$('pemail').value.trim()||null,data_nascita:$('pbirth').value||null,data_ingresso:$('pentry').value||null,dipendente:$('pdep').value==='true',stato_anagrafico:$('pstate').value,attivo:$('pstate').value==='ATTIVO'};
  const r=await sb.from('personale').upsert(row,{onConflict:'badge'});if(r.error)return msg('pmsg',r.error.message,'err');
  const selected=[...document.querySelectorAll('[data-qual]:checked')].map(x=>x.dataset.qual);await sb.from('personale_qualifiche').delete().eq('badge_personale',badge);
  if(selected.length){const ins=await sb.from('personale_qualifiche').insert(selected.map(c=>({badge_personale:badge,codice_qualifica:c,attiva:true})));if(ins.error)return msg('pmsg','Anagrafica salvata, errore qualifiche: '+ins.error.message,'err')}
