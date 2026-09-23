@@ -145,7 +145,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.8</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.9</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -401,7 +401,7 @@
   </div>
 
   <div class="section"><h3>Paziente e percorso</h3>
-   <div class="grid4">
+   <div class="grid4" id="fvPatientFields">
     <div class="field"><label>Nome</label><input id="fvdPn" disabled></div>
     <div class="field"><label>Cognome</label><input id="fvdPc" disabled></div>
     <div class="field"><label>Codice fiscale</label><input id="fvdCf" disabled></div>
@@ -537,7 +537,7 @@
   </div>
  </div>
 
- <div class="section"><h3>Paziente / utente</h3>
+ <div class="section" id="detailPatientSection"><h3>Paziente / utente</h3>
   <div class="grid4">
    <div class="field"><label>Nome</label><input id="dpn"></div>
    <div class="field"><label>Cognome</label><input id="dpc"></div>
@@ -547,14 +547,15 @@
   </div>
  </div>
 
+ <div class="section hidden" id="detailEventContactSection"><h3>Referente manifestazione</h3><div class="grid2"><div class="field"><label>Nome referente</label><input id="dEventRefName" maxlength="120"></div><div class="field"><label>Telefono referente</label><input id="dEventRefPhone" type="tel" maxlength="40"></div></div></div>
  <div class="section"><h3>Percorso</h3>
   <div class="grid2">
    <div class="field"><label>Luogo partenza</label><input id="dlp"></div>
    <div class="field"><label>Indirizzo partenza</label><input id="dip"></div>
-   <div class="field"><label>Destinazione</label><input id="ddest"></div>
+   <div class="field"><label id="detailDestinationLabel">Destinazione</label><input id="ddest"></div>
    <div class="field"><label>Indirizzo destinazione</label><input id="didest"></div>
   </div>
-  <div class="field" style="margin-top:9px"><label>Ospedale / RSA / struttura</label><input id="dstruct"></div>
+  <div class="field" style="margin-top:9px"><label id="detailStructureLabel">Ospedale / RSA / struttura</label><input id="dstruct"></div>
  </div>
 
  <div class="section"><h3>Economico</h3>
@@ -593,7 +594,7 @@
 
 <section id="new" class="surface hidden"><div class="hero"><h2>Nuovo servizio ordinario</h2><p id="newServiceTimesHelp">Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.</p></div><div class="pad"><form id="form">
 <div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data *</label><input id="d" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label>Partenza prevista *</label><input id="op" type="time" required></div><div class="field hidden" id="newPatientLoadTime"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field"><label>Rientro previsto</label><input id="or" type="time"></div></div></div>
-<div class="section"><h3>Paziente / utente</h3>
+<div class="section" id="newPatientSection"><h3>Paziente / utente</h3>
 <div class="box" style="margin-bottom:12px">
  <h4 style="margin:0 0 6px">Richiama un paziente già registrato</h4>
  <p class="muted">Cerca per cognome o codice fiscale. I dati anagrafici si compilano automaticamente nel servizio, ma puoi modificarli per questo viaggio.</p>
@@ -607,7 +608,8 @@
 </div><div class="grid3"><div class="field"><label>Nome</label><input id="pn"></div><div class="field"><label>Cognome</label><input id="pc"></div><div class="field"><label>Codice fiscale</label><input id="cf" maxlength="16"></div><div class="field"><label>Data nascita</label><input id="dn" type="date"></div><div class="field"><label>Telefono</label><input id="tel"></div>
 <div class="field"><label>Indirizzo paziente</label><input id="patientAddress" maxlength="400" autocomplete="street-address"></div>
 <div class="field"><label>E-mail paziente</label><input id="patientEmail" type="email" maxlength="254" autocomplete="email"></div></div></div>
-<div class="section"><h3>Percorso</h3><div class="grid2"><div class="field"><label>Luogo partenza</label><input id="lp"></div><div class="field"><label>Indirizzo partenza</label><input id="ip"></div><div class="field"><label>Destinazione</label><input id="dest"></div><div class="field"><label>Indirizzo destinazione</label><input id="idest"></div></div><div class="field" style="margin-top:9px"><label>Ospedale / RSA / struttura</label><input id="strutt"></div></div>
+<div class="section hidden" id="newEventContactSection"><h3>Referente manifestazione</h3><div class="grid2"><div class="field"><label>Nome referente</label><input id="eventRefName" maxlength="120" placeholder="Referente sul posto"></div><div class="field"><label>Telefono referente</label><input id="eventRefPhone" type="tel" maxlength="40" placeholder="Recapito del referente"></div></div></div>
+<div class="section"><h3>Percorso</h3><div class="grid2"><div class="field"><label>Luogo partenza</label><input id="lp"></div><div class="field"><label>Indirizzo partenza</label><input id="ip"></div><div class="field"><label id="newDestinationLabel">Destinazione</label><input id="dest"></div><div class="field"><label>Indirizzo destinazione</label><input id="idest"></div></div><div class="field" style="margin-top:9px"><label id="newStructureLabel">Ospedale / RSA / struttura</label><input id="strutt"></div></div>
 <div class="section"><h3>Economico e note</h3><div class="grid4">
 <div class="field"><label>Tariffario</label><select id="tar"><option value="">Nessuno / tariffa concordata</option></select></div>
 <div class="field"><label>Destinazione tariffaria</label><select id="tarDest"><option value="">—</option></select></div>
@@ -1140,18 +1142,38 @@ function isAssistanceManifestation(type){
  const t=String(type||'').toLowerCase();
  return t.includes('assistenza') && (t.includes('manifestazion') || t.trim()==='assistenza');
 }
+// Dati del referente nelle note operative, non nell'anagrafica pazienti.
+function extractEventContact(note){
+ const t=String(note||'');
+ const m=/^Referente manifestazione: ([^\r\n]*)\r?\nTelefono referente: ([^\r\n]*)(?:\r?\n){1,2}/.exec(t);
+ return m?{name:m[1],phone:m[2],notes:t.slice(m[0].length)}:{name:'',phone:'',notes:t};
+}
+function composeEventNotes(note,name,phone,isEvent){
+ const t=String(note||'').trim();
+ if(!isEvent)return t||null;
+ const n=String(name||'').trim().replace(/[\r\n]+/g,' ');
+ const p=String(phone||'').trim().replace(/[\r\n]+/g,' ');
+ return n||p?'Referente manifestazione: '+n+'\nTelefono referente: '+p+'\n\n'+t:(t||null);
+}
 function updateManifestationTimes(){
- const type=$('t').value;
- const isEvent=isAssistanceManifestation(type);
+ const type=$('t').value,isEvent=isAssistanceManifestation(type);
  $('newPatientLoadTime').classList.toggle('hidden',!type||isEvent);
+ $('newPatientSection').classList.toggle('hidden',isEvent);
+ $('newEventContactSection').classList.toggle('hidden',!isEvent);
+ $('newDestinationLabel').textContent=isEvent?'Destinazione / luogo evento':'Destinazione';
+ $('newStructureLabel').textContent=isEvent?'Nome manifestazione / struttura':'Ospedale / RSA / struttura';
  $('newServiceTimesHelp').textContent=isEvent?
-  'Orari assistenza: partenza, arrivo a destinazione e rientro previsto.':
-  'Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.';
+ 'Orari assistenza: partenza, arrivo a destinazione e rientro previsto.':
+ 'Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.';
 }
 function updateDetailManifestationTimes(){
  const isEvent=isAssistanceManifestation($('dtype').value);
  $('detailPatientLoadTime').classList.toggle('hidden',isEvent);
  $('detailPatientLoadActual').classList.toggle('hidden',isEvent);
+ $('detailPatientSection').classList.toggle('hidden',isEvent);
+ $('detailEventContactSection').classList.toggle('hidden',!isEvent);
+ $('detailDestinationLabel').textContent=isEvent?'Destinazione / luogo evento':'Destinazione';
+ $('detailStructureLabel').textContent=isEvent?'Nome manifestazione / struttura':'Ospedale / RSA / struttura';
 }
 $('t').addEventListener('change',updateManifestationTimes);
 $('t').addEventListener('input',updateManifestationTimes);
@@ -1225,11 +1247,11 @@ function buildFoglioPrint(f){
    '<div class="print-box"><small>Stato documento</small>'+esc(f.stato||'—')+'</div>'+
   '</div>'+
 
-  '<div class="print-section"><h3>Paziente / utente</h3><div class="print-grid3">'+
+  (isAssistanceManifestation(f.tipo_servizio)?'':'<div class="print-section"><h3>Paziente / utente</h3><div class="print-grid3">'+
    '<div class="print-box"><small>Cognome e nome</small>'+esc([f.paziente_cognome,f.paziente_nome].filter(Boolean).join(' ')||'—')+'</div>'+
    '<div class="print-box"><small>Codice fiscale</small>'+esc(f.codice_fiscale||'—')+'</div>'+
    '<div class="print-box"><small>Telefono</small>'+esc(f.telefono||'—')+'</div>'+
-  '</div></div>'+
+  '</div></div>')+
 
   '<div class="print-section"><h3>Percorso</h3><div class="print-grid2">'+
    '<div class="print-box"><small>Partenza</small>'+esc([f.luogo_partenza,f.indirizzo_partenza].filter(Boolean).join(' - ')||'—')+'</div>'+
@@ -1268,7 +1290,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.8</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.9</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1356,6 +1378,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvdVehicle').value=f.mezzo||'';
  $('fvdType').value=f.tipo_servizio||'';
  $('fvdNumField').value=f.numero_foglio||'';
+ $('fvPatientFields').classList.toggle('hidden',isAssistanceManifestation(f.tipo_servizio));
  $('fvdPn').value=f.paziente_nome||'';
  $('fvdPc').value=f.paziente_cognome||'';
  $('fvdCf').value=f.codice_fiscale||'';
@@ -1429,7 +1452,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.8'
+  versione_app:'V13.9'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -1721,7 +1744,10 @@ async function loadServiceDetail(id=currentServiceId){
  $('dDiscount').value=s.sconto??0;
  $('dFinal').value=s.importo_finale??'';
  $('dPayMode').value=s.modalita_pagamento_prevista||'';
- $('dNotes').value=s.note||'';
+ const contact=extractEventContact(s.note);
+ $('dEventRefName').value=contact.name;
+ $('dEventRefPhone').value=contact.phone;
+ $('dNotes').value=isAssistanceManifestation(s.tipo_servizio)?contact.notes:(s.note||'');
  $('dAdminNotesField').classList.toggle('hidden',isCentral);$('dAdminNotes').value=isCentral?'':(s.note_amministrazione||'');
 
  const locked=['CHIUSO','ANNULLATO'].includes(s.stato_gestionale);
@@ -1763,6 +1789,7 @@ $('detailForm').onsubmit=async e=>{
  const previsto=$('dAmount').value===''?null:Number($('dAmount').value);
  const sconto=$('dDiscount').value===''?0:Number($('dDiscount').value);
  const finale=$('dFinal').value===''?(previsto===null?null:Math.max(previsto-sconto,0)):Number($('dFinal').value);
+ const isEvent=isAssistanceManifestation($('dtype').value);
  const row={
   data_servizio:$('ddate').value,
   mezzo:$('dvehicle').value,
@@ -1776,11 +1803,11 @@ $('detailForm').onsubmit=async e=>{
   ora_partenza_effettiva:$('dOpe').value||null,
   ora_carico_paziente_effettiva:isAssistanceManifestation($('dtype').value)?null:($('dOce').value||null),
   ora_rientro_effettivo:$('dOre').value||null,
-  paziente_nome:$('dpn').value.trim()||null,
-  paziente_cognome:$('dpc').value.trim()||null,
-  codice_fiscale:$('dcf').value.trim().toUpperCase()||null,
-  data_nascita:$('ddn').value||null,
-  telefono:$('dtel').value.trim()||null,
+  paziente_nome:isEvent?null:($('dpn').value.trim()||null),
+  paziente_cognome:isEvent?null:($('dpc').value.trim()||null),
+  codice_fiscale:isEvent?null:($('dcf').value.trim().toUpperCase()||null),
+  data_nascita:isEvent?null:($('ddn').value||null),
+  telefono:isEvent?null:($('dtel').value.trim()||null),
   luogo_partenza:$('dlp').value.trim()||null,
   indirizzo_partenza:$('dip').value.trim()||null,
   destinazione:$('ddest').value.trim()||null,
@@ -1790,10 +1817,11 @@ $('detailForm').onsubmit=async e=>{
   sconto:sconto,
   importo_finale:finale,
   modalita_pagamento_prevista:$('dPayMode').value||null,
-  note:$('dNotes').value.trim()||null,
+  note:composeEventNotes($('dNotes').value,$('dEventRefName').value,$('dEventRefPhone').value,isEvent),
   capo_servizio_obbligatorio:false,
   equipaggio_minimo:$('dvehicle').value==='06'?1:2
  };
+ if(isEvent)row.paziente_id=null;
  if(prof?.ruolo!=='CENTRALINO')row.note_amministrazione=$('dAdminNotes').value.trim()||null;
  const r=await sb.from('servizi_giornalieri').update(row).eq('id',currentServiceId);
  if(r.error)return msg('dSaveMsg',r.error.message,'err');
@@ -1869,8 +1897,9 @@ $('form').onsubmit=async e=>{
  if(selectedTariffario&&tariffSimple(selectedTariffario.codice)&&selectedTariff&&$('tarNight').value==='true')
   return msg('fmsg','Il prezzo notturno dei trasporti semplici non è indicato nel PDF: seleziona «Nessuno / tariffa concordata» e inserisci l’importo concordato con il Centralino.','warn');
  const amount=$('imp').value===''?null:Number($('imp').value);
- let linkedPatient=servicePatientId;
- if(!linkedPatient&&$('patientRemember').checked){
+ const isEvent=isAssistanceManifestation($('t').value);
+ let linkedPatient=isEvent?null:servicePatientId;
+ if(!isEvent&&!linkedPatient&&$('patientRemember').checked){
   const row=patientServiceRow();
   if(!row.nome||!row.cognome)return msg('fmsg','Nome e cognome necessari per memorizzare il paziente.','warn');
   if(row.codice_fiscale&&row.codice_fiscale.length!==16)return msg('fmsg','Controlla il codice fiscale del paziente.','warn');
@@ -1879,7 +1908,7 @@ $('form').onsubmit=async e=>{
   if(pr.error)return msg('fmsg','Anagrafica non salvata: '+pr.error.message+' Se il paziente esiste già, cercalo e selezionalo.','err');
   linkedPatient=pr.data.id;servicePatientId=linkedPatient;
  }
- const p={paziente_id:linkedPatient||null,data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:$('odest').value||null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:$('pn').value.trim()||null,paziente_cognome:$('pc').value.trim()||null,codice_fiscale:$('cf').value.trim().toUpperCase()||null,data_nascita:$('dn').value||null,telefono:$('tel').value.trim()||null,paziente_indirizzo:$('patientAddress').value.trim()||null,paziente_email:$('patientEmail').value.trim().toLowerCase()||null,luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:$('note').value.trim()||null,tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?amount:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
+ const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:$('odest').value||null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?amount:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
  const r=await sb.from('servizi_giornalieri').insert(p).select('id').single();
  if(r.error)return msg('fmsg',r.error.message,'err');
  msg('fmsg','Servizio salvato. Ora puoi assegnare l’equipaggio.','ok');
@@ -2583,13 +2612,13 @@ async function openTabletService(id){
  $('tabletServiceData').innerHTML='<h3>Dati servizio assegnato</h3><div class="tablet-fields">'+
  tabletReadOnlyField('Data',tabletDateLabel(s.data_servizio))+tabletReadOnlyField('Partenza prevista',tabletFmt(s.ora_partenza_prevista))+
  (isAssistanceManifestation(s.tipo_servizio)?'':tabletReadOnlyField('Carico previsto',tabletFmt(s.ora_carico_paziente_prevista)))+tabletReadOnlyField('Arrivo destinazione previsto',tabletFmt(s.ora_arrivo_destinazione_prevista))+tabletReadOnlyField('Rientro previsto',tabletFmt(s.ora_rientro_previsto))+
- tabletReadOnlyField('Paziente',[s.paziente_nome,s.paziente_cognome].filter(Boolean).join(' '))+
- tabletReadOnlyField('Telefono di servizio',s.telefono)+
+ (isAssistanceManifestation(s.tipo_servizio)?tabletReadOnlyField('Referente manifestazione',extractEventContact(s.note).name)+tabletReadOnlyField('Telefono referente',extractEventContact(s.note).phone):tabletReadOnlyField('Paziente',[s.paziente_nome,s.paziente_cognome].filter(Boolean).join(' ')))+
+ (isAssistanceManifestation(s.tipo_servizio)?'':tabletReadOnlyField('Telefono di servizio',s.telefono))+
  tabletReadOnlyField('Partenza',[s.luogo_partenza,s.indirizzo_partenza].filter(Boolean).join(' · '))+
  tabletReadOnlyField('Destinazione',[s.ospedale_destinazione||s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · '))+
  tabletReadOnlyField('Importo previsto per il paziente',tabletServiceAmount(s))+
  tabletReadOnlyField('Equipaggio',crew.map(x=>x.nome_completo+' · '+x.ruolo).join(' | '))+
- tabletReadOnlyField('Note operative',s.note)+'</div>';
+ tabletReadOnlyField('Note operative',isAssistanceManifestation(s.tipo_servizio)?extractEventContact(s.note).notes:s.note)+'</div>';
  renderTabletDetailHeader();await loadTabletSheet(id);
  msg('tabletDetailMsg','');$('tabletDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
