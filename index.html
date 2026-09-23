@@ -417,7 +417,7 @@
    <div class="section"><h3>Orari effettivi</h3>
     <div class="grid4">
      <div class="field"><label>Partenza servizio</label><input id="fvStart" type="time"></div>
-     <div class="field"><label>Carico paziente</label><input id="fvLoad" type="time"></div>
+     <div class="field" id="fvPatientLoadTime"><label>Carico paziente</label><input id="fvLoad" type="time"></div>
      <div class="field"><label>Arrivo destinazione</label><input id="fvArrDest" type="time"></div>
      <div class="field"><label>Ripartenza</label><input id="fvRestart" type="time"></div>
      <div class="field"><label>Arrivo sede</label><input id="fvArrBase" type="time"></div>
@@ -528,11 +528,11 @@
    <div class="field"><label>Tipo servizio</label><input id="dtype"></div>
    <div class="field"><label>Priorità</label><select id="dpriority"><option>BASSA</option><option>NORMALE</option><option>ALTA</option><option>URGENTE</option></select></div>
    <div class="field"><label>Partenza prevista</label><input id="dOp" type="time"></div>
-   <div class="field"><label>Carico paziente previsto</label><input id="dOc" type="time"></div>
+   <div class="field" id="detailPatientLoadTime"><label>Carico paziente previsto</label><input id="dOc" type="time"></div>
    <div class="field"><label>Arrivo a destinazione previsto</label><input id="dOdest" type="time"></div>
    <div class="field"><label>Rientro previsto</label><input id="dOr" type="time"></div>
    <div class="field"><label>Partenza effettiva</label><input id="dOpe" type="time"></div>
-   <div class="field"><label>Carico paziente effettivo</label><input id="dOce" type="time"></div>
+   <div class="field" id="detailPatientLoadActual"><label>Carico paziente effettivo</label><input id="dOce" type="time"></div>
    <div class="field"><label>Rientro effettivo</label><input id="dOre" type="time"></div>
   </div>
  </div>
@@ -591,8 +591,8 @@
 </div>
 </section>
 
-<section id="new" class="surface hidden"><div class="hero"><h2>Nuovo servizio ordinario</h2><p>Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.</p></div><div class="pad"><form id="form">
-<div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data *</label><input id="d" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label>Partenza prevista *</label><input id="op" type="time" required></div><div class="field"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field"><label>Rientro previsto</label><input id="or" type="time"></div></div></div>
+<section id="new" class="surface hidden"><div class="hero"><h2>Nuovo servizio ordinario</h2><p id="newServiceTimesHelp">Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.</p></div><div class="pad"><form id="form">
+<div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data *</label><input id="d" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label>Partenza prevista *</label><input id="op" type="time" required></div><div class="field" id="newPatientLoadTime"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field"><label>Rientro previsto</label><input id="or" type="time"></div></div></div>
 <div class="section"><h3>Paziente / utente</h3>
 <div class="box" style="margin-bottom:12px">
  <h4 style="margin:0 0 6px">Richiama un paziente già registrato</h4>
@@ -804,7 +804,7 @@
     <h3 class="tablet-section-title">Orari effettivi e percorrenza</h3>
     <div class="tablet-fields">
      <div class="field"><label>Partenza effettiva</label><input type="time" data-ts-field="ora_partenza_servizio"></div>
-     <div class="field"><label>Carico paziente</label><input type="time" data-ts-field="ora_carico_paziente"></div>
+     <div class="field" id="tabletPatientLoadTime"><label>Carico paziente</label><input type="time" data-ts-field="ora_carico_paziente"></div>
      <div class="field"><label>Arrivo a destinazione</label><input type="time" data-ts-field="ora_arrivo_destinazione"></div>
      <div class="field"><label>Ripartenza</label><input type="time" data-ts-field="ora_ripartenza"></div>
      <div class="field"><label>Rientro in sede</label><input type="time" data-ts-field="ora_arrivo_sede"></div>
@@ -1134,6 +1134,26 @@ $('tarDest').onchange=updateTariffQuote;
 $('tarNight').onchange=updateTariffQuote;
 
 
+// Le assistenze alle manifestazioni non prevedono il carico di un paziente.
+function isAssistanceManifestation(type){
+ const t=String(type||'').toLowerCase();
+ return t.includes('assistenza')&&t.includes('manifestazion');
+}
+function updateManifestationTimes(){
+ const isEvent=isAssistanceManifestation($('t').value);
+ $('newPatientLoadTime').classList.toggle('hidden',isEvent);
+ $('newServiceTimesHelp').textContent=isEvent?
+  'Orari assistenza: partenza, arrivo a destinazione e rientro previsto.':
+  'Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.';
+}
+function updateDetailManifestationTimes(){
+ const isEvent=isAssistanceManifestation($('dtype').value);
+ $('detailPatientLoadTime').classList.toggle('hidden',isEvent);
+ $('detailPatientLoadActual').classList.toggle('hidden',isEvent);
+}
+$('t').addEventListener('change',updateManifestationTimes);
+$('dtype').addEventListener('input',updateDetailManifestationTimes);
+updateManifestationTimes();
 function fvTime(v){return (v||'').slice(0,5)}
 function fvPreview(){
  const a=$('fvKmStart').value===''?null:Number($('fvKmStart').value);
@@ -1167,10 +1187,10 @@ function buildFoglioPrint(f){
   ['Carico previsto',fvTime(f.ora_carico_paziente_prevista)],
   ['Arrivo a destinazione previsto',fvTime(f.ora_arrivo_destinazione_prevista)],
   ['Rientro previsto',fvTime(f.ora_rientro_previsto)]
- ];
+ ].filter(x=>!isAssistanceManifestation(f.tipo_servizio)||x[0]!=='Carico previsto');
  const actual=[
   ['Partenza',fvTime(f.ora_partenza_servizio)],
-  ['Carico paziente',fvTime(f.ora_carico_paziente)],
+  ...(!isAssistanceManifestation(f.tipo_servizio)?[['Carico paziente',fvTime(f.ora_carico_paziente)]]:[]),
   ['Arrivo destinazione',fvTime(f.ora_arrivo_destinazione)],
   ['Ripartenza',fvTime(f.ora_ripartenza)],
   ['Arrivo sede',fvTime(f.ora_arrivo_sede)],
@@ -1342,6 +1362,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
 
  $('fvStart').value=fvTime(f.ora_partenza_servizio);
  $('fvLoad').value=fvTime(f.ora_carico_paziente);
+ $('fvPatientLoadTime').classList.toggle('hidden',isAssistanceManifestation(f.tipo_servizio));
  $('fvArrDest').value=fvTime(f.ora_arrivo_destinazione);
  $('fvRestart').value=fvTime(f.ora_ripartenza);
  $('fvArrBase').value=fvTime(f.ora_arrivo_sede);
@@ -1395,7 +1416,7 @@ async function saveTravelSheet(silent=false){
  }
  const row={
   ora_partenza_servizio:$('fvStart').value||null,
-  ora_carico_paziente:$('fvLoad').value||null,
+  ora_carico_paziente:isAssistanceManifestation(currentFoglio?.tipo_servizio)?null:($('fvLoad').value||null),
   ora_arrivo_destinazione:$('fvArrDest').value||null,
   ora_ripartenza:$('fvRestart').value||null,
   ora_arrivo_sede:$('fvArrBase').value||null,
@@ -1682,6 +1703,7 @@ async function loadServiceDetail(id=currentServiceId){
  $('dOpe').value=t5(s.ora_partenza_effettiva);
  $('dOce').value=t5(s.ora_carico_paziente_effettiva);
  $('dOre').value=t5(s.ora_rientro_effettivo);
+ updateDetailManifestationTimes();
  $('dpn').value=s.paziente_nome||'';
  $('dpc').value=s.paziente_cognome||'';
  $('dcf').value=s.codice_fiscale||'';
@@ -1745,11 +1767,11 @@ $('detailForm').onsubmit=async e=>{
   priorita:$('dpriority').value,
   ora_prevista:$('dOp').value||null,
   ora_partenza_prevista:$('dOp').value||null,
-  ora_carico_paziente_prevista:$('dOc').value||null,
+  ora_carico_paziente_prevista:isAssistanceManifestation($('dtype').value)?null:($('dOc').value||null),
   ora_arrivo_destinazione_prevista:$('dOdest').value||null,
   ora_rientro_previsto:$('dOr').value||null,
   ora_partenza_effettiva:$('dOpe').value||null,
-  ora_carico_paziente_effettiva:$('dOce').value||null,
+  ora_carico_paziente_effettiva:isAssistanceManifestation($('dtype').value)?null:($('dOce').value||null),
   ora_rientro_effettivo:$('dOre').value||null,
   paziente_nome:$('dpn').value.trim()||null,
   paziente_cognome:$('dpc').value.trim()||null,
@@ -1854,7 +1876,7 @@ $('form').onsubmit=async e=>{
   if(pr.error)return msg('fmsg','Anagrafica non salvata: '+pr.error.message+' Se il paziente esiste già, cercalo e selezionalo.','err');
   linkedPatient=pr.data.id;servicePatientId=linkedPatient;
  }
- const p={paziente_id:linkedPatient||null,data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:$('oc').value||null,ora_arrivo_destinazione_prevista:$('odest').value||null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:$('pn').value.trim()||null,paziente_cognome:$('pc').value.trim()||null,codice_fiscale:$('cf').value.trim().toUpperCase()||null,data_nascita:$('dn').value||null,telefono:$('tel').value.trim()||null,paziente_indirizzo:$('patientAddress').value.trim()||null,paziente_email:$('patientEmail').value.trim().toLowerCase()||null,luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:$('note').value.trim()||null,tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?amount:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
+ const p={paziente_id:linkedPatient||null,data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:$('odest').value||null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:$('pn').value.trim()||null,paziente_cognome:$('pc').value.trim()||null,codice_fiscale:$('cf').value.trim().toUpperCase()||null,data_nascita:$('dn').value||null,telefono:$('tel').value.trim()||null,paziente_indirizzo:$('patientAddress').value.trim()||null,paziente_email:$('patientEmail').value.trim().toLowerCase()||null,luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:$('note').value.trim()||null,tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?amount:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
  const r=await sb.from('servizi_giornalieri').insert(p).select('id').single();
  if(r.error)return msg('fmsg',r.error.message,'err');
  msg('fmsg','Servizio salvato. Ora puoi assegnare l’equipaggio.','ok');
@@ -2390,7 +2412,7 @@ function renderTabletList(){
  '<span class="tablet-vehicle">'+esc(s.mezzo)+'</span><span class="tablet-pill">'+esc(st)+'</span></div>'+
  '<div class="tablet-flow">'+esc(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+'<br>'+esc(s.luogo_partenza||'Sede')+' → '+esc(s.ospedale_destinazione||s.destinazione||'—')+'</div>'+
  '<div class="notice" style="margin:8px 0">Importo previsto per il paziente: <b>'+esc(tabletServiceAmount(s))+'</b></div>'+
- '<div class="muted">Carico previsto: '+esc(tabletFmt(s.ora_carico_paziente_prevista))+' · Arrivo destinazione previsto: '+esc(tabletFmt(s.ora_arrivo_destinazione_prevista))+' · Rientro previsto: '+esc(tabletFmt(s.ora_rientro_previsto))+'</div>'+
+ '<div class="muted">'+(isAssistanceManifestation(s.tipo_servizio)?'Partenza prevista: '+esc(tabletFmt(s.ora_partenza_prevista)):'Carico previsto: '+esc(tabletFmt(s.ora_carico_paziente_prevista)))+' · Arrivo destinazione previsto: '+esc(tabletFmt(s.ora_arrivo_destinazione_prevista))+' · Rientro previsto: '+esc(tabletFmt(s.ora_rientro_previsto))+'</div>'+
  '<div style="margin-top:6px"><span class="pill '+(ready?'g':'r')+'">'+crew.length+'/'+esc(s.equipaggio_minimo??(String(s.mezzo||'')==='06'?1:2))+' componenti assegnati</span>'+
  (s.numero_foglio?' <span class="pill b">'+esc(s.numero_foglio)+'</span>':'')+'</div>'+
  '<div class="tablet-actions"><button class="btn blue" type="button" data-tablet-open="'+esc(s.id)+'">Apri servizio / Foglio Viaggio</button></div></article>'
@@ -2557,7 +2579,7 @@ async function openTabletService(id){
  const crew=r.data||[];
  $('tabletServiceData').innerHTML='<h3>Dati servizio assegnato</h3><div class="tablet-fields">'+
  tabletReadOnlyField('Data',tabletDateLabel(s.data_servizio))+tabletReadOnlyField('Partenza prevista',tabletFmt(s.ora_partenza_prevista))+
- tabletReadOnlyField('Carico previsto',tabletFmt(s.ora_carico_paziente_prevista))+tabletReadOnlyField('Arrivo destinazione previsto',tabletFmt(s.ora_arrivo_destinazione_prevista))+tabletReadOnlyField('Rientro previsto',tabletFmt(s.ora_rientro_previsto))+
+ (isAssistanceManifestation(s.tipo_servizio)?'':tabletReadOnlyField('Carico previsto',tabletFmt(s.ora_carico_paziente_prevista)))+tabletReadOnlyField('Arrivo destinazione previsto',tabletFmt(s.ora_arrivo_destinazione_prevista))+tabletReadOnlyField('Rientro previsto',tabletFmt(s.ora_rientro_previsto))+
  tabletReadOnlyField('Paziente',[s.paziente_nome,s.paziente_cognome].filter(Boolean).join(' '))+
  tabletReadOnlyField('Telefono di servizio',s.telefono)+
  tabletReadOnlyField('Partenza',[s.luogo_partenza,s.indirizzo_partenza].filter(Boolean).join(' · '))+
@@ -2594,6 +2616,7 @@ async function loadTabletSheet(serviceId){
   msg('tabletDetailMsg','Foglio Viaggio non ancora predisposto. Premi «Prendi in carico» per crearlo, dopo il completamento dell’equipaggio.','warn');return;
  }
  tabletCurrentSheet=r.data;const f=r.data,closed=f.stato==='CHIUSO';
+ $('tabletPatientLoadTime').classList.toggle('hidden',isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio));
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
  document.querySelectorAll('[data-ts-field]').forEach(el=>{
@@ -2624,6 +2647,7 @@ async function saveTabletSheet(silent=false){
   else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
  }
+ if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio))row.ora_carico_paziente=null;
  if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
  if(tabletCurrentService?.tipo_servizio!=='118'&&row.importo_inserito===null)return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
