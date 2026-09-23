@@ -1483,10 +1483,10 @@ function renderCalendarGrid(prefix,cursor,selected,events,mode){
  grid.querySelectorAll('[data-cal-date]').forEach(el=>el.onclick=()=>{if(prefix==='cal')opCalSelected=el.dataset.calDate;else volCalSelected=el.dataset.calDate;renderCalendarGrid(prefix,cursor,el.dataset.calDate,events,mode);if(prefix==='cal')renderOperationalCalendarDay();else renderVolunteerCalendarDay()})
 }
 function turnCoverage(t,assignments){
- const active=(assignments||[]).filter(a=>String(a.risposta||'').toUpperCase()!=='NON DISPONIBILE'),n=active.length,em=String(t.tipo_turno||'').toUpperCase()==='EMERGENZA';
+ const active=(assignments||[]).filter(a=>String(a.risposta||'').toUpperCase()!=='NON DISPONIBILE'),n=active.length,min=String(t.mezzo||'')==='06'?1:2;
  if(n===0)return {label:'SCOPERTO',cls:'turn-gap',count:n};
- if(n<2)return {label:'INCOMPLETO',cls:'turn-gap',count:n};
- if(em&&n===2)return {label:'MINIMO',cls:'turn-min',count:n};
+ if(n<min)return {label:'INCOMPLETO',cls:'turn-gap',count:n};
+ if(n===min)return {label:'MINIMO',cls:'turn-min',count:n};
  return {label:'COMPLETO',cls:'',count:n}
 }
 function refreshOperationalCalendarView(){
@@ -1766,7 +1766,8 @@ $('detailForm').onsubmit=async e=>{
   importo_finale:finale,
   modalita_pagamento_prevista:$('dPayMode').value||null,
   note:$('dNotes').value.trim()||null,
-  capo_servizio_obbligatorio:['07','08','09'].includes($('dvehicle').value)
+  capo_servizio_obbligatorio:['07','08','09'].includes($('dvehicle').value),
+  equipaggio_minimo:$('dvehicle').value==='06'?1:2
  };
  if(prof?.ruolo!=='CENTRALINO')row.note_amministrazione=$('dAdminNotes').value.trim()||null;
  const r=await sb.from('servizi_giornalieri').update(row).eq('id',currentServiceId);
@@ -1853,7 +1854,7 @@ $('form').onsubmit=async e=>{
   if(pr.error)return msg('fmsg','Anagrafica non salvata: '+pr.error.message+' Se il paziente esiste già, cercalo e selezionalo.','err');
   linkedPatient=pr.data.id;servicePatientId=linkedPatient;
  }
- const p={paziente_id:linkedPatient||null,data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:$('oc').value||null,ora_arrivo_destinazione_prevista:$('odest').value||null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:$('pn').value.trim()||null,paziente_cognome:$('pc').value.trim()||null,codice_fiscale:$('cf').value.trim().toUpperCase()||null,data_nascita:$('dn').value||null,telefono:$('tel').value.trim()||null,paziente_indirizzo:$('patientAddress').value.trim()||null,paziente_email:$('patientEmail').value.trim().toLowerCase()||null,luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:$('note').value.trim()||null,tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?amount:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:['07','08','09'].includes($('m').value)};
+ const p={paziente_id:linkedPatient||null,data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:$('oc').value||null,ora_arrivo_destinazione_prevista:$('odest').value||null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:$('pn').value.trim()||null,paziente_cognome:$('pc').value.trim()||null,codice_fiscale:$('cf').value.trim().toUpperCase()||null,data_nascita:$('dn').value||null,telefono:$('tel').value.trim()||null,paziente_indirizzo:$('patientAddress').value.trim()||null,paziente_email:$('patientEmail').value.trim().toLowerCase()||null,luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:$('note').value.trim()||null,tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?amount:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:['07','08','09'].includes($('m').value),equipaggio_minimo:$('m').value==='06'?1:2};
  const r=await sb.from('servizi_giornalieri').insert(p).select('id').single();
  if(r.error)return msg('fmsg',r.error.message,'err');
  msg('fmsg','Servizio salvato. Ora puoi assegnare l’equipaggio.','ok');
@@ -2035,12 +2036,11 @@ function emActiveMembers(t){
 }
 function emCover(t){
  const a=emActiveMembers(t);
- // Tirocinanti e accompagnatori non sostituiscono i due operatori di soccorso.
- const eligible=a.filter(x=>['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].includes(x.ruolo));
+ const eligible=a.filter(x=>['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].includes(x.ruolo)),min=String(t.mezzo||'')==='06'?1:2;
  if(!eligible.length)return {label:'SCOPERTO',cls:'r'};
- if(eligible.length<2||!eligible.some(x=>x.ruolo==='AUTISTA'))return {label:'INCOMPLETO',cls:'r'};
- if(eligible.length===2)return {label:'MINIMO',cls:''};
- return {label:'3+ OPERATIVI',cls:'g'}
+ if(eligible.length<min||!eligible.some(x=>x.ruolo==='AUTISTA'))return {label:'INCOMPLETO',cls:'r'};
+ if(eligible.length===min)return {label:'MINIMO',cls:''};
+ return {label:min===1?'COMPLETO':'3+ OPERATIVI',cls:'g'}
 }
 function emEntry(t,a){
  const name=people.find(p=>p.badge===a.badge_personale)?.nome_completo||a.badge_personale,
@@ -2118,12 +2118,11 @@ function asActiveMembers(t){
 }
 function asCover(t){
  const a=asActiveMembers(t);
- // Tirocinanti e accompagnatori non sostituiscono i due operatori di soccorso.
- const eligible=a.filter(x=>['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].includes(x.ruolo));
+ const eligible=a.filter(x=>['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].includes(x.ruolo)),min=String(t.mezzo||'')==='06'?1:2;
  if(!eligible.length)return {label:'SCOPERTO',cls:'r'};
- if(eligible.length<2||!eligible.some(x=>x.ruolo==='AUTISTA'))return {label:'INCOMPLETO',cls:'r'};
- if(eligible.length===2)return {label:'MINIMO',cls:''};
- return {label:'3+ OPERATIVI',cls:'g'}
+ if(eligible.length<min||!eligible.some(x=>x.ruolo==='AUTISTA'))return {label:'INCOMPLETO',cls:'r'};
+ if(eligible.length===min)return {label:'MINIMO',cls:''};
+ return {label:min===1?'COMPLETO':'3+ OPERATIVI',cls:'g'}
 }
 function asEntry(t,a){
  const name=people.find(p=>p.badge===a.badge_personale)?.nome_completo||a.badge_personale,
@@ -2369,7 +2368,7 @@ function tabletServiceAmount(s){
  return a===null||a===undefined||a===''?'Da concordare con il Centralino':euro(Number(a))
 }
 function tabletCrewFor(id){return tabletAssignments.filter(x=>x.servizio_id===id)}
-function tabletCrewReady(s){const c=tabletCrewFor(s.id);return c.length>=Number(s.equipaggio_minimo||2)&&c.some(x=>x.ruolo==='AUTISTA')&&(!s.capo_servizio_obbligatorio||c.some(x=>x.ruolo==='CAPO_SERVIZIO'))}
+function tabletCrewReady(s){const c=tabletCrewFor(s.id),min=Number(s.equipaggio_minimo??(String(s.mezzo||'')==='06'?1:2));return c.length>=min&&c.some(x=>x.ruolo==='AUTISTA')&&(!s.capo_servizio_obbligatorio||c.some(x=>x.ruolo==='CAPO_SERVIZIO'))}
 function tabletListFiltered(){
  const t=todaySafe(),end=tabletShiftDays(7);
  return tabletServices.filter(x=>x.stato_gestionale!=='ANNULLATO'&&x.stato!=='ANNULLATO'&&(
@@ -2392,7 +2391,7 @@ function renderTabletList(){
  '<div class="tablet-flow">'+esc(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+'<br>'+esc(s.luogo_partenza||'Sede')+' → '+esc(s.ospedale_destinazione||s.destinazione||'—')+'</div>'+
  '<div class="notice" style="margin:8px 0">Importo previsto per il paziente: <b>'+esc(tabletServiceAmount(s))+'</b></div>'+
  '<div class="muted">Carico previsto: '+esc(tabletFmt(s.ora_carico_paziente_prevista))+' · Arrivo destinazione previsto: '+esc(tabletFmt(s.ora_arrivo_destinazione_prevista))+' · Rientro previsto: '+esc(tabletFmt(s.ora_rientro_previsto))+'</div>'+
- '<div style="margin-top:6px"><span class="pill '+(ready?'g':'r')+'">'+crew.length+'/'+esc(s.equipaggio_minimo||2)+' componenti assegnati</span>'+
+ '<div style="margin-top:6px"><span class="pill '+(ready?'g':'r')+'">'+crew.length+'/'+esc(s.equipaggio_minimo??(String(s.mezzo||'')==='06'?1:2))+' componenti assegnati</span>'+
  (s.numero_foglio?' <span class="pill b">'+esc(s.numero_foglio)+'</span>':'')+'</div>'+
  '<div class="tablet-actions"><button class="btn blue" type="button" data-tablet-open="'+esc(s.id)+'">Apri servizio / Foglio Viaggio</button></div></article>'
  }).join(''):'<div class="tablet-empty">Nessun servizio in questa vista per il mezzo '+esc(tabletMezzo)+'.<br>Il tablet si aggiorna automaticamente.</div>';
@@ -2478,7 +2477,8 @@ async function tabletCreateImmediate(){
   {ruolo:'SOCCORRITORE',badge:$('tabletAdRescuer').value.trim()},
   {ruolo:'SECONDO_SOCCORRITORE',badge:$('tabletAdSecond').value.trim()}
  ].filter(x=>x.badge);
- if(crew.length<2)return msg('tabletAdMsg','Inserisci almeno due operatori in equipaggio.','warn');
+ const minCrew=tabletMezzo==='06'?1:2;
+ if(crew.length<minCrew)return msg('tabletAdMsg',minCrew===1?'Inserisci almeno un operatore in equipaggio.':'Inserisci almeno due operatori in equipaggio.','warn');
  if(!confirm('Creare ORA un servizio non programmato per il mezzo '+tabletMezzo+' e il relativo Foglio Viaggio?'))return;
  tabletBusy=true;msg('tabletAdMsg','Creazione servizio e Foglio Viaggio...');
  let created=null;
@@ -2523,8 +2523,8 @@ async function startTabletArea(){
  $('tabletPriceVehicle').textContent=tabletMezzo;$('tabletImmediateVehicle').textContent=tabletMezzo;
  $('tabletAdLeaderBox').classList.toggle('hidden',tabletMezzo==='06');
  $('tabletAdLeader').required=tabletMezzo!=='06';
- $('tabletAdRescuer').required=tabletMezzo==='06';
- $('tabletAdRescuerRequired').textContent=tabletMezzo==='06'?'*':'(facoltativo)';
+ $('tabletAdRescuer').required=false;
+ $('tabletAdRescuerRequired').textContent='(facoltativo)';
  $('tabletPricePanel').classList.add('hidden');$('tabletImmediatePanel').classList.add('hidden');
  await tabletLoadTariffs();
  $('tabletDetail').classList.add('hidden');tabletCurrentService=null;tabletCurrentSheet=null;tabletSetListMode('week');await tabletRefreshList();
