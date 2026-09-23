@@ -93,7 +93,7 @@
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.8</div></div><div class="loginbody">
 <div id="staffLoginBlock">
- <div class="field"><label>Email</label><input id="email" type="email" autocomplete="username"></div><div class="field"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
+ <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
  <div style="margin:14px 0;border-top:1px solid var(--l)"></div>
 </div>
@@ -1001,7 +1001,7 @@ function applyRoleUI(){
 async function enter(){
  const u=await sb.auth.getUser();if(!u.data.user)return;
  const r=await sb.from('accessi_app').select('nome,ruolo,attivo,badge_personale,mezzo').single();
- if(r.error||!r.data?.attivo){await sb.auth.signOut();return msg(isTabletOnlyMode()?'tloginmsg':isVolunteerOnlyMode()?'vlmsg':'lmsg','Accesso non autorizzato o disattivato.','err')}
+ if(r.error||!r.data?.attivo){await sb.auth.signOut();return msg(isTabletOnlyMode()?'tloginmsg':isVolunteerOnlyMode()?'vlmsg':'lmsg',isTabletOnlyMode()?'Accesso non autorizzato o disattivato.':isVolunteerOnlyMode()?'Accesso non autorizzato o disattivato.':'Questo account non è autorizzato al Gestionale Croce Gialla. Verifica di non usare le credenziali del Magazzino Sanitario.','err')}
  if(isVolunteerOnlyMode()&&r.data.ruolo!=='VOLONTARIO'){await sb.auth.signOut();applyVolunteerOnlyLogin();return msg('vlmsg','Questa app è riservata ai volontari. Accedi con badge e PIN.','warn')}
  if(isTabletOnlyMode()&&(r.data.ruolo!=='TABLET'||(tabletRequestedVehicle()&&r.data.mezzo!==tabletRequestedVehicle()))){await sb.auth.signOut();applyVolunteerOnlyLogin();return msg('tloginmsg','Questo account non è assegnato al tablet del mezzo richiesto.','err')}
  if(isCentralinoOnlyMode()&&r.data.ruolo!=='CENTRALINO'){await sb.auth.signOut();applyVolunteerOnlyLogin();return msg('cloginmsg','Questo link consente esclusivamente l’accesso al Centralino.','err')}
