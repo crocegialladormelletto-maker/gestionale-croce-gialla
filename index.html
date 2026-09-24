@@ -3542,7 +3542,7 @@ async function openPendingAssistance(candidateId=''){
  }
 }
 
-const DIM_FASCE=[['MATTINO','Mattino'],['POMERIGGIO','Pomeriggio'],['NOTTE','Notte']];
+const DIM_FASCE=[['MATTINO','Mattino'],['POMERIGGIO','Pomeriggio'],['SERA','Sera'],['NOTTE','Notte']];
 const VOL_FASCIA_ORARI={MATTINO:'07:00–14:00',POMERIGGIO:'14:00–19:00',SERA:'19:00–24:00',NOTTE:'24:00–07:00 (+1 giorno)'};
 function volFasciaOrario(fascia){return VOL_FASCIA_ORARI[fascia]||'';}
 function dimRoleLabel(role){return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':'Soccorritore'}
@@ -3718,7 +3718,7 @@ $('dimAdminNext').onclick=()=>dimMoveMonth('Admin',1);
 $('dimAdminToday').onclick=()=>dimMoveMonth('Admin',0);
 $('dimAdminRefresh').onclick=loadDimissioniAdmin;
 
-const EMG_FASCE=[['MATTINO','Mattino'],['POMERIGGIO','Pomeriggio'],['NOTTE','Notte']];
+const EMG_FASCE=[['MATTINO','Mattino'],['POMERIGGIO','Pomeriggio'],['SERA','Sera'],['NOTTE','Notte']];
 function emgRoleLabel(role){return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':'Soccorritore'}
 function emgRowsFor(rows,day,fascia){return rows.filter(row=>row.giorno===day&&row.fascia===fascia)}
 function emgSlotCovered(rows){return rows.some(row=>row.ruolo==='AUTISTA')&&rows.some(row=>row.ruolo==='SOCCORRITORE')}
