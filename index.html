@@ -3545,7 +3545,7 @@ async function openPendingAssistance(candidateId=''){
 const DIM_FASCE=[['MATTINO','Mattino'],['POMERIGGIO','Pomeriggio'],['SERA','Sera'],['NOTTE','Notte']];
 const VOL_FASCIA_ORARI={MATTINO:'07:00–14:00',POMERIGGIO:'14:00–19:00',SERA:'19:00–24:00',NOTTE:'24:00–07:00 (+1 giorno)'};
 function volFasciaOrario(fascia){return VOL_FASCIA_ORARI[fascia]||'';}
-function dimRoleLabel(role){return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':'Soccorritore'}
+function dimRoleLabel(role){return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':role==='SECONDO_SOCCORRITORE'?'Secondo soccorritore':'Soccorritore'}
 function dimRowsFor(rows,day,fascia){return rows.filter(row=>row.giorno===day&&row.fascia===fascia)}
 function dimSlotCovered(rows){return rows.some(row=>row.ruolo==='AUTISTA')&&rows.some(row=>row.ruolo==='SOCCORRITORE')}
 function dimDayTitle(day){return new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(day+'T12:00:00')).replace(/^./,c=>c.toUpperCase())}
@@ -3586,7 +3586,7 @@ function dimRenderDay(kind){
    '</div>').join(''),
   missing=['AUTISTA','SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)).map(dimRoleLabel),
   state=covered?'Coperto · autista e soccorritore presenti':'Da completare · mancano '+missing.join(' e ');
-  const eligible=['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].filter(role=>vfcalQualificationRows.some(q=>
+  const eligible=['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].filter(role=>vfcalQualificationRows.some(q=>
    q.codice_qualifica===role&&(!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
   const action=!admin&&day>=todayY&&!mine?
    (eligible.length?'<div class="actions" style="margin-top:8px"><select aria-label="Ruolo per il turno dimissioni" data-dim-role="'+fascia+'" style="max-width:170px">'+
@@ -3609,7 +3609,7 @@ function dimRenderDay(kind){
 function dimAdminAssignControls(day,fascia,slot){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||day<todaySafe())return '';
  return '<div class="dim-admin-assign"><b>Aggiungi all’equipaggio</b>'+
-  ['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].map(role=>{
+  ['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].map(role=>{
    const candidates=dimAdminEligible.filter(p=>p.ruolo===role&&!slot.some(x=>x.badge_personale===p.badge));
    return '<div class="actions" style="margin-top:6px"><label class="muted" style="min-width:84px">'+dimRoleLabel(role)+'</label>'+
     '<select data-dim-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Volontario '+dimRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
@@ -3673,7 +3673,7 @@ async function loadDimissioniAdmin(){
 async function dimJoin(day,fascia){
  if(dimVolBusy)return;
  const role=$('dimVolDay').querySelector('[data-dim-role="'+fascia+'"]')?.value;
- if(!role||!['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].includes(role))return;
+ if(!role||!['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].includes(role))return;
  if(!confirm('Confermi il turno DEFINITIVO dimissioni del '+day+' · '+fascia+' come '+dimRoleLabel(role)+'? Non potrai annullarlo da solo.'))return;
  dimVolBusy=true;
  msg('dimVolMsg','Registrazione definitiva in corso...');
@@ -3719,7 +3719,7 @@ $('dimAdminToday').onclick=()=>dimMoveMonth('Admin',0);
 $('dimAdminRefresh').onclick=loadDimissioniAdmin;
 
 const EMG_FASCE=[['MATTINO','Mattino'],['POMERIGGIO','Pomeriggio'],['SERA','Sera'],['NOTTE','Notte']];
-function emgRoleLabel(role){return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':'Soccorritore'}
+function emgRoleLabel(role){return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':role==='SECONDO_SOCCORRITORE'?'Secondo soccorritore':'Soccorritore'}
 function emgRowsFor(rows,day,fascia){return rows.filter(row=>row.giorno===day&&row.fascia===fascia)}
 function emgSlotCovered(rows){return rows.some(row=>row.ruolo==='AUTISTA')&&rows.some(row=>row.ruolo==='SOCCORRITORE')}
 function emgDayTitle(day){return new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(day+'T12:00:00')).replace(/^./,c=>c.toUpperCase())}
@@ -3760,7 +3760,7 @@ function emgRenderDay(kind){
    '</div>').join(''),
   missing=['AUTISTA','SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)).map(emgRoleLabel),
   state=covered?'Coperto · autista e soccorritore presenti':'Da completare · mancano '+missing.join(' e ');
-  const eligible=['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].filter(role=>vfcalQualificationRows.some(q=>
+  const eligible=['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].filter(role=>vfcalQualificationRows.some(q=>
    q.codice_qualifica===role&&(!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
   const action=!admin&&day>=todayY&&!mine?
    (eligible.length?'<div class="actions" style="margin-top:8px"><select aria-label="Ruolo per il turno emergenza" data-emg-role="'+fascia+'" style="max-width:170px">'+
@@ -3783,7 +3783,7 @@ function emgRenderDay(kind){
 function emgAdminAssignControls(day,fascia,slot){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||day<todaySafe())return '';
  return '<div class="dim-admin-assign"><b>Aggiungi all’equipaggio</b>'+
-  ['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].map(role=>{
+  ['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].map(role=>{
    const candidates=emgAdminEligible.filter(p=>p.ruolo===role&&!slot.some(x=>x.badge_personale===p.badge));
    return '<div class="actions" style="margin-top:6px"><label class="muted" style="min-width:84px">'+emgRoleLabel(role)+'</label>'+
     '<select data-emg-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Volontario '+emgRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
@@ -3848,7 +3848,7 @@ async function loadEmergenzaAdmin(){
 async function emgJoin(day,fascia){
  if(emgVolBusy)return;
  const role=$('emgVolDay').querySelector('[data-emg-role="'+fascia+'"]')?.value;
- if(!role||!['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].includes(role))return;
+ if(!role||!['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].includes(role))return;
  if(!confirm('Confermi il turno DEFINITIVO emergenza del '+day+' · '+fascia+' come '+emgRoleLabel(role)+'? Non potrai annullarlo da solo.'))return;
  emgVolBusy=true;
  msg('emgVolMsg','Registrazione definitiva in corso...');
