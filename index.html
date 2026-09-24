@@ -122,6 +122,14 @@
 .as-month-event .dim-person{font-size:12px}
 @media(max-width:650px){.as-month-grid .as-month-date{min-height:65px}.as-month-grid .as-month-date .as-month-name{font-size:9px}}
 @media print{.as-month-panel{display:none!important}}
+
+.ordinary-month-grid .ord-date{min-height:74px}
+.ordinary-month-grid .ord-day-label{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
+.ord-card .ord-editor{margin-top:8px;max-width:420px}
+.ord-editor-inner{background:#f6f9fc;border:1px solid #d8e4ec;border-radius:9px;padding:10px}
+.ord-editor-inner .field{margin-bottom:8px}
+@media(max-width:650px){.ordinary-month-grid .ord-date{min-height:60px}.ordinary-month-grid .ord-day-label{font-size:9px}}
+@media print{.ordinary-calendar-panel{display:none!important}}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
@@ -441,7 +449,23 @@
 </section>
 
 
-<section id="services" class="surface hidden"><div class="hero"><h2>Servizi ordinari</h2></div><div class="pad">
+<section id="services" class="surface hidden"><div class="hero"><h2>Servizi ordinari</h2><p>Visita · Trasferimento · Trasporto semplice</p></div><div class="pad">
+<div class="section ordinary-calendar-panel">
+<h3>📅 Calendario SERVIZI ORDINARI</h3>
+<p class="muted">VISITA · TRASFERIMENTO · TRASPORTO SEMPLICE. Seleziona un giorno e un servizio specifico per consultare o completare il suo equipaggio.</p>
+<div class="actions" style="justify-content:space-between;align-items:center"><b id="ordTitle"></b><div class="actions">
+<button type="button" id="ordPrev" class="btn secondary">←</button>
+<button type="button" id="ordToday" class="btn yellow">Oggi</button>
+<button type="button" id="ordNext" class="btn secondary">→</button>
+<button type="button" id="ordRefresh" class="btn secondary">↻ Aggiorna</button>
+</div></div>
+<div class="field" style="max-width:320px;margin:8px 0"><label for="ordTypeFilter">Tipo servizio</label>
+<select id="ordTypeFilter"><option value="">Tutti i servizi ordinari</option><option value="VISITA">Visita</option>
+<option value="TRASFERIMENTO">Trasferimento</option><option value="TRASPORTO SEMPLICE">Trasporto semplice</option></select></div>
+<div id="ordMsg"></div><div class="dim-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
+<div id="ordGrid" class="dim-month-grid ordinary-month-grid"></div>
+<h3 id="ordDayTitle" style="margin-top:14px"></h3><div id="ordDayList"></div>
+</div>
 <div class="section"><h3>🔎 Ricerca nell’archivio servizi</h3><p class="muted">Cerca per nome, cognome, codice fiscale, manifestazione, luogo, destinazione, tipo, mezzo o numero Foglio Viaggio. Lascia vuote le date per cercare anche nello storico e nei servizi futuri.</p><div class="grid3"><div class="field"><label>Ricerca</label><input id="fq" placeholder="Cerca un servizio…" autocomplete="off"></div><div class="field"><label>Dal</label><input id="fd" type="date"></div><div class="field"><label>Al</label><input id="fdTo" type="date"></div><div class="field"><label>Stato</label><select id="fs"><option value="">Tutti</option><option>DA ASSEGNARE</option><option>CONFERMATO</option><option>IN CORSO</option><option>TERMINATO</option><option>DA CONTABILIZZARE</option><option>CHIUSO</option><option>ANNULLATO</option></select></div><div class="field"><label>Mezzo</label><select id="fm"><option value="">Tutti</option></select></div><div class="field"><label>&nbsp;</label><div class="actions"><button id="refresh" class="btn yellow" type="button">🔎 Cerca</button><button id="searchToday" class="btn secondary" type="button">Oggi</button><button id="clearServiceSearch" class="btn secondary" type="button">Cancella filtri</button></div></div></div></div><div class="toolbar"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button></div><div id="smsg"></div>
 <div class="table"><table><thead><tr><th>Data/Ora</th><th>Mezzo</th><th>Servizio</th><th>Paziente</th><th>Percorso</th><th>Equipaggio</th><th>Stato</th><th id="servicePayHead">Pagamento</th><th>Azioni</th></tr></thead><tbody id="tbody"></tbody></table></div></div></section>
 
@@ -1249,7 +1273,7 @@ async function view(v,options={}){
   if(options.patient)usePatientForService(options.patient);
  }
  selectView(v);
- const loader=({dash:dashboard,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,services:loadServices,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,tariffs:loadTariffsView,accounting:loadAccounting,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
+ const loader=({dash:dashboard,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,services:async()=>{await loadOrdinaryCalendar();await loadServices()},patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,tariffs:loadTariffsView,accounting:loadAccounting,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
  const result=await loader();
  selectView(v);
  return result;
@@ -4725,4 +4749,4 @@ if('serviceWorker' in navigator){
 applyVolunteerOnlyLogin();refreshPwaInstallUI();
 try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&$('vbadge')){$('vbadge').value=remembered;$('vremember').checked=true}}catch(_){}
 (async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
-</script></body></html>
+</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script></body></html>
