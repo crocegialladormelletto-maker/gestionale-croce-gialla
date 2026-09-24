@@ -92,7 +92,7 @@
 }
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.19</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.20</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -146,7 +146,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.19</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.20</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -169,7 +169,7 @@
 <section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button></div></div><div class="pad">
 <div class="stats"><div class="stat"><small>SERVIZI OGGI</small><b id="s1">0</b></div><div class="stat"><small>DA ASSEGNARE</small><b id="s2">0</b></div><div class="stat"><small>IN CORSO</small><b id="s3">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="s4">0</b></div></div>
 <div class="stats" style="margin-top:9px"><div class="stat"><small>PERSONALE ATTIVO</small><b id="s5">0</b></div><div class="stat"><small>TURNI PROSSIMI</small><b id="s6">0</b></div><div class="stat"><small>SCADENZE MEZZI</small><b id="s7">0</b></div><div class="stat"><small>DA INCASSARE</small><b id="s8">€ 0</b></div></div>
-<div class="grid2"><div class="section"><h3>Prossimi servizi</h3><div id="next"></div></div><div class="section"><h3>Scadenze mezzi</h3><div id="nextExp"></div></div></div>
+<div class="section"><h3>🔎 Cerca un servizio</h3><p class="muted">Trova servizi futuri o passati per paziente, manifestazione, destinazione, tipo servizio, mezzo o numero Foglio Viaggio.</p><div class="grid3"><div class="field"><label>Parola da cercare</label><input id="dashServiceSearch" placeholder="Es. Borgomanero, cognome, manifestazione…" autocomplete="off"></div><div class="field"><label>Data (facoltativa)</label><input id="dashServiceDate" type="date"></div><div class="field"><label>&nbsp;</label><div class="actions"><button id="dashServiceFind" class="btn yellow" type="button">🔎 Cerca servizi</button><button id="dashServiceAll" class="btn secondary" type="button">Tutti i servizi</button></div></div></div><div id="dashServiceMsg"></div></div><div class="grid2"><div class="section"><h3>Prossimi servizi</h3><div id="next"></div></div><div class="section"><h3>Scadenze mezzi</h3><div id="nextExp"></div></div></div>
 </div></section>
 
 <section id="accessi" class="surface hidden" data-admin-only="true">
@@ -353,8 +353,7 @@
 
 
 <section id="services" class="surface hidden"><div class="hero"><h2>Servizi ordinari</h2></div><div class="pad">
-<div class="grid4"><div class="field"><label>Data</label><input id="fd" type="date"></div><div class="field"><label>Stato</label><select id="fs"><option value="">Tutti</option><option>DA ASSEGNARE</option><option>CONFERMATO</option><option>IN CORSO</option><option>TERMINATO</option><option>DA CONTABILIZZARE</option><option>CHIUSO</option><option>ANNULLATO</option></select></div><div class="field"><label>Mezzo</label><select id="fm"><option value="">Tutti</option></select></div><div class="field"><label>Ricerca</label><input id="fq"></div></div>
-<div class="toolbar"><button id="refresh" class="btn secondary">Aggiorna</button><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button></div><div id="smsg"></div>
+<div class="section"><h3>🔎 Ricerca nell’archivio servizi</h3><p class="muted">Cerca per nome, cognome, codice fiscale, manifestazione, luogo, destinazione, tipo, mezzo o numero Foglio Viaggio. Lascia vuote le date per cercare anche nello storico e nei servizi futuri.</p><div class="grid3"><div class="field"><label>Ricerca</label><input id="fq" placeholder="Cerca un servizio…" autocomplete="off"></div><div class="field"><label>Dal</label><input id="fd" type="date"></div><div class="field"><label>Al</label><input id="fdTo" type="date"></div><div class="field"><label>Stato</label><select id="fs"><option value="">Tutti</option><option>DA ASSEGNARE</option><option>CONFERMATO</option><option>IN CORSO</option><option>TERMINATO</option><option>DA CONTABILIZZARE</option><option>CHIUSO</option><option>ANNULLATO</option></select></div><div class="field"><label>Mezzo</label><select id="fm"><option value="">Tutti</option></select></div><div class="field"><label>&nbsp;</label><div class="actions"><button id="refresh" class="btn yellow" type="button">🔎 Cerca</button><button id="searchToday" class="btn secondary" type="button">Oggi</button><button id="clearServiceSearch" class="btn secondary" type="button">Cancella filtri</button></div></div></div></div><div class="toolbar"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button></div><div id="smsg"></div>
 <div class="table"><table><thead><tr><th>Data/Ora</th><th>Mezzo</th><th>Servizio</th><th>Paziente</th><th>Percorso</th><th>Equipaggio</th><th>Stato</th><th id="servicePayHead">Pagamento</th><th>Azioni</th></tr></thead><tbody id="tbody"></tbody></table></div></div></section>
 
 
@@ -979,6 +978,7 @@ let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='m
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[];
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
+let servicesSearchSequence=0;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
 let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='';
 const $=x=>document.getElementById(x), today=()=>new Date().toISOString().slice(0,10);
@@ -1031,7 +1031,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.19';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.20';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -1057,12 +1057,12 @@ async function enter(){
  prof=r.data;$('login').classList.add('hidden');
  if(r.data.ruolo==='AMMINISTRATORE'){
   $('app').classList.remove('hidden');$('volApp').classList.add('hidden');$('monitorApp').classList.add('hidden');$('tabletApp').classList.add('hidden');$('who').textContent=(prof.nome||'Amministratore')+' · '+u.data.user.email;applyRoleUI();
-  $('d').value=today();$('fd').value=today();$('sd').value=today();$('exdate').value=today();
+  $('d').value=today();$('fd').value='';$('fdTo').value='';$('sd').value=today();$('exdate').value=today();
   await refreshMaster();view('dash');return;
  }
  if(r.data.ruolo==='CENTRALINO'){
   $('app').classList.remove('hidden');$('volApp').classList.add('hidden');$('monitorApp').classList.add('hidden');$('tabletApp').classList.add('hidden');$('who').textContent='Centralino Croce Gialla';applyRoleUI();
-  $('d').value=today();$('fd').value=today();$('sd').value=today();$('exdate').value=today();
+  $('d').value=today();$('fd').value='';$('fdTo').value='';$('sd').value=today();$('exdate').value=today();
   await refreshMaster();view('dash');return;
  }
  if(r.data.ruolo==='MONITOR_SEDE'){
@@ -1352,7 +1352,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.19</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.20</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1514,7 +1514,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.19'
+  versione_app:'V13.20'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -1795,21 +1795,48 @@ async function dashboard(){
  $('nextExp').innerHTML=exp.length?exp.map(x=>'<div class="box"><b>Mezzo '+esc(x.mezzo)+' · '+esc(x.tipo_scadenza)+'</b><br>'+esc(x.data_scadenza)+' · '+esc(x.descrizione||'')+' <span class="pill '+(x.stato_scadenza==='SCADUTA'?'r':'')+'">'+esc(x.stato_scadenza)+'</span></div>').join(''):'<div class="notice">Nessuna scadenza inserita.</div>';
 }
 async function loadServices(){
- msg('smsg','Caricamento...');
- let q=sb.from('v_servizi_gestionale').select('*').order('data_servizio',{ascending:false}).order('ora_partenza_prevista',{ascending:false});
- if($('fd').value)q=q.eq('data_servizio',$('fd').value);
- if($('fs').value)q=q.eq('stato_gestionale',$('fs').value);
- if($('fm').value)q=q.eq('mezzo',$('fm').value);
- const r=await q.limit(500);
- if(r.error)return msg('smsg',r.error.message,'err');
- let a=r.data||[];
- const z=$('fq').value.toLowerCase().trim();
- if(z)a=a.filter(x=>JSON.stringify(x).toLowerCase().includes(z));
- servicesCache=a;
- $('tbody').innerHTML=a.length?a.map(x=>'<tr><td><b>'+esc(x.data_servizio)+'</b><br>'+esc((x.ora_partenza_prevista||'').slice(0,5))+(x.ora_carico_paziente_prevista?'<br><span class="muted">Carico '+esc(x.ora_carico_paziente_prevista.slice(0,5))+'</span>':'')+(x.ora_arrivo_destinazione_prevista?'<br><span class="muted">Destinazione '+esc(x.ora_arrivo_destinazione_prevista.slice(0,5))+'</span>':'')+'</td><td>'+esc(x.mezzo)+'<br><span class="muted">'+esc(x.targa||'')+'</span></td><td>'+esc(x.tipo_servizio||'—')+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+esc(x.luogo_partenza||'—')+' → '+esc(x.destinazione||'—')+'</td><td>'+esc(x.componenti_equipaggio??0)+' componenti</td><td><span class="pill">'+esc(x.stato_gestionale)+'</span></td><td class="'+(prof?.ruolo==='CENTRALINO'?'hidden':'')+'"><span class="pill b">'+esc(x.stato_pagamento)+'</span></td><td><button class="btn secondary" data-open-service="'+esc(x.id)+'">Apri</button></td></tr>').join(''):'<tr><td colspan="9">Nessun servizio.</td></tr>';
- document.querySelectorAll('[data-open-service]').forEach(b=>b.onclick=()=>openService(b.dataset.openService));
- msg('smsg','');
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const seq=++servicesSearchSequence;
+ const from=$('fd').value,to=$('fdTo').value,search=$('fq').value.trim();
+ if(from&&to&&from>to)return msg('smsg','La data Dal non può essere successiva alla data Al.','warn');
+ msg('smsg','Ricerca servizi in corso...');
+ const r=await sb.rpc('cge_cerca_servizi',{p_search:search||null,p_dal:from||null,p_al:to||null,p_stato:$('fs').value||null,p_mezzo:$('fm').value||null});
+ if(seq!==servicesSearchSequence)return;
+ if(r.error)return msg('smsg','Errore ricerca servizi: '+r.error.message,'err');
+ const rows=r.data||[];
+ servicesCache=rows;
+ $('tbody').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(x.data_servizio)+'</b><br>'+esc((x.ora_partenza_prevista||'').slice(0,5))+(x.ora_carico_paziente_prevista?'<br><span class="muted">Carico '+esc(x.ora_carico_paziente_prevista.slice(0,5))+'</span>':'')+'</td><td>'+esc(x.mezzo)+'<br><span class="muted">'+esc(x.targa||'')+'</span></td><td>'+esc(x.tipo_servizio||'—')+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+esc(x.luogo_partenza||'—')+' → '+esc(x.destinazione||x.ospedale_destinazione||'—')+'</td><td>'+esc(x.componenti_equipaggio??0)+' componenti</td><td><span class="pill">'+esc(x.stato_gestionale)+'</span></td><td class="'+(prof?.ruolo==='CENTRALINO'?'hidden':'')+'"><span class="pill b">'+esc(x.stato_pagamento||'—')+'</span></td><td><button class="btn secondary" data-open-service="'+esc(x.id)+'">Apri</button></td></tr>').join(''):'<tr><td colspan="9">Nessun servizio trovato con questi filtri.</td></tr>';
+ $('tbody').querySelectorAll('[data-open-service]').forEach(button=>button.onclick=()=>openService(button.dataset.openService));
+ msg('smsg',rows.length+' '+(rows.length===1?'servizio trovato':'servizi trovati')+(rows.length===500?' · Mostrati i primi 500: restringi date o ricerca per risultati più precisi.':''),'ok');
 }
+$('refresh').onclick=loadServices;
+['fd','fdTo','fs','fm'].forEach(id=>$(id).onchange=loadServices);
+$('fq').oninput=()=>{clearTimeout(window.qq);window.qq=setTimeout(loadServices,350)};
+$('fq').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();clearTimeout(window.qq);loadServices()}};
+$('clearServiceSearch').onclick=()=>{
+ servicesSearchSequence++;
+ ['fd','fdTo','fs','fm','fq'].forEach(id=>{$(id).value=''});
+ loadServices();
+};
+$('searchToday').onclick=()=>{
+ servicesSearchSequence++;
+ $('fd').value=todaySafe();$('fdTo').value=todaySafe();
+ $('fs').value='';$('fm').value='';$('fq').value='';
+ loadServices();
+};
+async function dashFindService(all=false){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ $('fq').value=all?'':$('dashServiceSearch').value.trim();
+ $('fd').value=all?'':$('dashServiceDate').value;
+ $('fdTo').value=all?'':$('dashServiceDate').value;
+ $('fs').value='';$('fm').value='';
+ msg('dashServiceMsg','');
+ await view('services');
+}
+$('dashServiceFind').onclick=()=>dashFindService(false);
+$('dashServiceAll').onclick=()=>dashFindService(true);
+$('dashServiceSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();dashFindService(false)}};
+$('dashServiceDate').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();dashFindService(false)}};
 
 const t5=x=>(x||'').slice(0,5);
 function detailCrewCandidates(){
