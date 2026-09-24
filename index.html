@@ -3505,7 +3505,8 @@ async function protocolOpen(id){
 async function protocolSave(){
  if(protocolBusy)return;
  if(!$('protObject').value.trim())return msg('protFormMsg','Inserisci l’oggetto del documento.','warn');
- protocolBusy=true;$('protSave').disabled=true;msg('protFormMsg',currentProtocolId?'Aggiornamento protocollo...':'Protocollazione in corso...');
+ const wasEdit=!!currentProtocolId;
+ protocolBusy=true;$('protSave').disabled=true;msg('protFormMsg',wasEdit?'Aggiornamento protocollo...':'Protocollazione in corso...');
  const params={
   p_tipo:$('protType').value,p_data_documento:$('protDocDate').value||null,p_oggetto:$('protObject').value.trim(),
   p_mittente:$('protSender').value.trim()||null,p_destinatario:$('protRecipient').value.trim()||null,p_categoria:$('protCategory').value,
@@ -3522,7 +3523,7 @@ async function protocolSave(){
   const files=[...$('protFiles').files],fileErrors=await protocolUploadFiles(id,files);
   await loadProtocolView(id);
   if(fileErrors.length)msg('protFormMsg','Protocollo '+code+' salvato. Alcuni allegati non sono stati caricati: '+fileErrors.join(' | '),'warn');
-  else msg('protFormMsg',(currentProtocolId?'Protocollo aggiornato.':'Protocollo '+code+' creato.')+(files.length?' Allegati caricati.':''),'ok');
+  else msg('protFormMsg',(wasEdit?'Protocollo aggiornato.':'Protocollo '+code+' creato.')+(files.length?' Allegati caricati.':''),'ok');
  }catch(e){msg('protFormMsg',e.message||String(e),'err')}
  finally{protocolBusy=false;$('protSave').disabled=false}
 }
@@ -3540,7 +3541,7 @@ async function loadProtocolList(){
  protocolRows=r.data||[];$('protCount').textContent=String(protocolRows.length)+(protocolRows.length===500?' +':'');
  $('protBody').innerHTML=protocolRows.length?protocolRows.map(p=>{
   const tcls=p.tipo==='ENTRATA'?'b':p.tipo==='USCITA'?'g':'';
-  const parties=[p.mittente?'Da: '+p.mittente:'',p.destinatario?'A: '+p.destinatario:''].filter(Boolean).join('<br>');
+  const parties=[p.mittente?'Da: '+esc(p.mittente):'',p.destinatario?'A: '+esc(p.destinatario):''].filter(Boolean).join('<br>');
   return '<tr><td><b>'+esc(p.protocollo_codice)+'</b><br><span class="muted">'+esc(p.data_protocollo)+'</span>'+(p.riservato?'<br><span class="pill r">RISERVATO</span>':'')+'</td>'+
    '<td><span class="pill '+tcls+'">'+esc(p.tipo)+'</span></td><td><b>'+esc(p.oggetto)+'</b></td><td>'+parties+'</td><td>'+esc(protocolCategoryLabel(p.categoria))+'</td>'+
    '<td>'+protocolDueHtml(p.scadenza)+'</td><td>'+esc(p.allegati||0)+'</td><td>'+esc(p.stato)+'</td><td><button type="button" class="btn secondary" data-prot-open="'+esc(p.id)+'">Apri</button></td></tr>';
