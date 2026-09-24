@@ -91,6 +91,7 @@
  body.print-roster #emergency .pad,body.print-roster #assistance .pad{padding:0!important}
  body.print-roster #emergency .hero,body.print-roster #assistance .hero{padding:0 0 8px!important;border:0!important;background:#fff!important}
 }
+.as-candidate-target{outline:3px solid #deb721;outline-offset:2px;background:#fff7d6!important;scroll-margin-top:115px}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
@@ -172,7 +173,7 @@
 <section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button></div></div><div class="pad">
 <div class="stats"><div class="stat"><small>SERVIZI OGGI</small><b id="s1">0</b></div><div class="stat"><small>DA ASSEGNARE</small><b id="s2">0</b></div><div class="stat"><small>IN CORSO</small><b id="s3">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="s4">0</b></div></div>
 <div class="stats" style="margin-top:9px"><div class="stat"><small>PERSONALE ATTIVO</small><b id="s5">0</b></div><div class="stat"><small>TURNI PROSSIMI</small><b id="s6">0</b></div><div class="stat"><small>SCADENZE MEZZI</small><b id="s7">0</b></div><div class="stat"><small>DA INCASSARE</small><b id="s8">€ 0</b></div></div>
-<div class="section"><div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">🙋 Candidature assistenze da valutare</h3><div class="muted">Disponibilità inviate dai volontari che attendono una decisione.</div></div><div class="actions"><span id="dashPendingCandidates" class="pill b" style="font-size:16px">0</span><button id="dashOpenCandidates" type="button" class="btn yellow">Apri Assistenze</button></div></div><div id="dashCandidateMsg"></div></div>
+<div class="section"><div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">🙋 Candidature assistenze da valutare</h3><div class="muted">Disponibilità inviate dai volontari che attendono una decisione.</div></div><div class="actions"><span id="dashPendingCandidates" class="pill b" style="font-size:16px">0</span><button id="dashOpenCandidates" type="button" class="btn yellow">Apri Assistenze</button></div></div><div id="dashCandidateMsg"></div><div id="dashPendingCandidateList"></div></div>
 <div class="section">
  <div class="actions" style="justify-content:space-between;align-items:center">
   <div><h3 style="margin:0">🚨 Assistenze future da coprire</h3><div class="muted">Sono evidenziate automaticamente le assistenze senza equipaggio o con equipaggio incompleto.</div></div>
@@ -1943,6 +1944,36 @@ async function dashboard(){
  const d=isCentral?(k.data?.[0]||{}):(k.data||{}), n=sv.data||[], exp=ex.data||[];
  $('dashPendingCandidates').textContent=pc.error?'—':String(pc.data??0);
  msg('dashCandidateMsg',pc.error?'Impossibile aggiornare il numero delle candidature: '+pc.error.message:'',pc.error?'warn':'');
+ const list=$('dashPendingCandidateList');
+ list.innerHTML='';
+ if(!pc.error&&Number(pc.data||0)>0){
+  const pending=await sb.from('candidature_assistenze')
+   .select('id,servizio_id,badge_personale,ruolo,created_at')
+   .eq('stato','IN_ATTESA').order('created_at',{ascending:false}).limit(30);
+  if(pending.error){
+   msg('dashCandidateMsg','Impossibile caricare il dettaglio delle candidature: '+pending.error.message,'warn');
+  }else if(pending.data?.length){
+   const serviceIds=[...new Set(pending.data.map(x=>x.servizio_id).filter(Boolean))];
+   const services=await sb.from('servizi_giornalieri')
+    .select('id,data_servizio,ospedale_destinazione,tipo_servizio_altro,tipo_servizio,mezzo')
+    .in('id',serviceIds);
+   if(services.error){
+    msg('dashCandidateMsg','Impossibile caricare i servizi delle candidature: '+services.error.message,'warn');
+   }else{
+    const byId=new Map((services.data||[]).map(s=>[s.id,s]));
+    list.innerHTML=pending.data.map(candidate=>{
+     const s=byId.get(candidate.servizio_id);
+     const label=s?(s.ospedale_destinazione||s.tipo_servizio_altro||s.tipo_servizio||'Assistenza'):'Servizio non disponibile';
+     return '<div class="box" style="margin-top:7px"><div class="actions" style="justify-content:space-between">'+
+      '<div><b>'+esc(s?.data_servizio||'Data non disponibile')+' · '+esc(label)+'</b><br>'+
+      '<span class="muted">Volontario badge '+esc(candidate.badge_personale)+' · '+esc(candidate.ruolo||'Ruolo da verificare')+
+      (s?.mezzo?' · Mezzo '+esc(s.mezzo):'')+'</span></div>'+
+      '<button type="button" class="btn secondary" data-dash-pending-id="'+esc(candidate.id)+'">Apri questa assistenza</button></div></div>';
+    }).join('');
+    list.querySelectorAll('[data-dash-pending-id]').forEach(button=>button.onclick=()=>openPendingAssistance(button.dataset.dashPendingId));
+   }
+  }
+ }
  const critical=ca.data||[],criticalTotal=critical.length?Number(critical[0].totale_criticita||critical.length):0;
  $('dashCriticalAssistanceCount').textContent=ca.error?'—':String(criticalTotal);
  $('dashCriticalAssistanceCount').className='pill '+(criticalTotal?'r':'g');
@@ -1986,7 +2017,7 @@ async function dashboard(){
  $('next').innerHTML=n.length?n.map(x=>'<div class="box"><b>'+esc(x.data_servizio)+' · '+esc((x.ora_partenza_prevista||'').slice(0,5))+' · Mezzo '+esc(x.mezzo)+'</b><br>'+esc(x.tipo_servizio||'Servizio')+' · '+esc(x.destinazione||'')+' <span class="pill">'+esc(x.stato_gestionale)+'</span></div>').join(''):'<div class="notice">Nessun servizio programmato.</div>';
  $('nextExp').innerHTML=exp.length?exp.map(x=>'<div class="box"><b>Mezzo '+esc(x.mezzo)+' · '+esc(x.tipo_scadenza)+'</b><br>'+esc(x.data_scadenza)+' · '+esc(x.descrizione||'')+' <span class="pill '+(x.stato_scadenza==='SCADUTA'?'r':'')+'">'+esc(x.stato_scadenza)+'</span></div>').join(''):'<div class="notice">Nessuna scadenza inserita.</div>';
 }
-$('dashOpenCandidates').onclick=()=>view('assistance');
+$('dashOpenCandidates').onclick=()=>openPendingAssistance();
 $('dashCriticalAssistanceOpen').onclick=()=>view('assistance');
 
 async function loadServices(){
@@ -2663,6 +2694,49 @@ $('emRefresh').onclick=loadEmergencyRoster;
 $('emPrint').onclick=()=>{document.body.classList.remove('print-assistance');document.body.classList.add('print-roster','print-emergency');window.print()};
 $('emManage').onclick=()=>{view('shifts');$('stype').value='EMERGENZA';$('sd').value=calYmd(emCursor)};
 
+async function openPendingAssistance(candidateId=''){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ $('dashOpenCandidates').disabled=true;
+ msg('dashCandidateMsg','Apertura dell’assistenza scelta dal volontario...');
+ try{
+  let query=sb.from('candidature_assistenze').select('id,servizio_id,badge_personale,stato,created_at')
+   .eq('stato','IN_ATTESA').order('created_at',{ascending:false}).limit(1);
+  if(candidateId)query=sb.from('candidature_assistenze')
+   .select('id,servizio_id,badge_personale,stato,created_at').eq('id',candidateId).eq('stato','IN_ATTESA').limit(1);
+  const result=await query;
+  if(result.error)throw result.error;
+  const candidate=result.data?.[0];
+  if(!candidate){
+   msg('dashCandidateMsg','Nessuna candidatura ancora in attesa: aggiorna la Dashboard.','warn');
+   return;
+  }
+  const service=await sb.from('servizi_giornalieri').select('id,data_servizio,tipo_servizio')
+   .eq('id',candidate.servizio_id).maybeSingle();
+  if(service.error)throw service.error;
+  if(!service.data?.data_servizio)throw new Error('Il servizio collegato alla candidatura non è disponibile.');
+  const day=service.data.data_servizio;
+  asCursor=new Date(day+'T12:00:00');
+  asView='day';asVehicle='';$('asVehicle').value='';
+  await view('assistance');
+  const card=[...$('asCandidates').querySelectorAll('[data-as-service-id]')]
+   .find(el=>el.dataset.asServiceId===candidate.servizio_id);
+  const selected=card&&[...card.querySelectorAll('[data-as-candidate-id]')]
+   .find(el=>el.dataset.asCandidateId===candidate.id);
+  if(!card){
+   msg('asCandidateMsg','Assistenza del '+day+' non visibile nel calendario: verifica che il servizio sia ancora attivo.','warn');
+   $('asCandidateMsg').scrollIntoView({behavior:'smooth',block:'center'});
+   return;
+  }
+  const target=selected||card;
+  target.classList.add('as-candidate-target');
+  target.scrollIntoView({behavior:'smooth',block:'center'});
+  msg('asCandidateMsg','Assistenza selezionata: '+day+'. Verifica la disponibilità evidenziata.');
+ }catch(e){
+  msg('dashCandidateMsg','Impossibile aprire l’assistenza: '+(e.message||String(e)),'err');
+ }finally{
+  $('dashOpenCandidates').disabled=false;
+ }
+}
 function asPeriodRange(){
  const base=new Date(asCursor.getFullYear(),asCursor.getMonth(),asCursor.getDate());
  if(asView!=='week')return {start:base,end:base};
@@ -2763,11 +2837,11 @@ function renderAssistanceCandidates(){
  box.innerHTML=visible.length?visible.map(s=>{
   const crew=asServiceAssignments.filter(x=>x.servizio_id===s.id);
   const candidates=asCandidates.filter(x=>x.servizio_id===s.id).sort((a,b)=>(a.stato==='IN_ATTESA'?0:1)-(b.stato==='IN_ATTESA'?0:1));
-  return '<div class="box"><b>'+esc(s.data_servizio+' · '+asServiceName(s))+'</b> · Mezzo '+esc(s.mezzo||'—')+
+  return '<div class="box" data-as-service-id="'+esc(s.id)+'"><b>'+esc(s.data_servizio+' · '+asServiceName(s))+'</b> · Mezzo '+esc(s.mezzo||'—')+
    (candidates.length?candidates.map(c=>{
     const person=people.find(p=>p.badge===c.badge_personale),taken=crew.some(x=>x.badge_personale===c.badge_personale||x.ruolo===c.ruolo);
     const status=({IN_ATTESA:'In attesa',CONFERMATA:'Confermata',NON_CONFERMATA:'Non confermata',RITIRATA:'Ritirata'})[c.stato]||c.stato;
-    return '<div class="box"><b>'+esc(person?.nome_completo||c.badge_personale)+'</b> · '+esc(ASSISTANCE_APPLICATION_ROLES.find(x=>x[0]===c.ruolo)?.[1]||c.ruolo)+' <span class="pill">'+esc(status)+'</span>'+
+    return '<div class="box" data-as-candidate-id="'+esc(c.id)+'"><b>'+esc(person?.nome_completo||c.badge_personale)+'</b> · '+esc(ASSISTANCE_APPLICATION_ROLES.find(x=>x[0]===c.ruolo)?.[1]||c.ruolo)+' <span class="pill">'+esc(status)+'</span>'+
      (c.nota?'<br><span class="muted">'+esc(c.nota)+'</span>':'')+
      (c.stato==='IN_ATTESA'?'<div class="actions"><button type="button" class="btn yellow" data-cand-yes="'+esc(c.id)+'"'+(taken?' disabled':'')+'>Conferma e assegna</button><button type="button" class="btn secondary" data-cand-no="'+esc(c.id)+'">Non confermare</button></div>'+
      (taken?'<span class="muted">Volontario o ruolo già assegnato: controlla l’equipaggio.</span>':''):'')+'</div>';
