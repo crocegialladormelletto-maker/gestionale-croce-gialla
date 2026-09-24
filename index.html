@@ -979,70 +979,20 @@
  <div class="vol-layout">
   <aside class="vol-side" aria-label="Menu APP Volontari">
    <div class="vol-side-head"><b>👋 Area volontario</b><span>Scegli una sezione</span></div>
-   <button type="button" class="vol-nav active" data-vol-target="volHomeSection">⌂ Home</button>
-   <button type="button" class="vol-nav" data-vol-target="volAlertsSection">🔔 Avvisi</button>
-   <button type="button" class="vol-nav" data-vol-target="volCalendarSection">📅 Il mio calendario</button>
-   <button type="button" class="vol-nav" data-vol-target="volFutureSection">🚑 Servizi futuri</button>
-   <button type="button" class="vol-nav" data-vol-target="volDimSection">🚑 Turni dimissioni</button>
+      <button type="button" class="vol-nav active" data-vol-target="volDimSection">🚑 Turni dimissioni</button>
    <button type="button" class="vol-nav" data-vol-target="volShiftsSection">🕒 I miei turni</button>
    <button type="button" class="vol-nav" data-vol-target="volAvailabilitySection">✅ Disponibilità</button>
    <button type="button" class="vol-nav" data-vol-target="volServicesSection">🚐 I miei servizi</button>
    <button type="button" class="vol-nav" data-vol-target="volProfileSection">👤 Profilo</button>
    <button type="button" class="vol-nav" data-vol-target="volDocumentsSection">📁 Documenti</button>
+   <button type="button" class="vol-nav" data-vol-target="volHomeSection">⌂ Home</button>
+   <button type="button" class="vol-nav" data-vol-target="volAlertsSection">🔔 Avvisi</button>
+   <button type="button" class="vol-nav" data-vol-target="volCalendarSection">📅 Il mio calendario</button>
+   <button type="button" class="vol-nav" data-vol-target="volFutureSection">🚑 Servizi futuri</button>
   </aside>
 
   <main class="vol-main">
-   <section id="volHomeSection" class="surface vol-panel vol-panel-home">
-    <div class="hero"><h1>La mia attività</h1><p>La tua situazione operativa in un colpo d’occhio.</p><div class="actions"><button id="vrefresh" class="btn secondary">↻ Aggiorna</button></div></div>
-    <div class="pad">
-     <div id="volmsg"></div>
-     <div class="stats">
-      <div class="stat"><small>ORE MESE</small><b id="volHoursM">0</b><span class="muted" id="volHoursMMin"></span></div>
-      <div class="stat"><small>ORE TRIMESTRE</small><b id="volHoursT">0</b><span class="muted" id="volHoursTMin"></span></div>
-      <div class="stat"><small>TURNI PROSSIMI</small><b id="volTurnCount">0</b></div>
-      <div class="stat"><small>SERVIZI ASSEGNATI</small><b id="volServiceCount">0</b></div>
-     </div>
-     <div class="vol-quick-note"><span class="pill b">🔔 Controlla gli avvisi</span><span class="pill g">✅ Inserisci le disponibilità</span><span class="pill">🚑 Consulta i servizi futuri</span></div>
-    </div>
-   </section>
-
-   <section id="volAlertsSection" class="surface vol-panel vol-panel-alerts">
-    <div class="hero"><h2>🔔 Avvisi</h2><p>Conferme delle disponibilità e nuove assegnazioni ai servizi.</p></div>
-    <div class="pad">
-     <div class="actions" style="justify-content:space-between;align-items:center"><span id="volNotificationCount" class="pill b">0 nuovi</span><button id="volNotificationsReadAll" type="button" class="btn secondary">Segna tutti come letti</button></div>
-     <div id="volNotificationMsg"></div><div id="volNotifications"></div>
-    </div>
-   </section>
-
-   <section id="volCalendarSection" class="surface vol-panel vol-panel-calendar">
-    <div class="hero"><h2>📅 Il mio calendario</h2><p>Turni, servizi assegnati e disponibilità personali.</p></div>
-    <div class="pad">
-     <div class="actions" style="justify-content:space-between">
-      <strong id="vcalTitle" style="font-size:18px;color:var(--n)"></strong>
-      <div class="actions"><button id="vcalPrev" class="btn secondary">←</button><button id="vcalToday" class="btn yellow">Oggi</button><button id="vcalNext" class="btn secondary">→</button><button id="vcalMonth" class="btn yellow">Mensile</button><button id="vcalWeek" class="btn secondary">Settimanale</button></div>
-     </div>
-     <div class="cal-legend" style="margin:9px 0"><label class="check"><input id="vcalShowTurns" type="checkbox" checked> Turni</label><label class="check"><input id="vcalShowServices" type="checkbox" checked> Servizi</label><label class="check"><input id="vcalShowAvailability" type="checkbox" checked> Disponibilità</label></div>
-     <div id="vcalMsg"></div>
-     <div class="calendar-wrap"><div class="cal-weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div></div><div id="vcalGrid" class="cal-grid"></div></div>
-     <div style="margin-top:10px"><h3 id="vcalDayTitle">Dettaglio giorno</h3><div id="vcalDayDetails"></div></div>
-    </div>
-   </section>
-
-   <section id="volFutureSection" class="surface vol-panel vol-panel-future">
-    <div class="hero"><h2>🚑 Calendario servizi futuri</h2><p>Consulta i servizi programmati e proponi la tua disponibilità per le assistenze alle manifestazioni.</p></div>
-    <div class="pad">
-     <div class="actions" style="justify-content:space-between">
-      <strong id="vfcalTitle" style="font-size:18px;color:var(--n)"></strong>
-      <div class="actions"><button id="vfcalPrev" class="btn secondary" type="button">←</button><button id="vfcalToday" class="btn yellow" type="button">Oggi</button><button id="vfcalNext" class="btn secondary" type="button">→</button><button id="vfcalMonth" class="btn yellow" type="button">Mensile</button><button id="vfcalWeek" class="btn secondary" type="button">Settimanale</button><button id="vfcalRefresh" class="btn secondary" type="button">↻ Aggiorna</button></div>
-     </div>
-     <div class="muted" style="margin:8px 0">Per le sole assistenze alle manifestazioni puoi proporre la tua disponibilità. Non diventa un’assegnazione finché Centralino o Amministrazione non confermano. Gli altri servizi restano di sola consultazione; non sono visibili dati dei pazienti.</div>
-     <div id="vfcalMsg"></div>
-     <div class="calendar-wrap" style="margin-top:9px"><div class="cal-weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div></div><div id="vfcalGrid" class="cal-grid"></div></div>
-     <div style="margin-top:10px"><h3 id="vfcalDayTitle">Servizi del giorno</h3><div id="vfcalDayDetails"></div></div>
-    </div>
-   </section>
-
-   <section id="volDimSection" class="surface vol-panel vol-panel-dimissioni">
+<section id="volDimSection" class="surface vol-panel vol-panel-dimissioni">
     <div class="hero"><h2>🚑 Turni DIMISSIONI</h2><p>Iscriviti direttamente a un turno definitivo: scegli giorno, fascia e ruolo. Ogni turno richiede almeno un autista e un soccorritore.</p></div>
     <div class="pad">
      <div class="actions" style="justify-content:space-between"><b id="dimVolTitle"></b><div class="actions">
@@ -1055,12 +1005,12 @@
     </div>
    </section>
 
-   <section id="volShiftsSection" class="surface vol-panel vol-panel-shifts">
+<section id="volShiftsSection" class="surface vol-panel vol-panel-shifts">
     <div class="hero"><h2>🕒 I miei turni</h2><p>I turni assegnati sono definitivi. Per variazioni, contatta il Centralino.</p></div>
     <div class="pad"><div id="volShifts"></div></div>
    </section>
 
-   <section id="volAvailabilitySection" class="surface vol-panel vol-panel-availability">
+<section id="volAvailabilitySection" class="surface vol-panel vol-panel-availability">
     <div class="hero"><h2>✅ Le mie disponibilità</h2><p>Comunica quando sei disponibile, indisponibile o hai una preferenza.</p></div>
     <div class="pad">
      <div class="grid4"><div class="field"><label>Da</label><input id="volAvFrom" type="datetime-local"></div><div class="field"><label>A</label><input id="volAvTo" type="datetime-local"></div><div class="field"><label>Tipo</label><select id="volAvType"><option>DISPONIBILE</option><option>INDISPONIBILE</option><option>PREFERENZA</option></select></div><div class="field"><label>Note</label><input id="volAvNote"></div></div>
@@ -1068,12 +1018,12 @@
     </div>
    </section>
 
-   <section id="volServicesSection" class="surface vol-panel vol-panel-services">
+<section id="volServicesSection" class="surface vol-panel vol-panel-services">
     <div class="hero"><h2>🚐 I miei servizi assegnati</h2><p>Informazioni operative dei servizi ai quali sei stato assegnato.</p></div>
     <div class="pad"><div id="volServices"></div></div>
    </section>
 
-   <section id="volProfileSection" class="surface vol-panel vol-panel-profile">
+<section id="volProfileSection" class="surface vol-panel vol-panel-profile">
     <div class="hero"><h2>👤 Profilo e qualifiche</h2><p>I tuoi dati personali, qualifiche e gestione del PIN di accesso.</p></div>
     <div class="pad">
      <div class="grid2">
@@ -1092,13 +1042,63 @@
     </div>
    </section>
 
-   <section id="volDocumentsSection" class="surface vol-panel vol-panel-documents">
+<section id="volDocumentsSection" class="surface vol-panel vol-panel-documents">
     <div class="hero"><h2>📁 I miei documenti</h2><p>Archivio personale privato per documenti e attestati.</p></div>
     <div class="pad">
      <p class="muted">Formati ammessi: PDF, JPG, PNG e WEBP. Dimensione massima 10 MB.</p>
      <div class="grid4"><div class="field"><label>Tipo documento</label><select id="volDocCategory"><option value="CARTA_IDENTITA">Carta d'identità</option><option value="CODICE_FISCALE">Codice fiscale</option><option value="ATTESTATO">Attestato</option><option value="ALTRO">Altro documento</option></select></div><div class="field"><label>Titolo / descrizione</label><input id="volDocTitle" placeholder="Es. Allegato A, BLSD..."></div><div class="field"><label>Scadenza (facoltativa)</label><input id="volDocExpiry" type="date"></div><div class="field"><label>File</label><input id="volDocFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"></div></div>
      <div class="field" style="margin-top:8px"><label>Note</label><input id="volDocNote"></div>
      <div class="toolbar"><button id="volDocUpload" class="btn yellow">Carica documento</button></div><div id="volDocMsg"></div><div id="volDocuments"></div>
+    </div>
+   </section>
+
+<section id="volHomeSection" class="surface vol-panel vol-panel-home">
+    <div class="hero"><h1>La mia attività</h1><p>La tua situazione operativa in un colpo d’occhio.</p><div class="actions"><button id="vrefresh" class="btn secondary">↻ Aggiorna</button></div></div>
+    <div class="pad">
+     <div id="volmsg"></div>
+     <div class="stats">
+      <div class="stat"><small>ORE MESE</small><b id="volHoursM">0</b><span class="muted" id="volHoursMMin"></span></div>
+      <div class="stat"><small>ORE TRIMESTRE</small><b id="volHoursT">0</b><span class="muted" id="volHoursTMin"></span></div>
+      <div class="stat"><small>TURNI PROSSIMI</small><b id="volTurnCount">0</b></div>
+      <div class="stat"><small>SERVIZI ASSEGNATI</small><b id="volServiceCount">0</b></div>
+     </div>
+     <div class="vol-quick-note"><span class="pill b">🔔 Controlla gli avvisi</span><span class="pill g">✅ Inserisci le disponibilità</span><span class="pill">🚑 Consulta i servizi futuri</span></div>
+    </div>
+   </section>
+
+<section id="volAlertsSection" class="surface vol-panel vol-panel-alerts">
+    <div class="hero"><h2>🔔 Avvisi</h2><p>Conferme delle disponibilità e nuove assegnazioni ai servizi.</p></div>
+    <div class="pad">
+     <div class="actions" style="justify-content:space-between;align-items:center"><span id="volNotificationCount" class="pill b">0 nuovi</span><button id="volNotificationsReadAll" type="button" class="btn secondary">Segna tutti come letti</button></div>
+     <div id="volNotificationMsg"></div><div id="volNotifications"></div>
+    </div>
+   </section>
+
+<section id="volCalendarSection" class="surface vol-panel vol-panel-calendar">
+    <div class="hero"><h2>📅 Il mio calendario</h2><p>Turni, servizi assegnati e disponibilità personali.</p></div>
+    <div class="pad">
+     <div class="actions" style="justify-content:space-between">
+      <strong id="vcalTitle" style="font-size:18px;color:var(--n)"></strong>
+      <div class="actions"><button id="vcalPrev" class="btn secondary">←</button><button id="vcalToday" class="btn yellow">Oggi</button><button id="vcalNext" class="btn secondary">→</button><button id="vcalMonth" class="btn yellow">Mensile</button><button id="vcalWeek" class="btn secondary">Settimanale</button></div>
+     </div>
+     <div class="cal-legend" style="margin:9px 0"><label class="check"><input id="vcalShowTurns" type="checkbox" checked> Turni</label><label class="check"><input id="vcalShowServices" type="checkbox" checked> Servizi</label><label class="check"><input id="vcalShowAvailability" type="checkbox" checked> Disponibilità</label></div>
+     <div id="vcalMsg"></div>
+     <div class="calendar-wrap"><div class="cal-weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div></div><div id="vcalGrid" class="cal-grid"></div></div>
+     <div style="margin-top:10px"><h3 id="vcalDayTitle">Dettaglio giorno</h3><div id="vcalDayDetails"></div></div>
+    </div>
+   </section>
+
+<section id="volFutureSection" class="surface vol-panel vol-panel-future">
+    <div class="hero"><h2>🚑 Calendario servizi futuri</h2><p>Consulta i servizi programmati e proponi la tua disponibilità per le assistenze alle manifestazioni.</p></div>
+    <div class="pad">
+     <div class="actions" style="justify-content:space-between">
+      <strong id="vfcalTitle" style="font-size:18px;color:var(--n)"></strong>
+      <div class="actions"><button id="vfcalPrev" class="btn secondary" type="button">←</button><button id="vfcalToday" class="btn yellow" type="button">Oggi</button><button id="vfcalNext" class="btn secondary" type="button">→</button><button id="vfcalMonth" class="btn yellow" type="button">Mensile</button><button id="vfcalWeek" class="btn secondary" type="button">Settimanale</button><button id="vfcalRefresh" class="btn secondary" type="button">↻ Aggiorna</button></div>
+     </div>
+     <div class="muted" style="margin:8px 0">Per le sole assistenze alle manifestazioni puoi proporre la tua disponibilità. Non diventa un’assegnazione finché Centralino o Amministrazione non confermano. Gli altri servizi restano di sola consultazione; non sono visibili dati dei pazienti.</div>
+     <div id="vfcalMsg"></div>
+     <div class="calendar-wrap" style="margin-top:9px"><div class="cal-weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div></div><div id="vfcalGrid" class="cal-grid"></div></div>
+     <div style="margin-top:10px"><h3 id="vfcalDayTitle">Servizi del giorno</h3><div id="vfcalDayDetails"></div></div>
     </div>
    </section>
   </main>
