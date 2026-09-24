@@ -115,6 +115,13 @@
 @media print{.roster-crew-editor{display:none!important}.roster-crew-summary{break-inside:avoid}}
 .vol-panel-shifts#volRosterSection{border-top:5px solid #5c9bd5}
 .section .dim-dash-side{position:static;max-height:none;overflow:visible}
+
+.as-month-grid .as-month-date{min-height:76px}
+.as-month-grid .as-month-date .as-month-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
+.as-month-event .btn{margin-top:8px}
+.as-month-event .dim-person{font-size:12px}
+@media(max-width:650px){.as-month-grid .as-month-date{min-height:65px}.as-month-grid .as-month-date .as-month-name{font-size:9px}}
+@media print{.as-month-panel{display:none!important}}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
@@ -386,8 +393,25 @@
   </div>
  </div>
  <div class="pad">
- <div class="section"><h3>🎪 Equipaggi delle singole manifestazioni</h3><p class="muted">I volontari si iscrivono direttamente alla manifestazione scelta. Seleziona la data nel calendario qui sotto per vedere e completare l’equipaggio dell’evento.</p></div>
-  <div class="section em-toolbar">
+ <div class="section as-month-panel">
+  <h3 style="margin:0">🎪 Calendario manifestazioni programmate</h3>
+  <p class="muted">Seleziona il giorno e la manifestazione specifica per vedere e completare il suo equipaggio. Nessuna fascia generica.</p>
+  <div class="actions" style="justify-content:space-between;align-items:center">
+   <b id="asMonthTitle"></b>
+   <div class="actions">
+    <button id="asMonthPrev" class="btn secondary" type="button" aria-label="Mese precedente">←</button>
+    <button id="asMonthToday" class="btn yellow" type="button">Oggi</button>
+    <button id="asMonthNext" class="btn secondary" type="button" aria-label="Mese successivo">→</button>
+    <button id="asMonthRefresh" class="btn secondary" type="button">↻ Aggiorna</button>
+   </div>
+  </div>
+  <div id="asMonthMsg"></div>
+  <div class="dim-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
+  <div id="asMonthGrid" class="dim-month-grid as-month-grid"></div>
+  <h4 id="asMonthDayTitle" style="margin:12px 0 6px"></h4>
+  <div id="asMonthDay"></div>
+ </div>
+ <div class="section em-toolbar">
    <div class="actions" style="justify-content:space-between;align-items:end">
     <div class="actions">
      <button id="asPrev" type="button" class="btn secondary" aria-label="Periodo precedente">←</button>
@@ -1182,6 +1206,7 @@ let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMod
 let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalOccupiedRoles=[],vfcalQualificationRows=[],vfcalAppBusy=false;
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
+let asMonthCursor=new Date(),asMonthSelected=todaySafe(),asMonthServices=[],asMonthCrew=[],asMonthSeq=0;
 let dimVolCursor=new Date(),dimVolSelected=todaySafe(),dimVolRows=[],dimVolSeq=0,dimVolBusy=false;
 let volRosterCursor=new Date(),volRosterSelected=todaySafe(),volRosterEvents=[],volRosterOccupied=[],volRosterApplications=[],volRosterSeq=0,volRosterBusy=false;
 let dimAdminCursor=new Date(),dimAdminSelected=todaySafe(),dimAdminRows=[],dimAdminEligible=[],dimAdminSeq=0,dimAdminEligibleSeq=0,dimAdminBusy=false;
@@ -3460,6 +3485,117 @@ $('emgAdminNext').onclick=()=>emgMoveMonth('Admin',1);
 $('emgAdminToday').onclick=()=>emgMoveMonth('Admin',0);
 $('emgAdminRefresh').onclick=loadEmergenzaAdmin;
 
+
+function asMonthRender(){
+ const range=calVisibleRange(asMonthCursor,'month');
+ $('asMonthTitle').textContent=calMonthTitle(asMonthCursor);
+ let html='';
+ for(let i=0;i<range.cells;i++){
+  const date=new Date(range.start);date.setDate(range.start.getDate()+i);
+  const day=calYmd(date);
+  const events=asMonthServices.filter(s=>s.data_servizio===day&&(!asVehicle||s.mezzo===asVehicle))
+    .sort((a,b)=>String(a.ora_partenza_prevista||'99:99').localeCompare(String(b.ora_partenza_prevista||'99:99')));
+  html+='<button type="button" class="dim-date as-month-date '+
+   (date.getMonth()!==asMonthCursor.getMonth()?'dim-out ':'')+
+   (day===todaySafe()?'dim-today ':'')+(day===asMonthSelected?'dim-selected ':'')+
+   '" data-as-month-day="'+day+'"><b>'+date.getDate()+'</b>'+
+   (events.length?'<small>🎪 '+events.length+'</small>'+events.slice(0,2).map(s=>
+    '<small class="as-month-name">'+esc(asServiceName(s))+'</small>').join(''):'')+'</button>';
+ }
+ $('asMonthGrid').innerHTML=html;
+ $('asMonthGrid').querySelectorAll('[data-as-month-day]').forEach(button=>
+  button.onclick=()=>asMonthSelect(button.dataset.asMonthDay));
+ asMonthRenderSelected();
+}
+function asMonthRenderSelected(){
+ $('asMonthDayTitle').textContent='Manifestazioni · '+dimDayTitle(asMonthSelected);
+ const events=asMonthServices.filter(s=>s.data_servizio===asMonthSelected&&(!asVehicle||s.mezzo===asVehicle))
+  .sort((a,b)=>String(a.ora_partenza_prevista||'99:99').localeCompare(String(b.ora_partenza_prevista||'99:99')));
+ $('asMonthDay').innerHTML=events.length?events.map(s=>{
+  const crew=asMonthCrew.filter(row=>row.servizio_id===s.id);
+  const crewHtml=crew.length?crew.map(row=>{
+   const name=people.find(p=>p.badge===row.badge_personale)?.nome_completo||row.badge_personale;
+   return '<div class="dim-person">• '+esc(name)+' · <b>'+esc(EM_ROLES.find(x=>x[0]===row.ruolo)?.[1]||row.ruolo)+'</b></div>';
+  }).join(''):'<div class="muted">Nessun operatore ancora assegnato.</div>';
+  const times='Partenza '+(calTime(s.ora_partenza_prevista)||'—')+
+   ' · Inizio '+(calTime(s.ora_inizio_assistenza_prevista)||'—')+
+   ' · Fine '+(calTime(s.ora_fine_assistenza_prevista)||'—')+
+   ' · Rientro '+(calTime(s.ora_rientro_previsto)||'—');
+  return '<div class="dim-slot as-month-event"><b>🎪 '+esc(asServiceName(s))+'</b>'+
+   '<div class="muted">'+esc(s.destinazione||s.indirizzo_destinazione||'Luogo da indicare')+
+   ' · Mezzo '+esc(s.mezzo||'—')+'</div>'+
+   '<div class="muted">'+esc(times)+'</div>'+crewHtml+
+   '<button type="button" class="btn yellow" data-as-month-open="'+esc(s.id)+'">✚ Apri / completa equipaggio</button></div>';
+ }).join(''):'<div class="notice">Nessuna manifestazione programmata in questa data. Per inserirne una, utilizza «Nuovo servizio».</div>';
+ $('asMonthDay').querySelectorAll('[data-as-month-open]').forEach(button=>
+  button.onclick=()=>asMonthOpenService(button.dataset.asMonthOpen));
+}
+async function loadAssistanceMonth(){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const seq=++asMonthSeq,range=calVisibleRange(asMonthCursor,'month');
+ msg('asMonthMsg','Caricamento manifestazioni del mese...');
+ const result=await sb.from('servizi_giornalieri')
+  .select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,ora_partenza_prevista,ora_inizio_assistenza_prevista,ora_fine_assistenza_prevista,ora_rientro_previsto,destinazione,indirizzo_destinazione,ospedale_destinazione,stato,stato_gestionale')
+  .ilike('tipo_servizio','%assistenza%')
+  .gte('data_servizio',range.startYmd).lte('data_servizio',range.endYmd)
+  .neq('stato_gestionale','ANNULLATO')
+  .order('data_servizio').order('ora_partenza_prevista');
+ if(seq!==asMonthSeq)return;
+ if(result.error){
+  asMonthServices=[];asMonthCrew=[];asMonthRender();
+  return msg('asMonthMsg','Errore caricamento manifestazioni: '+result.error.message,'err');
+ }
+ const services=(result.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio)
+  &&String(s.stato||'').toUpperCase()!=='ANNULLATO');
+ const crew=services.length?
+  await sb.from('servizi_equipaggio').select('servizio_id,badge_personale,ruolo')
+   .in('servizio_id',services.map(s=>s.id)):
+  {data:[],error:null};
+ if(seq!==asMonthSeq)return;
+ if(crew.error){
+  asMonthServices=services;asMonthCrew=[];asMonthRender();
+  return msg('asMonthMsg','Errore lettura equipaggi: '+crew.error.message,'err');
+ }
+ asMonthServices=services;asMonthCrew=crew.data||[];
+ asMonthRender();msg('asMonthMsg','');
+}
+async function asMonthSelect(day){
+ asMonthSelected=day;asCursor=new Date(day+'T12:00:00');asView='day';
+ if(asMonthCursor.getMonth()!==asCursor.getMonth()||asMonthCursor.getFullYear()!==asCursor.getFullYear()){
+  asMonthCursor=new Date(asCursor.getFullYear(),asCursor.getMonth(),1);
+ }
+ asMonthRender();
+ await loadAssistanceRoster();
+}
+async function asMonthOpenService(id){
+ const service=asMonthServices.find(s=>s.id===id&&s.data_servizio===asMonthSelected);
+ if(!service)return msg('asMonthMsg','Manifestazione non trovata. Aggiorna il calendario.','warn');
+ asCursor=new Date(service.data_servizio+'T12:00:00');asView='day';asMonthSelected=service.data_servizio;
+ await loadAssistanceRoster();
+ const row=$('asDays').querySelector('[data-as-service-id="'+id+'"]');
+ if(!row)return msg('asMonthMsg','Servizio non visibile nel dettaglio. Verifica il filtro del mezzo.','warn');
+ row.classList.add('as-candidate-target');
+ row.scrollIntoView({behavior:'smooth',block:'center'});
+ const btn=row.querySelector('[data-roster-crew-open="SERVIZIO_ASSISTENZA"]');
+ if(btn&&btn.nextElementSibling?.innerHTML.trim()==='')btn.click();
+ msg('asMsg','Manifestazione selezionata: puoi completare l’equipaggio nella riga evidenziata.','ok');
+}
+function asMonthMove(delta){
+ if(delta===0){
+  asCursor=new Date();asMonthSelected=todaySafe();
+ }else{
+  asCursor=new Date(asMonthCursor.getFullYear(),asMonthCursor.getMonth()+delta,1);
+  asMonthSelected=calYmd(asCursor);
+ }
+ asMonthCursor=new Date(asCursor.getFullYear(),asCursor.getMonth(),1);
+ asView='day';
+ loadAssistanceRoster();
+}
+$('asMonthPrev').onclick=()=>asMonthMove(-1);
+$('asMonthNext').onclick=()=>asMonthMove(1);
+$('asMonthToday').onclick=()=>asMonthMove(0);
+$('asMonthRefresh').onclick=()=>loadAssistanceMonth();
+
 function asPeriodRange(){
  const base=new Date(asCursor.getFullYear(),asCursor.getMonth(),asCursor.getDate());
  if(asView!=='week')return {start:base,end:base};
@@ -3500,7 +3636,7 @@ function asServiceRow(s){
  '<span class="as-service-hours">Mezzo '+esc(s.mezzo||'—')+' · '+esc(times)+'</span>'+
  (crew.length?'':'<span class="pill r">Equipaggio da assegnare</span>')+
  '<button type="button" class="btn secondary as-open-service" data-as-open-service="'+esc(s.id)+'">Apri servizio / Equipaggio</button>'+rosterCrewMarkup('SERVIZIO_ASSISTENZA',s)+'</th>';
- return '<tr class="as-service-row">'+first+EM_ROLES.map(([role])=>{
+ return '<tr class="as-service-row" data-as-service-id="'+esc(s.id)+'">'+first+EM_ROLES.map(([role])=>{
   const entries=crew.filter(a=>a.ruolo===role).map(a=>asServiceCrewEntry(s,a));
   return '<td>'+(entries.join('')||'<div class="em-empty">—</div>')+'</td>';
  }).join('')+'</tr>';
@@ -3578,6 +3714,10 @@ async function decideAssistanceCandidate(id,yes){
 }
 async function loadAssistanceRoster(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ asMonthSelected=calYmd(asCursor);
+ if(asMonthCursor.getMonth()!==asCursor.getMonth()||asMonthCursor.getFullYear()!==asCursor.getFullYear())
+  asMonthCursor=new Date(asCursor.getFullYear(),asCursor.getMonth(),1);
+ void loadAssistanceMonth();
  const seq=++asLoadSequence;
  msg('asMsg','Caricamento turnario Assistenze...');
  msg('asCandidateMsg','');
@@ -3616,7 +3756,7 @@ $('asToday').onclick=()=>{asCursor=new Date();loadAssistanceRoster()};
 $('asDate').onchange=()=>{if($('asDate').value){asCursor=new Date($('asDate').value+'T12:00:00');loadAssistanceRoster()}};
 $('asDayMode').onclick=()=>{asView='day';loadAssistanceRoster()};
 $('asWeekMode').onclick=()=>{asView='week';loadAssistanceRoster()};
-$('asVehicle').onchange=()=>{asVehicle=$('asVehicle').value;asRender()};
+$('asVehicle').onchange=()=>{asVehicle=$('asVehicle').value;asMonthRender();asRender()};
 $('asRefresh').onclick=loadAssistanceRoster;
 $('asPrint').onclick=()=>{document.body.classList.remove('print-emergency');document.body.classList.add('print-roster','print-assistance');window.print()};
 window.addEventListener('afterprint',()=>document.body.classList.remove('print-roster','print-assistance','print-emergency'));
