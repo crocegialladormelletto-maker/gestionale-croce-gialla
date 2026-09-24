@@ -93,7 +93,7 @@
 }
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.28</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.29</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -147,7 +147,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.28</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.29</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -640,6 +640,11 @@
     <button id="patientAdminNew" class="btn yellow" type="button">✚ Nuova scheda</button></div>
    <div id="patientAdminMsg"></div><div id="patientAdminResults"></div>
   </div>
+  <div class="section">
+   <div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">📋 Elenco pazienti</h3><div class="muted">Elenco alfabetico delle anagrafiche memorizzate.</div></div><div class="actions"><span id="patientDirectoryCount" class="pill b">0</span><button id="patientDirectoryRefresh" class="btn secondary" type="button">↻ Aggiorna</button></div></div>
+   <div id="patientDirectoryMsg"></div>
+   <div id="patientDirectoryList" style="margin-top:8px"></div>
+  </div>
   <div class="section"><h3 id="patientAdminTitle">Nuovo paziente</h3>
    <div class="grid3">
     <div class="field"><label>Nome *</label><input id="paName" maxlength="120"></div>
@@ -1067,7 +1072,7 @@ const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoR
 const LOGO_URL="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70";
 document.querySelectorAll('.js-logo').forEach(img=>{img.src=LOGO_URL});
 let tariffViewCode='DEA_BORGOMANERO',tariffManagementRows=[];
-let patientSearchRows=[],servicePatientId=null,adminPatientId=null,adminPatientRecord=null,patientLookupRows=[];
+let patientSearchRows=[],patientDirectoryRows=[],servicePatientId=null,adminPatientId=null,adminPatientRecord=null,patientLookupRows=[];
 let prof=null,people=[],qualifications=[],pq=[],vehicles=[],tariffs=[],tariffDestinations=[],servicesCache=[],currentServiceId=null,currentService=null,currentFoglioId=null,currentFoglio=null,volunteerBadge=null;
 let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsRequest=0;
 let volNotifications=[];
@@ -1144,7 +1149,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.28';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.29';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -1465,7 +1470,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.28</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.29</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1627,7 +1632,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.28'
+  versione_app:'V13.29'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -2348,8 +2353,14 @@ $('patientClearButton').onclick=()=>{
  $('patientRemember').checked=false;$('patientLookupResults').innerHTML='';
  msg('patientLookupMsg','Nuovo paziente: compila i dati e scegli se memorizzarli.');
 };
-function patientAdminOpen(p){
+function patientAdminOpen(p,clearSearch=true){
  adminPatientId=p?.id||null;adminPatientRecord=p||null;
+ if(clearSearch){
+  $('patientAdminSearch').value='';
+  patientSearchRows=[];
+  $('patientAdminResults').innerHTML='';
+  msg('patientAdminMsg','');
+ }
  $('patientAdminTitle').textContent=p?'Modifica anagrafica':'Nuovo paziente';
  $('paName').value=p?.nome||'';$('paSurname').value=p?.cognome||'';
  $('paCf').value=p?.codice_fiscale||'';$('paDob').value=p?.data_nascita||'';
@@ -2357,21 +2368,55 @@ function patientAdminOpen(p){
  $('paAddress').value=p?.indirizzo||'';$('paEmail').value=p?.email||'';
  msg('paMsg','');
 }
+function bindPatientDirectoryButtons(){
+ $('patientDirectoryList').querySelectorAll('[data-patient-directory-open]').forEach(b=>b.onclick=()=>{
+  const p=patientDirectoryRows.find(x=>x.id===b.dataset.patientDirectoryOpen);
+  if(p)patientAdminOpen(p,true);
+ });
+}
+function renderPatientDirectory(total=null){
+ const count=total===null?patientDirectoryRows.length:Number(total||0);
+ $('patientDirectoryCount').textContent=count.toLocaleString('it-IT')+(count>patientDirectoryRows.length?' totali':'');
+ $('patientDirectoryList').innerHTML=patientDirectoryRows.length?
+  patientDirectoryRows.map(p=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>'+esc([p.cognome,p.nome].filter(Boolean).join(' · '))+'</b>'+
+   '<br><span class="muted">'+esc([p.data_nascita||'',p.codice_fiscale||'',p.telefono||''].filter(Boolean).join(' · '))+'</span></div>'+
+   '<button type="button" class="btn secondary" data-patient-directory-open="'+esc(p.id)+'">Apri scheda</button></div></div>').join(''):
+  '<div class="notice">Nessun paziente presente in anagrafica.</div>';
+ bindPatientDirectoryButtons();
+}
+async function loadPatientDirectory(){
+ if(!['CENTRALINO','AMMINISTRATORE'].includes(prof?.ruolo))return;
+ msg('patientDirectoryMsg','Caricamento elenco pazienti...');
+ const r=await sb.from('anagrafica_pazienti').select(PATIENT_FIELDS,{count:'exact'}).order('cognome').order('nome').range(0,499);
+ if(r.error){patientDirectoryRows=[];$('patientDirectoryList').innerHTML='';$('patientDirectoryCount').textContent='—';return msg('patientDirectoryMsg',r.error.message,'err')}
+ patientDirectoryRows=r.data||[];
+ renderPatientDirectory(r.count);
+ msg('patientDirectoryMsg',r.count>500?'Mostrati i primi 500 pazienti in ordine alfabetico. Usa la ricerca per trovare gli altri.':'');
+}
 async function patientAdminFind(){
  const r=await patientFind($('patientAdminSearch').value);
  if(r.error)return msg('patientAdminMsg',r.error.message,'warn');
  patientSearchRows=r.data||[];
  $('patientAdminResults').innerHTML=patientListHtml(patientSearchRows,'data-patient-open');
- $('patientAdminResults').querySelectorAll('[data-patient-open]').forEach(b=>b.onclick=()=>patientAdminOpen(patientSearchRows.find(x=>x.id===b.dataset.patientOpen)));
+ $('patientAdminResults').querySelectorAll('[data-patient-open]').forEach(b=>b.onclick=()=>{
+  const p=patientSearchRows.find(x=>x.id===b.dataset.patientOpen);
+  if(p)patientAdminOpen(p,true);
+ });
  msg('patientAdminMsg','');
 }
 async function loadPatientsView(){
  if(!['CENTRALINO','AMMINISTRATORE'].includes(prof?.ruolo))return;
- if(!$('paName').value&&!$('paSurname').value)patientAdminOpen(null);
+ $('patientAdminSearch').value='';
+ patientSearchRows=[];
+ $('patientAdminResults').innerHTML='';
+ msg('patientAdminMsg','');
+ if(!$('paName').value&&!$('paSurname').value)patientAdminOpen(null,false);
+ await loadPatientDirectory();
 }
 $('patientAdminFind').onclick=patientAdminFind;
 $('patientAdminSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();patientAdminFind()}};
-$('patientAdminNew').onclick=()=>patientAdminOpen(null);
+$('patientAdminNew').onclick=()=>patientAdminOpen(null,true);
+$('patientDirectoryRefresh').onclick=loadPatientDirectory;
 $('paSave').onclick=async()=>{
  if(!['CENTRALINO','AMMINISTRATORE'].includes(prof?.ruolo))return;
  const row=patientFormRow();
@@ -2383,8 +2428,9 @@ $('paSave').onclick=async()=>{
  sb.from('anagrafica_pazienti').insert(row);
  const r=await query.select(PATIENT_FIELDS).single();
  if(r.error)return msg('paMsg','Salvataggio non riuscito: '+r.error.message,'err');
- patientAdminOpen(r.data);
+ patientAdminOpen(r.data,true);
  msg('paMsg','Anagrafica salvata.','ok');
+ await loadPatientDirectory();
 };
 $('paUse').onclick=()=>{
  const row=adminPatientRecord||{id:adminPatientId,...patientFormRow()};
@@ -3467,7 +3513,7 @@ async function downloadSingleBackupDataset(){
   const {rows}=await backupFetchDataset(code);
   const base='CGE_'+backupSafeName(code)+'_'+backupTimestamp();
   if(format==='CSV')backupDownloadFile(base+'.csv',backupRowsToCsv(rows),'text/csv;charset=utf-8');
-  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.28',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
+  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.29',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
   await backupLogExport(format,code,rows.length);
   msg('backupDatasetMsg','Esportazione completata: '+rows.length+' record.','ok');
   await loadBackupExport();
@@ -3493,7 +3539,7 @@ async function downloadFullBackup(){
   const backup={
    formato:'CGE_BACKUP_V1',
    associazione:'Croce Gialla Emergenza ODV',
-   versione_app:'V13.28',
+   versione_app:'V13.29',
    generato_il:new Date().toISOString(),
    contiene_credenziali_accesso:false,
    documenti_binari_inclusi:false,
