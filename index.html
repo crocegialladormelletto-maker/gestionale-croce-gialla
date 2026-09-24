@@ -92,6 +92,7 @@
  body.print-roster #emergency .hero,body.print-roster #assistance .hero{padding:0 0 8px!important;border:0!important;background:#fff!important}
 }
 .as-candidate-target{outline:3px solid #deb721;outline-offset:2px;background:#fff7d6!important;scroll-margin-top:115px}
+.dim-dash-layout.dim-central{grid-template-columns:minmax(0,1fr)}
 .dim-dash-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,360px);gap:14px;align-items:start}
 .dim-dash-main{min-width:0}.dim-dash-side{margin:11px 0;min-width:0;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
 .dim-weekdays,.dim-month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
@@ -1201,6 +1202,7 @@ function centralinoLoginEmail(){return 'centralino@access.crocegiallaemergenza.i
 function monitorLoginEmail(){return 'monitor@access.crocegiallaemergenza.it'}
 function applyRoleUI(){
  const isCentral=prof?.ruolo==='CENTRALINO';
+ $('dash').querySelector('.dim-dash-layout')?.classList.toggle('dim-central',isCentral);
  document.querySelectorAll('[data-admin-only="true"]').forEach(x=>{
   if(isCentral)x.classList.add('hidden');
   else if(x.tagName!=='SECTION')x.classList.remove('hidden');
