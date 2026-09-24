@@ -92,6 +92,20 @@
  body.print-roster #emergency .hero,body.print-roster #assistance .hero{padding:0 0 8px!important;border:0!important;background:#fff!important}
 }
 .as-candidate-target{outline:3px solid #deb721;outline-offset:2px;background:#fff7d6!important;scroll-margin-top:115px}
+.dim-dash-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,360px);gap:14px;align-items:start}
+.dim-dash-main{min-width:0}.dim-dash-side{margin:11px 0;min-width:0;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.dim-weekdays,.dim-month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.dim-weekdays span{text-align:center;color:var(--n);font-size:11px;font-weight:850;padding:7px 2px}
+.dim-date{border:1px solid #d9e4eb;border-radius:8px;background:#fff;min-height:68px;padding:5px 3px;text-align:left;cursor:pointer;color:var(--n);font:inherit;min-width:0}
+.dim-date.dim-out{background:#f5f7f9;color:#8b9ba9}.dim-date.dim-today{border-color:#d8af00;border-width:2px}.dim-date.dim-selected{background:#fff6c9;border-color:#cda617}
+.dim-date b{display:block;font-size:12px}.dim-date small{display:block;font-size:10px;color:#5b6e7c;line-height:1.4}
+.dim-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:2px;background:#d6e0e9}
+.dim-dot.ok{background:#179b62}.dim-dot.partial{background:#d99b13}
+.dim-month-small .dim-date{min-height:52px;padding:4px 2px}.dim-month-small .dim-date small{font-size:9px}
+.dim-slot{margin:8px 0;padding:10px;border:1px solid #dbe3ea;border-radius:10px;background:#fff}
+.dim-slot.dim-complete{border-left:5px solid #19985a}.dim-slot.dim-incomplete{border-left:5px solid #dba51c}
+.dim-slot .dim-person{font-size:12px;margin:3px 0;overflow-wrap:anywhere}
+@media(max-width:1120px){.dim-dash-layout{display:block}.dim-dash-side{position:static;max-height:none}}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
@@ -173,7 +187,7 @@
 <section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button></div></div><div class="pad">
 <div class="stats"><div class="stat"><small>SERVIZI OGGI</small><b id="s1">0</b></div><div class="stat"><small>DA ASSEGNARE</small><b id="s2">0</b></div><div class="stat"><small>IN CORSO</small><b id="s3">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="s4">0</b></div></div>
 <div class="stats" style="margin-top:9px"><div class="stat"><small>PERSONALE ATTIVO</small><b id="s5">0</b></div><div class="stat"><small>TURNI PROSSIMI</small><b id="s6">0</b></div><div class="stat"><small>SCADENZE MEZZI</small><b id="s7">0</b></div><div class="stat"><small>DA INCASSARE</small><b id="s8">€ 0</b></div></div>
-<div class="section"><div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">🙋 Candidature assistenze da valutare</h3><div class="muted">Disponibilità inviate dai volontari che attendono una decisione.</div></div><div class="actions"><span id="dashPendingCandidates" class="pill b" style="font-size:16px">0</span><button id="dashOpenCandidates" type="button" class="btn yellow">Apri Assistenze</button></div></div><div id="dashCandidateMsg"></div><div id="dashPendingCandidateList"></div></div>
+<div class="dim-dash-layout"><div class="dim-dash-main"><div class="section"><div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">🙋 Candidature assistenze da valutare</h3><div class="muted">Disponibilità inviate dai volontari che attendono una decisione.</div></div><div class="actions"><span id="dashPendingCandidates" class="pill b" style="font-size:16px">0</span><button id="dashOpenCandidates" type="button" class="btn yellow">Apri Assistenze</button></div></div><div id="dashCandidateMsg"></div><div id="dashPendingCandidateList"></div></div>
 <div class="section">
  <div class="actions" style="justify-content:space-between;align-items:center">
   <div><h3 style="margin:0">🚨 Assistenze future da coprire</h3><div class="muted">Sono evidenziate automaticamente le assistenze senza equipaggio o con equipaggio incompleto.</div></div>
@@ -183,7 +197,18 @@
  <div id="dashCriticalAssistanceList" style="margin-top:8px"></div>
 </div>
 <div class="section"><h3>🔎 Cerca un servizio</h3><p class="muted">Trova servizi futuri o passati per paziente, manifestazione, destinazione, tipo servizio, mezzo o numero Foglio Viaggio.</p><div class="grid3"><div class="field"><label>Parola da cercare</label><input id="dashServiceSearch" placeholder="Es. Borgomanero, cognome, manifestazione…" autocomplete="off"></div><div class="field"><label>Data (facoltativa)</label><input id="dashServiceDate" type="date"></div><div class="field"><label>&nbsp;</label><div class="actions"><button id="dashServiceFind" class="btn yellow" type="button">🔎 Cerca servizi</button><button id="dashServiceAll" class="btn secondary" type="button">Tutti i servizi</button></div></div></div><div id="dashServiceMsg"></div></div><div class="grid2"><div class="section"><h3>Prossimi servizi</h3><div id="next"></div></div><div class="section"><h3>Scadenze mezzi</h3><div id="nextExp"></div></div></div>
-</div></section>
+</div><aside class="dim-dash-side section" data-admin-only="true">
+ <h3>🚑 Turni DIMISSIONI</h3><div class="muted">Iscrizioni definitive dei volontari: per ogni fascia servono un autista e un soccorritore.</div>
+ <div class="actions" style="justify-content:space-between;margin-top:10px"><b id="dimAdminTitle"></b><div class="actions">
+ <button id="dimAdminPrev" class="btn secondary" type="button">←</button>
+ <button id="dimAdminToday" class="btn yellow" type="button">Oggi</button>
+ <button id="dimAdminNext" class="btn secondary" type="button">→</button>
+ <button id="dimAdminRefresh" class="btn secondary" type="button">↻</button></div></div>
+ <div id="dimAdminMsg"></div>
+ <div class="dim-weekdays"><span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span></div>
+ <div id="dimAdminGrid" class="dim-month-grid dim-month-small"></div>
+ <h4 id="dimAdminDayTitle" style="margin:12px 0 5px"></h4><div id="dimAdminDay"></div>
+ </aside></div></div></section>
 
 <section id="accessi" class="surface hidden" data-admin-only="true">
  <div class="hero"><h2>🔐 Accessi</h2><p>Gestisci credenziali e attivazione di Centralino, Tablet mezzi e Monitor sede in un'unica pagina.</p></div>
@@ -958,6 +983,7 @@
    <button type="button" class="vol-nav" data-vol-target="volAlertsSection">🔔 Avvisi</button>
    <button type="button" class="vol-nav" data-vol-target="volCalendarSection">📅 Il mio calendario</button>
    <button type="button" class="vol-nav" data-vol-target="volFutureSection">🚑 Servizi futuri</button>
+   <button type="button" class="vol-nav" data-vol-target="volDimSection">🚑 Turni dimissioni</button>
    <button type="button" class="vol-nav" data-vol-target="volShiftsSection">🕒 I miei turni</button>
    <button type="button" class="vol-nav" data-vol-target="volAvailabilitySection">✅ Disponibilità</button>
    <button type="button" class="vol-nav" data-vol-target="volServicesSection">🚐 I miei servizi</button>
@@ -1013,6 +1039,19 @@
      <div id="vfcalMsg"></div>
      <div class="calendar-wrap" style="margin-top:9px"><div class="cal-weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div></div><div id="vfcalGrid" class="cal-grid"></div></div>
      <div style="margin-top:10px"><h3 id="vfcalDayTitle">Servizi del giorno</h3><div id="vfcalDayDetails"></div></div>
+    </div>
+   </section>
+
+   <section id="volDimSection" class="surface vol-panel vol-panel-dimissioni">
+    <div class="hero"><h2>🚑 Turni DIMISSIONI</h2><p>Iscriviti direttamente a un turno definitivo: scegli giorno, fascia e ruolo. Ogni turno richiede almeno un autista e un soccorritore.</p></div>
+    <div class="pad">
+     <div class="actions" style="justify-content:space-between"><b id="dimVolTitle"></b><div class="actions">
+      <button id="dimVolPrev" class="btn secondary" type="button">←</button><button id="dimVolToday" class="btn yellow" type="button">Oggi</button>
+      <button id="dimVolNext" class="btn secondary" type="button">→</button><button id="dimVolRefresh" class="btn secondary" type="button">↻ Aggiorna</button>
+     </div></div>
+     <p class="muted">Verde: autista e soccorritore presenti. Giallo: turno da completare. L'iscrizione è definitiva e non si può cancellare autonomamente.</p>
+     <div id="dimVolMsg"></div><div class="dim-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
+     <div id="dimVolGrid" class="dim-month-grid"></div><h3 id="dimVolDayTitle" style="margin-top:15px"></h3><div id="dimVolDay"></div>
     </div>
    </section>
 
@@ -1083,6 +1122,8 @@ let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMod
 let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalQualificationRows=[],vfcalAppBusy=false;
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
+let dimVolCursor=new Date(),dimVolSelected=todaySafe(),dimVolRows=[],dimVolSeq=0,dimVolBusy=false;
+let dimAdminCursor=new Date(),dimAdminSelected=todaySafe(),dimAdminRows=[],dimAdminSeq=0,dimAdminBusy=false;
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupAutomaticRows=[],backupBusy=false;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
@@ -2014,6 +2055,7 @@ async function dashboard(){
  }else{
   $('s4').textContent=d.servizi_da_contabilizzare||0;$('s5').textContent=d.personale_attivo||0;$('s6').textContent=d.turni_prossimi||0;$('s7').textContent=d.scadenze_mezzi_urgenti||0;$('s8').textContent=euro(d.totale_da_incassare||0);
  }
+ await loadDimissioniAdmin();
  $('next').innerHTML=n.length?n.map(x=>'<div class="box"><b>'+esc(x.data_servizio)+' · '+esc((x.ora_partenza_prevista||'').slice(0,5))+' · Mezzo '+esc(x.mezzo)+'</b><br>'+esc(x.tipo_servizio||'Servizio')+' · '+esc(x.destinazione||'')+' <span class="pill">'+esc(x.stato_gestionale)+'</span></div>').join(''):'<div class="notice">Nessun servizio programmato.</div>';
  $('nextExp').innerHTML=exp.length?exp.map(x=>'<div class="box"><b>Mezzo '+esc(x.mezzo)+' · '+esc(x.tipo_scadenza)+'</b><br>'+esc(x.data_scadenza)+' · '+esc(x.descrizione||'')+' <span class="pill '+(x.stato_scadenza==='SCADUTA'?'r':'')+'">'+esc(x.stato_scadenza)+'</span></div>').join(''):'<div class="notice">Nessuna scadenza inserita.</div>';
 }
@@ -2737,6 +2779,129 @@ async function openPendingAssistance(candidateId=''){
   $('dashOpenCandidates').disabled=false;
  }
 }
+
+const DIM_FASCE=[['MATTINO','Mattino'],['POMERIGGIO','Pomeriggio'],['NOTTE','Notte']];
+function dimRoleLabel(role){return role==='AUTISTA'?'Autista':'Soccorritore'}
+function dimRowsFor(rows,day,fascia){return rows.filter(row=>row.giorno===day&&row.fascia===fascia)}
+function dimSlotCovered(rows){return rows.some(row=>row.ruolo==='AUTISTA')&&rows.some(row=>row.ruolo==='SOCCORRITORE')}
+function dimDayTitle(day){return new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(day+'T12:00:00')).replace(/^./,c=>c.toUpperCase())}
+function dimRenderMonth(kind){
+ const admin=kind==='Admin',cursor=admin?dimAdminCursor:dimVolCursor,
+ selected=admin?dimAdminSelected:dimVolSelected,rows=admin?dimAdminRows:dimVolRows,
+ prefix=admin?'dimAdmin':'dimVol',range=calVisibleRange(cursor,'month');
+ $(prefix+'Title').textContent=calMonthTitle(cursor);
+ let output='';
+ for(let i=0;i<range.cells;i++){
+  const date=new Date(range.start);date.setDate(range.start.getDate()+i);
+  const day=calYmd(date),out=date.getMonth()!==cursor.getMonth(),counts=DIM_FASCE.map(([fascia])=>{
+   const slot=dimRowsFor(rows,day,fascia);
+   return '<span class="dim-dot '+(dimSlotCovered(slot)?'ok':slot.length?'partial':'')+'"></span>';
+  }).join('');
+  output+='<button type="button" class="dim-date '+(out?'dim-out ':'')+(day===todaySafe()?'dim-today ':'')+
+   (day===selected?'dim-selected':'')+'" data-dim-date="'+day+'"><b>'+date.getDate()+'</b><small>'+counts+'</small></button>';
+ }
+ $(prefix+'Grid').innerHTML=output;
+ $(prefix+'Grid').querySelectorAll('[data-dim-date]').forEach(button=>button.onclick=()=>{
+  if(admin)dimAdminSelected=button.dataset.dimDate;else dimVolSelected=button.dataset.dimDate;
+  dimRenderMonth(kind);dimRenderDay(kind);
+ });
+ dimRenderDay(kind);
+}
+function dimRenderDay(kind){
+ const admin=kind==='Admin',day=admin?dimAdminSelected:dimVolSelected,
+ rows=admin?dimAdminRows:dimVolRows,prefix=admin?'dimAdmin':'dimVol',todayY=todaySafe();
+ $(prefix+'DayTitle').textContent=dimDayTitle(day);
+ $(prefix+'Day').innerHTML=DIM_FASCE.map(([fascia,label])=>{
+  const slot=dimRowsFor(rows,day,fascia),
+  covered=dimSlotCovered(slot),mine=slot.some(x=>x.badge_personale===volunteerBadge),
+  peopleHtml=slot.map(row=>'<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
+   ' · <b>'+esc(dimRoleLabel(row.ruolo))+'</b>'+
+   (admin?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-dim-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
+   '</div>').join(''),
+  state=covered?'Coperto · autista e soccorritore presenti':slot.length?'Da completare · manca '+(slot.some(x=>x.ruolo==='AUTISTA')?'soccorritore':'autista'):'Da coprire · mancano autista e soccorritore';
+  const eligible=['AUTISTA','SOCCORRITORE'].filter(role=>vfcalQualificationRows.some(q=>
+   q.codice_qualifica===role&&(!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
+  const action=!admin&&day>=todayY&&!mine?
+   (eligible.length?'<div class="actions" style="margin-top:8px"><select aria-label="Ruolo per il turno dimissioni" data-dim-role="'+fascia+'" style="max-width:170px">'+
+     eligible.map(role=>'<option value="'+role+'">'+dimRoleLabel(role)+'</option>').join('')+'</select>'+
+    '<button type="button" class="btn yellow" data-dim-join="'+fascia+'">Mi segno (definitivo)</button></div>':
+    '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
+    (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
+  return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+label+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
+   (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+'</div>';
+ }).join('');
+ if(admin){
+  $(prefix+'Day').querySelectorAll('[data-dim-remove]').forEach(button=>button.onclick=()=>dimRemove(button.dataset.dimRemove));
+ }else{
+  $(prefix+'Day').querySelectorAll('[data-dim-join]').forEach(button=>button.onclick=()=>dimJoin(day,button.dataset.dimJoin));
+ }
+}
+async function loadDimissioniVol(){
+ if(!volunteerBadge)return;
+ const seq=++dimVolSeq,range=calVisibleRange(dimVolCursor,'month');
+ msg('dimVolMsg','Caricamento turni dimissioni...');
+ const r=await sb.rpc('cge_dimissioni_turni',{p_dal:range.startYmd,p_al:range.endYmd});
+ if(seq!==dimVolSeq)return;
+ if(r.error)return msg('dimVolMsg',r.error.message,'err');
+ dimVolRows=r.data||[];dimRenderMonth('Vol');msg('dimVolMsg','');
+}
+async function loadDimissioniAdmin(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const seq=++dimAdminSeq,range=calVisibleRange(dimAdminCursor,'month');
+ msg('dimAdminMsg','Caricamento turni dimissioni...');
+ const r=await sb.rpc('cge_dimissioni_turni',{p_dal:range.startYmd,p_al:range.endYmd});
+ if(seq!==dimAdminSeq)return;
+ if(r.error)return msg('dimAdminMsg',r.error.message,'err');
+ dimAdminRows=r.data||[];dimRenderMonth('Admin');msg('dimAdminMsg','');
+}
+async function dimJoin(day,fascia){
+ if(dimVolBusy)return;
+ const role=$('dimVolDay').querySelector('[data-dim-role="'+fascia+'"]')?.value;
+ if(!role||!['AUTISTA','SOCCORRITORE'].includes(role))return;
+ if(!confirm('Confermi il turno DEFINITIVO dimissioni del '+day+' · '+fascia+' come '+dimRoleLabel(role)+'? Non potrai annullarlo da solo.'))return;
+ dimVolBusy=true;
+ msg('dimVolMsg','Registrazione definitiva in corso...');
+ try{
+  const r=await sb.rpc('cge_dimissioni_segnati',{p_giorno:day,p_fascia:fascia,p_ruolo:role});
+  if(r.error)throw r.error;
+  await loadDimissioniVol();msg('dimVolMsg','Turno definitivo registrato. Presentati nella fascia scelta.','ok');
+ }catch(e){msg('dimVolMsg',e.message||String(e),'err')}
+ finally{dimVolBusy=false}
+}
+async function dimRemove(id){
+ if(dimAdminBusy)return;
+ const row=dimAdminRows.find(x=>x.id===id);
+ if(!row)return;
+ if(!confirm('Rimuovere '+row.nome_completo+' dal turno definitivo '+row.giorno+' · '+row.fascia+'?'))return;
+ dimAdminBusy=true;
+ msg('dimAdminMsg','Aggiornamento turno...');
+ try{
+  const r=await sb.rpc('cge_dimissioni_rimuovi',{p_id:id});
+  if(r.error)throw r.error;
+  await loadDimissioniAdmin();msg('dimAdminMsg','Operatore rimosso. Ricontrolla la copertura del turno.','ok');
+ }catch(e){msg('dimAdminMsg',e.message||String(e),'err')}
+ finally{dimAdminBusy=false}
+}
+function dimMoveMonth(kind,delta){
+ if(kind==='Admin'){
+  dimAdminCursor=delta===0?new Date():new Date(dimAdminCursor.getFullYear(),dimAdminCursor.getMonth()+delta,1);
+  dimAdminSelected=delta===0?todaySafe():calYmd(new Date(dimAdminCursor.getFullYear(),dimAdminCursor.getMonth(),1));
+  loadDimissioniAdmin();
+ }else{
+  dimVolCursor=delta===0?new Date():new Date(dimVolCursor.getFullYear(),dimVolCursor.getMonth()+delta,1);
+  dimVolSelected=delta===0?todaySafe():calYmd(new Date(dimVolCursor.getFullYear(),dimVolCursor.getMonth(),1));
+  loadDimissioniVol();
+ }
+}
+$('dimVolPrev').onclick=()=>dimMoveMonth('Vol',-1);
+$('dimVolNext').onclick=()=>dimMoveMonth('Vol',1);
+$('dimVolToday').onclick=()=>dimMoveMonth('Vol',0);
+$('dimVolRefresh').onclick=loadDimissioniVol;
+$('dimAdminPrev').onclick=()=>dimMoveMonth('Admin',-1);
+$('dimAdminNext').onclick=()=>dimMoveMonth('Admin',1);
+$('dimAdminToday').onclick=()=>dimMoveMonth('Admin',0);
+$('dimAdminRefresh').onclick=loadDimissioniAdmin;
+
 function asPeriodRange(){
  const base=new Date(asCursor.getFullYear(),asCursor.getMonth(),asCursor.getDate());
  if(asView!=='week')return {start:base,end:base};
@@ -3757,7 +3922,7 @@ async function loadVolunteerArea(){
   document.querySelectorAll('[data-vol-doc-open]').forEach(b=>b.onclick=()=>volOpenDocument(b.dataset.volDocOpen,documents));
   document.querySelectorAll('[data-vol-doc-del]').forEach(b=>b.onclick=()=>volDeleteDocument(b.dataset.volDocDel,documents));
   $('volServices').innerHTML=services.length?services.slice(0,30).map(x=>{const aids=[x.necessita_carrozzina?'Carrozzina':'',x.necessita_ossigeno?'Ossigeno':'',x.necessita_barellato?'Barellato':'',x.necessita_monitoraggio?'Monitoraggio':'',x.assistenza_extra?'Assistenza extra':''].filter(Boolean).join(', ');return '<div class="box" style="margin:7px 0"><b>'+esc(x.data_servizio)+' · '+esc(volFmtTime(x.ora_partenza_prevista))+' · '+esc(x.tipo_servizio_altro||x.tipo_servizio)+'</b> <span class="pill b">'+esc(x.ruolo_assegnato||'—')+'</span><br>Mezzo '+esc(x.mezzo||'—')+' · '+esc(x.luogo_partenza||x.indirizzo_partenza||'—')+' → '+esc(x.ospedale_destinazione||x.destinazione||x.indirizzo_destinazione||'—')+'<br><span class="muted">Carico '+esc(volFmtTime(x.ora_carico_paziente_prevista))+' · Rientro '+esc(volFmtTime(x.ora_rientro_previsto))+' · Stato '+esc(x.stato)+'</span>'+(aids?'<br><span class="pill">'+esc(aids)+'</span>':'')+(x.note?'<br>'+esc(x.note):'')+'</div>'}).join(''):'<div class="notice">Nessun servizio assegnato.</div>';
-  await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar()]);
+  await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar(),loadDimissioniVol()]);
   msg('volmsg','');
  }catch(e){msg('volmsg',e.message||String(e),'err')}
 }
