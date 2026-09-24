@@ -185,7 +185,7 @@
 @media(max-width:360px){.vol-home-icon{width:64px;height:64px}.vol-home-label{font-size:10px}.vol-home-pad{padding:0 7px 12px}.vol-mobile-bar b{font-size:11px}}
 @media(min-width:901px){.vol-home-grid{gap:20px;padding:20px}.vol-home-label{font-size:15px}}
 
-.vol-fascia-hours{font-size:12px;font-weight:800;color:#17668b;white-space:nowrap}#volApp .dim-slot>b{display:inline-block;margin-bottom:3px}
+.vol-fascia-hours{font-size:12px;font-weight:800;color:#17668b;white-space:nowrap}.em-roster .em-fascia-hours{display:block;font-size:10px;line-height:1.35;font-weight:700;white-space:normal;color:#f8fbff;margin-top:4px}#volApp .dim-slot>b{display:inline-block;margin-bottom:3px}
 
 .vol-home-alert-count{display:inline-block;background:#da4e1d;color:#fff;border-radius:20px;min-width:22px;padding:2px 5px;font-size:11px;font-weight:950}
 .vol-home-unread{background:#fff9e4;border:1px solid #ecc75b;border-left:5px solid #dc4d1e;border-radius:9px;padding:11px 13px;margin-top:12px}
@@ -3248,7 +3248,7 @@ function emRenderDay(day){
  const rows=EM_SLOTS.map(slot=>{
   const slotTurns=dayTurns.filter(t=>emSlotIds(t).includes(slot.id));
   const enrolled=dayFasce.filter(row=>row.fascia===slot.id);
-  return '<tr><th scope="row">'+slot.id+'</th>'+
+  return '<tr><th scope="row">'+esc(slot.id)+(volFasciaOrario(slot.id)?'<small class="em-fascia-hours">'+esc(volFasciaOrario(slot.id))+'</small>':'')+'</th>'+
    EM_ROLES.map(([role])=>{
     const assigned=slotTurns.flatMap(t=>emAssignments.filter(a=>a.turno_id===t.id&&a.ruolo===role)
        .map(a=>({turn:t,assignment:a})));
@@ -3428,7 +3428,7 @@ function dimRenderDay(kind){
     '<button type="button" class="btn yellow" data-dim-join="'+fascia+'">Mi segno (definitivo)</button></div>':
     '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
     (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
-  return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+esc(label)+(!admin?' <span class="vol-fascia-hours">'+esc(volFasciaOrario(fascia))+'</span>':'')+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
+  return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+esc(label)+' <span class="vol-fascia-hours">'+esc(volFasciaOrario(fascia))+'</span>'+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
    (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
    (admin?dimAdminAssignControls(day,fascia,slot):'')+'</div>';
  }).join('');
@@ -3602,7 +3602,7 @@ function emgRenderDay(kind){
     '<button type="button" class="btn yellow" data-emg-join="'+fascia+'">Mi segno (definitivo)</button></div>':
     '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
     (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
-  return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+esc(label)+(!admin?' <span class="vol-fascia-hours">'+esc(volFasciaOrario(fascia))+'</span>':'')+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
+  return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+esc(label)+' <span class="vol-fascia-hours">'+esc(volFasciaOrario(fascia))+'</span>'+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
    (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
    (admin?emgAdminAssignControls(day,fascia,slot):'')+'</div>';
  }).join('');
