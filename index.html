@@ -3586,13 +3586,13 @@ function dimRenderDay(kind){
    '</div>').join(''),
   missing=['AUTISTA','SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)).map(dimRoleLabel),
   state=covered?'Coperto · autista e soccorritore presenti':'Da completare · mancano '+missing.join(' e ');
-  const eligible=['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].filter(role=>vfcalQualificationRows.some(q=>
+  const eligible=['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)&&vfcalQualificationRows.some(q=>
    q.codice_qualifica===role&&(!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
   const action=!admin&&day>=todayY&&!mine?
    (eligible.length?'<div class="actions" style="margin-top:8px"><select aria-label="Ruolo per il turno dimissioni" data-dim-role="'+fascia+'" style="max-width:170px">'+
      eligible.map(role=>'<option value="'+role+'">'+dimRoleLabel(role)+'</option>').join('')+'</select>'+
     '<button type="button" class="btn yellow" data-dim-join="'+fascia+'">Mi segno (definitivo)</button></div>':
-    '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
+    '<div class="muted">Non ci sono ruoli disponibili per l’iscrizione in questa fascia.</div>'):
     (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
   return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+esc(label)+' <span class="vol-fascia-hours">'+esc(volFasciaOrario(fascia))+'</span>'+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
    (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
@@ -3608,8 +3608,10 @@ function dimRenderDay(kind){
 
 function dimAdminAssignControls(day,fascia,slot){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||day<todaySafe())return '';
+ const remaining=['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role));
+ if(!remaining.length)return '';
  return '<div class="dim-admin-assign"><b>Aggiungi all’equipaggio</b>'+
-  ['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].map(role=>{
+  remaining.map(role=>{
    const candidates=dimAdminEligible.filter(p=>p.ruolo===role&&!slot.some(x=>x.badge_personale===p.badge));
    return '<div class="actions" style="margin-top:6px"><label class="muted" style="min-width:84px">'+dimRoleLabel(role)+'</label>'+
     '<select data-dim-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Volontario '+dimRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
@@ -3637,6 +3639,7 @@ async function dimAdminAssign(day,fascia,role){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||dimAdminBusy||day!==dimAdminSelected)return;
  const badge=$('dimAdminDay').querySelector('[data-dim-assign-person="'+fascia+'-'+role+'"]')?.value;
  const person=dimAdminEligible.find(p=>p.badge===badge&&p.ruolo===role);
+ if(dimRowsFor(dimAdminRows,day,fascia).some(x=>x.ruolo===role))return msg('dimAdminMsg','Questo ruolo è già occupato nella fascia selezionata.','warn');
  if(!person)return msg('dimAdminMsg','Seleziona un volontario con qualifica valida.','warn');
  if(!confirm('Inserire DEFINITIVAMENTE '+person.nome_completo+' nel turno DIMISSIONI del '+day+
   ', '+fascia+' come '+dimRoleLabel(role)+'?'))return;
@@ -3647,7 +3650,7 @@ async function dimAdminAssign(day,fascia,role){
   await loadDimissioniAdmin();
   msg('dimAdminMsg',person.nome_completo+' inserito definitivamente come '+dimRoleLabel(role)+
    ' per '+day+' · '+fascia+'.','ok');
- }catch(e){msg('dimAdminMsg',e.message||String(e),'err')}
+ }catch(e){msg('dimAdminMsg',e?.code==='23505'?'Questo ruolo è già occupato nella fascia selezionata. Aggiorna i turni.':(e.message||String(e)),'err')}
  finally{dimAdminBusy=false}
 }
 async function loadDimissioniVol(){
@@ -3674,6 +3677,7 @@ async function dimJoin(day,fascia){
  if(dimVolBusy)return;
  const role=$('dimVolDay').querySelector('[data-dim-role="'+fascia+'"]')?.value;
  if(!role||!['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].includes(role))return;
+ if(dimRowsFor(dimVolRows,day,fascia).some(x=>x.ruolo===role))return msg('dimVolMsg','Questo ruolo è già occupato nella fascia selezionata.','warn');
  if(!confirm('Confermi il turno DEFINITIVO dimissioni del '+day+' · '+fascia+' come '+dimRoleLabel(role)+'? Non potrai annullarlo da solo.'))return;
  dimVolBusy=true;
  msg('dimVolMsg','Registrazione definitiva in corso...');
@@ -3681,7 +3685,7 @@ async function dimJoin(day,fascia){
   const r=await sb.rpc('cge_dimissioni_segnati',{p_giorno:day,p_fascia:fascia,p_ruolo:role});
   if(r.error)throw r.error;
   await loadVolunteerArea();msg('dimVolMsg','Turno definitivo registrato. Presentati nella fascia scelta.','ok');
- }catch(e){msg('dimVolMsg',e.message||String(e),'err')}
+ }catch(e){msg('dimVolMsg',e?.code==='23505'?'Questo ruolo è già occupato nella fascia selezionata. Aggiorna i turni.':(e.message||String(e)),'err')}
  finally{dimVolBusy=false}
 }
 async function dimRemove(id){
@@ -3760,13 +3764,13 @@ function emgRenderDay(kind){
    '</div>').join(''),
   missing=['AUTISTA','SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)).map(emgRoleLabel),
   state=covered?'Coperto · autista e soccorritore presenti':'Da completare · mancano '+missing.join(' e ');
-  const eligible=['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].filter(role=>vfcalQualificationRows.some(q=>
+  const eligible=['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)&&vfcalQualificationRows.some(q=>
    q.codice_qualifica===role&&(!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
   const action=!admin&&day>=todayY&&!mine?
    (eligible.length?'<div class="actions" style="margin-top:8px"><select aria-label="Ruolo per il turno emergenza" data-emg-role="'+fascia+'" style="max-width:170px">'+
      eligible.map(role=>'<option value="'+role+'">'+emgRoleLabel(role)+'</option>').join('')+'</select>'+
     '<button type="button" class="btn yellow" data-emg-join="'+fascia+'">Mi segno (definitivo)</button></div>':
-    '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
+    '<div class="muted">Non ci sono ruoli disponibili per l’iscrizione in questa fascia.</div>'):
     (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
   return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+esc(label)+' <span class="vol-fascia-hours">'+esc(volFasciaOrario(fascia))+'</span>'+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
    (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
@@ -3782,8 +3786,10 @@ function emgRenderDay(kind){
 
 function emgAdminAssignControls(day,fascia,slot){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||day<todaySafe())return '';
+ const remaining=['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role));
+ if(!remaining.length)return '';
  return '<div class="dim-admin-assign"><b>Aggiungi all’equipaggio</b>'+
-  ['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].map(role=>{
+  remaining.map(role=>{
    const candidates=emgAdminEligible.filter(p=>p.ruolo===role&&!slot.some(x=>x.badge_personale===p.badge));
    return '<div class="actions" style="margin-top:6px"><label class="muted" style="min-width:84px">'+emgRoleLabel(role)+'</label>'+
     '<select data-emg-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Volontario '+emgRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
@@ -3811,6 +3817,7 @@ async function emgAdminAssign(day,fascia,role){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||emgAdminBusy||day!==emgAdminSelected)return;
  const badge=$('emgAdminDay').querySelector('[data-emg-assign-person="'+fascia+'-'+role+'"]')?.value;
  const person=emgAdminEligible.find(p=>p.badge===badge&&p.ruolo===role);
+ if(emgRowsFor(emgAdminRows,day,fascia).some(x=>x.ruolo===role))return msg('emgAdminMsg','Questo ruolo è già occupato nella fascia selezionata.','warn');
  if(!person)return msg('emgAdminMsg','Seleziona un volontario con qualifica valida.','warn');
  if(!confirm('Inserire DEFINITIVAMENTE '+person.nome_completo+' nel turno EMERGENZA 118 del '+day+
   ', '+fascia+' come '+emgRoleLabel(role)+'?'))return;
@@ -3822,7 +3829,7 @@ async function emgAdminAssign(day,fascia,role){
   if(!$('emergency').classList.contains('hidden'))await loadEmergencyRoster(true);
   msg('emgAdminMsg',person.nome_completo+' inserito definitivamente come '+emgRoleLabel(role)+
    ' per '+day+' · '+fascia+'.','ok');
- }catch(e){msg('emgAdminMsg',e.message||String(e),'err')}
+ }catch(e){msg('emgAdminMsg',e?.code==='23505'?'Questo ruolo è già occupato nella fascia selezionata. Aggiorna i turni.':(e.message||String(e)),'err')}
  finally{emgAdminBusy=false}
 }
 async function loadEmergenzaVol(){
@@ -3849,6 +3856,7 @@ async function emgJoin(day,fascia){
  if(emgVolBusy)return;
  const role=$('emgVolDay').querySelector('[data-emg-role="'+fascia+'"]')?.value;
  if(!role||!['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].includes(role))return;
+ if(emgRowsFor(emgVolRows,day,fascia).some(x=>x.ruolo===role))return msg('emgVolMsg','Questo ruolo è già occupato nella fascia selezionata.','warn');
  if(!confirm('Confermi il turno DEFINITIVO emergenza del '+day+' · '+fascia+' come '+emgRoleLabel(role)+'? Non potrai annullarlo da solo.'))return;
  emgVolBusy=true;
  msg('emgVolMsg','Registrazione definitiva in corso...');
@@ -3856,7 +3864,7 @@ async function emgJoin(day,fascia){
   const r=await sb.rpc('cge_emergenza_segnati',{p_giorno:day,p_fascia:fascia,p_ruolo:role});
   if(r.error)throw r.error;
   await loadVolunteerArea();msg('emgVolMsg','Turno definitivo registrato. Presentati nella fascia scelta.','ok');
- }catch(e){msg('emgVolMsg',e.message||String(e),'err')}
+ }catch(e){msg('emgVolMsg',e?.code==='23505'?'Questo ruolo è già occupato nella fascia selezionata. Aggiorna i turni.':(e.message||String(e)),'err')}
  finally{emgVolBusy=false}
 }
 async function emgRemove(id){
