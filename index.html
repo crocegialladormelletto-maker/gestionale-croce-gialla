@@ -1662,8 +1662,9 @@ function getTariffPrice(){
   return {valid:false,error:'Inserisci una variazione positiva in euro (massimo € 10.000).'};
  const diff=op==='NONE'?0:Math.round(Number(diffText)*100);
  const equipment=selectedEquipmentFees();
- const total=baseCents+(op==='MINUS'?-diff:diff)+Math.round(equipment.total*100);
- if(total<0||total>1000000)return {valid:false,error:'L’importo del servizio deve essere compreso fra € 0 e € 10.000.'};
+ const adjustedBase=baseCents+(op==='MINUS'?-diff:diff);
+ const total=adjustedBase+Math.round(equipment.total*100);
+ if(adjustedBase<0||total<0||total>1000000)return {valid:false,error:'L’importo del servizio deve essere compreso fra € 0 e € 10.000.'};
  return {valid:true,base:baseCents/100,diff:diff/100,total:total/100,op,row,notturno,equipment};
 }
 function refreshTariffDestinations(){
@@ -2368,21 +2369,28 @@ function volunteerOrdinaryRouteHTML(route){
   '<div><b>📍 Luogo di carico / partenza:</b> '+esc(location([route.luogo_partenza,route.indirizzo_partenza]))+'</div>'+
   '<div><b>🏥 Destinazione:</b> '+esc(location([route.destinazione,route.indirizzo_destinazione,route.ospedale_destinazione]))+'</div></div>';
 }
+function volunteerSpecialEquipmentHTML(s){
+ if(!s||(!s.sedia_motorizzata&&!s.barella_bariatrica))return '';
+ return '<div class="vol-route-preview" aria-label="Dotazioni speciali"><b>♿ Dotazioni necessarie:</b> '+
+  [s.sedia_motorizzata?'Sedia motorizzata / cingolata':'',
+   s.barella_bariatrica?'Barella bariatrica':''].filter(Boolean).map(esc).join(' · ')+'</div>';
+}
 async function loadVolunteerFutureCalendar(){
  if(!volunteerBadge)return;
  const request=++vfcalLoadSequence;
  msg('vfcalMsg','Caricamento servizi futuri...');
  const range=calVisibleRange(vfcalCursor,vfcalMode);
- const [r,occupied,routes]=await Promise.all([
+ const [r,occupied,routes,equipment]=await Promise.all([
   sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_ordinari_percorsi',{p_dal:range.startYmd,p_al:range.endYmd})
+  sb.rpc('cge_volontario_ordinari_percorsi',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_ordinari_dotazioni',{p_dal:range.startYmd,p_al:range.endYmd})
  ]);
  if(request!==vfcalLoadSequence)return;
- if(r.error||occupied.error||routes.error){
+ if(r.error||occupied.error||routes.error||equipment.error){
   vfcalEvents=[];vfcalApplications=[];vfcalOccupiedRoles=[];vfcalOrdRoutes=[];
   refreshVolunteerFutureCalendarView();
-  return msg('vfcalMsg','Impossibile caricare i servizi futuri: '+(r.error||occupied.error||routes.error).message,'err');
+  return msg('vfcalMsg','Impossibile caricare i servizi futuri: '+(r.error||occupied.error||routes.error||equipment.error).message,'err');
  }
  const rows=r.data||[],ids=rows.filter(s=>isAssistanceManifestation(s.tipo_servizio)).map(s=>s.id);
  let applications=[];
@@ -2395,7 +2403,8 @@ async function loadVolunteerFutureCalendar(){
  if(request!==vfcalLoadSequence)return;
  vfcalApplications=applications;
  vfcalOccupiedRoles=occupied.data||[];
- vfcalOrdRoutes=routes.data||[];
+ const equipmentById=new Map((equipment.data||[]).map(x=>[x.servizio_id,x]));
+ vfcalOrdRoutes=(routes.data||[]).map(x=>({...x,...(equipmentById.get(x.servizio_id)||{})}));
  vfcalEvents=rows.map(s=>{
   const event=isAssistanceManifestation(s.tipo_servizio);
   return {kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),
@@ -2435,7 +2444,7 @@ function renderVolunteerFutureCalendarDay(){
    }
   }
   const pickupAndDestination=vfcalOrdRoutes.find(route=>route.servizio_id===s.id);
-  return '<div class="cal-detail-item service"><b>'+esc(e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'<br><span class="muted">'+esc(times)+'</span>'+volunteerOrdinaryRouteHTML(pickupAndDestination)+
+  return '<div class="cal-detail-item service"><b>'+esc(e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'<br><span class="muted">'+esc(times)+'</span>'+volunteerOrdinaryRouteHTML(pickupAndDestination)+volunteerSpecialEquipmentHTML(pickupAndDestination)+
    '<br><span class="pill '+(s.assegnato_a_me?'g':'b')+'">'+(s.assegnato_a_me?'Sei assegnato a questo servizio':'Servizio programmato')+'</span>'+signup+'</div>';
  }).join(''):'<div class="notice">Nessun servizio futuro programmato per questo giorno.</div>';
  box.querySelectorAll('[data-vf-join]').forEach(b=>b.onclick=()=>submitVolunteerAssistanceApplication(b.dataset.vfJoin,'ISCRIVITI'));
@@ -5155,4 +5164,4 @@ if('serviceWorker' in navigator){
 applyVolunteerOnlyLogin();refreshPwaInstallUI();
 try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&$('vbadge')){$('vbadge').value=remembered;$('vremember').checked=true}}catch(_){}
 (async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
-</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924b"></script></body></html>
+</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
