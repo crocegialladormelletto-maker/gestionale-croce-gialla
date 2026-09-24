@@ -639,7 +639,7 @@
      <div class="field"><label>Totale calcolato €</label><input id="fvGrandTotal" disabled></div>
     </div>
     <div class="inline-checks" style="margin-top:10px">
-     <label class="check"><input id="fvChair" type="checkbox"> Sedia montascale</label>
+     <label class="check"><input id="fvChair" type="checkbox"> Sedia cingolata / motorizzata</label>
      <label class="check"><input id="fvBari" type="checkbox"> Barella bariatrica</label>
     </div>
    </div>
@@ -743,7 +743,13 @@
   <div class="field" style="margin-top:9px"><label id="detailStructureLabel">Ospedale / RSA / struttura</label><input id="dstruct"></div>
  </div>
 
- <div class="section"><h3>Economico</h3>
+ <div class="section"><h3>♿ Dotazioni per il servizio</h3>
+<p class="muted">Le dotazioni sono visibili ai volontari prima dell’iscrizione.</p>
+<div class="inline-checks">
+<label class="check"><input id="dSediaMotorizzata" type="checkbox"> Sedia motorizzata / cingolata (+ € 15)</label>
+<label class="check"><input id="dBarellaBariatrica" type="checkbox"> Barella bariatrica (+ € 20)</label>
+</div></div>
+<div class="section"><h3>Economico</h3>
   <div class="grid4">
    <div class="field"><label>Importo previsto €</label><input id="dAmount" type="number" min="0" step="0.01"><div class="muted" id="dTariffBaseInfo"></div></div>
    <div class="field"><label>Sconto €</label><input id="dDiscount" type="number" min="0" step="0.01"></div>
@@ -795,6 +801,12 @@
 <div class="field"><label>E-mail paziente</label><input id="patientEmail" type="email" maxlength="254" autocomplete="email"></div></div></div>
 <div class="section hidden" id="newEventContactSection"><h3>Referente manifestazione</h3><div class="grid2"><div class="field"><label>Nome referente</label><input id="eventRefName" maxlength="120" placeholder="Referente sul posto"></div><div class="field"><label>Telefono referente</label><input id="eventRefPhone" type="tel" maxlength="40" placeholder="Recapito del referente"></div></div></div>
 <div class="section"><h3>Percorso</h3><div class="grid2"><div class="field"><label>Luogo partenza</label><input id="lp"></div><div class="field"><label>Indirizzo partenza</label><input id="ip"></div><div class="field"><label id="newDestinationLabel">Destinazione</label><input id="dest"></div><div class="field"><label>Indirizzo destinazione</label><input id="idest"></div></div><div class="field" style="margin-top:9px"><label id="newStructureLabel">Ospedale / RSA / struttura</label><input id="strutt"></div></div>
+<div class="section" id="newServiceSpecialEquipment"><h3>♿ Dotazioni necessarie per il servizio</h3>
+<p class="muted">Indica le dotazioni che il volontario deve conoscere prima di iscriversi.</p>
+<div class="inline-checks">
+<label class="check"><input id="newSediaMotorizzata" type="checkbox"> Sedia motorizzata / cingolata (+ € 15)</label>
+<label class="check"><input id="newBarellaBariatrica" type="checkbox"> Barella bariatrica (+ € 20)</label>
+</div></div>
 <div class="section"><h3>Economico e note</h3><div class="grid4">
 <div class="field"><label>Tariffario</label><select id="tar"><option value="">Nessuno / tariffa concordata</option></select></div>
 <div class="field"><label>Destinazione tariffaria</label><select id="tarDest"><option value="">—</option></select></div>
@@ -893,11 +905,15 @@
 <button type="button" class="btn secondary" data-tariff-code="TS_BORGOMANERO">🚐 Trasporto semplice · Ospedale Borgomanero</button>
 <button type="button" class="btn secondary" data-tariff-code="TS_NOVARA_DOBLO">🚐 Trasporto semplice · Ospedale Novara</button></div>
 <p class="muted" style="margin-top:9px">Tariffari in vigore dal 18/09/2026. Per destinazioni non presenti, chiedere al Centralino; non inventare il prezzo.</p></div>
+<div class="section"><h3>♿ Supplementi per dotazioni speciali</h3>
+<p class="muted">Selezionabili nel Nuovo servizio. Sono aggiunti al singolo trasporto, non alle tariffe base.</p>
+<div class="grid2"><div class="notice"><b>Sedia cingolata / motorizzata · € 15,00</b></div>
+<div class="notice"><b>Barella bariatrica · € 20,00</b></div></div></div>
 <div id="tariffGroupPanels">
 <div id="tariffPane_DEA_BORGOMANERO" class="section" data-tariff-pane="DEA_BORGOMANERO"><h3>Ambulanza · Ospedale Borgomanero</h3><div class="table"><table><thead><tr><th>Destinazione</th><th>Diurno</th><th>Notturno</th></tr></thead><tbody></tbody></table></div></div>
 <div id="tariffPane_DEA_NOVARA" class="section hidden" data-tariff-pane="DEA_NOVARA"><h3>Ambulanza · Ospedale Novara</h3><div class="table"><table><thead><tr><th>Destinazione</th><th>Diurno</th><th>Notturno</th></tr></thead><tbody></tbody></table></div></div>
-<div id="tariffPane_TS_BORGOMANERO" class="section hidden" data-tariff-pane="TS_BORGOMANERO"><h3>Trasporto semplice · Ospedale Borgomanero</h3><p class="muted">Da sede – H Borgomanero A/R · supplemento sedia montascale/barella bariatrica €15 · fermo mezzo €18/ora. Prezzo notturno distinto non indicato: concordare col Centralino.</p><div class="table"><table><thead><tr><th>Destinazione</th><th>Prezzo riportato nel tariffario</th></tr></thead><tbody></tbody></table></div></div>
-<div id="tariffPane_TS_NOVARA_DOBLO" class="section hidden" data-tariff-pane="TS_NOVARA_DOBLO"><h3>Trasporto semplice · Ospedale Novara</h3><p class="muted">Da sede – H Novara A/R · supplemento sedia montascale/barella bariatrica €15 · fermo mezzo €18/ora. Prezzo notturno distinto non indicato: concordare col Centralino.</p><div class="table"><table><thead><tr><th>Destinazione</th><th>Prezzo riportato nel tariffario</th></tr></thead><tbody></tbody></table></div></div>
+<div id="tariffPane_TS_BORGOMANERO" class="section hidden" data-tariff-pane="TS_BORGOMANERO"><h3>Trasporto semplice · Ospedale Borgomanero</h3><p class="muted">Da sede – H Borgomanero A/R · supplementi: sedia cingolata/motorizzata €15 · barella bariatrica €20 · fermo mezzo €18/ora. Prezzo notturno distinto non indicato: concordare col Centralino.</p><div class="table"><table><thead><tr><th>Destinazione</th><th>Prezzo riportato nel tariffario</th></tr></thead><tbody></tbody></table></div></div>
+<div id="tariffPane_TS_NOVARA_DOBLO" class="section hidden" data-tariff-pane="TS_NOVARA_DOBLO"><h3>Trasporto semplice · Ospedale Novara</h3><p class="muted">Da sede – H Novara A/R · supplementi: sedia cingolata/motorizzata €15 · barella bariatrica €20 · fermo mezzo €18/ora. Prezzo notturno distinto non indicato: concordare col Centralino.</p><div class="table"><table><thead><tr><th>Destinazione</th><th>Prezzo riportato nel tariffario</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="section" data-admin-only="true"><h3>Modifica una tariffa della scheda selezionata</h3><div class="grid4"><div class="field"><label>Tariffario selezionato</label><select id="ttar"></select></div><div class="field"><label>Destinazione</label><input id="tdest"></div><div class="field"><label>Tipo mezzo</label><select id="ttype" disabled><option>AMBULANZA</option><option>TRASPORTO SEMPLICE</option></select></div><div class="field"><label>Importo €</label><input id="tday" type="number" min="0" step="0.01"></div><div class="field"><label>Notturno € (solo se previsto)</label><input id="tnight" type="number" min="0" step="0.01"></div><div class="field"><label>Provincia</label><input id="tprov"></div></div><div class="toolbar"><button id="tsave" class="btn yellow">Aggiungi / aggiorna tariffa</button></div><div id="tmsg"></div></div>
 </div></section>
@@ -1131,7 +1147,7 @@
     <h3 class="tablet-section-title" style="margin-top:20px">Servizio e pagamento</h3>
     <div class="tablet-fields">
      <div class="field"><label>Importo base € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito"></div>
-     <div class="field"><label>Sedia montascale</label><label class="check"><input type="checkbox" data-ts-field="sedia_montascale"> Utilizzata</label></div>
+     <div class="field"><label>Sedia cingolata / motorizzata</label><label class="check"><input type="checkbox" data-ts-field="sedia_montascale"> Utilizzata</label></div>
      <div class="field"><label>Supplemento sedia €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_sedia"></div>
      <div class="field"><label>Barella bariatrica</label><label class="check"><input type="checkbox" data-ts-field="barella_bariatrica"> Utilizzata</label></div>
      <div class="field"><label>Supplemento bariatrica €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_bariatrica"></div>
@@ -1831,7 +1847,7 @@ function buildFoglioPrint(f){
    (crew.length?crew.map(x=>'<tr><td>'+esc(x[0])+'</td><td>'+esc(x[1])+'</td><td>'+esc(x[2]||'—')+'</td></tr>').join(''):'<tr><td colspan="3">Nessun componente registrato</td></tr>')+
   '</tbody></table></div>'+
 
-  (prof?.ruolo==='CENTRALINO'?'':'<div class="print-section"><h3>Economico e pagamento</h3><table class="print-table"><thead><tr><th>Importo base</th><th>Sedia montascale</th><th>Barella bariatrica</th><th>Totale</th><th>Pagamento</th></tr></thead><tbody><tr>'+
+  (prof?.ruolo==='CENTRALINO'?'':'<div class="print-section"><h3>Economico e pagamento</h3><table class="print-table"><thead><tr><th>Importo base</th><th>Sedia cingolata / motorizzata</th><th>Barella bariatrica</th><th>Totale</th><th>Pagamento</th></tr></thead><tbody><tr>'+
    '<td>'+euro(f.importo_inserito)+'</td>'+
    '<td>'+(f.sedia_montascale?'Sì · '+euro(f.supplemento_sedia):'No')+'</td>'+
    '<td>'+(f.barella_bariatrica?'Sì · '+euro(f.supplemento_bariatrica):'No')+'</td>'+
@@ -1967,7 +1983,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvChair').checked=!!f.sedia_montascale;
  $('fvBari').checked=!!f.barella_bariatrica;
  $('fvChairAmount').value=f.supplemento_sedia??15;
- $('fvBariAmount').value=f.supplemento_bariatrica??15;
+ $('fvBariAmount').value=f.supplemento_bariatrica??20;
  $('fvGrandTotal').value=Number(f.totale_servizio||0).toFixed(2);
  $('fvPayMode').value=f.modalita_pagamento||'';
  $('fvPayDate').value=f.data_pagamento||'';
