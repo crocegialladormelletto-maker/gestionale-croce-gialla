@@ -20,23 +20,82 @@
 @media(max-width:900px){.layout{display:block}.side{display:flex;overflow-x:auto;gap:4px;position:sticky;top:4px;z-index:20;margin-bottom:10px;box-shadow:0 3px 12px #0002}.nav{width:auto;white-space:nowrap;flex:0 0 auto}.nav:hover{transform:none}.stats,.grid4{grid-template-columns:1fr 1fr}.grid2,.grid3{grid-template-columns:1fr}}
 @media(max-width:520px){.stats,.grid4{grid-template-columns:1fr}.head .btn{padding:8px 9px}}
 @media print{
- @page{size:A4;margin:14mm}
- body{background:#fff!important}
+ @page{
+  size:A4;
+  margin:18mm 17mm 20mm;
+  @bottom-center{
+   content:"CROCE GIALLA EMERGENZA ODV  ·  VERBALE  ·  PAGINA " counter(page) " / " counter(pages);
+   font:7.5pt Arial,Helvetica,sans-serif;
+   color:#718092;
+  }
+ }
+ html,body{background:#fff!important;margin:0!important;padding:0!important}
  body>*:not(#verbPrint){display:none!important}
- #verbPrint{display:block!important;color:#111!important;font:11pt/1.45 Arial,Helvetica,sans-serif}
- #verbPrint .vp-head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #12375d;padding-bottom:10px;margin-bottom:18px}
- #verbPrint .vp-logo{width:72px;height:72px;border-radius:50%;object-fit:cover}
- #verbPrint .vp-org{flex:1}.vp-org h1{margin:0;color:#12375d;font-size:17pt}.vp-org div{font-size:9pt}
- #verbPrint .vp-code{text-align:right;font-size:9pt}.vp-code b{display:block;font-size:12pt;color:#12375d}
- #verbPrint h2{text-align:center;color:#12375d;font-size:15pt;margin:14px 0 4px}
- #verbPrint .vp-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:14px 0}
- #verbPrint .vp-box{border:1px solid #b8c0c8;padding:7px 8px;min-height:38px}
- #verbPrint .vp-box small{display:block;font-size:7.5pt;font-weight:700;color:#52606c;text-transform:uppercase;margin-bottom:2px}
- #verbPrint .vp-section{margin-top:15px;break-inside:avoid}
- #verbPrint .vp-section h3{font-size:10.5pt;color:#12375d;margin:0 0 6px;padding:4px 7px;background:#f0f3f6;border-left:4px solid #ffdb17}
- #verbPrint .vp-text{white-space:pre-wrap}
- #verbPrint .vp-sign{display:grid;grid-template-columns:1fr 1fr;gap:60px;margin-top:45px}
- #verbPrint .vp-sign div{border-top:1px solid #333;padding-top:5px;text-align:center;font-size:9pt}
+ #verbPrint{
+  display:block!important;position:relative;color:#1b2d3d!important;
+  font:10.1pt/1.55 Arial,Helvetica,sans-serif;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact
+ }
+ #verbPrint *{box-sizing:border-box}
+ #verbPrint .vp-watermark{
+  position:fixed;left:50%;top:45%;width:132mm;height:132mm;
+  transform:translate(-50%,-50%);object-fit:contain;opacity:.045;
+  pointer-events:none;z-index:0
+ }
+ #verbPrint .vp-content{position:relative;z-index:1}
+ #verbPrint .vp-head{
+  display:grid;grid-template-columns:21mm minmax(0,1fr) 21mm;
+  gap:6mm;align-items:center;text-align:center;
+  padding:1mm 0 5mm;border-bottom:1px solid #b8c7d4
+ }
+ #verbPrint .vp-logo{width:20mm;height:20mm;object-fit:contain}
+ #verbPrint .vp-org h1{margin:0;color:#12375d;font-size:13.2pt;line-height:1.3;letter-spacing:.25px}
+ #verbPrint .vp-org .vp-org-kind{font-size:7pt;letter-spacing:1.2px;font-weight:700;color:#657788}
+ #verbPrint .vp-org .vp-contact{font-size:7.4pt;line-height:1.45;color:#364b5b;overflow-wrap:anywhere}
+ #verbPrint .vp-accent{height:2.5mm;margin-bottom:8mm;background:linear-gradient(90deg,#f3ce26 0 73%,#e44940 73% 86%,#3477c9 86% 100%)}
+ #verbPrint .vp-kicker{text-align:center;color:#536a7e;font-size:8pt;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;margin-bottom:1.5mm}
+ #verbPrint .vp-title{
+  text-align:center;color:#12375d;font-size:17pt;line-height:1.28;
+  font-weight:800;margin:0;overflow-wrap:anywhere
+ }
+ #verbPrint .vp-type{text-align:center;color:#526a7e;font-size:9.2pt;margin:1.5mm 0 5mm}
+ #verbPrint .vp-document{display:flex;justify-content:center;gap:3mm;align-items:center;margin:0 0 7mm}
+ #verbPrint .vp-number{border:1.5px solid #d0ab17;padding:2mm 4mm;border-radius:3mm;background:#fff8d9;color:#12375d;font-weight:800;font-size:10pt}
+ #verbPrint .vp-status{color:#526677;font-size:8pt;text-transform:uppercase;letter-spacing:.45px}
+ #verbPrint .vp-meta{
+  display:grid;grid-template-columns:1fr 1fr;gap:2.5mm 4mm;
+  border:1px solid #dce3ea;border-radius:2.5mm;padding:4mm 5mm;margin:0 0 7mm;
+  background:rgba(247,249,252,.65)
+ }
+ #verbPrint .vp-box{min-width:0;overflow-wrap:anywhere;font-size:9pt}
+ #verbPrint .vp-box small{display:block;color:#597080;font-size:7pt;font-weight:800;letter-spacing:.55px;text-transform:uppercase;margin-bottom:.5mm}
+ #verbPrint .vp-section{margin:0 0 5.5mm;break-inside:auto;page-break-inside:auto}
+ #verbPrint .vp-section h3{
+  display:flex;align-items:center;gap:2.5mm;break-after:avoid;
+  page-break-after:avoid;margin:0 0 2mm;color:#12375d;
+  font-size:10.5pt;letter-spacing:.1px;font-weight:800
+ }
+ #verbPrint .vp-section h3:before{content:"";display:inline-block;flex:0 0 1.3mm;width:1.3mm;height:5mm;background:#e6c11e;border-radius:1mm}
+ #verbPrint .vp-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:10pt;line-height:1.6}
+ #verbPrint .vp-agenda{margin:2mm 0 0;padding:0;list-style:none;counter-reset:odg}
+ #verbPrint .vp-agenda li{
+  counter-increment:odg;display:grid;grid-template-columns:9mm minmax(0,1fr);
+  gap:3mm;align-items:start;margin:0 0 2.5mm;break-inside:avoid;page-break-inside:avoid
+ }
+ #verbPrint .vp-agenda li:before{
+  content:counter(odg);background:#fff4c8;color:#12375d;
+  border:1px solid #ebd77e;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;font-size:8pt;font-weight:800;
+  width:7.5mm;height:7.5mm
+ }
+ #verbPrint .vp-agenda li span{padding-top:.5mm;white-space:pre-wrap;overflow-wrap:anywhere}
+ #verbPrint .vp-sign{
+  display:grid;grid-template-columns:1fr 1fr;gap:20mm;
+  margin:17mm 0 2mm;break-inside:avoid;page-break-inside:avoid
+ }
+ #verbPrint .vp-sign div{text-align:center;font-size:9pt;color:#12375d}
+ #verbPrint .vp-sign .vp-sign-line{border-top:1px solid #738696;padding-top:2.5mm}
+ #verbPrint .vp-sign b{display:block;font-size:9.6pt;margin-top:1mm;color:#253e52}
 }
 </style>
 </head>
@@ -419,18 +478,48 @@ function openMinute(id){
 }
 function printMinute(){
  const p={
-  verbale_codice:currentMinute?.verbale_codice||'BOZZA',
+  verbale_codice:currentMinute?.verbale_codice||'BOZZA NON SALVATA',
   tipo_riunione:$('vType').value,data_riunione:$('vDate').value,ora_inizio:$('vStart').value,ora_fine:$('vEnd').value,luogo:$('vPlace').value,titolo:$('vHeading').value,
   ordine_giorno:minuteAgendaText(),presenti:$('vPresent').value,assenti:$('vAbsent').value,invitati:$('vGuests').value,svolgimento:$('vProceedings').value,
   deliberazioni:$('vDecisions').value,votazione:$('vVote').value,presidente:$('vPresident').value,segretario:$('vSecretary').value,note:$('vNotes').value,stato:$('vStatus').value
  };
- const sec=(title,value)=>value?'<div class="vp-section"><h3>'+esc(title)+'</h3><div class="vp-text">'+esc(value)+'</div></div>':'';
- $('verbPrint').innerHTML='<div class="vp-head"><img class="vp-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><div class="vp-org"><h1>Croce Gialla Emergenza ODV</h1><div>Via I° Maggio 1 · 28040 Dormelletto (NO)</div></div><div class="vp-code"><b>'+esc(p.verbale_codice||'BOZZA')+'</b>'+esc(p.stato||'BOZZA')+'</div></div>'+
- '<h2>'+esc(p.titolo||'Verbale')+'</h2><div style="text-align:center">'+esc(minuteTypeLabel(p.tipo_riunione))+'</div>'+
- '<div class="vp-meta"><div class="vp-box"><small>Data</small>'+esc(p.data_riunione||'—')+'</div><div class="vp-box"><small>Orario</small>'+esc((p.ora_inizio?String(p.ora_inizio).slice(0,5):'—')+(p.ora_fine?' – '+String(p.ora_fine).slice(0,5):''))+'</div><div class="vp-box"><small>Luogo</small>'+esc(p.luogo||'—')+'</div><div class="vp-box"><small>Presidente / Segretario</small>'+esc([p.presidente,p.segretario].filter(Boolean).join(' / ')||'—')+'</div></div>'+
- sec('Presenti',p.presenti)+sec('Assenti',p.assenti)+sec('Invitati / altri presenti',p.invitati)+sec('Ordine del giorno',p.ordine_giorno)+sec('Svolgimento della seduta',p.svolgimento)+sec('Deliberazioni / decisioni assunte',p.deliberazioni)+sec('Esito votazione',p.votazione)+sec('Note',p.note)+
- '<div class="vp-sign"><div>Il Presidente<br><b>'+esc(p.presidente||'')+'</b></div><div>Il Segretario verbalizzante<br><b>'+esc(p.segretario||'')+'</b></div></div>';
- window.print();
+ const clean=v=>String(v||'').trim();
+ const shortTime=v=>v?String(v).slice(0,5):'';
+ const italianDate=v=>{const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:(v||'—')};
+ const orgLogo='https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100';
+ const sec=(title,value)=>clean(value)?'<section class="vp-section"><h3>'+esc(title)+'</h3><div class="vp-text">'+esc(clean(value))+'</div></section>':'';
+ const agendaEntries=[...$('vAgendaPoints').querySelectorAll('textarea')].map(x=>x.value.trim()).filter(Boolean);
+ const agenda=agendaEntries.length?'<section class="vp-section"><h3>Ordine del giorno</h3><ol class="vp-agenda">'+agendaEntries.map(x=>'<li><span>'+esc(x)+'</span></li>').join('')+'</ol></section>':'';
+ const info=(title,value)=>'<div class="vp-box"><small>'+esc(title)+'</small>'+esc(clean(value)||'—')+'</div>';
+ const time=[shortTime(p.ora_inizio),shortTime(p.ora_fine)].filter(Boolean).join(' – ');
+ $('verbPrint').innerHTML=
+  '<img class="vp-watermark" src="'+orgLogo+'" alt="" aria-hidden="true">'+
+  '<div class="vp-content"><header class="vp-head">'+
+   '<img class="vp-logo" src="'+orgLogo+'" alt="Logo Croce Gialla">'+
+   '<div class="vp-org"><div class="vp-org-kind">Organizzazione di volontariato</div><h1>Croce Gialla Emergenza ODV</h1>'+
+    '<div class="vp-contact">Via I Maggio 1 · 28040 Dormelletto (NO)</div>'+
+    '<div class="vp-contact">C.F. 91023880031 · Tel. 0322 282730</div>'+
+    '<div class="vp-contact">crocegialladormelletto@crocegiallaemergenza.it</div>'+
+    '<div class="vp-contact">PEC: crocegiallaemergenza@pec.it</div></div>'+
+   '<img class="vp-logo" src="'+orgLogo+'" alt="" aria-hidden="true"></header>'+
+  '<div class="vp-accent"></div>'+
+  '<div class="vp-kicker">Documento ufficiale · Verbale di riunione</div>'+
+  '<h2 class="vp-title">'+esc(clean(p.titolo)||'Verbale')+'</h2>'+
+  '<div class="vp-type">'+esc(minuteTypeLabel(p.tipo_riunione))+'</div>'+
+  '<div class="vp-document"><span class="vp-number">'+esc(p.verbale_codice)+'</span><span class="vp-status">'+esc(p.stato)+'</span></div>'+
+  '<div class="vp-meta">'+info('Data della riunione',italianDate(p.data_riunione))+info('Orario',time)+
+    info('Luogo',p.luogo)+info('Presidente / Segretario',[p.presidente,p.segretario].filter(Boolean).join(' / '))+'</div>'+
+  sec('Presenti',p.presenti)+sec('Assenti',p.assenti)+sec('Invitati / altri presenti',p.invitati)+agenda+
+  sec('Svolgimento della seduta',p.svolgimento)+sec('Deliberazioni e decisioni assunte',p.deliberazioni)+
+  sec('Esito della votazione',p.votazione)+sec('Note',p.note)+
+  '<div class="vp-sign"><div><div class="vp-sign-line">Il Presidente<b>'+esc(clean(p.presidente))+'</b></div></div>'+
+   '<div><div class="vp-sign-line">Il Segretario verbalizzante<b>'+esc(clean(p.segretario))+'</b></div></div></div>'+
+  '</div>';
+ const imgs=[...$('verbPrint').querySelectorAll('img')];
+ Promise.race([
+  Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve}))),
+  new Promise(resolve=>setTimeout(resolve,1800))
+ ]).then(()=>window.print());
 }
 $('vNew').onclick=()=>{resetMinuteForm();resetMinuteFilters();loadMinutesList()};
 $('vExit').onclick=()=>{resetMinuteForm();resetMinuteFilters();loadMinutesList();$('vBody').scrollIntoView({behavior:'smooth',block:'start'})};
