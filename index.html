@@ -107,6 +107,12 @@
 .dim-slot .dim-person{font-size:12px;margin:3px 0;overflow-wrap:anywhere}
 @media(max-width:1120px){.dim-dash-layout{display:block}.dim-dash-side{position:static;max-height:none}}
 .dim-admin-assign{border-top:1px solid #dce6ef;margin-top:8px;padding-top:8px}.dim-admin-assign>b{font-size:11px;color:var(--n)}
+.roster-crew-editor{margin-top:8px;max-width:360px;white-space:normal}
+.roster-crew-panel{margin-top:7px;padding:8px;background:#f6f9fc;border:1px solid #d8e4ec;border-radius:9px}
+.roster-crew-panel .field{margin:6px 0;text-align:left}.roster-crew-panel .actions{margin-top:8px}
+.roster-crew-summary{padding:8px 0;border-bottom:1px solid #e5eaf0}
+.roster-crew-summary:last-child{border-bottom:0}
+@media print{.roster-crew-editor{display:none!important}.roster-crew-summary{break-inside:avoid}}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
@@ -1125,6 +1131,7 @@ let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
 let dimVolCursor=new Date(),dimVolSelected=todaySafe(),dimVolRows=[],dimVolSeq=0,dimVolBusy=false;
 let dimAdminCursor=new Date(),dimAdminSelected=todaySafe(),dimAdminRows=[],dimAdminEligible=[],dimAdminSeq=0,dimAdminEligibleSeq=0,dimAdminBusy=false;
+let rosterCrewBusy=false,rosterCrewEligible=new Map();
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupAutomaticRows=[],backupBusy=false;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
@@ -2646,6 +2653,113 @@ const EM_SLOTS=[
  {id:'SERA',start:18,end:22},
  {id:'NOTTE',start:22,end:30}
 ];
+
+function rosterCrewTarget(kind,id){
+ if(kind==='TURNO_EMERGENZA'){
+  const item=emTurns.find(t=>t.id===id);
+  return item?{item,day:item.data_turno,members:emAssignments.filter(a=>a.turno_id===id),msgId:'emMsg',reload:loadEmergencyRoster}:null;
+ }
+ if(kind==='TURNO_ASSISTENZA'){
+  const item=asTurns.find(t=>t.id===id);
+  return item?{item,day:item.data_turno,members:asAssignments.filter(a=>a.turno_id===id),msgId:'asMsg',reload:loadAssistanceRoster}:null;
+ }
+ if(kind==='SERVIZIO_ASSISTENZA'){
+  const item=asServices.find(s=>s.id===id);
+  return item?{item,day:item.data_servizio,members:asServiceAssignments.filter(a=>a.servizio_id===id),msgId:'asMsg',reload:loadAssistanceRoster}:null;
+ }
+ return null;
+}
+function rosterCrewPanelId(kind,id){return 'rosterCrew-'+kind+'-'+id}
+function rosterCrewMarkup(kind,item){
+ const day=item.data_turno||item.data_servizio;
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||day<todaySafe())return '';
+ return '<div class="roster-crew-editor">'+
+  '<button type="button" class="btn yellow" data-roster-crew-open="'+esc(kind)+'" data-roster-crew-id="'+esc(item.id)+'">✚ Aggiungi componente</button>'+
+  '<div id="'+esc(rosterCrewPanelId(kind,item.id))+'" class="roster-crew-panel"></div></div>';
+}
+function rosterCrewPersonOptions(kind,id){
+ const panel=$(rosterCrewPanelId(kind,id)),target=rosterCrewTarget(kind,id);
+ if(!panel||!target)return;
+ const role=panel.querySelector('[data-roster-crew-role]')?.value||'';
+ const select=panel.querySelector('[data-roster-crew-person]');
+ if(!select)return;
+ const existing=new Set(target.members.map(p=>p.badge_personale));
+ const candidates=(rosterCrewEligible.get(panel.id)||[])
+  .filter(p=>p.ruolo===role&&!existing.has(p.badge))
+  .sort((a,b)=>String(a.badge).localeCompare(String(b.badge),'it',{numeric:true}));
+ select.innerHTML='<option value="">Seleziona un volontario</option>'+
+  candidates.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo+' · badge '+p.badge)+'</option>').join('');
+}
+async function rosterCrewOpen(kind,id){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const target=rosterCrewTarget(kind,id),panel=$(rosterCrewPanelId(kind,id));
+ if(!target||!panel)return;
+ if(panel.innerHTML.trim()){panel.innerHTML='';rosterCrewEligible.delete(panel.id);return}
+ panel.innerHTML='<div class="muted">Caricamento operatori abilitati...</div>';
+ const r=await sb.rpc('cge_turnario_abilitati',{p_giorno:target.day});
+ if(!document.getElementById(panel.id))return;
+ if(r.error){panel.innerHTML='<div class="notice err">'+esc(r.error.message)+'</div>';return}
+ rosterCrewEligible.set(panel.id,r.data||[]);
+ const roles=EM_ROLES.filter(([role])=>
+  (r.data||[]).some(p=>p.ruolo===role)&&
+  (kind!=='SERVIZIO_ASSISTENZA'||!target.members.some(m=>m.ruolo===role)));
+ if(!roles.length){
+  panel.innerHTML='<div class="notice warn">Nessun ruolo libero con volontari qualificati per questa data.</div>';
+  return;
+ }
+ panel.innerHTML='<div class="field"><label>Ruolo</label>'+
+  '<select data-roster-crew-role>'+roles.map(([role,label])=>
+    '<option value="'+esc(role)+'">'+esc(label)+'</option>').join('')+'</select></div>'+
+  '<div class="field"><label>Volontario qualificato</label><select data-roster-crew-person></select></div>'+
+  '<div class="actions"><button type="button" class="btn yellow" data-roster-crew-confirm>Assegna definitivamente</button>'+
+  '<button type="button" class="btn secondary" data-roster-crew-close>Chiudi</button></div>'+
+  '<div data-roster-crew-feedback></div>';
+ panel.querySelector('[data-roster-crew-role]').onchange=()=>rosterCrewPersonOptions(kind,id);
+ panel.querySelector('[data-roster-crew-confirm]').onclick=()=>rosterCrewAssign(kind,id);
+ panel.querySelector('[data-roster-crew-close]').onclick=()=>{rosterCrewEligible.delete(panel.id);panel.innerHTML=''};
+ rosterCrewPersonOptions(kind,id);
+}
+async function rosterCrewAssign(kind,id){
+ if(rosterCrewBusy||!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const target=rosterCrewTarget(kind,id),panel=$(rosterCrewPanelId(kind,id));
+ if(!target||!panel)return;
+ const role=panel.querySelector('[data-roster-crew-role]')?.value;
+ const badge=panel.querySelector('[data-roster-crew-person]')?.value;
+ const name=(rosterCrewEligible.get(panel.id)||[]).find(x=>x.badge===badge&&x.ruolo===role)?.nome_completo;
+ if(!badge||!name||!role){
+  const feedback=panel.querySelector('[data-roster-crew-feedback]');
+  if(feedback)feedback.innerHTML='<div class="notice warn">Seleziona prima un volontario.</div>';
+  return;
+ }
+ if(!confirm('Inserire DEFINITIVAMENTE '+name+' come '+(EM_ROLES.find(x=>x[0]===role)?.[1]||role)+
+  ' nel '+(kind==='SERVIZIO_ASSISTENZA'?'servizio':'turno')+' del '+target.day+'?'))return;
+ rosterCrewBusy=true;
+ panel.querySelector('[data-roster-crew-confirm]').disabled=true;
+ const feedback=panel.querySelector('[data-roster-crew-feedback]');
+ if(feedback)feedback.innerHTML='<div class="muted">Registrazione in corso...</div>';
+ try{
+  const r=await sb.rpc('cge_turnario_assegna',{
+   p_tipo:kind,p_elemento:id,p_badge:badge,p_ruolo:role
+  });
+  if(r.error)throw r.error;
+  await target.reload();
+  msg(target.msgId,'Assegnato '+name+' in modo definitivo. Equipaggio aggiornato.','ok');
+ }catch(e){
+  const still=$(rosterCrewPanelId(kind,id));
+  const notice=still?.querySelector('[data-roster-crew-feedback]');
+  if(notice)notice.innerHTML='<div class="notice err">'+esc(e.message||String(e))+'</div>';
+  else msg(target.msgId,e.message||String(e),'err');
+ }finally{
+  rosterCrewBusy=false;
+  const still=$(rosterCrewPanelId(kind,id));
+  const btn=still?.querySelector('[data-roster-crew-confirm]');
+  if(btn)btn.disabled=false;
+ }
+}
+function rosterCrewBind(parentId){
+ $(parentId).querySelectorAll('[data-roster-crew-open]').forEach(button=>
+  button.onclick=()=>rosterCrewOpen(button.dataset.rosterCrewOpen,button.dataset.rosterCrewId));
+}
 function emHour(v){if(!v)return 0;const p=String(v).split(':');return Number(p[0])+Number(p[1]||0)/60}
 function emSlotIds(t){
  const start=emHour(t.ora_inizio),end=emHour(t.ora_fine);
@@ -2692,8 +2806,10 @@ function emRenderDay(day){
    }).join('')+'</tr>'
  }).join('');
  const summary=dayTurns.length?dayTurns.map(t=>{const cov=emCover(t);
-  return '<span class="muted" style="margin:3px">'+esc(calTime(t.ora_inizio))+'–'+esc(calTime(t.ora_fine))+' · M'+esc(t.mezzo||'—')+'</span>'
- }).join(''):'<span class="muted">Nessun turno EMERGENZA inserito in questa data.</span>';
+  return '<div class="roster-crew-summary"><b>'+esc(calTime(t.ora_inizio))+'–'+esc(calTime(t.ora_fine))+' · M'+esc(t.mezzo||'—')+'</b>'+
+   ' <span class="pill '+(cov.cls||'')+'">'+esc(cov.label)+'</span>'+
+   rosterCrewMarkup('TURNO_EMERGENZA',t)+'</div>';
+ }).join(''):'<span class="muted">Nessun turno EMERGENZA inserito in questa data. Usa «Gestisci turni» per crearne uno.</span>';
  return '<div class="em-day">'+head+'<div class="em-table-wrap"><table class="em-roster">'+col+'<tbody>'+rows+'</tbody></table></div><div style="padding:7px 11px;background:#fff">'+summary+'</div></div>';
 }
 function emRender(){
@@ -2708,6 +2824,7 @@ function emRender(){
  const shown=emTurns.filter(t=>!emVehicle||t.mezzo===emVehicle);
  $('emCount').textContent=shown.length+' '+(shown.length===1?'turno di emergenza':'turni di emergenza');
  $('emDays').innerHTML=days.map(emRenderDay).join('');
+ rosterCrewBind('emDays');
 }
 async function loadEmergencyRoster(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
@@ -2999,7 +3116,7 @@ function asServiceRow(s,slot){
  '<b>'+esc(asServiceName(s))+'</b><span class="as-service-location">'+esc(s.destinazione||s.indirizzo_destinazione||'Luogo da indicare')+'</span>'+
  '<span class="as-service-hours">Mezzo '+esc(s.mezzo||'—')+' · '+esc(times)+'</span>'+
  (crew.length?'':'<span class="pill r">Equipaggio da assegnare</span>')+
- '<button type="button" class="btn secondary as-open-service" data-as-open-service="'+esc(s.id)+'">Apri servizio / Equipaggio</button></th>';
+ '<button type="button" class="btn secondary as-open-service" data-as-open-service="'+esc(s.id)+'">Apri servizio / Equipaggio</button>'+rosterCrewMarkup('SERVIZIO_ASSISTENZA',s)+'</th>';
  return '<tr class="as-service-row">'+first+EM_ROLES.map(([role])=>{
   const entries=crew.filter(a=>a.ruolo===role).map(a=>asServiceCrewEntry(s,a));
   return '<td>'+(entries.join('')||'<div class="em-empty">—</div>')+'</td>';
@@ -3011,7 +3128,7 @@ function asTurnRow(t,slot){
  '<b>Turno assistenza · Mezzo '+esc(t.mezzo||'—')+'</b>'+
  '<span class="as-service-location">'+esc(t.note||'')+'</span>'+
  '<span class="as-service-hours">'+esc(calTime(t.ora_inizio))+'–'+esc(calTime(t.ora_fine))+'</span>'+
- '<span class="pill '+(cov.cls||'')+'">'+esc(cov.label)+'</span></th>';
+ '<span class="pill '+(cov.cls||'')+'">'+esc(cov.label)+'</span>'+rosterCrewMarkup('TURNO_ASSISTENZA',t)+'</th>';
  return '<tr class="as-turn-row">'+first+EM_ROLES.map(([role])=>{
   const entries=crew.filter(a=>a.ruolo===role).map(a=>asEntry(t,a));
   return '<td>'+(entries.join('')||'<div class="em-empty">—</div>')+'</td>';
@@ -3046,6 +3163,7 @@ function asRender(){
  $('asCount').textContent=shownServices.length+' '+(shownServices.length===1?'servizio':'servizi')+' · '+shown.length+' '+(shown.length===1?'turno':'turni')+' di assistenza';
  $('asDays').innerHTML=days.map(asRenderDay).join('');
  $('asDays').querySelectorAll('[data-as-open-service]').forEach(b=>b.onclick=()=>openService(b.dataset.asOpenService));
+ rosterCrewBind('asDays');
  renderAssistanceCandidates();
 }
 
