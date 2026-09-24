@@ -113,6 +113,7 @@
 .roster-crew-summary{padding:8px 0;border-bottom:1px solid #e5eaf0}
 .roster-crew-summary:last-child{border-bottom:0}
 @media print{.roster-crew-editor{display:none!important}.roster-crew-summary{break-inside:avoid}}
+.vol-panel-shifts#volRosterSection{border-top:5px solid #5c9bd5}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
@@ -987,6 +988,7 @@
   <aside class="vol-side" aria-label="Menu APP Volontari">
    <div class="vol-side-head"><b>👋 Area volontario</b><span>Scegli una sezione</span></div>
       <button type="button" class="vol-nav active" data-vol-target="volDimSection">🚑 Turni dimissioni</button>
+   <button type="button" class="vol-nav" data-vol-target="volRosterSection">🚨 Emergenza e assistenze</button>
    <button type="button" class="vol-nav" data-vol-target="volShiftsSection">🕒 I miei turni</button>
    <button type="button" class="vol-nav" data-vol-target="volAvailabilitySection">✅ Disponibilità</button>
    <button type="button" class="vol-nav" data-vol-target="volServicesSection">🚐 I miei servizi</button>
@@ -1011,6 +1013,26 @@
      <div id="dimVolGrid" class="dim-month-grid"></div><h3 id="dimVolDayTitle" style="margin-top:15px"></h3><div id="dimVolDay"></div>
     </div>
    </section>
+
+<section id="volRosterSection" class="surface vol-panel vol-panel-shifts">
+ <div class="hero"><h2>🚨 Emergenza 118 e assistenze manifestazioni</h2>
+ <p>Iscriviti ai turni e alle assistenze già programmati. La scelta è definitiva: per eventuali variazioni contatta il Centralino.</p></div>
+ <div class="pad">
+  <div class="actions" style="justify-content:space-between"><b id="volRosterTitle"></b>
+   <div class="actions"><button type="button" class="btn secondary" id="volRosterPrev">←</button>
+    <button type="button" class="btn yellow" id="volRosterToday">Oggi</button>
+    <button type="button" class="btn secondary" id="volRosterNext">→</button>
+    <button type="button" class="btn secondary" id="volRosterRefresh">↻ Aggiorna</button>
+   </div>
+  </div>
+  <p class="muted">Sono disponibili soltanto i turni Emergenza e Assistenza e i servizi Assistenza manifestazioni già inseriti da Amministrazione o Centralino. Puoi scegliere solo i ruoli per cui risulti qualificato.</p>
+  <div id="volRosterMsg"></div>
+  <div class="dim-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
+  <div id="volRosterGrid" class="dim-month-grid"></div>
+  <h3 id="volRosterDayTitle" style="margin-top:15px"></h3>
+  <div id="volRosterDay"></div>
+ </div>
+</section>
 
 <section id="volShiftsSection" class="surface vol-panel vol-panel-shifts">
     <div class="hero"><h2>🕒 I miei turni</h2><p>I turni assegnati sono definitivi. Per variazioni, contatta il Centralino.</p></div>
@@ -1130,6 +1152,7 @@ let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='m
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
 let dimVolCursor=new Date(),dimVolSelected=todaySafe(),dimVolRows=[],dimVolSeq=0,dimVolBusy=false;
+let volRosterCursor=new Date(),volRosterSelected=todaySafe(),volRosterEvents=[],volRosterSeq=0,volRosterBusy=false;
 let dimAdminCursor=new Date(),dimAdminSelected=todaySafe(),dimAdminRows=[],dimAdminEligible=[],dimAdminSeq=0,dimAdminEligibleSeq=0,dimAdminBusy=false;
 let rosterCrewBusy=false,rosterCrewEligible=new Map();
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
@@ -1840,6 +1863,130 @@ $('calWeek').onclick=()=>{opCalMode='week';opCalCursor=new Date(opCalSelected+'T
 document.querySelectorAll('.cal-vehicle').forEach(b=>b.onclick=()=>{opCalVehicle=b.dataset.calVehicle||'';document.querySelectorAll('.cal-vehicle').forEach(x=>x.className='btn '+((x.dataset.calVehicle||'')===opCalVehicle?'blue':'secondary')+' cal-vehicle');refreshOperationalCalendarView()});
 $('calNewService').onclick=()=>view('new',{date:opCalSelected});$('calNewShift').onclick=()=>{if($('sd'))$('sd').value=opCalSelected;view('shifts')};
 
+
+const VOL_ROSTER_ROLES=[
+ ['AUTISTA','Autista'],['CAPO_SERVIZIO','Capo servizio'],
+ ['SOCCORRITORE','Soccorritore'],['SECONDO_SOCCORRITORE','Secondo soccorritore'],
+ ['AFFIANCATO','Affiancato'],['ACCOMPAGNATORE','Accompagnatore']
+];
+function volRosterEligible(day,kind){
+ return VOL_ROSTER_ROLES.filter(([role])=>(kind==='SERVIZIO_ASSISTENZA'||role!=='ACCOMPAGNATORE')&&
+  vfcalQualificationRows.some(q=>(q.codice_qualifica===(role==='ACCOMPAGNATORE'?'ALLEGATO_A':role))&&
+   (!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
+}
+function volRosterTitle(event){
+ if(event.kind==='TURNO_EMERGENZA')return '🚨 Emergenza 118';
+ if(event.kind==='TURNO_ASSISTENZA')return '🎪 Turno assistenza manifestazione';
+ return '🎪 '+(event.nome||'Assistenza manifestazione');
+}
+function volRosterRender(){
+ const range=calVisibleRange(volRosterCursor,'month');
+ $('volRosterTitle').textContent=calMonthTitle(volRosterCursor);
+ let html='';
+ for(let i=0;i<range.cells;i++){
+  const date=new Date(range.start);date.setDate(range.start.getDate()+i);
+  const day=calYmd(date),items=volRosterEvents.filter(e=>e.day===day);
+  const em=items.filter(e=>e.kind==='TURNO_EMERGENZA').length,
+   ass=items.length-em;
+  html+='<button type="button" class="dim-date '+
+   (date.getMonth()!==volRosterCursor.getMonth()?'dim-out ':'')+
+   (day===todaySafe()?'dim-today ':'')+(day===volRosterSelected?'dim-selected':'')+
+   '" data-vol-roster-day="'+day+'"><b>'+date.getDate()+'</b>'+
+   '<small>'+(em?'🚨 '+em+' ':'')+(ass?'🎪 '+ass:'')+'</small></button>';
+ }
+ $('volRosterGrid').innerHTML=html;
+ $('volRosterGrid').querySelectorAll('[data-vol-roster-day]').forEach(button=>
+  button.onclick=()=>{volRosterSelected=button.dataset.volRosterDay;volRosterRender()});
+ volRosterRenderDay();
+}
+function volRosterRenderDay(){
+ const day=volRosterSelected;
+ $('volRosterDayTitle').textContent=dimDayTitle(day);
+ const entries=volRosterEvents.filter(e=>e.day===day)
+ .sort((a,b)=>(a.start||'99:99').localeCompare(b.start||'99:99'));
+ $('volRosterDay').innerHTML=entries.length?entries.map(e=>{
+  const assigned=!!e.mine,roles=volRosterEligible(e.day,e.kind);
+  const description=e.kind==='SERVIZIO_ASSISTENZA'?
+    (e.start||'—')+'–'+(e.end||'—')+' · Mezzo '+(e.mezzo||'—')+
+    (e.luogo?' · '+e.luogo:''):
+    (e.start||'—')+'–'+(e.end||'—')+' · Mezzo '+(e.mezzo||'—')+
+    ' · '+(e.count||0)+' operatori iscritti';
+  const controls=assigned?'<div class="notice ok">Iscritto definitivamente'+
+   (e.myRole?' come '+esc(VOL_ROSTER_ROLES.find(x=>x[0]===e.myRole)?.[1]||e.myRole):'')+
+   '. Per variazioni contatta il Centralino.</div>':
+   day<todaySafe()?'':
+   roles.length?'<div class="actions" style="margin-top:8px">'+
+    '<select aria-label="Scegli ruolo" data-vol-roster-role="'+esc(e.kind)+'-'+esc(e.id)+'" style="flex:1 1 140px">'+
+     roles.map(([role,label])=>'<option value="'+esc(role)+'">'+esc(label)+'</option>').join('')+
+    '</select><button type="button" class="btn yellow" data-vol-roster-join="'+esc(e.id)+
+    '" data-vol-roster-kind="'+esc(e.kind)+'">Mi segno (definitivo)</button></div>':
+    '<div class="muted">Non risultano qualifiche valide per questa data.</div>';
+  return '<div class="box" style="margin:8px 0"><b>'+esc(volRosterTitle(e))+'</b>'+
+   '<div class="muted">'+esc(description)+'</div>'+controls+'</div>';
+ }).join(''):'<div class="notice">Nessun turno o assistenza inseriti per questo giorno.</div>';
+ $('volRosterDay').querySelectorAll('[data-vol-roster-join]').forEach(button=>
+  button.onclick=()=>volRosterJoin(button.dataset.volRosterKind,button.dataset.volRosterJoin));
+}
+async function loadVolRoster(){
+ if(!volunteerBadge)return;
+ const seq=++volRosterSeq,range=calVisibleRange(volRosterCursor,'month');
+ msg('volRosterMsg','Caricamento turni e assistenze...');
+ const [turns,services]=await Promise.all([
+  sb.rpc('cge_volontario_turni_aperti',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd})
+ ]);
+ if(seq!==volRosterSeq)return;
+ if(turns.error||services.error)return msg('volRosterMsg',
+  'Errore calendario: '+(turns.error||services.error).message,'err');
+ volRosterEvents=[
+  ...(turns.data||[]).map(t=>({
+   id:t.id,kind:t.tipo_turno==='EMERGENZA'?'TURNO_EMERGENZA':'TURNO_ASSISTENZA',
+   day:t.data_turno,start:calTime(t.ora_inizio),end:calTime(t.ora_fine),
+   mezzo:t.mezzo,count:t.numero_assegnati,mine:!!t.ruolo_assegnato,myRole:t.ruolo_assegnato
+  })),
+  ...(services.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio)).map(s=>({
+   id:s.id,kind:'SERVIZIO_ASSISTENZA',day:s.data_servizio,
+   start:calTime(s.ora_inizio_assistenza_prevista||s.ora_partenza_prevista),
+   end:calTime(s.ora_fine_assistenza_prevista||s.ora_rientro_previsto),
+   nome:s.nome_manifestazione,luogo:s.luogo_manifestazione,
+   mezzo:s.mezzo,mine:s.assegnato_a_me
+  }))
+ ];
+ volRosterRender();msg('volRosterMsg','');
+}
+async function volRosterJoin(kind,id){
+ if(volRosterBusy)return;
+ const event=volRosterEvents.find(e=>e.kind===kind&&e.id===id);
+ if(!event||event.mine||event.day<todaySafe())return;
+ const role=$('volRosterDay').querySelector('[data-vol-roster-role="'+kind+'-'+id+'"]')?.value;
+ if(!volRosterEligible(event.day,kind).some(x=>x[0]===role))
+  return msg('volRosterMsg','Seleziona un ruolo per cui sei qualificato.','warn');
+ if(!confirm('Iscriverti DEFINITIVAMENTE come '+
+  (VOL_ROSTER_ROLES.find(x=>x[0]===role)?.[1]||role)+' al '+volRosterTitle(event)+
+  ' del '+event.day+'? Non potrai annullare autonomamente.'))return;
+ volRosterBusy=true;msg('volRosterMsg','Registrazione definitiva in corso...');
+ try{
+  const result=await sb.rpc('cge_volontario_turnario_iscriviti',{
+   p_tipo:kind,p_elemento:id,p_ruolo:role
+  });
+  if(result.error)throw result.error;
+  await loadVolunteerArea();
+  msg('volRosterMsg','Turno definitivo registrato.','ok');
+ }catch(e){msg('volRosterMsg',e.message||String(e),'err')}
+ finally{volRosterBusy=false}
+}
+$('volRosterPrev').onclick=()=>{
+ volRosterCursor=new Date(volRosterCursor.getFullYear(),volRosterCursor.getMonth()-1,1);
+ volRosterSelected=calYmd(volRosterCursor);loadVolRoster();
+};
+$('volRosterNext').onclick=()=>{
+ volRosterCursor=new Date(volRosterCursor.getFullYear(),volRosterCursor.getMonth()+1,1);
+ volRosterSelected=calYmd(volRosterCursor);loadVolRoster();
+};
+$('volRosterToday').onclick=()=>{
+ volRosterCursor=new Date();volRosterSelected=todaySafe();loadVolRoster();
+};
+$('volRosterRefresh').onclick=loadVolRoster;
 function refreshVolunteerFutureCalendarView(){
  renderCalendarGrid('vfcal',vfcalCursor,vfcalSelected,vfcalEvents,vfcalMode);
  renderVolunteerFutureCalendarDay();
@@ -4092,7 +4239,7 @@ async function loadVolunteerArea(){
   document.querySelectorAll('[data-vol-doc-open]').forEach(b=>b.onclick=()=>volOpenDocument(b.dataset.volDocOpen,documents));
   document.querySelectorAll('[data-vol-doc-del]').forEach(b=>b.onclick=()=>volDeleteDocument(b.dataset.volDocDel,documents));
   $('volServices').innerHTML=services.length?services.slice(0,30).map(x=>{const aids=[x.necessita_carrozzina?'Carrozzina':'',x.necessita_ossigeno?'Ossigeno':'',x.necessita_barellato?'Barellato':'',x.necessita_monitoraggio?'Monitoraggio':'',x.assistenza_extra?'Assistenza extra':''].filter(Boolean).join(', ');return '<div class="box" style="margin:7px 0"><b>'+esc(x.data_servizio)+' · '+esc(volFmtTime(x.ora_partenza_prevista))+' · '+esc(x.tipo_servizio_altro||x.tipo_servizio)+'</b> <span class="pill b">'+esc(x.ruolo_assegnato||'—')+'</span><br>Mezzo '+esc(x.mezzo||'—')+' · '+esc(x.luogo_partenza||x.indirizzo_partenza||'—')+' → '+esc(x.ospedale_destinazione||x.destinazione||x.indirizzo_destinazione||'—')+'<br><span class="muted">Carico '+esc(volFmtTime(x.ora_carico_paziente_prevista))+' · Rientro '+esc(volFmtTime(x.ora_rientro_previsto))+' · Stato '+esc(x.stato)+'</span>'+(aids?'<br><span class="pill">'+esc(aids)+'</span>':'')+(x.note?'<br>'+esc(x.note):'')+'</div>'}).join(''):'<div class="notice">Nessun servizio assegnato.</div>';
-  await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar(),loadDimissioniVol()]);
+  await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar(),loadDimissioniVol(),loadVolRoster()]);
   msg('volmsg','');
  }catch(e){msg('volmsg',e.message||String(e),'err')}
 }
