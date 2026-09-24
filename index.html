@@ -1056,6 +1056,7 @@
       <button type="button" class="vol-nav active" data-vol-target="volDimSection">🚑 Turni dimissioni</button>
    <button type="button" class="vol-nav" data-vol-target="volEmgSection">🚨 Emergenza 118</button>
    <button type="button" class="vol-nav" data-vol-target="volRosterSection">🎪 Assistenze manifestazioni</button>
+   <button type="button" class="vol-nav" data-vol-target="volOrdSection">🚐 Servizi ordinari</button>
    <button type="button" class="vol-nav" data-vol-target="volShiftsSection">🕒 I miei turni</button>
    <button type="button" class="vol-nav" data-vol-target="volAvailabilitySection">✅ Disponibilità</button>
    <button type="button" class="vol-nav" data-vol-target="volServicesSection">🚐 I miei servizi</button>
@@ -1113,6 +1114,29 @@
   <div id="volRosterDay"></div>
  </div>
 </section>
+<section id="volOrdSection" class="surface vol-panel vol-panel-shifts">
+ <div class="hero"><h2>🚐 Servizi ordinari</h2>
+  <p>Visita · Trasferimento · Trasporto semplice. Scegli la data e il servizio specifico, poi segnati con il ruolo per cui sei qualificato.</p>
+ </div>
+ <div class="pad">
+  <div class="actions" style="justify-content:space-between">
+   <b id="volOrdTitle"></b>
+   <div class="actions">
+    <button id="volOrdPrev" class="btn secondary" type="button">←</button>
+    <button id="volOrdToday" class="btn yellow" type="button">Oggi</button>
+    <button id="volOrdNext" class="btn secondary" type="button">→</button>
+    <button id="volOrdRefresh" class="btn secondary" type="button">↻ Aggiorna</button>
+   </div>
+  </div>
+  <p class="muted">Le giornate con 🚐 contengono servizi ordinari programmati. La scelta è definitiva; per variazioni contatta il Centralino.</p>
+  <div id="volOrdMsg"></div>
+  <div class="dim-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
+  <div id="volOrdGrid" class="dim-month-grid"></div>
+  <h3 id="volOrdDayTitle" style="margin-top:15px"></h3>
+  <div id="volOrdDay"></div>
+ </div>
+</section>
+
 <section id="volShiftsSection" class="surface vol-panel vol-panel-shifts">
     <div class="hero"><h2>🕒 I miei turni</h2><p>I turni assegnati sono definitivi. Per variazioni, contatta il Centralino.</p></div>
     <div class="pad"><div id="volShifts"></div></div>
@@ -4637,7 +4661,7 @@ async function loadVolunteerArea(){
   document.querySelectorAll('[data-vol-doc-open]').forEach(b=>b.onclick=()=>volOpenDocument(b.dataset.volDocOpen,documents));
   document.querySelectorAll('[data-vol-doc-del]').forEach(b=>b.onclick=()=>volDeleteDocument(b.dataset.volDocDel,documents));
   $('volServices').innerHTML=services.length?services.slice(0,30).map(x=>{const aids=[x.necessita_carrozzina?'Carrozzina':'',x.necessita_ossigeno?'Ossigeno':'',x.necessita_barellato?'Barellato':'',x.necessita_monitoraggio?'Monitoraggio':'',x.assistenza_extra?'Assistenza extra':''].filter(Boolean).join(', ');return '<div class="box" style="margin:7px 0"><b>'+esc(x.data_servizio)+' · '+esc(volFmtTime(x.ora_partenza_prevista))+' · '+esc(x.tipo_servizio_altro||x.tipo_servizio)+'</b> <span class="pill b">'+esc(x.ruolo_assegnato||'—')+'</span><br>Mezzo '+esc(x.mezzo||'—')+' · '+esc(x.luogo_partenza||x.indirizzo_partenza||'—')+' → '+esc(x.ospedale_destinazione||x.destinazione||x.indirizzo_destinazione||'—')+'<br><span class="muted">Carico '+esc(volFmtTime(x.ora_carico_paziente_prevista))+' · Rientro '+esc(volFmtTime(x.ora_rientro_previsto))+' · Stato '+esc(x.stato)+'</span>'+(aids?'<br><span class="pill">'+esc(aids)+'</span>':'')+(x.note?'<br>'+esc(x.note):'')+'</div>'}).join(''):'<div class="notice">Nessun servizio assegnato.</div>';
-  await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar(),loadDimissioniVol(),loadEmergenzaVol(),loadVolRoster()]);
+  await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar(),loadDimissioniVol(),loadEmergenzaVol(),loadVolRoster(),loadVolOrd()]);
   msg('volmsg','');
  }catch(e){msg('volmsg',e.message||String(e),'err')}
 }
@@ -4749,4 +4773,4 @@ if('serviceWorker' in navigator){
 applyVolunteerOnlyLogin();refreshPwaInstallUI();
 try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&$('vbadge')){$('vbadge').value=remembered;$('vremember').checked=true}}catch(_){}
 (async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
-</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script></body></html>
+</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924a"></script></body></html>
