@@ -385,6 +385,21 @@
   </div>
  </div>
  <div class="pad">
+ <div class="section"><h3>🎪 Calendario fasce Assistenze manifestazioni</h3><p class="muted">Iscrizioni definitive per giorno e fascia: mattino, pomeriggio e notte. L’elenco delle singole manifestazioni programmate resta consultabile sotto.</p>
+<aside class="dim-dash-side section">
+ <h3>🎪 Turni ASSISTENZE MANIFESTAZIONI</h3><div class="muted">Iscrizioni definitive dei volontari: per ogni fascia servono un autista e un soccorritore.</div>
+ <div class="actions" style="justify-content:space-between;margin-top:10px"><b id="astAdminTitle"></b><div class="actions">
+ <button id="astAdminPrev" class="btn secondary" type="button">←</button>
+ <button id="astAdminToday" class="btn yellow" type="button">Oggi</button>
+ <button id="astAdminNext" class="btn secondary" type="button">→</button>
+ <button id="astAdminRefresh" class="btn secondary" type="button">↻</button></div></div>
+ <div id="astAdminMsg"></div>
+ <div class="dim-weekdays"><span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span></div>
+ <div id="astAdminGrid" class="dim-month-grid dim-month-small"></div>
+ <h4 id="astAdminDayTitle" style="margin:12px 0 5px"></h4><div id="astAdminDay"></div>
+ </aside>
+ </div>
+  <div class="section"><h3>🎪 Servizi e turni delle singole manifestazioni</h3><p class="muted">Le assegnazioni alle manifestazioni specifiche rimangono separate dalle iscrizioni per fascia.</p></div>
   <div class="section em-toolbar">
    <div class="actions" style="justify-content:space-between;align-items:end">
     <div class="actions">
@@ -1044,10 +1059,20 @@
     </div>
    </section>
 
-<section id="volRosterSection" class="surface vol-panel vol-panel-shifts">
- <div class="hero"><h2>🎪 Assistenze manifestazioni</h2>
- <p>Seleziona la manifestazione specifica e iscriviti definitivamente con la qualifica corretta.</p></div>
- <div class="pad">
+<section id="volRosterSection" class="surface vol-panel vol-panel-assistenza">
+    <div class="hero"><h2>🎪 Turni ASSISTENZE MANIFESTAZIONI</h2><p>Scegli giorno, fascia e ruolo per inserirti in un turno definitivo di assistenza. La scelta della singola manifestazione è disponibile più sotto.</p></div>
+    <div class="pad">
+     <div class="actions" style="justify-content:space-between"><b id="astVolTitle"></b><div class="actions">
+      <button id="astVolPrev" class="btn secondary" type="button">←</button><button id="astVolToday" class="btn yellow" type="button">Oggi</button>
+      <button id="astVolNext" class="btn secondary" type="button">→</button><button id="astVolRefresh" class="btn secondary" type="button">↻ Aggiorna</button>
+     </div></div>
+     <p class="muted">Verde: autista e soccorritore presenti. Giallo: turno da completare. L'iscrizione è definitiva e non si può cancellare autonomamente.</p>
+     <div id="astVolMsg"></div><div class="dim-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
+     <div id="astVolGrid" class="dim-month-grid"></div><h3 id="astVolDayTitle" style="margin-top:15px"></h3><div id="astVolDay"></div>
+    </div>
+ <div class="pad"><div class="section"><h3>🎪 Manifestazioni specifiche già programmate</h3>
+ <p class="muted">Se conosci la manifestazione, puoi segnarti direttamente al servizio indicato. L’iscrizione per fascia qui sopra, invece, non assegna automaticamente un evento specifico.</p>
+  <div class="pad">
   <div class="actions" style="justify-content:space-between"><b id="volRosterTitle"></b>
    <div class="actions"><button type="button" class="btn secondary" id="volRosterPrev">←</button>
     <button type="button" class="btn yellow" id="volRosterToday">Oggi</button>
@@ -1062,8 +1087,9 @@
   <h3 id="volRosterDayTitle" style="margin-top:15px"></h3>
   <div id="volRosterDay"></div>
  </div>
-</section>
 
+ </div></div>
+</section>
 <section id="volShiftsSection" class="surface vol-panel vol-panel-shifts">
     <div class="hero"><h2>🕒 I miei turni</h2><p>I turni assegnati sono definitivi. Per variazioni, contatta il Centralino.</p></div>
     <div class="pad"><div id="volShifts"></div></div>
@@ -1185,7 +1211,9 @@ let dimVolCursor=new Date(),dimVolSelected=todaySafe(),dimVolRows=[],dimVolSeq=0
 let volRosterCursor=new Date(),volRosterSelected=todaySafe(),volRosterEvents=[],volRosterSeq=0,volRosterBusy=false;
 let dimAdminCursor=new Date(),dimAdminSelected=todaySafe(),dimAdminRows=[],dimAdminEligible=[],dimAdminSeq=0,dimAdminEligibleSeq=0,dimAdminBusy=false;
 let emgVolCursor=new Date(),emgVolSelected=todaySafe(),emgVolRows=[],emgVolSeq=0,emgVolBusy=false;
+let astVolCursor=new Date(),astVolSelected=todaySafe(),astVolRows=[],astVolSeq=0,astVolBusy=false;
 let emgAdminCursor=new Date(),emgAdminSelected=todaySafe(),emgAdminRows=[],emgAdminEligible=[],emgAdminSeq=0,emgAdminEligibleSeq=0,emgAdminBusy=false;
+let astAdminCursor=new Date(),astAdminSelected=todaySafe(),astAdminRows=[],astAdminEligible=[],astAdminSeq=0,astAdminEligibleSeq=0,astAdminBusy=false;
 let rosterCrewBusy=false,rosterCrewEligible=new Map();
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupAutomaticRows=[],backupBusy=false;
@@ -3426,6 +3454,180 @@ $('emgAdminNext').onclick=()=>emgMoveMonth('Admin',1);
 $('emgAdminToday').onclick=()=>emgMoveMonth('Admin',0);
 $('emgAdminRefresh').onclick=loadEmergenzaAdmin;
 
+const AST_FASCE=[['MATTINO','Mattino'],['POMERIGGIO','Pomeriggio'],['NOTTE','Notte']];
+function astRoleLabel(role){return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':'Soccorritore'}
+function astRowsFor(rows,day,fascia){return rows.filter(row=>row.giorno===day&&row.fascia===fascia)}
+function astSlotCovered(rows){return rows.some(row=>row.ruolo==='AUTISTA')&&rows.some(row=>row.ruolo==='SOCCORRITORE')}
+function astDayTitle(day){return new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(day+'T12:00:00')).replace(/^./,c=>c.toUpperCase())}
+function astRenderMonth(kind){
+ const admin=kind==='Admin',cursor=admin?astAdminCursor:astVolCursor,
+ selected=admin?astAdminSelected:astVolSelected,rows=admin?astAdminRows:astVolRows,
+ prefix=admin?'astAdmin':'astVol',range=calVisibleRange(cursor,'month');
+ $(prefix+'Title').textContent=calMonthTitle(cursor);
+ let output='';
+ for(let i=0;i<range.cells;i++){
+  const date=new Date(range.start);date.setDate(range.start.getDate()+i);
+  const day=calYmd(date),out=date.getMonth()!==cursor.getMonth(),counts=AST_FASCE.map(([fascia])=>{
+   const slot=astRowsFor(rows,day,fascia);
+   return '<span class="dim-dot '+(astSlotCovered(slot)?'ok':slot.length?'partial':'')+'"></span>';
+  }).join('');
+  output+='<button type="button" class="dim-date '+(out?'ast-out ':'')+(day===todaySafe()?'ast-today ':'')+
+   (day===selected?'ast-selected':'')+'" data-ast-date="'+day+'"><b>'+date.getDate()+'</b><small>'+counts+'</small></button>';
+ }
+ $(prefix+'Grid').innerHTML=output;
+ $(prefix+'Grid').querySelectorAll('[data-ast-date]').forEach(button=>button.onclick=()=>{
+  if(admin)astAdminSelected=button.dataset.astDate;else astVolSelected=button.dataset.astDate;
+  if(admin)astAdminEligible=[];
+  astRenderMonth(kind);
+  if(admin)loadAssistenzaEligible();
+ });
+ astRenderDay(kind);
+}
+function astRenderDay(kind){
+ const admin=kind==='Admin',day=admin?astAdminSelected:astVolSelected,
+ rows=admin?astAdminRows:astVolRows,prefix=admin?'astAdmin':'astVol',todayY=todaySafe();
+ $(prefix+'DayTitle').textContent=astDayTitle(day);
+ $(prefix+'Day').innerHTML=AST_FASCE.map(([fascia,label])=>{
+  const slot=astRowsFor(rows,day,fascia),
+  covered=astSlotCovered(slot),mine=slot.some(x=>x.badge_personale===volunteerBadge),
+  peopleHtml=slot.map(row=>'<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
+   ' · <b>'+esc(astRoleLabel(row.ruolo))+'</b>'+
+   (admin&&prof?.ruolo==='AMMINISTRATORE'?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-ast-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
+   '</div>').join(''),
+  missing=['AUTISTA','SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)).map(astRoleLabel),
+  state=covered?'Coperto · autista e soccorritore presenti':'Da completare · mancano '+missing.join(' e ');
+  const eligible=['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].filter(role=>vfcalQualificationRows.some(q=>
+   q.codice_qualifica===role&&(!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
+  const action=!admin&&day>=todayY&&!mine?
+   (eligible.length?'<div class="actions" style="margin-top:8px"><select aria-label="Ruolo per il turno assistenza_fasce" data-ast-role="'+fascia+'" style="max-width:170px">'+
+     eligible.map(role=>'<option value="'+role+'">'+astRoleLabel(role)+'</option>').join('')+'</select>'+
+    '<button type="button" class="btn yellow" data-ast-join="'+fascia+'">Mi segno (definitivo)</button></div>':
+    '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
+    (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
+  return '<div class="dim-slot '+(covered?'ast-complete':'ast-incomplete')+'"><b>'+label+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
+   (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
+   (admin?astAdminAssignControls(day,fascia,slot):'')+'</div>';
+ }).join('');
+ if(admin){
+  $(prefix+'Day').querySelectorAll('[data-ast-remove]').forEach(button=>button.onclick=()=>astRemove(button.dataset.astRemove));
+  $(prefix+'Day').querySelectorAll('[data-ast-assign]').forEach(button=>button.onclick=()=>astAdminAssign(day,button.dataset.astAssign,button.dataset.astRole));
+ }else{
+  $(prefix+'Day').querySelectorAll('[data-ast-join]').forEach(button=>button.onclick=()=>astJoin(day,button.dataset.astJoin));
+ }
+}
+
+function astAdminAssignControls(day,fascia,slot){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||day<todaySafe())return '';
+ return '<div class="dim-admin-assign"><b>Aggiungi all’equipaggio</b>'+
+  ['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].map(role=>{
+   const candidates=astAdminEligible.filter(p=>p.ruolo===role&&!slot.some(x=>x.badge_personale===p.badge));
+   return '<div class="actions" style="margin-top:6px"><label class="muted" style="min-width:84px">'+astRoleLabel(role)+'</label>'+
+    '<select data-ast-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Volontario '+astRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
+     '<option value="">Scegli volontario</option>'+
+     candidates.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo+' · '+p.badge)+'</option>').join('')+
+    '</select><button type="button" class="btn yellow" style="padding:8px" data-ast-assign="'+esc(fascia)+
+     '" data-ast-role="'+role+'"'+(candidates.length?'':' disabled')+'>Aggiungi</button></div>';
+  }).join('')+'</div>';
+}
+async function loadAssistenzaEligible(){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const seq=++astAdminEligibleSeq,day=astAdminSelected;
+ astAdminEligible=[];
+ if(day<todaySafe()){astRenderDay('Admin');return}
+ const r=await sb.rpc('cge_assistenza_fasce_abilitati',{p_giorno:day});
+ if(seq!==astAdminEligibleSeq||day!==astAdminSelected)return;
+ if(r.error){
+  astRenderDay('Admin');
+  return msg('astAdminMsg','Impossibile caricare i volontari abilitati: '+r.error.message,'err');
+ }
+ astAdminEligible=r.data||[];
+ astRenderDay('Admin');
+}
+async function astAdminAssign(day,fascia,role){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||astAdminBusy||day!==astAdminSelected)return;
+ const badge=$('astAdminDay').querySelector('[data-ast-assign-person="'+fascia+'-'+role+'"]')?.value;
+ const person=astAdminEligible.find(p=>p.badge===badge&&p.ruolo===role);
+ if(!person)return msg('astAdminMsg','Seleziona un volontario con qualifica valida.','warn');
+ if(!confirm('Inserire DEFINITIVAMENTE '+person.nome_completo+' nel turno ASSISTENZE MANIFESTAZIONI del '+day+
+  ', '+fascia+' come '+astRoleLabel(role)+'?'))return;
+ astAdminBusy=true;msg('astAdminMsg','Inserimento nell’equipaggio in corso...');
+ try{
+  const r=await sb.rpc('cge_assistenza_fasce_assegna',{p_giorno:day,p_fascia:fascia,p_badge:badge,p_ruolo:role});
+  if(r.error)throw r.error;
+  await loadAssistenzaAdmin();
+  msg('astAdminMsg',person.nome_completo+' inserito definitivamente come '+astRoleLabel(role)+
+   ' per '+day+' · '+fascia+'.','ok');
+ }catch(e){msg('astAdminMsg',e.message||String(e),'err')}
+ finally{astAdminBusy=false}
+}
+async function loadAssistenzaVol(){
+ if(!volunteerBadge)return;
+ const seq=++astVolSeq,range=calVisibleRange(astVolCursor,'month');
+ msg('astVolMsg','Caricamento turni assistenza...');
+ const r=await sb.rpc('cge_assistenza_fasce_turni',{p_dal:range.startYmd,p_al:range.endYmd});
+ if(seq!==astVolSeq)return;
+ if(r.error)return msg('astVolMsg',r.error.message,'err');
+ astVolRows=r.data||[];astRenderMonth('Vol');msg('astVolMsg','');
+}
+async function loadAssistenzaAdmin(){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const seq=++astAdminSeq,range=calVisibleRange(astAdminCursor,'month');
+ ++astAdminEligibleSeq;astAdminEligible=[];
+ msg('astAdminMsg','Caricamento turni assistenza...');
+ const r=await sb.rpc('cge_assistenza_fasce_turni',{p_dal:range.startYmd,p_al:range.endYmd});
+ if(seq!==astAdminSeq)return;
+ if(r.error)return msg('astAdminMsg',r.error.message,'err');
+ astAdminRows=r.data||[];astRenderMonth('Admin');msg('astAdminMsg','');
+ await loadAssistenzaEligible();
+}
+async function astJoin(day,fascia){
+ if(astVolBusy)return;
+ const role=$('astVolDay').querySelector('[data-ast-role="'+fascia+'"]')?.value;
+ if(!role||!['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].includes(role))return;
+ if(!confirm('Confermi il turno DEFINITIVO di assistenza alle manifestazioni del '+day+' · '+fascia+' come '+astRoleLabel(role)+'? Non potrai annullarlo da solo.'))return;
+ astVolBusy=true;
+ msg('astVolMsg','Registrazione definitiva in corso...');
+ try{
+  const r=await sb.rpc('cge_assistenza_fasce_segnati',{p_giorno:day,p_fascia:fascia,p_ruolo:role});
+  if(r.error)throw r.error;
+  await loadAssistenzaVol();msg('astVolMsg','Turno definitivo registrato. Presentati nella fascia scelta.','ok');
+ }catch(e){msg('astVolMsg',e.message||String(e),'err')}
+ finally{astVolBusy=false}
+}
+async function astRemove(id){
+ if(prof?.ruolo!=='AMMINISTRATORE'||astAdminBusy)return;
+ const row=astAdminRows.find(x=>x.id===id);
+ if(!row)return;
+ if(!confirm('Rimuovere '+row.nome_completo+' dal turno definitivo '+row.giorno+' · '+row.fascia+'?'))return;
+ astAdminBusy=true;
+ msg('astAdminMsg','Aggiornamento turno...');
+ try{
+  const r=await sb.rpc('cge_assistenza_fasce_rimuovi',{p_id:id});
+  if(r.error)throw r.error;
+  await loadAssistenzaAdmin();msg('astAdminMsg','Operatore rimosso. Ricontrolla la copertura del turno.','ok');
+ }catch(e){msg('astAdminMsg',e.message||String(e),'err')}
+ finally{astAdminBusy=false}
+}
+function astMoveMonth(kind,delta){
+ if(kind==='Admin'){
+  astAdminCursor=delta===0?new Date():new Date(astAdminCursor.getFullYear(),astAdminCursor.getMonth()+delta,1);
+  astAdminSelected=delta===0?todaySafe():calYmd(new Date(astAdminCursor.getFullYear(),astAdminCursor.getMonth(),1));
+  loadAssistenzaAdmin();
+ }else{
+  astVolCursor=delta===0?new Date():new Date(astVolCursor.getFullYear(),astVolCursor.getMonth()+delta,1);
+  astVolSelected=delta===0?todaySafe():calYmd(new Date(astVolCursor.getFullYear(),astVolCursor.getMonth(),1));
+  loadAssistenzaVol();
+ }
+}
+$('astVolPrev').onclick=()=>astMoveMonth('Vol',-1);
+$('astVolNext').onclick=()=>astMoveMonth('Vol',1);
+$('astVolToday').onclick=()=>astMoveMonth('Vol',0);
+$('astVolRefresh').onclick=loadAssistenzaVol;
+$('astAdminPrev').onclick=()=>astMoveMonth('Admin',-1);
+$('astAdminNext').onclick=()=>astMoveMonth('Admin',1);
+$('astAdminToday').onclick=()=>astMoveMonth('Admin',0);
+$('astAdminRefresh').onclick=loadAssistenzaAdmin;
+
 function asPeriodRange(){
  const base=new Date(asCursor.getFullYear(),asCursor.getMonth(),asCursor.getDate());
  if(asView!=='week')return {start:base,end:base};
@@ -3582,7 +3784,8 @@ async function loadAssistanceRoster(){
  if(seq!==asLoadSequence)return;
  asCandidates=cr.data||[];
  if(cr.error)msg('asCandidateMsg','Errore caricamento candidature: '+cr.error.message,'err');
- msg('asMsg','');asRender()
+ msg('asMsg','');asRender();
+ await loadAssistenzaAdmin();
 }
 $('asPrev').onclick=()=>{asCursor.setDate(asCursor.getDate()-(asView==='week'?7:1));loadAssistanceRoster()};
 $('asNext').onclick=()=>{asCursor.setDate(asCursor.getDate()+(asView==='week'?7:1));loadAssistanceRoster()};
@@ -4447,7 +4650,7 @@ async function loadVolunteerArea(){
   document.querySelectorAll('[data-vol-doc-open]').forEach(b=>b.onclick=()=>volOpenDocument(b.dataset.volDocOpen,documents));
   document.querySelectorAll('[data-vol-doc-del]').forEach(b=>b.onclick=()=>volDeleteDocument(b.dataset.volDocDel,documents));
   $('volServices').innerHTML=services.length?services.slice(0,30).map(x=>{const aids=[x.necessita_carrozzina?'Carrozzina':'',x.necessita_ossigeno?'Ossigeno':'',x.necessita_barellato?'Barellato':'',x.necessita_monitoraggio?'Monitoraggio':'',x.assistenza_extra?'Assistenza extra':''].filter(Boolean).join(', ');return '<div class="box" style="margin:7px 0"><b>'+esc(x.data_servizio)+' · '+esc(volFmtTime(x.ora_partenza_prevista))+' · '+esc(x.tipo_servizio_altro||x.tipo_servizio)+'</b> <span class="pill b">'+esc(x.ruolo_assegnato||'—')+'</span><br>Mezzo '+esc(x.mezzo||'—')+' · '+esc(x.luogo_partenza||x.indirizzo_partenza||'—')+' → '+esc(x.ospedale_destinazione||x.destinazione||x.indirizzo_destinazione||'—')+'<br><span class="muted">Carico '+esc(volFmtTime(x.ora_carico_paziente_prevista))+' · Rientro '+esc(volFmtTime(x.ora_rientro_previsto))+' · Stato '+esc(x.stato)+'</span>'+(aids?'<br><span class="pill">'+esc(aids)+'</span>':'')+(x.note?'<br>'+esc(x.note):'')+'</div>'}).join(''):'<div class="notice">Nessun servizio assegnato.</div>';
-  await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar(),loadDimissioniVol(),loadEmergenzaVol(),loadVolRoster()]);
+  await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar(),loadDimissioniVol(),loadEmergenzaVol(),loadAssistenzaVol(),loadVolRoster()]);
   msg('volmsg','');
  }catch(e){msg('volmsg',e.message||String(e),'err')}
 }
