@@ -745,7 +745,7 @@
 
  <div class="section"><h3>Economico</h3>
   <div class="grid4">
-   <div class="field"><label>Importo previsto €</label><input id="dAmount" type="number" min="0" step="0.01"></div>
+   <div class="field"><label>Importo previsto €</label><input id="dAmount" type="number" min="0" step="0.01"><div class="muted" id="dTariffBaseInfo"></div></div>
    <div class="field"><label>Sconto €</label><input id="dDiscount" type="number" min="0" step="0.01"></div>
    <div class="field"><label>Importo finale €</label><input id="dFinal" type="number" min="0" step="0.01"></div>
    <div class="field"><label>Pagamento previsto</label><select id="dPayMode"><option value="">—</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>ALTRO</option></select></div>
@@ -800,7 +800,17 @@
 <div class="field"><label>Destinazione tariffaria</label><select id="tarDest"><option value="">—</option></select></div>
 <div class="field"><label>Fascia</label><select id="tarNight"><option value="false">DIURNO</option><option value="true">NOTTURNO</option></select></div>
 <div class="field"><label>Importo previsto €</label><input id="imp" type="number" step="0.01" min="0"></div>
-</div><div id="tarQuote"></div><div class="field" style="margin-top:9px"><label>Note operative</label><textarea id="note"></textarea></div></div>
+</div>
+<div id="tarAdjustment" class="section hidden" style="margin:10px 0;background:#f4f9fd">
+<h3 style="margin:0 0 5px">↕ Variazione tariffa per questo servizio</h3>
+<p class="muted">Aumenta o riduci l’importo selezionato, senza modificare i prezzi del tariffario generale.</p>
+<div class="grid3">
+<div class="field"><label for="tarChangeType">Operazione</label><select id="tarChangeType"><option value="NONE">Nessuna variazione</option><option value="PLUS">＋ Aumenta la tariffa</option><option value="MINUS">− Riduci la tariffa</option></select></div>
+<div class="field"><label for="tarChangeValue">Importo variazione €</label><input id="tarChangeValue" type="number" min="0.01" max="10000" step="0.01" placeholder="Es. 5,00" disabled></div>
+<div class="field"><label for="tarBasePrice">Tariffa originale €</label><input id="tarBasePrice" type="text" value="—" readonly tabindex="-1"></div>
+</div><div class="muted" style="margin-top:7px">L’importo aggiornato viene riportato in «Importo previsto €» e vale solo per il servizio corrente.</div>
+</div>
+<div id="tarQuote"></div><div class="field" style="margin-top:9px"><label>Note operative</label><textarea id="note"></textarea></div></div>
 <button class="btn yellow" type="submit">Salva servizio</button><div id="fmsg"></div></form></div></section>
 
 <section id="patients" class="surface hidden">
@@ -1391,6 +1401,7 @@ function resetNewServiceForm(){
  form.querySelectorAll('input[type="checkbox"],input[type="radio"]').forEach(el=>{el.checked=false});
  ['m','t','tar','tarDest'].forEach(id=>{$(id).value=''});
  $('tarNight').value='false';
+ $('tarChangeType').value='NONE';$('tarChangeValue').value='';$('tarChangeValue').disabled=true;$('tarAdjustment').classList.add('hidden');$('tarBasePrice').value='—';$('imp').readOnly=false;
  servicePatientId=null;patientLookupRows=[];
  $('patientLookupResults').innerHTML='';
  $('patientLookupText').value='';
@@ -1611,11 +1622,31 @@ function populateServiceTariffOptions(){
  else if(prev){$('imp').value='';$('tarQuote').innerHTML='';}
  refreshTariffDestinations();
 }
+
+function resetTariffAdjustment(){
+ $('tarChangeType').value='NONE';$('tarChangeValue').value='';$('tarChangeValue').disabled=true;
+}
+function getTariffPrice(){
+ const row=tariffDestinations.find(x=>x.tariffa_destinazione_id===$('tarDest').value);
+ if(!row)return null;
+ const t=tariffs.find(x=>x.id===$('tar').value),notturno=$('tarNight').value==='true';
+ if(t&&tariffSimple(t.codice)&&notturno)
+  return {valid:false,error:'Il tariffario di trasporto semplice non prevede un prezzo notturno: usa «Nessuno / tariffa concordata».'};
+ const raw=notturno?row.importo_notturno:row.importo_diurno;
+ if(raw===null||raw===undefined||raw===''||!Number.isFinite(Number(raw)))
+  return {valid:false,error:'Non è disponibile un prezzo per questa fascia: usa la tariffa concordata.'};
+ const baseCents=Math.round(Number(raw)*100),op=$('tarChangeType').value,diffText=$('tarChangeValue').value;
+ if(baseCents<0)return {valid:false,error:'Tariffa originale non valida.'};
+ if(op!=='NONE'&&(!diffText||!Number.isFinite(Number(diffText))||Number(diffText)<=0||Number(diffText)>10000||Math.round(Number(diffText)*100)<=0))
+  return {valid:false,error:'Inserisci una variazione positiva in euro (massimo € 10.000).'};
+ const diff=op==='NONE'?0:Math.round(Number(diffText)*100);
+ const total=baseCents+(op==='MINUS'?-diff:diff);
+ if(total<0||total>1000000)return {valid:false,error:'L’importo del servizio deve essere compreso fra € 0 e € 10.000.'};
+ return {valid:true,base:baseCents/100,diff:diff/100,total:total/100,op,row,notturno};
+}
 function refreshTariffDestinations(){
  if(!$('tarDest'))return;
- const tid=$('tar').value;
- const chosen=tariffs.find(t=>t.id===tid);
- const type=chosen?tariffTypeFromCode(chosen.codice):null;
+ const tid=$('tar').value,chosen=tariffs.find(t=>t.id===tid),type=chosen?tariffTypeFromCode(chosen.codice):null;
  const rows=tariffDestinations.filter(x=>x.tariffario_id===tid&&String(x.tipo_mezzo).toUpperCase()===type);
  const current=$('tarDest').value;
  $('tarDest').innerHTML='<option value="">— Seleziona / fuori tariffario —</option>'+
@@ -1626,24 +1657,32 @@ function refreshTariffDestinations(){
 }
 function updateTariffQuote(){
  const row=tariffDestinations.find(x=>x.tariffa_destinazione_id===$('tarDest').value);
- if(!row){$('tarQuote').innerHTML='';return;}
- const t=tariffs.find(x=>x.id===$('tar').value),notturno=$('tarNight').value==='true';
- if(t&&tariffSimple(t.codice)&&notturno){
-  $('imp').value='';
-  $('tarQuote').innerHTML='<div class="notice warn">Il PDF del trasporto semplice non indica un prezzo notturno: chiedi al Centralino e usa «Nessuno / tariffa concordata» per inserire il prezzo concordato. Nessun prezzo viene applicato automaticamente.</div>';
-  return;
- }
- const amount=Number(notturno?row.importo_notturno:row.importo_diurno);
- if(!Number.isFinite(amount))return;
- $('imp').value=amount.toFixed(2);
+ const panel=$('tarAdjustment'),amountInput=$('imp');
+ if(!row){panel.classList.add('hidden');$('tarBasePrice').value='—';amountInput.readOnly=false;$('tarQuote').innerHTML='';return;}
+ panel.classList.remove('hidden');amountInput.readOnly=true;
+ const t=tariffs.find(x=>x.id===$('tar').value);
+ const raw=$('tarNight').value==='true'?row.importo_notturno:row.importo_diurno;
+ $('tarBasePrice').value=raw===null||raw===undefined||raw===''?'—':Number(raw).toFixed(2);
+ const p=getTariffPrice();
+ if(!p?.valid){amountInput.value='';$('tarQuote').innerHTML='<div class="notice warn">'+esc(p?.error||'Tariffa non disponibile.')+'</div>';return;}
+ amountInput.value=p.total.toFixed(2);
  if(!$('dest').value.trim())$('dest').value=row.destinazione||'';
- $('tarQuote').innerHTML='<div class="notice ok">Tariffa '+esc(notturno?'notturna':'da PDF')+' applicata: <b>'+euro(amount)+'</b> · '+esc(row.destinazione)+'</div>';
+ const change=p.op==='NONE'?'Nessuna variazione':(p.op==='PLUS'?'Aumento':'Riduzione')+' di '+euro(p.diff);
+ $('tarQuote').innerHTML='<div class="notice ok"><b>'+esc(t?.nome||'Tariffario')+'</b> · '+
+  esc(row.destinazione)+'<br>Tariffa '+esc(p.notturno?'notturna':'diurna')+': <b>'+euro(p.base)+
+  '</b> · '+esc(change)+'<br><b>Totale del servizio: '+euro(p.total)+'</b></div>';
 }
-$('m').onchange=populateServiceTariffOptions;
-$('tar').onchange=()=>{$('imp').value='';refreshTariffDestinations()};
-$('tarDest').onchange=updateTariffQuote;
-$('tarNight').onchange=updateTariffQuote;
-
+$('m').onchange=()=>{resetTariffAdjustment();populateServiceTariffOptions()};
+$('tar').onchange=()=>{resetTariffAdjustment();$('imp').value='';refreshTariffDestinations()};
+$('tarDest').onchange=()=>{resetTariffAdjustment();updateTariffQuote()};
+$('tarNight').onchange=()=>{resetTariffAdjustment();updateTariffQuote()};
+$('tarChangeType').onchange=()=>{
+ const on=$('tarChangeType').value!=='NONE';$('tarChangeValue').disabled=!on;
+ if(!on)$('tarChangeValue').value='';
+ updateTariffQuote();
+ if(on)$('tarChangeValue').focus();
+};
+$('tarChangeValue').oninput=updateTariffQuote;
 
 // Le assistenze alle manifestazioni non prevedono il carico di un paziente.
 function isAssistanceManifestation(type){
@@ -2654,6 +2693,10 @@ async function loadServiceDetail(id=currentServiceId){
  $('didest').value=s.indirizzo_destinazione||'';
  $('dstruct').value=s.ospedale_destinazione||'';
  $('dAmount').value=s.importo_previsto??'';
+ const baseAmount=s.importo_calcolato;
+ $('dTariffBaseInfo').textContent=s.tariffa_destinazione_id&&baseAmount!==null&&baseAmount!==undefined?
+  'Tariffa originale: '+euro(Number(baseAmount))+' · Variazione servizio: '+
+  (Number(s.importo_previsto||0)-Number(baseAmount)>=0?'+':'−')+euro(Math.abs(Number(s.importo_previsto||0)-Number(baseAmount))):'';
  $('dDiscount').value=s.sconto??0;
  $('dFinal').value=s.importo_finale??'';
  $('dPayMode').value=s.modalita_pagamento_prevista||'';
@@ -2811,7 +2854,10 @@ $('form').onsubmit=async e=>{
   return msg('fmsg','Il tariffario selezionato non corrisponde al mezzo. Seleziona un tariffario per '+selectedType+'.','warn');
  if(selectedTariffario&&tariffSimple(selectedTariffario.codice)&&selectedTariff&&$('tarNight').value==='true')
   return msg('fmsg','Il prezzo notturno dei trasporti semplici non è indicato nel PDF: seleziona «Nessuno / tariffa concordata» e inserisci l’importo concordato con il Centralino.','warn');
- const amount=$('imp').value===''?null:Number($('imp').value);
+ const price=selectedTariff?getTariffPrice():null;
+ if(selectedTariff&&!price?.valid)return msg('fmsg',price?.error||'Correggi la variazione della tariffa.','warn');
+ const amount=selectedTariff?price.total:($('imp').value===''?null:Number($('imp').value));
+ if(amount!==null&&(!Number.isFinite(amount)||amount<0||amount>10000))return msg('fmsg','Importo non valido (da € 0 a € 10.000).','warn');
  const isEvent=isAssistanceManifestation($('t').value);
  let linkedPatient=isEvent?null:servicePatientId;
  if(!isEvent&&!linkedPatient&&$('patientRemember').checked){
@@ -2823,7 +2869,7 @@ $('form').onsubmit=async e=>{
   if(pr.error)return msg('fmsg','Anagrafica non salvata: '+pr.error.message+' Se il paziente esiste già, cercalo e selezionalo.','err');
   linkedPatient=pr.data.id;servicePatientId=linkedPatient;
  }
- const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:isEvent?null:($('odest').value||null),ora_inizio_assistenza_prevista:isEvent?($('asStart').value||null):null,ora_fine_assistenza_prevista:isEvent?($('asEnd').value||null):null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?amount:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
+ const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:isEvent?null:($('odest').value||null),ora_inizio_assistenza_prevista:isEvent?($('asStart').value||null):null,ora_fine_assistenza_prevista:isEvent?($('asEnd').value||null):null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?price.base:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
  const r=await sb.from('servizi_giornalieri').insert(p).select('id').single();
  if(r.error)return msg('fmsg',r.error.message,'err');
  // Dopo il salvataggio, elimina ogni dato del servizio appena creato.
