@@ -1643,7 +1643,12 @@ async function refreshMaster(){
  renderQualChecks();
  refreshTariffDestinations();
 }
-function renderQualChecks(selected=[]){$('pquals').innerHTML=qualifications.map(q=>'<label class="check"><input type="checkbox" data-qual="'+esc(q.codice)+'" '+(selected.includes(q.codice)?'checked':'')+'> '+esc(q.nome)+'</label>').join('')}
+function qualificationDisplayName(q){
+ const code=String(q?.codice||'').toUpperCase();
+ const name=String(q?.nome||'');
+ return code==='ALLEGATO_A'||/operatore\s+allegato\s*a\b/i.test(name)?'Accompagnatore':(name||q?.codice||'—');
+}
+function renderQualChecks(selected=[]){$('pquals').innerHTML=qualifications.map(q=>'<label class="check"><input type="checkbox" data-qual="'+esc(q.codice)+'" '+(selected.includes(q.codice)?'checked':'')+'> '+esc(qualificationDisplayName(q))+'</label>').join('')}
 function qualifiedPeople(role){let qcode=role==='ACCOMPAGNATORE'?'ALLEGATO_A':role;return people.filter(p=>p.attivo!==false&&pq.some(x=>x.badge_personale===p.badge&&x.codice_qualifica===qcode&&x.attiva))}
 function refreshCrewPeople(){$('cp').innerHTML=opts(qualifiedPeople($('cr').value),'badge',x=>x.nome_completo+' · '+x.badge)}
 $('cr').onchange=refreshCrewPeople;
@@ -3174,7 +3179,7 @@ async function loadPeopleView(){
  const h=await sb.from('v_personale_monte_ore').select('*');
  const hours=h.data||[];
  $('ptbody').innerHTML=[...people].sort((a,b)=>String(a.badge||'').localeCompare(String(b.badge||''),'it',{numeric:true,sensitivity:'base'})).map(p=>{
-  const qs=pq.filter(x=>x.badge_personale===p.badge).map(x=>qualifications.find(q=>q.codice===x.codice_qualifica)?.nome||x.codice_qualifica).join(', ');
+  const qs=pq.filter(x=>x.badge_personale===p.badge).map(x=>qualificationDisplayName(qualifications.find(q=>q.codice===x.codice_qualifica)||{codice:x.codice_qualifica})).join(', ');
   const mh=hours.find(x=>x.badge===p.badge)||{};
   const mese=Number(mh.ore_mese||0), trim=Number(mh.ore_trimestre||0);
   const minM=Number(mh.ore_minime_mensili||p.ore_minime_mensili||28), minT=Number(mh.ore_minime_trimestrali||p.ore_minime_trimestrali||84);
@@ -5077,7 +5082,7 @@ async function loadVolunteerArea(){
   $('volTurnCount').textContent=futureAssignments.length;$('volServiceCount').textContent=services.filter(x=>x.data_servizio>=today()).length;
   $('volProfile').innerHTML='<b>'+esc(person.nome_completo||prof?.nome||'Volontario')+'</b><br>Badge '+esc(person.badge||volunteerBadge)+' · Stato: <span class="pill g">'+esc(person.stato_anagrafico||'ATTIVO')+'</span><br>Ingresso: '+esc(person.data_ingresso||'—');$('volAccessBadge').value=person.badge||volunteerBadge;
   $('volPhone').value=person.telefono||'';$('volEmail').value=person.email||'';$('volBirth').value=person.data_nascita||'';$('volCF').value=person.codice_fiscale||'';$('volAddress').value=person.indirizzo||'';$('volCity').value=person.comune||'';$('volProvince').value=person.provincia||'';$('volCap').value=person.cap||'';
-  $('volQuals').innerHTML=quals.length?quals.map(x=>{const q=qdefs.find(z=>z.codice===x.codice_qualifica);return '<span class="pill b" style="margin:2px">'+esc(q?.nome||x.codice_qualifica)+'</span>'}).join(''):'<span class="muted">Nessuna qualifica registrata.</span>';
+  $('volQuals').innerHTML=quals.length?quals.map(x=>{const q=qdefs.find(z=>z.codice===x.codice_qualifica);return '<span class="pill b" style="margin:2px">'+esc(qualificationDisplayName(q||{codice:x.codice_qualifica}))+'</span>'}).join(''):'<span class="muted">Nessuna qualifica registrata.</span>';
   $('volShifts').innerHTML=futureAssignments.length?futureAssignments.map(a=>{const t=a.turno;return '<div class="box" style="margin:7px 0"><b>'+esc(t.data_turno)+' · '+esc(volFmtTime(t.ora_inizio))+'-'+esc(volFmtTime(t.ora_fine))+' · '+esc(t.tipo_turno)+'</b> <span class="pill g">Assegnato</span><br>Mezzo '+esc(t.mezzo||'—')+' · Ruolo '+esc(a.ruolo||'—')+(t.note?'<br><span class="muted">'+esc(t.note)+'</span>':'')+'</div>'}).join(''):'<div class="notice">Nessun turno futuro assegnato.</div>';
   $('volAvailability').innerHTML=availability.length?availability.map(x=>'<div class="box" style="margin:7px 0"><b>'+esc(dt(x.inizio))+' → '+esc(dt(x.fine))+'</b> <span class="pill">'+esc(x.tipo)+'</span>'+(x.note?'<br>'+esc(x.note):'')+'<div class="actions" style="margin-top:6px"><button class="btn danger" data-vol-av-del="'+esc(x.id)+'">Elimina</button></div></div>').join(''):'<div class="notice">Nessuna disponibilità futura inserita.</div>';
   document.querySelectorAll('[data-vol-av-del]').forEach(b=>b.onclick=()=>volDeleteAvailability(b.dataset.volAvDel));
