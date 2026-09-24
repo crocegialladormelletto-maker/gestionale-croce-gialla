@@ -2567,6 +2567,35 @@ function asRender(){
  $('asDays').querySelectorAll('[data-as-open-service]').forEach(b=>b.onclick=()=>openService(b.dataset.asOpenService));
  renderAssistanceCandidates();
 }
+
+function renderAssistanceCandidates(){
+ const box=$('asCandidates'),visible=asServices.filter(s=>!asVehicle||s.mezzo===asVehicle);
+ box.innerHTML=visible.length?visible.map(s=>{
+  const crew=asServiceAssignments.filter(x=>x.servizio_id===s.id);
+  const candidates=asCandidates.filter(x=>x.servizio_id===s.id).sort((a,b)=>(a.stato==='IN_ATTESA'?0:1)-(b.stato==='IN_ATTESA'?0:1));
+  return '<div class="box"><b>'+esc(s.data_servizio+' · '+asServiceName(s))+'</b> · Mezzo '+esc(s.mezzo||'—')+
+   (candidates.length?candidates.map(c=>{
+    const person=people.find(p=>p.badge===c.badge_personale),taken=crew.some(x=>x.badge_personale===c.badge_personale||x.ruolo===c.ruolo);
+    const status=({IN_ATTESA:'In attesa',CONFERMATA:'Confermata',NON_CONFERMATA:'Non confermata',RITIRATA:'Ritirata'})[c.stato]||c.stato;
+    return '<div class="box"><b>'+esc(person?.nome_completo||c.badge_personale)+'</b> · '+esc(ASSISTANCE_APPLICATION_ROLES.find(x=>x[0]===c.ruolo)?.[1]||c.ruolo)+' <span class="pill">'+esc(status)+'</span>'+
+     (c.nota?'<br><span class="muted">'+esc(c.nota)+'</span>':'')+
+     (c.stato==='IN_ATTESA'?'<div class="actions"><button type="button" class="btn yellow" data-cand-yes="'+esc(c.id)+'"'+(taken?' disabled':'')+'>Conferma e assegna</button><button type="button" class="btn secondary" data-cand-no="'+esc(c.id)+'">Non confermare</button></div>'+
+     (taken?'<span class="muted">Volontario o ruolo già assegnato: controlla l’equipaggio.</span>':''):'')+'</div>';
+   }).join(''):'<div class="muted">Nessun volontario si è ancora proposto.</div>')+'</div>';
+ }).join(''):'<div class="notice">Nessuna assistenza nel periodo selezionato.</div>';
+ box.querySelectorAll('[data-cand-yes]').forEach(b=>b.onclick=()=>decideAssistanceCandidate(b.dataset.candYes,true));
+ box.querySelectorAll('[data-cand-no]').forEach(b=>b.onclick=()=>decideAssistanceCandidate(b.dataset.candNo,false));
+}
+async function decideAssistanceCandidate(id,yes){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||!asCandidates.some(c=>c.id===id&&c.stato==='IN_ATTESA'))return;
+ if(!confirm(yes?'Confermare e inserire il volontario nell’equipaggio?':'Non confermare questa candidatura?'))return;
+ $('asCandidates').querySelectorAll('[data-cand-yes],[data-cand-no]').forEach(b=>b.disabled=true);
+ msg('asCandidateMsg','Salvataggio in corso...');
+ const r=await sb.rpc('cge_candidatura_assistenza_decidi',{p_candidatura:id,p_conferma:yes});
+ if(r.error){renderAssistanceCandidates();return msg('asCandidateMsg',r.error.message,'err')}
+ await loadAssistanceRoster();
+ msg('asCandidateMsg',yes?'Candidatura confermata e volontario assegnato.':'Candidatura non confermata.','ok');
+}
 async function loadAssistanceRoster(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  msg('asMsg','Caricamento turnario Assistenze...');
