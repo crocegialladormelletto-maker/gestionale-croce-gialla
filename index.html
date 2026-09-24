@@ -906,11 +906,11 @@
  <button id="paccessstatus" class="btn secondary">Verifica accesso</button>
  <button id="paccessdisable" class="btn danger">Disattiva accesso</button>
 </div><div id="paccessmsg"></div></div>
-<div class="section hidden" id="pdocSection" style="margin-top:14px">
- <h3>📁 Documenti della persona</h3>
+<div class="section" id="pdocSection" style="margin-top:14px;scroll-margin-top:20px">
+ <h3>📁 Documenti caricati dai volontari</h3>
  <p class="muted">Archivio condiviso con l’app volontari: i documenti caricati dal titolare sono disponibili anche qui, nella sua scheda, senza duplicazioni. Accesso riservato all’Amministrazione.</p>
  <div class="actions" style="justify-content:space-between;align-items:center"><b id="pdocPerson"></b><button type="button" class="btn secondary" id="pdocRefresh">Aggiorna documenti</button></div>
- <div id="pdocMsg"></div><div id="pdocList"></div>
+ <div id="pdocMsg"></div><div id="pdocList"><div class="notice">Seleziona un volontario dall’elenco qui sotto e premi «Documenti» per consultare i file caricati dalla sua app.</div></div>
 </div></div>
 <div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Qualifiche</th><th>Ore mese</th><th>Ore trimestre</th><th>Telefono</th><th></th></tr></thead><tbody id="ptbody"></tbody></table></div></div></section>
 
@@ -3167,7 +3167,7 @@ window.removeCrew=async id=>{
  msg('cmsg','Operatore rimosso dal servizio selezionato.','ok');await loadCrew(service);
 };
 
-function resetPerson(){adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';$('pdocSection').classList.add('hidden');msg('pdocMsg','');$('pdocList').innerHTML='';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pbirth').value='';$('pentry').value='';$('pdep').value='false';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
+function resetPerson(){adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';msg('pdocMsg','');$('pdocPerson').textContent='';$('pdocList').innerHTML='<div class="notice">Seleziona un volontario e premi «Documenti» per consultare il suo archivio.</div>';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pbirth').value='';$('pentry').value='';$('pdep').value='false';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
 $('pnew').onclick=resetPerson;
 async function loadPeopleView(){
  await refreshMaster();
@@ -3178,17 +3178,19 @@ async function loadPeopleView(){
   const mh=hours.find(x=>x.badge===p.badge)||{};
   const mese=Number(mh.ore_mese||0), trim=Number(mh.ore_trimestre||0);
   const minM=Number(mh.ore_minime_mensili||p.ore_minime_mensili||28), minT=Number(mh.ore_minime_trimestrali||p.ore_minime_trimestrali||84);
-  return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo)+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs||'—')+'</td><td><b>'+esc(mese.toFixed(2))+'</b> / '+esc(minM)+'</td><td><b>'+esc(trim.toFixed(2))+'</b> / '+esc(minT)+'</td><td>'+esc(p.telefono||'—')+'</td><td><button class="btn secondary" data-edit-person="'+esc(p.badge)+'">Apri</button></td></tr>';
+  return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo)+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs||'—')+'</td><td><b>'+esc(mese.toFixed(2))+'</b> / '+esc(minM)+'</td><td><b>'+esc(trim.toFixed(2))+'</b> / '+esc(minT)+'</td><td>'+esc(p.telefono||'—')+'</td><td><button class="btn secondary" data-edit-person="'+esc(p.badge)+'">Apri</button> <button class="btn blue" type="button" data-person-documents="'+esc(p.badge)+'">📁 Documenti</button></td></tr>';
  }).join('');
  document.querySelectorAll('[data-edit-person]').forEach(b=>b.onclick=()=>window.editPerson(b.dataset.editPerson));
+ document.querySelectorAll('[data-person-documents]').forEach(b=>b.onclick=()=>{window.editPerson(b.dataset.personDocuments);$('pdocSection').scrollIntoView({behavior:'smooth',block:'start'});});
 }
 async function loadAdminPersonDocuments(badge){
  const req=++adminPersonDocumentsRequest;
  adminPersonDocuments=[];adminPersonDocumentsBadge='';
  if(prof?.ruolo!=='AMMINISTRATORE'||!badge||!people.some(p=>p.badge===badge)){
-  $('pdocSection').classList.add('hidden');return;
+  $('pdocPerson').textContent='';
+  $('pdocList').innerHTML='<div class="notice">Seleziona un volontario e premi «Documenti» per consultare il suo archivio.</div>';
+  return;
  }
- $('pdocSection').classList.remove('hidden');
  const person=people.find(p=>p.badge===badge);
  $('pdocPerson').textContent=(person?.nome_completo||'Persona')+' · Badge '+badge;
  $('pdocList').innerHTML='';
