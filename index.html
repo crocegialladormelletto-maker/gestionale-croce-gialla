@@ -1179,11 +1179,11 @@ let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsReq
 let volNotifications=[];
 let opCalCursor=new Date(),opCalSelected=todaySafe(),opCalEvents=[],opCalMode='month',opCalVehicle='';
 let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month';
-let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalQualificationRows=[],vfcalAppBusy=false;
+let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalOccupiedRoles=[],vfcalQualificationRows=[],vfcalAppBusy=false;
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
 let dimVolCursor=new Date(),dimVolSelected=todaySafe(),dimVolRows=[],dimVolSeq=0,dimVolBusy=false;
-let volRosterCursor=new Date(),volRosterSelected=todaySafe(),volRosterEvents=[],volRosterSeq=0,volRosterBusy=false;
+let volRosterCursor=new Date(),volRosterSelected=todaySafe(),volRosterEvents=[],volRosterOccupied=[],volRosterApplications=[],volRosterSeq=0,volRosterBusy=false;
 let dimAdminCursor=new Date(),dimAdminSelected=todaySafe(),dimAdminRows=[],dimAdminEligible=[],dimAdminSeq=0,dimAdminEligibleSeq=0,dimAdminBusy=false;
 let emgVolCursor=new Date(),emgVolSelected=todaySafe(),emgVolRows=[],emgVolSeq=0,emgVolBusy=false;
 let emgAdminCursor=new Date(),emgAdminSelected=todaySafe(),emgAdminRows=[],emgAdminEligible=[],emgAdminSeq=0,emgAdminEligibleSeq=0,emgAdminBusy=false;
@@ -1933,45 +1933,69 @@ function volRosterRender(){
 }
 function volRosterRenderDay(){
  const day=volRosterSelected;
- $('volRosterDayTitle').textContent=dimDayTitle(day);
+ $('volRosterDayTitle').textContent='Manifestazioni · '+dimDayTitle(day);
  const entries=volRosterEvents.filter(e=>e.day===day)
- .sort((a,b)=>(a.start||'99:99').localeCompare(b.start||'99:99'));
+  .sort((a,b)=>(a.start||'99:99').localeCompare(b.start||'99:99'));
  $('volRosterDay').innerHTML=entries.length?entries.map(e=>{
-  const assigned=!!e.mine,roles=volRosterEligible(e.day,e.kind);
-  const description=e.kind==='SERVIZIO_ASSISTENZA'?
-    (e.start||'—')+'–'+(e.end||'—')+' · Mezzo '+(e.mezzo||'—')+
-    (e.luogo?' · '+e.luogo:''):
-    (e.start||'—')+'–'+(e.end||'—')+' · Mezzo '+(e.mezzo||'—')+
-    ' · '+(e.count||0)+' operatori iscritti';
-  const controls=assigned?'<div class="notice ok">Iscritto definitivamente'+
-   (e.myRole?' come '+esc(VOL_ROSTER_ROLES.find(x=>x[0]===e.myRole)?.[1]||e.myRole):'')+
-   '. Per variazioni contatta il Centralino.</div>':
-   day<todaySafe()?'':
-   roles.length?'<div class="actions" style="margin-top:8px">'+
-    '<select aria-label="Scegli ruolo" data-vol-roster-role="'+esc(e.kind)+'-'+esc(e.id)+'" style="flex:1 1 140px">'+
+  const app=volRosterApplications.find(a=>a.servizio_id===e.id);
+  const qualified=volRosterEligible(e.day,'SERVIZIO_ASSISTENZA');
+  const free=qualified.filter(([role])=>!volRosterOccupied.some(x=>x.servizio_id===e.id&&x.ruolo===role));
+  const roles=app?.stato==='IN_ATTESA'?free.filter(([role])=>role===app.ruolo):free;
+  const description='Data '+e.day+' · '+(e.start||'—')+'–'+(e.end||'—')+
+    ' · Mezzo '+(e.mezzo||'—')+(e.luogo?' · '+e.luogo:'');
+  let controls='';
+  if(e.mine)controls='<div class="notice ok">Sei già iscritto definitivamente a questa manifestazione. Per variazioni contatta il Centralino.</div>';
+  else if(app?.stato==='CONFERMATA')controls='<div class="notice ok">Candidatura già confermata: verifica l’equipaggio con il Centralino.</div>';
+  else if(app?.stato==='NON_CONFERMATA')controls='<div class="notice">Una candidatura precedente non è stata confermata. Contatta il Centralino.</div>';
+  else if(day>=todaySafe()){
+   if(app?.stato==='IN_ATTESA')controls+='<div class="notice warn">Hai una candidatura in attesa: puoi iscriverti definitivamente allo stesso ruolo.</div>';
+   if(roles.length)controls+='<div class="actions" style="margin-top:8px">'+
+     '<select aria-label="Ruolo per questa manifestazione" data-vol-roster-role="SERVIZIO_ASSISTENZA-'+esc(e.id)+'" style="flex:1 1 140px">'+
      roles.map(([role,label])=>'<option value="'+esc(role)+'">'+esc(label)+'</option>').join('')+
-    '</select><button type="button" class="btn yellow" data-vol-roster-join="'+esc(e.id)+
-    '" data-vol-roster-kind="'+esc(e.kind)+'">Mi segno (definitivo)</button></div>':
-    '<div class="muted">Non risultano qualifiche valide per questa data.</div>';
+     '</select><button type="button" class="btn yellow" data-vol-roster-join="'+esc(e.id)+
+     '" data-vol-roster-kind="SERVIZIO_ASSISTENZA">Mi segno a questa manifestazione</button></div>'+
+     '<div class="muted">Iscrizione definitiva; non potrai annullarla dall’APP.</div>';
+   else if(!qualified.length)controls+='<div class="muted">Nessun ruolo abilitato dalle tue qualifiche per questa data.</div>';
+   else controls+='<div class="muted">Non ci sono ruoli liberi compatibili con le tue qualifiche. Contatta il Centralino.</div>';
+  }
   return '<div class="box" style="margin:8px 0"><b>'+esc(volRosterTitle(e))+'</b>'+
    '<div class="muted">'+esc(description)+'</div>'+controls+'</div>';
- }).join(''):'<div class="notice">Nessun turno o assistenza inseriti per questo giorno.</div>';
+ }).join(''):'<div class="notice">Nessuna manifestazione programmata per questo giorno. Scegli una data con 🎪 oppure chiedi al Centralino di inserire il servizio.</div>';
  $('volRosterDay').querySelectorAll('[data-vol-roster-join]').forEach(button=>
   button.onclick=()=>volRosterJoin(button.dataset.volRosterKind,button.dataset.volRosterJoin));
 }
 async function loadVolRoster(){
  if(!volunteerBadge)return;
  const seq=++volRosterSeq,range=calVisibleRange(volRosterCursor,'month');
- msg('volRosterMsg','Caricamento assistenze manifestazioni...');
- const services=await sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd});
+ msg('volRosterMsg','Caricamento delle manifestazioni...');
+ const [services,occupied]=await Promise.all([
+  sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd})
+ ]);
  if(seq!==volRosterSeq)return;
- if(services.error)return msg('volRosterMsg','Errore calendario: '+services.error.message,'err');
- volRosterEvents=(services.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio)).map(s=>({
-   id:s.id,kind:'SERVIZIO_ASSISTENZA',day:s.data_servizio,
-   start:calTime(s.ora_inizio_assistenza_prevista||s.ora_partenza_prevista),
-   end:calTime(s.ora_fine_assistenza_prevista||s.ora_rientro_previsto),
-   nome:s.nome_manifestazione,luogo:s.luogo_manifestazione,
-   mezzo:s.mezzo,mine:s.assegnato_a_me
+ if(services.error||occupied.error){
+  volRosterEvents=[];volRosterOccupied=[];volRosterApplications=[];volRosterRender();
+  return msg('volRosterMsg','Errore calendario: '+(services.error||occupied.error).message,'err');
+ }
+ const rows=(services.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio));
+ const ids=rows.map(s=>s.id);
+ let applications=[];
+ if(ids.length){
+  const res=await sb.from('candidature_assistenze')
+   .select('id,servizio_id,ruolo,stato').in('servizio_id',ids).eq('badge_personale',volunteerBadge);
+  if(seq!==volRosterSeq)return;
+  if(res.error)return msg('volRosterMsg','Errore lettura candidature precedenti: '+res.error.message,'err');
+  applications=res.data||[];
+ }
+ if(seq!==volRosterSeq)return;
+ volRosterOccupied=occupied.data||[];
+ volRosterApplications=applications;
+ volRosterEvents=rows.map(s=>({
+  id:s.id,kind:'SERVIZIO_ASSISTENZA',day:s.data_servizio,
+  start:calTime(s.ora_inizio_assistenza_prevista||s.ora_partenza_prevista),
+  end:calTime(s.ora_fine_assistenza_prevista||s.ora_rientro_previsto),
+  nome:s.nome_manifestazione,luogo:s.luogo_manifestazione,
+  mezzo:s.mezzo,mine:s.assegnato_a_me
  }));
  volRosterRender();msg('volRosterMsg','');
 }
@@ -2031,9 +2055,16 @@ async function loadVolunteerFutureCalendar(){
  const request=++vfcalLoadSequence;
  msg('vfcalMsg','Caricamento servizi futuri...');
  const range=calVisibleRange(vfcalCursor,vfcalMode);
- const r=await sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd});
+ const [r,occupied]=await Promise.all([
+  sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd})
+ ]);
  if(request!==vfcalLoadSequence)return;
- if(r.error){vfcalEvents=[];vfcalApplications=[];refreshVolunteerFutureCalendarView();return msg('vfcalMsg','Impossibile caricare i servizi futuri: '+r.error.message,'err')}
+ if(r.error||occupied.error){
+  vfcalEvents=[];vfcalApplications=[];vfcalOccupiedRoles=[];
+  refreshVolunteerFutureCalendarView();
+  return msg('vfcalMsg','Impossibile caricare i servizi futuri: '+(r.error||occupied.error).message,'err');
+ }
  const rows=r.data||[],ids=rows.filter(s=>isAssistanceManifestation(s.tipo_servizio)).map(s=>s.id);
  let applications=[];
  if(ids.length){
@@ -2044,6 +2075,7 @@ async function loadVolunteerFutureCalendar(){
  }
  if(request!==vfcalLoadSequence)return;
  vfcalApplications=applications;
+ vfcalOccupiedRoles=occupied.data||[];
  vfcalEvents=rows.map(s=>{
   const event=isAssistanceManifestation(s.tipo_servizio);
   return {kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),
@@ -2067,7 +2099,8 @@ function renderVolunteerFutureCalendarDay(){
    const app=vfcalApplications.find(a=>a.servizio_id===s.id),
     future=s.data_servizio>=todaySafe();
    const eligible=volRosterEligible(s.data_servizio,'SERVIZIO_ASSISTENZA');
-   const roles=app?.stato==='IN_ATTESA'?eligible.filter(x=>x[0]===app.ruolo):eligible;
+   const free=eligible.filter(([role])=>!vfcalOccupiedRoles.some(x=>x.servizio_id===s.id&&x.ruolo===role));
+   const roles=app?.stato==='IN_ATTESA'?free.filter(x=>x[0]===app.ruolo):free;
    if(s.assegnato_a_me)signup='<div class="notice ok">Sei già iscritto definitivamente all’equipaggio di questa assistenza.</div>';
    else if(app?.stato==='CONFERMATA')signup='<div class="notice ok">Candidatura già confermata. Contatta il Centralino se l’equipaggio non risulta aggiornato.</div>';
    else if(app?.stato==='NON_CONFERMATA')signup='<div class="notice">La precedente candidatura non è stata confermata. Contatta il Centralino.</div>';
@@ -2078,7 +2111,7 @@ function renderVolunteerFutureCalendarDay(){
      roles.map(([role,label])=>'<option value="'+esc(role)+'">'+esc(label)+'</option>').join('')+'</select>'+
      '<button type="button" class="btn yellow" data-vf-join="'+esc(s.id)+'">Mi iscrivo (definitivo)</button></div>'+
      '<div class="muted">Per variazioni successive contatta il Centralino.</div>';
-    else if(app?.stato!=='IN_ATTESA')signup='<div class="muted">Nessuna qualifica valida per questa assistenza. Contatta il Centralino.</div>';
+    else if(app?.stato!=='IN_ATTESA')signup='<div class="muted">'+(eligible.length?'I ruoli per cui sei qualificato sono già occupati.':'Nessuna qualifica valida per questa assistenza.')+' Contatta il Centralino.</div>';
    }
   }
   return '<div class="cal-detail-item service"><b>'+esc(e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'<br><span class="muted">'+esc(times)+'</span>'+
