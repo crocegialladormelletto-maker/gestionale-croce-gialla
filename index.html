@@ -899,7 +899,7 @@
       <button id="vfcalRefresh" class="btn secondary" type="button">↻ Aggiorna</button>
      </div>
     </div>
-    <div class="muted" style="margin:8px 0">Solo consultazione: data, orario, tipo servizio, mezzo e manifestazioni. Non vengono mostrati nomi, indirizzi o informazioni dei pazienti. Gli incarichi personali restano nel calendario sopra.</div>
+    <div class="muted" style="margin:8px 0">Per le sole assistenze alle manifestazioni puoi proporre la tua disponibilità. Non diventa un’assegnazione finché Centralino o Amministrazione non confermano. Gli altri servizi restano di sola consultazione; non sono visibili dati dei pazienti.</div>
     <strong id="vfcalTitle" style="font-size:18px;color:var(--n)"></strong>
     <div id="vfcalMsg"></div>
     <div class="calendar-wrap" style="margin-top:9px"><div class="cal-weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div></div><div id="vfcalGrid" class="cal-grid"></div></div>
@@ -974,7 +974,7 @@ let prof=null,people=[],qualifications=[],pq=[],vehicles=[],tariffs=[],tariffDes
 let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsRequest=0;
 let opCalCursor=new Date(),opCalSelected=todaySafe(),opCalEvents=[],opCalMode='month',opCalVehicle='';
 let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month';
-let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0;
+let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalQualificationRows=[],vfcalAppBusy=false;
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[];
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
@@ -1677,6 +1677,17 @@ function refreshVolunteerFutureCalendarView(){
  $('vfcalMonth').className='btn '+(vfcalMode==='month'?'yellow':'secondary');
  $('vfcalWeek').className='btn '+(vfcalMode==='week'?'yellow':'secondary');
 }
+
+const ASSISTANCE_APPLICATION_ROLES=[
+ ['AUTISTA','Autista'],['CAPO_SERVIZIO','Capo servizio'],
+ ['SOCCORRITORE','Soccorritore'],['SECONDO_SOCCORRITORE','Secondo soccorritore'],
+ ['ACCOMPAGNATORE','Accompagnatore']
+];
+function volunteerEligibleAssistanceRoles(day){
+ return ASSISTANCE_APPLICATION_ROLES.filter(([role])=>vfcalQualificationRows.some(q=>
+   (q.codice_qualifica===role||(role==='ACCOMPAGNATORE'&&q.codice_qualifica==='ALLEGATO_A'))
+   &&(!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
+}
 async function loadVolunteerFutureCalendar(){
  if(!volunteerBadge)return;
  const request=++vfcalLoadSequence;
@@ -1684,39 +1695,73 @@ async function loadVolunteerFutureCalendar(){
  const range=calVisibleRange(vfcalCursor,vfcalMode);
  const r=await sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd});
  if(request!==vfcalLoadSequence)return;
- if(r.error){
-  vfcalEvents=[];refreshVolunteerFutureCalendarView();
-  return msg('vfcalMsg','Impossibile caricare i servizi futuri: '+r.error.message,'err');
+ if(r.error){vfcalEvents=[];vfcalApplications=[];refreshVolunteerFutureCalendarView();return msg('vfcalMsg','Impossibile caricare i servizi futuri: '+r.error.message,'err')}
+ const rows=r.data||[],ids=rows.filter(s=>isAssistanceManifestation(s.tipo_servizio)).map(s=>s.id);
+ let applications=[];
+ if(ids.length){
+  const c=await sb.from('candidature_assistenze').select('id,servizio_id,ruolo,nota,stato').in('servizio_id',ids).eq('badge_personale',volunteerBadge);
+  if(request!==vfcalLoadSequence)return;
+  if(c.error)return msg('vfcalMsg','Errore lettura disponibilità: '+c.error.message,'err');
+  applications=c.data||[];
  }
- vfcalEvents=(r.data||[]).map(s=>{
+ if(request!==vfcalLoadSequence)return;
+ vfcalApplications=applications;
+ vfcalEvents=rows.map(s=>{
   const event=isAssistanceManifestation(s.tipo_servizio);
-  const name=event&&s.nome_manifestazione?s.nome_manifestazione:(s.tipo_servizio||'Servizio programmato');
   return {kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),
-   title:name+' · M'+(s.mezzo||'—'),subtitle:event?(s.luogo_manifestazione||''):null,raw:s};
+   title:(event&&s.nome_manifestazione?s.nome_manifestazione:(s.tipo_servizio||'Servizio programmato'))+' · M'+(s.mezzo||'—'),
+   subtitle:event?(s.luogo_manifestazione||''):null,raw:s};
  });
  refreshVolunteerFutureCalendarView();
  msg('vfcalMsg','');
 }
 function renderVolunteerFutureCalendarDay(){
- const title=$('vfcalDayTitle'),box=$('vfcalDayDetails');
- if(!title||!box)return;
- const date=new Date(vfcalSelected+'T12:00:00');
- title.textContent='Servizi · '+new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(date);
+ const box=$('vfcalDayDetails'),title=$('vfcalDayTitle');
+ if(!box||!title)return;
+ title.textContent='Servizi · '+new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(vfcalSelected+'T12:00:00'));
  const rows=vfcalEvents.filter(e=>e.date===vfcalSelected).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
  box.innerHTML=rows.length?rows.map(e=>{
   const s=e.raw,evt=isAssistanceManifestation(s.tipo_servizio);
-  const times=evt?'Partenza sede '+(calTime(s.ora_partenza_prevista)||'—')+
-    ' · Inizio '+(calTime(s.ora_inizio_assistenza_prevista)||'—')+
-    ' · Fine '+(calTime(s.ora_fine_assistenza_prevista)||'—')+
-    ' · Rientro '+(calTime(s.ora_rientro_previsto)||'—'):
-    'Partenza '+(calTime(s.ora_partenza_prevista)||'—')+
-    ' · Rientro previsto '+(calTime(s.ora_rientro_previsto)||'—');
-  return '<div class="cal-detail-item service"><b>'+esc(e.title)+'</b>'+
-   (e.subtitle?'<br>'+esc(e.subtitle):'')+
-   '<br><span class="muted">'+esc(times)+'</span>'+
-   '<br><span class="pill '+(s.assegnato_a_me?'g':'b')+'">'+
-   (s.assegnato_a_me?'Sei assegnato a questo servizio':'Servizio programmato')+'</span></div>';
+  const times=evt?'Partenza sede '+(calTime(s.ora_partenza_prevista)||'—')+' · Inizio '+(calTime(s.ora_inizio_assistenza_prevista)||'—')+' · Fine '+(calTime(s.ora_fine_assistenza_prevista)||'—')+' · Rientro '+(calTime(s.ora_rientro_previsto)||'—'):
+   'Partenza '+(calTime(s.ora_partenza_prevista)||'—')+' · Rientro previsto '+(calTime(s.ora_rientro_previsto)||'—');
+  let signup='';
+  if(evt){
+   const app=vfcalApplications.find(a=>a.servizio_id===s.id),roles=volunteerEligibleAssistanceRoles(s.data_servizio),future=s.data_servizio>=todaySafe();
+   if(s.assegnato_a_me)signup='<div class="notice ok">Sei già nell’equipaggio di questa assistenza.</div>';
+   else if(app?.stato==='IN_ATTESA')signup='<div class="notice warn">Disponibilità inviata come '+esc(ASSISTANCE_APPLICATION_ROLES.find(r=>r[0]===app.ruolo)?.[1]||app.ruolo)+'. In attesa di conferma.</div>'+(future?'<button type="button" class="btn secondary" data-vf-withdraw="'+esc(s.id)+'">Ritira disponibilità</button>':'');
+   else if(app?.stato==='CONFERMATA')signup='<div class="notice ok">Confermata dal Centralino. Se l’equipaggio non compare, contatta il Centralino.</div>';
+   else if(app?.stato==='NON_CONFERMATA')signup='<div class="notice">Candidatura non confermata. Per chiarimenti contatta il Centralino.</div>';
+   else if(future&&roles.length)signup=(app?.stato==='RITIRATA'?'<div class="muted">Puoi riproporre la disponibilità ritirata.</div>':'')+
+    '<div class="grid2" style="margin-top:8px"><div class="field"><label>Ruolo per cui ti proponi</label><select data-vf-role="'+esc(s.id)+'">'+roles.map(([r,n])=>'<option value="'+esc(r)+'">'+esc(n)+'</option>').join('')+'</select></div>'+
+    '<div class="field"><label>Nota facoltativa (max 300 caratteri)</label><input maxlength="300" data-vf-note="'+esc(s.id)+'" placeholder="Es. disponibile dalle 14"></div></div>'+
+    '<button type="button" class="btn yellow" data-vf-propose="'+esc(s.id)+'">🙋 Mi rendo disponibile</button><div class="muted">La proposta NON equivale ad assegnazione: attendi conferma.</div>';
+   else if(future)signup='<div class="muted">Nessun ruolo disponibile secondo le qualifiche registrate. Contatta il Centralino.</div>';
+  }
+  return '<div class="cal-detail-item service"><b>'+esc(e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'<br><span class="muted">'+esc(times)+'</span>'+
+   '<br><span class="pill '+(s.assegnato_a_me?'g':'b')+'">'+(s.assegnato_a_me?'Sei assegnato a questo servizio':'Servizio programmato')+'</span>'+signup+'</div>';
  }).join(''):'<div class="notice">Nessun servizio futuro programmato per questo giorno.</div>';
+ box.querySelectorAll('[data-vf-propose]').forEach(b=>b.onclick=()=>submitVolunteerAssistanceApplication(b.dataset.vfPropose,'PROPONI'));
+ box.querySelectorAll('[data-vf-withdraw]').forEach(b=>b.onclick=()=>submitVolunteerAssistanceApplication(b.dataset.vfWithdraw,'RITIRA'));
+}
+async function submitVolunteerAssistanceApplication(serviceId,action){
+ if(vfcalAppBusy)return;
+ const event=vfcalEvents.find(e=>e.raw.id===serviceId&&isAssistanceManifestation(e.raw.tipo_servizio));
+ if(!event)return msg('vfcalMsg','Il servizio non è disponibile come assistenza.','warn');
+ let role=null,note=null;
+ if(action==='PROPONI'){
+  role=document.querySelector('[data-vf-role="'+serviceId+'"]')?.value;
+  note=document.querySelector('[data-vf-note="'+serviceId+'"]')?.value||null;
+  if(!role||!volunteerEligibleAssistanceRoles(event.raw.data_servizio).some(x=>x[0]===role))
+   return msg('vfcalMsg','Seleziona un ruolo abilitato dalle tue qualifiche.','warn');
+ }else if(!confirm('Ritirare la disponibilità per questa assistenza?'))return;
+ vfcalAppBusy=true;msg('vfcalMsg',action==='PROPONI'?'Invio disponibilità...':'Ritiro disponibilità...');
+ try{
+  const r=await sb.rpc('cge_candidatura_assistenza_salva',{p_servizio:serviceId,p_ruolo:role,p_nota:note,p_azione:action});
+  if(r.error)throw r.error;
+  await loadVolunteerFutureCalendar();
+  msg('vfcalMsg',action==='PROPONI'?'Disponibilità inviata. Attendi la conferma prima di considerarti assegnato.':'Disponibilità ritirata.','ok');
+ }catch(e){msg('vfcalMsg',e.message||String(e),'err')}
+ finally{vfcalAppBusy=false}
 }
 function moveVolunteerFutureCalendar(delta){
  if(vfcalMode==='week')vfcalCursor=new Date(vfcalCursor.getFullYear(),vfcalCursor.getMonth(),vfcalCursor.getDate()+delta*7);
@@ -3131,6 +3176,7 @@ async function loadVolunteerArea(){
   ]);
   const err=[pr.error,qr.error,qd.error,hr.error,tpr.error,avr.error,srv.error,dr.error].find(Boolean);if(err)throw err;
   const person=pr.data||{},hours=hr.data||{},quals=qr.data||[],qdefs=qd.data||[],tp=tpr.data||[],availability=avr.data||[],services=srv.data||[],documents=dr.data||[];
+   vfcalQualificationRows=quals;
   let turns=[];
   const ids=[...new Set(tp.map(x=>x.turno_id).filter(Boolean))];
   if(ids.length){const tr=await sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note').in('id',ids).gte('data_turno',today()).order('data_turno').order('ora_inizio');if(tr.error)throw tr.error;turns=tr.data||[]}
