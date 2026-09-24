@@ -2263,7 +2263,7 @@ function volRosterRenderDay(){
    else controls+='<div class="muted">Non ci sono ruoli liberi compatibili con le tue qualifiche. Contatta il Centralino.</div>';
   }
   return '<div class="box" style="margin:8px 0"><b>'+esc(volRosterTitle(e))+'</b>'+
-   '<div class="muted">'+esc(description)+'</div>'+controls+'</div>';
+   '<div class="muted">'+esc(description)+'</div>'+volunteerSpecialEquipmentHTML(e)+controls+'</div>';
  }).join(''):'<div class="notice">Nessuna manifestazione programmata per questo giorno. Scegli una data con 🎪 oppure chiedi al Centralino di inserire il servizio.</div>';
  $('volRosterDay').querySelectorAll('[data-vol-roster-join]').forEach(button=>
   button.onclick=()=>volRosterJoin(button.dataset.volRosterKind,button.dataset.volRosterJoin));
@@ -2272,14 +2272,15 @@ async function loadVolRoster(){
  if(!volunteerBadge)return;
  const seq=++volRosterSeq,range=calVisibleRange(volRosterCursor,'month');
  msg('volRosterMsg','Caricamento delle manifestazioni...');
- const [services,occupied]=await Promise.all([
+ const [services,occupied,equipment]=await Promise.all([
   sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd})
+  sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_ordinari_dotazioni',{p_dal:range.startYmd,p_al:range.endYmd})
  ]);
  if(seq!==volRosterSeq)return;
- if(services.error||occupied.error){
+ if(services.error||occupied.error||equipment.error){
   volRosterEvents=[];volRosterOccupied=[];volRosterApplications=[];volRosterRender();
-  return msg('volRosterMsg','Errore calendario: '+(services.error||occupied.error).message,'err');
+  return msg('volRosterMsg','Errore calendario: '+(services.error||occupied.error||equipment.error).message,'err');
  }
  const rows=(services.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio));
  const ids=rows.map(s=>s.id);
@@ -2294,7 +2295,9 @@ async function loadVolRoster(){
  if(seq!==volRosterSeq)return;
  volRosterOccupied=occupied.data||[];
  volRosterApplications=applications;
+ const equipmentById=new Map((equipment.data||[]).map(x=>[x.servizio_id,x]));
  volRosterEvents=rows.map(s=>({
+  ...(equipmentById.get(s.id)||{}),
   id:s.id,kind:'SERVIZIO_ASSISTENZA',day:s.data_servizio,
   start:calTime(s.ora_inizio_assistenza_prevista||s.ora_partenza_prevista),
   end:calTime(s.ora_fine_assistenza_prevista||s.ora_rientro_previsto),
