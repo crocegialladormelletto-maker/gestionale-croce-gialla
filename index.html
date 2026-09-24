@@ -92,7 +92,7 @@
 }
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.17</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.18</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -146,7 +146,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.17</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.18</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -888,6 +888,24 @@
     <div class="calendar-wrap"><div class="cal-weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div></div><div id="vcalGrid" class="cal-grid"></div></div>
     <div style="margin-top:10px"><h3 id="vcalDayTitle">Dettaglio giorno</h3><div id="vcalDayDetails"></div></div>
    </div>
+   <div class="section">
+    <div class="actions" style="justify-content:space-between">
+     <div><h3 style="margin:0">🚑 Calendario servizi futuri</h3><div class="muted">Tutti i servizi programmati dell’associazione, anche quelli non ancora assegnati a te.</div></div>
+     <div class="actions">
+      <button id="vfcalPrev" class="btn secondary" type="button">←</button>
+      <button id="vfcalToday" class="btn yellow" type="button">Oggi</button>
+      <button id="vfcalNext" class="btn secondary" type="button">→</button>
+      <button id="vfcalMonth" class="btn yellow" type="button">Mensile</button>
+      <button id="vfcalWeek" class="btn secondary" type="button">Settimanale</button>
+      <button id="vfcalRefresh" class="btn secondary" type="button">↻ Aggiorna</button>
+     </div>
+    </div>
+    <div class="muted" style="margin:8px 0">Solo consultazione: data, orario, tipo servizio, mezzo e manifestazioni. Non vengono mostrati nomi, indirizzi o informazioni dei pazienti. Gli incarichi personali restano nel calendario sopra.</div>
+    <strong id="vfcalTitle" style="font-size:18px;color:var(--n)"></strong>
+    <div id="vfcalMsg"></div>
+    <div class="calendar-wrap" style="margin-top:9px"><div class="cal-weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div></div><div id="vfcalGrid" class="cal-grid"></div></div>
+    <div style="margin-top:10px"><h3 id="vfcalDayTitle">Servizi del giorno</h3><div id="vfcalDayDetails"></div></div>
+   </div>
    <div class="grid2" style="margin-top:10px">
     <div class="section"><h3>I miei dati</h3>
      <div id="volProfile" style="margin-bottom:10px"></div>
@@ -957,6 +975,7 @@ let prof=null,people=[],qualifications=[],pq=[],vehicles=[],tariffs=[],tariffDes
 let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsRequest=0;
 let opCalCursor=new Date(),opCalSelected=todaySafe(),opCalEvents=[],opCalMode='month',opCalVehicle='';
 let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month';
+let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0;
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[];
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
@@ -1012,7 +1031,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.17';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.18';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -1327,7 +1346,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.17</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.18</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1489,7 +1508,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.17'
+  versione_app:'V13.18'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -1564,7 +1583,15 @@ function renderCalendarGrid(prefix,cursor,selected,events,mode){
    (dayEvents.length>limit?'<div class="cal-more">+'+(dayEvents.length-limit)+' altri</div>':'')+'</div>'
  }
  grid.innerHTML=html;
- grid.querySelectorAll('[data-cal-date]').forEach(el=>el.onclick=()=>{if(prefix==='cal')opCalSelected=el.dataset.calDate;else volCalSelected=el.dataset.calDate;renderCalendarGrid(prefix,cursor,el.dataset.calDate,events,mode);if(prefix==='cal')renderOperationalCalendarDay();else renderVolunteerCalendarDay()})
+ grid.querySelectorAll('[data-cal-date]').forEach(el=>el.onclick=()=>{
+  if(prefix==='cal')opCalSelected=el.dataset.calDate;
+  else if(prefix==='vcal')volCalSelected=el.dataset.calDate;
+  else if(prefix==='vfcal')vfcalSelected=el.dataset.calDate;
+  renderCalendarGrid(prefix,cursor,el.dataset.calDate,events,mode);
+  if(prefix==='cal')renderOperationalCalendarDay();
+  else if(prefix==='vcal')renderVolunteerCalendarDay();
+  else if(prefix==='vfcal')renderVolunteerFutureCalendarDay();
+ })
 }
 function turnCoverage(t,assignments){
  const active=(assignments||[]).filter(a=>String(a.risposta||'').toUpperCase()!=='NON DISPONIBILE'),n=active.length,min=String(t.mezzo||'')==='06'?1:2;
@@ -1637,6 +1664,66 @@ $('calWeek').onclick=()=>{opCalMode='week';opCalCursor=new Date(opCalSelected+'T
 ['calShowTurns','calShowServices','calShowAvailability'].forEach(id=>$(id).onchange=refreshOperationalCalendarView);
 document.querySelectorAll('.cal-vehicle').forEach(b=>b.onclick=()=>{opCalVehicle=b.dataset.calVehicle||'';document.querySelectorAll('.cal-vehicle').forEach(x=>x.className='btn '+((x.dataset.calVehicle||'')===opCalVehicle?'blue':'secondary')+' cal-vehicle');refreshOperationalCalendarView()});
 $('calNewService').onclick=()=>view('new',{date:opCalSelected});$('calNewShift').onclick=()=>{if($('sd'))$('sd').value=opCalSelected;view('shifts')};
+
+function refreshVolunteerFutureCalendarView(){
+ renderCalendarGrid('vfcal',vfcalCursor,vfcalSelected,vfcalEvents,vfcalMode);
+ renderVolunteerFutureCalendarDay();
+ $('vfcalMonth').className='btn '+(vfcalMode==='month'?'yellow':'secondary');
+ $('vfcalWeek').className='btn '+(vfcalMode==='week'?'yellow':'secondary');
+}
+async function loadVolunteerFutureCalendar(){
+ if(!volunteerBadge)return;
+ const request=++vfcalLoadSequence;
+ msg('vfcalMsg','Caricamento servizi futuri...');
+ const range=calVisibleRange(vfcalCursor,vfcalMode);
+ const r=await sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd});
+ if(request!==vfcalLoadSequence)return;
+ if(r.error){
+  vfcalEvents=[];refreshVolunteerFutureCalendarView();
+  return msg('vfcalMsg','Impossibile caricare i servizi futuri: '+r.error.message,'err');
+ }
+ vfcalEvents=(r.data||[]).map(s=>{
+  const event=isAssistanceManifestation(s.tipo_servizio);
+  const name=event&&s.nome_manifestazione?s.nome_manifestazione:(s.tipo_servizio||'Servizio programmato');
+  return {kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),
+   title:name+' · M'+(s.mezzo||'—'),subtitle:event?(s.luogo_manifestazione||''):null,raw:s};
+ });
+ refreshVolunteerFutureCalendarView();
+ msg('vfcalMsg','');
+}
+function renderVolunteerFutureCalendarDay(){
+ const title=$('vfcalDayTitle'),box=$('vfcalDayDetails');
+ if(!title||!box)return;
+ const date=new Date(vfcalSelected+'T12:00:00');
+ title.textContent='Servizi · '+new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(date);
+ const rows=vfcalEvents.filter(e=>e.date===vfcalSelected).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+ box.innerHTML=rows.length?rows.map(e=>{
+  const s=e.raw,evt=isAssistanceManifestation(s.tipo_servizio);
+  const times=evt?'Partenza sede '+(calTime(s.ora_partenza_prevista)||'—')+
+    ' · Inizio '+(calTime(s.ora_inizio_assistenza_prevista)||'—')+
+    ' · Fine '+(calTime(s.ora_fine_assistenza_prevista)||'—')+
+    ' · Rientro '+(calTime(s.ora_rientro_previsto)||'—'):
+    'Partenza '+(calTime(s.ora_partenza_prevista)||'—')+
+    ' · Rientro previsto '+(calTime(s.ora_rientro_previsto)||'—');
+  return '<div class="cal-detail-item service"><b>'+esc(e.title)+'</b>'+
+   (e.subtitle?'<br>'+esc(e.subtitle):'')+
+   '<br><span class="muted">'+esc(times)+'</span>'+
+   '<br><span class="pill '+(s.assegnato_a_me?'g':'b')+'">'+
+   (s.assegnato_a_me?'Sei assegnato a questo servizio':'Servizio programmato')+'</span></div>';
+ }).join(''):'<div class="notice">Nessun servizio futuro programmato per questo giorno.</div>';
+}
+function moveVolunteerFutureCalendar(delta){
+ if(vfcalMode==='week')vfcalCursor=new Date(vfcalCursor.getFullYear(),vfcalCursor.getMonth(),vfcalCursor.getDate()+delta*7);
+ else vfcalCursor=new Date(vfcalCursor.getFullYear(),vfcalCursor.getMonth()+delta,1);
+ vfcalSelected=calYmd(vfcalCursor);
+ loadVolunteerFutureCalendar();
+}
+$('vfcalPrev').onclick=()=>moveVolunteerFutureCalendar(-1);
+$('vfcalNext').onclick=()=>moveVolunteerFutureCalendar(1);
+$('vfcalToday').onclick=()=>{vfcalCursor=new Date();vfcalSelected=todaySafe();loadVolunteerFutureCalendar()};
+$('vfcalMonth').onclick=()=>{vfcalMode='month';vfcalCursor=new Date(vfcalSelected+'T12:00:00');loadVolunteerFutureCalendar()};
+$('vfcalWeek').onclick=()=>{vfcalMode='week';vfcalCursor=new Date(vfcalSelected+'T12:00:00');loadVolunteerFutureCalendar()};
+$('vfcalRefresh').onclick=loadVolunteerFutureCalendar;
 
 function refreshVolunteerCalendarView(){renderCalendarGrid('vcal',volCalCursor,volCalSelected,volCalEvents,volCalMode);renderVolunteerCalendarDay();$('vcalMonth').className='btn '+(volCalMode==='month'?'yellow':'secondary');$('vcalWeek').className='btn '+(volCalMode==='week'?'yellow':'secondary')}
 async function loadVolunteerCalendar(){
@@ -3030,7 +3117,7 @@ async function loadVolunteerArea(){
   document.querySelectorAll('[data-vol-doc-open]').forEach(b=>b.onclick=()=>volOpenDocument(b.dataset.volDocOpen,documents));
   document.querySelectorAll('[data-vol-doc-del]').forEach(b=>b.onclick=()=>volDeleteDocument(b.dataset.volDocDel,documents));
   $('volServices').innerHTML=services.length?services.slice(0,30).map(x=>{const aids=[x.necessita_carrozzina?'Carrozzina':'',x.necessita_ossigeno?'Ossigeno':'',x.necessita_barellato?'Barellato':'',x.necessita_monitoraggio?'Monitoraggio':'',x.assistenza_extra?'Assistenza extra':''].filter(Boolean).join(', ');return '<div class="box" style="margin:7px 0"><b>'+esc(x.data_servizio)+' · '+esc(volFmtTime(x.ora_partenza_prevista))+' · '+esc(x.tipo_servizio_altro||x.tipo_servizio)+'</b> <span class="pill b">'+esc(x.ruolo_assegnato||'—')+'</span><br>Mezzo '+esc(x.mezzo||'—')+' · '+esc(x.luogo_partenza||x.indirizzo_partenza||'—')+' → '+esc(x.ospedale_destinazione||x.destinazione||x.indirizzo_destinazione||'—')+'<br><span class="muted">Carico '+esc(volFmtTime(x.ora_carico_paziente_prevista))+' · Rientro '+esc(volFmtTime(x.ora_rientro_previsto))+' · Stato '+esc(x.stato)+'</span>'+(aids?'<br><span class="pill">'+esc(aids)+'</span>':'')+(x.note?'<br>'+esc(x.note):'')+'</div>'}).join(''):'<div class="notice">Nessun servizio assegnato.</div>';
-  await loadVolunteerCalendar();
+  await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar()]);
   msg('volmsg','');
  }catch(e){msg('volmsg',e.message||String(e),'err')}
 }
