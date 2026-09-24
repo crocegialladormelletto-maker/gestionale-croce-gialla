@@ -295,6 +295,7 @@
 <button class="nav" data-v="services">🔎 Archivio servizi</button>
 <button class="nav" data-v="patients">🪪 Anagrafica pazienti</button>
 <button class="nav" data-v="travelSheets">📄 Fogli Viaggio</button>
+<button class="nav" data-v="debitNotes" data-admin-only="true">🧾 Note di Debito</button>
 <button class="nav" data-v="new">✚ Nuovo servizio</button>
 <button class="nav" data-v="crew">👥 Equipaggi</button>
 <button class="nav sep" data-v="people" data-admin-only="true">🪪 Volontari</button>
@@ -591,6 +592,59 @@
  </div>
 </section>
 
+<section id="debitNotes" class="surface hidden" data-admin-only="true">
+ <div class="hero"><h2>🧾 Note di Debito</h2><p>Documenti creati manualmente dall’Amministrazione dopo la chiusura del Foglio Viaggio.</p></div>
+ <div class="pad">
+  <div class="notice">Prima della prima emissione, confronta i progressivi con le eventuali Note di Debito PDF già emesse fuori dal gestionale per evitare doppioni. Le email si preparano nel programma di posta: il PDF deve essere allegato manualmente.</div>
+  <div class="toolbar"><button id="ndRefresh" type="button" class="btn secondary">↻ Aggiorna archivio</button></div>
+  <div id="ndListMsg"></div>
+  <div class="table"><table><thead><tr><th>Numero</th><th>Data</th><th>Intestatario</th><th>Foglio Viaggio</th><th>Totale</th><th>Stato</th><th></th></tr></thead><tbody id="ndRows"></tbody></table></div>
+ </div>
+</section>
+
+<section id="debitNoteDetail" class="surface hidden" data-admin-only="true">
+ <div class="hero"><div class="actions" style="justify-content:space-between"><div><h2>Nota di Debito <span id="ndNumber"></span></h2><p>Stato: <b id="ndState"></b> · <span id="ndLinked"></span></p></div><button id="ndBack" type="button" class="btn secondary">← Archivio Note di Debito</button></div></div>
+ <div class="pad"><div id="ndMsg"></div>
+  <div class="notice" id="ndNoDuplicate"></div>
+  <form id="ndForm" onsubmit="return false">
+   <div class="section"><h3>Intestatario e dati del documento</h3>
+    <div class="grid4">
+     <div class="field"><label>Data documento</label><input id="ndDate" type="date" required></div>
+     <div class="field"><label>Data servizio</label><input id="ndServiceDate" type="date" disabled></div>
+     <div class="field"><label>Intestatario *</label><input id="ndName" maxlength="240" required></div>
+     <div class="field"><label>Codice fiscale / P. IVA</label><input id="ndCF" maxlength="32"></div>
+     <div class="field"><label>Indirizzo</label><input id="ndAddress" maxlength="240"></div>
+     <div class="field"><label>CAP</label><input id="ndCap" maxlength="12"></div>
+     <div class="field"><label>Comune</label><input id="ndComune" maxlength="120"></div>
+     <div class="field"><label>Provincia</label><input id="ndProvincia" maxlength="12"></div>
+     <div class="field"><label>Indirizzo email destinatario</label><input id="ndEmail" type="email" maxlength="254"></div>
+    </div>
+   </div>
+   <div class="section"><h3>Descrizione e importi</h3>
+    <div class="field"><label>Descrizione del servizio *</label><textarea id="ndDescription" rows="4" required></textarea></div>
+    <div class="grid3">
+     <div class="field"><label>Importo €</label><input id="ndAmount" type="number" min="0" step="0.01"></div>
+     <div class="field"><label>Sconto €</label><input id="ndDiscount" type="number" min="0" step="0.01"></div>
+     <div class="field"><label>Totale €</label><input id="ndTotal" disabled></div>
+    </div>
+   </div>
+   <div class="section"><h3>Pagamento</h3>
+    <div class="grid3">
+     <div class="field"><label>Modalità</label><select id="ndPayment"><option value="">Da concordare</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO A VISTA">Bonifico bancario a vista</option><option value="ALTRO">Altro</option></select></div>
+     <div class="field"><label>Già pagato in data (facoltativo)</label><input id="ndPayDate" type="date"></div>
+    </div>
+   </div>
+  </form>
+  <div class="actions">
+   <button id="ndSave" type="button" class="btn secondary">Salva bozza</button>
+   <button id="ndIssue" type="button" class="btn yellow">✓ Emetti Nota di Debito</button>
+   <button id="ndPrint" type="button" class="btn blue">🖨 Stampa / Salva PDF</button>
+   <button id="ndEmailSend" type="button" class="btn secondary">✉ Prepara email</button>
+  </div>
+  <div class="notice">L’invio email automatico con PDF allegato richiede un servizio di posta dedicato, non ancora configurato. «Prepara email» apre solo una bozza: allega tu il PDF e verifica l’invio.</div>
+ </div>
+</section>
+
 <section id="travelSheetDetail" class="surface hidden">
  <div class="hero">
   <div class="actions" style="justify-content:space-between">
@@ -692,6 +746,11 @@
    </div>
    <div id="fvDetailMsg"></div>
   </form>
+  <div class="section hidden" id="ndFromSheet" data-admin-only="true">
+   <h3>🧾 Nota di Debito</h3>
+   <p id="ndFromSheetInfo" class="muted">Crea la Nota di Debito dopo la chiusura del Foglio Viaggio.</p>
+   <div class="actions"><button type="button" id="ndFromSheetButton" class="btn yellow">✚ Crea Nota di Debito</button><button type="button" class="btn secondary" id="ndFromSheetOpenList">Archivio Note di Debito</button></div>
+  </div>
  </div>
 </section>
 
@@ -1464,7 +1523,7 @@ async function view(v,options={}){
   if(options.patient)usePatientForService(options.patient);
  }
  selectView(v);
- const loader=({dash:dashboard,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,tariffs:loadTariffsView,accounting:loadAccounting,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
+ const loader=({dash:dashboard,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,tariffs:loadTariffsView,accounting:loadAccounting,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
  const result=await loader();
  selectView(v);
  return result;
@@ -2053,6 +2112,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvClose').classList.toggle('hidden',closed);
  $('fvDelete').classList.toggle('hidden',closed||prof?.ruolo!=='AMMINISTRATORE'||!!f.pdf_path);
  fvPreview();
+ if(window.ndRefreshForFoglio)await window.ndRefreshForFoglio(f);
  msg('fvDetailMsg',closed?'Foglio Viaggio chiuso: documento non più modificabile.':'',closed?'ok':'');
 }
 
@@ -5212,4 +5272,4 @@ if('serviceWorker' in navigator){
 applyVolunteerOnlyLogin();refreshPwaInstallUI();
 try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&$('vbadge')){$('vbadge').value=remembered;$('vremember').checked=true}}catch(_){}
 (async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
-</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
+</script><script src="/gestionale-croce-gialla/note-debito.js?v=20260924b"></script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
