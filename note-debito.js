@@ -31,7 +31,7 @@
   el('ndSave').classList.toggle('hidden',!draft);
   el('ndIssue').classList.toggle('hidden',!draft);
   el('ndPrint').disabled=draft;
-  el('ndEmail').disabled=draft;
+  el('ndEmailSend').disabled=draft;
   el('ndNoDuplicate').textContent=draft
    ?'Bozza: controlla numerazione, intestatario, importo, sconto e dati di pagamento prima di emettere.'
    :'Nota emessa. Per correzioni successive rivolgersi all’Amministrazione.';
@@ -42,7 +42,7 @@
   info('Caricamento della Nota di Debito...');
   const r=await sb.from('note_di_debito').select('*').eq('id',id).single();
   if(r.error)return info(r.error.message,'err');
-  fill(r.data);selectView('debitNotes');info('');
+  fill(r.data);selectView('debitNoteDetail');info('');
   window.scrollTo({top:0,behavior:'smooth'});
  }
  window.ndOpen=read;
@@ -155,7 +155,7 @@
   const restore=()=>{document.title=oldTitle;print.classList.add('hidden');window.removeEventListener('afterprint',restore)};
   window.addEventListener('afterprint',restore);window.print();
  };
- el('ndEmail').onclick=()=>{
+ el('ndEmailSend').onclick=()=>{
   if(!isAdmin()||!active||active.stato!=='EMESSA')return;
   if(!active.email)return info('Inserisci l’indirizzo email corretto quando la nota è ancora in bozza.','warn');
   if(!confirm('Aprire un messaggio email indirizzato a '+active.email+'? Salva prima il PDF e ALLEGALO manualmente: il gestionale non invia automaticamente file o email.'))return;
