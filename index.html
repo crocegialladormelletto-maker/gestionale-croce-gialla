@@ -114,6 +114,7 @@
 .roster-crew-summary:last-child{border-bottom:0}
 @media print{.roster-crew-editor{display:none!important}.roster-crew-summary{break-inside:avoid}}
 .vol-panel-shifts#volRosterSection{border-top:5px solid #5c9bd5}
+.section .dim-dash-side{position:static;max-height:none;overflow:visible}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
@@ -3035,6 +3036,7 @@ function emRender(){
 }
 async function loadEmergencyRoster(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ void loadEmergenzaAdmin();
  msg('emMsg','Caricamento turnario Emergenza...');
  const range=emPeriodRange();
  const r=await sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note')
@@ -3049,7 +3051,6 @@ async function loadEmergencyRoster(){
   emAssignments=a.data||[];
  }else emAssignments=[];
  msg('emMsg','');emRender();
- await loadEmergenzaAdmin();
 }
 $('emPrev').onclick=()=>{emCursor.setDate(emCursor.getDate()-(emView==='week'?7:1));loadEmergencyRoster()};
 $('emNext').onclick=()=>{emCursor.setDate(emCursor.getDate()+(emView==='week'?7:1));loadEmergencyRoster()};
@@ -3297,8 +3298,8 @@ function emgRenderMonth(kind){
    const slot=emgRowsFor(rows,day,fascia);
    return '<span class="dim-dot '+(emgSlotCovered(slot)?'ok':slot.length?'partial':'')+'"></span>';
   }).join('');
-  output+='<button type="button" class="dim-date '+(out?'emg-out ':'')+(day===todaySafe()?'emg-today ':'')+
-   (day===selected?'emg-selected':'')+'" data-emg-date="'+day+'"><b>'+date.getDate()+'</b><small>'+counts+'</small></button>';
+  output+='<button type="button" class="dim-date '+(out?'dim-out ':'')+(day===todaySafe()?'dim-today ':'')+
+   (day===selected?'dim-selected':'')+'" data-emg-date="'+day+'"><b>'+date.getDate()+'</b><small>'+counts+'</small></button>';
  }
  $(prefix+'Grid').innerHTML=output;
  $(prefix+'Grid').querySelectorAll('[data-emg-date]').forEach(button=>button.onclick=()=>{
@@ -3330,7 +3331,7 @@ function emgRenderDay(kind){
     '<button type="button" class="btn yellow" data-emg-join="'+fascia+'">Mi segno (definitivo)</button></div>':
     '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
     (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
-  return '<div class="dim-slot '+(covered?'emg-complete':'emg-incomplete')+'"><b>'+label+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
+  return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+label+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
    (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
    (admin?emgAdminAssignControls(day,fascia,slot):'')+'</div>';
  }).join('');
@@ -3374,7 +3375,7 @@ async function emgAdminAssign(day,fascia,role){
  const badge=$('emgAdminDay').querySelector('[data-emg-assign-person="'+fascia+'-'+role+'"]')?.value;
  const person=emgAdminEligible.find(p=>p.badge===badge&&p.ruolo===role);
  if(!person)return msg('emgAdminMsg','Seleziona un volontario con qualifica valida.','warn');
- if(!confirm('Inserire DEFINITIVAMENTE '+person.nome_completo+' nel turno DIMISSIONI del '+day+
+ if(!confirm('Inserire DEFINITIVAMENTE '+person.nome_completo+' nel turno EMERGENZA 118 del '+day+
   ', '+fascia+' come '+emgRoleLabel(role)+'?'))return;
  emgAdminBusy=true;msg('emgAdminMsg','Inserimento nell’equipaggio in corso...');
  try{
@@ -3471,8 +3472,8 @@ function astRenderMonth(kind){
    const slot=astRowsFor(rows,day,fascia);
    return '<span class="dim-dot '+(astSlotCovered(slot)?'ok':slot.length?'partial':'')+'"></span>';
   }).join('');
-  output+='<button type="button" class="dim-date '+(out?'ast-out ':'')+(day===todaySafe()?'ast-today ':'')+
-   (day===selected?'ast-selected':'')+'" data-ast-date="'+day+'"><b>'+date.getDate()+'</b><small>'+counts+'</small></button>';
+  output+='<button type="button" class="dim-date '+(out?'dim-out ':'')+(day===todaySafe()?'dim-today ':'')+
+   (day===selected?'dim-selected':'')+'" data-ast-date="'+day+'"><b>'+date.getDate()+'</b><small>'+counts+'</small></button>';
  }
  $(prefix+'Grid').innerHTML=output;
  $(prefix+'Grid').querySelectorAll('[data-ast-date]').forEach(button=>button.onclick=()=>{
@@ -3504,7 +3505,7 @@ function astRenderDay(kind){
     '<button type="button" class="btn yellow" data-ast-join="'+fascia+'">Mi segno (definitivo)</button></div>':
     '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
     (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
-  return '<div class="dim-slot '+(covered?'ast-complete':'ast-incomplete')+'"><b>'+label+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
+  return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+label+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
    (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
    (admin?astAdminAssignControls(day,fascia,slot):'')+'</div>';
  }).join('');
@@ -3754,6 +3755,7 @@ async function decideAssistanceCandidate(id,yes){
 }
 async function loadAssistanceRoster(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ void loadAssistenzaAdmin();
  const seq=++asLoadSequence;
  msg('asMsg','Caricamento turnario Assistenze...');
  msg('asCandidateMsg','');
@@ -3785,7 +3787,6 @@ async function loadAssistanceRoster(){
  asCandidates=cr.data||[];
  if(cr.error)msg('asCandidateMsg','Errore caricamento candidature: '+cr.error.message,'err');
  msg('asMsg','');asRender();
- await loadAssistenzaAdmin();
 }
 $('asPrev').onclick=()=>{asCursor.setDate(asCursor.getDate()-(asView==='week'?7:1));loadAssistanceRoster()};
 $('asNext').onclick=()=>{asCursor.setDate(asCursor.getDate()+(asView==='week'?7:1));loadAssistanceRoster()};
