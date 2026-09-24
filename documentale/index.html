@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestionale Documentale · Croce Gialla Emergenza</title>
+<meta name="theme-color" content="#12375d">
+<link rel="icon" type="image/png" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192.png">
+<style>
+:root{--n:#12375d;--y:#ffdb17;--bg:#f2f5f8;--ink:#1c3347;--muted:#64798b;--line:#d9e2ea;--g:#15734f;--r:#a93138}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Arial}button,input,select,textarea{font:inherit}.hidden{display:none!important}
+.shell{max-width:1450px;margin:auto;padding:12px}.top{background:var(--n);color:#fff;border-radius:18px;overflow:hidden}.head{display:flex;align-items:center;gap:12px;padding:13px 18px;flex-wrap:wrap}.logo{width:62px;height:62px;border-radius:50%;object-fit:cover;background:#fff;border:3px solid #fff}.brand{flex:1;min-width:220px}.brand small{display:block;color:var(--y);font-weight:900}.brand strong{font-size:22px}.stripe{height:7px;background:linear-gradient(90deg,var(--y) 0 74%,#e8463d 74% 87%,#3477c9 87%)}
+.layout{display:grid;grid-template-columns:225px minmax(0,1fr);gap:14px;margin-top:14px}.side,.surface,.card{background:#fff;border:1px solid var(--line);border-radius:16px}.side{padding:10px;height:max-content;position:sticky;top:10px}.nav{width:100%;border:1px solid transparent;text-align:left;padding:11px;border-radius:10px;font-weight:850;color:var(--n);margin:3px 0;cursor:pointer;transition:.15s}.nav:hover{filter:brightness(.97);transform:translateX(2px)}.nav.active{box-shadow:inset 4px 0 0 rgba(18,55,93,.45),0 1px 4px #12375d20}.nav[data-v="dash"]{background:#fff2ad;border-color:#e6c741}.nav[data-v="protocol"]{background:#e7f2f0;border-color:#8fbab3}.nav[data-v="archive"]{background:#e5f0fb;border-color:#93bce3}.nav[data-v="due"]{background:#fff0d8;border-color:#e7bd78}
+.hero{padding:20px;background:linear-gradient(120deg,#fff0a1,#fffbe6 58%,#fff);border-bottom:1px solid #eee2a4;border-radius:16px 16px 0 0}.hero h1,.hero h2{margin:0 0 5px;color:var(--n)}.hero p{margin:0}.pad{padding:18px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.stat,.box{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}.stat small{font-size:10px;font-weight:900;color:var(--muted)}.stat b{display:block;font-size:24px;color:var(--n)}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.field{display:flex;flex-direction:column;gap:4px}.field label{font-size:11px;font-weight:900;color:var(--n)}input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padding:9px 10px;background:#fff;color:var(--ink)}textarea{min-height:82px;resize:vertical}.section{border:1px solid var(--line);border-radius:13px;padding:13px;margin:11px 0}.section h3{margin:0 0 10px;color:var(--n)}
+.btn{border:0;border-radius:8px;padding:9px 12px;font-weight:850;cursor:pointer}.yellow{background:var(--y);color:var(--n)}.blue{background:var(--n);color:#fff}.secondary{background:#eef2f6;color:var(--n)}.danger{background:#fbe9ea;color:var(--r)}.actions,.toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.toolbar{margin:10px 0}.notice{padding:10px 12px;border-radius:9px;margin:9px 0;background:#edf6ff;border:1px solid #cfe4fa;white-space:pre-wrap}.ok{background:#eaf8f1;color:#176a4b}.err{background:#fff0f0;color:#a32b34}.warn{background:#fff7df;color:#875d12}.muted{color:var(--muted);font-size:12px}.pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#fff2bd;font-size:10px;font-weight:900}.pill.g{background:#dff4e9;color:#166846}.pill.r{background:#fde8e9;color:#9d2f37}.pill.b{background:#e5f0fb;color:#1c5d91}
+.table{overflow:auto;border:1px solid var(--line);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:9px;border-bottom:1px solid #e7edf2;text-align:left;vertical-align:top}th{background:#f5f7fa;color:var(--n);font-size:10px;position:sticky;top:0}
+.login{max-width:470px;margin:7vh auto;padding:14px}.loginhead{background:var(--n);color:#fff;text-align:center;padding:22px;border-radius:16px 16px 0 0}.loginhead img{width:88px;height:88px;border-radius:50%;object-fit:cover;background:#fff;border:4px solid #fff}.loginbody{padding:19px}.loginbody .field{margin:10px 0}.separator{margin:16px 0;border-top:1px solid var(--line)}.due-row{border-left:5px solid #e0a800}.due-row.over{border-left-color:#b52d36;background:#fff7f7}
+@media(max-width:900px){.layout{display:block}.side{display:flex;overflow-x:auto;gap:4px;position:sticky;top:4px;z-index:20;margin-bottom:10px;box-shadow:0 3px 12px #0002}.nav{width:auto;white-space:nowrap;flex:0 0 auto}.nav:hover{transform:none}.stats,.grid4{grid-template-columns:1fr 1fr}.grid2,.grid3{grid-template-columns:1fr}}
+@media(max-width:520px){.stats,.grid4{grid-template-columns:1fr}.head .btn{padding:8px 9px}}
+</style>
+</head>
+<body>
+<div id="login" class="login">
+ <div class="card">
+  <div class="loginhead">
+   <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.0</div>
+  </div>
+  <div class="loginbody">
+   <div><b>Accesso Amministrazione</b></div>
+   <div class="field"><label>Email</label><input id="email" type="email" autocomplete="username"></div>
+   <div class="field"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
+   <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
+   <div class="separator"></div>
+   <form id="centralinoForm">
+    <div><b>Accesso Centralino</b></div>
+    <div class="grid2"><div class="field"><label>Username</label><input id="cuser" value="centralino" autocomplete="username"></div><div class="field"><label>Password</label><input id="cpw" type="password" autocomplete="current-password"></div></div>
+    <button class="btn secondary" type="submit" style="width:100%">Accedi al Centralino</button>
+   </form><div id="cloginmsg"></div>
+  </div>
+ </div>
+</div>
+
+<div id="app" class="shell hidden">
+ <div class="top"><div class="head">
+  <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.0</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
+  <button id="out" class="btn secondary">Esci</button>
+ </div><div class="stripe"></div></div>
+
+ <div class="layout">
+  <aside class="side">
+   <button class="nav active" data-v="dash">⌂ Dashboard</button>
+   <button class="nav" data-v="protocol">📥 Nuovo protocollo</button>
+   <button class="nav" data-v="archive">📂 Archivio documenti</button>
+   <button class="nav" data-v="due">⏰ Scadenze</button>
+  </aside>
+  <main>
+   <section id="dash" class="surface">
+    <div class="hero"><h1>Dashboard documentale</h1><p>Protocollo, archivio, allegati e scadenze amministrative.</p></div>
+    <div class="pad">
+     <div class="stats">
+      <div class="stat"><small>PROTOCOLLI ANNO</small><b id="dTotal">0</b><span id="dYear" class="muted"></span></div>
+      <div class="stat"><small>ENTRATA</small><b id="dIn">0</b></div>
+      <div class="stat"><small>USCITA</small><b id="dOut">0</b></div>
+      <div class="stat"><small>SCADENZE 30 GG</small><b id="dDue">0</b></div>
+     </div>
+     <div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">Documenti recenti</h3><div class="muted">Ultimi protocolli registrati.</div></div><button id="dRefresh" class="btn secondary">↻ Aggiorna</button></div><div id="dmsg"></div><div id="dRecent"></div></div>
+     <div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">Scadenze imminenti</h3><div class="muted">Documenti con una scadenza prossima.</div></div><button class="btn yellow jump" data-v="due">Apri scadenze</button></div><div id="dDueList"></div></div>
+    </div>
+   </section>
+
+   <section id="protocol" class="surface hidden">
+    <div class="hero"><h2>📥 Nuovo protocollo</h2><p>Registra documenti in entrata, uscita o interni. Il numero viene assegnato automaticamente.</p></div>
+    <div class="pad">
+     <div class="section">
+      <div class="actions" style="justify-content:space-between"><div><h3 id="pTitle" style="margin:0">Nuovo protocollo</h3><div id="pCode" class="muted">Numerazione automatica.</div></div><button id="pNew" class="btn secondary">✚ Nuovo</button></div>
+      <div class="grid4" style="margin-top:10px">
+       <div class="field"><label>Tipo *</label><select id="pType"><option>ENTRATA</option><option>USCITA</option><option>INTERNO</option></select></div>
+       <div class="field"><label>Data documento</label><input id="pDocDate" type="date"></div>
+       <div class="field"><label>Categoria *</label><select id="pCategory"><option>ISTITUZIONALE</option><option>ASL_118</option><option>COMUNI</option><option>UEPE_LPU</option><option>FORNITORI</option><option>PERSONALE</option><option>MEZZI</option><option>FORMAZIONE</option><option>AMMINISTRAZIONE</option><option>ALTRO</option></select></div>
+       <div class="field"><label>Stato</label><select id="pStatus"><option>ATTIVO</option><option>ARCHIVIATO</option><option>ANNULLATO</option></select></div>
+       <div class="field"><label>Mittente</label><input id="pSender" maxlength="240"></div>
+       <div class="field"><label>Destinatario</label><input id="pRecipient" maxlength="240"></div>
+       <div class="field"><label>Scadenza</label><input id="pDeadline" type="date"></div>
+       <div class="field" id="pReservedWrap"><label>Riservatezza</label><label class="actions"><input id="pReserved" type="checkbox" style="width:auto"> Riservato · solo Amministratore</label></div>
+      </div>
+      <div class="field" style="margin-top:9px"><label>Oggetto *</label><input id="pObject" maxlength="500"></div>
+      <div class="field" style="margin-top:9px"><label>Note</label><textarea id="pNotes" maxlength="2000"></textarea></div>
+      <div class="field" style="margin-top:9px"><label>Allegati</label><input id="pFiles" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.odt,.ods,.txt"><span class="muted">Massimo 20 MB per file.</span></div>
+      <div class="toolbar"><button id="pSave" class="btn yellow">Salva / protocolla</button></div>
+      <div id="pmsg"></div><div id="pAttachments"></div>
+     </div>
+    </div>
+   </section>
+
+   <section id="archive" class="surface hidden">
+    <div class="hero"><h2>📂 Archivio documenti</h2><p>Ricerca e consultazione del registro protocollo.</p></div>
+    <div class="pad">
+     <div class="section">
+      <div class="grid4">
+       <div class="field"><label>Ricerca</label><input id="aSearch" placeholder="Numero, oggetto, mittente, destinatario…"></div>
+       <div class="field"><label>Tipo</label><select id="aType"><option value="">Tutti</option><option>ENTRATA</option><option>USCITA</option><option>INTERNO</option></select></div>
+       <div class="field"><label>Categoria</label><select id="aCategory"><option value="">Tutte</option><option>ISTITUZIONALE</option><option>ASL_118</option><option>COMUNI</option><option>UEPE_LPU</option><option>FORNITORI</option><option>PERSONALE</option><option>MEZZI</option><option>FORMAZIONE</option><option>AMMINISTRAZIONE</option><option>ALTRO</option></select></div>
+       <div class="field"><label>Stato</label><select id="aStatus"><option value="">Tutti</option><option>ATTIVO</option><option>ARCHIVIATO</option><option>ANNULLATO</option></select></div>
+       <div class="field"><label>Dal</label><input id="aFrom" type="date"></div>
+       <div class="field"><label>Al</label><input id="aTo" type="date"></div>
+      </div>
+      <div class="toolbar"><button id="aFind" class="btn yellow">🔎 Cerca</button><button id="aClear" class="btn secondary">Cancella filtri</button></div><div id="amsg"></div>
+     </div>
+     <div class="actions" style="justify-content:space-between;margin:10px 0"><b>Registro protocollo</b><span id="aCount" class="pill b">0</span></div>
+     <div class="table"><table><thead><tr><th>Protocollo</th><th>Tipo</th><th>Oggetto</th><th>Mittente / Destinatario</th><th>Categoria</th><th>Scadenza</th><th>Allegati</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="aBody"></tbody></table></div>
+    </div>
+   </section>
+
+   <section id="due" class="surface hidden">
+    <div class="hero"><h2>⏰ Scadenze documentali</h2><p>Controllo delle scadenze collegate ai documenti protocollati.</p></div>
+    <div class="pad"><div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">Scadenze future</h3><div class="muted">Ordinate dalla più vicina.</div></div><button id="dueRefresh" class="btn secondary">↻ Aggiorna</button></div><div id="duemsg"></div><div id="dueList"></div></div></div>
+   </section>
+  </main>
+ </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+<script>
+const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co',KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
+const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date().toISOString().slice(0,10),dt=x=>x?new Date(x).toLocaleString('it-IT'):'—';
+let prof=null,rows=[],attachments=[],currentId=null,currentDoc=null,busy=false,loadSeq=0;
+
+function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c+'">'+esc(t)+'</div>':''}
+function centralinoEmail(){return 'centralino@access.crocegiallaemergenza.it'}
+function view(v){
+ document.querySelectorAll('main>section').forEach(x=>x.classList.toggle('hidden',x.id!==v));
+ document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+ if(v==='dash')loadDashboard();if(v==='archive')loadArchive();if(v==='due')loadDue();if(v==='protocol'&&!currentId)resetForm();
+}
+document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>view(b.dataset.v));
+
+async function enter(){
+ const u=await sb.auth.getUser();if(!u.data.user)return;
+ const r=await sb.from('accessi_app').select('nome,ruolo,attivo').single();
+ if(r.error||!r.data?.attivo||!['AMMINISTRATORE','CENTRALINO'].includes(r.data.ruolo)){
+  await sb.auth.signOut();return msg('lmsg','Account non autorizzato al Gestionale Documentale.','err');
+ }
+ prof=r.data;$('login').classList.add('hidden');$('app').classList.remove('hidden');$('who').textContent=(prof.nome||prof.ruolo)+' · '+u.data.user.email;
+ $('pReservedWrap').classList.toggle('hidden',prof.ruolo!=='AMMINISTRATORE');
+ view('dash');
+}
+$('go').onclick=async()=>{msg('lmsg','Accesso in corso...');const r=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('pw').value});if(r.error)return msg('lmsg',r.error.message,'err');enter()};
+$('pw').onkeydown=e=>{if(e.key==='Enter')$('go').click()};
+$('centralinoForm').onsubmit=async e=>{e.preventDefault();const user=$('cuser').value.trim().toLowerCase(),pw=$('cpw').value;if(user!=='centralino'||!pw)return msg('cloginmsg','Inserisci username e password.','warn');msg('cloginmsg','Accesso in corso...');const r=await sb.auth.signInWithPassword({email:centralinoEmail(),password:pw});if(r.error)return msg('cloginmsg','Credenziali Centralino non valide.','err');enter()};
+$('out').onclick=async()=>{await sb.auth.signOut();location.reload()};
+
+function catLabel(v){return String(v||'ALTRO').replaceAll('_',' / ')}
+function dueHtml(v){
+ if(!v)return '—';const d=new Date(v+'T12:00:00'),n=new Date(today()+'T12:00:00'),days=Math.round((d-n)/86400000),cls=days<0?'r':days<=30?'':'g';
+ return '<span class="pill '+cls+'">'+esc(v)+(days<0?' · scaduta':days===0?' · oggi':days<=30?' · '+days+' gg':'')+'</span>';
+}
+function bytes(n){n=Number(n||0);if(!n)return '—';if(n<1024)return n+' B';if(n<1048576)return (n/1024).toLocaleString('it-IT',{maximumFractionDigits:1})+' KB';return (n/1048576).toLocaleString('it-IT',{maximumFractionDigits:2})+' MB'}
+function safeFile(name){return String(name||'file').normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g,'_').slice(-120)}
+function mime(file){const e=(file.name.split('.').pop()||'').toLowerCase();return file.type||({pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',odt:'application/vnd.oasis.opendocument.text',ods:'application/vnd.oasis.opendocument.spreadsheet',txt:'text/plain'}[e]||'application/pdf')}
+
+async function loadDashboard(){
+ const [st,recent,due]=await Promise.all([
+  sb.rpc('cge_protocollo_statistiche'),
+  sb.rpc('cge_protocollo_elenco',{p_search:null,p_tipo:null,p_categoria:null,p_stato:null,p_dal:null,p_al:null,p_solo_scadenze:false}),
+  sb.rpc('cge_protocollo_elenco',{p_search:null,p_tipo:null,p_categoria:null,p_stato:'ATTIVO',p_dal:null,p_al:null,p_solo_scadenze:true})
+ ]);
+ if(st.error)return msg('dmsg',st.error.message,'err');
+ const x=st.data?.[0]||{};$('dYear').textContent=x.anno||new Date().getFullYear();$('dTotal').textContent=x.totale||0;$('dIn').textContent=x.entrata||0;$('dOut').textContent=x.uscita||0;$('dDue').textContent=x.scadenze_30||0;
+ const rr=(recent.data||[]).slice(0,6);$('dRecent').innerHTML=rr.length?rr.map(p=>'<div class="box" style="margin:6px 0"><b>'+esc(p.protocollo_codice)+' · '+esc(p.oggetto)+'</b><br><span class="muted">'+esc(p.tipo)+' · '+esc(p.data_protocollo)+' · '+esc(catLabel(p.categoria))+'</span></div>').join(''):'<div class="notice">Nessun documento protocollato.</div>';
+ const now=today(),dd=(due.data||[]).filter(p=>p.scadenza).sort((a,b)=>String(a.scadenza).localeCompare(String(b.scadenza))).slice(0,6);
+ $('dDueList').innerHTML=dd.length?dd.map(p=>'<div class="box '+(p.scadenza<now?'due-row over':'due-row')+'" style="margin:6px 0"><b>'+esc(p.protocollo_codice)+' · '+esc(p.oggetto)+'</b><br>'+dueHtml(p.scadenza)+'</div>').join(''):'<div class="notice">Nessuna scadenza registrata.</div>';
+ msg('dmsg','');
+}
+$('dRefresh').onclick=loadDashboard;
+
+function resetForm(){
+ currentId=null;currentDoc=null;attachments=[];$('pTitle').textContent='Nuovo protocollo';$('pCode').textContent='Numerazione automatica.';
+ $('pType').value='ENTRATA';$('pDocDate').value=today();$('pCategory').value='ISTITUZIONALE';$('pStatus').value='ATTIVO';$('pStatus').disabled=true;
+ $('pSender').value='';$('pRecipient').value='';$('pDeadline').value='';$('pObject').value='';$('pNotes').value='';$('pReserved').checked=false;$('pFiles').value='';$('pAttachments').innerHTML='';msg('pmsg','');
+}
+$('pNew').onclick=resetForm;
+
+async function uploadFiles(docId,files){
+ if(!files.length)return [];
+ const u=await sb.auth.getUser(),uid=u.data.user?.id;if(!uid)throw new Error('Sessione scaduta.');
+ const errors=[];
+ for(const f of files){
+  if(f.size>20971520){errors.push(f.name+': supera 20 MB');continue}
+  const path=uid+'/'+docId+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'-'+safeFile(f.name);
+  const up=await sb.storage.from('protocollo-documenti').upload(path,f,{contentType:mime(f),upsert:false});
+  if(up.error){errors.push(f.name+': '+up.error.message);continue}
+  const reg=await sb.rpc('cge_protocollo_allegato_registra',{p_documento:docId,p_storage_path:path,p_nome_file:f.name,p_mime_type:mime(f),p_dimensione_bytes:f.size});
+  if(reg.error){await sb.storage.from('protocollo-documenti').remove([path]);errors.push(f.name+': '+reg.error.message)}
+ }
+ return errors;
+}
+async function loadAttachments(id){
+ const r=await sb.from('protocollo_allegati').select('id,storage_path,nome_file,dimensione_bytes,created_at').eq('documento_id',id).order('created_at');
+ if(r.error)return msg('pmsg','Errore allegati: '+r.error.message,'err');
+ attachments=r.data||[];$('pAttachments').innerHTML=attachments.length?'<div class="section"><h3>📎 Allegati</h3>'+attachments.map(a=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(a.nome_file)+'</b><br><span class="muted">'+esc(bytes(a.dimensione_bytes))+' · '+esc(dt(a.created_at))+'</span></div><button class="btn secondary" data-down="'+esc(a.id)+'">⬇ Scarica</button></div></div>').join('')+'</div>':'<div class="muted" style="margin-top:8px">Nessun allegato.</div>';
+ document.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>downloadAttachment(b.dataset.down));
+}
+async function downloadAttachment(id){
+ const a=attachments.find(x=>x.id===id);if(!a)return;msg('pmsg','Download allegato...');
+ const r=await sb.storage.from('protocollo-documenti').download(a.storage_path);if(r.error)return msg('pmsg',r.error.message,'err');
+ const url=URL.createObjectURL(r.data),ln=document.createElement('a');ln.href=url;ln.download=a.nome_file;document.body.appendChild(ln);ln.click();ln.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);msg('pmsg','');
+}
+
+async function saveProtocol(){
+ if(busy)return;if(!$('pObject').value.trim())return msg('pmsg','Inserisci l’oggetto del documento.','warn');
+ const wasEdit=!!currentId;busy=true;$('pSave').disabled=true;msg('pmsg',wasEdit?'Aggiornamento protocollo...':'Protocollazione in corso...');
+ const params={p_tipo:$('pType').value,p_data_documento:$('pDocDate').value||null,p_oggetto:$('pObject').value.trim(),p_mittente:$('pSender').value.trim()||null,p_destinatario:$('pRecipient').value.trim()||null,p_categoria:$('pCategory').value,p_scadenza:$('pDeadline').value||null,p_note:$('pNotes').value.trim()||null,p_riservato:prof?.ruolo==='AMMINISTRATORE'&&$('pReserved').checked};
+ try{
+  let id=currentId,code=currentDoc?.protocollo_codice||'';
+  if(id){const r=await sb.rpc('cge_protocollo_modifica',{p_id:id,...params,p_stato:$('pStatus').value});if(r.error)throw r.error}
+  else{const r=await sb.rpc('cge_protocollo_crea',params);if(r.error)throw r.error;id=r.data?.[0]?.id;code=r.data?.[0]?.protocollo_codice||'';if(!id)throw new Error('Numero protocollo non restituito.')}
+  const fs=[...$('pFiles').files],errs=await uploadFiles(id,fs);await loadArchive();await openProtocol(id);
+  if(errs.length)msg('pmsg','Protocollo salvato. Alcuni allegati non sono stati caricati: '+errs.join(' | '),'warn');
+  else msg('pmsg',(wasEdit?'Protocollo aggiornato.':'Protocollo '+code+' creato.')+(fs.length?' Allegati caricati.':''),'ok');
+  loadDashboard();
+ }catch(e){msg('pmsg',e.message||String(e),'err')}finally{busy=false;$('pSave').disabled=false}
+}
+$('pSave').onclick=saveProtocol;
+
+function renderArchive(list){
+ $('aCount').textContent=String(list.length)+(list.length===500?' +':'');
+ $('aBody').innerHTML=list.length?list.map(p=>{const tcls=p.tipo==='ENTRATA'?'b':p.tipo==='USCITA'?'g':'',parties=[p.mittente?'Da: '+esc(p.mittente):'',p.destinatario?'A: '+esc(p.destinatario):''].filter(Boolean).join('<br>');
+ return '<tr><td><b>'+esc(p.protocollo_codice)+'</b><br><span class="muted">'+esc(p.data_protocollo)+'</span>'+(p.riservato?'<br><span class="pill r">RISERVATO</span>':'')+'</td><td><span class="pill '+tcls+'">'+esc(p.tipo)+'</span></td><td><b>'+esc(p.oggetto)+'</b></td><td>'+parties+'</td><td>'+esc(catLabel(p.categoria))+'</td><td>'+dueHtml(p.scadenza)+'</td><td>'+esc(p.allegati||0)+'</td><td>'+esc(p.stato)+'</td><td><button class="btn secondary" data-open="'+esc(p.id)+'">Apri</button></td></tr>'}).join(''):'<tr><td colspan="9">Nessun documento trovato.</td></tr>';
+ document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openProtocol(b.dataset.open));
+}
+async function loadArchive(){
+ const seq=++loadSeq;msg('amsg','Caricamento archivio...');
+ const r=await sb.rpc('cge_protocollo_elenco',{p_search:$('aSearch').value.trim()||null,p_tipo:$('aType').value||null,p_categoria:$('aCategory').value||null,p_stato:$('aStatus').value||null,p_dal:$('aFrom').value||null,p_al:$('aTo').value||null,p_solo_scadenze:false});
+ if(seq!==loadSeq)return;if(r.error){rows=[];renderArchive([]);return msg('amsg',r.error.message,'err')}rows=r.data||[];renderArchive(rows);msg('amsg',rows.length===500?'Mostrati i 500 protocolli più recenti. Restringi i filtri.':'');
+}
+$('aFind').onclick=loadArchive;$('aSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadArchive()}};$('aClear').onclick=()=>{['aSearch','aType','aCategory','aStatus','aFrom','aTo'].forEach(id=>$(id).value='');loadArchive()};
+
+async function openProtocol(id){
+ let p=rows.find(x=>x.id===id);
+ if(!p){const r=await sb.rpc('cge_protocollo_elenco',{p_search:null,p_tipo:null,p_categoria:null,p_stato:null,p_dal:null,p_al:null,p_solo_scadenze:false});if(r.error)return;p=(r.data||[]).find(x=>x.id===id)}
+ if(!p)return;currentId=p.id;currentDoc=p;view('protocol');$('pTitle').textContent='Modifica protocollo';$('pCode').textContent=p.protocollo_codice+' · protocollato il '+p.data_protocollo;$('pType').value=p.tipo;$('pDocDate').value=p.data_documento||'';$('pCategory').value=p.categoria||'ALTRO';$('pStatus').value=p.stato||'ATTIVO';$('pStatus').disabled=false;$('pSender').value=p.mittente||'';$('pRecipient').value=p.destinatario||'';$('pDeadline').value=p.scadenza||'';$('pObject').value=p.oggetto||'';$('pNotes').value=p.note||'';$('pReserved').checked=!!p.riservato;$('pFiles').value='';await loadAttachments(p.id);
+}
+
+async function loadDue(){
+ msg('duemsg','Caricamento scadenze...');const r=await sb.rpc('cge_protocollo_elenco',{p_search:null,p_tipo:null,p_categoria:null,p_stato:'ATTIVO',p_dal:null,p_al:null,p_solo_scadenze:true});
+ if(r.error)return msg('duemsg',r.error.message,'err');const list=(r.data||[]).filter(x=>x.scadenza).sort((a,b)=>String(a.scadenza).localeCompare(String(b.scadenza))),now=today();
+ $('dueList').innerHTML=list.length?list.map(p=>'<div class="box '+(p.scadenza<now?'due-row over':'due-row')+'" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(p.protocollo_codice)+' · '+esc(p.oggetto)+'</b><br><span class="muted">'+esc(p.tipo)+' · '+esc(catLabel(p.categoria))+(p.mittente?' · '+esc(p.mittente):'')+'</span></div><div>'+dueHtml(p.scadenza)+'</div></div></div>').join(''):'<div class="notice">Nessuna scadenza futura registrata.</div>';msg('duemsg','');
+}
+$('dueRefresh').onclick=loadDue;
+
+(async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
+</script>
+</body></html>
