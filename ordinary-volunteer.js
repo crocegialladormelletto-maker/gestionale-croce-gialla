@@ -72,7 +72,7 @@ function volOrdRenderDay(){
    ' <span class="pill '+(coverage.complete?'g':'')+'">'+esc(coverage.label)+'</span>'+
    '<div class="muted">'+esc(s.data_servizio)+' · Mezzo '+esc(s.mezzo||'—')+'</div>'+
    '<div class="muted">'+esc(times)+'</div>'+
-   volunteerOrdinaryRouteHTML(s)+
+   volunteerOrdinaryRouteHTML(s)+volunteerSpecialEquipmentHTML(s)+
    '<div class="muted">I dati personali e sanitari del paziente sono visibili solo dopo l’assegnazione.</div>'+
    action+'</div>';
  }).join(''):'<div class="notice">Nessun servizio ordinario programmato per questo giorno. Scegli una data con 🚐 oppure chiedi al Centralino di inserire il servizio.</div>';
@@ -82,14 +82,16 @@ async function loadVolOrd(){
  if(!volunteerBadge)return;
  const seq=++volOrdSeq,range=calVisibleRange(volOrdCursor,'month');
  msg('volOrdMsg','Caricamento visite, trasferimenti e trasporti semplici...');
- const [r,route]=await Promise.all([
+ const [r,route,equipment]=await Promise.all([
   sb.rpc('cge_volontario_ordinari_calendario',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_ordinari_percorsi',{p_dal:range.startYmd,p_al:range.endYmd})
+  sb.rpc('cge_volontario_ordinari_percorsi',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_ordinari_dotazioni',{p_dal:range.startYmd,p_al:range.endYmd})
  ]);
  if(seq!==volOrdSeq)return;
- if(r.error||route.error){volOrdServices=[];volOrdRender();return msg('volOrdMsg',(r.error||route.error).message,'err')}
+ if(r.error||route.error||equipment.error){volOrdServices=[];volOrdRender();return msg('volOrdMsg',(r.error||route.error||equipment.error).message,'err')}
  const routes=new Map((route.data||[]).map(p=>[p.servizio_id,p]));
- volOrdServices=(r.data||[]).map(s=>({...s,...(routes.get(s.id)||{})}));
+ const flags=new Map((equipment.data||[]).map(p=>[p.servizio_id,p]));
+ volOrdServices=(r.data||[]).map(s=>({...s,...(routes.get(s.id)||{}),...(flags.get(s.id)||{})}));
  volOrdRender();msg('volOrdMsg','');
 }
 async function volOrdJoin(id){
