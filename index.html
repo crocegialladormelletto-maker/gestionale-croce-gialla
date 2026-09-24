@@ -193,6 +193,10 @@
 .vol-home-unread button{margin-top:5px}
 #comHistory .com-history-card{margin:8px 0;border:1px solid #d9e3ed;border-left:4px solid #9e7ad0;border-radius:9px;padding:12px}
 #comHistory .com-history-card p{white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0}
+
+.vol-route-preview{margin:9px 0;padding:9px 10px;border-left:4px solid #14a2bd;background:#eaf8fc;border-radius:6px;color:#1c4054;font-size:13px;line-height:1.55}
+.vol-route-preview div+div{margin-top:5px}
+.vol-route-preview b{color:#133c55}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
@@ -1357,7 +1361,7 @@ let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsReq
 let volNotifications=[];
 let opCalCursor=new Date(),opCalSelected=todaySafe(),opCalEvents=[],opCalMode='month',opCalVehicle='';
 let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month';
-let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalOccupiedRoles=[],vfcalQualificationRows=[],vfcalAppBusy=false;
+let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalOccupiedRoles=[],vfcalOrdRoutes=[],vfcalQualificationRows=[],vfcalAppBusy=false;
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[],emFasciaRows=[],emRosterSeq=0;
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
 let asMonthCursor=new Date(),asMonthSelected=todaySafe(),asMonthServices=[],asMonthCrew=[],asMonthSeq=0;
@@ -2277,20 +2281,36 @@ function volunteerEligibleAssistanceRoles(day){
    (q.codice_qualifica===role||(role==='ACCOMPAGNATORE'&&q.codice_qualifica==='ALLEGATO_A'))
    &&(!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
 }
+function volunteerOrdinaryRouteHTML(route){
+ // Only the pickup/origin and destination fields: never fetch patient identity, notes or clinical data.
+ const location=(fields)=>{
+  const out=[];
+  for(const field of fields){
+   const value=String(field||'').trim();
+   if(value&&!out.some(x=>x.toLocaleLowerCase('it-IT')===value.toLocaleLowerCase('it-IT')))out.push(value);
+  }
+  return out.join(' · ')||'Da indicare dal Centralino';
+ };
+ if(!route)return '';
+ return '<div class="vol-route-preview" aria-label="Percorso del servizio">'+
+  '<div><b>📍 Luogo di carico / partenza:</b> '+esc(location([route.luogo_partenza,route.indirizzo_partenza]))+'</div>'+
+  '<div><b>🏥 Destinazione:</b> '+esc(location([route.destinazione,route.indirizzo_destinazione,route.ospedale_destinazione]))+'</div></div>';
+}
 async function loadVolunteerFutureCalendar(){
  if(!volunteerBadge)return;
  const request=++vfcalLoadSequence;
  msg('vfcalMsg','Caricamento servizi futuri...');
  const range=calVisibleRange(vfcalCursor,vfcalMode);
- const [r,occupied]=await Promise.all([
+ const [r,occupied,routes]=await Promise.all([
   sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd})
+  sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_ordinari_percorsi',{p_dal:range.startYmd,p_al:range.endYmd})
  ]);
  if(request!==vfcalLoadSequence)return;
- if(r.error||occupied.error){
-  vfcalEvents=[];vfcalApplications=[];vfcalOccupiedRoles=[];
+ if(r.error||occupied.error||routes.error){
+  vfcalEvents=[];vfcalApplications=[];vfcalOccupiedRoles=[];vfcalOrdRoutes=[];
   refreshVolunteerFutureCalendarView();
-  return msg('vfcalMsg','Impossibile caricare i servizi futuri: '+(r.error||occupied.error).message,'err');
+  return msg('vfcalMsg','Impossibile caricare i servizi futuri: '+(r.error||occupied.error||routes.error).message,'err');
  }
  const rows=r.data||[],ids=rows.filter(s=>isAssistanceManifestation(s.tipo_servizio)).map(s=>s.id);
  let applications=[];
@@ -2303,6 +2323,7 @@ async function loadVolunteerFutureCalendar(){
  if(request!==vfcalLoadSequence)return;
  vfcalApplications=applications;
  vfcalOccupiedRoles=occupied.data||[];
+ vfcalOrdRoutes=routes.data||[];
  vfcalEvents=rows.map(s=>{
   const event=isAssistanceManifestation(s.tipo_servizio);
   return {kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),
@@ -2341,7 +2362,8 @@ function renderVolunteerFutureCalendarDay(){
     else if(app?.stato!=='IN_ATTESA')signup='<div class="muted">'+(eligible.length?'I ruoli per cui sei qualificato sono già occupati.':'Nessuna qualifica valida per questa assistenza.')+' Contatta il Centralino.</div>';
    }
   }
-  return '<div class="cal-detail-item service"><b>'+esc(e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'<br><span class="muted">'+esc(times)+'</span>'+
+  const pickupAndDestination=vfcalOrdRoutes.find(route=>route.servizio_id===s.id);
+  return '<div class="cal-detail-item service"><b>'+esc(e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'<br><span class="muted">'+esc(times)+'</span>'+volunteerOrdinaryRouteHTML(pickupAndDestination)+
    '<br><span class="pill '+(s.assegnato_a_me?'g':'b')+'">'+(s.assegnato_a_me?'Sei assegnato a questo servizio':'Servizio programmato')+'</span>'+signup+'</div>';
  }).join(''):'<div class="notice">Nessun servizio futuro programmato per questo giorno.</div>';
  box.querySelectorAll('[data-vf-join]').forEach(b=>b.onclick=()=>submitVolunteerAssistanceApplication(b.dataset.vfJoin,'ISCRIVITI'));
@@ -5038,4 +5060,4 @@ if('serviceWorker' in navigator){
 applyVolunteerOnlyLogin();refreshPwaInstallUI();
 try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&$('vbadge')){$('vbadge').value=remembered;$('vremember').checked=true}}catch(_){}
 (async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
-</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924a"></script></body></html>
+</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924b"></script></body></html>
