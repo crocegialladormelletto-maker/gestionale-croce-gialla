@@ -92,7 +92,7 @@
 }
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.23</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.24</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -146,7 +146,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.23</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.24</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -164,6 +164,7 @@
 <button class="nav sep" data-v="vehicles">🚐 Mezzi e scadenze</button>
 <button class="nav" data-v="tariffs">€ Tariffari</button>
 <button class="nav" data-v="accounting" data-admin-only="true">🧾 Contabilità</button>
+<button class="nav" data-v="activityLog" data-admin-only="true">📋 Registro attività</button>
 </aside><main>
 
 <section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button></div></div><div class="pad">
@@ -716,6 +717,27 @@
 <div class="section"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="0.01"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
 <div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto</th><th>Pagamento</th><th>Stato gestionale</th></tr></thead><tbody id="accBody"></tbody></table></div></div></section>
 
+<section id="activityLog" class="surface hidden" data-admin-only="true">
+ <div class="hero"><h2>📋 Registro attività</h2><p>Tracciabilità delle principali operazioni effettuate nel gestionale. Visibile esclusivamente all’Amministratore.</p></div>
+ <div class="pad">
+  <div class="notice">Il registro parte dall’attivazione della V13.24: le operazioni precedenti non vengono ricostruite retroattivamente.</div>
+  <div class="section">
+   <h3>Filtri</h3>
+   <div class="grid3">
+    <div class="field"><label>Dal</label><input id="activityFrom" type="date"></div>
+    <div class="field"><label>Al</label><input id="activityTo" type="date"></div>
+    <div class="field"><label>Area</label><select id="activityArea"><option value="">Tutte</option><option>Servizi</option><option>Equipaggi</option><option>Fogli viaggio</option><option>Turni</option><option>Candidature</option></select></div>
+    <div class="field"><label>Operatore</label><input id="activityActor" placeholder="Nome o badge"></div>
+    <div class="field"><label>Ricerca</label><input id="activitySearch" placeholder="Es. assegnato, stato, mezzo…"></div>
+   </div>
+   <div class="toolbar"><button id="activityRefresh" type="button" class="btn yellow">🔎 Cerca</button><button id="activityLast7" type="button" class="btn secondary">Ultimi 7 giorni</button><button id="activityClear" type="button" class="btn secondary">Cancella filtri</button></div>
+   <div id="activityMsg"></div>
+  </div>
+  <div class="actions" style="justify-content:space-between;margin:9px 0"><b>Operazioni registrate</b><span id="activityCount" class="pill b">0</span></div>
+  <div class="table"><table><thead><tr><th>Data / ora</th><th>Operatore</th><th>Azione</th><th>Area</th><th>Descrizione</th><th>Campi modificati</th></tr></thead><tbody id="activityBody"></tbody></table></div>
+ </div>
+</section>
+
 </main></div></div>
 
 <div id="monitorApp" class="monitor-shell hidden">
@@ -997,7 +1019,7 @@ let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='m
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
-let servicesSearchSequence=0;
+let servicesSearchSequence=0,activityLogSequence=0;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
 let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='';
 const $=x=>document.getElementById(x), today=()=>new Date().toISOString().slice(0,10);
@@ -1025,14 +1047,14 @@ function resetNewServiceForm(){
  updateManifestationTimes();
 }
 async function view(v,options={}){
- if(prof?.ruolo==='CENTRALINO'&&['people','accounting','accessi'].includes(v))v='dash';
+ if(prof?.ruolo==='CENTRALINO'&&['people','accounting','accessi','activityLog'].includes(v))v='dash';
  if(v==='new'){
   resetNewServiceForm();
   if(options.date)$('d').value=options.date;
   if(options.patient)usePatientForService(options.patient);
  }
  selectView(v);
- const loader=({dash:dashboard,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,services:loadServices,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,tariffs:loadTariffsView,accounting:loadAccounting,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
+ const loader=({dash:dashboard,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,services:loadServices,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,tariffs:loadTariffsView,accounting:loadAccounting,activityLog:loadActivityLog,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
  const result=await loader();
  selectView(v);
  return result;
@@ -1050,7 +1072,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.23';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.24';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -1371,7 +1393,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.23</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.24</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1533,7 +1555,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.23'
+  versione_app:'V13.24'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -3245,6 +3267,55 @@ async function loadVolunteerAccessStatus(badge){
 $('paccessstatus').onclick=()=>{const b=$('pb').value.trim();if(!b)return msg('paccessmsg','Seleziona prima un volontario.','warn');loadVolunteerAccessStatus(b)};
 $('paccesscreate').onclick=async()=>{const b=$('pb').value.trim();if(!b)return msg('paccessmsg','Seleziona o salva prima un volontario.','warn');try{const d=await invokeVolunteerAccess('CREATE_OR_RESET',b,$('paccesspin').value.trim());$('paccessstate').value='ATTIVO';$('paccesspin').value='';msg('paccessmsg',d.pin_temporaneo?'Accesso attivato. PIN temporaneo: '+d.pin_temporaneo+' — comunicalo al volontario in modo riservato.':'Accesso attivato e PIN aggiornato.','ok')}catch(e){msg('paccessmsg',e.message,'err')}};
 $('paccessdisable').onclick=async()=>{const b=$('pb').value.trim();if(!b)return msg('paccessmsg','Seleziona prima un volontario.','warn');if(!confirm('Disattivare l\'accesso app del badge '+b+'?'))return;try{await invokeVolunteerAccess('DISABLE',b);$('paccessstate').value='DISATTIVATO';msg('paccessmsg','Accesso disattivato.','ok')}catch(e){msg('paccessmsg',e.message,'err')}};
+
+const ACTIVITY_FIELD_LABELS={
+ data_servizio:'data servizio',ora_partenza_prevista:'ora partenza',ora_carico_paziente_prevista:'ora carico',
+ ora_rientro_previsto:'ora rientro',mezzo:'mezzo',tipo_servizio:'tipo servizio',tipo_servizio_altro:'descrizione servizio',
+ luogo_partenza:'luogo partenza',destinazione:'destinazione',ospedale_destinazione:'struttura / manifestazione',
+ stato:'stato operativo',stato_gestionale:'stato gestionale',stato_pagamento:'stato pagamento',
+ equipaggio_minimo:'equipaggio minimo',capo_servizio_obbligatorio:'capo servizio obbligatorio',
+ badge_personale:'volontario',ruolo:'ruolo',confermato:'conferma',risposta:'risposta volontario',
+ numero_foglio:'numero foglio',km_partenza:'km partenza',km_arrivo:'km arrivo',totale_servizio:'totale servizio',
+ modalita_pagamento:'modalità pagamento',note_amministrazione:'note amministrazione',note:'note',
+ data_turno:'data turno',ora_inizio:'ora inizio',ora_fine:'ora fine',tipo_turno:'tipo turno'
+};
+function activityFieldText(fields){
+ return (fields||[]).map(x=>ACTIVITY_FIELD_LABELS[x]||String(x).replaceAll('_',' ')).join(', ')||'—';
+}
+function setActivityLast7Days(){
+ const d=new Date();d.setDate(d.getDate()-6);
+ $('activityFrom').value=calYmd(d);$('activityTo').value=todaySafe();
+}
+async function loadActivityLog(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const seq=++activityLogSequence;
+ if(!$('activityFrom').value&&!$('activityTo').value)setActivityLast7Days();
+ const from=$('activityFrom').value,to=$('activityTo').value;
+ if(from&&to&&from>to)return msg('activityMsg','La data Dal non può essere successiva alla data Al.','warn');
+ msg('activityMsg','Caricamento registro attività...');
+ const r=await sb.rpc('cge_registro_attivita',{
+  p_dal:from||null,p_al:to||null,p_area:$('activityArea').value||null,
+  p_attore:$('activityActor').value.trim()||null,p_ricerca:$('activitySearch').value.trim()||null
+ });
+ if(seq!==activityLogSequence)return;
+ if(r.error){$('activityBody').innerHTML='';$('activityCount').textContent='—';return msg('activityMsg',r.error.message,'err')}
+ const rows=r.data||[];
+ $('activityCount').textContent=String(rows.length)+(rows.length===500?' +':'');
+ $('activityBody').innerHTML=rows.length?rows.map(x=>{
+  const role=x.attore_ruolo==='AMMINISTRATORE'?'Amministratore':x.attore_ruolo==='CENTRALINO'?'Centralino':x.attore_ruolo==='VOLONTARIO'?'Volontario':x.attore_ruolo;
+  const cls=x.azione==='ELIMINAZIONE'||x.azione==='RIMOZIONE'?'r':x.azione==='CREAZIONE'||x.azione==='ASSEGNAZIONE'||x.azione==='CANDIDATURA'?'g':'b';
+  return '<tr><td><b>'+esc(dt(x.creato_il))+'</b></td><td>'+esc(x.attore_nome||'Sistema')+
+   '<br><span class="muted">'+esc(role||'—')+(x.attore_badge?' · Badge '+esc(x.attore_badge):'')+'</span></td>'+
+   '<td><span class="pill '+cls+'">'+esc(x.azione)+'</span></td><td>'+esc(x.area)+'</td>'+
+   '<td>'+esc(x.descrizione)+'</td><td><span class="muted">'+esc(activityFieldText(x.campi_modificati))+'</span></td></tr>';
+ }).join(''):'<tr><td colspan="6">Nessuna operazione trovata con questi filtri.</td></tr>';
+ msg('activityMsg',rows.length===500?'Mostrate le 500 operazioni più recenti. Restringi i filtri per una ricerca più precisa.':'','warn');
+}
+$('activityRefresh').onclick=loadActivityLog;
+$('activityLast7').onclick=()=>{setActivityLast7Days();$('activityArea').value='';$('activityActor').value='';$('activitySearch').value='';loadActivityLog()};
+$('activityClear').onclick=()=>{activityLogSequence++;['activityFrom','activityTo','activityArea','activityActor','activitySearch'].forEach(id=>$(id).value='');loadActivityLog()};
+['activityFrom','activityTo','activityArea'].forEach(id=>$(id).onchange=loadActivityLog);
+['activityActor','activitySearch'].forEach(id=>$(id).onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadActivityLog()}});
 
 function volFmtTime(v){return v?String(v).slice(0,5):'—'}
 function volResponseClass(r){return r==='CONFERMATO'?'g':(r==='NON DISPONIBILE'?'r':'')}
