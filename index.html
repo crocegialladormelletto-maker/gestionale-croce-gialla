@@ -92,7 +92,7 @@
 }
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.21</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.22</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -146,7 +146,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.21</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.22</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -169,6 +169,7 @@
 <section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button></div></div><div class="pad">
 <div class="stats"><div class="stat"><small>SERVIZI OGGI</small><b id="s1">0</b></div><div class="stat"><small>DA ASSEGNARE</small><b id="s2">0</b></div><div class="stat"><small>IN CORSO</small><b id="s3">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="s4">0</b></div></div>
 <div class="stats" style="margin-top:9px"><div class="stat"><small>PERSONALE ATTIVO</small><b id="s5">0</b></div><div class="stat"><small>TURNI PROSSIMI</small><b id="s6">0</b></div><div class="stat"><small>SCADENZE MEZZI</small><b id="s7">0</b></div><div class="stat"><small>DA INCASSARE</small><b id="s8">€ 0</b></div></div>
+<div class="section"><div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">🙋 Candidature assistenze da valutare</h3><div class="muted">Disponibilità inviate dai volontari che attendono una decisione.</div></div><div class="actions"><span id="dashPendingCandidates" class="pill b" style="font-size:16px">0</span><button id="dashOpenCandidates" type="button" class="btn yellow">Apri Assistenze</button></div></div><div id="dashCandidateMsg"></div></div>
 <div class="section"><h3>🔎 Cerca un servizio</h3><p class="muted">Trova servizi futuri o passati per paziente, manifestazione, destinazione, tipo servizio, mezzo o numero Foglio Viaggio.</p><div class="grid3"><div class="field"><label>Parola da cercare</label><input id="dashServiceSearch" placeholder="Es. Borgomanero, cognome, manifestazione…" autocomplete="off"></div><div class="field"><label>Data (facoltativa)</label><input id="dashServiceDate" type="date"></div><div class="field"><label>&nbsp;</label><div class="actions"><button id="dashServiceFind" class="btn yellow" type="button">🔎 Cerca servizi</button><button id="dashServiceAll" class="btn secondary" type="button">Tutti i servizi</button></div></div></div><div id="dashServiceMsg"></div></div><div class="grid2"><div class="section"><h3>Prossimi servizi</h3><div id="next"></div></div><div class="section"><h3>Scadenze mezzi</h3><div id="nextExp"></div></div></div>
 </div></section>
 
@@ -869,6 +870,14 @@
     <div class="stat"><small>SERVIZI ASSEGNATI</small><b id="volServiceCount">0</b></div>
    </div>
    <div class="section">
+    <div class="actions" style="justify-content:space-between;align-items:center">
+     <div><h3 style="margin:0">🔔 Avvisi</h3><div class="muted">Conferme delle disponibilità e nuove assegnazioni ai servizi.</div></div>
+     <div class="actions"><span id="volNotificationCount" class="pill b">0 nuovi</span><button id="volNotificationsReadAll" type="button" class="btn secondary">Segna tutti come letti</button></div>
+    </div>
+    <div id="volNotificationMsg"></div>
+    <div id="volNotifications"></div>
+   </div>
+   <div class="section">
     <div class="actions" style="justify-content:space-between">
      <div><h3 style="margin:0">📅 Il mio calendario</h3><div class="muted">Turni, servizi assegnati e disponibilità personali.</div></div>
      <div class="actions">
@@ -973,6 +982,7 @@ let tariffViewCode='DEA_BORGOMANERO',tariffManagementRows=[];
 let patientSearchRows=[],servicePatientId=null,adminPatientId=null,adminPatientRecord=null,patientLookupRows=[];
 let prof=null,people=[],qualifications=[],pq=[],vehicles=[],tariffs=[],tariffDestinations=[],servicesCache=[],currentServiceId=null,currentService=null,currentFoglioId=null,currentFoglio=null,volunteerBadge=null;
 let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsRequest=0;
+let volNotifications=[];
 let opCalCursor=new Date(),opCalSelected=todaySafe(),opCalEvents=[],opCalMode='month',opCalVehicle='';
 let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month';
 let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalQualificationRows=[],vfcalAppBusy=false;
@@ -1032,7 +1042,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.21';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.22';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -1353,7 +1363,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.21</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.22</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1515,7 +1525,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.21'
+  versione_app:'V13.22'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -1815,12 +1825,15 @@ $('vcalWeek').onclick=()=>{volCalMode='week';volCalCursor=new Date(volCalSelecte
 async function dashboard(){
  const isCentral=prof?.ruolo==='CENTRALINO';
  const kPromise=isCentral?sb.rpc('cge_centralino_dashboard'):sb.from('v_dashboard_gestionale').select('*').single();
- const [k,sv,ex]=await Promise.all([
+ const [k,sv,ex,pc]=await Promise.all([
   kPromise,
   sb.from('v_servizi_gestionale').select('*').gte('data_servizio',today()).neq('stato_gestionale','ANNULLATO').order('data_servizio').order('ora_partenza_prevista').limit(7),
-  sb.from('v_mezzi_scadenze_gestionale').select('*').in('stato_scadenza',['SCADUTA','ENTRO_30_GIORNI','ENTRO_90_GIORNI']).order('data_scadenza').limit(7)
+  sb.from('v_mezzi_scadenze_gestionale').select('*').in('stato_scadenza',['SCADUTA','ENTRO_30_GIORNI','ENTRO_90_GIORNI']).order('data_scadenza').limit(7),
+  sb.rpc('cge_candidature_assistenze_in_attesa_count')
  ]);
  const d=isCentral?(k.data?.[0]||{}):(k.data||{}), n=sv.data||[], exp=ex.data||[];
+ $('dashPendingCandidates').textContent=pc.error?'—':String(pc.data??0);
+ msg('dashCandidateMsg',pc.error?'Impossibile aggiornare il numero delle candidature: '+pc.error.message:'',pc.error?'warn':'');
  const labels=isCentral?[
   ['s1','SERVIZI OGGI'],['s2','DA ASSEGNARE'],['s3','IN CORSO'],['s4','FOGLI APERTI'],
   ['s5','TURNI OGGI'],['s6','TURNI SCOPERTI'],['s7','SCADENZE MEZZI'],['s8','PERSONALE ATTIVO']
@@ -1840,6 +1853,8 @@ async function dashboard(){
  $('next').innerHTML=n.length?n.map(x=>'<div class="box"><b>'+esc(x.data_servizio)+' · '+esc((x.ora_partenza_prevista||'').slice(0,5))+' · Mezzo '+esc(x.mezzo)+'</b><br>'+esc(x.tipo_servizio||'Servizio')+' · '+esc(x.destinazione||'')+' <span class="pill">'+esc(x.stato_gestionale)+'</span></div>').join(''):'<div class="notice">Nessun servizio programmato.</div>';
  $('nextExp').innerHTML=exp.length?exp.map(x=>'<div class="box"><b>Mezzo '+esc(x.mezzo)+' · '+esc(x.tipo_scadenza)+'</b><br>'+esc(x.data_scadenza)+' · '+esc(x.descrizione||'')+' <span class="pill '+(x.stato_scadenza==='SCADUTA'?'r':'')+'">'+esc(x.stato_scadenza)+'</span></div>').join(''):'<div class="notice">Nessuna scadenza inserita.</div>';
 }
+$('dashOpenCandidates').onclick=()=>view('assistance');
+
 async function loadServices(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  const seq=++servicesSearchSequence;
@@ -3199,11 +3214,43 @@ $('paccessdisable').onclick=async()=>{const b=$('pb').value.trim();if(!b)return 
 
 function volFmtTime(v){return v?String(v).slice(0,5):'—'}
 function volResponseClass(r){return r==='CONFERMATO'?'g':(r==='NON DISPONIBILE'?'r':'')}
+function renderVolunteerNotifications(){
+ const box=$('volNotifications'),unread=volNotifications.filter(n=>!n.letta_il).length;
+ $('volNotificationCount').textContent=unread+' '+(unread===1?'nuovo':'nuovi');
+ $('volNotificationCount').className='pill '+(unread?'b':'g');
+ $('volNotificationsReadAll').disabled=unread===0;
+ box.innerHTML=volNotifications.length?volNotifications.map(n=>
+  '<div class="box" style="margin:7px 0;'+(!n.letta_il?'border-left:5px solid #f0c400;':'')+'">'+
+  '<div class="actions" style="justify-content:space-between"><b>'+esc(n.titolo)+'</b><span class="pill '+(!n.letta_il?'b':'')+'">'+(!n.letta_il?'Nuovo':'Letto')+'</span></div>'+
+  '<div>'+esc(n.messaggio)+'</div><div class="muted" style="margin-top:4px">'+esc(dt(n.created_at))+'</div>'+
+  (!n.letta_il?'<button type="button" class="btn secondary" style="margin-top:7px" data-vol-notification-read="'+esc(n.id)+'">Segna come letto</button>':'')+
+  '</div>').join(''):'<div class="notice">Nessun avviso.</div>';
+ box.querySelectorAll('[data-vol-notification-read]').forEach(b=>b.onclick=()=>volMarkNotificationRead(b.dataset.volNotificationRead));
+}
+async function loadVolunteerNotificationsOnly(){
+ if(!volunteerBadge)return;
+ const r=await sb.from('notifiche_volontari').select('id,badge_personale,servizio_id,tipo,titolo,messaggio,created_at,letta_il')
+  .eq('badge_personale',volunteerBadge).order('created_at',{ascending:false}).limit(30);
+ if(r.error)return msg('volNotificationMsg','Errore avvisi: '+r.error.message,'err');
+ volNotifications=r.data||[];renderVolunteerNotifications();msg('volNotificationMsg','');
+}
+async function volMarkNotificationRead(id){
+ const r=await sb.rpc('cge_notifica_volontario_letta',{p_notifica:id});
+ if(r.error)return msg('volNotificationMsg',r.error.message,'err');
+ await loadVolunteerNotificationsOnly();
+}
+async function volMarkAllNotificationsRead(){
+ if(!volNotifications.some(n=>!n.letta_il))return;
+ const r=await sb.rpc('cge_notifiche_volontario_tutte_lette');
+ if(r.error)return msg('volNotificationMsg',r.error.message,'err');
+ await loadVolunteerNotificationsOnly();msg('volNotificationMsg','Avvisi segnati come letti.','ok');
+}
+$('volNotificationsReadAll').onclick=volMarkAllNotificationsRead;
 async function loadVolunteerArea(){
  if(!volunteerBadge)return;
  msg('volmsg','Aggiornamento dati...');
  try{
-  const [pr,qr,qd,hr,tpr,avr,srv,dr]=await Promise.all([
+  const [pr,qr,qd,hr,tpr,avr,srv,dr,nr]=await Promise.all([
    sb.from('personale').select('badge,nome_completo,stato_anagrafico,telefono,email,data_ingresso,data_nascita,codice_fiscale,indirizzo,comune,provincia,cap').eq('badge',volunteerBadge).maybeSingle(),
    sb.from('personale_qualifiche').select('codice_qualifica,valida_dal,valida_al').eq('badge_personale',volunteerBadge).eq('attiva',true),
    sb.from('qualifiche').select('codice,nome').eq('attiva',true).order('ordine'),
@@ -3211,10 +3258,12 @@ async function loadVolunteerArea(){
    sb.from('turni_personale').select('id,turno_id,ruolo,risposta,risposto_il,nota_risposta_volontario').eq('badge_personale',volunteerBadge),
    sb.from('disponibilita_personale').select('*').eq('badge_personale',volunteerBadge).gte('fine',new Date().toISOString()).order('inizio'),
    sb.rpc('cge_volontario_servizi'),
-   sb.from('documenti_personale').select('*').eq('badge_personale',volunteerBadge).order('created_at',{ascending:false})
+   sb.from('documenti_personale').select('*').eq('badge_personale',volunteerBadge).order('created_at',{ascending:false}),
+   sb.from('notifiche_volontari').select('id,badge_personale,servizio_id,tipo,titolo,messaggio,created_at,letta_il').eq('badge_personale',volunteerBadge).order('created_at',{ascending:false}).limit(30)
   ]);
-  const err=[pr.error,qr.error,qd.error,hr.error,tpr.error,avr.error,srv.error,dr.error].find(Boolean);if(err)throw err;
+  const err=[pr.error,qr.error,qd.error,hr.error,tpr.error,avr.error,srv.error,dr.error,nr.error].find(Boolean);if(err)throw err;
   const person=pr.data||{},hours=hr.data||{},quals=qr.data||[],qdefs=qd.data||[],tp=tpr.data||[],availability=avr.data||[],services=srv.data||[],documents=dr.data||[];
+  volNotifications=nr.data||[];renderVolunteerNotifications();
    vfcalQualificationRows=quals;
   let turns=[];
   const ids=[...new Set(tp.map(x=>x.turno_id).filter(Boolean))];
