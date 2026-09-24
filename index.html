@@ -92,7 +92,7 @@
 }
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.25</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.26</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -146,7 +146,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.25</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.26</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -751,7 +751,22 @@
   </div>
 
   <div class="section">
-   <h3>💾 Backup completo</h3>
+   <div class="actions" style="justify-content:space-between;align-items:center">
+    <div><h3 style="margin:0">🕒 Backup automatico giornaliero</h3><div class="muted">Una copia viene archiviata automaticamente ogni notte. Il sistema conserva le ultime 30 copie completate.</div></div>
+    <button id="backupAutoRun" type="button" class="btn yellow">▶ Esegui backup adesso</button>
+   </div>
+   <div class="stats" style="margin-top:10px">
+    <div class="stat"><small>STATO</small><b id="backupAutoEnabled" style="font-size:15px">—</b></div>
+    <div class="stat"><small>COPIE DISPONIBILI</small><b id="backupAutoCopies">0</b></div>
+    <div class="stat"><small>CONSERVAZIONE</small><b id="backupAutoRetention">30</b><span class="muted"> copie</span></div>
+    <div class="stat"><small>ULTIMO BACKUP</small><b id="backupAutoLast" style="font-size:14px">—</b></div>
+   </div>
+   <div id="backupAutoMsg"></div>
+   <div class="table" style="margin-top:9px"><table><thead><tr><th>Data / ora</th><th>Tipo</th><th>Stato</th><th>Dimensione</th><th>Contenuto</th><th>Azioni</th></tr></thead><tbody id="backupAutoBody"></tbody></table></div>
+  </div>
+
+  <div class="section">
+   <h3>💾 Backup completo manuale</h3>
    <p class="muted">Scarica un unico file JSON con tutti i dataset operativi del gestionale: servizi, pazienti, volontari, equipaggi, turni, Fogli Viaggio, mezzi, tariffari, pagamenti, candidature, registro attività e metadati documenti.</p>
    <div class="notice">I file PDF/JPG caricati nell’archivio documenti <b>non sono inclusi come contenuto binario</b>: nel backup vengono salvati i relativi metadati e percorsi. Le credenziali di accesso non vengono mai esportate.</div>
    <div class="toolbar"><button id="backupFullJson" type="button" class="btn yellow">⬇ Scarica backup completo JSON</button></div>
@@ -1057,7 +1072,7 @@ let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='m
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
-let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupBusy=false;
+let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupAutomaticRows=[],backupBusy=false;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
 let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='';
 const $=x=>document.getElementById(x), today=()=>new Date().toISOString().slice(0,10);
@@ -1110,7 +1125,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.25';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.26';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -1431,7 +1446,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.25</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.26</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1593,7 +1608,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.25'
+  versione_app:'V13.26'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -3306,6 +3321,39 @@ $('paccessstatus').onclick=()=>{const b=$('pb').value.trim();if(!b)return msg('p
 $('paccesscreate').onclick=async()=>{const b=$('pb').value.trim();if(!b)return msg('paccessmsg','Seleziona o salva prima un volontario.','warn');try{const d=await invokeVolunteerAccess('CREATE_OR_RESET',b,$('paccesspin').value.trim());$('paccessstate').value='ATTIVO';$('paccesspin').value='';msg('paccessmsg',d.pin_temporaneo?'Accesso attivato. PIN temporaneo: '+d.pin_temporaneo+' — comunicalo al volontario in modo riservato.':'Accesso attivato e PIN aggiornato.','ok')}catch(e){msg('paccessmsg',e.message,'err')}};
 $('paccessdisable').onclick=async()=>{const b=$('pb').value.trim();if(!b)return msg('paccessmsg','Seleziona prima un volontario.','warn');if(!confirm('Disattivare l\'accesso app del badge '+b+'?'))return;try{await invokeVolunteerAccess('DISABLE',b);$('paccessstate').value='DISATTIVATO';msg('paccessmsg','Accesso disattivato.','ok')}catch(e){msg('paccessmsg',e.message,'err')}};
 
+function formatBackupBytes(value){
+ const n=Number(value||0);if(!n)return '—';
+ if(n<1024)return n+' B';
+ if(n<1048576)return (n/1024).toLocaleString('it-IT',{maximumFractionDigits:1})+' KB';
+ return (n/1048576).toLocaleString('it-IT',{maximumFractionDigits:2})+' MB';
+}
+async function downloadStoredAutomaticBackup(id){
+ if(prof?.ruolo!=='AMMINISTRATORE'||backupBusy)return;
+ const row=backupAutomaticRows.find(x=>x.id===id&&x.stato==='COMPLETATO'&&x.storage_path);
+ if(!row)return msg('backupAutoMsg','Backup non disponibile.','warn');
+ setBackupBusy(true);msg('backupAutoMsg','Download backup...');
+ try{
+  const r=await sb.storage.from('backup-automatici').download(row.storage_path);
+  if(r.error)throw r.error;
+  const url=URL.createObjectURL(r.data),a=document.createElement('a');
+  a.href=url;a.download=row.nome_file||('CGE_backup_'+backupTimestamp()+'.json');
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  msg('backupAutoMsg','Backup scaricato.','ok');
+ }catch(e){msg('backupAutoMsg','Download non riuscito: '+(e.message||String(e)),'err')}
+ finally{setBackupBusy(false)}
+}
+async function runStoredAutomaticBackupNow(){
+ if(prof?.ruolo!=='AMMINISTRATORE'||backupBusy)return;
+ setBackupBusy(true);msg('backupAutoMsg','Creazione backup archiviato in corso...');
+ try{
+  const r=await sb.functions.invoke('backup-automatico',{body:{origine:'manuale-amministratore'}});
+  if(r.error)throw r.error;
+  if(r.data?.error)throw new Error(r.data.error);
+  msg('backupAutoMsg','Backup archiviato completato: '+Number(r.data?.totale_righe||0).toLocaleString('it-IT')+' righe.','ok');
+  await loadBackupExport();
+ }catch(e){msg('backupAutoMsg','Backup archiviato non riuscito: '+(e.message||String(e)),'err')}
+ finally{setBackupBusy(false)}
+}
 function backupSafeName(value){
  return String(value||'export').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
 }
@@ -3331,14 +3379,16 @@ function backupRowsToCsv(rows){
 }
 function setBackupBusy(value){
  backupBusy=value;
- ['backupFullJson','backupDatasetDownload','backupRefresh'].forEach(id=>{if($(id))$(id).disabled=value});
+ ['backupFullJson','backupDatasetDownload','backupRefresh','backupAutoRun'].forEach(id=>{if($(id))$(id).disabled=value});
 }
 async function loadBackupExport(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
  msg('backupSummaryMsg','Aggiornamento contenuto backup...');
- const [summary,last]=await Promise.all([
+ const [summary,last,autoState,autoList]=await Promise.all([
   sb.rpc('cge_backup_riepilogo'),
-  sb.rpc('cge_registro_attivita',{p_dal:null,p_al:null,p_area:'Backup',p_attore:null,p_ricerca:null})
+  sb.rpc('cge_registro_attivita',{p_dal:null,p_al:null,p_area:'Backup',p_attore:null,p_ricerca:null}),
+  sb.rpc('cge_backup_automatico_stato'),
+  sb.rpc('cge_backup_automatici_elenco')
  ]);
  if(summary.error){
   backupSummaryRows=[];$('backupSummaryBody').innerHTML='';
@@ -3353,6 +3403,30 @@ async function loadBackupExport(){
  $('backupDatasetSelect').innerHTML=backupSummaryRows.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.etichetta)+' · '+Number(x.righe||0).toLocaleString('it-IT')+' record</option>').join('');
  $('backupSummaryBody').innerHTML=backupSummaryRows.map(x=>'<tr><td><b>'+esc(x.etichetta)+'</b><br><span class="muted">'+esc(x.codice)+'</span></td><td>'+Number(x.righe||0).toLocaleString('it-IT')+'</td><td>'+esc(x.nota||'—')+'</td></tr>').join('');
  msg('backupSummaryMsg','');
+
+ if(autoState.error){
+  $('backupAutoEnabled').textContent='Errore';$('backupAutoCopies').textContent='—';$('backupAutoLast').textContent='—';
+  msg('backupAutoMsg','Impossibile leggere lo stato dei backup automatici: '+autoState.error.message,'err');
+ }else{
+  const st=(autoState.data||[])[0]||{};
+  $('backupAutoEnabled').textContent=st.abilitato?'ATTIVO':'DISATTIVATO';
+  $('backupAutoEnabled').style.color=st.abilitato?'#166846':'#9d2f37';
+  $('backupAutoCopies').textContent=Number(st.copie_disponibili||0);
+  $('backupAutoRetention').textContent=Number(st.conserva_copie||30);
+  $('backupAutoLast').textContent=st.ultima_esecuzione?new Date(st.ultima_esecuzione).toLocaleString('it-IT'):'Mai';
+ }
+ backupAutomaticRows=autoList.error?[]:(autoList.data||[]);
+ if(autoList.error)msg('backupAutoMsg','Impossibile leggere lo storico automatico: '+autoList.error.message,'err');
+ $('backupAutoBody').innerHTML=backupAutomaticRows.length?backupAutomaticRows.map(x=>{
+  const ok=x.stato==='COMPLETATO',fail=x.stato==='FALLITO';
+  return '<tr><td><b>'+esc(new Date(x.creato_il).toLocaleString('it-IT'))+'</b></td>'+
+   '<td>'+esc(x.tipo==='AUTOMATICO'?'Automatico':'Manuale archiviato')+'</td>'+
+   '<td><span class="pill '+(ok?'g':fail?'r':'b')+'">'+esc(x.stato)+'</span>'+(x.errore?'<br><span class="muted">'+esc(x.errore)+'</span>':'')+'</td>'+
+   '<td>'+esc(formatBackupBytes(x.dimensione_bytes))+'</td>'+
+   '<td>'+esc((x.totale_dataset??'—')+' archivi · '+(x.totale_righe??'—')+' righe')+'</td>'+
+   '<td>'+(ok&&x.storage_path?'<button type="button" class="btn secondary" data-backup-auto-download="'+esc(x.id)+'">⬇ Scarica</button>':'—')+'</td></tr>';
+ }).join(''):'<tr><td colspan="6">Nessun backup automatico ancora disponibile.</td></tr>';
+ $('backupAutoBody').querySelectorAll('[data-backup-auto-download]').forEach(b=>b.onclick=()=>downloadStoredAutomaticBackup(b.dataset.backupAutoDownload));
 }
 async function backupFetchDataset(code){
  const r=await sb.rpc('cge_backup_export',{p_dataset:code});
@@ -3374,7 +3448,7 @@ async function downloadSingleBackupDataset(){
   const {rows}=await backupFetchDataset(code);
   const base='CGE_'+backupSafeName(code)+'_'+backupTimestamp();
   if(format==='CSV')backupDownloadFile(base+'.csv',backupRowsToCsv(rows),'text/csv;charset=utf-8');
-  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.25',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
+  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.26',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
   await backupLogExport(format,code,rows.length);
   msg('backupDatasetMsg','Esportazione completata: '+rows.length+' record.','ok');
   await loadBackupExport();
@@ -3400,7 +3474,7 @@ async function downloadFullBackup(){
   const backup={
    formato:'CGE_BACKUP_V1',
    associazione:'Croce Gialla Emergenza ODV',
-   versione_app:'V13.25',
+   versione_app:'V13.26',
    generato_il:new Date().toISOString(),
    contiene_credenziali_accesso:false,
    documenti_binari_inclusi:false,
@@ -3420,6 +3494,7 @@ async function downloadFullBackup(){
 $('backupFullJson').onclick=downloadFullBackup;
 $('backupDatasetDownload').onclick=downloadSingleBackupDataset;
 $('backupRefresh').onclick=loadBackupExport;
+$('backupAutoRun').onclick=runStoredAutomaticBackupNow;
 
 const ACTIVITY_FIELD_LABELS={
  data_servizio:'data servizio',ora_partenza_prevista:'ora partenza',ora_carico_paziente_prevista:'ora carico',
