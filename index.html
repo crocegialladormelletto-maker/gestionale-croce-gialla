@@ -106,6 +106,7 @@
 .dim-slot.dim-complete{border-left:5px solid #19985a}.dim-slot.dim-incomplete{border-left:5px solid #dba51c}
 .dim-slot .dim-person{font-size:12px;margin:3px 0;overflow-wrap:anywhere}
 @media(max-width:1120px){.dim-dash-layout{display:block}.dim-dash-side{position:static;max-height:none}}
+.dim-admin-assign{border-top:1px solid #dce6ef;margin-top:8px;padding-top:8px}.dim-admin-assign>b{font-size:11px;color:var(--n)}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
@@ -1123,7 +1124,7 @@ let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='m
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
 let dimVolCursor=new Date(),dimVolSelected=todaySafe(),dimVolRows=[],dimVolSeq=0,dimVolBusy=false;
-let dimAdminCursor=new Date(),dimAdminSelected=todaySafe(),dimAdminRows=[],dimAdminSeq=0,dimAdminBusy=false;
+let dimAdminCursor=new Date(),dimAdminSelected=todaySafe(),dimAdminRows=[],dimAdminEligible=[],dimAdminSeq=0,dimAdminEligibleSeq=0,dimAdminBusy=false;
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupAutomaticRows=[],backupBusy=false;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
@@ -2803,7 +2804,9 @@ function dimRenderMonth(kind){
  $(prefix+'Grid').innerHTML=output;
  $(prefix+'Grid').querySelectorAll('[data-dim-date]').forEach(button=>button.onclick=()=>{
   if(admin)dimAdminSelected=button.dataset.dimDate;else dimVolSelected=button.dataset.dimDate;
-  dimRenderMonth(kind);dimRenderDay(kind);
+  if(admin)dimAdminEligible=[];
+  dimRenderMonth(kind);
+  if(admin)loadDimissioniEligible();
  });
  dimRenderDay(kind);
 }
@@ -2828,13 +2831,60 @@ function dimRenderDay(kind){
     '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
     (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
   return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+label+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
-   (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+'</div>';
+   (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
+   (admin?dimAdminAssignControls(day,fascia,slot):'')+'</div>';
  }).join('');
  if(admin){
   $(prefix+'Day').querySelectorAll('[data-dim-remove]').forEach(button=>button.onclick=()=>dimRemove(button.dataset.dimRemove));
+  $(prefix+'Day').querySelectorAll('[data-dim-assign]').forEach(button=>button.onclick=()=>dimAdminAssign(day,button.dataset.dimAssign,button.dataset.dimRole));
  }else{
   $(prefix+'Day').querySelectorAll('[data-dim-join]').forEach(button=>button.onclick=()=>dimJoin(day,button.dataset.dimJoin));
  }
+}
+
+function dimAdminAssignControls(day,fascia,slot){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||day<todaySafe())return '';
+ return '<div class="dim-admin-assign"><b>Aggiungi all’equipaggio</b>'+
+  ['AUTISTA','SOCCORRITORE'].map(role=>{
+   const candidates=dimAdminEligible.filter(p=>p.ruolo===role&&!slot.some(x=>x.badge_personale===p.badge));
+   return '<div class="actions" style="margin-top:6px"><label class="muted" style="min-width:84px">'+dimRoleLabel(role)+'</label>'+
+    '<select data-dim-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Volontario '+dimRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
+     '<option value="">Scegli volontario</option>'+
+     candidates.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo+' · '+p.badge)+'</option>').join('')+
+    '</select><button type="button" class="btn yellow" style="padding:8px" data-dim-assign="'+esc(fascia)+
+     '" data-dim-role="'+role+'"'+(candidates.length?'':' disabled')+'>Aggiungi</button></div>';
+  }).join('')+'</div>';
+}
+async function loadDimissioniEligible(){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const seq=++dimAdminEligibleSeq,day=dimAdminSelected;
+ dimAdminEligible=[];
+ if(day<todaySafe()){dimRenderDay('Admin');return}
+ const r=await sb.rpc('cge_dimissioni_abilitati',{p_giorno:day});
+ if(seq!==dimAdminEligibleSeq||day!==dimAdminSelected)return;
+ if(r.error){
+  dimRenderDay('Admin');
+  return msg('dimAdminMsg','Impossibile caricare i volontari abilitati: '+r.error.message,'err');
+ }
+ dimAdminEligible=r.data||[];
+ dimRenderDay('Admin');
+}
+async function dimAdminAssign(day,fascia,role){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||dimAdminBusy||day!==dimAdminSelected)return;
+ const badge=$('dimAdminDay').querySelector('[data-dim-assign-person="'+fascia+'-'+role+'"]')?.value;
+ const person=dimAdminEligible.find(p=>p.badge===badge&&p.ruolo===role);
+ if(!person)return msg('dimAdminMsg','Seleziona un volontario con qualifica valida.','warn');
+ if(!confirm('Inserire DEFINITIVAMENTE '+person.nome_completo+' nel turno DIMISSIONI del '+day+
+  ', '+fascia+' come '+dimRoleLabel(role)+'?'))return;
+ dimAdminBusy=true;msg('dimAdminMsg','Inserimento nell’equipaggio in corso...');
+ try{
+  const r=await sb.rpc('cge_dimissioni_assegna',{p_giorno:day,p_fascia:fascia,p_badge:badge,p_ruolo:role});
+  if(r.error)throw r.error;
+  await loadDimissioniAdmin();
+  msg('dimAdminMsg',person.nome_completo+' inserito definitivamente come '+dimRoleLabel(role)+
+   ' per '+day+' · '+fascia+'.','ok');
+ }catch(e){msg('dimAdminMsg',e.message||String(e),'err')}
+ finally{dimAdminBusy=false}
 }
 async function loadDimissioniVol(){
  if(!volunteerBadge)return;
@@ -2848,11 +2898,13 @@ async function loadDimissioniVol(){
 async function loadDimissioniAdmin(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  const seq=++dimAdminSeq,range=calVisibleRange(dimAdminCursor,'month');
+ ++dimAdminEligibleSeq;dimAdminEligible=[];
  msg('dimAdminMsg','Caricamento turni dimissioni...');
  const r=await sb.rpc('cge_dimissioni_turni',{p_dal:range.startYmd,p_al:range.endYmd});
  if(seq!==dimAdminSeq)return;
  if(r.error)return msg('dimAdminMsg',r.error.message,'err');
  dimAdminRows=r.data||[];dimRenderMonth('Admin');msg('dimAdminMsg','');
+ await loadDimissioniEligible();
 }
 async function dimJoin(day,fascia){
  if(dimVolBusy)return;
