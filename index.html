@@ -92,7 +92,7 @@
 }
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.15</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.16</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -146,7 +146,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.15</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.16</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -645,7 +645,7 @@
   </div>
  </div>
 </section>
-<section id="crew" class="surface hidden"><div class="hero"><h2>Equipaggi</h2><p>Gli operatori vengono filtrati in base alla qualifica scelta.</p></div><div class="pad">
+<section id="crew" class="surface hidden"><div class="hero"><h2>Equipaggi</h2><p>Seleziona un servizio per vedere esclusivamente il suo equipaggio. Gli operatori disponibili sono filtrati per qualifica.</p></div><div class="pad">
 <div class="section"><div class="grid3"><div class="field"><label>Servizio</label><select id="cs"></select></div><div class="field"><label>Ruolo</label><select id="cr"><option>AUTISTA</option><option>CAPO_SERVIZIO</option><option>SOCCORRITORE</option><option>SECONDO_SOCCORRITORE</option><option>ACCOMPAGNATORE</option><option>AFFIANCATO</option></select></div><div class="field"><label>Operatore abilitato</label><select id="cp"></select></div></div><div class="toolbar"><button id="add" class="btn yellow">Assegna</button></div><div id="cmsg"></div></div><div id="clist"></div></div></section>
 
 <section id="people" class="surface hidden"><div class="hero"><h2>Volontari e personale</h2><p>Anagrafica e qualifiche gestite separatamente.</p></div><div class="pad">
@@ -959,6 +959,7 @@ let opCalCursor=new Date(),opCalSelected=todaySafe(),opCalEvents=[],opCalMode='m
 let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month';
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[];
+let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
 let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='';
 const $=x=>document.getElementById(x), today=()=>new Date().toISOString().slice(0,10);
@@ -993,7 +994,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.15';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.16';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -1308,7 +1309,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.15</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.16</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1470,7 +1471,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.15'
+  versione_app:'V13.16'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -1949,8 +1950,13 @@ $('form').onsubmit=async e=>{
  const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:isEvent?null:($('odest').value||null),ora_inizio_assistenza_prevista:isEvent?($('asStart').value||null):null,ora_fine_assistenza_prevista:isEvent?($('asEnd').value||null):null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?amount:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
  const r=await sb.from('servizi_giornalieri').insert(p).select('id').single();
  if(r.error)return msg('fmsg',r.error.message,'err');
+ // Reset solo dopo un salvataggio riuscito; i dati del servizio precedente non restano in un nuovo inserimento.
+ $('form').reset();servicePatientId=null;patientLookupRows=[];
+ $('patientLookupResults').innerHTML='';msg('patientLookupMsg','');
+ $('patientLookupText').value='';updateManifestationTimes();
  msg('fmsg','Servizio salvato. Ora puoi assegnare l’equipaggio.','ok');
- await loadCrew();$('cs').value=r.data.id;view('crew');
+ nextCrewServiceId=r.data.id;
+ await view('crew');
 };
 
 const PATIENT_FIELDS='id,nome,cognome,codice_fiscale,data_nascita,telefono,indirizzo,email';
@@ -2061,13 +2067,53 @@ $('paUse').onclick=()=>{
  usePatientForService(row);view('new');
 };
 
-async function loadCrew(){
- const [s,c]=await Promise.all([sb.from('v_servizi_gestionale').select('id,data_servizio,ora_partenza_prevista,mezzo,tipo_servizio').in('stato_gestionale',['DA ASSEGNARE','EQUIPAGGIO INCOMPLETO','CONFERMATO']).order('data_servizio'),sb.from('servizi_equipaggio').select('*').order('assegnato_il')]);
- $('cs').innerHTML=opts(s.data||[],'id',x=>x.data_servizio+' · '+(x.ora_partenza_prevista||'').slice(0,5)+' · '+x.mezzo+' · '+x.tipo_servizio);refreshCrewPeople();
- const a=c.data||[];$('clist').innerHTML=a.length?a.map(x=>{const p=people.find(z=>z.badge===x.badge_personale);return '<div class="box"><b>'+esc(p?.nome_completo||x.badge_personale)+'</b> · '+esc(x.ruolo)+' <button class="btn danger" style="float:right" onclick="removeCrew(\''+x.id+'\')">Rimuovi</button></div>'}).join(''):'<div class="notice">Nessun componente assegnato.</div>'
+async function loadCrew(requestedServiceId=null){
+ const request=++crewLoadSequence;
+ const wanted=requestedServiceId??nextCrewServiceId??$('cs').value;
+ nextCrewServiceId=null;
+ $('clist').innerHTML='<div class="notice">Caricamento equipaggio...</div>';
+ const sr=await sb.from('v_servizi_gestionale').select('id,data_servizio,ora_partenza_prevista,mezzo,tipo_servizio')
+  .in('stato_gestionale',['DA ASSEGNARE','EQUIPAGGIO INCOMPLETO','CONFERMATO'])
+  .order('data_servizio').order('ora_partenza_prevista');
+ if(request!==crewLoadSequence)return;
+ if(sr.error){msg('cmsg','Impossibile caricare i servizi: '+sr.error.message,'err');$('clist').innerHTML='';return}
+ $('cs').innerHTML=opts(sr.data||[],'id',x=>x.data_servizio+' · '+(x.ora_partenza_prevista||'').slice(0,5)+' · '+x.mezzo+' · '+x.tipo_servizio);
+ $('cs').value=(sr.data||[]).some(x=>x.id===wanted)?wanted:'';
+ refreshCrewPeople();
+ const service=$('cs').value;
+ if(!service){
+  crewRows=[];
+  $('clist').innerHTML='<div class="notice">Seleziona un servizio. Gli equipaggi degli altri servizi non vengono mostrati qui.</div>';
+  return;
+ }
+ const cr=await sb.from('servizi_equipaggio').select('id,servizio_id,badge_personale,ruolo,assegnato_il')
+  .eq('servizio_id',service).order('assegnato_il');
+ if(request!==crewLoadSequence||$('cs').value!==service)return;
+ if(cr.error){msg('cmsg','Impossibile caricare l’equipaggio: '+cr.error.message,'err');$('clist').innerHTML='';return}
+ crewRows=cr.data||[];
+ $('clist').innerHTML=crewRows.length?crewRows.map(x=>{
+  const p=people.find(z=>z.badge===x.badge_personale);
+  return '<div class="box"><b>'+esc(p?.nome_completo||x.badge_personale)+'</b> · '+esc(x.ruolo)+
+   ' <button class="btn danger" style="float:right" data-remove-crew="'+esc(x.id)+'">Rimuovi</button></div>';
+ }).join(''):'<div class="notice">Nessun operatore assegnato a questo servizio. Puoi creare l’equipaggio qui sopra.</div>';
+ $('clist').querySelectorAll('[data-remove-crew]').forEach(b=>b.onclick=()=>window.removeCrew(b.dataset.removeCrew));
 }
-$('add').onclick=async()=>{if(!$('cs').value||!$('cp').value)return msg('cmsg','Seleziona servizio e operatore.','warn');const r=await sb.from('servizi_equipaggio').insert({servizio_id:$('cs').value,badge_personale:$('cp').value,ruolo:$('cr').value});if(r.error)return msg('cmsg',r.error.message,'err');msg('cmsg','Operatore assegnato.','ok');loadCrew()};
-window.removeCrew=async id=>{if(!confirm('Rimuovere questo componente?'))return;const r=await sb.from('servizi_equipaggio').delete().eq('id',id);if(r.error)return alert(r.error.message);loadCrew()};
+$('cs').onchange=()=>{msg('cmsg','');loadCrew($('cs').value)};
+$('add').onclick=async()=>{
+ const service=$('cs').value,operator=$('cp').value;
+ if(!service||!operator)return msg('cmsg','Seleziona un servizio e un operatore.','warn');
+ const result=await sb.from('servizi_equipaggio').insert({servizio_id:service,badge_personale:operator,ruolo:$('cr').value});
+ if(result.error)return msg('cmsg',result.error.message,'err');
+ msg('cmsg','Operatore assegnato al servizio selezionato.','ok');await loadCrew(service);
+};
+window.removeCrew=async id=>{
+ const service=$('cs').value,member=crewRows.find(x=>x.id===id&&x.servizio_id===service);
+ if(!service||!member)return msg('cmsg','Seleziona il servizio corretto prima di rimuovere un operatore.','warn');
+ if(!confirm('Rimuovere questo operatore dall’equipaggio del servizio selezionato?'))return;
+ const result=await sb.from('servizi_equipaggio').delete().eq('id',id).eq('servizio_id',service);
+ if(result.error)return msg('cmsg',result.error.message,'err');
+ msg('cmsg','Operatore rimosso dal servizio selezionato.','ok');await loadCrew(service);
+};
 
 function resetPerson(){adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';$('pdocSection').classList.add('hidden');msg('pdocMsg','');$('pdocList').innerHTML='';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pbirth').value='';$('pentry').value='';$('pdep').value='false';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
 $('pnew').onclick=resetPerson;
