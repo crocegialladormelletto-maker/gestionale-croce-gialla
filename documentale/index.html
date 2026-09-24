@@ -385,7 +385,7 @@ async function saveMinute(){
   const params=minuteParams();let id=currentMinuteId,code=currentMinute?.verbale_codice||'';
   if(wasEdit){const r=await sb.rpc('cge_verbale_modifica',{p_id:id,...params});if(r.error)throw r.error}
   else{const r=await sb.rpc('cge_verbale_crea',params);if(r.error)throw r.error;id=r.data?.[0]?.id;code=r.data?.[0]?.verbale_codice||'';if(!id)throw new Error('Numero verbale non restituito.')}
-  resetMinuteFilters();await loadMinutesList();openMinute(id);
+  resetMinuteFilters();$('vYear').value=Number(String(params.p_data_riunione).slice(0,4));await loadMinutesList();openMinute(id);
   msg('vmsg',wasEdit?'Verbale aggiornato.':'Verbale '+code+' creato.','ok');
  }catch(e){msg('vmsg',e.message||String(e),'err')}finally{minutesBusy=false;$('vSave').disabled=false}
 }
