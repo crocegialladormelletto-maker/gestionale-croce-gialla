@@ -359,6 +359,20 @@
   </div>
   <div id="emMsg"></div>
   <div id="emDays"></div>
+ <div class="section"><h3>🚨 Calendario fasce Emergenza 118</h3><p class="muted">Iscrizioni definitive per giorno e fascia: mattino, pomeriggio e notte. Il turnario storico resta consultabile sopra.</p>
+<aside class="dim-dash-side section">
+ <h3>🚨 Turni EMERGENZA 118</h3><div class="muted">Iscrizioni definitive dei volontari: per ogni fascia servono un autista e un soccorritore.</div>
+ <div class="actions" style="justify-content:space-between;margin-top:10px"><b id="emgAdminTitle"></b><div class="actions">
+ <button id="emgAdminPrev" class="btn secondary" type="button">←</button>
+ <button id="emgAdminToday" class="btn yellow" type="button">Oggi</button>
+ <button id="emgAdminNext" class="btn secondary" type="button">→</button>
+ <button id="emgAdminRefresh" class="btn secondary" type="button">↻</button></div></div>
+ <div id="emgAdminMsg"></div>
+ <div class="dim-weekdays"><span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span></div>
+ <div id="emgAdminGrid" class="dim-month-grid dim-month-small"></div>
+ <h4 id="emgAdminDayTitle" style="margin:12px 0 5px"></h4><div id="emgAdminDay"></div>
+ </aside>
+ </div>
  </div>
 </section>
 <section id="assistance" class="surface hidden">
@@ -988,7 +1002,8 @@
   <aside class="vol-side" aria-label="Menu APP Volontari">
    <div class="vol-side-head"><b>👋 Area volontario</b><span>Scegli una sezione</span></div>
       <button type="button" class="vol-nav active" data-vol-target="volDimSection">🚑 Turni dimissioni</button>
-   <button type="button" class="vol-nav" data-vol-target="volRosterSection">🚨 Emergenza e assistenze</button>
+   <button type="button" class="vol-nav" data-vol-target="volEmgSection">🚨 Emergenza 118</button>
+   <button type="button" class="vol-nav" data-vol-target="volRosterSection">🎪 Assistenze manifestazioni</button>
    <button type="button" class="vol-nav" data-vol-target="volShiftsSection">🕒 I miei turni</button>
    <button type="button" class="vol-nav" data-vol-target="volAvailabilitySection">✅ Disponibilità</button>
    <button type="button" class="vol-nav" data-vol-target="volServicesSection">🚐 I miei servizi</button>
@@ -1014,9 +1029,22 @@
     </div>
    </section>
 
+<section id="volEmgSection" class="surface vol-panel vol-panel-emergenza">
+    <div class="hero"><h2>🚨 Turni EMERGENZA 118</h2><p>Iscriviti direttamente a un turno definitivo: scegli giorno, fascia e ruolo. Ogni fascia richiede almeno un autista e un soccorritore.</p></div>
+    <div class="pad">
+     <div class="actions" style="justify-content:space-between"><b id="emgVolTitle"></b><div class="actions">
+      <button id="emgVolPrev" class="btn secondary" type="button">←</button><button id="emgVolToday" class="btn yellow" type="button">Oggi</button>
+      <button id="emgVolNext" class="btn secondary" type="button">→</button><button id="emgVolRefresh" class="btn secondary" type="button">↻ Aggiorna</button>
+     </div></div>
+     <p class="muted">Verde: autista e soccorritore presenti. Giallo: turno da completare. L'iscrizione è definitiva e non si può cancellare autonomamente.</p>
+     <div id="emgVolMsg"></div><div class="dim-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
+     <div id="emgVolGrid" class="dim-month-grid"></div><h3 id="emgVolDayTitle" style="margin-top:15px"></h3><div id="emgVolDay"></div>
+    </div>
+   </section>
+
 <section id="volRosterSection" class="surface vol-panel vol-panel-shifts">
- <div class="hero"><h2>🚨 Emergenza 118 e assistenze manifestazioni</h2>
- <p>Iscriviti ai turni e alle assistenze già programmati. La scelta è definitiva: per eventuali variazioni contatta il Centralino.</p></div>
+ <div class="hero"><h2>🎪 Assistenze manifestazioni</h2>
+ <p>Seleziona la manifestazione specifica e iscriviti definitivamente con la qualifica corretta.</p></div>
  <div class="pad">
   <div class="actions" style="justify-content:space-between"><b id="volRosterTitle"></b>
    <div class="actions"><button type="button" class="btn secondary" id="volRosterPrev">←</button>
@@ -1025,7 +1053,7 @@
     <button type="button" class="btn secondary" id="volRosterRefresh">↻ Aggiorna</button>
    </div>
   </div>
-  <p class="muted">Sono disponibili soltanto i turni Emergenza e Assistenza e i servizi Assistenza manifestazioni già inseriti da Amministrazione o Centralino. Puoi scegliere solo i ruoli per cui risulti qualificato.</p>
+  <p class="muted">Scegli la manifestazione già programmata nel calendario. L’iscrizione è definitiva; per variazioni contatta il Centralino.</p>
   <div id="volRosterMsg"></div>
   <div class="dim-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
   <div id="volRosterGrid" class="dim-month-grid"></div>
@@ -1154,6 +1182,8 @@ let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],as
 let dimVolCursor=new Date(),dimVolSelected=todaySafe(),dimVolRows=[],dimVolSeq=0,dimVolBusy=false;
 let volRosterCursor=new Date(),volRosterSelected=todaySafe(),volRosterEvents=[],volRosterSeq=0,volRosterBusy=false;
 let dimAdminCursor=new Date(),dimAdminSelected=todaySafe(),dimAdminRows=[],dimAdminEligible=[],dimAdminSeq=0,dimAdminEligibleSeq=0,dimAdminBusy=false;
+let emgVolCursor=new Date(),emgVolSelected=todaySafe(),emgVolRows=[],emgVolSeq=0,emgVolBusy=false;
+let emgAdminCursor=new Date(),emgAdminSelected=todaySafe(),emgAdminRows=[],emgAdminEligible=[],emgAdminSeq=0,emgAdminEligibleSeq=0,emgAdminBusy=false;
 let rosterCrewBusy=false,rosterCrewEligible=new Map();
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupAutomaticRows=[],backupBusy=false;
@@ -1886,13 +1916,12 @@ function volRosterRender(){
  for(let i=0;i<range.cells;i++){
   const date=new Date(range.start);date.setDate(range.start.getDate()+i);
   const day=calYmd(date),items=volRosterEvents.filter(e=>e.day===day);
-  const em=items.filter(e=>e.kind==='TURNO_EMERGENZA').length,
-   ass=items.length-em;
+  const ass=items.length;
   html+='<button type="button" class="dim-date '+
    (date.getMonth()!==volRosterCursor.getMonth()?'dim-out ':'')+
    (day===todaySafe()?'dim-today ':'')+(day===volRosterSelected?'dim-selected':'')+
    '" data-vol-roster-day="'+day+'"><b>'+date.getDate()+'</b>'+
-   '<small>'+(em?'🚨 '+em+' ':'')+(ass?'🎪 '+ass:'')+'</small></button>';
+   '<small>'+(ass?'🎪 '+ass:'')+'</small></button>';
  }
  $('volRosterGrid').innerHTML=html;
  $('volRosterGrid').querySelectorAll('[data-vol-roster-day]').forEach(button=>
@@ -1930,30 +1959,20 @@ function volRosterRenderDay(){
 async function loadVolRoster(){
  if(!volunteerBadge)return;
  const seq=++volRosterSeq,range=calVisibleRange(volRosterCursor,'month');
- msg('volRosterMsg','Caricamento turni e assistenze...');
- const [turns,services]=await Promise.all([
-  sb.rpc('cge_volontario_turni_aperti',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd})
- ]);
+ msg('volRosterMsg','Caricamento assistenze manifestazioni...');
+ const services=await sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd});
  if(seq!==volRosterSeq)return;
- if(turns.error||services.error)return msg('volRosterMsg',
-  'Errore calendario: '+(turns.error||services.error).message,'err');
- volRosterEvents=[
-  ...(turns.data||[]).map(t=>({
-   id:t.id,kind:t.tipo_turno==='EMERGENZA'?'TURNO_EMERGENZA':'TURNO_ASSISTENZA',
-   day:t.data_turno,start:calTime(t.ora_inizio),end:calTime(t.ora_fine),
-   mezzo:t.mezzo,count:t.numero_assegnati,mine:!!t.ruolo_assegnato,myRole:t.ruolo_assegnato
-  })),
-  ...(services.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio)).map(s=>({
+ if(services.error)return msg('volRosterMsg','Errore calendario: '+services.error.message,'err');
+ volRosterEvents=(services.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio)).map(s=>({
    id:s.id,kind:'SERVIZIO_ASSISTENZA',day:s.data_servizio,
    start:calTime(s.ora_inizio_assistenza_prevista||s.ora_partenza_prevista),
    end:calTime(s.ora_fine_assistenza_prevista||s.ora_rientro_previsto),
    nome:s.nome_manifestazione,luogo:s.luogo_manifestazione,
    mezzo:s.mezzo,mine:s.assegnato_a_me
-  }))
- ];
+ }));
  volRosterRender();msg('volRosterMsg','');
 }
+
 async function volRosterJoin(kind,id){
  if(volRosterBusy)return;
  const event=volRosterEvents.find(e=>e.kind===kind&&e.id===id);
@@ -2999,7 +3018,8 @@ async function loadEmergencyRoster(){
   if(a.error){msg('emMsg','Errore lettura equipaggi: '+a.error.message,'err');return}
   emAssignments=a.data||[];
  }else emAssignments=[];
- msg('emMsg','');emRender()
+ msg('emMsg','');emRender();
+ await loadEmergenzaAdmin();
 }
 $('emPrev').onclick=()=>{emCursor.setDate(emCursor.getDate()-(emView==='week'?7:1));loadEmergencyRoster()};
 $('emNext').onclick=()=>{emCursor.setDate(emCursor.getDate()+(emView==='week'?7:1));loadEmergencyRoster()};
@@ -3229,6 +3249,180 @@ $('dimAdminPrev').onclick=()=>dimMoveMonth('Admin',-1);
 $('dimAdminNext').onclick=()=>dimMoveMonth('Admin',1);
 $('dimAdminToday').onclick=()=>dimMoveMonth('Admin',0);
 $('dimAdminRefresh').onclick=loadDimissioniAdmin;
+
+const EMG_FASCE=[['MATTINO','Mattino'],['POMERIGGIO','Pomeriggio'],['NOTTE','Notte']];
+function emgRoleLabel(role){return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':'Soccorritore'}
+function emgRowsFor(rows,day,fascia){return rows.filter(row=>row.giorno===day&&row.fascia===fascia)}
+function emgSlotCovered(rows){return rows.some(row=>row.ruolo==='AUTISTA')&&rows.some(row=>row.ruolo==='SOCCORRITORE')}
+function emgDayTitle(day){return new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(day+'T12:00:00')).replace(/^./,c=>c.toUpperCase())}
+function emgRenderMonth(kind){
+ const admin=kind==='Admin',cursor=admin?emgAdminCursor:emgVolCursor,
+ selected=admin?emgAdminSelected:emgVolSelected,rows=admin?emgAdminRows:emgVolRows,
+ prefix=admin?'emgAdmin':'emgVol',range=calVisibleRange(cursor,'month');
+ $(prefix+'Title').textContent=calMonthTitle(cursor);
+ let output='';
+ for(let i=0;i<range.cells;i++){
+  const date=new Date(range.start);date.setDate(range.start.getDate()+i);
+  const day=calYmd(date),out=date.getMonth()!==cursor.getMonth(),counts=EMG_FASCE.map(([fascia])=>{
+   const slot=emgRowsFor(rows,day,fascia);
+   return '<span class="dim-dot '+(emgSlotCovered(slot)?'ok':slot.length?'partial':'')+'"></span>';
+  }).join('');
+  output+='<button type="button" class="dim-date '+(out?'emg-out ':'')+(day===todaySafe()?'emg-today ':'')+
+   (day===selected?'emg-selected':'')+'" data-emg-date="'+day+'"><b>'+date.getDate()+'</b><small>'+counts+'</small></button>';
+ }
+ $(prefix+'Grid').innerHTML=output;
+ $(prefix+'Grid').querySelectorAll('[data-emg-date]').forEach(button=>button.onclick=()=>{
+  if(admin)emgAdminSelected=button.dataset.emgDate;else emgVolSelected=button.dataset.emgDate;
+  if(admin)emgAdminEligible=[];
+  emgRenderMonth(kind);
+  if(admin)loadEmergenzaEligible();
+ });
+ emgRenderDay(kind);
+}
+function emgRenderDay(kind){
+ const admin=kind==='Admin',day=admin?emgAdminSelected:emgVolSelected,
+ rows=admin?emgAdminRows:emgVolRows,prefix=admin?'emgAdmin':'emgVol',todayY=todaySafe();
+ $(prefix+'DayTitle').textContent=emgDayTitle(day);
+ $(prefix+'Day').innerHTML=EMG_FASCE.map(([fascia,label])=>{
+  const slot=emgRowsFor(rows,day,fascia),
+  covered=emgSlotCovered(slot),mine=slot.some(x=>x.badge_personale===volunteerBadge),
+  peopleHtml=slot.map(row=>'<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
+   ' · <b>'+esc(emgRoleLabel(row.ruolo))+'</b>'+
+   (admin&&prof?.ruolo==='AMMINISTRATORE'?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-emg-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
+   '</div>').join(''),
+  missing=['AUTISTA','SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)).map(emgRoleLabel),
+  state=covered?'Coperto · autista e soccorritore presenti':'Da completare · mancano '+missing.join(' e ');
+  const eligible=['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].filter(role=>vfcalQualificationRows.some(q=>
+   q.codice_qualifica===role&&(!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
+  const action=!admin&&day>=todayY&&!mine?
+   (eligible.length?'<div class="actions" style="margin-top:8px"><select aria-label="Ruolo per il turno emergenza" data-emg-role="'+fascia+'" style="max-width:170px">'+
+     eligible.map(role=>'<option value="'+role+'">'+emgRoleLabel(role)+'</option>').join('')+'</select>'+
+    '<button type="button" class="btn yellow" data-emg-join="'+fascia+'">Mi segno (definitivo)</button></div>':
+    '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
+    (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
+  return '<div class="dim-slot '+(covered?'emg-complete':'emg-incomplete')+'"><b>'+label+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
+   (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
+   (admin?emgAdminAssignControls(day,fascia,slot):'')+'</div>';
+ }).join('');
+ if(admin){
+  $(prefix+'Day').querySelectorAll('[data-emg-remove]').forEach(button=>button.onclick=()=>emgRemove(button.dataset.emgRemove));
+  $(prefix+'Day').querySelectorAll('[data-emg-assign]').forEach(button=>button.onclick=()=>emgAdminAssign(day,button.dataset.emgAssign,button.dataset.emgRole));
+ }else{
+  $(prefix+'Day').querySelectorAll('[data-emg-join]').forEach(button=>button.onclick=()=>emgJoin(day,button.dataset.emgJoin));
+ }
+}
+
+function emgAdminAssignControls(day,fascia,slot){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||day<todaySafe())return '';
+ return '<div class="dim-admin-assign"><b>Aggiungi all’equipaggio</b>'+
+  ['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].map(role=>{
+   const candidates=emgAdminEligible.filter(p=>p.ruolo===role&&!slot.some(x=>x.badge_personale===p.badge));
+   return '<div class="actions" style="margin-top:6px"><label class="muted" style="min-width:84px">'+emgRoleLabel(role)+'</label>'+
+    '<select data-emg-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Volontario '+emgRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
+     '<option value="">Scegli volontario</option>'+
+     candidates.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo+' · '+p.badge)+'</option>').join('')+
+    '</select><button type="button" class="btn yellow" style="padding:8px" data-emg-assign="'+esc(fascia)+
+     '" data-emg-role="'+role+'"'+(candidates.length?'':' disabled')+'>Aggiungi</button></div>';
+  }).join('')+'</div>';
+}
+async function loadEmergenzaEligible(){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const seq=++emgAdminEligibleSeq,day=emgAdminSelected;
+ emgAdminEligible=[];
+ if(day<todaySafe()){emgRenderDay('Admin');return}
+ const r=await sb.rpc('cge_emergenza_abilitati',{p_giorno:day});
+ if(seq!==emgAdminEligibleSeq||day!==emgAdminSelected)return;
+ if(r.error){
+  emgRenderDay('Admin');
+  return msg('emgAdminMsg','Impossibile caricare i volontari abilitati: '+r.error.message,'err');
+ }
+ emgAdminEligible=r.data||[];
+ emgRenderDay('Admin');
+}
+async function emgAdminAssign(day,fascia,role){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||emgAdminBusy||day!==emgAdminSelected)return;
+ const badge=$('emgAdminDay').querySelector('[data-emg-assign-person="'+fascia+'-'+role+'"]')?.value;
+ const person=emgAdminEligible.find(p=>p.badge===badge&&p.ruolo===role);
+ if(!person)return msg('emgAdminMsg','Seleziona un volontario con qualifica valida.','warn');
+ if(!confirm('Inserire DEFINITIVAMENTE '+person.nome_completo+' nel turno DIMISSIONI del '+day+
+  ', '+fascia+' come '+emgRoleLabel(role)+'?'))return;
+ emgAdminBusy=true;msg('emgAdminMsg','Inserimento nell’equipaggio in corso...');
+ try{
+  const r=await sb.rpc('cge_emergenza_assegna',{p_giorno:day,p_fascia:fascia,p_badge:badge,p_ruolo:role});
+  if(r.error)throw r.error;
+  await loadEmergenzaAdmin();
+  msg('emgAdminMsg',person.nome_completo+' inserito definitivamente come '+emgRoleLabel(role)+
+   ' per '+day+' · '+fascia+'.','ok');
+ }catch(e){msg('emgAdminMsg',e.message||String(e),'err')}
+ finally{emgAdminBusy=false}
+}
+async function loadEmergenzaVol(){
+ if(!volunteerBadge)return;
+ const seq=++emgVolSeq,range=calVisibleRange(emgVolCursor,'month');
+ msg('emgVolMsg','Caricamento turni emergenza...');
+ const r=await sb.rpc('cge_emergenza_turni',{p_dal:range.startYmd,p_al:range.endYmd});
+ if(seq!==emgVolSeq)return;
+ if(r.error)return msg('emgVolMsg',r.error.message,'err');
+ emgVolRows=r.data||[];emgRenderMonth('Vol');msg('emgVolMsg','');
+}
+async function loadEmergenzaAdmin(){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const seq=++emgAdminSeq,range=calVisibleRange(emgAdminCursor,'month');
+ ++emgAdminEligibleSeq;emgAdminEligible=[];
+ msg('emgAdminMsg','Caricamento turni emergenza...');
+ const r=await sb.rpc('cge_emergenza_turni',{p_dal:range.startYmd,p_al:range.endYmd});
+ if(seq!==emgAdminSeq)return;
+ if(r.error)return msg('emgAdminMsg',r.error.message,'err');
+ emgAdminRows=r.data||[];emgRenderMonth('Admin');msg('emgAdminMsg','');
+ await loadEmergenzaEligible();
+}
+async function emgJoin(day,fascia){
+ if(emgVolBusy)return;
+ const role=$('emgVolDay').querySelector('[data-emg-role="'+fascia+'"]')?.value;
+ if(!role||!['AUTISTA','SOCCORRITORE','CAPO_SERVIZIO'].includes(role))return;
+ if(!confirm('Confermi il turno DEFINITIVO emergenza del '+day+' · '+fascia+' come '+emgRoleLabel(role)+'? Non potrai annullarlo da solo.'))return;
+ emgVolBusy=true;
+ msg('emgVolMsg','Registrazione definitiva in corso...');
+ try{
+  const r=await sb.rpc('cge_emergenza_segnati',{p_giorno:day,p_fascia:fascia,p_ruolo:role});
+  if(r.error)throw r.error;
+  await loadEmergenzaVol();msg('emgVolMsg','Turno definitivo registrato. Presentati nella fascia scelta.','ok');
+ }catch(e){msg('emgVolMsg',e.message||String(e),'err')}
+ finally{emgVolBusy=false}
+}
+async function emgRemove(id){
+ if(prof?.ruolo!=='AMMINISTRATORE'||emgAdminBusy)return;
+ const row=emgAdminRows.find(x=>x.id===id);
+ if(!row)return;
+ if(!confirm('Rimuovere '+row.nome_completo+' dal turno definitivo '+row.giorno+' · '+row.fascia+'?'))return;
+ emgAdminBusy=true;
+ msg('emgAdminMsg','Aggiornamento turno...');
+ try{
+  const r=await sb.rpc('cge_emergenza_rimuovi',{p_id:id});
+  if(r.error)throw r.error;
+  await loadEmergenzaAdmin();msg('emgAdminMsg','Operatore rimosso. Ricontrolla la copertura del turno.','ok');
+ }catch(e){msg('emgAdminMsg',e.message||String(e),'err')}
+ finally{emgAdminBusy=false}
+}
+function emgMoveMonth(kind,delta){
+ if(kind==='Admin'){
+  emgAdminCursor=delta===0?new Date():new Date(emgAdminCursor.getFullYear(),emgAdminCursor.getMonth()+delta,1);
+  emgAdminSelected=delta===0?todaySafe():calYmd(new Date(emgAdminCursor.getFullYear(),emgAdminCursor.getMonth(),1));
+  loadEmergenzaAdmin();
+ }else{
+  emgVolCursor=delta===0?new Date():new Date(emgVolCursor.getFullYear(),emgVolCursor.getMonth()+delta,1);
+  emgVolSelected=delta===0?todaySafe():calYmd(new Date(emgVolCursor.getFullYear(),emgVolCursor.getMonth(),1));
+  loadEmergenzaVol();
+ }
+}
+$('emgVolPrev').onclick=()=>emgMoveMonth('Vol',-1);
+$('emgVolNext').onclick=()=>emgMoveMonth('Vol',1);
+$('emgVolToday').onclick=()=>emgMoveMonth('Vol',0);
+$('emgVolRefresh').onclick=loadEmergenzaVol;
+$('emgAdminPrev').onclick=()=>emgMoveMonth('Admin',-1);
+$('emgAdminNext').onclick=()=>emgMoveMonth('Admin',1);
+$('emgAdminToday').onclick=()=>emgMoveMonth('Admin',0);
+$('emgAdminRefresh').onclick=loadEmergenzaAdmin;
 
 function asPeriodRange(){
  const base=new Date(asCursor.getFullYear(),asCursor.getMonth(),asCursor.getDate());
@@ -4251,7 +4445,7 @@ async function loadVolunteerArea(){
   document.querySelectorAll('[data-vol-doc-open]').forEach(b=>b.onclick=()=>volOpenDocument(b.dataset.volDocOpen,documents));
   document.querySelectorAll('[data-vol-doc-del]').forEach(b=>b.onclick=()=>volDeleteDocument(b.dataset.volDocDel,documents));
   $('volServices').innerHTML=services.length?services.slice(0,30).map(x=>{const aids=[x.necessita_carrozzina?'Carrozzina':'',x.necessita_ossigeno?'Ossigeno':'',x.necessita_barellato?'Barellato':'',x.necessita_monitoraggio?'Monitoraggio':'',x.assistenza_extra?'Assistenza extra':''].filter(Boolean).join(', ');return '<div class="box" style="margin:7px 0"><b>'+esc(x.data_servizio)+' · '+esc(volFmtTime(x.ora_partenza_prevista))+' · '+esc(x.tipo_servizio_altro||x.tipo_servizio)+'</b> <span class="pill b">'+esc(x.ruolo_assegnato||'—')+'</span><br>Mezzo '+esc(x.mezzo||'—')+' · '+esc(x.luogo_partenza||x.indirizzo_partenza||'—')+' → '+esc(x.ospedale_destinazione||x.destinazione||x.indirizzo_destinazione||'—')+'<br><span class="muted">Carico '+esc(volFmtTime(x.ora_carico_paziente_prevista))+' · Rientro '+esc(volFmtTime(x.ora_rientro_previsto))+' · Stato '+esc(x.stato)+'</span>'+(aids?'<br><span class="pill">'+esc(aids)+'</span>':'')+(x.note?'<br>'+esc(x.note):'')+'</div>'}).join(''):'<div class="notice">Nessun servizio assegnato.</div>';
-  await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar(),loadDimissioniVol(),loadVolRoster()]);
+  await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar(),loadDimissioniVol(),loadEmergenzaVol(),loadVolRoster()]);
   msg('volmsg','');
  }catch(e){msg('volmsg',e.message||String(e),'err')}
 }
