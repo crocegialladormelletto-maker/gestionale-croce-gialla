@@ -92,7 +92,7 @@
 }
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.20</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.21</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -146,7 +146,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.20</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.21</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1032,7 +1032,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.20';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.21';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -1353,7 +1353,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.20</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.21</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -1515,7 +1515,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.20'
+  versione_app:'V13.21'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -2598,7 +2598,9 @@ async function decideAssistanceCandidate(id,yes){
 }
 async function loadAssistanceRoster(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const seq=++asLoadSequence;
  msg('asMsg','Caricamento turnario Assistenze...');
+ msg('asCandidateMsg','');
  const range=asPeriodRange();
  const [r,sv]=await Promise.all([
   sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note')
@@ -2608,6 +2610,7 @@ async function loadAssistanceRoster(){
    .ilike('tipo_servizio','%assistenza%').gte('data_servizio',calYmd(range.start)).lte('data_servizio',calYmd(range.end))
    .neq('stato_gestionale','ANNULLATO').order('data_servizio').order('ora_partenza_prevista')
  ]);
+ if(seq!==asLoadSequence)return;
  const loadError=r.error||sv.error;
  if(loadError){msg('asMsg','Errore lettura assistenze: '+loadError.message,'err');return}
  asTurns=(r.data||[]).filter(t=>!['ANNULLATO','CANCELLATO'].includes(String(t.stato||'').toUpperCase()));
@@ -2616,10 +2619,15 @@ async function loadAssistanceRoster(){
   asTurns.length?sb.from('turni_personale').select('turno_id,badge_personale,ruolo,risposta,confermato').in('turno_id',asTurns.map(t=>t.id)):Promise.resolve({data:[],error:null}),
   asServices.length?sb.from('servizi_equipaggio').select('servizio_id,badge_personale,ruolo').in('servizio_id',asServices.map(s=>s.id)):Promise.resolve({data:[],error:null})
  ]);
+ if(seq!==asLoadSequence)return;
  const crewError=turnCrew.error||serviceCrew.error;
  if(crewError){msg('asMsg','Errore lettura equipaggi: '+crewError.message,'err');return}
  asAssignments=turnCrew.data||[];
  asServiceAssignments=serviceCrew.data||[];
+ const cr=asServices.length?await sb.from('candidature_assistenze').select('id,servizio_id,badge_personale,ruolo,nota,stato,created_at').in('servizio_id',asServices.map(x=>x.id)):{data:[],error:null};
+ if(seq!==asLoadSequence)return;
+ asCandidates=cr.data||[];
+ if(cr.error)msg('asCandidateMsg','Errore caricamento candidature: '+cr.error.message,'err');
  msg('asMsg','');asRender()
 }
 $('asPrev').onclick=()=>{asCursor.setDate(asCursor.getDate()-(asView==='week'?7:1));loadAssistanceRoster()};
