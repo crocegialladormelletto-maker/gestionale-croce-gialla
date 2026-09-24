@@ -348,6 +348,7 @@
   </div>
   <div id="asMsg"></div>
   <div id="asDays"></div>
+  <div class="section"><h3>🙋 Disponibilità volontari per le assistenze</h3><p class="muted">La candidatura non è un’assegnazione. Conferma solo dopo avere verificato ruolo ed equipaggio.</p><div id="asCandidateMsg"></div><div id="asCandidates"></div></div>
  </div>
 </section>
 
@@ -976,7 +977,7 @@ let opCalCursor=new Date(),opCalSelected=todaySafe(),opCalEvents=[],opCalMode='m
 let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month';
 let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalQualificationRows=[],vfcalAppBusy=false;
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[];
-let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[];
+let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let servicesSearchSequence=0;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
@@ -2564,6 +2565,7 @@ function asRender(){
  $('asCount').textContent=shownServices.length+' '+(shownServices.length===1?'servizio':'servizi')+' · '+shown.length+' '+(shown.length===1?'turno':'turni')+' di assistenza';
  $('asDays').innerHTML=days.map(asRenderDay).join('');
  $('asDays').querySelectorAll('[data-as-open-service]').forEach(b=>b.onclick=()=>openService(b.dataset.asOpenService));
+ renderAssistanceCandidates();
 }
 async function loadAssistanceRoster(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
