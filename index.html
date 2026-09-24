@@ -131,6 +131,60 @@
 .ord-editor-inner .field{margin-bottom:8px}
 @media(max-width:650px){.ordinary-month-grid .ord-date{min-height:60px}.ordinary-month-grid .ord-day-label{font-size:9px}}
 @media print{.ordinary-calendar-panel{display:none!important}}
+
+/* Home APP Volontari: schermata iniziale a icone, ispirata al modello fornito. */
+#volApp .top{background:#f6f7f9;color:#24313d;border:1px solid #e2e7eb}
+#volApp .top .head{gap:10px}
+#volApp .top .brand small{color:#dc4e1e;font-weight:950;font-size:clamp(13px,2.6vw,20px);line-height:1.1}
+#volApp .top .brand strong{display:block;font-size:12px;font-weight:650;color:#667987}
+#volApp .top #vwho{color:#667987!important;font-size:11px}
+#volApp .top .stripe{height:4px}
+#volApp .top #vout{font-size:12px;padding:7px}
+.vol-home-head{padding:14px 17px 7px;background:#f6f7f9}
+.vol-home-head h1{color:#da4d1d;font-size:clamp(15px,3.6vw,26px);letter-spacing:.02em;line-height:1.2;margin:0;font-weight:900}
+.vol-home-head p{font-size:12px;color:#6b7c89;margin:4px 0}
+.vol-home-pad{padding:0 14px 18px;background:#f6f7f9}
+.vol-home-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 8px;padding:18px 7px 20px;background:#fff;border:1px solid #e3e8ee;border-radius:5px}
+.vol-home-tile{appearance:none;border:0;background:transparent;color:#202a35;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:9px;padding:3px 2px 7px;cursor:pointer;text-align:center;text-decoration:none;min-width:0;font:inherit}
+.vol-home-tile:focus-visible{outline:3px solid #184e9e;border-radius:10px;outline-offset:1px}
+.vol-home-tile:active .vol-home-icon{transform:scale(.96)}
+.vol-home-icon{width:clamp(62px,15vw,106px);height:clamp(62px,15vw,106px);display:flex;align-items:center;justify-content:center;border-radius:50%;color:#fff;box-shadow:0 2px 8px #00000012;transition:transform .12s ease}
+.vol-home-icon svg{width:49%;height:49%;stroke:currentColor}
+.vol-home-label{font-weight:850;font-size:clamp(10px,2.3vw,15px);line-height:1.15;overflow-wrap:anywhere;max-width:125px;text-transform:uppercase}
+.vol-home-green{background:#08d82d}.vol-home-purple{background:#ac10dd}.vol-home-black{background:#121212}.vol-home-red{background:#e74d35}.vol-home-blue{background:#212be8}.vol-home-cyan{background:#12cdd2}.vol-home-yellow{background:#f1d900}.vol-home-teal{background:#169b8e}.vol-home-gray{background:#8a95a5}
+.vol-home-turn-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:19px 0 9px}
+.vol-home-turn-head h2{margin:0;color:#d94a1a;font-size:clamp(19px,4vw,26px)}
+.vol-home-all{border:0;background:transparent;color:#235e8d;font-size:12px;font-weight:800;cursor:pointer}
+.vol-home-turns{border:1px solid #e2e6ed;background:#fff;border-radius:5px;overflow:hidden}
+.vol-home-turn{display:block;width:100%;text-align:left;border:0;background:#fff;color:#202b36;padding:13px 14px;border-bottom:1px solid #e3e7eb;font:inherit;cursor:pointer}
+.vol-home-turn:last-child{border-bottom:0}
+.vol-home-turn b{display:block;font-size:14px;line-height:1.35}
+.vol-home-turn span{font-size:13px;line-height:1.35}
+.vol-home-turn small{display:block;font-size:11px;color:#677a88}
+.vol-home-turn:focus-visible,.vol-home-turn:hover{outline:0;background:#fffbea}
+.vol-home-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+.vol-home-summary .stat{padding:10px}
+.vol-home-summary .stat b{font-size:19px}
+.vol-home-footer{margin-top:10px}
+.vol-mobile-bar{display:none}
+@media(max-width:900px){
+ #volApp{padding:0 7px 10px}
+ #volApp .top{border-radius:0 0 9px 9px}
+ #volApp .top .head{padding:8px}
+ #volApp .crest-img{width:43px;height:43px}
+ .vol-mobile-bar{display:flex;position:sticky;top:0;z-index:60;background:#f6f7f9;border:1px solid #e0e6ea;border-radius:8px;align-items:center;justify-content:space-between;padding:5px 8px;margin:8px 0;gap:8px}
+ .vol-mobile-bar button{background:#fff;border:1px solid #d7e1e8;border-radius:8px;padding:7px 9px;color:#12375d;font-size:13px;font-weight:850}
+ .vol-mobile-bar b{color:#d94b1b;letter-spacing:.03em;font-size:13px}
+ #volApp .vol-layout .vol-side{display:none;position:sticky;top:51px;z-index:59;max-height:65vh;overflow:auto;flex-wrap:wrap;box-shadow:0 9px 22px #0002}
+ #volApp .vol-layout.vol-menu-open .vol-side{display:flex}
+ #volApp .vol-layout .vol-main{margin-top:0}
+ #volApp .vol-panel{scroll-margin-top:56px}
+ .vol-home-grid{gap:13px 5px;padding:18px 4px}
+ .vol-home-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:360px){.vol-home-icon{width:64px;height:64px}.vol-home-label{font-size:10px}.vol-home-pad{padding:0 7px 12px}.vol-mobile-bar b{font-size:11px}}
+@media(min-width:901px){.vol-home-grid{gap:20px;padding:20px}.vol-home-label{font-size:15px}}
+
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
@@ -1050,15 +1104,17 @@
 <div id="volApp" class="shell hidden">
  <div class="top"><div class="head">
   <img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>APP Volontari</strong><div id="vwho" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>APP Volontari</strong><div id="vwho" class="muted"></div></div>
   <button id="pwaInstallShort" class="btn secondary hidden" type="button">📱 Installa</button>
   <button id="vout" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
 
  <div class="vol-layout">
-  <aside class="vol-side" aria-label="Menu APP Volontari">
+  <div class="vol-mobile-bar"><button type="button" id="volMenuToggle" aria-controls="volSide" aria-expanded="false" aria-label="Apri menu">☰ <span>Menu</span></button><b>CROCE GIALLA</b><button type="button" id="volGoHome" aria-label="Torna alla Home">⌂ Home</button></div>
+  <aside id="volSide" class="vol-side" aria-label="Menu APP Volontari">
    <div class="vol-side-head"><b>👋 Area volontario</b><span>Scegli una sezione</span></div>
-      <button type="button" class="vol-nav active" data-vol-target="volDimSection">🚑 Turni dimissioni</button>
+   <button type="button" class="vol-nav active" data-vol-target="volHomeSection">⌂ Home</button>
+      <button type="button" class="vol-nav" data-vol-target="volDimSection">🚑 Turni dimissioni</button>
    <button type="button" class="vol-nav" data-vol-target="volEmgSection">🚨 Emergenza 118</button>
    <button type="button" class="vol-nav" data-vol-target="volRosterSection">🎪 Assistenze manifestazioni</button>
    <button type="button" class="vol-nav" data-vol-target="volOrdSection">🚐 Servizi ordinari</button>
@@ -1067,13 +1123,37 @@
    <button type="button" class="vol-nav" data-vol-target="volServicesSection">🚐 I miei servizi</button>
    <button type="button" class="vol-nav" data-vol-target="volProfileSection">👤 Profilo</button>
    <button type="button" class="vol-nav" data-vol-target="volDocumentsSection">📁 Documenti</button>
-   <button type="button" class="vol-nav" data-vol-target="volHomeSection">⌂ Home</button>
    <button type="button" class="vol-nav" data-vol-target="volAlertsSection">🔔 Avvisi</button>
    <button type="button" class="vol-nav" data-vol-target="volCalendarSection">📅 Il mio calendario</button>
    <button type="button" class="vol-nav" data-vol-target="volFutureSection">🚑 Servizi futuri</button>
   </aside>
 
   <main class="vol-main">
+<section id="volHomeSection" class="surface vol-panel vol-panel-home">
+ <div class="vol-home-head"><h1>CROCE GIALLA EMERGENZA ODV</h1><p>La tua area volontario</p></div>
+ <div class="vol-home-pad">
+  <div id="volmsg"></div>
+  <div class="vol-home-grid" aria-label="Accessi rapidi ai calendari"><button type="button" class="vol-home-tile" data-vol-home-target="volRosterSection"><span class="vol-home-icon vol-home-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h6l3-4h6v10h-5"/><circle cx="8" cy="16" r="4"/><path d="M18 6h3M18 10h3"/></svg></span><span class="vol-home-label">ASSISTENZE</span></button>
+<a class="vol-home-tile" href="tel:0322282730" aria-label="Chiama il Centralino: 0322 282730"><span class="vol-home-icon vol-home-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h5l1 5-3 2c1.4 2.6 3.4 4.6 6 6l2-3 5 1v5c0 1-1 2-2 2C10 21 3 14 3 5c0-1 1-2 2-2Z"/></svg></span><span class="vol-home-label">CENTRALINO</span></a>
+<button type="button" class="vol-home-tile" data-vol-home-target="volAvailabilitySection"><span class="vol-home-icon vol-home-black"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12 5 5L20 6"/><circle cx="12" cy="12" r="10"/></svg></span><span class="vol-home-label">DISPONIBILITÀ VOLONTARI</span></button>
+<button type="button" class="vol-home-tile" data-vol-home-target="volEmgSection"><span class="vol-home-icon vol-home-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16h14l-1.5-9H6.5L5 16ZM4 19h16M12 3V1M4 5 2 3M20 5l2-2M12 10v3M9 11h6"/></svg></span><span class="vol-home-label">EMERGENZA 118</span></button>
+<button type="button" class="vol-home-tile" data-vol-home-target="volOrdSection"><span class="vol-home-icon vol-home-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h11v10H3zM14 12h4l3 4v3h-7zM7 5h4M9 3v4"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg></span><span class="vol-home-label">SERVIZI ORDINARI</span></button>
+<button type="button" class="vol-home-tile" data-vol-home-target="volDimSection"><span class="vol-home-icon vol-home-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h11v10H3zM14 12h4l3 4v3h-7zM7 5h4M9 3v4"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg></span><span class="vol-home-label">DIMISSIONI</span></button>
+<button type="button" class="vol-home-tile" data-vol-home-target="volShiftsSection"><span class="vol-home-icon vol-home-yellow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span><span class="vol-home-label">I MIEI TURNI</span></button>
+<button type="button" class="vol-home-tile" data-vol-home-target="volCalendarSection"><span class="vol-home-icon vol-home-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 2v6M17 2v6M3 10h18M8 14h3M8 18h3M15 14h2"/></svg></span><span class="vol-home-label">IL MIO CALENDARIO</span></button>
+<button type="button" class="vol-home-tile" data-vol-home-target="volAlertsSection"><span class="vol-home-icon vol-home-gray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 6-3 7-3 8h18c0-1-3-2-3-8M10 21h4"/></svg></span><span class="vol-home-label">AVVISI</span></button></div>
+  <div class="vol-home-turn-head"><h2>I miei turni</h2><button type="button" class="vol-home-all" data-vol-home-target="volShiftsSection">Vedi tutti →</button></div>
+  <div id="volHomeTurns" class="vol-home-turns"><div class="notice">Caricamento dei tuoi prossimi turni...</div></div>
+  <div class="vol-home-summary">
+   <div class="stat"><small>ORE MESE</small><b id="volHoursM">0</b><span class="muted" id="volHoursMMin"></span></div>
+   <div class="stat"><small>ORE TRIMESTRE</small><b id="volHoursT">0</b><span class="muted" id="volHoursTMin"></span></div>
+   <div class="stat"><small>TURNI PROSSIMI</small><b id="volTurnCount">0</b></div>
+   <div class="stat"><small>SERVIZI ASSEGNATI</small><b id="volServiceCount">0</b></div>
+  </div>
+  <div class="actions vol-home-footer"><button id="vrefresh" type="button" class="btn secondary">↻ Aggiorna la Home</button><button type="button" class="btn secondary" data-vol-home-target="volProfileSection">👤 Profilo</button></div>
+ </div>
+</section>
+
 <section id="volDimSection" class="surface vol-panel vol-panel-dimissioni">
     <div class="hero"><h2>🚑 Turni DIMISSIONI</h2><p>Iscriviti direttamente a un turno definitivo: scegli giorno, fascia e ruolo. Ogni turno richiede almeno un autista e un soccorritore.</p></div>
     <div class="pad">
@@ -1189,20 +1269,6 @@
     </div>
    </section>
 
-<section id="volHomeSection" class="surface vol-panel vol-panel-home">
-    <div class="hero"><h1>La mia attività</h1><p>La tua situazione operativa in un colpo d’occhio.</p><div class="actions"><button id="vrefresh" class="btn secondary">↻ Aggiorna</button></div></div>
-    <div class="pad">
-     <div id="volmsg"></div>
-     <div class="stats">
-      <div class="stat"><small>ORE MESE</small><b id="volHoursM">0</b><span class="muted" id="volHoursMMin"></span></div>
-      <div class="stat"><small>ORE TRIMESTRE</small><b id="volHoursT">0</b><span class="muted" id="volHoursTMin"></span></div>
-      <div class="stat"><small>TURNI PROSSIMI</small><b id="volTurnCount">0</b></div>
-      <div class="stat"><small>SERVIZI ASSEGNATI</small><b id="volServiceCount">0</b></div>
-     </div>
-     <div class="vol-quick-note"><span class="pill b">🔔 Controlla gli avvisi</span><span class="pill g">✅ Inserisci le disponibilità</span><span class="pill">🚑 Consulta i servizi futuri</span></div>
-    </div>
-   </section>
-
 <section id="volAlertsSection" class="surface vol-panel vol-panel-alerts">
     <div class="hero"><h2>🔔 Avvisi</h2><p>Conferme delle disponibilità e nuove assegnazioni ai servizi.</p></div>
     <div class="pad">
@@ -1308,12 +1374,60 @@ async function view(v,options={}){
  return result;
 }
 document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>view(b.dataset.v));
+function volunteerGoTo(target){
+ const el=$(target);if(!el)return;
+ $('volApp').querySelector('.vol-layout')?.classList.remove('vol-menu-open');
+ $('volMenuToggle')?.setAttribute('aria-expanded','false');
+ setVolunteerNavActive(target);
+ el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('volMenuToggle').onclick=()=>{
+ const open=$('volApp').querySelector('.vol-layout').classList.toggle('vol-menu-open');
+ $('volMenuToggle').setAttribute('aria-expanded',String(open));
+};
+$('volGoHome').onclick=()=>volunteerGoTo('volHomeSection');
+document.querySelectorAll('[data-vol-home-target]').forEach(b=>b.onclick=()=>volunteerGoTo(b.dataset.volHomeTarget));
+function renderVolunteerHomeTurns(turns,services){
+ const future=[];
+ const present=todaySafe();
+ for(const t of turns){
+  const x=t.turn;if(!x||x.data_turno<present||t.risposta==='NON DISPONIBILE')continue;
+  future.push({date:x.data_turno,clock:volFmtTime(x.ora_inizio),end:volFmtTime(x.ora_fine),
+   type:x.tipo_turno||'Turno',role:t.ruolo,detail:'Mezzo '+(x.mezzo||'—'),target:'volShiftsSection',key:'shift'+t.turno_id});
+ }
+ for(const s of services){
+  if(s.data_servizio<present)continue;
+  future.push({date:s.data_servizio,clock:volFmtTime(s.ora_partenza_prevista),end:volFmtTime(s.ora_rientro_previsto),
+   type:s.tipo_servizio_altro||s.tipo_servizio||'Servizio',role:s.ruolo_assegnato,
+   detail:[s.ospedale_destinazione||s.destinazione||'',s.mezzo?'Mezzo '+s.mezzo:''].filter(Boolean).join(' · '),
+   target:'volServicesSection',key:'service'+s.id});
+ }
+ for(const [kind,rows,type,target] of [
+   ['DIM',dimVolRows,'DIMISSIONI','volDimSection'],
+   ['EMG',emgVolRows,'EMERGENZA 118','volEmgSection']
+ ]){
+  for(const r of rows){
+   if(r.badge_personale!==volunteerBadge||r.giorno<present)continue;
+   future.push({date:r.giorno,clock:'',end:'',type,role:r.ruolo,
+    detail:'Fascia '+r.fascia,target,key:kind+r.id});
+  }
+ }
+ future.sort((a,b)=>a.date.localeCompare(b.date)||(a.clock||'').localeCompare(b.clock||''));
+ $('volHomeTurns').innerHTML=future.length?future.slice(0,7).map(x=>{
+  const date=new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+   .format(new Date(x.date+'T12:00:00')).replace(/^./,v=>v.toUpperCase());
+  const time=x.clock&&x.clock!=='—'?' ('+x.clock+(x.end&&x.end!=='—'?' – '+x.end:'')+')':'';
+  return '<button type="button" class="vol-home-turn" data-vol-home-target="'+esc(x.target)+'">'+
+   '<b>'+esc(date+time)+'</b><span>'+esc(x.type+' · '+(x.role||'Ruolo da verificare'))+'</span>'+
+   '<small>'+esc(x.detail)+'</small></button>';
+ }).join(''):'<div class="notice">Non hai ancora turni o servizi futuri assegnati. Puoi segnarti dai pulsanti colorati qui sopra.</div>';
+ $('volHomeTurns').querySelectorAll('[data-vol-home-target]').forEach(b=>b.onclick=()=>volunteerGoTo(b.dataset.volHomeTarget));
+}
 function setVolunteerNavActive(target){
  document.querySelectorAll('.vol-nav').forEach(b=>b.classList.toggle('active',b.dataset.volTarget===target));
 }
 document.querySelectorAll('.vol-nav').forEach(b=>b.onclick=()=>{
- const target=b.dataset.volTarget,el=$(target);if(!el)return;
- setVolunteerNavActive(target);el.scrollIntoView({behavior:'smooth',block:'start'});
+ const target=b.dataset.volTarget;volunteerGoTo(target);
 });
 if('IntersectionObserver' in window){
  const volObserver=new IntersectionObserver(entries=>{
@@ -1378,7 +1492,7 @@ async function enter(){
  }
  if(r.data.ruolo==='VOLONTARIO'&&r.data.badge_personale){
   volunteerBadge=r.data.badge_personale;$('app').classList.add('hidden');$('monitorApp').classList.add('hidden');$('tabletApp').classList.add('hidden');$('volApp').classList.remove('hidden');$('vwho').textContent=(prof.nome||'Volontario')+' · badge '+volunteerBadge;
-  await loadVolunteerArea();return;
+  await loadVolunteerArea();window.scrollTo({top:0,behavior:'instant'});return;
  }
  await sb.auth.signOut();msg('lmsg','Questo account non è abilitato a questa area.','err')
 }
@@ -3356,7 +3470,7 @@ async function dimJoin(day,fascia){
  try{
   const r=await sb.rpc('cge_dimissioni_segnati',{p_giorno:day,p_fascia:fascia,p_ruolo:role});
   if(r.error)throw r.error;
-  await loadDimissioniVol();msg('dimVolMsg','Turno definitivo registrato. Presentati nella fascia scelta.','ok');
+  await loadVolunteerArea();msg('dimVolMsg','Turno definitivo registrato. Presentati nella fascia scelta.','ok');
  }catch(e){msg('dimVolMsg',e.message||String(e),'err')}
  finally{dimVolBusy=false}
 }
@@ -3531,7 +3645,7 @@ async function emgJoin(day,fascia){
  try{
   const r=await sb.rpc('cge_emergenza_segnati',{p_giorno:day,p_fascia:fascia,p_ruolo:role});
   if(r.error)throw r.error;
-  await loadEmergenzaVol();msg('emgVolMsg','Turno definitivo registrato. Presentati nella fascia scelta.','ok');
+  await loadVolunteerArea();msg('emgVolMsg','Turno definitivo registrato. Presentati nella fascia scelta.','ok');
  }catch(e){msg('emgVolMsg',e.message||String(e),'err')}
  finally{emgVolBusy=false}
 }
@@ -4700,6 +4814,7 @@ async function loadVolunteerArea(){
   document.querySelectorAll('[data-vol-doc-del]').forEach(b=>b.onclick=()=>volDeleteDocument(b.dataset.volDocDel,documents));
   $('volServices').innerHTML=services.length?services.slice(0,30).map(x=>{const aids=[x.necessita_carrozzina?'Carrozzina':'',x.necessita_ossigeno?'Ossigeno':'',x.necessita_barellato?'Barellato':'',x.necessita_monitoraggio?'Monitoraggio':'',x.assistenza_extra?'Assistenza extra':''].filter(Boolean).join(', ');return '<div class="box" style="margin:7px 0"><b>'+esc(x.data_servizio)+' · '+esc(volFmtTime(x.ora_partenza_prevista))+' · '+esc(x.tipo_servizio_altro||x.tipo_servizio)+'</b> <span class="pill b">'+esc(x.ruolo_assegnato||'—')+'</span><br>Mezzo '+esc(x.mezzo||'—')+' · '+esc(x.luogo_partenza||x.indirizzo_partenza||'—')+' → '+esc(x.ospedale_destinazione||x.destinazione||x.indirizzo_destinazione||'—')+'<br><span class="muted">Carico '+esc(volFmtTime(x.ora_carico_paziente_prevista))+' · Rientro '+esc(volFmtTime(x.ora_rientro_previsto))+' · Stato '+esc(x.stato)+'</span>'+(aids?'<br><span class="pill">'+esc(aids)+'</span>':'')+(x.note?'<br>'+esc(x.note):'')+'</div>'}).join(''):'<div class="notice">Nessun servizio assegnato.</div>';
   await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar(),loadDimissioniVol(),loadEmergenzaVol(),loadVolRoster(),loadVolOrd()]);
+  renderVolunteerHomeTurns(futureAssignments,services);
   msg('volmsg','');
  }catch(e){msg('volmsg',e.message||String(e),'err')}
 }
