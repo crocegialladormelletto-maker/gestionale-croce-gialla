@@ -185,6 +185,7 @@
 @media(max-width:360px){.vol-home-icon{width:64px;height:64px}.vol-home-label{font-size:10px}.vol-home-pad{padding:0 7px 12px}.vol-mobile-bar b{font-size:11px}}
 @media(min-width:901px){.vol-home-grid{gap:20px;padding:20px}.vol-home-label{font-size:15px}}
 
+.vol-fascia-hours{font-size:12px;font-weight:800;color:#17668b;white-space:nowrap}#volApp .dim-slot>b{display:inline-block;margin-bottom:3px}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
@@ -1409,7 +1410,7 @@ function renderVolunteerHomeTurns(turns,services){
   for(const r of rows){
    if(r.badge_personale!==volunteerBadge||r.giorno<present)continue;
    future.push({date:r.giorno,clock:'',end:'',type,role:r.ruolo,
-    detail:'Fascia '+r.fascia,target,key:kind+r.id});
+    detail:'Fascia '+r.fascia+' · '+volFasciaOrario(r.fascia),target,key:kind+r.id});
   }
  }
  future.sort((a,b)=>a.date.localeCompare(b.date)||(a.clock||'').localeCompare(b.clock||''));
@@ -3335,6 +3336,8 @@ async function openPendingAssistance(candidateId=''){
 }
 
 const DIM_FASCE=[['MATTINO','Mattino'],['POMERIGGIO','Pomeriggio'],['NOTTE','Notte']];
+const VOL_FASCIA_ORARI={MATTINO:'07:00–14:00',POMERIGGIO:'14:00–19:00',NOTTE:'19:00–07:00 (+1 giorno)'};
+function volFasciaOrario(fascia){return VOL_FASCIA_ORARI[fascia]||'';}
 function dimRoleLabel(role){return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':'Soccorritore'}
 function dimRowsFor(rows,day,fascia){return rows.filter(row=>row.giorno===day&&row.fascia===fascia)}
 function dimSlotCovered(rows){return rows.some(row=>row.ruolo==='AUTISTA')&&rows.some(row=>row.ruolo==='SOCCORRITORE')}
@@ -3384,7 +3387,7 @@ function dimRenderDay(kind){
     '<button type="button" class="btn yellow" data-dim-join="'+fascia+'">Mi segno (definitivo)</button></div>':
     '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
     (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
-  return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+label+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
+  return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+esc(label)+(!admin?' <span class="vol-fascia-hours">'+esc(volFasciaOrario(fascia))+'</span>':'')+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
    (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
    (admin?dimAdminAssignControls(day,fascia,slot):'')+'</div>';
  }).join('');
@@ -3558,7 +3561,7 @@ function emgRenderDay(kind){
     '<button type="button" class="btn yellow" data-emg-join="'+fascia+'">Mi segno (definitivo)</button></div>':
     '<div class="muted">Nessuna qualifica valida per l’iscrizione.</div>'):
     (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
-  return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+label+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
+  return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+esc(label)+(!admin?' <span class="vol-fascia-hours">'+esc(volFasciaOrario(fascia))+'</span>':'')+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
    (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
    (admin?emgAdminAssignControls(day,fascia,slot):'')+'</div>';
  }).join('');
