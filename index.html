@@ -1642,6 +1642,11 @@ function populateServiceTariffOptions(){
 function resetTariffAdjustment(){
  $('tarChangeType').value='NONE';$('tarChangeValue').value='';$('tarChangeValue').disabled=true;
 }
+function selectedEquipmentFees(){
+ const chair=$('newSediaMotorizzata').checked?15:0;
+ const bariatric=$('newBarellaBariatrica').checked?20:0;
+ return {chair,bariatric,total:chair+bariatric};
+}
 function getTariffPrice(){
  const row=tariffDestinations.find(x=>x.tariffa_destinazione_id===$('tarDest').value);
  if(!row)return null;
@@ -1656,9 +1661,10 @@ function getTariffPrice(){
  if(op!=='NONE'&&(!diffText||!Number.isFinite(Number(diffText))||Number(diffText)<=0||Number(diffText)>10000||Math.round(Number(diffText)*100)<=0))
   return {valid:false,error:'Inserisci una variazione positiva in euro (massimo € 10.000).'};
  const diff=op==='NONE'?0:Math.round(Number(diffText)*100);
- const total=baseCents+(op==='MINUS'?-diff:diff);
+ const equipment=selectedEquipmentFees();
+ const total=baseCents+(op==='MINUS'?-diff:diff)+Math.round(equipment.total*100);
  if(total<0||total>1000000)return {valid:false,error:'L’importo del servizio deve essere compreso fra € 0 e € 10.000.'};
- return {valid:true,base:baseCents/100,diff:diff/100,total:total/100,op,row,notturno};
+ return {valid:true,base:baseCents/100,diff:diff/100,total:total/100,op,row,notturno,equipment};
 }
 function refreshTariffDestinations(){
  if(!$('tarDest'))return;
@@ -1674,7 +1680,16 @@ function refreshTariffDestinations(){
 function updateTariffQuote(){
  const row=tariffDestinations.find(x=>x.tariffa_destinazione_id===$('tarDest').value);
  const panel=$('tarAdjustment'),amountInput=$('imp');
- if(!row){panel.classList.add('hidden');$('tarBasePrice').value='—';amountInput.readOnly=false;$('tarQuote').innerHTML='';return;}
+ if(!row){
+ panel.classList.add('hidden');$('tarBasePrice').value='—';amountInput.readOnly=false;
+ const fees=selectedEquipmentFees(),manual=amountInput.value;
+ const base=manual===''?null:Number(manual),valid=base!==null&&Number.isFinite(base)&&base>=0;
+ $('tarQuote').innerHTML=fees.total?
+ '<div class="notice '+(valid?'ok':'warn')+'">Dotazioni: '+
+ (fees.chair?'sedia cingolata/motorizzata €15 ':'')+(fees.bariatric?'barella bariatrica €20':'')+
+ (valid?'<br><b>Totale del servizio: '+euro(base+fees.total)+'</b>':' · inserisci il prezzo concordato di base per vedere il totale')+'</div>':'';
+ return;
+}
  panel.classList.remove('hidden');amountInput.readOnly=true;
  const t=tariffs.find(x=>x.id===$('tar').value);
  const raw=$('tarNight').value==='true'?row.importo_notturno:row.importo_diurno;
@@ -1686,7 +1701,7 @@ function updateTariffQuote(){
  const change=p.op==='NONE'?'Nessuna variazione':(p.op==='PLUS'?'Aumento':'Riduzione')+' di '+euro(p.diff);
  $('tarQuote').innerHTML='<div class="notice ok"><b>'+esc(t?.nome||'Tariffario')+'</b> · '+
   esc(row.destinazione)+'<br>Tariffa '+esc(p.notturno?'notturna':'diurna')+': <b>'+euro(p.base)+
-  '</b> · '+esc(change)+'<br><b>Totale del servizio: '+euro(p.total)+'</b></div>';
+  '</b> · '+esc(change)+'<br>Dotazioni: '+(p.equipment.chair?'sedia €15 ':'')+(p.equipment.bariatric?'barella bariatrica €20':'')+(!p.equipment.total?'nessuna':'')+'<br><b>Totale del servizio: '+euro(p.total)+'</b></div>';
 }
 $('m').onchange=()=>{resetTariffAdjustment();populateServiceTariffOptions()};
 $('tar').onchange=()=>{resetTariffAdjustment();$('imp').value='';refreshTariffDestinations()};
@@ -1699,6 +1714,8 @@ $('tarChangeType').onchange=()=>{
  if(on)$('tarChangeValue').focus();
 };
 $('tarChangeValue').oninput=updateTariffQuote;
+['newSediaMotorizzata','newBarellaBariatrica'].forEach(id=>$(id).onchange=updateTariffQuote);
+$('imp').oninput=()=>{if(!$('imp').readOnly)updateTariffQuote()};
 
 // Le assistenze alle manifestazioni non prevedono il carico di un paziente.
 function isAssistanceManifestation(type){
@@ -2709,6 +2726,8 @@ async function loadServiceDetail(id=currentServiceId){
  $('didest').value=s.indirizzo_destinazione||'';
  $('dstruct').value=s.ospedale_destinazione||'';
  $('dAmount').value=s.importo_previsto??'';
+ $('dSediaMotorizzata').checked=!!s.sedia_motorizzata;
+ $('dBarellaBariatrica').checked=!!s.barella_bariatrica;
  const baseAmount=s.importo_calcolato;
  $('dTariffBaseInfo').textContent=s.tariffa_destinazione_id&&baseAmount!==null&&baseAmount!==undefined?
   'Tariffa originale: '+euro(Number(baseAmount))+' · Variazione servizio: '+
@@ -2755,6 +2774,16 @@ async function loadServiceDetail(id=currentServiceId){
 
 $('dBack').onclick=()=>view('services');
 
+function updateDetailEquipmentAmount(){
+ if(!currentService)return;
+ const diff=($('dSediaMotorizzata').checked?15:0)+($('dBarellaBariatrica').checked?20:0)-
+  (currentService.sedia_motorizzata?15:0)-(currentService.barella_bariatrica?20:0);
+ if(currentService.importo_previsto!==null&&currentService.importo_previsto!==undefined)
+  $('dAmount').value=Math.max(0,Math.round((Number(currentService.importo_previsto)+diff)*100)/100).toFixed(2);
+ if(currentService.importo_finale!==null&&currentService.importo_finale!==undefined)
+  $('dFinal').value=Math.max(0,Math.round((Number(currentService.importo_finale)+diff)*100)/100).toFixed(2);
+}
+['dSediaMotorizzata','dBarellaBariatrica'].forEach(id=>$(id).onchange=updateDetailEquipmentAmount);
 $('detailForm').onsubmit=async e=>{
  e.preventDefault();
  if(!currentServiceId)return;
@@ -2788,6 +2817,8 @@ $('detailForm').onsubmit=async e=>{
   indirizzo_destinazione:$('didest').value.trim()||null,
   ospedale_destinazione:$('dstruct').value.trim()||null,
   importo_previsto:previsto,
+  sedia_motorizzata:$('dSediaMotorizzata').checked,
+  barella_bariatrica:$('dBarellaBariatrica').checked,
   sconto:sconto,
   importo_finale:finale,
   modalita_pagamento_prevista:$('dPayMode').value||null,
@@ -2872,7 +2903,9 @@ $('form').onsubmit=async e=>{
   return msg('fmsg','Il prezzo notturno dei trasporti semplici non è indicato nel PDF: seleziona «Nessuno / tariffa concordata» e inserisci l’importo concordato con il Centralino.','warn');
  const price=selectedTariff?getTariffPrice():null;
  if(selectedTariff&&!price?.valid)return msg('fmsg',price?.error||'Correggi la variazione della tariffa.','warn');
- const amount=selectedTariff?price.total:($('imp').value===''?null:Number($('imp').value));
+ const equipment=selectedEquipmentFees();
+ const manual=$('imp').value===''?null:Number($('imp').value);
+ const amount=selectedTariff?price.total:(manual===null?null:Math.round((manual+equipment.total)*100)/100);
  if(amount!==null&&(!Number.isFinite(amount)||amount<0||amount>10000))return msg('fmsg','Importo non valido (da € 0 a € 10.000).','warn');
  const isEvent=isAssistanceManifestation($('t').value);
  let linkedPatient=isEvent?null:servicePatientId;
@@ -2885,7 +2918,7 @@ $('form').onsubmit=async e=>{
   if(pr.error)return msg('fmsg','Anagrafica non salvata: '+pr.error.message+' Se il paziente esiste già, cercalo e selezionalo.','err');
   linkedPatient=pr.data.id;servicePatientId=linkedPatient;
  }
- const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:isEvent?null:($('odest').value||null),ora_inizio_assistenza_prevista:isEvent?($('asStart').value||null):null,ora_fine_assistenza_prevista:isEvent?($('asEnd').value||null):null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?price.base:null,importo_finale:amount,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
+ const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:isEvent?null:($('odest').value||null),ora_inizio_assistenza_prevista:isEvent?($('asStart').value||null):null,ora_fine_assistenza_prevista:isEvent?($('asEnd').value||null):null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?price.base:null,importo_finale:amount,sedia_motorizzata:$('newSediaMotorizzata').checked,barella_bariatrica:$('newBarellaBariatrica').checked,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
  const r=await sb.from('servizi_giornalieri').insert(p).select('id').single();
  if(r.error)return msg('fmsg',r.error.message,'err');
  // Dopo il salvataggio, elimina ogni dato del servizio appena creato.
