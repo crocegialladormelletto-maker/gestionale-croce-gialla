@@ -92,7 +92,6 @@
  body.print-roster #emergency .hero,body.print-roster #assistance .hero{padding:0 0 8px!important;border:0!important;background:#fff!important}
 }
 .as-candidate-target{outline:3px solid #deb721;outline-offset:2px;background:#fff7d6!important;scroll-margin-top:115px}
-.dim-dash-layout.dim-central{grid-template-columns:minmax(0,1fr)}
 .dim-dash-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,360px);gap:14px;align-items:start}
 .dim-dash-main{min-width:0}.dim-dash-side{margin:11px 0;min-width:0;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
 .dim-weekdays,.dim-month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
@@ -198,7 +197,7 @@
  <div id="dashCriticalAssistanceList" style="margin-top:8px"></div>
 </div>
 <div class="section"><h3>🔎 Cerca un servizio</h3><p class="muted">Trova servizi futuri o passati per paziente, manifestazione, destinazione, tipo servizio, mezzo o numero Foglio Viaggio.</p><div class="grid3"><div class="field"><label>Parola da cercare</label><input id="dashServiceSearch" placeholder="Es. Borgomanero, cognome, manifestazione…" autocomplete="off"></div><div class="field"><label>Data (facoltativa)</label><input id="dashServiceDate" type="date"></div><div class="field"><label>&nbsp;</label><div class="actions"><button id="dashServiceFind" class="btn yellow" type="button">🔎 Cerca servizi</button><button id="dashServiceAll" class="btn secondary" type="button">Tutti i servizi</button></div></div></div><div id="dashServiceMsg"></div></div><div class="grid2"><div class="section"><h3>Prossimi servizi</h3><div id="next"></div></div><div class="section"><h3>Scadenze mezzi</h3><div id="nextExp"></div></div></div>
-</div><aside class="dim-dash-side section" data-admin-only="true">
+</div><aside class="dim-dash-side section">
  <h3>🚑 Turni DIMISSIONI</h3><div class="muted">Iscrizioni definitive dei volontari: per ogni fascia servono un autista e un soccorritore.</div>
  <div class="actions" style="justify-content:space-between;margin-top:10px"><b id="dimAdminTitle"></b><div class="actions">
  <button id="dimAdminPrev" class="btn secondary" type="button">←</button>
@@ -1202,7 +1201,6 @@ function centralinoLoginEmail(){return 'centralino@access.crocegiallaemergenza.i
 function monitorLoginEmail(){return 'monitor@access.crocegiallaemergenza.it'}
 function applyRoleUI(){
  const isCentral=prof?.ruolo==='CENTRALINO';
- $('dash').querySelector('.dim-dash-layout')?.classList.toggle('dim-central',isCentral);
  document.querySelectorAll('[data-admin-only="true"]').forEach(x=>{
   if(isCentral)x.classList.add('hidden');
   else if(x.tagName!=='SECTION')x.classList.remove('hidden');
@@ -2818,7 +2816,7 @@ function dimRenderDay(kind){
   covered=dimSlotCovered(slot),mine=slot.some(x=>x.badge_personale===volunteerBadge),
   peopleHtml=slot.map(row=>'<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
    ' · <b>'+esc(dimRoleLabel(row.ruolo))+'</b>'+
-   (admin?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-dim-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
+   (admin&&prof?.ruolo==='AMMINISTRATORE'?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-dim-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
    '</div>').join(''),
   state=covered?'Coperto · autista e soccorritore presenti':slot.length?'Da completare · manca '+(slot.some(x=>x.ruolo==='AUTISTA')?'soccorritore':'autista'):'Da coprire · mancano autista e soccorritore';
   const eligible=['AUTISTA','SOCCORRITORE'].filter(role=>vfcalQualificationRows.some(q=>
@@ -2848,7 +2846,7 @@ async function loadDimissioniVol(){
  dimVolRows=r.data||[];dimRenderMonth('Vol');msg('dimVolMsg','');
 }
 async function loadDimissioniAdmin(){
- if(prof?.ruolo!=='AMMINISTRATORE')return;
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  const seq=++dimAdminSeq,range=calVisibleRange(dimAdminCursor,'month');
  msg('dimAdminMsg','Caricamento turni dimissioni...');
  const r=await sb.rpc('cge_dimissioni_turni',{p_dal:range.startYmd,p_al:range.endYmd});
@@ -2871,7 +2869,7 @@ async function dimJoin(day,fascia){
  finally{dimVolBusy=false}
 }
 async function dimRemove(id){
- if(dimAdminBusy)return;
+ if(prof?.ruolo!=='AMMINISTRATORE'||dimAdminBusy)return;
  const row=dimAdminRows.find(x=>x.id===id);
  if(!row)return;
  if(!confirm('Rimuovere '+row.nome_completo+' dal turno definitivo '+row.giorno+' · '+row.fascia+'?'))return;
