@@ -116,6 +116,36 @@
 .vol-panel-shifts#volRosterSection{border-top:5px solid #5c9bd5}
 .section .dim-dash-side{position:static;max-height:none;overflow:visible}
 
+/* Dashboard desktop: il contenuto centrale e la colonna dei turni a destra
+   scorrono in autonomia; il menu sinistro mantiene il proprio scorrimento. */
+@media (min-width:1121px) and (min-height:500px){
+ #dash .dim-dash-layout{
+  height:calc(100vh - 300px);
+  height:calc(100dvh - 300px);
+  min-height:280px;
+  overflow:hidden;
+  align-items:stretch;
+ }
+ #dash .dim-dash-main,#dash .dim-dash-side{
+  min-height:0;
+  min-width:0;
+  max-height:none;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior-y:contain;
+  scrollbar-gutter:stable;
+ }
+ #dash .dim-dash-side{
+  position:static;
+  align-self:stretch;
+ }
+}
+@media print{
+ #dash .dim-dash-layout{height:auto!important;min-height:0!important;overflow:visible!important}
+ #dash .dim-dash-main,#dash .dim-dash-side{height:auto!important;max-height:none!important;overflow:visible!important}
+}
+
+
 .as-month-grid .as-month-date{min-height:76px}
 .as-month-grid .as-month-date .as-month-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
 .as-month-event .btn{margin-top:8px}
