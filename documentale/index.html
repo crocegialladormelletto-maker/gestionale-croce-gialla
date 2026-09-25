@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.13</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.14</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.13</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.14</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -301,6 +301,13 @@ Consigliere: Ragazzini Luisa</textarea></div>
       <div class="field" style="margin-top:10px"><label>Ordine del giorno</label><div id="cvAgendaPoints" class="agenda-points"></div><div class="toolbar"><button id="cvAddAgenda" class="btn secondary" type="button">＋ Aggiungi punto</button></div><small class="muted">L’ordine del giorno viene riportato su entrambe le convocazioni dell’Assemblea.</small></div>
       <div class="toolbar"><button id="cvGenerateText" class="btn secondary" type="button">✨ Genera testo base</button></div>
       <div class="field" style="margin-top:10px;max-width:500px"><label>Firmatario</label><input id="cvSigner" value="Musso Paolo"></div>
+
+      <div class="box" style="margin-top:12px">
+       <div class="actions" style="justify-content:space-between"><div><b>✍️ Convocazioni firmate</b><div class="muted">Per l’Assemblea dei Soci vengono gestiti separatamente il PDF firmato della 1ª e della 2ª convocazione.</div></div><span class="pill g">PDF</span></div>
+       <div id="cvSignedArea" style="margin-top:10px"></div>
+       <div id="cvSignedMsg"></div>
+      </div>
+
       <div class="toolbar"><button id="cvSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="cvFinalize" class="btn blue" type="button">✅ Rendi definitiva</button></div>
       <div id="cvmsg"></div>
      </div>
@@ -338,7 +345,7 @@ const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,
 const today=()=>new Date().toISOString().slice(0,10),dt=x=>x?new Date(x).toLocaleString('it-IT'):'—';
 let prof=null,rows=[],attachments=[],currentId=null,currentDoc=null,busy=false,loadSeq=0;
 let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false,minutesAiBusy=false,signedMinuteFiles={};
-let callsRows=[],currentCallId=null,currentCall=null,callsBusy=false;
+let callsRows=[],currentCallId=null,currentCall=null,callsBusy=false,signedCallFiles={},currentCallGroup=[];
 const CONSIGLIO_DIRETTIVO_PRESENTI="Presidente: Musso Paolo\nVice Presidente: Fontana Stefano\nSegretario: Ronco Meri\nConsigliere: Milan Roberto\nConsigliere: Pedercini Sabrina\nConsigliere: Broggio Emanuele\nConsigliere: Ragazzini Luisa";
 function renderSignedMinuteInfo(){
  const upload=$('vSignedUpload'),open=$('vSignedOpen'),down=$('vSignedDownload'),info=$('vSignedInfo');
@@ -802,6 +809,96 @@ $('vType').onchange=()=>{if(!currentMinuteId){const t=minuteTypeLabel($('vType')
 
 
 
+function signedCallSlotHtml(call,label){
+ if(!call)return '<div class="box"><b>'+esc(label)+'</b><div class="muted" style="margin-top:6px">Salva prima le convocazioni per poter caricare il PDF firmato.</div></div>';
+ const f=signedCallFiles[String(call.id)];
+ return '<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(label)+'</b><div class="muted">'+esc(call.convocazione_codice||'')+(call.data_riunione?' · '+esc(call.data_riunione):'')+'</div></div>'+(f?'<span class="pill g">PDF FIRMATO</span>':'<span class="pill b">DA CARICARE</span>')+'</div>'+
+ '<div class="field" style="margin-top:8px"><label>PDF firmato</label><input type="file" accept=".pdf,application/pdf" data-cvsigned-file="'+esc(call.id)+'"><span class="muted">Solo PDF · massimo 15 MB.</span></div>'+
+ '<div class="toolbar"><button class="btn blue" type="button" data-cvsigned-upload="'+esc(call.id)+'">📤 '+(f?'Sostituisci':'Carica')+' PDF firmato</button>'+
+ (f?'<button class="btn secondary" type="button" data-cvsigned-open="'+esc(call.id)+'">📄 Apri</button><button class="btn secondary" type="button" data-cvsigned-download="'+esc(call.id)+'">⬇ Scarica</button>':'')+'</div>'+
+ (f?'<div class="notice ok"><b>'+esc(f.nome_file)+'</b> · '+esc(bytes(f.dimensione_bytes))+' · caricato il '+esc(dt(f.caricato_il))+'</div>':'')+'</div>';
+}
+function renderSignedCalls(){
+ const area=$('cvSignedArea');if(!area)return;
+ if(!currentCallId){
+  if($('cvType').value==='ASSEMBLEA_SOCI')area.innerHTML=signedCallSlotHtml(null,'1ª convocazione firmata')+signedCallSlotHtml(null,'2ª convocazione firmata');
+  else area.innerHTML=signedCallSlotHtml(null,'Convocazione firmata');
+  return;
+ }
+ if(currentCall?.tipo_riunione==='ASSEMBLEA_SOCI'){
+  const first=currentCallGroup.find(x=>x.fase_convocazione==='PRIMA')||null;
+  const second=currentCallGroup.find(x=>x.fase_convocazione==='SECONDA')||null;
+  area.innerHTML=signedCallSlotHtml(first,'1ª convocazione firmata')+signedCallSlotHtml(second,'2ª convocazione firmata');
+ }else{
+  area.innerHTML=signedCallSlotHtml(currentCall,'Convocazione firmata');
+ }
+ area.querySelectorAll('[data-cvsigned-upload]').forEach(b=>b.onclick=()=>uploadSignedCall(b.dataset.cvsignedUpload));
+ area.querySelectorAll('[data-cvsigned-open]').forEach(b=>b.onclick=()=>openSignedCall(b.dataset.cvsignedOpen,false));
+ area.querySelectorAll('[data-cvsigned-download]').forEach(b=>b.onclick=()=>openSignedCall(b.dataset.cvsignedDownload,true));
+}
+async function loadSignedCallsForCurrent(){
+ currentCallGroup=[];
+ if(!currentCallId){renderSignedCalls();return}
+ try{
+  if(currentCall?.tipo_riunione==='ASSEMBLEA_SOCI'&&currentCall?.gruppo_assemblea){
+   const r=await sb.from('convocazioni_documentali').select('id,convocazione_codice,tipo_riunione,data_riunione,ora_prima,gruppo_assemblea,fase_convocazione').eq('gruppo_assemblea',currentCall.gruppo_assemblea);
+   if(r.error)throw r.error;
+   currentCallGroup=r.data||[];
+  }else currentCallGroup=[currentCall];
+  const ids=currentCallGroup.map(x=>x.id);
+  if(ids.length){
+   const sf=await sb.from('convocazioni_firmate').select('convocazione_id,storage_path,nome_file,dimensione_bytes,caricato_il').in('convocazione_id',ids);
+   if(sf.error)throw sf.error;
+   (sf.data||[]).forEach(x=>signedCallFiles[String(x.convocazione_id)]=x);
+  }
+  renderSignedCalls();
+ }catch(e){msg('cvSignedMsg','Errore caricamento convocazioni firmate: '+(e.message||String(e)),'err')}
+}
+async function uploadSignedCall(id){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const input=$('cvSignedArea').querySelector('[data-cvsigned-file="'+CSS.escape(String(id))+'"]');
+ const file=input?.files?.[0];
+ if(!file)return msg('cvSignedMsg','Seleziona il PDF firmato da caricare.','warn');
+ if(!/\.pdf$/i.test(file.name)||(file.type&&file.type!=='application/pdf'))return msg('cvSignedMsg','Puoi caricare solamente file PDF.','warn');
+ if(file.size>15728640)return msg('cvSignedMsg','Il PDF supera il limite di 15 MB.','warn');
+ const old=signedCallFiles[String(id)]||null;
+ const path=id+'/'+Date.now()+'-'+safeFile(file.name);
+ msg('cvSignedMsg','Caricamento del PDF firmato...');
+ try{
+  const up=await sb.storage.from('convocazioni-firmate').upload(path,file,{contentType:'application/pdf',upsert:false});
+  if(up.error)throw up.error;
+  const user=await sb.auth.getUser();
+  const reg=await sb.from('convocazioni_firmate').upsert({
+   convocazione_id:id,storage_path:path,nome_file:file.name,dimensione_bytes:file.size,
+   caricato_il:new Date().toISOString(),caricato_da:user.data.user?.id||null
+  },{onConflict:'convocazione_id'});
+  if(reg.error){
+   await sb.storage.from('convocazioni-firmate').remove([path]);
+   throw reg.error;
+  }
+  if(old?.storage_path&&old.storage_path!==path)await sb.storage.from('convocazioni-firmate').remove([old.storage_path]);
+  signedCallFiles[String(id)]={convocazione_id:id,storage_path:path,nome_file:file.name,dimensione_bytes:file.size,caricato_il:new Date().toISOString()};
+  renderSignedCalls();await loadCallsList();
+  msg('cvSignedMsg','PDF firmato caricato correttamente.','ok');
+ }catch(e){msg('cvSignedMsg',e.message||String(e),'err')}
+}
+async function openSignedCall(id,download=false){
+ let popup=null;
+ if(!download)popup=window.open('about:blank','_blank');
+ try{
+  let f=signedCallFiles[String(id)];
+  if(!f){
+   const r=await sb.from('convocazioni_firmate').select('convocazione_id,storage_path,nome_file,dimensione_bytes,caricato_il').eq('convocazione_id',id).maybeSingle();
+   if(r.error)throw r.error;if(!r.data)throw new Error('PDF firmato non presente.');f=r.data;signedCallFiles[String(id)]=f;
+  }
+  const r=await sb.storage.from('convocazioni-firmate').download(f.storage_path);if(r.error)throw r.error;
+  const url=URL.createObjectURL(r.data);
+  if(download){
+   const a=document.createElement('a');a.href=url;a.download=f.nome_file||'convocazione-firmata.pdf';document.body.appendChild(a);a.click();a.remove();
+  }else if(popup)popup.location.href=url;
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+ }catch(e){if(popup)popup.close();msg('cvSignedMsg',e.message||String(e),'err')}
+}
 function callTypeLabel(v){return v==='ASSEMBLEA_SOCI'?'Assemblea dei Soci':'Consiglio Direttivo'}
 function callPhaseLabel(v){return v==='PRIMA'?'1ª convocazione':v==='SECONDA'?'2ª convocazione':'Convocazione'}
 function resetCallFilters(){
@@ -904,7 +1001,7 @@ function resetCallForm(){
  $('cvType').disabled=false;$('cvType').value='CONSIGLIO_DIRETTIVO';$('cvDate').value='';$('cvTime1').value='';$('cvDate2').value='';$('cvTime2').value='';
  $('cvPlace').value='Sede Croce Gialla Emergenza ODV';$('cvStatus').value='BOZZA';$('cvHeading').value='';
  $('cvRecipients').value='';$('cvObject').value='';$('cvText').value='';$('cvText2').value='';$('cvSigner').value='Musso Paolo';
- setCallAgenda();updateCallLayout(true);msg('cvmsg','');
+ setCallAgenda();updateCallLayout(true);signedCallFiles={};currentCallGroup=[];renderSignedCalls();msg('cvSignedMsg','');msg('cvmsg','');
 }
 function fmtCallDate(v){
  const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:(v||'');
@@ -1001,7 +1098,8 @@ function renderCalls(){
  $('cvCount').textContent=callsRows.length;
  $('cvBody').innerHTML=callsRows.length?callsRows.map(v=>{
   const phase=v.fase_convocazione==='PRIMA'?'<span class="pill r">1ª CONVOCAZIONE</span>':v.fase_convocazione==='SECONDA'?'<span class="pill g">2ª CONVOCAZIONE</span>':'';
-  return '<tr><td><b>'+esc(v.convocazione_codice)+'</b>'+(phase?'<br>'+phase:'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='DESERTA'||v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button></div></td></tr>';
+  const signed=signedCallFiles[String(v.id)];
+  return '<tr><td><b>'+esc(v.convocazione_codice)+'</b>'+(phase?'<br>'+phase:'')+(signed?'<br><span class="pill g">✍️ FIRMATA</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='DESERTA'||v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button></div></td></tr>';
  }).join(''):'<tr><td colspan="7">Nessuna convocazione trovata.</td></tr>';
  $('cvBody').querySelectorAll('[data-cvopen]').forEach(b=>b.onclick=()=>openCall(b.dataset.cvopen,false));
  $('cvBody').querySelectorAll('[data-cvprint]').forEach(b=>b.onclick=()=>openCall(b.dataset.cvprint,true));
@@ -1011,8 +1109,14 @@ async function loadCallsList(){
  msg('cvListMsg','Caricamento convocazioni...');
  const year=$('cvYear').value?Number($('cvYear').value):null;
  const r=await sb.rpc('cge_convocazioni_elenco',{p_search:$('cvSearch').value.trim()||null,p_tipo:$('cvFilterType').value||null,p_stato:$('cvFilterStatus').value||null,p_anno:year});
- if(r.error){callsRows=[];renderCalls();return msg('cvListMsg',r.error.message,'err')}
- callsRows=r.data||[];renderCalls();updateNextCallCode();msg('cvListMsg','');
+ if(r.error){callsRows=[];signedCallFiles={};renderCalls();return msg('cvListMsg',r.error.message,'err')}
+ callsRows=r.data||[];
+ signedCallFiles={};
+ if(callsRows.length){
+  const sf=await sb.from('convocazioni_firmate').select('convocazione_id,storage_path,nome_file,dimensione_bytes,caricato_il').in('convocazione_id',callsRows.map(v=>v.id));
+  if(!sf.error)(sf.data||[]).forEach(x=>signedCallFiles[String(x.convocazione_id)]=x);
+ }
+ renderCalls();updateNextCallCode();msg('cvListMsg','');
 }
 async function loadCalls(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
@@ -1034,6 +1138,7 @@ async function openCall(id,printAfter=false){
   $('cvDate2').value='';$('cvTime2').value='';$('cvPlace').value=v.luogo||'';$('cvStatus').value=v.stato||'BOZZA';$('cvHeading').value=v.titolo||'';
   $('cvRecipients').value=v.destinatari||'';$('cvObject').value=v.oggetto||'';setCallAgenda(v.ordine_giorno||'');
   $('cvText').value=v.testo||'';$('cvText2').value='';$('cvSigner').value=v.firmatario||'Musso Paolo';updateCallLayout(false);
+  await loadSignedCallsForCurrent();
   msg('cvListMsg','');msg('cvmsg','Convocazione '+v.convocazione_codice+' aperta.','ok');
   if(printAfter)setTimeout(()=>printCall(),120);else $('cvTitle').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){msg('cvListMsg',e.message||String(e),'err')}
