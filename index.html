@@ -229,7 +229,7 @@
 .vol-route-preview b{color:#133c55}
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.33</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.34</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -4486,20 +4486,24 @@ function tabletPopulateCrewNames(){
   ['tabletAdSecond','secondo_soccorritore','Seleziona secondo soccorritore']
  ];
  configs.forEach(([id,qual,label])=>{
-  const el=$(id),selected=el.value,eligible=tabletCrewPeople.filter(p=>p[qual]===true);
+  const el=$(id),selected=el.value,eligible=tabletCrewPeople.filter(p=>p[qual]===true||p[qual]==='true'||p[qual]===1);
   el.innerHTML=tabletCrewSelectOptions(eligible,label);
   if(eligible.some(p=>p.badge===selected))el.value=selected;
  });
 }
 async function tabletLoadCrewPeople(){
  msg('tabletCrewNamesMsg','Caricamento nominativi equipaggio...');
- const r=await sb.rpc('cge_tablet_personale_equipaggio');
+ let r=await sb.rpc('cge_tablet_personale_equipaggio');
+ if(r.error||!(r.data||[]).length){
+  const refreshed=await sb.auth.refreshSession();
+  if(!refreshed.error)r=await sb.rpc('cge_tablet_personale_equipaggio');
+ }
  if(r.error){
   tabletCrewPeople=[];tabletPopulateCrewNames();
   msg('tabletCrewNamesMsg','Nominativi equipaggio non disponibili: '+r.error.message,'err');return false;
  }
  tabletCrewPeople=r.data||[];tabletPopulateCrewNames();
- if(!tabletCrewPeople.length){msg('tabletCrewNamesMsg','Nessun volontario attivo disponibile.','warn');return false}
+ if(!tabletCrewPeople.length){msg('tabletCrewNamesMsg','Nessun volontario attivo disponibile. Riprova uscendo e rientrando nel Tablet.','warn');return false}
  msg('tabletCrewNamesMsg','');
  return true;
 }
@@ -4598,7 +4602,11 @@ $('tabletTariffToggle').onclick=()=>{
  $('tabletPricePanel').classList.toggle('hidden');
  if(!$('tabletPricePanel').classList.contains('hidden'))tabletRenderTariffPrices();
 };
-$('tabletImmediateToggle').onclick=()=>{$('tabletImmediatePanel').classList.toggle('hidden')};
+$('tabletImmediateToggle').onclick=async()=>{
+ const panel=$('tabletImmediatePanel');
+ panel.classList.toggle('hidden');
+ if(!panel.classList.contains('hidden'))await tabletLoadCrewPeople();
+};
 $('tabletPriceGroup').onchange=tabletRenderTariffPrices;
 $('tabletPriceSearch').oninput=tabletRenderTariffPrices;
 $('tabletAdTariffGroup').onchange=tabletUpdateImmediateTariff;
