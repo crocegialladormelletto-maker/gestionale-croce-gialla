@@ -682,7 +682,7 @@
      <button id="emManage" type="button" class="btn yellow">✚ Gestisci turni</button>
     </div>
    </div>
-   <div class="em-note">I riquadri mostrano sia le iscrizioni definitive alle fasce Emergenza sia i turni con mezzo e orari già programmati. Le iscrizioni a mattino, pomeriggio e notte non assegnano automaticamente un mezzo; SERA resta riservata ai turni preesistenti. Le chiamate 118 non vengono programmate.</div>
+   <div class="em-note">I riquadri mostrano sia le iscrizioni definitive alle fasce Emergenza sia i turni con mezzo e orari già programmati. Le iscrizioni alle fasce non assegnano automaticamente un mezzo: Amministrazione e Centralino possono associarlo direttamente dalla colonna MEZZO. SERA resta riservata ai turni preesistenti. Le chiamate 118 non vengono programmate.</div>
   </div>
   <div class="actions" style="justify-content:space-between">
    <b id="emPeriod" class="em-head-week"></b>
@@ -1769,7 +1769,7 @@ function renderVolunteerHomeTurns(turns,services){
   for(const r of rows){
    if(r.badge_personale!==volunteerBadge||r.giorno<present)continue;
    future.push({date:r.giorno,clock:'',end:'',type,role:r.ruolo,
-    detail:'Fascia '+r.fascia+' · '+volFasciaOrario(r.fascia),target,key:kind+r.id});
+    detail:'Fascia '+r.fascia+' · '+volFasciaOrario(r.fascia)+(r.mezzo?' · Mezzo '+r.mezzo:''),target,key:kind+r.id});
   }
  }
  future.sort((a,b)=>a.date.localeCompare(b.date)||(a.clock||'').localeCompare(b.clock||''));
@@ -3742,7 +3742,44 @@ function emEntry(t,a){
 function emFasciaEntry(row){
  return '<div class="em-entry em-definitive"><strong>'+esc(row.nome_completo||row.badge_personale)+
   '</strong><small>Iscritto alla fascia '+esc(row.fascia)+
-  ' · mezzo non assegnato</small><br><span class="pill g">Definitivo</span></div>';
+  ' · '+(row.mezzo?'Mezzo '+esc(row.mezzo):'mezzo non assegnato')+
+  '</small><br><span class="pill g">Definitivo</span></div>';
+}
+function emgAssignedMezzo(rows){
+ return rows.find(row=>row.mezzo)?.mezzo||'';
+}
+function emgMezzoOptions(selected){
+ return '<option value="">Nessun mezzo</option>'+['06','07','08','09'].map(m=>
+  '<option value="'+m+'"'+(m===selected?' selected':'')+'>Mezzo '+m+'</option>').join('');
+}
+function emgMezzoEditor(day,fascia,rows,compact=false){
+ if(!rows.length)return '<div class="muted">—</div>';
+ const mezzo=emgAssignedMezzo(rows),canEdit=['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)&&day>=todaySafe();
+ if(!canEdit)return mezzo?'<b>Mezzo '+esc(mezzo)+'</b>':'<span class="muted">Non assegnato</span>';
+ return '<div class="actions" style="gap:5px;'+(compact?'flex-wrap:nowrap':'margin-top:6px')+'">'+
+  '<select data-emg-mezzo-select aria-label="Mezzo '+esc(fascia)+'" style="min-width:'+(compact?'82px':'110px')+';max-width:140px">'+
+   emgMezzoOptions(mezzo)+'</select>'+
+  '<button type="button" class="btn yellow" style="padding:7px 9px" data-emg-mezzo-save="'+esc(fascia)+
+   '" data-emg-mezzo-day="'+esc(day)+'">'+(mezzo?'Aggiorna':'Assegna')+'</button></div>';
+}
+async function emgAssignMezzo(button){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||emgAdminBusy)return;
+ const day=button.dataset.emgMezzoDay,fascia=button.dataset.emgMezzoSave;
+ const select=button.parentElement?.querySelector('[data-emg-mezzo-select]');
+ const mezzo=select?.value||'';
+ const msgId=button.closest('#emgAdminDay')?'emgAdminMsg':'emMsg';
+ if(!day||!fascia)return;
+ emgAdminBusy=true;
+ msg(msgId,mezzo?'Assegnazione mezzo '+mezzo+' alla fascia '+fascia+'...':'Rimozione mezzo dalla fascia '+fascia+'...');
+ try{
+  const r=await sb.rpc('cge_emergenza_assegna_mezzo',{p_giorno:day,p_fascia:fascia,p_mezzo:mezzo||null});
+  if(r.error)throw r.error;
+  await loadEmergenzaAdmin();
+  if(!$('emergency').classList.contains('hidden'))await loadEmergencyRoster(true);
+  msg(msgId,mezzo?'Mezzo '+mezzo+' assegnato a tutto l’equipaggio '+fascia+'.':'Mezzo rimosso dalla fascia '+fascia+'.','ok');
+ }catch(e){
+  msg(msgId,e.message||String(e),'err');
+ }finally{emgAdminBusy=false}
 }
 function emRenderDay(day){
  const y=calYmd(day),dayTurns=emTurns.filter(t=>t.data_turno===y&&(!emVehicle||t.mezzo===emVehicle)),
@@ -3752,10 +3789,13 @@ function emRenderDay(day){
    dayTurns.length+' '+(dayTurns.length===1?'turno programmato':'turni programmati')+
    (!emVehicle?' · '+dayFasce.length+' '+(dayFasce.length===1?'iscritto':'iscritti')+' per fascia':' · Mezzo '+esc(emVehicle))+
    '</span></div>',
-  col='<thead><tr><th>FASCIA</th>'+EM_ROLES.map(x=>'<th>'+x[1]+'</th>').join('')+'</tr></thead>';
+  col='<thead><tr><th>FASCIA</th>'+EM_ROLES.map(x=>'<th>'+x[1]+'</th>').join('')+'<th>MEZZO</th></tr></thead>';
  const rows=EM_SLOTS.map(slot=>{
   const slotTurns=dayTurns.filter(t=>emSlotIds(t).includes(slot.id));
   const enrolled=dayFasce.filter(row=>row.fascia===slot.id);
+  const programmed=[...new Set(slotTurns.map(t=>t.mezzo).filter(Boolean))];
+  const mezzoCell=(enrolled.length?emgMezzoEditor(y,slot.id,enrolled,true):'<div class="muted">—</div>')+
+   (programmed.length?'<div class="muted" style="margin-top:4px">Turno programmato: '+programmed.map(esc).join(', ')+'</div>':'');
   return '<tr><th scope="row">'+esc(slot.id)+(volFasciaOrario(slot.id)?'<small class="em-fascia-hours">'+esc(volFasciaOrario(slot.id))+'</small>':'')+'</th>'+
    EM_ROLES.map(([role])=>{
     const assigned=slotTurns.flatMap(t=>emAssignments.filter(a=>a.turno_id===t.id&&a.ruolo===role)
@@ -3766,7 +3806,7 @@ function emRenderDay(day){
     const entries=assigned.map(x=>emEntry(x.turn,x.assignment))
       .concat(enrolledRole.map(emFasciaEntry));
     return '<td>'+(entries.join('')||'<div class="em-empty">—</div>')+'</td>';
-   }).join('')+'</tr>';
+   }).join('')+'<td>'+mezzoCell+'</td></tr>';
  }).join('');
  const summary=dayTurns.length?dayTurns.map(t=>{
   const cov=emCover(t);
@@ -3775,7 +3815,7 @@ function emRenderDay(day){
    rosterCrewMarkup('TURNO_EMERGENZA',t)+'</div>';
  }).join(''):
  dayFasce.length?'<span class="muted">'+dayFasce.length+
-  ' iscrizioni definitive per fascia mostrate nella tabella. Nessun turno con mezzo e orari programmato per questa data.</span>':
+  ' iscrizioni definitive per fascia mostrate nella tabella. Il mezzo può essere assegnato direttamente dalla colonna MEZZO.</span>':
  '<span class="muted">Nessun turno o iscrizione EMERGENZA in questa data. I volontari possono segnarsi nel calendario a fasce qui sopra.</span>';
  return '<div class="em-day">'+head+'<div class="em-table-wrap"><table class="em-roster">'+col+
   '<tbody>'+rows+'</tbody></table></div><div style="padding:7px 11px;background:#fff">'+summary+'</div></div>';
@@ -3794,6 +3834,7 @@ function emRender(){
   (!emVehicle?' · '+emFasciaRows.length+' iscrizioni definitive per fascia':' · iscrizioni per fascia non legate al mezzo');
  $('emDays').innerHTML=days.map(emRenderDay).join('');
  rosterCrewBind('emDays');
+ $('emDays').querySelectorAll('[data-emg-mezzo-save]').forEach(button=>button.onclick=()=>emgAssignMezzo(button));
 }
 async function loadEmergencyRoster(skipAdmin=false){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
@@ -3804,7 +3845,7 @@ async function loadEmergencyRoster(skipAdmin=false){
   sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note')
    .eq('tipo_turno','EMERGENZA').gte('data_turno',calYmd(range.start))
    .lte('data_turno',calYmd(range.end)).order('data_turno').order('ora_inizio'),
-  sb.rpc('cge_emergenza_turni',{p_dal:calYmd(range.start),p_al:calYmd(range.end)})
+  sb.rpc('cge_emergenza_turni_v2',{p_dal:calYmd(range.start),p_al:calYmd(range.end)})
  ]);
  if(seq!==emRosterSeq)return;
  if(r.error||enrolled.error){
@@ -4100,6 +4141,7 @@ function emgRenderDay(kind){
  $(prefix+'Day').innerHTML=EMG_FASCE.map(([fascia,label])=>{
   const slot=emgRowsFor(rows,day,fascia),
   covered=emgSlotCovered(slot),mine=slot.some(x=>x.badge_personale===volunteerBadge),
+  mezzo=emgAssignedMezzo(slot),
   peopleHtml=slot.map(row=>'<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
    ' · <b>'+esc(emgRoleLabel(row.ruolo))+'</b>'+
    (admin&&prof?.ruolo==='AMMINISTRATORE'?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-emg-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
@@ -4114,13 +4156,16 @@ function emgRenderDay(kind){
     '<button type="button" class="btn yellow" data-emg-join="'+fascia+'">Mi segno (definitivo)</button></div>':
     '<div class="muted">Non ci sono ruoli disponibili per l’iscrizione in questa fascia.</div>'):
     (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
+  const mezzoInfo=slot.length?'<div class="muted" style="margin-top:6px">🚑 '+(mezzo?'Mezzo assegnato: <b>'+esc(mezzo)+'</b>':'Mezzo non ancora assegnato')+'</div>':'';
   return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+esc(label)+' <span class="vol-fascia-hours">'+esc(volFasciaOrario(fascia))+'</span>'+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
-   (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
+   (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+mezzoInfo+action+
+   (admin&&slot.length?'<div class="dim-admin-assign"><b>Mezzo della fascia</b>'+emgMezzoEditor(day,fascia,slot)+'</div>':'')+
    (admin?emgAdminAssignControls(day,fascia,slot):'')+'</div>';
  }).join('');
  if(admin){
   $(prefix+'Day').querySelectorAll('[data-emg-remove]').forEach(button=>button.onclick=()=>emgRemove(button.dataset.emgRemove));
   $(prefix+'Day').querySelectorAll('[data-emg-assign]').forEach(button=>button.onclick=()=>emgAdminAssign(day,button.dataset.emgAssign,button.dataset.emgRole));
+  $(prefix+'Day').querySelectorAll('[data-emg-mezzo-save]').forEach(button=>button.onclick=()=>emgAssignMezzo(button));
  }else{
   $(prefix+'Day').querySelectorAll('[data-emg-join]').forEach(button=>button.onclick=()=>emgJoin(day,button.dataset.emgJoin));
  }
@@ -4178,7 +4223,7 @@ async function loadEmergenzaVol(){
  if(!volunteerBadge)return;
  const seq=++emgVolSeq,range=calVisibleRange(emgVolCursor,'month');
  msg('emgVolMsg','Caricamento turni emergenza...');
- const r=await sb.rpc('cge_emergenza_turni',{p_dal:range.startYmd,p_al:range.endYmd});
+ const r=await sb.rpc('cge_emergenza_turni_v2',{p_dal:range.startYmd,p_al:range.endYmd});
  if(seq!==emgVolSeq)return;
  if(r.error)return msg('emgVolMsg',r.error.message,'err');
  emgVolRows=r.data||[];emgRenderMonth('Vol');msg('emgVolMsg','');
@@ -4188,7 +4233,7 @@ async function loadEmergenzaAdmin(){
  const seq=++emgAdminSeq,range=calVisibleRange(emgAdminCursor,'month');
  ++emgAdminEligibleSeq;emgAdminEligible=[];
  msg('emgAdminMsg','Caricamento turni emergenza...');
- const r=await sb.rpc('cge_emergenza_turni',{p_dal:range.startYmd,p_al:range.endYmd});
+ const r=await sb.rpc('cge_emergenza_turni_v2',{p_dal:range.startYmd,p_al:range.endYmd});
  if(seq!==emgAdminSeq)return;
  if(r.error)return msg('emgAdminMsg',r.error.message,'err');
  emgAdminRows=r.data||[];emgRenderMonth('Admin');msg('emgAdminMsg','');
@@ -5604,7 +5649,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.44-20260925-nd-print-image';
+const CGE_APP_BUILD='13.45-20260925-emergency-vehicle';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
