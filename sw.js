@@ -1,5 +1,5 @@
 // Questa versione aggiorna la PWA esistente senza richiedere una nuova installazione.
-const CACHE_NAME = 'cge-volontari-static-v4';
+const CACHE_NAME = 'cge-volontari-static-v5';
 const APP_BASE = '/gestionale-croce-gialla/';
 const STATIC_ASSETS = new Set([
   APP_BASE + 'manifest.json',
@@ -35,8 +35,7 @@ self.addEventListener('fetch', event => {
   // Il collegamento salvato nell'icona ha un URL fisso, ma l'HTML deve essere
   // preso sempre dalla versione pubblicata, non dalla cache del telefono.
   // Una query diversa evita anche vecchie copie sui CDN intermedi.
-  if (request.mode === 'navigate' &&
-      (url.pathname === APP_BASE || url.pathname === APP_BASE + 'index.html')) {
+  if (request.mode === 'navigate' && url.pathname.startsWith(APP_BASE)) {
     event.respondWith((async () => {
       const freshUrl = new URL(request.url);
       freshUrl.searchParams.set('cge_refresh', String(Date.now()));
@@ -58,4 +57,8 @@ self.addEventListener('fetch', event => {
       return response;
     }))
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
