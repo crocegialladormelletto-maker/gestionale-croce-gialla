@@ -2271,30 +2271,7 @@ function openFoglioPrintWindow(){
   const w=window.open('','_blank');
   if(!w)return null;
   w.document.open();
-  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Preparazione stampa</title></head><body style="font-family:Arial,sans-serif;padding:24px">Preparazione Foglio Viaggio…
-<div style="position:fixed;left:12px;bottom:12px;z-index:99999;background:#12375d;color:#fff;padding:8px 12px;border-radius:999px;font:800 12px system-ui;box-shadow:0 4px 18px #0003">ANTEPRIMA V13.47 · SOLA LETTURA</div>
-<script>
-(function(){
- function lockPreview(){
-  const app=document.getElementById('app');
-  if(!app)return;
-  app.querySelectorAll('input,select,textarea').forEach(el=>{el.disabled=true});
-  app.querySelectorAll('button').forEach(btn=>{
-   const allow=btn.matches('.nav,#out,#dashOpsRefresh,[data-v="dash"],[data-v="emergency"],[data-v="services"],[data-v="travelSheets"]');
-   if(!allow)btn.disabled=true;
-  });
-  app.querySelectorAll('[contenteditable="true"]').forEach(el=>el.setAttribute('contenteditable','false'));
- }
- const app=document.getElementById('app');
- if(app){
-  new MutationObserver(lockPreview).observe(app,{childList:true,subtree:true,attributes:false});
-  setInterval(lockPreview,800);
-  lockPreview();
- }
-})();
-</script>
-
-</body></html>');
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Preparazione stampa</title></head><body style="font-family:Arial,sans-serif;padding:24px">Preparazione Foglio Viaggio…</body></html>');
   w.document.close();
   return w;
  }catch(_){return null}
@@ -5895,4 +5872,27 @@ const CGE_APP_BUILD='13.47-preview-dashboard-20260925';
 applyVolunteerOnlyLogin();refreshPwaInstallUI();
 try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&$('vbadge')){$('vbadge').value=remembered;$('vremember').checked=true}}catch(_){}
 (async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
-</script><script src="/gestionale-croce-gialla/note-debito.js?v=20260925f"></script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
+</script><script src="/gestionale-croce-gialla/note-debito.js?v=20260925f"></script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script>
+<div style="position:fixed;left:12px;bottom:12px;z-index:99999;background:#12375d;color:#fff;padding:8px 12px;border-radius:999px;font:800 12px system-ui;box-shadow:0 4px 18px #0003">ANTEPRIMA V13.47 · SOLA LETTURA</div>
+<script>
+(function(){
+ function lockPreview(){
+  const app=document.getElementById('app');
+  if(!app)return;
+  app.querySelectorAll('input,select,textarea').forEach(el=>{el.disabled=true});
+  app.querySelectorAll('button').forEach(btn=>{
+   const allow=btn.matches('.nav,#out,#dashOpsRefresh,[data-v="dash"],[data-v="emergency"],[data-v="services"],[data-v="travelSheets"]');
+   if(!allow)btn.disabled=true;
+  });
+  app.querySelectorAll('[contenteditable="true"]').forEach(el=>el.setAttribute('contenteditable','false'));
+ }
+ const app=document.getElementById('app');
+ if(app){
+  new MutationObserver(lockPreview).observe(app,{childList:true,subtree:true,attributes:false});
+  setInterval(lockPreview,800);
+  lockPreview();
+ }
+})();
+</script>
+
+</body></html>
