@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.20</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.21</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.20</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.21</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -209,7 +209,7 @@
     <div class="hero"><h2>📝 Verbali</h2><p>Crea, archivia e stampa i verbali direttamente dal Gestionale Documentale.</p></div>
     <div class="pad">
      <div class="section">
-      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vPrint" class="btn secondary" type="button">🖨️ Stampa / Salva PDF</button><button id="vNew" class="btn secondary" type="button">✚ Nuovo</button><button id="vExit" class="btn secondary" type="button">← Esci / Elenco</button></div></div>
+      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn yellow" type="button">✚ Verbale Assemblea Soci</button><button id="vPrint" class="btn secondary" type="button">🖨️ Stampa / Salva PDF</button><button id="vNew" class="btn secondary" type="button">✚ Nuovo</button><button id="vExit" class="btn secondary" type="button">← Esci / Elenco</button></div></div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Tipo riunione *</label><select id="vType"><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea Soci</option><option value="RIUNIONE_OPERATIVA">Riunione operativa</option><option value="ALTRO">Altro</option></select></div>
        <div class="field"><label>Data riunione *</label><input id="vDate" type="date"></div>
@@ -221,15 +221,15 @@
        <div class="field"><label>Titolo</label><input id="vHeading" placeholder="Verbale del Consiglio Direttivo"></div>
       </div>
       <div class="grid3" style="margin-top:10px">
-       <div class="field"><label>Presenti</label><textarea id="vPresent" placeholder="Un nominativo per riga">Presidente: Musso Paolo
+       <div class="field"><label id="vPresentLabel">Presenti</label><textarea id="vPresent" placeholder="Un nominativo per riga">Presidente: Musso Paolo
 Vice Presidente: Fontana Stefano
 Segretario: Ronco Meri
 Consigliere: Milan Roberto
 Consigliere: Pedercini Sabrina
 Consigliere: Broggio Emanuele
 Consigliere: Ragazzini Luisa</textarea></div>
-       <div class="field"><label>Assenti</label><textarea id="vAbsent" placeholder="Un nominativo per riga"></textarea></div>
-       <div class="field"><label>Invitati / altri presenti</label><textarea id="vGuests" placeholder="Facoltativo"></textarea></div>
+       <div class="field"><label id="vAbsentLabel">Assenti</label><textarea id="vAbsent" placeholder="Un nominativo per riga"></textarea></div>
+       <div class="field"><label id="vGuestsLabel">Invitati / altri presenti</label><textarea id="vGuests" placeholder="Facoltativo"></textarea></div>
       </div>
       <div class="field" style="margin-top:10px"><label>Ordine del giorno</label><div id="vAgendaPoints" class="agenda-points"></div><div class="toolbar"><button id="vAddAgenda" class="btn secondary" type="button">＋ Aggiungi punto</button></div><small class="muted">In stampa compaiono solo i punti compilati.</small></div>
       <div class="ai-box">
@@ -696,6 +696,51 @@ async function openProtocol(id){
 }
 
 function minuteTypeLabel(v){return ({CONSIGLIO_DIRETTIVO:'Consiglio Direttivo',ASSEMBLEA_SOCI:'Assemblea Soci',RIUNIONE_OPERATIVA:'Riunione operativa',ALTRO:'Altro'})[v]||v||'—'}
+function updateMinuteTypeUI(resetDefaults=false){
+ const type=$('vType').value;
+ const isAssembly=type==='ASSEMBLEA_SOCI';
+ $('vPresentLabel').textContent=isAssembly?'Soci presenti':'Presenti';
+ $('vAbsentLabel').textContent=isAssembly?'Soci assenti':'Assenti';
+ $('vGuestsLabel').textContent=isAssembly?'Invitati / altri partecipanti':'Invitati / altri presenti';
+ if(!currentMinuteId&&resetDefaults){
+  if(isAssembly){
+   $('vHeading').value='Verbale dell’Assemblea dei Soci';
+   $('vPresent').value='';
+   $('vAbsent').value='';
+   $('vGuests').value='';
+   $('vPresident').value='Musso Paolo';
+   $('vSecretary').value='Ronco Meri';
+   setMinuteAgenda();
+   $('vProceedings').value='';
+   $('vDecisions').value='';
+   $('vVote').value='';
+   $('vNotes').value='';
+   $('vAiNotes').value='';
+  }else if(type==='CONSIGLIO_DIRETTIVO'){
+   $('vHeading').value='Verbale del Consiglio Direttivo';
+   $('vPresent').value=CONSIGLIO_DIRETTIVO_PRESENTI;
+   $('vAbsent').value='';
+   $('vGuests').value='';
+   $('vPresident').value='Musso Paolo';
+   $('vSecretary').value='Ronco Meri';
+   setMinuteAgenda();
+  }else{
+   const t=minuteTypeLabel(type);
+   $('vHeading').value=t==='Riunione operativa'?'Verbale riunione operativa':'Verbale riunione';
+   $('vPresent').value='';
+   $('vAbsent').value='';
+   $('vGuests').value='';
+   setMinuteAgenda();
+  }
+ }
+}
+function newMinuteOfType(type){
+ resetMinuteForm();
+ $('vType').value=type;
+ updateMinuteTypeUI(true);
+ $('vTitle').textContent=type==='ASSEMBLEA_SOCI'?'Nuovo verbale Assemblea dei Soci':type==='CONSIGLIO_DIRETTIVO'?'Nuovo verbale Consiglio Direttivo':'Nuovo verbale';
+ $('vType').scrollIntoView({behavior:'smooth',block:'center'});
+}
 function updateMinuteStateUI(){
  const approved=$('vStatus').value==='APPROVATO';
  $('vSave').textContent=approved?'💾 Salva modifiche':'💾 Salva bozza';
@@ -710,7 +755,7 @@ function resetMinuteForm(){
  $('vPresent').value=CONSIGLIO_DIRETTIVO_PRESENTI;
  $('vPresident').value='Musso Paolo';
  $('vSecretary').value='Ronco Meri';
- setMinuteAgenda();updateNextMinuteCode();
+ setMinuteAgenda();updateMinuteTypeUI(false);updateNextMinuteCode();
  $('vSignedFile').value='';renderSignedMinuteInfo();updateMinuteStateUI();
  msg('vmsg','');msg('vAiMsg','');
 }
@@ -842,7 +887,7 @@ async function openMinute(id,printAfter=false){
   if(!v)throw new Error('Verbale non trovato nell’archivio.');
   currentMinuteId=v.id;currentMinute=v;
   $('vTitle').textContent='Modifica verbale';$('vCode').textContent=v.verbale_codice+' · '+v.data_riunione;
-  $('vType').value=v.tipo_riunione||'CONSIGLIO_DIRETTIVO';$('vDate').value=v.data_riunione||'';
+  $('vType').value=v.tipo_riunione||'CONSIGLIO_DIRETTIVO';updateMinuteTypeUI(false);$('vDate').value=v.data_riunione||'';
   $('vStart').value=v.ora_inizio?String(v.ora_inizio).slice(0,5):'';$('vEnd').value=v.ora_fine?String(v.ora_fine).slice(0,5):'';
   $('vPlace').value=v.luogo||'';$('vStatus').value=v.stato||'BOZZA';$('vApprovalDate').value=v.data_approvazione||'';$('vHeading').value=v.titolo||'';
   $('vPresent').value=v.presenti||CONSIGLIO_DIRETTIVO_PRESENTI;$('vAbsent').value=v.assenti||'';$('vGuests').value=v.invitati||'';
@@ -887,7 +932,7 @@ function printMinute(){
     '<div class="vp-contact">PEC: crocegiallaemergenza@pec.it</div></div>'+
    '<img class="vp-logo" src="'+orgLogo+'" alt="" aria-hidden="true"></header>'+
   '<div class="vp-accent"></div>'+
-  '<div class="vp-kicker">Croce Gialla Emergenza · Verbale di riunione</div>'+
+  '<div class="vp-kicker">Croce Gialla Emergenza · '+(p.tipo_riunione==='ASSEMBLEA_SOCI'?'Verbale Assemblea dei Soci':'Verbale di riunione')+'</div>'+
   '<h2 class="vp-title">'+esc(clean(p.titolo)||'Verbale')+'</h2>'+
   '<div class="vp-type">'+esc(minuteTypeLabel(p.tipo_riunione))+'</div>'+
   '<div class="vp-document"><span class="vp-number">'+esc(p.verbale_codice)+'</span><span class="vp-status">'+esc(p.stato)+'</span></div>'+
@@ -906,6 +951,8 @@ function printMinute(){
  ]).then(()=>window.print());
 }
 $('vNew').onclick=()=>{resetMinuteForm();resetMinuteFilters();loadMinutesList()};
+$('vNewBoard').onclick=()=>newMinuteOfType('CONSIGLIO_DIRETTIVO');
+$('vNewAssembly').onclick=()=>newMinuteOfType('ASSEMBLEA_SOCI');
 $('vExit').onclick=()=>{resetMinuteForm();resetMinuteFilters();loadMinutesList();$('vBody').scrollIntoView({behavior:'smooth',block:'start'})};
 $('vAddAgenda').onclick=()=>addMinuteAgendaPoint();
 $('vAiGenerate').onclick=()=>useMinuteAI('genera');$('vAiImprove').onclick=()=>useMinuteAI('migliora');
@@ -914,7 +961,7 @@ $('vSave').onclick=()=>saveMinute(false);$('vApprove').onclick=()=>saveMinute(tr
 $('vSignedUpload').onclick=uploadSignedMinute;$('vSignedOpen').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,false);$('vSignedDownload').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,true);$('vSignedDelete').onclick=()=>currentMinuteId&&deleteSignedMinute(currentMinuteId);
 $('vSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadMinutesList()}};
 $('vClear').onclick=()=>{resetMinuteFilters();loadMinutesList()};
-$('vType').onchange=()=>{if(!currentMinuteId){const t=minuteTypeLabel($('vType').value);$('vHeading').value=t==='Consiglio Direttivo'?'Verbale del Consiglio Direttivo':t==='Assemblea Soci'?'Verbale dell’Assemblea dei Soci':t==='Riunione operativa'?'Verbale riunione operativa':'Verbale riunione'}};
+$('vType').onchange=()=>{if(!currentMinuteId)updateMinuteTypeUI(true);else updateMinuteTypeUI(false)};
 
 
 
