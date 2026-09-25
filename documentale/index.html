@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.14</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.15</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.14</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.15</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -162,7 +162,7 @@
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Tipo *</label><select id="pType"><option>ENTRATA</option><option>USCITA</option><option>INTERNO</option></select></div>
        <div class="field"><label>Data documento</label><input id="pDocDate" type="date"></div>
-       <div class="field"><label>Categoria *</label><select id="pCategory"><option>ISTITUZIONALE</option><option>ASL_118</option><option>COMUNI</option><option>UEPE_LPU</option><option>FORNITORI</option><option>PERSONALE</option><option>MEZZI</option><option>FORMAZIONE</option><option>AMMINISTRAZIONE</option><option>ALTRO</option></select></div>
+       <div class="field"><label>Categoria *</label><select id="pCategory"><option>ISTITUZIONALE</option><option>ASL_118</option><option>COMUNI</option><option>UEPE_LPU</option><option>FORNITORI</option><option>PERSONALE</option><option>MEZZI</option><option>FORMAZIONE</option><option>AMMINISTRAZIONE</option><option>VERBALI</option><option>CONVOCAZIONI</option><option>ALTRO</option></select></div>
        <div class="field"><label>Stato</label><select id="pStatus"><option>ATTIVO</option><option>ARCHIVIATO</option><option>ANNULLATO</option></select></div>
        <div class="field"><label>Mittente</label><input id="pSender" maxlength="240"></div>
        <div class="field"><label>Destinatario</label><input id="pRecipient" maxlength="240"></div>
@@ -179,7 +179,7 @@
    </section>
 
    <section id="archive" class="surface hidden">
-    <div class="hero"><h2>📂 Archivio documenti</h2><p>Ricerca e consultazione del registro protocollo.</p></div>
+    <div class="hero"><h2>📂 Archivio documenti</h2><p>Ricerca e consultazione del registro protocollo e dei documenti firmati archiviati automaticamente.</p></div>
     <div class="pad">
      <div class="section">
       <div class="grid4">
@@ -194,6 +194,14 @@
      </div>
      <div class="actions" style="justify-content:space-between;margin:10px 0"><b>Registro protocollo</b><span id="aCount" class="pill b">0</span></div>
      <div class="table"><table><thead><tr><th>Protocollo</th><th>Tipo</th><th>Oggetto</th><th>Mittente / Destinatario</th><th>Categoria</th><th>Scadenza</th><th>Allegati</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="aBody"></tbody></table></div>
+
+     <div id="aSignedSection" class="section" data-admin-only="true" style="margin-top:16px">
+      <div class="actions" style="justify-content:space-between">
+       <div><h3 style="margin:0">📑 Documenti firmati</h3><div class="muted">Verbali e convocazioni firmati archiviati automaticamente, senza numero di protocollo.</div></div>
+       <span id="aSignedCount" class="pill g">0</span>
+      </div>
+      <div class="table" style="margin-top:10px"><table><thead><tr><th>Documento</th><th>Data</th><th>Categoria</th><th>Tipo</th><th>File firmato</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="aSignedBody"></tbody></table></div>
+     </div>
     </div>
    </section>
 
@@ -343,7 +351,7 @@ const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co',KEY='sb_publishabl
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>new Date().toISOString().slice(0,10),dt=x=>x?new Date(x).toLocaleString('it-IT'):'—';
-let prof=null,rows=[],attachments=[],currentId=null,currentDoc=null,busy=false,loadSeq=0;
+let prof=null,rows=[],attachments=[],currentId=null,currentDoc=null,busy=false,loadSeq=0,signedArchiveRows=[];
 let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false,minutesAiBusy=false,signedMinuteFiles={};
 let callsRows=[],currentCallId=null,currentCall=null,callsBusy=false,signedCallFiles={},currentCallGroup=[];
 const CONSIGLIO_DIRETTIVO_PRESENTI="Presidente: Musso Paolo\nVice Presidente: Fontana Stefano\nSegretario: Ronco Meri\nConsigliere: Milan Roberto\nConsigliere: Pedercini Sabrina\nConsigliere: Broggio Emanuele\nConsigliere: Ragazzini Luisa";
@@ -394,7 +402,8 @@ async function uploadSignedMinute(){
   $('vSignedFile').value='';
   await loadSignedMinute(currentMinuteId);
   await loadMinutesList();
-  msg('vSignedInfo','PDF firmato caricato correttamente.','ok');
+  if(!$('archive').classList.contains('hidden'))await loadArchive();
+  msg('vSignedInfo','PDF firmato caricato correttamente e inserito nell’Archivio documenti.','ok');
  }catch(e){
   msg('vSignedInfo',e.message||String(e),'err');
  }finally{
@@ -569,13 +578,60 @@ $('pSave').onclick=saveProtocol;
 function renderArchive(list){
  $('aCount').textContent=String(list.length)+(list.length===500?' +':'');
  $('aBody').innerHTML=list.length?list.map(p=>{const tcls=p.tipo==='ENTRATA'?'b':p.tipo==='USCITA'?'g':'',parties=[p.mittente?'Da: '+esc(p.mittente):'',p.destinatario?'A: '+esc(p.destinatario):''].filter(Boolean).join('<br>');
- return '<tr><td><b>'+esc(p.protocollo_codice)+'</b><br><span class="muted">'+esc(p.data_protocollo)+'</span>'+(p.riservato?'<br><span class="pill r">RISERVATO</span>':'')+'</td><td><span class="pill '+tcls+'">'+esc(p.tipo)+'</span></td><td><b>'+esc(p.oggetto)+'</b></td><td>'+parties+'</td><td>'+esc(catLabel(p.categoria))+'</td><td>'+dueHtml(p.scadenza)+'</td><td>'+esc(p.allegati||0)+'</td><td>'+esc(p.stato)+'</td><td><button class="btn secondary" data-open="'+esc(p.id)+'">Apri</button></td></tr>'}).join(''):'<tr><td colspan="9">Nessun documento trovato.</td></tr>';
+ return '<tr><td><b>'+esc(p.protocollo_codice)+'</b><br><span class="muted">'+esc(p.data_protocollo)+'</span>'+(p.riservato?'<br><span class="pill r">RISERVATO</span>':'')+'</td><td><span class="pill '+tcls+'">'+esc(p.tipo)+'</span></td><td><b>'+esc(p.oggetto)+'</b></td><td>'+parties+'</td><td>'+esc(catLabel(p.categoria))+'</td><td>'+dueHtml(p.scadenza)+'</td><td>'+esc(p.allegati||0)+'</td><td>'+esc(p.stato)+'</td><td><button class="btn secondary" data-open="'+esc(p.id)+'">Apri</button></td></tr>'}).join(''):'<tr><td colspan="9">Nessun documento protocollato trovato.</td></tr>';
  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openProtocol(b.dataset.open));
+}
+function renderSignedArchive(list){
+ const section=$('aSignedSection');if(!section)return;
+ section.classList.toggle('hidden',prof?.ruolo!=='AMMINISTRATORE');
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ $('aSignedCount').textContent=String(list.length)+(list.length===500?' +':'');
+ $('aSignedBody').innerHTML=list.length?list.map(x=>{
+  const cat=x.categoria==='VERBALI'?'📝 VERBALI':'📨 CONVOCAZIONI';
+  return '<tr><td><b>'+esc(x.codice)+'</b><br><span class="muted">'+esc(x.titolo||'')+'</span></td>'+
+   '<td>'+esc(x.data_documento||'—')+'<br><span class="muted">Caricato: '+esc(dt(x.caricato_il))+'</span></td>'+
+   '<td><span class="pill '+(x.categoria==='VERBALI'?'b':'g')+'">'+cat+'</span></td>'+
+   '<td>'+esc(x.sottotipo||'—')+'</td>'+
+   '<td><b>'+esc(x.nome_file||'PDF firmato')+'</b><br><span class="muted">'+esc(bytes(x.dimensione_bytes))+'</span></td>'+
+   '<td>'+esc(x.stato||'—')+'</td>'+
+   '<td><div class="actions"><button class="btn secondary" type="button" data-as-open="'+esc(x.documento_id)+'">📄 Apri PDF</button><button class="btn secondary" type="button" data-as-down="'+esc(x.documento_id)+'">⬇ Scarica</button><button class="btn yellow" type="button" data-as-origin="'+esc(x.documento_id)+'">Apri origine</button></div></td></tr>';
+ }).join(''):'<tr><td colspan="7">Nessun verbale o convocazione firmata presente.</td></tr>';
+ $('aSignedBody').querySelectorAll('[data-as-open]').forEach(b=>b.onclick=()=>openArchiveSigned(b.dataset.asOpen,false));
+ $('aSignedBody').querySelectorAll('[data-as-down]').forEach(b=>b.onclick=()=>openArchiveSigned(b.dataset.asDown,true));
+ $('aSignedBody').querySelectorAll('[data-as-origin]').forEach(b=>b.onclick=()=>openArchiveOrigin(b.dataset.asOrigin));
+}
+async function openArchiveSigned(id,download=false){
+ const x=signedArchiveRows.find(r=>String(r.documento_id)===String(id));
+ if(!x)return msg('amsg','Documento firmato non trovato.','err');
+ let popup=null;if(!download)popup=window.open('about:blank','_blank');
+ try{
+  const r=await sb.storage.from(x.storage_bucket).download(x.storage_path);if(r.error)throw r.error;
+  const url=URL.createObjectURL(r.data);
+  if(download){
+   const a=document.createElement('a');a.href=url;a.download=x.nome_file||'documento-firmato.pdf';document.body.appendChild(a);a.click();a.remove();
+  }else if(popup)popup.location.href=url;
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+ }catch(e){if(popup)popup.close();msg('amsg',e.message||String(e),'err')}
+}
+async function openArchiveOrigin(id){
+ const x=signedArchiveRows.find(r=>String(r.documento_id)===String(id));if(!x)return;
+ if(x.tipo_documento==='VERBALE'){view('minutes');await openMinute(id,false)}
+ else{view('calls');await openCall(id,false)}
 }
 async function loadArchive(){
  const seq=++loadSeq;msg('amsg','Caricamento archivio...');
- const r=await sb.rpc('cge_protocollo_elenco',{p_search:$('aSearch').value.trim()||null,p_tipo:$('aType').value||null,p_categoria:$('aCategory').value||null,p_stato:$('aStatus').value||null,p_dal:$('aFrom').value||null,p_al:$('aTo').value||null,p_solo_scadenze:false});
- if(seq!==loadSeq)return;if(r.error){rows=[];renderArchive([]);return msg('amsg',r.error.message,'err')}rows=r.data||[];renderArchive(rows);msg('amsg',rows.length===500?'Mostrati i 500 protocolli più recenti. Restringi i filtri.':'');
+ const cat=$('aCategory').value||null;
+ const protocolCategory=(cat==='VERBALI'||cat==='CONVOCAZIONI')?'__NESSUN_PROTOCOLLO__':cat;
+ const rp=sb.rpc('cge_protocollo_elenco',{p_search:$('aSearch').value.trim()||null,p_tipo:$('aType').value||null,p_categoria:protocolCategory,p_stato:$('aStatus').value||null,p_dal:$('aFrom').value||null,p_al:$('aTo').value||null,p_solo_scadenze:false});
+ const rs=prof?.ruolo==='AMMINISTRATORE'
+  ?sb.rpc('cge_archivio_firmati',{p_search:$('aSearch').value.trim()||null,p_categoria:cat,p_dal:$('aFrom').value||null,p_al:$('aTo').value||null})
+  :Promise.resolve({data:[],error:null});
+ const [r,s]=await Promise.all([rp,rs]);
+ if(seq!==loadSeq)return;
+ if(r.error){rows=[];renderArchive([]);msg('amsg',r.error.message,'err')}else{rows=r.data||[];renderArchive(rows)}
+ if(s.error){signedArchiveRows=[];renderSignedArchive([]);return msg('amsg','Archivio firmati: '+s.error.message,'err')}
+ signedArchiveRows=s.data||[];renderSignedArchive(signedArchiveRows);
+ if(!r.error)msg('amsg',rows.length===500||signedArchiveRows.length===500?'Mostrati i 500 documenti più recenti. Restringi i filtri.':'');
 }
 $('aFind').onclick=loadArchive;$('aSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadArchive()}};$('aClear').onclick=()=>{['aSearch','aType','aCategory','aStatus','aFrom','aTo'].forEach(id=>$(id).value='');loadArchive()};
 
@@ -879,7 +935,8 @@ async function uploadSignedCall(id){
   if(old?.storage_path&&old.storage_path!==path)await sb.storage.from('convocazioni-firmate').remove([old.storage_path]);
   signedCallFiles[String(id)]={convocazione_id:id,storage_path:path,nome_file:file.name,dimensione_bytes:file.size,caricato_il:new Date().toISOString()};
   renderSignedCalls();await loadCallsList();
-  msg('cvSignedMsg','PDF firmato caricato correttamente.','ok');
+  if(!$('archive').classList.contains('hidden'))await loadArchive();
+  msg('cvSignedMsg','PDF firmato caricato correttamente e inserito nell’Archivio documenti.','ok');
  }catch(e){msg('cvSignedMsg',e.message||String(e),'err')}
 }
 async function openSignedCall(id,download=false){
