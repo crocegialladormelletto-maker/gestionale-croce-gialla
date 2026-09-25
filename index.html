@@ -1483,7 +1483,7 @@
 
   <main class="vol-main">
 <section id="volHomeSection" class="surface vol-panel vol-panel-home">
- <div class="vol-home-head"><h1>CROCE GIALLA EMERGENZA ODV</h1><p>La tua area volontario · v13.41</p></div>
+ <div class="vol-home-head"><h1>CROCE GIALLA EMERGENZA ODV</h1><p>La tua area volontario · v13.42</p></div>
  <div class="vol-home-pad">
   <div id="volmsg"></div>
   <div class="vol-home-grid" aria-label="Accessi rapidi ai calendari"><button type="button" class="vol-home-tile" data-vol-home-target="volRosterSection"><span class="vol-home-icon vol-home-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h6l3-4h6v10h-5"/><circle cx="8" cy="16" r="4"/><path d="M18 6h3M18 10h3"/></svg></span><span class="vol-home-label">ASSISTENZE</span></button>
@@ -1736,11 +1736,13 @@ function volunteerGoTo(target){
  setVolunteerNavActive(target);
  el.scrollIntoView({behavior:'smooth',block:'start'});
 }
-$('volMenuToggle').onclick=()=>{
- const open=$('volApp').querySelector('.vol-layout').classList.toggle('vol-menu-open');
- $('volMenuToggle').setAttribute('aria-expanded',String(open));
+if($('volMenuToggle'))$('volMenuToggle').onclick=()=>{
+ const layout=$('volApp')?.querySelector('.vol-layout');
+ if(!layout)return;
+ const open=layout.classList.toggle('vol-menu-open');
+ $('volMenuToggle')?.setAttribute('aria-expanded',String(open));
 };
-$('volGoHome').onclick=()=>volunteerGoTo('volHomeSection');
+if($('volGoHome'))$('volGoHome').onclick=()=>volunteerGoTo('volHomeSection');
 document.querySelectorAll('[data-vol-home-target]').forEach(b=>b.onclick=()=>volunteerGoTo(b.dataset.volHomeTarget));
 function renderVolunteerHomeTurns(turns,services){
  const future=[];
@@ -1803,7 +1805,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.41':'Versione 13.36';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.42':'Versione 13.36';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5599,7 +5601,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.41-20260925-home-ripristinata';
+const CGE_APP_BUILD='13.42-20260925-login-fix';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
