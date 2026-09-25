@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.7</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.8</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.7</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.8</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -270,19 +270,35 @@ Consigliere: Ragazzini Luisa</textarea></div>
        <div><h3 id="cvTitle" style="margin:0">Nuova convocazione</h3><div id="cvCode" class="muted">Numerazione automatica per anno.</div></div>
        <div class="actions"><button id="cvPrint" class="btn secondary" type="button">🖨️ Stampa / Salva PDF</button><button id="cvNew" class="btn secondary" type="button">✚ Nuova</button><button id="cvExit" class="btn secondary" type="button">← Esci / Elenco</button></div>
       </div>
+
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Tipo convocazione *</label><select id="cvType"><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea dei Soci</option></select></div>
-       <div class="field"><label>Data riunione *</label><input id="cvDate" type="date"></div>
-       <div class="field"><label>Ora prima convocazione</label><input id="cvTime1" type="time"></div>
-       <div class="field"><label>Ora seconda convocazione</label><input id="cvTime2" type="time"></div>
-       <div class="field"><label>Luogo</label><input id="cvPlace" placeholder="Es. Sede Croce Gialla"></div>
-       <div class="field"><label>Stato (automatico)</label><select id="cvStatus" disabled><option>BOZZA</option><option>DEFINITIVA</option><option>ANNULLATA</option></select></div>
+       <div class="field"><label>Stato (automatico)</label><select id="cvStatus" disabled><option>BOZZA</option><option>DEFINITIVA</option><option>DESERTA</option><option>ANNULLATA</option></select></div>
        <div class="field" style="grid-column:span 2"><label>Titolo</label><input id="cvHeading"></div>
       </div>
-      <div class="field" style="margin-top:10px"><label>Destinatari</label><textarea id="cvRecipients" style="min-height:100px"></textarea></div>
+
+      <div id="cvFirstBox" class="box" style="margin-top:12px">
+       <div class="actions" style="justify-content:space-between"><b id="cvFirstTitle">Convocazione</b><span id="cvFirstBadge" class="pill b">UNICA</span></div>
+       <div class="grid3" style="margin-top:9px">
+        <div class="field"><label id="cvDateLabel">Data riunione *</label><input id="cvDate" type="date"></div>
+        <div class="field"><label id="cvTime1Label">Ora *</label><input id="cvTime1" type="time"></div>
+        <div class="field"><label>Luogo</label><input id="cvPlace" placeholder="Es. Sede Croce Gialla"></div>
+       </div>
+       <div class="field" style="margin-top:9px"><label id="cvTextLabel">Testo della convocazione</label><textarea id="cvText" style="min-height:150px"></textarea></div>
+      </div>
+
+      <div id="cvSecondBox" class="box hidden" style="margin-top:12px">
+       <div class="actions" style="justify-content:space-between"><b>2ª Convocazione — riunione effettiva</b><span class="pill g">EFFETTIVA</span></div>
+       <div class="grid2" style="margin-top:9px">
+        <div class="field"><label>Data seconda convocazione *</label><input id="cvDate2" type="date"></div>
+        <div class="field"><label>Ora seconda convocazione *</label><input id="cvTime2" type="time"></div>
+       </div>
+       <div class="field" style="margin-top:9px"><label>Testo della seconda convocazione</label><textarea id="cvText2" style="min-height:150px"></textarea></div>
+      </div>
+
+      <div class="field" style="margin-top:10px"><label>Destinatari</label><textarea id="cvRecipients" style="min-height:90px"></textarea></div>
       <div class="field" style="margin-top:10px"><label>Oggetto</label><input id="cvObject"></div>
-      <div class="field" style="margin-top:10px"><label>Ordine del giorno</label><div id="cvAgendaPoints" class="agenda-points"></div><div class="toolbar"><button id="cvAddAgenda" class="btn secondary" type="button">＋ Aggiungi punto</button></div><small class="muted">In stampa compaiono solo i punti compilati.</small></div>
-      <div class="field" style="margin-top:10px"><label>Testo della convocazione</label><textarea id="cvText" style="min-height:190px" placeholder="Scrivi il testo della convocazione oppure usa il pulsante Genera testo base."></textarea></div>
+      <div class="field" style="margin-top:10px"><label>Ordine del giorno</label><div id="cvAgendaPoints" class="agenda-points"></div><div class="toolbar"><button id="cvAddAgenda" class="btn secondary" type="button">＋ Aggiungi punto</button></div><small class="muted">L’ordine del giorno viene riportato su entrambe le convocazioni dell’Assemblea.</small></div>
       <div class="toolbar"><button id="cvGenerateText" class="btn secondary" type="button">✨ Genera testo base</button></div>
       <div class="field" style="margin-top:10px;max-width:500px"><label>Firmatario</label><input id="cvSigner" value="Musso Paolo"></div>
       <div class="toolbar"><button id="cvSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="cvFinalize" class="btn blue" type="button">✅ Rendi definitiva</button></div>
@@ -295,7 +311,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
        <div class="field"><label>Ricerca</label><input id="cvSearch" placeholder="Numero, oggetto, ODG, destinatari…"></div>
        <div class="field"><label>Anno</label><input id="cvYear" type="number" min="2020" max="2100"></div>
        <div class="field"><label>Tipo</label><select id="cvFilterType"><option value="">Tutte</option><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea dei Soci</option></select></div>
-       <div class="field"><label>Stato</label><select id="cvFilterStatus"><option value="">Tutti</option><option>BOZZA</option><option>DEFINITIVA</option><option>ANNULLATA</option></select></div>
+       <div class="field"><label>Stato</label><select id="cvFilterStatus"><option value="">Tutti</option><option>BOZZA</option><option>DEFINITIVA</option><option>DESERTA</option><option>ANNULLATA</option></select></div>
       </div>
       <div class="toolbar"><button id="cvFind" class="btn yellow" type="button">🔎 Cerca</button><button id="cvClear" class="btn secondary" type="button">Cancella filtri</button></div><div id="cvListMsg"></div>
       <div class="actions" style="justify-content:space-between;margin:10px 0"><b>Convocazioni salvate</b><span id="cvCount" class="pill b">0</span></div>
@@ -785,7 +801,9 @@ $('vType').onchange=()=>{if(!currentMinuteId){const t=minuteTypeLabel($('vType')
 
 
 
+
 function callTypeLabel(v){return v==='ASSEMBLEA_SOCI'?'Assemblea dei Soci':'Consiglio Direttivo'}
+function callPhaseLabel(v){return v==='PRIMA'?'1ª convocazione':v==='SECONDA'?'2ª convocazione':'Convocazione'}
 function resetCallFilters(){
  $('cvSearch').value='';$('cvYear').value=new Date().getFullYear();$('cvFilterType').value='';$('cvFilterStatus').value='';
 }
@@ -794,7 +812,13 @@ function nextCallCode(){
  const last=callsRows.filter(v=>Number(v.convocazione_anno)===year).reduce((m,v)=>Math.max(m,Number(v.convocazione_numero)||0),0);
  return 'CONV-'+year+'-'+String(last+1).padStart(3,'0');
 }
-function updateNextCallCode(){if(!currentCallId)$('cvCode').textContent='Prossima convocazione: '+nextCallCode()+' · numero assegnato al salvataggio.'}
+function updateNextCallCode(){
+ if(currentCallId)return;
+ if($('cvType').value==='ASSEMBLEA_SOCI'){
+  const first=nextCallCode();
+  $('cvCode').textContent='Assemblea: saranno creati due documenti distinti. Primo numero previsto: '+first+'.';
+ }else $('cvCode').textContent='Prossima convocazione: '+nextCallCode()+' · numero assegnato al salvataggio.';
+}
 function addCallAgendaPoint(value=''){
  const container=$('cvAgendaPoints'),number=container.children.length+1,row=document.createElement('div');
  row.className='agenda-item';
@@ -816,78 +840,150 @@ function setCallAgenda(value=''){
 function callAgendaText(){
  return [...$('cvAgendaPoints').querySelectorAll('textarea')].map(x=>x.value.trim()).filter(Boolean).map((x,i)=>(i+1)+'. '+x).join('\n');
 }
-function applyCallTypeDefaults(force=false){
+function isNewAssemblyPair(){
+ return !currentCallId&&$('cvType').value==='ASSEMBLEA_SOCI';
+}
+function updateCallLayout(forceDefaults=false){
  const assembly=$('cvType').value==='ASSEMBLEA_SOCI';
- const title=assembly?'Convocazione Assemblea dei Soci':'Convocazione Consiglio Direttivo';
- const recipients=assembly?'Ai Soci della Croce Gialla Emergenza ODV':'Ai componenti del Consiglio Direttivo';
- if(force||!$('cvHeading').value.trim())$('cvHeading').value=title;
- if(force||!$('cvRecipients').value.trim())$('cvRecipients').value=recipients;
- if(force||!$('cvObject').value.trim())$('cvObject').value=title;
- $('cvTime2').closest('.field').classList.toggle('hidden',!assembly);
- if(!assembly)$('cvTime2').value='';
+ const pair=isNewAssemblyPair();
+ $('cvSecondBox').classList.toggle('hidden',!pair);
+ $('cvType').disabled=!!currentCallId;
+ if(currentCallId&&assembly){
+  const first=currentCall?.fase_convocazione==='PRIMA';
+  $('cvFirstTitle').textContent=first?'1ª Convocazione — DESERTA':'2ª Convocazione — riunione effettiva';
+  $('cvFirstBadge').textContent=first?'DESERTA':'EFFETTIVA';
+  $('cvFirstBadge').className='pill '+(first?'r':'g');
+  $('cvDateLabel').textContent=first?'Data 1ª convocazione *':'Data 2ª convocazione *';
+  $('cvTime1Label').textContent=first?'Ora 1ª convocazione *':'Ora 2ª convocazione *';
+  $('cvTextLabel').textContent=first?'Testo della prima convocazione':'Testo della seconda convocazione';
+ }else if(pair){
+  $('cvFirstTitle').textContent='1ª Convocazione — DESERTA';
+  $('cvFirstBadge').textContent='DESERTA';
+  $('cvFirstBadge').className='pill r';
+  $('cvDateLabel').textContent='Data prima convocazione *';
+  $('cvTime1Label').textContent='Ora prima convocazione *';
+  $('cvTextLabel').textContent='Testo della prima convocazione';
+ }else{
+  $('cvFirstTitle').textContent='Convocazione Consiglio Direttivo';
+  $('cvFirstBadge').textContent='UNICA';
+  $('cvFirstBadge').className='pill b';
+  $('cvDateLabel').textContent='Data riunione *';
+  $('cvTime1Label').textContent='Ora *';
+  $('cvTextLabel').textContent='Testo della convocazione';
+ }
+ if(!currentCallId){
+  const title=assembly?'Convocazione Assemblea dei Soci':'Convocazione Consiglio Direttivo';
+  const recipients=assembly?'Ai Soci della Croce Gialla Emergenza ODV':'Ai componenti del Consiglio Direttivo';
+  if(forceDefaults||!$('cvHeading').value.trim())$('cvHeading').value=title;
+  if(forceDefaults||!$('cvRecipients').value.trim())$('cvRecipients').value=recipients;
+  if(forceDefaults||!$('cvObject').value.trim())$('cvObject').value=title;
+ }
+ updateNextCallCode();updateCallStateUI();
 }
 function updateCallStateUI(){
+ const phase=currentCall?.fase_convocazione||'';
  const final=$('cvStatus').value==='DEFINITIVA';
- $('cvSave').textContent=final?'💾 Salva modifiche':'💾 Salva bozza';
- $('cvFinalize').disabled=final||callsBusy;
- $('cvFinalize').textContent=final?'✅ Convocazione definitiva':'✅ Rendi definitiva';
+ const firstDesert=phase==='PRIMA';
+ if(isNewAssemblyPair()){
+  $('cvSave').textContent='💾 Crea le 2 convocazioni';
+  $('cvFinalize').textContent='✅ Crea coppia definitiva';
+  $('cvFinalize').disabled=callsBusy;
+ }else{
+  $('cvSave').textContent=final||firstDesert?'💾 Salva modifiche':'💾 Salva bozza';
+  $('cvFinalize').disabled=final||firstDesert||callsBusy;
+  $('cvFinalize').textContent=firstDesert?'✓ 1ª convocazione deserta':(final?'✅ Convocazione definitiva':'✅ Rendi definitiva');
+ }
 }
 function resetCallForm(){
  currentCallId=null;currentCall=null;$('cvTitle').textContent='Nuova convocazione';
- $('cvType').value='CONSIGLIO_DIRETTIVO';$('cvDate').value='';$('cvTime1').value='';$('cvTime2').value='';
+ $('cvType').disabled=false;$('cvType').value='CONSIGLIO_DIRETTIVO';$('cvDate').value='';$('cvTime1').value='';$('cvDate2').value='';$('cvTime2').value='';
  $('cvPlace').value='Sede Croce Gialla Emergenza ODV';$('cvStatus').value='BOZZA';$('cvHeading').value='';
- $('cvRecipients').value='';$('cvObject').value='';$('cvText').value='';$('cvSigner').value='Musso Paolo';
- setCallAgenda();applyCallTypeDefaults(true);updateNextCallCode();updateCallStateUI();msg('cvmsg','');
+ $('cvRecipients').value='';$('cvObject').value='';$('cvText').value='';$('cvText2').value='';$('cvSigner').value='Musso Paolo';
+ setCallAgenda();updateCallLayout(true);msg('cvmsg','');
+}
+function fmtCallDate(v){
+ const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:(v||'');
 }
 function generateCallText(){
- if(!$('cvDate').value)return msg('cvmsg','Inserisci prima la data della riunione.','warn');
+ if(!$('cvDate').value)return msg('cvmsg','Inserisci prima la data della convocazione.','warn');
  const assembly=$('cvType').value==='ASSEMBLEA_SOCI';
- const d=(()=>{const m=$('cvDate').value.match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:$('cvDate').value})();
- const t1=$('cvTime1').value||'orario da definire',t2=$('cvTime2').value;
+ const d1=fmtCallDate($('cvDate').value),t1=$('cvTime1').value||'orario da definire';
  const place=$('cvPlace').value.trim()||'Sede Croce Gialla Emergenza ODV';
- let text='';
- if(assembly){
-  text='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea il giorno '+d+' alle ore '+t1;
-  if(t2)text+=' in prima convocazione e alle ore '+t2+' in seconda convocazione';
-  text+=', presso '+place+', per discutere e deliberare sui punti indicati nell’ordine del giorno.\n\nSi raccomanda la partecipazione.';
+ if(assembly&&!currentCallId){
+  if(!$('cvDate2').value||!$('cvTime2').value)return msg('cvmsg','Inserisci anche data e ora della seconda convocazione.','warn');
+  const d2=fmtCallDate($('cvDate2').value),t2=$('cvTime2').value;
+  $('cvText').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in prima convocazione il giorno '+d1+' alle ore '+t1+', presso '+place+'. La prima convocazione è prevista come deserta. La seduta effettiva si terrà in seconda convocazione il giorno '+d2+' alle ore '+t2+'.';
+  $('cvText2').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+', per discutere e deliberare sui punti indicati nell’ordine del giorno.\n\nSi raccomanda la partecipazione.';
  }else{
-  text='I componenti del Consiglio Direttivo della Croce Gialla Emergenza ODV sono convocati per il giorno '+d+' alle ore '+t1+', presso '+place+', per discutere i punti indicati nell’ordine del giorno.\n\nSi raccomanda la puntualità e la partecipazione.';
+  const label=assembly?(currentCall?.fase_convocazione==='PRIMA'?'prima':'seconda'):'';
+  $('cvText').value=assembly
+   ?'I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in '+label+' convocazione il giorno '+d1+' alle ore '+t1+', presso '+place+'.'
+   :'I componenti del Consiglio Direttivo della Croce Gialla Emergenza ODV sono convocati per il giorno '+d1+' alle ore '+t1+', presso '+place+', per discutere i punti indicati nell’ordine del giorno.\n\nSi raccomanda la puntualità e la partecipazione.';
  }
- $('cvText').value=text;msg('cvmsg','Testo base inserito. Puoi modificarlo liberamente prima del salvataggio.','ok');
+ msg('cvmsg','Testo base inserito. Puoi modificarlo liberamente prima del salvataggio.','ok');
 }
 function callParams(){
  return {
-  p_tipo_riunione:$('cvType').value,p_data_riunione:$('cvDate').value||null,p_ora_prima:$('cvTime1').value||null,p_ora_seconda:$('cvTime2').value||null,
+  p_tipo_riunione:$('cvType').value,p_data_riunione:$('cvDate').value||null,p_ora_prima:$('cvTime1').value||null,p_ora_seconda:null,
   p_luogo:$('cvPlace').value.trim()||null,p_titolo:$('cvHeading').value.trim()||null,p_destinatari:$('cvRecipients').value.trim()||null,
   p_oggetto:$('cvObject').value.trim()||null,p_ordine_giorno:callAgendaText()||null,p_testo:$('cvText').value.trim()||null,
   p_firmatario:$('cvSigner').value.trim()||null,p_stato:$('cvStatus').value
  };
 }
+async function saveNewAssemblyPair(finalize=false){
+ if(!$('cvDate').value||!$('cvTime1').value)return msg('cvmsg','Inserisci data e ora della prima convocazione.','warn');
+ if(!$('cvDate2').value||!$('cvTime2').value)return msg('cvmsg','Inserisci data e ora della seconda convocazione.','warn');
+ const body={
+  p_data_prima:$('cvDate').value,p_ora_prima:$('cvTime1').value,
+  p_data_seconda:$('cvDate2').value,p_ora_seconda:$('cvTime2').value,
+  p_luogo:$('cvPlace').value.trim()||null,p_destinatari:$('cvRecipients').value.trim()||null,
+  p_oggetto:$('cvObject').value.trim()||null,p_ordine_giorno:callAgendaText()||null,
+  p_testo_prima:$('cvText').value.trim()||null,p_testo_seconda:$('cvText2').value.trim()||null,
+  p_firmatario:$('cvSigner').value.trim()||null,p_stato_seconda:finalize?'DEFINITIVA':'BOZZA'
+ };
+ const r=await sb.rpc('cge_convocazioni_assemblea_crea',body);if(r.error)throw r.error;
+ const created=r.data||[];
+ resetCallFilters();
+ const y=Number(String(body.p_data_seconda).slice(0,4));$('cvYear').value=y;
+ await loadCallsList();
+ resetCallForm();
+ const codes=created.map(x=>x.convocazione_codice).join(' e ');
+ msg('cvmsg','Create due convocazioni distinte: '+codes+'. La prima è DESERTA; la seconda '+(finalize?'è DEFINITIVA.':'resta in BOZZA.'),'ok');
+}
 async function saveCall(finalize=false){
  if(prof?.ruolo!=='AMMINISTRATORE'||callsBusy)return;
- if(!$('cvDate').value)return msg('cvmsg','Inserisci la data della riunione.','warn');
  if(!$('cvHeading').value.trim())return msg('cvmsg','Inserisci il titolo della convocazione.','warn');
- const prev=$('cvStatus').value||'BOZZA';
- if(finalize)$('cvStatus').value='DEFINITIVA';else if(!currentCallId)$('cvStatus').value='BOZZA';
  callsBusy=true;$('cvSave').disabled=true;$('cvFinalize').disabled=true;
- const wasEdit=!!currentCallId;msg('cvmsg',finalize?'Finalizzazione convocazione...':(wasEdit?'Aggiornamento convocazione...':'Salvataggio bozza...'));
  try{
+  if(isNewAssemblyPair()){
+   await saveNewAssemblyPair(finalize);
+   return;
+  }
+  if(!$('cvDate').value)return msg('cvmsg','Inserisci la data della riunione.','warn');
+  if(!$('cvTime1').value)return msg('cvmsg','Inserisci l’orario della convocazione.','warn');
+  const previous=$('cvStatus').value||'BOZZA';
+  if(currentCall?.fase_convocazione==='PRIMA')$('cvStatus').value='DESERTA';
+  else if(finalize)$('cvStatus').value='DEFINITIVA';
+  else if(!currentCallId)$('cvStatus').value='BOZZA';
   const params=callParams();let id=currentCallId,code=currentCall?.convocazione_codice||'';
-  if(wasEdit){
-   const r=await sb.rpc('cge_convocazione_modifica',{p_id:id,...params});if(r.error)throw r.error;
+  if(currentCallId){
+   const r=await sb.rpc('cge_convocazione_modifica',{p_id:id,...params});if(r.error){$('cvStatus').value=previous;throw r.error}
   }else{
-   const r=await sb.rpc('cge_convocazione_crea',params);if(r.error)throw r.error;
+   const r=await sb.rpc('cge_convocazione_crea',params);if(r.error){$('cvStatus').value=previous;throw r.error}
    id=r.data?.[0]?.id;code=r.data?.[0]?.convocazione_codice||'';if(!id)throw new Error('Numero convocazione non restituito.');
   }
   resetCallFilters();$('cvYear').value=Number(String(params.p_data_riunione).slice(0,4));
   await loadCallsList();await openCall(id,false);
-  msg('cvmsg',finalize?'Convocazione '+(currentCall?.convocazione_codice||code)+' resa definitiva.':(wasEdit?'Convocazione aggiornata.':'Bozza '+code+' salvata.'),'ok');
- }catch(e){$('cvStatus').value=prev;msg('cvmsg',e.message||String(e),'err')}
+  msg('cvmsg',finalize?'Convocazione '+(currentCall?.convocazione_codice||code)+' resa definitiva.':(currentCallId?'Convocazione aggiornata.':'Bozza '+code+' salvata.'),'ok');
+ }catch(e){msg('cvmsg',e.message||String(e),'err')}
  finally{callsBusy=false;$('cvSave').disabled=false;updateCallStateUI()}
 }
 function renderCalls(){
  $('cvCount').textContent=callsRows.length;
- $('cvBody').innerHTML=callsRows.length?callsRows.map(v=>'<tr><td><b>'+esc(v.convocazione_codice)+'</b></td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+(v.ora_seconda?' / '+esc(String(v.ora_seconda).slice(0,5)):'')+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button></div></td></tr>').join(''):'<tr><td colspan="7">Nessuna convocazione trovata.</td></tr>';
+ $('cvBody').innerHTML=callsRows.length?callsRows.map(v=>{
+  const phase=v.fase_convocazione==='PRIMA'?'<span class="pill r">1ª CONVOCAZIONE</span>':v.fase_convocazione==='SECONDA'?'<span class="pill g">2ª CONVOCAZIONE</span>':'';
+  return '<tr><td><b>'+esc(v.convocazione_codice)+'</b>'+(phase?'<br>'+phase:'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='DESERTA'||v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button></div></td></tr>';
+ }).join(''):'<tr><td colspan="7">Nessuna convocazione trovata.</td></tr>';
  $('cvBody').querySelectorAll('[data-cvopen]').forEach(b=>b.onclick=()=>openCall(b.dataset.cvopen,false));
  $('cvBody').querySelectorAll('[data-cvprint]').forEach(b=>b.onclick=()=>openCall(b.dataset.cvprint,true));
 }
@@ -915,11 +1011,10 @@ async function openCall(id,printAfter=false){
   }
   if(!v)throw new Error('Convocazione non trovata nell’archivio.');
   currentCallId=v.id;currentCall=v;$('cvTitle').textContent='Modifica convocazione';$('cvCode').textContent=v.convocazione_codice+' · '+v.data_riunione;
-  $('cvType').value=v.tipo_riunione||'CONSIGLIO_DIRETTIVO';$('cvDate').value=v.data_riunione||'';
-  $('cvTime1').value=v.ora_prima?String(v.ora_prima).slice(0,5):'';$('cvTime2').value=v.ora_seconda?String(v.ora_seconda).slice(0,5):'';
-  $('cvPlace').value=v.luogo||'';$('cvStatus').value=v.stato||'BOZZA';$('cvHeading').value=v.titolo||'';
+  $('cvType').value=v.tipo_riunione||'CONSIGLIO_DIRETTIVO';$('cvDate').value=v.data_riunione||'';$('cvTime1').value=v.ora_prima?String(v.ora_prima).slice(0,5):'';
+  $('cvDate2').value='';$('cvTime2').value='';$('cvPlace').value=v.luogo||'';$('cvStatus').value=v.stato||'BOZZA';$('cvHeading').value=v.titolo||'';
   $('cvRecipients').value=v.destinatari||'';$('cvObject').value=v.oggetto||'';setCallAgenda(v.ordine_giorno||'');
-  $('cvText').value=v.testo||'';$('cvSigner').value=v.firmatario||'Musso Paolo';applyCallTypeDefaults(false);updateCallStateUI();
+  $('cvText').value=v.testo||'';$('cvText2').value='';$('cvSigner').value=v.firmatario||'Musso Paolo';updateCallLayout(false);
   msg('cvListMsg','');msg('cvmsg','Convocazione '+v.convocazione_codice+' aperta.','ok');
   if(printAfter)setTimeout(()=>printCall(),120);else $('cvTitle').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){msg('cvListMsg',e.message||String(e),'err')}
@@ -927,8 +1022,9 @@ async function openCall(id,printAfter=false){
 function printCall(){
  const v={
   codice:currentCall?.convocazione_codice||'BOZZA NON SALVATA',tipo:$('cvType').value,data:$('cvDate').value,
-  ora1:$('cvTime1').value,ora2:$('cvTime2').value,luogo:$('cvPlace').value,titolo:$('cvHeading').value,
-  destinatari:$('cvRecipients').value,oggetto:$('cvObject').value,testo:$('cvText').value,firmatario:$('cvSigner').value,stato:$('cvStatus').value
+  ora:$('cvTime1').value,luogo:$('cvPlace').value,titolo:$('cvHeading').value,destinatari:$('cvRecipients').value,
+  oggetto:$('cvObject').value,testo:$('cvText').value,firmatario:$('cvSigner').value,stato:$('cvStatus').value,
+  fase:currentCall?.fase_convocazione||($('cvType').value==='ASSEMBLEA_SOCI'?'PRIMA':'UNICA')
  };
  const clean=x=>String(x||'').trim(),shortTime=x=>x?String(x).slice(0,5):'';
  const italianDate=x=>{const m=String(x||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:(x||'—')};
@@ -936,7 +1032,7 @@ function printCall(){
  const agendaEntries=[...$('cvAgendaPoints').querySelectorAll('textarea')].map(x=>x.value.trim()).filter(Boolean);
  const agenda=agendaEntries.length?'<section class="vp-section"><h3>Ordine del giorno</h3><ol class="vp-agenda">'+agendaEntries.map(x=>'<li><span>'+esc(x)+'</span></li>').join('')+'</ol></section>':'';
  const info=(t,x)=>'<div class="vp-box"><small>'+esc(t)+'</small>'+esc(clean(x)||'—')+'</div>';
- const times=[shortTime(v.ora1),shortTime(v.ora2)].filter(Boolean).join(' / ');
+ const phaseText=v.fase==='PRIMA'?'1ª convocazione — DESERTA':v.fase==='SECONDA'?'2ª convocazione — RIUNIONE EFFETTIVA':callTypeLabel(v.tipo);
  $('verbPrint').innerHTML=
   '<img class="vp-watermark" src="'+orgLogo+'" alt="" aria-hidden="true">'+
   '<div class="vp-content"><header class="vp-head"><img class="vp-logo" src="'+orgLogo+'" alt="Logo Croce Gialla">'+
@@ -945,10 +1041,10 @@ function printCall(){
   '<div class="vp-contact">crocegialladormelletto@crocegiallaemergenza.it</div><div class="vp-contact">PEC: crocegiallaemergenza@pec.it</div></div>'+
   '<img class="vp-logo" src="'+orgLogo+'" alt="" aria-hidden="true"></header><div class="vp-accent"></div>'+
   '<div class="vp-kicker">Convocazione</div><h2 class="vp-title">'+esc(clean(v.titolo)||'Convocazione')+'</h2>'+
-  '<div class="vp-type">'+esc(callTypeLabel(v.tipo))+'</div><div class="vp-document"><span class="vp-number">'+esc(v.codice)+'</span></div>'+
+  '<div class="vp-type">'+esc(phaseText)+'</div><div class="vp-document"><span class="vp-number">'+esc(v.codice)+'</span><span class="vp-status">'+esc(v.stato)+'</span></div>'+
   '<section class="vp-section"><h3>Destinatari</h3><div class="vp-text">'+esc(clean(v.destinatari))+'</div></section>'+
   '<section class="vp-section"><h3>Oggetto</h3><div class="vp-text">'+esc(clean(v.oggetto))+'</div></section>'+
-  '<div class="vp-meta">'+info('Data riunione',italianDate(v.data))+info('Orario',times)+info('Luogo',v.luogo)+info('Firmatario',v.firmatario)+'</div>'+
+  '<div class="vp-meta">'+info('Data',italianDate(v.data))+info('Ora',shortTime(v.ora))+info('Luogo',v.luogo)+info('Firmatario',v.firmatario)+'</div>'+
   (clean(v.testo)?'<section class="vp-section"><div class="vp-text">'+esc(clean(v.testo))+'</div></section>':'')+agenda+
   '<div class="vp-sign"><div></div><div><div class="vp-sign-line">Il Presidente<b>'+esc(clean(v.firmatario))+'</b></div></div></div></div>';
  const imgs=[...$('verbPrint').querySelectorAll('img')];
@@ -959,7 +1055,7 @@ $('cvExit').onclick=()=>{resetCallForm();resetCallFilters();loadCallsList();$('c
 $('cvAddAgenda').onclick=()=>addCallAgendaPoint();
 $('cvGenerateText').onclick=generateCallText;
 $('cvDate').addEventListener('change',updateNextCallCode);
-$('cvType').onchange=()=>{if(!currentCallId)applyCallTypeDefaults(true)};
+$('cvType').onchange=()=>{if(!currentCallId)updateCallLayout(true)};
 $('cvSave').onclick=()=>saveCall(false);$('cvFinalize').onclick=()=>saveCall(true);$('cvPrint').onclick=printCall;$('cvFind').onclick=loadCallsList;
 $('cvSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadCallsList()}};
 $('cvClear').onclick=()=>{resetCallFilters();loadCallsList()};
