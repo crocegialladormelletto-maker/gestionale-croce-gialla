@@ -17,6 +17,7 @@
 .table{overflow:auto;border:1px solid var(--line);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:9px;border-bottom:1px solid #e7edf2;text-align:left;vertical-align:top}th{background:#f5f7fa;color:var(--n);font-size:10px;position:sticky;top:0}
 .login{max-width:470px;margin:7vh auto;padding:14px}.loginhead{background:var(--n);color:#fff;text-align:center;padding:22px;border-radius:16px 16px 0 0}.loginhead img{width:88px;height:88px;border-radius:50%;object-fit:cover;background:#fff;border:4px solid #fff}.loginbody{padding:19px}.loginbody .field{margin:10px 0}.separator{margin:16px 0;border-top:1px solid var(--line)}.due-row{border-left:5px solid #e0a800}.due-row.over{border-left-color:#b52d36;background:#fff7f7}
 .agenda-points{display:flex;flex-direction:column;gap:8px;margin-top:6px}.agenda-item{display:flex;align-items:flex-start;gap:10px}.agenda-item b{width:25px;flex:0 0 25px;padding-top:10px;text-align:right;color:var(--n)}.agenda-item textarea{flex:1;min-height:58px}
+.ai-box{border:1px solid #b9a3df;background:linear-gradient(135deg,#f5f0ff,#fff 60%);border-radius:13px;padding:13px;margin:13px 0}.ai-box h3{margin:0;color:var(--n)}.ai-box textarea{min-height:120px}.ai-help{font-size:12px;color:var(--muted);margin-top:4px}.ai-btn{background:#6f4db7;color:#fff}.ai-btn:hover{filter:brightness(.96)}
 @media(max-width:900px){.layout{display:block}.side{display:flex;overflow-x:auto;overflow-y:hidden;max-height:none;gap:4px;position:sticky;top:4px;z-index:20;margin-bottom:10px;box-shadow:0 3px 12px #0002}.nav{width:auto;white-space:nowrap;flex:0 0 auto}.nav:hover{transform:none}.stats,.grid4{grid-template-columns:1fr 1fr}.grid2,.grid3{grid-template-columns:1fr}}
 @media(max-width:520px){.stats,.grid4{grid-template-columns:1fr}.head .btn{padding:8px 9px}}
 @media print{
@@ -104,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.1</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.2</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -124,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.1</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.2</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -216,6 +217,12 @@
        <div class="field"><label>Invitati / altri presenti</label><textarea id="vGuests" placeholder="Facoltativo"></textarea></div>
       </div>
       <div class="field" style="margin-top:10px"><label>Ordine del giorno</label><div id="vAgendaPoints" class="agenda-points"></div><div class="toolbar"><button id="vAddAgenda" class="btn secondary" type="button">＋ Aggiungi punto</button></div><small class="muted">In stampa compaiono solo i punti compilati.</small></div>
+      <div class="ai-box">
+       <div class="actions" style="justify-content:space-between"><div><h3>✨ Assistente AI verbali</h3><div class="ai-help">Scrivi appunti anche in forma libera: l’AI li trasforma in testo istituzionale senza inventare dati mancanti.</div></div><span class="pill b">AI</span></div>
+       <div class="field" style="margin-top:10px"><label>Appunti per l’AI</label><textarea id="vAiNotes" placeholder="Esempio: discusso punto 1, approvato nuovo tariffario; 6 favorevoli, 1 assente; il Presidente illustra le motivazioni..."></textarea></div>
+       <div class="toolbar"><button id="vAiGenerate" class="btn ai-btn" type="button">✨ Genera bozza</button><button id="vAiImprove" class="btn secondary" type="button">✨ Migliora testo già scritto</button></div>
+       <div class="ai-help">Il testo prodotto resta una bozza: controllalo prima di salvare o stampare il verbale.</div><div id="vAiMsg"></div>
+      </div>
       <div class="field" style="margin-top:10px"><label>Svolgimento della seduta</label><textarea id="vProceedings" style="min-height:170px" placeholder="Riporta sinteticamente la discussione dei punti all’ordine del giorno."></textarea></div>
       <div class="field" style="margin-top:10px"><label>Deliberazioni / decisioni assunte</label><textarea id="vDecisions" style="min-height:150px" placeholder="Riporta le deliberazioni approvate."></textarea></div>
       <div class="grid3" style="margin-top:10px">
@@ -259,7 +266,7 @@ const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoR
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>new Date().toISOString().slice(0,10),dt=x=>x?new Date(x).toLocaleString('it-IT'):'—';
 let prof=null,rows=[],attachments=[],currentId=null,currentDoc=null,busy=false,loadSeq=0;
-let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false;
+let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false,minutesAiBusy=false;
 function resetMinuteFilters(){
  $('vSearch').value='';$('vYear').value=new Date().getFullYear();
  $('vFilterType').value='';$('vFilterStatus').value='';
@@ -421,9 +428,9 @@ function resetMinuteForm(){
  currentMinuteId=null;currentMinute=null;$('vTitle').textContent='Nuovo verbale';
  $('vType').value='CONSIGLIO_DIRETTIVO';$('vDate').value=today();$('vStart').value='';$('vEnd').value='';$('vPlace').value='Sede Croce Gialla Emergenza ODV';
  $('vStatus').value='BOZZA';$('vApprovalDate').value='';$('vHeading').value='Verbale del Consiglio Direttivo';
- ['vPresent','vAbsent','vGuests','vProceedings','vDecisions','vVote','vPresident','vSecretary','vNotes'].forEach(id=>$(id).value='');
+ ['vPresent','vAbsent','vGuests','vProceedings','vDecisions','vVote','vPresident','vSecretary','vNotes','vAiNotes'].forEach(id=>$(id).value='');
  setMinuteAgenda();updateNextMinuteCode();
- msg('vmsg','');
+ msg('vmsg','');msg('vAiMsg','');
 }
 function minuteParams(){
  return {
@@ -434,6 +441,39 @@ function minuteParams(){
   p_presidente:$('vPresident').value.trim()||null,p_segretario:$('vSecretary').value.trim()||null,p_note:$('vNotes').value.trim()||null,
   p_stato:$('vStatus').value,p_data_approvazione:$('vApprovalDate').value||null
  };
+}
+function minuteAiPayload(){
+ return {
+  tipo_riunione:minuteTypeLabel($('vType').value),data_riunione:$('vDate').value||'',ora_inizio:$('vStart').value||'',ora_fine:$('vEnd').value||'',
+  luogo:$('vPlace').value.trim(),titolo:$('vHeading').value.trim(),presenti:$('vPresent').value.trim(),assenti:$('vAbsent').value.trim(),
+  invitati:$('vGuests').value.trim(),ordine_giorno:minuteAgendaText(),svolgimento:$('vProceedings').value.trim(),
+  deliberazioni:$('vDecisions').value.trim(),votazione:$('vVote').value.trim(),note:$('vNotes').value.trim()
+ };
+}
+async function useMinuteAI(mode){
+ if(prof?.ruolo!=='AMMINISTRATORE'||minutesAiBusy)return;
+ if(!minuteAgendaText().trim()&&!$('vAiNotes').value.trim()&&!$('vProceedings').value.trim()&&!$('vDecisions').value.trim()&&!$('vVote').value.trim()){
+  return msg('vAiMsg','Inserisci almeno un punto all’ordine del giorno, degli appunti o un testo da migliorare.','warn');
+ }
+ minutesAiBusy=true;$('vAiGenerate').disabled=true;$('vAiImprove').disabled=true;
+ msg('vAiMsg',mode==='migliora'?'Miglioramento del testo in corso...':'Creazione della bozza in corso...');
+ try{
+  const r=await sb.functions.invoke('assistente-verbali-ai',{body:{mode,appunti:$('vAiNotes').value.trim(),verbale:minuteAiPayload()}});
+  if(r.error){
+   let detail=r.error.message||'Errore durante la generazione AI.';
+   try{const e=await r.error.context?.json();if(e?.error)detail=e.error}catch{}
+   throw new Error(detail);
+  }
+  const data=r.data||{};
+  if(typeof data.svolgimento==='string')$('vProceedings').value=data.svolgimento;
+  if(typeof data.deliberazioni==='string')$('vDecisions').value=data.deliberazioni;
+  if(typeof data.votazione==='string')$('vVote').value=data.votazione;
+  msg('vAiMsg','Bozza AI inserita nei campi del verbale. Verifica il testo e poi salvalo.','ok');
+ }catch(e){
+  msg('vAiMsg',e.message||String(e),'err');
+ }finally{
+  minutesAiBusy=false;$('vAiGenerate').disabled=false;$('vAiImprove').disabled=false;
+ }
 }
 async function saveMinute(){
  if(prof?.ruolo!=='AMMINISTRATORE'||minutesBusy)return;
@@ -524,6 +564,7 @@ function printMinute(){
 $('vNew').onclick=()=>{resetMinuteForm();resetMinuteFilters();loadMinutesList()};
 $('vExit').onclick=()=>{resetMinuteForm();resetMinuteFilters();loadMinutesList();$('vBody').scrollIntoView({behavior:'smooth',block:'start'})};
 $('vAddAgenda').onclick=()=>addMinuteAgendaPoint();
+$('vAiGenerate').onclick=()=>useMinuteAI('genera');$('vAiImprove').onclick=()=>useMinuteAI('migliora');
 $('vDate').addEventListener('change',updateNextMinuteCode);
 $('vSave').onclick=saveMinute;$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
 $('vSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadMinutesList()}};
