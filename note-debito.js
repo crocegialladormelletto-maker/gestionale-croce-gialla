@@ -147,7 +147,7 @@
     '<div>C.F. 91023880031 · P. IVA 02809130038</div>'+
     '<div>Tel. 0322 282730 · tesoreria@crocegiallaemergenza.it</div></div>'+
     '<div class="print-doc"><h2>NOTA DI DEBITO</h2><b>'+safe(n.numero)+'</b><div>'+niceDate(n.data_documento)+'</div></div></div>'+
-    '<div class="print-box nd-print-box"><b>DESTINATARIO / INTESTATARIO</b>'+
+    '<div class="print-box nd-print-box nd-recipient-box"><b>DESTINATARIO / INTESTATARIO</b>'+
     line('Nome e cognome / intestatario',n.intestatario)+line('C.F. / P. IVA',n.cf_piva)+
     line('Indirizzo',n.indirizzo)+line('CAP · Comune · Provincia',[n.cap,n.comune,n.provincia].filter(Boolean).join(' · '))+'</div>'+
     '<div class="print-box nd-print-box nd-service-box"><b>DETTAGLIO DEL SERVIZIO</b>'+
@@ -157,7 +157,7 @@
     '<thead><tr><th style="text-align:left">Descrizione</th><th>Prezzo</th><th>Sconto</th><th>Importo</th></tr></thead>'+
     '<tbody><tr><td>'+safe(n.descrizione)+'</td><td>'+money(n.importo)+'</td><td>'+money(n.sconto)+'</td><td>'+money(n.totale)+'</td></tr></tbody></table>'+
     '<div class="nd-total">TOTALE DA CORRISPONDERE: '+money(n.totale)+'</div>'+
-    '<div class="print-box nd-print-box"><b>MODALITÀ DI PAGAMENTO</b>'+
+    '<div class="print-box nd-print-box nd-payment-box"><b>MODALITÀ DI PAGAMENTO</b>'+
     line('Metodo',n.modalita_pagamento||'Da concordare')+
     line('Già pagato',n.data_pagamento?'Sì · '+niceDate(n.data_pagamento):'No')+
     line('Banca','UniCredit - filiale di Borgomanero')+
