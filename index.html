@@ -427,6 +427,42 @@
  #volApp .vol-home-label{font-size:10px!important}
 }
 
+
+/* === V13.47 SVILUPPO · DASHBOARD OPERATIVA === */
+.ops-board-wrap{margin:14px 0 18px;padding:14px;border:1px solid #d9e3ec;border-radius:16px;background:linear-gradient(180deg,#f8fbfd,#f2f6f9)}
+.ops-board-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.ops-board-head h2{margin:0;color:var(--n);font-size:22px}
+.ops-kpi{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.ops-kpi-card{background:#fff;border:1px solid #dbe4eb;border-radius:12px;padding:12px;min-height:78px;box-shadow:0 2px 8px #12375d0b}
+.ops-kpi-card small{display:block;color:#667987;font-weight:800;font-size:11px;line-height:1.15}
+.ops-kpi-card b{display:block;color:#12375d;font-size:28px;line-height:1.1;margin-top:6px}
+.ops-kpi-alert b{color:#a12a31}
+.ops-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ops-card{margin:0!important;min-width:0}
+.ops-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.ops-title h3{margin:0}
+.ops-row{padding:9px 10px;border:1px solid #e0e6eb;border-radius:9px;background:#fff;margin:6px 0}
+.ops-row strong{color:#173954}
+.ops-row .muted{font-size:12px}
+.ops-row-alert{border-left:5px solid #b52d36;background:#fff8f8}
+.ops-row-warn{border-left:5px solid #d6a100;background:#fffdf4}
+.ops-row-ok{border-left:5px solid #2d9a69;background:#f7fffb}
+.ops-crew-line{display:flex;gap:7px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.ops-crew-members{margin-top:5px;font-size:13px;line-height:1.45}
+.ops-service-head{display:flex;gap:8px;justify-content:space-between;align-items:flex-start}
+.ops-empty{padding:12px;border:1px dashed #ccd8e2;border-radius:9px;color:#607787;background:#fbfdfe}
+@media(max-width:980px){
+ .ops-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ops-board{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+ .ops-board-wrap{padding:9px;margin-left:-3px;margin-right:-3px}
+ .ops-kpi{grid-template-columns:1fr 1fr;gap:6px}
+ .ops-kpi-card{padding:9px;min-height:68px}
+ .ops-kpi-card b{font-size:24px}
+ .ops-board-head h2{font-size:19px}
+}
+
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.36</div></div><div class="loginbody">
@@ -508,9 +544,41 @@
 <button class="nav" data-v="backup" data-admin-only="true">🔐 Backup & Export</button>
 </aside><main>
 
-<section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button><button class="btn secondary jump" data-v="servicesOrd">🚐 Servizi ordinari</button><button class="btn secondary jump" data-v="communications">📣 Scrivi ai volontari</button></div></div><div class="pad">
+<section id="dash" class="surface"><div class="hero"><div class="pill b" style="display:inline-block;margin-bottom:8px">SVILUPPO V13.47 · Dashboard operativa</div><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button><button class="btn secondary jump" data-v="servicesOrd">🚐 Servizi ordinari</button><button class="btn secondary jump" data-v="communications">📣 Scrivi ai volontari</button></div></div><div class="pad">
 <div class="stats"><div class="stat"><small>SERVIZI OGGI</small><b id="s1">0</b></div><div class="stat"><small>DA ASSEGNARE</small><b id="s2">0</b></div><div class="stat"><small>IN CORSO</small><b id="s3">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="s4">0</b></div></div>
 <div class="stats" style="margin-top:9px"><div class="stat"><small>PERSONALE ATTIVO</small><b id="s5">0</b></div><div class="stat"><small>TURNI PROSSIMI</small><b id="s6">0</b></div><div class="stat"><small>SCADENZE MEZZI</small><b id="s7">0</b></div><div class="stat"><small>DA INCASSARE</small><b id="s8">€ 0</b></div></div>
+<div class="ops-board-wrap">
+ <div class="ops-board-head">
+  <div><h2>📡 Quadro operativo di oggi</h2><div class="muted">Equipaggi, mezzi, servizi, fogli viaggio e criticità in un'unica schermata.</div></div>
+  <div class="actions"><span id="dashOpsUpdated" class="pill b">Aggiornamento…</span><button id="dashOpsRefresh" type="button" class="btn secondary">↻ Aggiorna quadro</button></div>
+ </div>
+ <div class="ops-kpi">
+  <div class="ops-kpi-card"><small>EQUIPAGGI / FASCE ATTIVE</small><b id="dashOpsCrewCount">0</b></div>
+  <div class="ops-kpi-card"><small>SERVIZI OGGI</small><b id="dashOpsServiceCount">0</b></div>
+  <div class="ops-kpi-card"><small>FOGLI APERTI</small><b id="dashOpsTravelOpen">0</b></div>
+  <div class="ops-kpi-card"><small>FOGLI CHIUSI</small><b id="dashOpsTravelClosed">0</b></div>
+  <div class="ops-kpi-card ops-kpi-alert"><small>PROBLEMI DA VERIFICARE</small><b id="dashOpsProblemCount">0</b></div>
+ </div>
+ <div id="dashOpsMsg"></div>
+ <div class="ops-board">
+  <section class="section ops-card">
+   <div class="ops-title"><h3>👥 Equipaggi di oggi</h3><button type="button" class="btn secondary jump" data-v="emergency">Apri turnari</button></div>
+   <div id="dashTodayCrews"></div>
+  </section>
+  <section class="section ops-card">
+   <div class="ops-title"><h3>🚑 Servizi di oggi</h3><button type="button" class="btn secondary jump" data-v="services">Apri servizi</button></div>
+   <div id="dashTodayServices"></div>
+  </section>
+  <section class="section ops-card">
+   <div class="ops-title"><h3>📄 Fogli viaggio</h3><button type="button" class="btn secondary jump" data-v="travelSheets">Apri fogli viaggio</button></div>
+   <div id="dashTodayTravel"></div>
+  </section>
+  <section class="section ops-card">
+   <div class="ops-title"><h3>⚠️ Problemi da verificare</h3><span id="dashOpsProblemBadge" class="pill g">Nessuno</span></div>
+   <div id="dashTodayProblems"></div>
+  </section>
+ </div>
+</div>
 <div class="dim-dash-layout"><div class="dim-dash-main"><div class="section"><div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">🙋 Candidature assistenze da valutare</h3><div class="muted">Disponibilità inviate dai volontari che attendono una decisione.</div></div><div class="actions"><span id="dashPendingCandidates" class="pill b" style="font-size:16px">0</span><button id="dashOpenCandidates" type="button" class="btn yellow">Apri Assistenze</button></div></div><div id="dashCandidateMsg"></div><div id="dashPendingCandidateList"></div></div>
 <div class="section">
  <div class="actions" style="justify-content:space-between;align-items:center">
@@ -2895,7 +2963,118 @@ $('vcalMonth').onclick=()=>{volCalMode='month';volCalCursor=new Date(volCalSelec
 $('vcalWeek').onclick=()=>{volCalMode='week';volCalCursor=new Date(volCalSelected+'T12:00:00');loadVolunteerCalendar()};
 ['vcalShowTurns','vcalShowServices','vcalShowAvailability'].forEach(id=>$(id).onchange=refreshVolunteerCalendarView);
 
+
+function dashOpsRole(role){
+ return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':role==='SECONDO_SOCCORRITORE'?'2° soccorritore':role==='AFFIANCATO'?'Tirocinante':'Soccorritore';
+}
+function dashOpsFasciaOrder(fascia){
+ return ({MATTINO:1,POMERIGGIO:2,SERA:3,NOTTE:4})[fascia]||9;
+}
+function dashOpsGroup(rows){
+ const map=new Map();
+ (rows||[]).forEach(row=>{
+  const key=row.fascia||'ALTRO';
+  if(!map.has(key))map.set(key,[]);
+  map.get(key).push(row);
+ });
+ return [...map.entries()].sort((a,b)=>dashOpsFasciaOrder(a[0])-dashOpsFasciaOrder(b[0]));
+}
+function dashOpsCrewBlock(title,rows,showVehicle){
+ const groups=dashOpsGroup(rows);
+ if(!groups.length)return '<div class="ops-empty">'+esc(title)+': nessuna iscrizione per oggi.</div>';
+ return '<div style="margin-bottom:10px"><b>'+esc(title)+'</b>'+groups.map(([fascia,members])=>{
+  const mezzo=showVehicle?(members.find(x=>x.mezzo)?.mezzo||''):'';
+  const hasAut=members.some(x=>x.ruolo==='AUTISTA'),hasSoc=members.some(x=>x.ruolo==='SOCCORRITORE'),
+   covered=hasAut&&hasSoc;
+  return '<div class="ops-row '+(covered?'ops-row-ok':'ops-row-warn')+'">'+
+   '<div class="ops-crew-line"><strong>'+esc(fascia)+' · '+esc(volFasciaOrario(fascia))+'</strong>'+
+   '<span class="pill '+(covered?'g':'')+'">'+(covered?'COPERTO':'DA COMPLETARE')+'</span></div>'+
+   (showVehicle?'<div class="muted">🚑 '+(mezzo?'Mezzo '+esc(mezzo):'Mezzo non assegnato')+'</div>':'')+
+   '<div class="ops-crew-members">'+members.map(x=>'• '+esc(x.nome_completo||x.badge_personale)+' · <b>'+esc(dashOpsRole(x.ruolo))+'</b>').join('<br>')+'</div></div>';
+ }).join('')+'</div>';
+}
+async function loadOperationalDashboard(){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const day=todaySafe(),now=new Date();
+ msg('dashOpsMsg','Aggiornamento quadro operativo...');
+ const [emg,dim,sv,fg,exp]=await Promise.all([
+  sb.rpc('cge_emergenza_turni_v2',{p_dal:day,p_al:day}),
+  sb.rpc('cge_dimissioni_turni',{p_dal:day,p_al:day}),
+  sb.from('v_servizi_gestionale').select('*').eq('data_servizio',day).neq('stato_gestionale','ANNULLATO').order('ora_partenza_prevista'),
+  sb.from('fogli_viaggio').select('id,numero_foglio,stato,mezzo,tipo_servizio,servizio_giornaliero_id,data_servizio,creato_il').eq('data_servizio',day).order('creato_il'),
+  sb.from('v_mezzi_scadenze_gestionale').select('*').in('stato_scadenza',['SCADUTA','ENTRO_30_GIORNI']).order('data_scadenza').limit(20)
+ ]);
+ const errors=[emg,dim,sv,fg,exp].filter(x=>x.error).map(x=>x.error.message);
+ const emgRows=emg.data||[],dimRows=dim.data||[],services=sv.data||[],fogli=fg.data||[],expRows=exp.data||[];
+
+ const crewGroups=dashOpsGroup(emgRows).length+dashOpsGroup(dimRows).length;
+ $('dashOpsCrewCount').textContent=String(crewGroups);
+ $('dashOpsServiceCount').textContent=String(services.length);
+ $('dashOpsTravelOpen').textContent=String(fogli.filter(x=>x.stato==='APERTO').length);
+ $('dashOpsTravelClosed').textContent=String(fogli.filter(x=>x.stato==='CHIUSO').length);
+
+ $('dashTodayCrews').innerHTML=
+  dashOpsCrewBlock('🚨 Emergenza 118',emgRows,true)+
+  dashOpsCrewBlock('🚑 Dimissioni',dimRows,false);
+
+ $('dashTodayServices').innerHTML=services.length?services.map(x=>{
+  const time=(x.ora_partenza_prevista||'').slice(0,5)||'Orario —';
+  const crew=Number(x.componenti_equipaggio||0);
+  const complete=!!x.equipaggio_completo;
+  return '<div class="ops-row '+(complete?'ops-row-ok':'ops-row-warn')+'">'+
+   '<div class="ops-service-head"><div><strong>'+esc(time)+' · Mezzo '+esc(x.mezzo||'—')+'</strong><br>'+
+   '<span class="muted">'+esc(x.tipo_servizio||x.tipo_servizio_altro||'Servizio')+
+   (x.destinazione||x.ospedale_destinazione?' · '+esc(x.destinazione||x.ospedale_destinazione):'')+'</span></div>'+
+   '<span class="pill '+(complete?'g':'')+'">'+esc(x.stato_gestionale||'—')+'</span></div>'+
+   '<div class="muted" style="margin-top:5px">Equipaggio: '+crew+' componente/i'+
+   (x.numero_foglio?' · Foglio '+esc(x.numero_foglio):' · Nessun foglio viaggio')+'</div>'+
+   '<div class="actions" style="margin-top:6px"><button type="button" class="btn secondary" data-dash-ops-service="'+esc(x.id)+'">Apri servizio</button></div></div>';
+ }).join(''):'<div class="ops-empty">Nessun servizio programmato per oggi.</div>';
+ $('dashTodayServices').querySelectorAll('[data-dash-ops-service]').forEach(b=>b.onclick=()=>openService(b.dataset.dashOpsService));
+
+ $('dashTodayTravel').innerHTML=fogli.length?fogli.map(x=>
+  '<div class="ops-row '+(x.stato==='CHIUSO'?'ops-row-ok':'ops-row-warn')+'"><div class="ops-crew-line">'+
+  '<strong>'+esc(x.numero_foglio||'Foglio senza numero')+' · Mezzo '+esc(x.mezzo||'—')+'</strong>'+
+  '<span class="pill '+(x.stato==='CHIUSO'?'g':'')+'">'+esc(x.stato||'—')+'</span></div>'+
+  '<div class="muted">'+esc(x.tipo_servizio||'Servizio')+'</div></div>'
+ ).join(''):'<div class="ops-empty">Nessun foglio viaggio creato oggi.</div>';
+
+ const problems=[];
+ services.filter(x=>!x.equipaggio_completo).forEach(x=>problems.push({
+  level:'warn',title:'Servizio con equipaggio da verificare',
+  detail:(x.ora_partenza_prevista||'').slice(0,5)+' · Mezzo '+(x.mezzo||'—')+' · '+(x.tipo_servizio||'Servizio'),
+  serviceId:x.id
+ }));
+ dashOpsGroup(emgRows).forEach(([fascia,members])=>{
+  if(!(members.some(x=>x.ruolo==='AUTISTA')&&members.some(x=>x.ruolo==='SOCCORRITORE')))
+   problems.push({level:'alert',title:'Emergenza 118 '+fascia+' incompleta',detail:'Autista e soccorritore non risultano entrambi presenti.'});
+  if(!members.find(x=>x.mezzo)?.mezzo)
+   problems.push({level:'warn',title:'Emergenza 118 '+fascia+' senza mezzo',detail:'Assegna il mezzo all’equipaggio della fascia.'});
+ });
+ dashOpsGroup(dimRows).forEach(([fascia,members])=>{
+  if(!(members.some(x=>x.ruolo==='AUTISTA')&&members.some(x=>x.ruolo==='SOCCORRITORE')))
+   problems.push({level:'warn',title:'Dimissioni '+fascia+' incomplete',detail:'Autista e soccorritore non risultano entrambi presenti.'});
+ });
+ expRows.filter(x=>x.stato_scadenza==='SCADUTA').forEach(x=>problems.push({
+  level:'alert',title:'Scadenza mezzo superata',detail:'Mezzo '+(x.mezzo||'—')+' · '+(x.tipo_scadenza||'Scadenza')+' · '+(x.data_scadenza||'')
+ }));
+
+ $('dashOpsProblemCount').textContent=String(problems.length);
+ $('dashOpsProblemBadge').textContent=problems.length?problems.length+' da verificare':'Nessuno';
+ $('dashOpsProblemBadge').className='pill '+(problems.length?'r':'g');
+ $('dashTodayProblems').innerHTML=problems.length?problems.map(p=>
+  '<div class="ops-row '+(p.level==='alert'?'ops-row-alert':'ops-row-warn')+'"><strong>'+esc(p.title)+'</strong><br>'+
+  '<span class="muted">'+esc(p.detail)+'</span>'+
+  (p.serviceId?'<div class="actions" style="margin-top:6px"><button type="button" class="btn secondary" data-dash-problem-service="'+esc(p.serviceId)+'">Apri servizio</button></div>':'')+
+  '</div>'
+ ).join(''):'<div class="ops-row ops-row-ok"><strong>✅ Nessun problema operativo rilevato per oggi.</strong></div>';
+ $('dashTodayProblems').querySelectorAll('[data-dash-problem-service]').forEach(b=>b.onclick=()=>openService(b.dataset.dashProblemService));
+
+ $('dashOpsUpdated').textContent='Aggiornato '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+ msg('dashOpsMsg',errors.length?'Alcuni dati non sono stati caricati: '+errors.join(' · '):'',errors.length?'warn':'');
+}
 async function dashboard(){
+ void loadOperationalDashboard();
  const isCentral=prof?.ruolo==='CENTRALINO';
  const kPromise=isCentral?sb.rpc('cge_centralino_dashboard'):sb.from('v_dashboard_gestionale').select('*').single();
  const [k,sv,ex,pc,ca]=await Promise.all([
@@ -2982,6 +3161,7 @@ async function dashboard(){
  $('next').innerHTML=n.length?n.map(x=>'<div class="box"><b>'+esc(x.data_servizio)+' · '+esc((x.ora_partenza_prevista||'').slice(0,5))+' · Mezzo '+esc(x.mezzo)+'</b><br>'+esc(x.tipo_servizio||'Servizio')+' · '+esc(x.destinazione||'')+' <span class="pill">'+esc(x.stato_gestionale)+'</span></div>').join(''):'<div class="notice">Nessun servizio programmato.</div>';
  $('nextExp').innerHTML=exp.length?exp.map(x=>'<div class="box"><b>Mezzo '+esc(x.mezzo)+' · '+esc(x.tipo_scadenza)+'</b><br>'+esc(x.data_scadenza)+' · '+esc(x.descrizione||'')+' <span class="pill '+(x.stato_scadenza==='SCADUTA'?'r':'')+'">'+esc(x.stato_scadenza)+'</span></div>').join(''):'<div class="notice">Nessuna scadenza inserita.</div>';
 }
+$('dashOpsRefresh').onclick=loadOperationalDashboard;
 $('dashOpenCandidates').onclick=()=>openPendingAssistance();
 $('dashCriticalAssistanceOpen').onclick=()=>view('assistance');
 
@@ -5650,7 +5830,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.46-20260925-dimissioni-eligible-fix';
+const CGE_APP_BUILD='13.47-dev-dashboard-20260925';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
