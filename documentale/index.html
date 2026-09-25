@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.18</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.19</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.18</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.19</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -318,12 +318,14 @@ Consigliere: Ragazzini Luisa</textarea></div>
 
       <div class="box" style="margin-top:12px">
        <div class="actions" style="justify-content:space-between"><div><b>📲 Invio via WhatsApp</b><div class="muted">Il gestionale prepara il messaggio. Dopo averlo realmente inviato su WhatsApp, registra l’invio nello storico.</div></div><span class="pill g">WHATSAPP</span></div>
-       <div class="grid2" style="margin-top:9px">
-        <div class="field"><label>Destinatario / nominativo</label><input id="cvWaRecipient" placeholder="Es. Mario Rossi"></div>
-        <div class="field"><label>Numero WhatsApp</label><input id="cvWaPhone" type="tel" placeholder="Es. +39 333 1234567"></div>
+       <div class="box" style="margin-top:9px;background:#f4fbf6">
+        <b>Destinatario fisso</b><br><span style="font-size:1.06rem">📲 Gruppo WhatsApp “Comunicazioni Croce Gialla”</span>
+        <div class="muted" style="margin-top:5px">WhatsApp non consente a una pagina web di selezionare automaticamente uno specifico gruppo: dopo l’apertura scegli il gruppo “Comunicazioni Croce Gialla”.</div>
        </div>
+       <input id="cvWaRecipient" type="hidden" value="Gruppo WhatsApp Comunicazioni Croce Gialla">
+       <input id="cvWaPhone" type="hidden" value="">
        <div class="field" style="margin-top:9px"><label>Messaggio WhatsApp</label><textarea id="cvWaMessage" style="min-height:180px"></textarea></div>
-       <div class="toolbar"><button id="cvWaGenerate" class="btn secondary" type="button">✨ Prepara messaggio</button><button id="cvWaOpen" class="btn blue" type="button">📲 Apri WhatsApp</button><button id="cvWaPdf" class="btn blue" type="button">📎 WhatsApp + PDF firmato</button><button id="cvWaLog" class="btn yellow" type="button">✅ Registra invio effettuato</button></div>
+       <div class="toolbar"><button id="cvWaGenerate" class="btn secondary" type="button">✨ Prepara messaggio</button><button id="cvWaOpen" class="btn blue" type="button">📲 Apri gruppo WhatsApp</button><button id="cvWaPdf" class="btn blue" type="button">📎 Gruppo WhatsApp + PDF firmato</button><button id="cvWaLog" class="btn yellow" type="button">✅ Registra invio effettuato</button></div>
        <div class="muted">Su telefono, se supportato, il gestionale apre la condivisione del PDF firmato con il messaggio; scegli WhatsApp. Su PC scarica il PDF e apre WhatsApp Web, così puoi allegarlo subito. La registrazione dell’invio resta manuale per evitare falsi “inviato”.</div>
        <div id="cvWaMsg"></div>
        <div id="cvWaHistory" style="margin-top:10px"></div>
@@ -918,6 +920,7 @@ $('vType').onchange=()=>{if(!currentMinuteId){const t=minuteTypeLabel($('vType')
 
 
 
+const WHATSAPP_COMUNICAZIONI_GROUP='Gruppo WhatsApp Comunicazioni Croce Gialla';
 function buildCallWhatsAppMessage(){
  const type=$('cvType').value==='ASSEMBLEA_SOCI'?'Assemblea dei Soci':'Consiglio Direttivo';
  const phase=currentCall?.fase_convocazione==='PRIMA'?'1ª convocazione':currentCall?.fase_convocazione==='SECONDA'?'2ª convocazione':'';
@@ -964,10 +967,10 @@ function openCallWhatsApp(){
  if(!currentCallId)return msg('cvWaMsg','Salva prima la convocazione.','warn');
  const message=$('cvWaMessage').value.trim()||buildCallWhatsAppMessage();
  $('cvWaMessage').value=message;
- const phone=normalizeWhatsAppPhone($('cvWaPhone').value);
- const url=phone?'https://wa.me/'+phone+'?text='+encodeURIComponent(message):'https://wa.me/?text='+encodeURIComponent(message);
+ const url='https://wa.me/?text='+encodeURIComponent(message);
  const w=window.open(url,'_blank','noopener');
- if(!w)msg('cvWaMsg','Il browser ha bloccato l’apertura di WhatsApp. Consenti i popup e riprova.','warn');
+ if(!w)return msg('cvWaMsg','Il browser ha bloccato l’apertura di WhatsApp. Consenti i popup e riprova.','warn');
+ msg('cvWaMsg','WhatsApp aperto: seleziona il gruppo “Comunicazioni Croce Gialla” e invia il messaggio.','ok');
 }
 async function shareCallWhatsAppPdf(){
  if(!currentCallId)return msg('cvWaMsg','Salva prima la convocazione.','warn');
@@ -983,8 +986,7 @@ async function shareCallWhatsAppPdf(){
  }
  const message=$('cvWaMessage').value.trim()||buildCallWhatsAppMessage();
  $('cvWaMessage').value=message;
- const phone=normalizeWhatsAppPhone($('cvWaPhone').value);
- const waUrl=phone?'https://wa.me/'+phone+'?text='+encodeURIComponent(message):'https://wa.me/?text='+encodeURIComponent(message);
+ const waUrl='https://wa.me/?text='+encodeURIComponent(message);
  const fileName=f.nome_file||'convocazione-firmata.pdf';
  const nativeShare=!!(navigator.share&&typeof File!=='undefined');
  let fallbackPopup=null;
@@ -1032,7 +1034,7 @@ function renderCallWhatsAppHistory(){
  const box=$('cvWaHistory');if(!box)return;
  if(!currentCallId){box.innerHTML='';return}
  if(!whatsAppHistory.length){box.innerHTML='<div class="muted">Nessun invio WhatsApp registrato per questa convocazione.</div>';return}
- box.innerHTML='<b>Storico invii WhatsApp</b>'+whatsAppHistory.map(x=>
+ box.innerHTML='<b>Storico invii al gruppo Comunicazioni Croce Gialla</b>'+whatsAppHistory.map(x=>
   '<div class="box" style="margin-top:7px"><div class="actions" style="justify-content:space-between"><div><b>'+esc(x.destinatario||'Destinatario non indicato')+'</b>'+
   (x.telefono?' · '+esc(x.telefono):'')+'<br><span class="muted">'+esc(dt(x.inviato_il))+'</span></div>'+
   '<button class="btn danger" type="button" data-wa-delete="'+esc(x.id)+'">🗑️ Elimina registrazione</button></div></div>'
@@ -1041,19 +1043,17 @@ function renderCallWhatsAppHistory(){
 }
 async function registerCallWhatsAppSend(){
  if(!currentCallId)return msg('cvWaMsg','Salva prima la convocazione.','warn');
- const recipient=$('cvWaRecipient').value.trim();
- const phone=$('cvWaPhone').value.trim();
+ const recipient=WHATSAPP_COMUNICAZIONI_GROUP;
  const message=$('cvWaMessage').value.trim()||buildCallWhatsAppMessage();
- if(!recipient&&!phone)return msg('cvWaMsg','Inserisci almeno il destinatario o il numero WhatsApp.','warn');
  try{
   const r=await sb.from('convocazioni_whatsapp_log').insert({
-   convocazione_id:currentCallId,destinatario:recipient||null,telefono:phone||null,messaggio:message
+   convocazione_id:currentCallId,destinatario:recipient,telefono:null,messaggio:message
   });
   if(r.error)throw r.error;
   await loadCallWhatsAppHistory();
   whatsAppSentMap[String(currentCallId)]=true;
   renderCalls();
-  msg('cvWaMsg','Invio WhatsApp registrato nello storico.','ok');
+  msg('cvWaMsg','Invio al gruppo “Comunicazioni Croce Gialla” registrato nello storico.','ok');
  }catch(e){msg('cvWaMsg',e.message||String(e),'err')}
 }
 async function deleteCallWhatsAppLog(id){
@@ -1282,7 +1282,7 @@ function resetCallForm(){
  $('cvType').disabled=false;$('cvType').value='CONSIGLIO_DIRETTIVO';$('cvDate').value='';$('cvTime1').value='';$('cvDate2').value='';$('cvTime2').value='';
  $('cvPlace').value='Sede Croce Gialla Emergenza ODV';$('cvStatus').value='BOZZA';$('cvHeading').value='';
  $('cvRecipients').value='';$('cvObject').value='';$('cvText').value='';$('cvText2').value='';$('cvSigner').value='Musso Paolo';
- setCallAgenda();updateCallLayout(true);signedCallFiles={};currentCallGroup=[];whatsAppHistory=[];$('cvWaRecipient').value='';$('cvWaPhone').value='';$('cvWaMessage').value='';renderSignedCalls();renderCallWhatsAppHistory();prepareCallWhatsAppMessage(false);msg('cvSignedMsg','');msg('cvmsg','');
+ setCallAgenda();updateCallLayout(true);signedCallFiles={};currentCallGroup=[];whatsAppHistory=[];$('cvWaRecipient').value=WHATSAPP_COMUNICAZIONI_GROUP;$('cvWaPhone').value='';$('cvWaMessage').value='';renderSignedCalls();renderCallWhatsAppHistory();prepareCallWhatsAppMessage(false);msg('cvSignedMsg','');msg('cvmsg','');
 }
 function fmtCallDate(v){
  const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:(v||'');
@@ -1423,7 +1423,7 @@ async function openCall(id,printAfter=false){
   $('cvRecipients').value=v.destinatari||'';$('cvObject').value=v.oggetto||'';setCallAgenda(v.ordine_giorno||'');
   $('cvText').value=v.testo||'';$('cvText2').value='';$('cvSigner').value=v.firmatario||'Musso Paolo';updateCallLayout(false);
   await loadSignedCallsForCurrent();
-  $('cvWaRecipient').value='';$('cvWaPhone').value='';$('cvWaMessage').value='';prepareCallWhatsAppMessage(true);await loadCallWhatsAppHistory();
+  $('cvWaRecipient').value=WHATSAPP_COMUNICAZIONI_GROUP;$('cvWaPhone').value='';$('cvWaMessage').value='';prepareCallWhatsAppMessage(true);await loadCallWhatsAppHistory();
   msg('cvListMsg','');msg('cvmsg','Convocazione '+v.convocazione_codice+' aperta.','ok');
   if(printAfter)setTimeout(()=>printCall(),120);else $('cvTitle').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){msg('cvListMsg',e.message||String(e),'err')}
