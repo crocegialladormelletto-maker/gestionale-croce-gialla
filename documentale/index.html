@@ -212,7 +212,13 @@
        <div class="field"><label>Titolo</label><input id="vHeading" placeholder="Verbale del Consiglio Direttivo"></div>
       </div>
       <div class="grid3" style="margin-top:10px">
-       <div class="field"><label>Presenti</label><textarea id="vPresent" placeholder="Un nominativo per riga"></textarea></div>
+       <div class="field"><label>Presenti</label><textarea id="vPresent" placeholder="Un nominativo per riga">Presidente: Musso Paolo
+Vice Presidente: Fontana Stefano
+Segretario: Ronco Meri
+Consigliere: Milan Roberto
+Consigliere: Pedercini Sabrina
+Consigliere: Broggio Emanuele
+Consigliere: Ragazzini Luisa</textarea></div>
        <div class="field"><label>Assenti</label><textarea id="vAbsent" placeholder="Un nominativo per riga"></textarea></div>
        <div class="field"><label>Invitati / altri presenti</label><textarea id="vGuests" placeholder="Facoltativo"></textarea></div>
       </div>
@@ -267,6 +273,7 @@ const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,
 const today=()=>new Date().toISOString().slice(0,10),dt=x=>x?new Date(x).toLocaleString('it-IT'):'—';
 let prof=null,rows=[],attachments=[],currentId=null,currentDoc=null,busy=false,loadSeq=0;
 let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false,minutesAiBusy=false;
+const CONSIGLIO_DIRETTIVO_PRESENTI="Presidente: Musso Paolo\nVice Presidente: Fontana Stefano\nSegretario: Ronco Meri\nConsigliere: Milan Roberto\nConsigliere: Pedercini Sabrina\nConsigliere: Broggio Emanuele\nConsigliere: Ragazzini Luisa";
 function resetMinuteFilters(){
  $('vSearch').value='';$('vYear').value=new Date().getFullYear();
  $('vFilterType').value='';$('vFilterStatus').value='';
@@ -428,7 +435,8 @@ function resetMinuteForm(){
  currentMinuteId=null;currentMinute=null;$('vTitle').textContent='Nuovo verbale';
  $('vType').value='CONSIGLIO_DIRETTIVO';$('vDate').value=today();$('vStart').value='';$('vEnd').value='';$('vPlace').value='Sede Croce Gialla Emergenza ODV';
  $('vStatus').value='BOZZA';$('vApprovalDate').value='';$('vHeading').value='Verbale del Consiglio Direttivo';
- ['vPresent','vAbsent','vGuests','vProceedings','vDecisions','vVote','vPresident','vSecretary','vNotes','vAiNotes'].forEach(id=>$(id).value='');
+ ['vAbsent','vGuests','vProceedings','vDecisions','vVote','vPresident','vSecretary','vNotes','vAiNotes'].forEach(id=>$(id).value='');
+ $('vPresent').value=CONSIGLIO_DIRETTIVO_PRESENTI;
  setMinuteAgenda();updateNextMinuteCode();
  msg('vmsg','');msg('vAiMsg','');
 }
