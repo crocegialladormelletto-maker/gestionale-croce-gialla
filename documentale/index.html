@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.15</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.16</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.15</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.16</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -249,7 +249,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
       <div class="box" style="margin-top:12px">
        <div class="actions" style="justify-content:space-between"><div><b>✍️ Verbale firmato</b><div class="muted">Carica la copia PDF firmata del verbale già salvato. Il file resta privato e accessibile solo all’Amministrazione.</div></div><span class="pill g">PDF</span></div>
        <div class="field" style="margin-top:9px"><label>PDF firmato</label><input id="vSignedFile" type="file" accept=".pdf,application/pdf"><span class="muted">Solo PDF · massimo 15 MB.</span></div>
-       <div class="toolbar"><button id="vSignedUpload" class="btn blue" type="button">📤 Carica / sostituisci PDF firmato</button><button id="vSignedOpen" class="btn secondary hidden" type="button">📄 Apri PDF firmato</button><button id="vSignedDownload" class="btn secondary hidden" type="button">⬇ Scarica PDF firmato</button></div>
+       <div class="toolbar"><button id="vSignedUpload" class="btn blue" type="button">📤 Carica / sostituisci PDF firmato</button><button id="vSignedOpen" class="btn secondary hidden" type="button">📄 Apri PDF firmato</button><button id="vSignedDownload" class="btn secondary hidden" type="button">⬇ Scarica PDF firmato</button><button id="vSignedDelete" class="btn danger hidden" type="button">🗑️ Elimina PDF firmato</button></div>
        <div id="vSignedInfo"></div>
       </div>
       <div class="toolbar"><button id="vSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="vApprove" class="btn blue" type="button">✅ Approva verbale</button></div><div id="vmsg"></div>
@@ -356,11 +356,11 @@ let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false,min
 let callsRows=[],currentCallId=null,currentCall=null,callsBusy=false,signedCallFiles={},currentCallGroup=[];
 const CONSIGLIO_DIRETTIVO_PRESENTI="Presidente: Musso Paolo\nVice Presidente: Fontana Stefano\nSegretario: Ronco Meri\nConsigliere: Milan Roberto\nConsigliere: Pedercini Sabrina\nConsigliere: Broggio Emanuele\nConsigliere: Ragazzini Luisa";
 function renderSignedMinuteInfo(){
- const upload=$('vSignedUpload'),open=$('vSignedOpen'),down=$('vSignedDownload'),info=$('vSignedInfo');
+ const upload=$('vSignedUpload'),open=$('vSignedOpen'),down=$('vSignedDownload'),del=$('vSignedDelete'),info=$('vSignedInfo');
  if(!upload||!info)return;
  upload.disabled=!currentMinuteId;
  const f=currentMinuteId?signedMinuteFiles[String(currentMinuteId)]:null;
- open.classList.toggle('hidden',!f);down.classList.toggle('hidden',!f);
+ open.classList.toggle('hidden',!f);down.classList.toggle('hidden',!f);del.classList.toggle('hidden',!f);
  if(!currentMinuteId){
   info.innerHTML='<div class="notice warn">Salva prima il verbale; poi potrai caricare il PDF firmato.</div>';
  }else if(f){
@@ -436,6 +436,28 @@ async function openSignedMinute(id,download=false){
   if(popup)popup.close();
   msg('vSignedInfo',e.message||String(e),'err');
  }
+}
+async function deleteSignedMinute(id=currentMinuteId){
+ if(prof?.ruolo!=='AMMINISTRATORE'||!id)return;
+ let f=signedMinuteFiles[String(id)];
+ if(!f){
+  const r=await sb.from('verbali_firmati').select('verbale_id,storage_path,nome_file,dimensione_bytes,caricato_il').eq('verbale_id',id).maybeSingle();
+  if(r.error)return msg('vSignedInfo',r.error.message,'err');
+  if(!r.data)return msg('vSignedInfo','Nessun PDF firmato da eliminare.','warn');
+  f=r.data;
+ }
+ if(!confirm('Eliminare definitivamente il PDF firmato "'+(f.nome_file||'')+'"?'))return;
+ msg('vSignedInfo','Eliminazione del PDF firmato...');
+ try{
+  const rm=await sb.storage.from('verbali-firmati').remove([f.storage_path]);if(rm.error)throw rm.error;
+  const db=await sb.from('verbali_firmati').delete().eq('verbale_id',id);if(db.error)throw db.error;
+  delete signedMinuteFiles[String(id)];
+  $('vSignedFile').value='';
+  renderSignedMinuteInfo();
+  await loadMinutesList();
+  if(!$('archive').classList.contains('hidden'))await loadArchive();
+  msg('vSignedInfo','PDF firmato eliminato. Il verbale resta salvato nel gestionale.','ok');
+ }catch(e){msg('vSignedInfo',e.message||String(e),'err')}
 }
 function resetMinuteFilters(){
  $('vSearch').value='';$('vYear').value=new Date().getFullYear();
@@ -594,11 +616,12 @@ function renderSignedArchive(list){
    '<td>'+esc(x.sottotipo||'—')+'</td>'+
    '<td><b>'+esc(x.nome_file||'PDF firmato')+'</b><br><span class="muted">'+esc(bytes(x.dimensione_bytes))+'</span></td>'+
    '<td>'+esc(x.stato||'—')+'</td>'+
-   '<td><div class="actions"><button class="btn secondary" type="button" data-as-open="'+esc(x.documento_id)+'">📄 Apri PDF</button><button class="btn secondary" type="button" data-as-down="'+esc(x.documento_id)+'">⬇ Scarica</button><button class="btn yellow" type="button" data-as-origin="'+esc(x.documento_id)+'">Apri origine</button></div></td></tr>';
+   '<td><div class="actions"><button class="btn secondary" type="button" data-as-open="'+esc(x.documento_id)+'">📄 Apri PDF</button><button class="btn secondary" type="button" data-as-down="'+esc(x.documento_id)+'">⬇ Scarica</button><button class="btn yellow" type="button" data-as-origin="'+esc(x.documento_id)+'">Apri origine</button><button class="btn danger" type="button" data-as-delete="'+esc(x.documento_id)+'">🗑️ Elimina PDF</button></div></td></tr>';
  }).join(''):'<tr><td colspan="7">Nessun verbale o convocazione firmata presente.</td></tr>';
  $('aSignedBody').querySelectorAll('[data-as-open]').forEach(b=>b.onclick=()=>openArchiveSigned(b.dataset.asOpen,false));
  $('aSignedBody').querySelectorAll('[data-as-down]').forEach(b=>b.onclick=()=>openArchiveSigned(b.dataset.asDown,true));
  $('aSignedBody').querySelectorAll('[data-as-origin]').forEach(b=>b.onclick=()=>openArchiveOrigin(b.dataset.asOrigin));
+ $('aSignedBody').querySelectorAll('[data-as-delete]').forEach(b=>b.onclick=()=>deleteArchiveSigned(b.dataset.asDelete));
 }
 async function openArchiveSigned(id,download=false){
  const x=signedArchiveRows.find(r=>String(r.documento_id)===String(id));
@@ -612,6 +635,22 @@ async function openArchiveSigned(id,download=false){
   }else if(popup)popup.location.href=url;
   setTimeout(()=>URL.revokeObjectURL(url),60000);
  }catch(e){if(popup)popup.close();msg('amsg',e.message||String(e),'err')}
+}
+async function deleteArchiveSigned(id){
+ const x=signedArchiveRows.find(r=>String(r.documento_id)===String(id));
+ if(!x)return msg('amsg','Documento firmato non trovato.','err');
+ if(!confirm('Eliminare definitivamente il PDF firmato "'+(x.nome_file||'')+'"? Il documento originale resterà salvato.'))return;
+ msg('amsg','Eliminazione del PDF firmato...');
+ try{
+  const rm=await sb.storage.from(x.storage_bucket).remove([x.storage_path]);if(rm.error)throw rm.error;
+  const table=x.tipo_documento==='VERBALE'?'verbali_firmati':'convocazioni_firmate';
+  const key=x.tipo_documento==='VERBALE'?'verbale_id':'convocazione_id';
+  const db=await sb.from(table).delete().eq(key,x.documento_id);if(db.error)throw db.error;
+  if(x.tipo_documento==='VERBALE')delete signedMinuteFiles[String(x.documento_id)];
+  else delete signedCallFiles[String(x.documento_id)];
+  await loadArchive();
+  msg('amsg','PDF firmato eliminato dall’Archivio. Il documento originale non è stato eliminato.','ok');
+ }catch(e){msg('amsg',e.message||String(e),'err')}
 }
 async function openArchiveOrigin(id){
  const x=signedArchiveRows.find(r=>String(r.documento_id)===String(id));if(!x)return;
@@ -857,7 +896,7 @@ $('vAddAgenda').onclick=()=>addMinuteAgendaPoint();
 $('vAiGenerate').onclick=()=>useMinuteAI('genera');$('vAiImprove').onclick=()=>useMinuteAI('migliora');
 $('vDate').addEventListener('change',updateNextMinuteCode);
 $('vSave').onclick=()=>saveMinute(false);$('vApprove').onclick=()=>saveMinute(true);$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
-$('vSignedUpload').onclick=uploadSignedMinute;$('vSignedOpen').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,false);$('vSignedDownload').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,true);
+$('vSignedUpload').onclick=uploadSignedMinute;$('vSignedOpen').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,false);$('vSignedDownload').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,true);$('vSignedDelete').onclick=()=>currentMinuteId&&deleteSignedMinute(currentMinuteId);
 $('vSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadMinutesList()}};
 $('vClear').onclick=()=>{resetMinuteFilters();loadMinutesList()};
 $('vType').onchange=()=>{if(!currentMinuteId){const t=minuteTypeLabel($('vType').value);$('vHeading').value=t==='Consiglio Direttivo'?'Verbale del Consiglio Direttivo':t==='Assemblea Soci'?'Verbale dell’Assemblea dei Soci':t==='Riunione operativa'?'Verbale riunione operativa':'Verbale riunione'}};
@@ -871,7 +910,7 @@ function signedCallSlotHtml(call,label){
  return '<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(label)+'</b><div class="muted">'+esc(call.convocazione_codice||'')+(call.data_riunione?' · '+esc(call.data_riunione):'')+'</div></div>'+(f?'<span class="pill g">PDF FIRMATO</span>':'<span class="pill b">DA CARICARE</span>')+'</div>'+
  '<div class="field" style="margin-top:8px"><label>PDF firmato</label><input type="file" accept=".pdf,application/pdf" data-cvsigned-file="'+esc(call.id)+'"><span class="muted">Solo PDF · massimo 15 MB.</span></div>'+
  '<div class="toolbar"><button class="btn blue" type="button" data-cvsigned-upload="'+esc(call.id)+'">📤 '+(f?'Sostituisci':'Carica')+' PDF firmato</button>'+
- (f?'<button class="btn secondary" type="button" data-cvsigned-open="'+esc(call.id)+'">📄 Apri</button><button class="btn secondary" type="button" data-cvsigned-download="'+esc(call.id)+'">⬇ Scarica</button>':'')+'</div>'+
+ (f?'<button class="btn secondary" type="button" data-cvsigned-open="'+esc(call.id)+'">📄 Apri</button><button class="btn secondary" type="button" data-cvsigned-download="'+esc(call.id)+'">⬇ Scarica</button><button class="btn danger" type="button" data-cvsigned-delete="'+esc(call.id)+'">🗑️ Elimina</button>':'')+'</div>'+
  (f?'<div class="notice ok"><b>'+esc(f.nome_file)+'</b> · '+esc(bytes(f.dimensione_bytes))+' · caricato il '+esc(dt(f.caricato_il))+'</div>':'')+'</div>';
 }
 function renderSignedCalls(){
@@ -891,6 +930,7 @@ function renderSignedCalls(){
  area.querySelectorAll('[data-cvsigned-upload]').forEach(b=>b.onclick=()=>uploadSignedCall(b.dataset.cvsignedUpload));
  area.querySelectorAll('[data-cvsigned-open]').forEach(b=>b.onclick=()=>openSignedCall(b.dataset.cvsignedOpen,false));
  area.querySelectorAll('[data-cvsigned-download]').forEach(b=>b.onclick=()=>openSignedCall(b.dataset.cvsignedDownload,true));
+ area.querySelectorAll('[data-cvsigned-delete]').forEach(b=>b.onclick=()=>deleteSignedCall(b.dataset.cvsignedDelete));
 }
 async function loadSignedCallsForCurrent(){
  currentCallGroup=[];
@@ -955,6 +995,27 @@ async function openSignedCall(id,download=false){
   }else if(popup)popup.location.href=url;
   setTimeout(()=>URL.revokeObjectURL(url),60000);
  }catch(e){if(popup)popup.close();msg('cvSignedMsg',e.message||String(e),'err')}
+}
+async function deleteSignedCall(id){
+ if(prof?.ruolo!=='AMMINISTRATORE'||!id)return;
+ let f=signedCallFiles[String(id)];
+ if(!f){
+  const r=await sb.from('convocazioni_firmate').select('convocazione_id,storage_path,nome_file,dimensione_bytes,caricato_il').eq('convocazione_id',id).maybeSingle();
+  if(r.error)return msg('cvSignedMsg',r.error.message,'err');
+  if(!r.data)return msg('cvSignedMsg','Nessun PDF firmato da eliminare.','warn');
+  f=r.data;
+ }
+ if(!confirm('Eliminare definitivamente il PDF firmato "'+(f.nome_file||'')+'"?'))return;
+ msg('cvSignedMsg','Eliminazione del PDF firmato...');
+ try{
+  const rm=await sb.storage.from('convocazioni-firmate').remove([f.storage_path]);if(rm.error)throw rm.error;
+  const db=await sb.from('convocazioni_firmate').delete().eq('convocazione_id',id);if(db.error)throw db.error;
+  delete signedCallFiles[String(id)];
+  renderSignedCalls();
+  await loadCallsList();
+  if(!$('archive').classList.contains('hidden'))await loadArchive();
+  msg('cvSignedMsg','PDF firmato eliminato. La convocazione resta salvata nel gestionale.','ok');
+ }catch(e){msg('cvSignedMsg',e.message||String(e),'err')}
 }
 function callTypeLabel(v){return v==='ASSEMBLEA_SOCI'?'Assemblea dei Soci':'Consiglio Direttivo'}
 function callPhaseLabel(v){return v==='PRIMA'?'1ª convocazione':v==='SECONDA'?'2ª convocazione':'Convocazione'}
