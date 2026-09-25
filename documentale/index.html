@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.16</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.17</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.16</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.17</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -316,6 +316,19 @@ Consigliere: Ragazzini Luisa</textarea></div>
        <div id="cvSignedMsg"></div>
       </div>
 
+      <div class="box" style="margin-top:12px">
+       <div class="actions" style="justify-content:space-between"><div><b>📲 Invio via WhatsApp</b><div class="muted">Il gestionale prepara il messaggio. Dopo averlo realmente inviato su WhatsApp, registra l’invio nello storico.</div></div><span class="pill g">WHATSAPP</span></div>
+       <div class="grid2" style="margin-top:9px">
+        <div class="field"><label>Destinatario / nominativo</label><input id="cvWaRecipient" placeholder="Es. Mario Rossi"></div>
+        <div class="field"><label>Numero WhatsApp</label><input id="cvWaPhone" type="tel" placeholder="Es. +39 333 1234567"></div>
+       </div>
+       <div class="field" style="margin-top:9px"><label>Messaggio WhatsApp</label><textarea id="cvWaMessage" style="min-height:180px"></textarea></div>
+       <div class="toolbar"><button id="cvWaGenerate" class="btn secondary" type="button">✨ Prepara messaggio</button><button id="cvWaOpen" class="btn blue" type="button">📲 Apri WhatsApp</button><button id="cvWaLog" class="btn yellow" type="button">✅ Registra invio effettuato</button></div>
+       <div class="muted">Il PDF firmato non viene allegato automaticamente: dopo l’apertura di WhatsApp puoi allegarlo dalla chat. Il gestionale non può verificare la consegna del messaggio.</div>
+       <div id="cvWaMsg"></div>
+       <div id="cvWaHistory" style="margin-top:10px"></div>
+      </div>
+
       <div class="toolbar"><button id="cvSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="cvFinalize" class="btn blue" type="button">✅ Rendi definitiva</button></div>
       <div id="cvmsg"></div>
      </div>
@@ -353,7 +366,7 @@ const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,
 const today=()=>new Date().toISOString().slice(0,10),dt=x=>x?new Date(x).toLocaleString('it-IT'):'—';
 let prof=null,rows=[],attachments=[],currentId=null,currentDoc=null,busy=false,loadSeq=0,signedArchiveRows=[];
 let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false,minutesAiBusy=false,signedMinuteFiles={};
-let callsRows=[],currentCallId=null,currentCall=null,callsBusy=false,signedCallFiles={},currentCallGroup=[];
+let callsRows=[],currentCallId=null,currentCall=null,callsBusy=false,signedCallFiles={},currentCallGroup=[],whatsAppHistory=[],whatsAppSentMap={};
 const CONSIGLIO_DIRETTIVO_PRESENTI="Presidente: Musso Paolo\nVice Presidente: Fontana Stefano\nSegretario: Ronco Meri\nConsigliere: Milan Roberto\nConsigliere: Pedercini Sabrina\nConsigliere: Broggio Emanuele\nConsigliere: Ragazzini Luisa";
 function renderSignedMinuteInfo(){
  const upload=$('vSignedUpload'),open=$('vSignedOpen'),down=$('vSignedDownload'),del=$('vSignedDelete'),info=$('vSignedInfo');
@@ -904,6 +917,104 @@ $('vType').onchange=()=>{if(!currentMinuteId){const t=minuteTypeLabel($('vType')
 
 
 
+
+function buildCallWhatsAppMessage(){
+ const type=$('cvType').value==='ASSEMBLEA_SOCI'?'Assemblea dei Soci':'Consiglio Direttivo';
+ const phase=currentCall?.fase_convocazione==='PRIMA'?'1ª convocazione':currentCall?.fase_convocazione==='SECONDA'?'2ª convocazione':'';
+ const heading=$('cvHeading').value.trim()||'Convocazione';
+ const body=$('cvText').value.trim();
+ const agenda=callAgendaText();
+ const signer=$('cvSigner').value.trim()||'Musso Paolo';
+ let out='*Croce Gialla Emergenza ODV*\n\n*'+heading+'*';
+ if(phase)out+='\n'+phase;
+ out+='\n\n';
+ if(body)out+=body;
+ else{
+  const d=fmtCallDate($('cvDate').value),t=$('cvTime1').value||'';
+  out+='Convocazione '+type+(d?' del '+d:'')+(t?' alle ore '+t:'')+'.';
+ }
+ if(agenda)out+='\n\n*Ordine del giorno*\n'+agenda;
+ out+='\n\nIl Presidente\n'+signer;
+ return out;
+}
+function prepareCallWhatsAppMessage(force=true){
+ if(!currentCallId){
+  $('cvWaMessage').value='';
+  $('cvWaOpen').disabled=true;$('cvWaLog').disabled=true;
+  msg('cvWaMsg','Salva prima la convocazione per poter registrare l’invio.','warn');
+  return;
+ }
+ $('cvWaOpen').disabled=false;$('cvWaLog').disabled=false;
+ if(force||!$('cvWaMessage').value.trim())$('cvWaMessage').value=buildCallWhatsAppMessage();
+ msg('cvWaMsg','');
+}
+function normalizeWhatsAppPhone(value){
+ let d=String(value||'').replace(/\D/g,'');
+ if(d.startsWith('00'))d=d.slice(2);
+ if(d&&d.length<=10&&!d.startsWith('39'))d='39'+d;
+ return d;
+}
+function openCallWhatsApp(){
+ if(!currentCallId)return msg('cvWaMsg','Salva prima la convocazione.','warn');
+ const message=$('cvWaMessage').value.trim()||buildCallWhatsAppMessage();
+ $('cvWaMessage').value=message;
+ const phone=normalizeWhatsAppPhone($('cvWaPhone').value);
+ const url=phone?'https://wa.me/'+phone+'?text='+encodeURIComponent(message):'https://wa.me/?text='+encodeURIComponent(message);
+ const w=window.open(url,'_blank','noopener');
+ if(!w)msg('cvWaMsg','Il browser ha bloccato l’apertura di WhatsApp. Consenti i popup e riprova.','warn');
+}
+async function loadCallWhatsAppHistory(){
+ whatsAppHistory=[];
+ if(!currentCallId){
+  renderCallWhatsAppHistory();return;
+ }
+ const r=await sb.from('convocazioni_whatsapp_log')
+  .select('id,convocazione_id,destinatario,telefono,messaggio,inviato_il')
+  .eq('convocazione_id',currentCallId)
+  .order('inviato_il',{ascending:false})
+  .limit(50);
+ if(r.error){msg('cvWaMsg','Errore storico WhatsApp: '+r.error.message,'err');return}
+ whatsAppHistory=r.data||[];renderCallWhatsAppHistory();
+}
+function renderCallWhatsAppHistory(){
+ const box=$('cvWaHistory');if(!box)return;
+ if(!currentCallId){box.innerHTML='';return}
+ if(!whatsAppHistory.length){box.innerHTML='<div class="muted">Nessun invio WhatsApp registrato per questa convocazione.</div>';return}
+ box.innerHTML='<b>Storico invii WhatsApp</b>'+whatsAppHistory.map(x=>
+  '<div class="box" style="margin-top:7px"><div class="actions" style="justify-content:space-between"><div><b>'+esc(x.destinatario||'Destinatario non indicato')+'</b>'+
+  (x.telefono?' · '+esc(x.telefono):'')+'<br><span class="muted">'+esc(dt(x.inviato_il))+'</span></div>'+
+  '<button class="btn danger" type="button" data-wa-delete="'+esc(x.id)+'">🗑️ Elimina registrazione</button></div></div>'
+ ).join('');
+ box.querySelectorAll('[data-wa-delete]').forEach(b=>b.onclick=()=>deleteCallWhatsAppLog(b.dataset.waDelete));
+}
+async function registerCallWhatsAppSend(){
+ if(!currentCallId)return msg('cvWaMsg','Salva prima la convocazione.','warn');
+ const recipient=$('cvWaRecipient').value.trim();
+ const phone=$('cvWaPhone').value.trim();
+ const message=$('cvWaMessage').value.trim()||buildCallWhatsAppMessage();
+ if(!recipient&&!phone)return msg('cvWaMsg','Inserisci almeno il destinatario o il numero WhatsApp.','warn');
+ try{
+  const r=await sb.from('convocazioni_whatsapp_log').insert({
+   convocazione_id:currentCallId,destinatario:recipient||null,telefono:phone||null,messaggio:message
+  });
+  if(r.error)throw r.error;
+  await loadCallWhatsAppHistory();
+  whatsAppSentMap[String(currentCallId)]=true;
+  renderCalls();
+  msg('cvWaMsg','Invio WhatsApp registrato nello storico.','ok');
+ }catch(e){msg('cvWaMsg',e.message||String(e),'err')}
+}
+async function deleteCallWhatsAppLog(id){
+ const row=whatsAppHistory.find(x=>String(x.id)===String(id));
+ if(!row)return;
+ if(!confirm('Eliminare questa registrazione di invio WhatsApp?'))return;
+ const r=await sb.from('convocazioni_whatsapp_log').delete().eq('id',id);
+ if(r.error)return msg('cvWaMsg',r.error.message,'err');
+ await loadCallWhatsAppHistory();
+ whatsAppSentMap[String(currentCallId)]=whatsAppHistory.length>0;
+ renderCalls();
+ msg('cvWaMsg','Registrazione di invio eliminata.','ok');
+}
 function signedCallSlotHtml(call,label){
  if(!call)return '<div class="box"><b>'+esc(label)+'</b><div class="muted" style="margin-top:6px">Salva prima le convocazioni per poter caricare il PDF firmato.</div></div>';
  const f=signedCallFiles[String(call.id)];
@@ -1119,7 +1230,7 @@ function resetCallForm(){
  $('cvType').disabled=false;$('cvType').value='CONSIGLIO_DIRETTIVO';$('cvDate').value='';$('cvTime1').value='';$('cvDate2').value='';$('cvTime2').value='';
  $('cvPlace').value='Sede Croce Gialla Emergenza ODV';$('cvStatus').value='BOZZA';$('cvHeading').value='';
  $('cvRecipients').value='';$('cvObject').value='';$('cvText').value='';$('cvText2').value='';$('cvSigner').value='Musso Paolo';
- setCallAgenda();updateCallLayout(true);signedCallFiles={};currentCallGroup=[];renderSignedCalls();msg('cvSignedMsg','');msg('cvmsg','');
+ setCallAgenda();updateCallLayout(true);signedCallFiles={};currentCallGroup=[];whatsAppHistory=[];$('cvWaRecipient').value='';$('cvWaPhone').value='';$('cvWaMessage').value='';renderSignedCalls();renderCallWhatsAppHistory();prepareCallWhatsAppMessage(false);msg('cvSignedMsg','');msg('cvmsg','');
 }
 function fmtCallDate(v){
  const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:(v||'');
@@ -1216,8 +1327,8 @@ function renderCalls(){
  $('cvCount').textContent=callsRows.length;
  $('cvBody').innerHTML=callsRows.length?callsRows.map(v=>{
   const phase=v.fase_convocazione==='PRIMA'?'<span class="pill r">1ª CONVOCAZIONE</span>':v.fase_convocazione==='SECONDA'?'<span class="pill g">2ª CONVOCAZIONE</span>':'';
-  const signed=signedCallFiles[String(v.id)];
-  return '<tr><td><b>'+esc(v.convocazione_codice)+'</b>'+(phase?'<br>'+phase:'')+(signed?'<br><span class="pill g">✍️ FIRMATA</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='DESERTA'||v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button></div></td></tr>';
+  const signed=signedCallFiles[String(v.id)],waSent=whatsAppSentMap[String(v.id)];
+  return '<tr><td><b>'+esc(v.convocazione_codice)+'</b>'+(phase?'<br>'+phase:'')+(signed?'<br><span class="pill g">✍️ FIRMATA</span>':'')+(waSent?'<br><span class="pill g">📲 WHATSAPP INVIATO</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='DESERTA'||v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button></div></td></tr>';
  }).join(''):'<tr><td colspan="7">Nessuna convocazione trovata.</td></tr>';
  $('cvBody').querySelectorAll('[data-cvopen]').forEach(b=>b.onclick=()=>openCall(b.dataset.cvopen,false));
  $('cvBody').querySelectorAll('[data-cvprint]').forEach(b=>b.onclick=()=>openCall(b.dataset.cvprint,true));
@@ -1231,9 +1342,12 @@ async function loadCallsList(){
  callsRows=r.data||[];
  signedCallFiles={};
  if(callsRows.length){
-  const sf=await sb.from('convocazioni_firmate').select('convocazione_id,storage_path,nome_file,dimensione_bytes,caricato_il').in('convocazione_id',callsRows.map(v=>v.id));
+  const ids=callsRows.map(v=>v.id);
+  const sf=await sb.from('convocazioni_firmate').select('convocazione_id,storage_path,nome_file,dimensione_bytes,caricato_il').in('convocazione_id',ids);
   if(!sf.error)(sf.data||[]).forEach(x=>signedCallFiles[String(x.convocazione_id)]=x);
- }
+  const wa=await sb.from('convocazioni_whatsapp_log').select('convocazione_id').in('convocazione_id',ids);
+  whatsAppSentMap={};if(!wa.error)(wa.data||[]).forEach(x=>whatsAppSentMap[String(x.convocazione_id)]=true);
+ }else whatsAppSentMap={};
  renderCalls();updateNextCallCode();msg('cvListMsg','');
 }
 async function loadCalls(){
@@ -1257,6 +1371,7 @@ async function openCall(id,printAfter=false){
   $('cvRecipients').value=v.destinatari||'';$('cvObject').value=v.oggetto||'';setCallAgenda(v.ordine_giorno||'');
   $('cvText').value=v.testo||'';$('cvText2').value='';$('cvSigner').value=v.firmatario||'Musso Paolo';updateCallLayout(false);
   await loadSignedCallsForCurrent();
+  $('cvWaRecipient').value='';$('cvWaPhone').value='';$('cvWaMessage').value='';prepareCallWhatsAppMessage(true);await loadCallWhatsAppHistory();
   msg('cvListMsg','');msg('cvmsg','Convocazione '+v.convocazione_codice+' aperta.','ok');
   if(printAfter)setTimeout(()=>printCall(),120);else $('cvTitle').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){msg('cvListMsg',e.message||String(e),'err')}
@@ -1301,6 +1416,7 @@ $('cvDate').addEventListener('change',updateNextCallCode);
 $('cvType').onchange=()=>{if(!currentCallId)updateCallLayout(true)};
 $('cvStatus').onchange=updateCallStateUI;
 $('cvSave').onclick=()=>saveCall(false);$('cvFinalize').onclick=()=>saveCall(true);$('cvPrint').onclick=printCall;$('cvFind').onclick=loadCallsList;
+$('cvWaGenerate').onclick=()=>prepareCallWhatsAppMessage(true);$('cvWaOpen').onclick=openCallWhatsApp;$('cvWaLog').onclick=registerCallWhatsAppSend;
 $('cvSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadCallsList()}};
 $('cvClear').onclick=()=>{resetCallFilters();loadCallsList()};
 
