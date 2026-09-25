@@ -30,6 +30,8 @@
 
 @media print{
  @page{size:A4 portrait;margin:7mm}
+ @page ndPortrait{size:A4 portrait;margin:7mm}
+ @page rosterLandscape{size:A4 landscape;margin:10mm}
  body{background:#fff!important;font-size:10.5pt}
  body>*:not(#printSheet){display:none!important}
  #printSheet{display:block!important;color:#111!important;background:#fff!important}
@@ -49,6 +51,7 @@
 
  /* Nota di Debito: A4 verticale, compatta e pensata per una sola pagina. */
  .nd-print-page{
+  page:ndPortrait;
   width:100%!important;
   max-width:none!important;
   margin:0!important;
@@ -110,7 +113,7 @@
 /* Turnario Emergenza 118: sola pianificazione equipaggi, nessun intervento programmato */
 .em-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.em-header img{width:54px;height:54px;border-radius:50%;background:#fff;border:3px solid #fff}.em-summary{display:flex;gap:7px;flex-wrap:wrap}.em-day{background:#fff;border:1px solid var(--l);border-radius:12px;margin:14px 0;overflow:hidden;break-inside:avoid-page}.em-day-head{background:#e9edf0;color:var(--n);font-size:17px;padding:11px 14px;font-weight:1000;display:flex;gap:9px;align-items:center;justify-content:space-between;flex-wrap:wrap}.em-day-head .muted{font-size:11px}.em-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.em-roster{border-collapse:separate;border-spacing:1px;width:100%;min-width:880px;background:#fff;table-layout:fixed}.em-roster thead th{position:static;background:#414449;color:white;text-align:center;font-size:12px;letter-spacing:.2px;padding:8px 4px;border:0}.em-roster thead th:first-child{width:90px}.em-roster tbody th{color:#fff;background:#414449;font-size:12px;text-align:left;padding:10px 7px;border:0;vertical-align:top;width:90px}.em-roster tbody td{border:0;background:#f8f9fa;padding:10px;vertical-align:top;min-height:95px;height:105px;overflow-wrap:anywhere}.em-roster tbody tr:nth-child(even) td{background:#f3f5f7}.em-entry{background:#fff;border-left:4px solid var(--n);border-radius:7px;padding:7px 8px;margin:0 0 7px;box-shadow:0 1px 4px #0000000d;font-size:12px;line-height:1.5}.em-entry.em-unavailable{border-left-color:var(--r);background:#fff0f0}.em-entry.em-pending{border-left-color:#c38c22}.em-entry strong{display:block;color:var(--n);font-size:13px;line-height:1.35}.em-entry small{color:var(--m);font-size:11px}.em-entry.em-unavailable strong{text-decoration:line-through;color:var(--r)}.em-empty{font-size:12px;color:#98a5b0;text-align:center;padding-top:8px}.em-shift-line{background:#fff9d5;border:1px solid #eddf98;border-radius:7px;padding:6px 9px;margin:0 0 9px;font-size:12px;font-weight:800;color:var(--n)}.em-head-week{font-size:20px;color:var(--n)}.em-note{padding:10px 13px;border-left:4px solid var(--y);background:#fffbdf;margin-top:8px;color:#68570c;font-size:12px}
 @media print{
- @page{size:A4 landscape;margin:10mm}
+ /* Orientamento orizzontale riservato ai turnari tramite pagina nominata. */
  body{background:#fff;color:#000}
  #app{max-width:none;padding:0}
  #app>.top,#app .side,#emergency .em-toolbar,#emergency .em-note,#emergency .em-no-print{display:none!important}
@@ -135,6 +138,7 @@
  /* The Foglio Viaggio's print stylesheet hides every body child except
     #printSheet. Explicitly restore #app ONLY when printing a roster. */
  body.print-roster #app{display:block!important;visibility:visible!important;max-width:none!important;padding:0!important}
+ body.print-roster #emergency,body.print-roster #assistance{page:rosterLandscape}
  body.print-roster #printSheet{display:none!important}
  body.print-roster #login,body.print-roster #volApp,body.print-roster #monitorApp,body.print-roster #tabletApp{display:none!important}
  body.print-roster #app>.top,body.print-roster #app .side{display:none!important}
@@ -339,7 +343,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.35</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.36</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -2033,7 +2037,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.35</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.36</span></div>'+
  '</div>';
 }
 function openFoglioPrintWindow(){
@@ -2255,7 +2259,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.35'
+  versione_app:'V13.36'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -5116,7 +5120,7 @@ async function downloadSingleBackupDataset(){
   const {rows}=await backupFetchDataset(code);
   const base='CGE_'+backupSafeName(code)+'_'+backupTimestamp();
   if(format==='CSV')backupDownloadFile(base+'.csv',backupRowsToCsv(rows),'text/csv;charset=utf-8');
-  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.35',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
+  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.36',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
   await backupLogExport(format,code,rows.length);
   msg('backupDatasetMsg','Esportazione completata: '+rows.length+' record.','ok');
   await loadBackupExport();
@@ -5142,7 +5146,7 @@ async function downloadFullBackup(){
   const backup={
    formato:'CGE_BACKUP_V1',
    associazione:'Croce Gialla Emergenza ODV',
-   versione_app:'V13.35',
+   versione_app:'V13.36',
    generato_il:new Date().toISOString(),
    contiene_credenziali_accesso:false,
    documenti_binari_inclusi:false,
