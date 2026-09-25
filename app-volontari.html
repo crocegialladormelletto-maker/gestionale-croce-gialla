@@ -11,8 +11,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <title>Croce Gialla Volontari</title>
-<link rel="manifest" href="/gestionale-croce-gialla/manifest-volontari-v13-41.webmanifest?v=13.41">
-<link rel="apple-touch-icon" sizes="180x180" href="/gestionale-croce-gialla/icons/icon-192-v6.png?v=13.41">
+<link rel="manifest" href="/gestionale-croce-gialla/manifest-volontari-v13-43.webmanifest?v=13.43">
+<link rel="apple-touch-icon" sizes="180x180" href="/gestionale-croce-gialla/icons/icon-192-v6.png?v=13.43">
 <style>
 body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f2f5f8;color:#12375d;font:16px system-ui,-apple-system,Segoe UI,Arial}
 .card{width:min(92vw,430px);background:#fff;border:1px solid #d9e2ea;border-radius:18px;padding:24px;text-align:center;box-shadow:0 10px 35px #12375d18}
@@ -24,16 +24,16 @@ a{display:inline-block;margin-top:8px;background:#12375d;color:#fff;text-decorat
 <body>
 <div class="card">
 <h1>Croce Gialla Emergenza</h1>
-<div class="badge">APP VOLONTARI · v13.41</div>
+<div class="badge">APP VOLONTARI · v13.43</div>
 <div class="spin"></div>
 <p id="status">Preparazione della nuova app…</p>
 <p id="installHelp" hidden><b>Su iPhone:</b> tocca il pulsante Condividi di Safari, scegli <b>“Aggiungi alla schermata Home”</b> e poi apri la nuova icona Croce Gialla.</p>
-<a id="manual" hidden href="/gestionale-croce-gialla/?area=volontari&appv=13.41&fresh=1">Apri solo l’anteprima aggiornata</a>
+<a id="manual" hidden href="/gestionale-croce-gialla/?area=volontari&appv=13.43&fresh=1">Apri solo l’anteprima aggiornata</a>
 </div>
 <script>
 (async()=>{
  const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
- const target='/gestionale-croce-gialla/?area=volontari&appv=13.41&fresh='+Date.now();
+ const target='/gestionale-croce-gialla/?area=volontari&appv=13.43&fresh='+Date.now();
  try{
   if('serviceWorker' in navigator){
    const regs=await navigator.serviceWorker.getRegistrations();
@@ -49,7 +49,7 @@ a{display:inline-block;margin-top:8px;background:#12375d;color:#fff;text-decorat
   setTimeout(()=>location.replace(target),350);
  }else{
   document.querySelector('.spin').style.display='none';
-  document.getElementById('status').textContent='Nuova App Volontari v13.41 pronta per l’installazione.';
+  document.getElementById('status').textContent='Nuova App Volontari v13.43 pronta per l’installazione.';
   document.getElementById('installHelp').hidden=false;
   document.getElementById('manual').hidden=false;
  }
