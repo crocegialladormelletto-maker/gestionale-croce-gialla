@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.26</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.27</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.26</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.27</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -231,7 +231,7 @@
     <div class="hero"><h2>📝 Verbali</h2><p>Crea, archivia e stampa i verbali direttamente dal Gestionale Documentale.</p></div>
     <div class="pad">
      <div class="section">
-      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn yellow" type="button">✚ Verbale Assemblea Soci</button><button id="vPrint" class="btn secondary" type="button">🖨️ Stampa / Salva PDF</button><button id="vNew" class="btn secondary" type="button">✚ Nuovo</button><button id="vExit" class="btn secondary" type="button">← Esci / Elenco</button></div></div>
+      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn yellow" type="button">✚ Verbale Assemblea Soci</button><button id="vDuplicate" class="btn yellow" type="button" disabled>⧉ Duplica verbale</button><button id="vPrint" class="btn secondary" type="button">🖨️ Stampa / Salva PDF</button><button id="vNew" class="btn secondary" type="button">✚ Nuovo</button><button id="vExit" class="btn secondary" type="button">← Esci / Elenco</button></div></div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Tipo riunione *</label><select id="vType"><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea Soci</option><option value="RIUNIONE_OPERATIVA">Riunione operativa</option><option value="ALTRO">Altro</option></select></div>
        <div class="field"><label>Data riunione *</label><input id="vDate" type="date"></div>
@@ -314,7 +314,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
      <div class="section">
       <div class="actions" style="justify-content:space-between">
        <div><h3 id="cvTitle" style="margin:0">Nuova convocazione</h3><div id="cvCode" class="muted">Numerazione automatica per anno.</div></div>
-       <div class="actions"><button id="cvPrint" class="btn secondary" type="button">🖨️ Stampa / Salva PDF</button><button id="cvNew" class="btn secondary" type="button">✚ Nuova</button><button id="cvExit" class="btn secondary" type="button">← Esci / Elenco</button></div>
+       <div class="actions"><button id="cvDuplicate" class="btn yellow" type="button" disabled>⧉ Duplica convocazione</button><button id="cvPrint" class="btn secondary" type="button">🖨️ Stampa / Salva PDF</button><button id="cvNew" class="btn secondary" type="button">✚ Nuova</button><button id="cvExit" class="btn secondary" type="button">← Esci / Elenco</button></div>
       </div>
 
       <div class="grid4" style="margin-top:10px">
@@ -1004,7 +1004,7 @@ function updateMinuteStateUI(){
  $('vApprove').textContent=approved?'✅ Verbale approvato':'✅ Approva verbale';
 }
 function resetMinuteForm(){
- currentMinuteId=null;currentMinute=null;$('vTitle').textContent='Nuovo verbale';
+ currentMinuteId=null;currentMinute=null;$('vDuplicate').disabled=true;$('vTitle').textContent='Nuovo verbale';
  $('vType').value='CONSIGLIO_DIRETTIVO';$('vDate').value=today();$('vStart').value='';$('vEnd').value='';$('vPlace').value='Sede Croce Gialla Emergenza ODV';
  $('vStatus').value='BOZZA';$('vApprovalDate').value='';$('vHeading').value='Verbale del Consiglio Direttivo';
  ['vAbsent','vGuests','vProceedings','vDecisions','vVote','vNotes','vAiNotes'].forEach(id=>$(id).value='');
@@ -1167,7 +1167,7 @@ async function openMinute(id,printAfter=false){
    v=(r.data||[]).find(x=>String(x.id)===String(id));
   }
   if(!v)throw new Error('Verbale non trovato nell’archivio.');
-  currentMinuteId=v.id;currentMinute=v;
+  currentMinuteId=v.id;currentMinute=v;$('vDuplicate').disabled=false;
   $('vTitle').textContent='Modifica verbale';$('vCode').textContent=v.verbale_codice+' · '+v.data_riunione;
   $('vType').value=v.tipo_riunione||'CONSIGLIO_DIRETTIVO';updateMinuteTypeUI(false);$('vDate').value=v.data_riunione||'';
   $('vStart').value=v.ora_inizio?String(v.ora_inizio).slice(0,5):'';$('vEnd').value=v.ora_fine?String(v.ora_fine).slice(0,5):'';
@@ -1259,7 +1259,7 @@ $('vAssemblyCall').onchange=applyAssemblyCallToMinute;
 $('vBoardCall').onchange=applyBoardCallToMinute;
 $('vAiGenerate').onclick=()=>useMinuteAI('genera');$('vAiImprove').onclick=()=>useMinuteAI('migliora');
 $('vDate').addEventListener('change',updateNextMinuteCode);
-$('vSave').onclick=()=>saveMinute(false);$('vApprove').onclick=()=>saveMinute(true);$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
+$('vSave').onclick=()=>saveMinute(false);$('vApprove').onclick=()=>saveMinute(true);$('vDuplicate').onclick=()=>currentMinuteId&&duplicateMinute(currentMinuteId);$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
 $('vSignedUpload').onclick=uploadSignedMinute;$('vSignedOpen').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,false);$('vSignedDownload').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,true);$('vSignedDelete').onclick=()=>currentMinuteId&&deleteSignedMinute(currentMinuteId);
 $('vSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadMinutesList()}};
 $('vClear').onclick=()=>{resetMinuteFilters();loadMinutesList()};
@@ -1480,7 +1480,7 @@ function updateCallStateUI(){
  }
 }
 function resetCallForm(){
- currentCallId=null;currentCall=null;$('cvTitle').textContent='Nuova convocazione';
+ currentCallId=null;currentCall=null;$('cvDuplicate').disabled=true;$('cvTitle').textContent='Nuova convocazione';
  $('cvType').disabled=false;$('cvType').value='CONSIGLIO_DIRETTIVO';$('cvDate').value='';$('cvTime1').value='';$('cvDate2').value='';$('cvTime2').value='';
  $('cvPlace').value='Sede Croce Gialla Emergenza ODV';$('cvStatus').value='BOZZA';$('cvHeading').value='';
  $('cvRecipients').value='';$('cvObject').value='';$('cvText').value='';$('cvText2').value='';$('cvSigner').value='Musso Paolo';
@@ -1645,7 +1645,7 @@ async function openCall(id,printAfter=false){
    v=(r.data||[]).find(x=>String(x.id)===String(id));
   }
   if(!v)throw new Error('Convocazione non trovata nell’archivio.');
-  currentCallId=v.id;currentCall=v;$('cvTitle').textContent='Modifica convocazione';$('cvCode').textContent=v.convocazione_codice+' · '+v.data_riunione;
+  currentCallId=v.id;currentCall=v;$('cvDuplicate').disabled=false;$('cvTitle').textContent='Modifica convocazione';$('cvCode').textContent=v.convocazione_codice+' · '+v.data_riunione;
   $('cvType').value=v.tipo_riunione||'CONSIGLIO_DIRETTIVO';$('cvDate').value=v.data_riunione||'';$('cvTime1').value=v.ora_prima?String(v.ora_prima).slice(0,5):'';
   $('cvDate2').value='';$('cvTime2').value='';$('cvPlace').value=v.luogo||'';$('cvStatus').value=v.stato||'BOZZA';$('cvHeading').value=v.titolo||'';
   $('cvRecipients').value=v.destinatari||'';$('cvObject').value=v.oggetto||'';setCallAgenda(v.ordine_giorno||'');
@@ -1694,7 +1694,7 @@ $('cvGenerateText').onclick=generateCallText;
 $('cvDate').addEventListener('change',updateNextCallCode);
 $('cvType').onchange=()=>{if(!currentCallId)updateCallLayout(true)};
 $('cvStatus').onchange=updateCallStateUI;
-$('cvSave').onclick=()=>saveCall(false);$('cvFinalize').onclick=()=>saveCall(true);$('cvPrint').onclick=printCall;$('cvFind').onclick=loadCallsList;
+$('cvSave').onclick=()=>saveCall(false);$('cvFinalize').onclick=()=>saveCall(true);$('cvDuplicate').onclick=()=>currentCallId&&duplicateCall(currentCallId);$('cvPrint').onclick=printCall;$('cvFind').onclick=loadCallsList;
 $('cvSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadCallsList()}};
 $('cvClear').onclick=()=>{resetCallFilters();loadCallsList()};
 
