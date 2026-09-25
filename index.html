@@ -229,7 +229,7 @@
 .vol-route-preview b{color:#133c55}
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.31</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.32</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -283,7 +283,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.31</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.32</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1167,7 +1167,7 @@
  </div>
  <div id="tabletImmediatePanel" class="surface hidden" style="margin:12px 0">
   <div class="hero"><h2>Nuovo servizio non programmato · mezzo <span id="tabletImmediateVehicle"></span></h2><p>Per una dimissione o un trasporto deciso al momento. Il servizio e il Foglio Viaggio saranno creati e collegati automaticamente.</p></div>
-  <div class="pad"><div class="notice warn">Inserisci i badge degli operatori presenti sul mezzo. Prima di creare il servizio verifica che partenza, destinazione e importo siano corretti. Nessun pagamento viene registrato automaticamente.</div>
+  <div class="pad"><div class="notice warn">Seleziona i nominativi degli operatori presenti sul mezzo. I nominativi sono filtrati automaticamente in base alla qualifica del ruolo. Prima di creare il servizio verifica che partenza, destinazione e importo siano corretti.</div>
    <form id="tabletImmediateForm">
    <div class="grid2">
     <div class="field"><label>Tipo servizio *</label><select id="tabletAdType" required><option>Dimissione</option><option>Trasporto semplice</option><option>Trasferimento</option><option>Visita</option><option>RSA</option></select></div>
@@ -1178,11 +1178,12 @@
    </div>
    <h3>Equipaggio a bordo</h3>
    <div class="grid2">
-    <div class="field"><label>Badge autista *</label><input id="tabletAdDriver" required placeholder="Es. 02"></div>
-    <div class="field" id="tabletAdLeaderBox"><label>Badge capo servizio (facoltativo)</label><input id="tabletAdLeader" placeholder="Es. 04"></div>
-    <div class="field" id="tabletAdRescuerBox"><label>Badge soccorritore <span id="tabletAdRescuerRequired">*</span></label><input id="tabletAdRescuer" placeholder="Badge"></div>
-    <div class="field"><label>Badge secondo soccorritore (facoltativo)</label><input id="tabletAdSecond" placeholder="Badge"></div>
+    <div class="field"><label>Autista *</label><select id="tabletAdDriver" required><option value="">Caricamento nominativi…</option></select></div>
+    <div class="field" id="tabletAdLeaderBox"><label>Capo servizio (facoltativo)</label><select id="tabletAdLeader"><option value="">Caricamento nominativi…</option></select></div>
+    <div class="field" id="tabletAdRescuerBox"><label>Soccorritore <span id="tabletAdRescuerRequired">(facoltativo)</span></label><select id="tabletAdRescuer"><option value="">Caricamento nominativi…</option></select></div>
+    <div class="field"><label>Secondo soccorritore (facoltativo)</label><select id="tabletAdSecond"><option value="">Caricamento nominativi…</option></select></div>
    </div>
+   <div id="tabletCrewNamesMsg"></div>
    <h3>Tariffa e note</h3>
    <div class="grid2">
     <div class="field"><label>Tariffario</label><select id="tabletAdTariffGroup"><option value="">Nessuno / concordata</option></select></div>
@@ -1489,7 +1490,7 @@ let rosterCrewBusy=false,rosterCrewEligible=new Map();
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupAutomaticRows=[],backupBusy=false;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
-let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='';
+let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='',tabletCrewPeople=[];
 const $=x=>document.getElementById(x), today=()=>new Date().toISOString().slice(0,10);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const euro=n=>'€ '+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -1603,7 +1604,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.31';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.32';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -1975,7 +1976,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.31</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.32</span></div>'+
  '</div>';
 }
 function printCurrentFoglio(){
@@ -2138,7 +2139,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.31'
+  versione_app:'V13.32'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -4466,6 +4467,34 @@ async function tabletRefreshList(){
  }
 }
 
+function tabletCrewSelectOptions(rows,label){
+ return '<option value="">— '+esc(label)+' —</option>'+rows.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+' · badge '+esc(p.badge)+'</option>').join('');
+}
+function tabletPopulateCrewNames(){
+ const configs=[
+  ['tabletAdDriver','autista','Seleziona autista'],
+  ['tabletAdLeader','capo_servizio','Seleziona capo servizio'],
+  ['tabletAdRescuer','soccorritore','Seleziona soccorritore'],
+  ['tabletAdSecond','secondo_soccorritore','Seleziona secondo soccorritore']
+ ];
+ configs.forEach(([id,qual,label])=>{
+  const el=$(id),selected=el.value,eligible=tabletCrewPeople.filter(p=>p[qual]===true);
+  el.innerHTML=tabletCrewSelectOptions(eligible,label);
+  if(eligible.some(p=>p.badge===selected))el.value=selected;
+ });
+}
+async function tabletLoadCrewPeople(){
+ msg('tabletCrewNamesMsg','Caricamento nominativi equipaggio...');
+ const r=await sb.rpc('cge_tablet_personale_equipaggio');
+ if(r.error){
+  tabletCrewPeople=[];tabletPopulateCrewNames();
+  msg('tabletCrewNamesMsg','Nominativi equipaggio non disponibili: '+r.error.message,'err');return false;
+ }
+ tabletCrewPeople=r.data||[];tabletPopulateCrewNames();
+ if(!tabletCrewPeople.length){msg('tabletCrewNamesMsg','Nessun volontario attivo disponibile.','warn');return false}
+ msg('tabletCrewNamesMsg','');
+ return true;
+}
 function tabletEligibleTariffCodes(){return tabletMezzo==='06'?['TS_BORGOMANERO','TS_NOVARA_DOBLO']:['DEA_BORGOMANERO','DEA_NOVARA']}
 async function tabletLoadTariffs(){
  const kind=tabletMezzo==='06'?'TRASPORTO SEMPLICE':'AMBULANZA';
@@ -4522,11 +4551,13 @@ async function tabletCreateImmediate(){
  if(code&&manual!=='')return msg('tabletAdMsg','Non inserire un importo manuale insieme al tariffario.','warn');
  if(code&&night&&code.startsWith('TS_'))return msg('tabletAdMsg','Tariffa notturna non prevista per trasporto semplice: chiedi al Centralino e usa la tariffa concordata.','warn');
  const crew=[
-  {ruolo:'AUTISTA',badge:$('tabletAdDriver').value.trim()},
-  ...(tabletMezzo==='06'?[]:[{ruolo:'CAPO_SERVIZIO',badge:$('tabletAdLeader').value.trim()}]),
-  {ruolo:'SOCCORRITORE',badge:$('tabletAdRescuer').value.trim()},
-  {ruolo:'SECONDO_SOCCORRITORE',badge:$('tabletAdSecond').value.trim()}
+  {ruolo:'AUTISTA',badge:$('tabletAdDriver').value},
+  ...(tabletMezzo==='06'?[]:[{ruolo:'CAPO_SERVIZIO',badge:$('tabletAdLeader').value}]),
+  {ruolo:'SOCCORRITORE',badge:$('tabletAdRescuer').value},
+  {ruolo:'SECONDO_SOCCORRITORE',badge:$('tabletAdSecond').value}
  ].filter(x=>x.badge);
+ const crewBadges=crew.map(x=>x.badge);
+ if(new Set(crewBadges).size!==crewBadges.length)return msg('tabletAdMsg','Lo stesso nominativo non può essere inserito in più ruoli.','warn');
  const minCrew=tabletMezzo==='06'?1:2;
  if(crew.length<minCrew)return msg('tabletAdMsg',minCrew===1?'Inserisci almeno un operatore in equipaggio.':'Inserisci almeno due operatori in equipaggio.','warn');
  if(!confirm('Creare ORA un servizio non programmato per il mezzo '+tabletMezzo+' e il relativo Foglio Viaggio?'))return;
@@ -4576,6 +4607,7 @@ async function startTabletArea(){
  $('tabletAdRescuer').required=false;
  $('tabletAdRescuerRequired').textContent='(facoltativo)';
  $('tabletPricePanel').classList.add('hidden');$('tabletImmediatePanel').classList.add('hidden');
+ await tabletLoadCrewPeople();
  await tabletLoadTariffs();
  $('tabletDetail').classList.add('hidden');tabletCurrentService=null;tabletCurrentSheet=null;tabletSetListMode('week');await tabletRefreshList();
  tabletRefreshTimer=setInterval(tabletRefreshList,20000);
@@ -4922,7 +4954,7 @@ async function downloadSingleBackupDataset(){
   const {rows}=await backupFetchDataset(code);
   const base='CGE_'+backupSafeName(code)+'_'+backupTimestamp();
   if(format==='CSV')backupDownloadFile(base+'.csv',backupRowsToCsv(rows),'text/csv;charset=utf-8');
-  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.31',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
+  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.32',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
   await backupLogExport(format,code,rows.length);
   msg('backupDatasetMsg','Esportazione completata: '+rows.length+' record.','ok');
   await loadBackupExport();
@@ -4948,7 +4980,7 @@ async function downloadFullBackup(){
   const backup={
    formato:'CGE_BACKUP_V1',
    associazione:'Croce Gialla Emergenza ODV',
-   versione_app:'V13.31',
+   versione_app:'V13.32',
    generato_il:new Date().toISOString(),
    contiene_credenziali_accesso:false,
    documenti_binari_inclusi:false,
