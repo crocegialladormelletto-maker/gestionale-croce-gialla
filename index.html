@@ -744,7 +744,7 @@
    <div class="actions">
     <button id="fvSave" class="btn secondary" type="submit">Salva Foglio Viaggio</button>
     <button id="fvClose" class="btn yellow" type="button">✓ Chiudi Foglio Viaggio</button>
-    <button id="fvPrint" class="btn blue" type="button">🖨 Stampa / Salva PDF</button>
+    <button id="fvPrint" class="btn blue" type="button" onclick="return cgePrintTravelSheetClick(event)">🖨 Stampa / Salva PDF</button>
     <button id="fvDelete" class="btn danger hidden" type="button" data-admin-only="true">🗑 Elimina Foglio Viaggio</button>
    </div>
    <div id="fvDetailMsg"></div>
@@ -1982,15 +1982,74 @@ function buildFoglioPrint(f){
   '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.32</span></div>'+
  '</div>';
 }
-function printCurrentFoglio(){
- if(!currentFoglio)return;
- $('printSheet').innerHTML=buildFoglioPrint(currentFoglio);
- $('printSheet').classList.remove('hidden');
- const oldTitle=document.title;
- document.title='Foglio_Viaggio_'+String(currentFoglio.numero_foglio||'').replace(/[^A-Za-z0-9_-]/g,'_');
- const restore=()=>{document.title=oldTitle;$('printSheet').classList.add('hidden');window.removeEventListener('afterprint',restore)};
- window.addEventListener('afterprint',restore);
- window.print();
+function openFoglioPrintWindow(){
+ try{
+  const w=window.open('','_blank');
+  if(!w)return null;
+  w.document.open();
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Preparazione stampa</title></head><body style="font-family:Arial,sans-serif;padding:24px">Preparazione Foglio Viaggio…</body></html>');
+  w.document.close();
+  return w;
+ }catch(_){return null}
+}
+function foglioPrintError(message){
+ if($('travelSheetDetail')&&!$('travelSheetDetail').classList.contains('hidden'))msg('fvDetailMsg',message,'err');
+ else if($('tabletSheetMsg'))msg('tabletSheetMsg',message,'err');
+ else alert(message);
+}
+function printCurrentFoglio(targetWindow=null){
+ if(!currentFoglio){
+  if(targetWindow&&!targetWindow.closed)targetWindow.close();
+  foglioPrintError('Nessun Foglio Viaggio caricato per la stampa.');
+  return false;
+ }
+ let printable='';
+ try{printable=buildFoglioPrint(currentFoglio)}
+ catch(e){
+  if(targetWindow&&!targetWindow.closed)targetWindow.close();
+  console.error('Errore preparazione Foglio Viaggio',e);
+  foglioPrintError('Impossibile preparare il Foglio Viaggio per la stampa.');
+  return false;
+ }
+ const title='Foglio_Viaggio_'+String(currentFoglio.numero_foglio||'').replace(/[^A-Za-z0-9_-]/g,'_');
+ const fallback=()=>{
+  try{
+   $('printSheet').innerHTML=printable;
+   $('printSheet').classList.remove('hidden');
+   const oldTitle=document.title;
+   document.title=title;
+   const restore=()=>{document.title=oldTitle;$('printSheet').classList.add('hidden');window.removeEventListener('afterprint',restore)};
+   window.addEventListener('afterprint',restore);
+   requestAnimationFrame(()=>setTimeout(()=>{try{window.focus();window.print()}catch(e){console.error(e);foglioPrintError('Il browser non ha consentito l’apertura della stampa.')}} ,80));
+   return true;
+  }catch(e){
+   console.error('Errore stampa Foglio Viaggio',e);
+   foglioPrintError('Il browser non ha consentito l’apertura della stampa.');
+   return false;
+  }
+ };
+ if(!targetWindow||targetWindow.closed)return fallback();
+ try{
+  const styles=[...document.querySelectorAll('style')].map(x=>x.textContent||'').join('\n').replace(/<\\/style/gi,'<\\\\/style');
+  targetWindow.document.open();
+  targetWindow.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title)+'</title><style>'+styles+'</style><style>body{background:#fff!important;margin:0;padding:0}#printSheet{display:block!important}</style></head><body><div id="printSheet">'+printable+'</div></body></html>');
+  targetWindow.document.close();
+  const launch=()=>setTimeout(()=>{
+   try{targetWindow.focus();targetWindow.print()}
+   catch(e){
+    console.error('Errore finestra stampa Foglio Viaggio',e);
+    try{targetWindow.close()}catch(_){}
+    fallback();
+   }
+  },250);
+  if(targetWindow.document.readyState==='complete')launch();
+  else targetWindow.addEventListener('load',launch,{once:true});
+  return true;
+ }catch(e){
+  console.error('Errore apertura finestra stampa Foglio Viaggio',e);
+  try{targetWindow.close()}catch(_){}
+  return fallback();
+ }
 }
 
 async function loadTravelSheets(){
@@ -2161,14 +2220,24 @@ async function saveTravelSheet(silent=false){
 }
 $('fvForm').onsubmit=async e=>{e.preventDefault();await saveTravelSheet(false)};
 
-$('fvPrint').onclick=async()=>{
- if(!currentFoglio)return;
+async function cgePrintTravelSheetClick(event){
+ if(event&&typeof event.preventDefault==='function')event.preventDefault();
+ if(!currentFoglio){
+  foglioPrintError('Nessun Foglio Viaggio caricato per la stampa.');
+  return false;
+ }
+ const printWindow=openFoglioPrintWindow();
  if(currentFoglio.stato!=='CHIUSO'){
   const ok=await saveTravelSheet(true);
-  if(!ok)return;
+  if(!ok){
+   if(printWindow&&!printWindow.closed)printWindow.close();
+   return false;
+  }
  }
- printCurrentFoglio();
-};
+ printCurrentFoglio(printWindow);
+ return false;
+}
+$('fvPrint').onclick=cgePrintTravelSheetClick;
 
 $('fvClose').onclick=async()=>{
  if(!currentFoglioId)return;
@@ -4762,10 +4831,17 @@ $('tabletCloseSheet').onclick=tabletCloseSheet;
 $('tabletSheetForm').addEventListener('input',tabletCalcSheet);
 $('tabletPrintSheet').onclick=async()=>{
  if(!tabletCurrentSheet)return;
- if(tabletCurrentSheet.stato!=='CHIUSO'&&!(await saveTabletSheet(true)))return;
+ const printWindow=openFoglioPrintWindow();
+ if(tabletCurrentSheet.stato!=='CHIUSO'&&!(await saveTabletSheet(true))){
+  if(printWindow&&!printWindow.closed)printWindow.close();
+  return;
+ }
  const r=await sb.from('fogli_viaggio').select('*').eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).maybeSingle();
- if(r.error||!r.data)return msg('tabletSheetMsg',r.error?.message||'Foglio non disponibile per la stampa.','err');
- tabletCurrentSheet=r.data;currentFoglio=r.data;printCurrentFoglio();
+ if(r.error||!r.data){
+  if(printWindow&&!printWindow.closed)printWindow.close();
+  return msg('tabletSheetMsg',r.error?.message||'Foglio non disponibile per la stampa.','err');
+ }
+ tabletCurrentSheet=r.data;currentFoglio=r.data;printCurrentFoglio(printWindow);
 };
 
 async function invokeTabletAccess(action,mezzo,password){
