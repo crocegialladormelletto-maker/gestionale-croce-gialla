@@ -178,7 +178,24 @@
     'Imposta di bollo: esente ai sensi dell’art. 82, comma 5, D.Lgs. 117/2017.</div>'+
     '<div class="nd-five"><img class="nd-five-img" src="'+FIVE_X1000_IMAGE+'" alt="Dona il tuo 5x1000"><div class="nd-five-cf">Sostieni Croce Gialla Emergenza ODV · C.F. <b>91023880031</b></div></div></div>';
  }
- el('ndPrint').onclick=()=>{
+ async function ndWaitForPrintImages(root){
+  const imgs=[...root.querySelectorAll('img')];
+  await Promise.all(imgs.map(img=>new Promise(resolve=>{
+   let finished=false;
+   const done=async()=>{
+    if(finished)return;finished=true;
+    img.removeEventListener('load',done);img.removeEventListener('error',done);
+    try{if(typeof img.decode==='function'&&img.naturalWidth>0)await img.decode()}catch(_){}
+    resolve();
+   };
+   if(img.complete)return done();
+   img.addEventListener('load',done,{once:true});
+   img.addEventListener('error',done,{once:true});
+   setTimeout(done,3000);
+  })));
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+ }
+ el('ndPrint').onclick=async()=>{
   if(!isAdmin()||!active)return info('Nota di Debito non disponibile.','warn');
   if(active.stato!=='EMESSA')return info('La Nota di Debito è ancora in BOZZA: premi prima “Emetti Nota di Debito”, poi potrai stamparla o salvarla in PDF.','warn');
   const print=el('printSheet'),oldTitle=document.title;
@@ -186,7 +203,16 @@
   print.innerHTML=printHtml(active);
   print.classList.remove('hidden');document.title='Nota_di_Debito_'+active.numero;
   const restore=()=>{document.title=oldTitle;print.classList.add('hidden');window.removeEventListener('afterprint',restore)};
-  window.addEventListener('afterprint',restore);window.print();
+  window.addEventListener('afterprint',restore);
+  info('Preparazione della stampa con grafica 5×1000…');
+  try{
+   await ndWaitForPrintImages(print);
+   await new Promise(resolve=>setTimeout(resolve,120));
+   window.print();
+  }catch(e){
+   restore();
+   info('Impossibile preparare la stampa: '+(e.message||String(e)),'err');
+  }
  };
  function ndWrapCanvas(ctx,text,maxWidth){
   const words=String(text??'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
