@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="theme-color" content="#12375d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Croce Gialla">
+<title>Croce Gialla Volontari V13.42</title>
+<link rel="manifest" href="/gestionale-croce-gialla/manifest-volontari-v13-42.webmanifest?v=13.42">
+<link rel="apple-touch-icon" sizes="180x180" href="/gestionale-croce-gialla/icons/icon-192-v6.png?v=13.42">
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f2f5f8;color:#12375d;font:16px system-ui,-apple-system,Segoe UI,Arial}
+.card{width:min(92vw,430px);background:#fff;border:1px solid #d9e2ea;border-radius:18px;padding:24px;text-align:center;box-shadow:0 10px 35px #12375d18}
+h1{font-size:22px;margin:0 0 8px}.badge{display:inline-block;background:#ffdb17;padding:6px 12px;border-radius:999px;font-weight:900;margin:8px 0 14px}
+p{color:#64798b}.spin{width:42px;height:42px;border:5px solid #d9e2ea;border-top-color:#12375d;border-radius:50%;margin:18px auto;animation:s 1s linear infinite}@keyframes s{to{transform:rotate(360deg)}}
+a{display:inline-block;margin-top:8px;background:#12375d;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:800}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Croce Gialla Emergenza</h1>
+<div class="badge">APP VOLONTARI · V13.42</div>
+<div class="spin"></div>
+<p id="status">Caricamento della Home colorata…</p>
+<p id="installHelp" hidden><b>Versione corretta pronta.</b><br>Apri prima l’app con il pulsante qui sotto. Se è tutto corretto, aggiungila alla schermata Home.</p>
+<a id="manual" hidden href="/gestionale-croce-gialla/index.html?area=volontari&appv=13.42&fresh=1">Apri APP Volontari V13.42</a>
+</div>
+<script>
+(async()=>{
+ const target='/gestionale-croce-gialla/index.html?area=volontari&appv=13.42&fresh='+Date.now();
+ const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+ try{
+  if('serviceWorker' in navigator){
+   const regs=await navigator.serviceWorker.getRegistrations();
+   await Promise.all(regs.filter(r=>r.scope.includes('/gestionale-croce-gialla/')).map(r=>r.unregister()));
+  }
+  if('caches' in window){
+   const keys=await caches.keys();
+   await Promise.all(keys.filter(k=>k.startsWith('cge-volontari-static-')).map(k=>caches.delete(k)));
+  }
+ }catch(_){}
+ try{
+  if('serviceWorker' in navigator){
+   await navigator.serviceWorker.register('/gestionale-croce-gialla/sw.js?v=13.42',{updateViaCache:'none'});
+  }
+ }catch(_){}
+ if(standalone){
+  location.replace(target);
+ }else{
+  document.querySelector('.spin').style.display='none';
+  document.getElementById('status').textContent='Home colorata V13.42 pronta.';
+  document.getElementById('installHelp').hidden=false;
+  document.getElementById('manual').hidden=false;
+ }
+})();
+</script>
+</body>
+</html>
