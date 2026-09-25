@@ -10,7 +10,7 @@
 :root{--n:#12375d;--y:#ffdb17;--bg:#f2f5f8;--ink:#1c3347;--muted:#64798b;--line:#d9e2ea;--g:#15734f;--r:#a93138}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Arial}button,input,select,textarea{font:inherit}.hidden{display:none!important}
 .shell{max-width:1450px;margin:auto;padding:12px}.top{background:var(--n);color:#fff;border-radius:18px;overflow:hidden}.head{display:flex;align-items:center;gap:12px;padding:13px 18px;flex-wrap:wrap}.logo{width:62px;height:62px;border-radius:50%;object-fit:cover;background:#fff;border:3px solid #fff}.brand{flex:1;min-width:220px}.brand small{display:block;color:var(--y);font-weight:900}.brand strong{font-size:22px}.stripe{height:7px;background:linear-gradient(90deg,var(--y) 0 74%,#e8463d 74% 87%,#3477c9 87%)}
-.layout{display:grid;grid-template-columns:225px minmax(0,1fr);gap:14px;margin-top:14px}.side,.surface,.card{background:#fff;border:1px solid var(--line);border-radius:16px}.side{padding:10px;align-self:start;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);overflow-y:auto;overscroll-behavior:contain;position:sticky;top:10px}.nav{width:100%;border:1px solid transparent;text-align:left;padding:11px;border-radius:10px;font-weight:850;color:var(--n);margin:3px 0;cursor:pointer;transition:.15s}.nav:hover{filter:brightness(.97);transform:translateX(2px)}.nav.active{box-shadow:inset 4px 0 0 rgba(18,55,93,.45),0 1px 4px #12375d20}.nav[data-v="dash"]{background:#fff2ad;border-color:#e6c741}.nav[data-v="protocol"]{background:#e7f2f0;border-color:#8fbab3}.nav[data-v="archive"]{background:#e5f0fb;border-color:#93bce3}.nav[data-v="minutes"]{background:#eee7fb;border-color:#b9a3df}.nav[data-v="calls"]{background:#e8f6ed;border-color:#9cc9ad}.nav[data-v="due"]{background:#fff0d8;border-color:#e7bd78}
+.layout{display:grid;grid-template-columns:225px minmax(0,1fr);gap:14px;margin-top:14px}.side,.surface,.card{background:#fff;border:1px solid var(--line);border-radius:16px}.side{padding:10px;align-self:start;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);overflow-y:auto;overscroll-behavior:contain;position:sticky;top:10px}.nav{width:100%;border:1px solid transparent;text-align:left;padding:11px;border-radius:10px;font-weight:850;color:var(--n);margin:3px 0;cursor:pointer;transition:.15s}.nav:hover{filter:brightness(.97);transform:translateX(2px)}.nav.active{box-shadow:inset 4px 0 0 rgba(18,55,93,.45),0 1px 4px #12375d20}.nav[data-v="dash"]{background:#fff2ad;border-color:#e6c741}.nav[data-v="protocol"]{background:#e7f2f0;border-color:#8fbab3}.nav[data-v="archive"]{background:#e5f0fb;border-color:#93bce3}.nav[data-v="dossiers"]{background:#fff6d7;border-color:#e4c75f}.nav[data-v="minutes"]{background:#eee7fb;border-color:#b9a3df}.nav[data-v="calls"]{background:#e8f6ed;border-color:#9cc9ad}.nav[data-v="due"]{background:#fff0d8;border-color:#e7bd78}
 .hero{padding:20px;background:linear-gradient(120deg,#fff0a1,#fffbe6 58%,#fff);border-bottom:1px solid #eee2a4;border-radius:16px 16px 0 0}.hero h1,.hero h2{margin:0 0 5px;color:var(--n)}.hero p{margin:0}.pad{padding:18px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.stat,.box{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}.stat small{font-size:10px;font-weight:900;color:var(--muted)}.stat b{display:block;font-size:24px;color:var(--n)}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.field{display:flex;flex-direction:column;gap:4px}.field label{font-size:11px;font-weight:900;color:var(--n)}input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padding:9px 10px;background:#fff;color:var(--ink)}textarea{min-height:82px;resize:vertical}.section{border:1px solid var(--line);border-radius:13px;padding:13px;margin:11px 0}.section h3{margin:0 0 10px;color:var(--n)}
 .btn{border:0;border-radius:8px;padding:9px 12px;font-weight:850;cursor:pointer}.yellow{background:var(--y);color:var(--n)}.blue{background:var(--n);color:#fff}.secondary{background:#eef2f6;color:var(--n)}.danger{background:#fbe9ea;color:var(--r)}.actions,.toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.toolbar{margin:10px 0}.notice{padding:10px 12px;border-radius:9px;margin:9px 0;background:#edf6ff;border:1px solid #cfe4fa;white-space:pre-wrap}.ok{background:#eaf8f1;color:#176a4b}.err{background:#fff0f0;color:#a32b34}.warn{background:#fff7df;color:#875d12}.muted{color:var(--muted);font-size:12px}.pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#fff2bd;font-size:10px;font-weight:900}.pill.g{background:#dff4e9;color:#166846}.pill.r{background:#fde8e9;color:#9d2f37}.pill.b{background:#e5f0fb;color:#1c5d91}
@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.24</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.25</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.24</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.25</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -135,6 +135,7 @@
    <button class="nav active" data-v="dash">⌂ Dashboard</button>
    <button class="nav" data-v="protocol">📥 Nuovo protocollo</button>
    <button class="nav" data-v="archive">📂 Archivio documenti</button>
+   <button class="nav" data-v="dossiers" data-admin-only="true">🗂️ Fascicoli riunioni</button>
    <button class="nav" data-v="minutes" data-admin-only="true">📝 Verbali</button>
    <button class="nav" data-v="calls" data-admin-only="true">📨 Convocazioni</button>
    <button class="nav" data-v="due">⏰ Scadenze</button>
@@ -202,6 +203,27 @@
       </div>
       <div class="table" style="margin-top:10px"><table><thead><tr><th>Documento</th><th>Data</th><th>Categoria</th><th>Tipo</th><th>File firmato</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="aSignedBody"></tbody></table></div>
      </div>
+    </div>
+   </section>
+
+   <section id="dossiers" class="surface hidden" data-admin-only="true">
+    <div class="hero"><h2>🗂️ Fascicoli riunioni</h2><p>Un’unica vista per convocazioni, invio WhatsApp, PDF firmati e verbale della riunione.</p></div>
+    <div class="pad">
+     <div class="section">
+      <div class="actions" style="justify-content:space-between">
+       <div><h3 style="margin:0">Fascicoli</h3><div class="muted">Il fascicolo è completo quando contiene i documenti essenziali della riunione.</div></div>
+       <button id="fRefresh" class="btn secondary" type="button">↻ Aggiorna</button>
+      </div>
+      <div class="grid3" style="margin-top:10px">
+       <div class="field"><label>Ricerca</label><input id="fSearch" placeholder="Numero convocazione, verbale, oggetto…"></div>
+       <div class="field"><label>Tipo</label><select id="fType"><option value="">Tutti</option><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea Soci</option></select></div>
+       <div class="field"><label>Stato fascicolo</label><select id="fStatus"><option value="">Tutti</option><option value="COMPLETO">Completo</option><option value="INCOMPLETO">Da completare</option></select></div>
+      </div>
+      <div class="toolbar"><button id="fFind" class="btn yellow" type="button">🔎 Filtra</button><button id="fClear" class="btn secondary" type="button">Cancella filtri</button></div>
+      <div id="fMsg"></div>
+     </div>
+     <div class="actions" style="justify-content:space-between;margin:10px 0"><b>Riunioni archiviate</b><span id="fCount" class="pill b">0</span></div>
+     <div id="fList"></div>
     </div>
    </section>
 
@@ -382,7 +404,7 @@ const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co',KEY='sb_publishabl
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>new Date().toISOString().slice(0,10),dt=x=>x?new Date(x).toLocaleString('it-IT'):'—';
-let prof=null,rows=[],attachments=[],currentId=null,currentDoc=null,busy=false,loadSeq=0,signedArchiveRows=[];
+let prof=null,rows=[],attachments=[],currentId=null,currentDoc=null,busy=false,loadSeq=0,signedArchiveRows=[],dossierRows=[];
 let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false,minutesAiBusy=false,signedMinuteFiles={},assemblyMinuteCalls=[],boardMinuteCalls=[];
 let callsRows=[],currentCallId=null,currentCall=null,callsBusy=false,signedCallFiles={},currentCallGroup=[],whatsAppHistory=[],whatsAppSentMap={};
 const CONSIGLIO_DIRETTIVO_PRESENTI="Presidente: Musso Paolo\nVice Presidente: Fontana Stefano\nSegretario: Ronco Meri\nConsigliere: Milan Roberto\nConsigliere: Pedercini Sabrina\nConsigliere: Broggio Emanuele\nConsigliere: Ragazzini Luisa";
@@ -530,12 +552,12 @@ function minuteAgendaText(){
 function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c+'">'+esc(t)+'</div>':''}
 function centralinoEmail(){return 'centralino@access.crocegiallaemergenza.it'}
 function view(v){
- if((v==='minutes'||v==='calls')&&prof?.ruolo!=='AMMINISTRATORE')v='dash';
+ if((v==='minutes'||v==='calls'||v==='dossiers')&&prof?.ruolo!=='AMMINISTRATORE')v='dash';
  if(v!=='minutes'&&!$('minutes').classList.contains('hidden'))resetMinuteFilters();
  if(v!=='calls'&&!$('calls').classList.contains('hidden'))resetCallFilters();
  document.querySelectorAll('main>section').forEach(x=>x.classList.toggle('hidden',x.id!==v));
  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
- if(v==='dash')loadDashboard();if(v==='archive')loadArchive();if(v==='due')loadDue();if(v==='protocol'&&!currentId)resetForm();if(v==='minutes')loadMinutes();if(v==='calls')loadCalls();
+ if(v==='dash')loadDashboard();if(v==='archive')loadArchive();if(v==='dossiers')loadDossiers();if(v==='due')loadDue();if(v==='protocol'&&!currentId)resetForm();if(v==='minutes')loadMinutes();if(v==='calls')loadCalls();
 }
 document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>view(b.dataset.v));
 
@@ -578,6 +600,94 @@ async function loadDashboard(){
  msg('dmsg','');
 }
 $('dRefresh').onclick=loadDashboard;
+
+
+function dossierPill(ok,label){
+ return '<span class="pill '+(ok?'g':'r')+'" style="margin:2px">'+(ok?'✓ ':'○ ')+esc(label)+'</span>';
+}
+function dossierSearchText(x){
+ return [x.typeLabel,x.title,x.date,x.calls.map(c=>c.convocazione_codice).join(' '),x.minute?.verbale_codice||'',x.minute?.titolo||''].join(' ').toLowerCase();
+}
+function renderDossiers(){
+ let list=dossierRows.slice();
+ const q=$('fSearch').value.trim().toLowerCase(),type=$('fType').value,status=$('fStatus').value;
+ if(q)list=list.filter(x=>dossierSearchText(x).includes(q));
+ if(type)list=list.filter(x=>x.type===type);
+ if(status)list=list.filter(x=>(x.complete?'COMPLETO':'INCOMPLETO')===status);
+ $('fCount').textContent=String(list.length);
+ $('fList').innerHTML=list.length?list.map(x=>{
+  const assembly=x.type==='ASSEMBLEA_SOCI';
+  const callRows=x.calls.map(call=>{
+   const signed=!!x.callSigned[String(call.id)],wa=!!x.waSent[String(call.id)];
+   const phase=call.fase_convocazione==='PRIMA'?'1ª convocazione':call.fase_convocazione==='SECONDA'?'2ª convocazione':'Convocazione';
+   return '<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(call.convocazione_codice)+' · '+esc(phase)+'</b><br><span class="muted">'+esc(call.data_riunione||'')+(call.ora_prima?' · '+esc(String(call.ora_prima).slice(0,5)):'')+'</span></div><div>'+dossierPill(signed,'PDF firmato')+dossierPill(wa,'WhatsApp')+'</div></div><div class="toolbar"><button class="btn secondary" type="button" data-fcall="'+esc(call.id)+'">Apri convocazione</button>'+(signed?'<button class="btn blue" type="button" data-fcallpdf="'+esc(call.id)+'">📄 PDF firmato</button>':'')+'</div></div>';
+  }).join('');
+  const minute=x.minute;
+  const minuteHtml=minute
+   ?'<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(minute.verbale_codice)+' · '+esc(minute.titolo||'Verbale')+'</b><br><span class="muted">'+esc(minuteTypeLabel(minute.tipo_riunione))+' · '+esc(minute.stato||'')+'</span></div><div>'+dossierPill(minute.stato==='APPROVATO','Approvato')+dossierPill(!!x.minuteSigned,'PDF firmato')+'</div></div><div class="toolbar"><button class="btn secondary" type="button" data-fminute="'+esc(minute.id)+'">Apri verbale</button>'+(x.minuteSigned?'<button class="btn blue" type="button" data-fminutepdf="'+esc(minute.id)+'">📄 PDF firmato</button>':'')+'</div></div>'
+   :'<div class="notice warn">Verbale non ancora collegato a questa riunione.</div>';
+  const note=assembly?'Per l’Assemblea il controllo considera entrambe le convocazioni; l’invio WhatsApp essenziale è quello della 2ª convocazione.':'';
+  return '<div class="section" style="margin:12px 0"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">'+esc(x.typeLabel)+' · '+esc(x.title)+'</h3><div class="muted">'+esc(x.date||'Data non definita')+(note?'<br>'+esc(note):'')+'</div></div><span class="pill '+(x.complete?'g':'r')+'" style="font-size:11px">'+(x.complete?'✓ COMPLETO':'DA COMPLETARE')+'</span></div><div style="margin-top:8px"><b>Convocazioni</b>'+callRows+'<b>Verbale</b>'+minuteHtml+'</div></div>';
+ }).join(''):'<div class="notice">Nessun fascicolo trovato con i filtri selezionati.</div>';
+
+ $('fList').querySelectorAll('[data-fcall]').forEach(b=>b.onclick=async()=>{view('calls');await openCall(b.dataset.fcall,false)});
+ $('fList').querySelectorAll('[data-fcallpdf]').forEach(b=>b.onclick=()=>openSignedCall(b.dataset.fcallpdf,false));
+ $('fList').querySelectorAll('[data-fminute]').forEach(b=>b.onclick=async()=>{view('minutes');await openMinute(b.dataset.fminute,false)});
+ $('fList').querySelectorAll('[data-fminutepdf]').forEach(b=>b.onclick=()=>openSignedMinute(b.dataset.fminutepdf,false));
+}
+async function loadDossiers(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ msg('fMsg','Caricamento fascicoli...');
+ try{
+  const [cr,mr,ar,br,cs,ms,wa]=await Promise.all([
+   sb.rpc('cge_convocazioni_elenco',{p_search:null,p_tipo:null,p_stato:null,p_anno:null}),
+   sb.rpc('cge_verbali_elenco',{p_search:null,p_tipo:null,p_stato:null,p_anno:null}),
+   sb.from('verbali_assemblea_dettagli').select('verbale_id,convocazione_id'),
+   sb.from('verbali_consiglio_dettagli').select('verbale_id,convocazione_id'),
+   sb.from('convocazioni_firmate').select('convocazione_id'),
+   sb.from('verbali_firmati').select('verbale_id'),
+   sb.from('convocazioni_whatsapp_log').select('convocazione_id')
+  ]);
+  for(const r of [cr,mr,ar,br,cs,ms,wa])if(r.error)throw r.error;
+  const calls=cr.data||[],minutes=mr.data||[],minuteById=Object.fromEntries(minutes.map(v=>[String(v.id),v]));
+  const callSigned={};(cs.data||[]).forEach(x=>callSigned[String(x.convocazione_id)]=true);
+  const minuteSigned={};(ms.data||[]).forEach(x=>minuteSigned[String(x.verbale_id)]=true);
+  const waSent={};(wa.data||[]).forEach(x=>waSent[String(x.convocazione_id)]=true);
+  const boardRelByCall={};(br.data||[]).forEach(x=>boardRelByCall[String(x.convocazione_id)]=x);
+  const assemblyRelByCall={};(ar.data||[]).forEach(x=>assemblyRelByCall[String(x.convocazione_id)]=x);
+  const usedMinutes=new Set(),out=[];
+
+  calls.filter(x=>x.tipo_riunione==='CONSIGLIO_DIRETTIVO').forEach(call=>{
+   const rel=boardRelByCall[String(call.id)]||null,minute=rel?minuteById[String(rel.verbale_id)]||null:null;
+   if(minute)usedMinutes.add(String(minute.id));
+   const complete=!!callSigned[String(call.id)]&&!!waSent[String(call.id)]&&!!minute&&minute.stato==='APPROVATO'&&!!minuteSigned[String(minute.id)];
+   out.push({key:'B:'+call.id,type:'CONSIGLIO_DIRETTIVO',typeLabel:'Consiglio Direttivo',title:call.oggetto||call.titolo||'Riunione',date:call.data_riunione||'',calls:[call],minute,callSigned,minuteSigned:minute?!!minuteSigned[String(minute.id)]:false,waSent,complete});
+  });
+
+  const groups={};
+  calls.filter(x=>x.tipo_riunione==='ASSEMBLEA_SOCI').forEach(call=>{
+   const key=String(call.gruppo_assemblea||call.id);(groups[key]||(groups[key]=[])).push(call);
+  });
+  Object.entries(groups).forEach(([key,group])=>{
+   group.sort((a,b)=>(a.fase_convocazione==='PRIMA'?0:a.fase_convocazione==='SECONDA'?1:2)-(b.fase_convocazione==='PRIMA'?0:b.fase_convocazione==='SECONDA'?1:2));
+   let rel=null;
+   for(const call of group){if(assemblyRelByCall[String(call.id)]){rel=assemblyRelByCall[String(call.id)];break}}
+   const minute=rel?minuteById[String(rel.verbale_id)]||null:null;if(minute)usedMinutes.add(String(minute.id));
+   const first=group.find(x=>x.fase_convocazione==='PRIMA'),second=group.find(x=>x.fase_convocazione==='SECONDA')||group[group.length-1];
+   const complete=!!first&&!!second&&!!callSigned[String(first.id)]&&!!callSigned[String(second.id)]&&!!waSent[String(second.id)]&&!!minute&&minute.stato==='APPROVATO'&&!!minuteSigned[String(minute.id)];
+   out.push({key:'A:'+key,type:'ASSEMBLEA_SOCI',typeLabel:'Assemblea Soci',title:second?.oggetto||second?.titolo||first?.oggetto||'Assemblea',date:second?.data_riunione||first?.data_riunione||'',calls:group,minute,callSigned,minuteSigned:minute?!!minuteSigned[String(minute.id)]:false,waSent,complete});
+  });
+
+  minutes.filter(v=>['CONSIGLIO_DIRETTIVO','ASSEMBLEA_SOCI'].includes(v.tipo_riunione)&&!usedMinutes.has(String(v.id))).forEach(v=>{
+   out.push({key:'M:'+v.id,type:v.tipo_riunione,typeLabel:minuteTypeLabel(v.tipo_riunione),title:v.titolo||'Verbale senza convocazione',date:v.data_riunione||'',calls:[],minute:v,callSigned,minuteSigned:!!minuteSigned[String(v.id)],waSent,complete:false});
+  });
+  dossierRows=out.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  renderDossiers();msg('fMsg','');
+ }catch(e){dossierRows=[];renderDossiers();msg('fMsg',e.message||String(e),'err')}
+}
+$('fRefresh').onclick=loadDossiers;$('fFind').onclick=renderDossiers;
+$('fSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();renderDossiers()}};
+$('fClear').onclick=()=>{$('fSearch').value='';$('fType').value='';$('fStatus').value='';renderDossiers()};
 
 function resetForm(){
  currentId=null;currentDoc=null;attachments=[];$('pTitle').textContent='Nuovo protocollo';$('pCode').textContent='Numerazione automatica.';
@@ -1010,13 +1120,37 @@ async function saveMinute(approve=false){
   minutesBusy=false;$('vSave').disabled=false;updateMinuteStateUI();
  }
 }
+
+async function duplicateMinute(id){
+ try{
+  let v=minutesRows.find(x=>String(x.id)===String(id));
+  if(!v){
+   const r=await sb.rpc('cge_verbali_elenco',{p_search:null,p_tipo:null,p_stato:null,p_anno:null});if(r.error)throw r.error;
+   v=(r.data||[]).find(x=>String(x.id)===String(id));
+  }
+  if(!v)throw new Error('Verbale da duplicare non trovato.');
+  resetMinuteForm();
+  currentMinuteId=null;currentMinute=null;
+  $('vType').value=v.tipo_riunione||'CONSIGLIO_DIRETTIVO';updateMinuteTypeUI(false);
+  $('vDate').value='';$('vStart').value=v.ora_inizio?String(v.ora_inizio).slice(0,5):'';$('vEnd').value=v.ora_fine?String(v.ora_fine).slice(0,5):'';
+  $('vPlace').value=v.luogo||'Sede Croce Gialla Emergenza ODV';$('vStatus').value='BOZZA';$('vApprovalDate').value='';
+  $('vHeading').value=v.titolo||'';$('vPresent').value=v.presenti||'';$('vAbsent').value=v.assenti||'';$('vGuests').value=v.invitati||'';
+  setMinuteAgenda(v.ordine_giorno||'');$('vProceedings').value=v.svolgimento||'';$('vDecisions').value=v.deliberazioni||'';$('vVote').value=v.votazione||'';
+  $('vPresident').value=v.presidente||'Musso Paolo';$('vSecretary').value=v.segretario||'Ronco Meri';$('vNotes').value=v.note||'';
+  clearAssemblyMinuteFields();clearBoardMinuteFields();signedMinuteFiles={};renderSignedMinuteInfo();updateNextMinuteCode();updateMinuteStateUI();
+  $('vTitle').textContent='Nuovo verbale da copia';$('vCode').textContent='Copia di '+v.verbale_codice+' · inserisci la nuova data prima di salvare.';
+  msg('vmsg','Verbale duplicato come nuova bozza. Ho lasciato vuota la data e rimosso collegamenti e PDF firmati: controlla i contenuti prima di salvare.','warn');
+  $('vTitle').scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(e){msg('vListMsg',e.message||String(e),'err')}
+}
 function renderMinutes(){
  $('vCount').textContent=minutesRows.length;
  $('vBody').innerHTML=minutesRows.length?minutesRows.map(v=>{
   const signed=signedMinuteFiles[String(v.id)];
-  return '<tr><td><b>'+esc(v.verbale_codice)+'</b>'+(signed?'<br><span class="pill g">✍️ PDF FIRMATO</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_inizio?'<br><span class="muted">'+esc(String(v.ora_inizio).slice(0,5))+(v.ora_fine?' – '+esc(String(v.ora_fine).slice(0,5)):'')+'</span>':'')+'</td><td>'+esc(minuteTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.titolo)+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='APPROVATO'?'g':v.stato==='ANNULLATO'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc([v.presidente,v.segretario].filter(Boolean).join(' / ')||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-vopen="'+esc(v.id)+'">Apri</button><button class="btn yellow" type="button" data-vprint="'+esc(v.id)+'">🖨️ Stampa PDF</button>'+(signed?'<button class="btn blue" type="button" data-vsigned="'+esc(v.id)+'">✍️ Apri firmato</button>':'')+'</div></td></tr>';
+  return '<tr><td><b>'+esc(v.verbale_codice)+'</b>'+(signed?'<br><span class="pill g">✍️ PDF FIRMATO</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_inizio?'<br><span class="muted">'+esc(String(v.ora_inizio).slice(0,5))+(v.ora_fine?' – '+esc(String(v.ora_fine).slice(0,5)):'')+'</span>':'')+'</td><td>'+esc(minuteTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.titolo)+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='APPROVATO'?'g':v.stato==='ANNULLATO'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc([v.presidente,v.segretario].filter(Boolean).join(' / ')||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-vopen="'+esc(v.id)+'">Apri</button><button class="btn secondary" type="button" data-vdup="'+esc(v.id)+'">⧉ Duplica</button><button class="btn yellow" type="button" data-vprint="'+esc(v.id)+'">🖨️ Stampa PDF</button>'+(signed?'<button class="btn blue" type="button" data-vsigned="'+esc(v.id)+'">✍️ Apri firmato</button>':'')+'</div></td></tr>';
  }).join(''):'<tr><td colspan="7">Nessun verbale trovato.</td></tr>';
  $('vBody').querySelectorAll('[data-vopen]').forEach(b=>b.onclick=()=>openMinute(b.dataset.vopen,false));
+ $('vBody').querySelectorAll('[data-vdup]').forEach(b=>b.onclick=()=>duplicateMinute(b.dataset.vdup));
  $('vBody').querySelectorAll('[data-vprint]').forEach(b=>b.onclick=()=>openMinute(b.dataset.vprint,true));
  $('vBody').querySelectorAll('[data-vsigned]').forEach(b=>b.onclick=()=>openSignedMinute(b.dataset.vsigned,false));
 }
@@ -1603,14 +1737,42 @@ async function saveCall(finalize=false){
  }catch(e){msg('cvmsg',e.message||String(e),'err')}
  finally{callsBusy=false;$('cvSave').disabled=false;updateCallStateUI()}
 }
+
+async function duplicateCall(id){
+ try{
+  const r=await sb.rpc('cge_convocazioni_elenco',{p_search:null,p_tipo:null,p_stato:null,p_anno:null});if(r.error)throw r.error;
+  const all=r.data||[],source=all.find(x=>String(x.id)===String(id));if(!source)throw new Error('Convocazione da duplicare non trovata.');
+  resetCallForm();currentCallId=null;currentCall=null;
+  $('cvType').value=source.tipo_riunione||'CONSIGLIO_DIRETTIVO';$('cvType').disabled=false;$('cvStatus').value='BOZZA';
+  $('cvPlace').value=source.luogo||'Sede Croce Gialla Emergenza ODV';$('cvRecipients').value=source.destinatari||'';
+  $('cvObject').value=source.oggetto||'';$('cvSigner').value=source.firmatario||'Musso Paolo';setCallAgenda(source.ordine_giorno||'');
+  $('cvDate').value='';$('cvText').value='';$('cvDate2').value='';$('cvText2').value='';
+  if(source.tipo_riunione==='ASSEMBLEA_SOCI'){
+   const group=all.filter(x=>source.gruppo_assemblea&&String(x.gruppo_assemblea)===String(source.gruppo_assemblea));
+   const first=group.find(x=>x.fase_convocazione==='PRIMA')||source,second=group.find(x=>x.fase_convocazione==='SECONDA')||source;
+   $('cvHeading').value='Convocazione Assemblea dei Soci';
+   $('cvTime1').value=first.ora_prima?String(first.ora_prima).slice(0,5):'';
+   $('cvTime2').value=second.ora_prima?String(second.ora_prima).slice(0,5):'';
+  }else{
+   $('cvHeading').value=source.titolo||'Convocazione Consiglio Direttivo';
+   $('cvTime1').value=source.ora_prima?String(source.ora_prima).slice(0,5):'';
+   $('cvTime2').value='';
+  }
+  signedCallFiles={};currentCallGroup=[];whatsAppHistory=[];whatsAppSentMap={};updateCallLayout(false);renderSignedCalls();renderCallWhatsAppHistory();prepareCallWhatsAppMessage(false);
+  $('cvTitle').textContent='Nuova convocazione da copia';$('cvCode').textContent='Copia di '+source.convocazione_codice+' · inserisci la nuova data prima di salvare.';
+  msg('cvmsg','Convocazione duplicata come nuova bozza. Ho mantenuto orari, luogo, destinatari e ordine del giorno; inserisci la nuova data e genera il nuovo testo prima di salvare.','warn');
+  $('cvTitle').scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(e){msg('cvListMsg',e.message||String(e),'err')}
+}
 function renderCalls(){
  $('cvCount').textContent=callsRows.length;
  $('cvBody').innerHTML=callsRows.length?callsRows.map(v=>{
   const phase=v.fase_convocazione==='PRIMA'?'<span class="pill r">1ª CONVOCAZIONE</span>':v.fase_convocazione==='SECONDA'?'<span class="pill g">2ª CONVOCAZIONE</span>':'';
   const signed=signedCallFiles[String(v.id)],waSent=whatsAppSentMap[String(v.id)];
-  return '<tr><td><b>'+esc(v.convocazione_codice)+'</b>'+(phase?'<br>'+phase:'')+(signed?'<br><span class="pill g">✍️ FIRMATA</span>':'')+(waSent?'<br><span class="pill g">📲 WHATSAPP INVIATO</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='DESERTA'||v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button></div></td></tr>';
+  return '<tr><td><b>'+esc(v.convocazione_codice)+'</b>'+(phase?'<br>'+phase:'')+(signed?'<br><span class="pill g">✍️ FIRMATA</span>':'')+(waSent?'<br><span class="pill g">📲 WHATSAPP INVIATO</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='DESERTA'||v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn secondary" type="button" data-cvdup="'+esc(v.id)+'">⧉ Duplica</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button></div></td></tr>';
  }).join(''):'<tr><td colspan="7">Nessuna convocazione trovata.</td></tr>';
  $('cvBody').querySelectorAll('[data-cvopen]').forEach(b=>b.onclick=()=>openCall(b.dataset.cvopen,false));
+ $('cvBody').querySelectorAll('[data-cvdup]').forEach(b=>b.onclick=()=>duplicateCall(b.dataset.cvdup));
  $('cvBody').querySelectorAll('[data-cvprint]').forEach(b=>b.onclick=()=>openCall(b.dataset.cvprint,true));
 }
 async function loadCallsList(){
