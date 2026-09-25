@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.17</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.18</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.17</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.18</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -323,8 +323,8 @@ Consigliere: Ragazzini Luisa</textarea></div>
         <div class="field"><label>Numero WhatsApp</label><input id="cvWaPhone" type="tel" placeholder="Es. +39 333 1234567"></div>
        </div>
        <div class="field" style="margin-top:9px"><label>Messaggio WhatsApp</label><textarea id="cvWaMessage" style="min-height:180px"></textarea></div>
-       <div class="toolbar"><button id="cvWaGenerate" class="btn secondary" type="button">✨ Prepara messaggio</button><button id="cvWaOpen" class="btn blue" type="button">📲 Apri WhatsApp</button><button id="cvWaLog" class="btn yellow" type="button">✅ Registra invio effettuato</button></div>
-       <div class="muted">Il PDF firmato non viene allegato automaticamente: dopo l’apertura di WhatsApp puoi allegarlo dalla chat. Il gestionale non può verificare la consegna del messaggio.</div>
+       <div class="toolbar"><button id="cvWaGenerate" class="btn secondary" type="button">✨ Prepara messaggio</button><button id="cvWaOpen" class="btn blue" type="button">📲 Apri WhatsApp</button><button id="cvWaPdf" class="btn blue" type="button">📎 WhatsApp + PDF firmato</button><button id="cvWaLog" class="btn yellow" type="button">✅ Registra invio effettuato</button></div>
+       <div class="muted">Su telefono, se supportato, il gestionale apre la condivisione del PDF firmato con il messaggio; scegli WhatsApp. Su PC scarica il PDF e apre WhatsApp Web, così puoi allegarlo subito. La registrazione dell’invio resta manuale per evitare falsi “inviato”.</div>
        <div id="cvWaMsg"></div>
        <div id="cvWaHistory" style="margin-top:10px"></div>
       </div>
@@ -938,13 +938,19 @@ function buildCallWhatsAppMessage(){
  return out;
 }
 function prepareCallWhatsAppMessage(force=true){
+ const pdfBtn=$('cvWaPdf');
  if(!currentCallId){
   $('cvWaMessage').value='';
-  $('cvWaOpen').disabled=true;$('cvWaLog').disabled=true;
+  $('cvWaOpen').disabled=true;$('cvWaLog').disabled=true;if(pdfBtn)pdfBtn.disabled=true;
   msg('cvWaMsg','Salva prima la convocazione per poter registrare l’invio.','warn');
   return;
  }
  $('cvWaOpen').disabled=false;$('cvWaLog').disabled=false;
+ if(pdfBtn){
+  const hasPdf=!!signedCallFiles[String(currentCallId)];
+  pdfBtn.disabled=!hasPdf;
+  pdfBtn.textContent=hasPdf?'📎 WhatsApp + PDF firmato':'📎 Carica prima il PDF firmato';
+ }
  if(force||!$('cvWaMessage').value.trim())$('cvWaMessage').value=buildCallWhatsAppMessage();
  msg('cvWaMsg','');
 }
@@ -962,6 +968,52 @@ function openCallWhatsApp(){
  const url=phone?'https://wa.me/'+phone+'?text='+encodeURIComponent(message):'https://wa.me/?text='+encodeURIComponent(message);
  const w=window.open(url,'_blank','noopener');
  if(!w)msg('cvWaMsg','Il browser ha bloccato l’apertura di WhatsApp. Consenti i popup e riprova.','warn');
+}
+async function shareCallWhatsAppPdf(){
+ if(!currentCallId)return msg('cvWaMsg','Salva prima la convocazione.','warn');
+ let f=signedCallFiles[String(currentCallId)];
+ if(!f){
+  const q=await sb.from('convocazioni_firmate').select('convocazione_id,storage_path,nome_file,dimensione_bytes,caricato_il').eq('convocazione_id',currentCallId).maybeSingle();
+  if(q.error)return msg('cvWaMsg',q.error.message,'err');
+  if(!q.data){
+   const isSecond=currentCall?.fase_convocazione==='SECONDA';
+   return msg('cvWaMsg',isSecond?'Carica prima il PDF firmato della 2ª convocazione.':'Carica prima il PDF firmato della convocazione.','warn');
+  }
+  f=q.data;signedCallFiles[String(currentCallId)]=f;
+ }
+ const message=$('cvWaMessage').value.trim()||buildCallWhatsAppMessage();
+ $('cvWaMessage').value=message;
+ const phone=normalizeWhatsAppPhone($('cvWaPhone').value);
+ const waUrl=phone?'https://wa.me/'+phone+'?text='+encodeURIComponent(message):'https://wa.me/?text='+encodeURIComponent(message);
+ const fileName=f.nome_file||'convocazione-firmata.pdf';
+ const nativeShare=!!(navigator.share&&typeof File!=='undefined');
+ let fallbackPopup=null;
+ if(!nativeShare)fallbackPopup=window.open('about:blank','_blank');
+ msg('cvWaMsg','Preparazione del PDF firmato per WhatsApp...');
+ try{
+  const r=await sb.storage.from('convocazioni-firmate').download(f.storage_path);
+  if(r.error)throw r.error;
+  const pdfFile=new File([r.data],fileName,{type:'application/pdf'});
+  const canShare=nativeShare&&(!navigator.canShare||navigator.canShare({files:[pdfFile]}));
+  if(canShare){
+   try{
+    await navigator.share({title:currentCall?.convocazione_codice||'Convocazione',text:message,files:[pdfFile]});
+    msg('cvWaMsg','Condivisione aperta. Seleziona WhatsApp e invia il messaggio con il PDF; poi registra l’invio effettuato.','ok');
+    return;
+   }catch(e){
+    if(e?.name==='AbortError'){msg('cvWaMsg','Condivisione annullata.','warn');return}
+   }
+  }
+  const blobUrl=URL.createObjectURL(r.data);
+  const a=document.createElement('a');a.href=blobUrl;a.download=fileName;document.body.appendChild(a);a.click();a.remove();
+  if(fallbackPopup)fallbackPopup.location.href=waUrl;
+  else window.open(waUrl,'_blank','noopener');
+  setTimeout(()=>URL.revokeObjectURL(blobUrl),60000);
+  msg('cvWaMsg','PDF firmato scaricato e WhatsApp aperto. Allega il PDF alla chat e, dopo l’invio, registra l’operazione.','ok');
+ }catch(e){
+  if(fallbackPopup)fallbackPopup.close();
+  msg('cvWaMsg',e.message||String(e),'err');
+ }
 }
 async function loadCallWhatsAppHistory(){
  whatsAppHistory=[];
@@ -1085,7 +1137,7 @@ async function uploadSignedCall(id){
   }
   if(old?.storage_path&&old.storage_path!==path)await sb.storage.from('convocazioni-firmate').remove([old.storage_path]);
   signedCallFiles[String(id)]={convocazione_id:id,storage_path:path,nome_file:file.name,dimensione_bytes:file.size,caricato_il:new Date().toISOString()};
-  renderSignedCalls();await loadCallsList();
+  renderSignedCalls();if(String(id)===String(currentCallId))prepareCallWhatsAppMessage(false);await loadCallsList();
   if(!$('archive').classList.contains('hidden'))await loadArchive();
   msg('cvSignedMsg','PDF firmato caricato correttamente e inserito nell’Archivio documenti.','ok');
  }catch(e){msg('cvSignedMsg',e.message||String(e),'err')}
@@ -1122,7 +1174,7 @@ async function deleteSignedCall(id){
   const rm=await sb.storage.from('convocazioni-firmate').remove([f.storage_path]);if(rm.error)throw rm.error;
   const db=await sb.from('convocazioni_firmate').delete().eq('convocazione_id',id);if(db.error)throw db.error;
   delete signedCallFiles[String(id)];
-  renderSignedCalls();
+  renderSignedCalls();if(String(id)===String(currentCallId))prepareCallWhatsAppMessage(false);
   await loadCallsList();
   if(!$('archive').classList.contains('hidden'))await loadArchive();
   msg('cvSignedMsg','PDF firmato eliminato. La convocazione resta salvata nel gestionale.','ok');
@@ -1416,7 +1468,7 @@ $('cvDate').addEventListener('change',updateNextCallCode);
 $('cvType').onchange=()=>{if(!currentCallId)updateCallLayout(true)};
 $('cvStatus').onchange=updateCallStateUI;
 $('cvSave').onclick=()=>saveCall(false);$('cvFinalize').onclick=()=>saveCall(true);$('cvPrint').onclick=printCall;$('cvFind').onclick=loadCallsList;
-$('cvWaGenerate').onclick=()=>prepareCallWhatsAppMessage(true);$('cvWaOpen').onclick=openCallWhatsApp;$('cvWaLog').onclick=registerCallWhatsAppSend;
+$('cvWaGenerate').onclick=()=>prepareCallWhatsAppMessage(true);$('cvWaOpen').onclick=openCallWhatsApp;$('cvWaPdf').onclick=shareCallWhatsAppPdf;$('cvWaLog').onclick=registerCallWhatsAppSend;
 $('cvSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadCallsList()}};
 $('cvClear').onclick=()=>{resetCallFilters();loadCallsList()};
 
