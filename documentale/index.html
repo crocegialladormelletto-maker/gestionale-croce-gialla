@@ -23,12 +23,7 @@
 @media print{
  @page{
   size:A4;
-  margin:18mm 17mm 20mm;
-  @bottom-center{
-   content:"CROCE GIALLA EMERGENZA ODV  ·  VERBALE  ·  PAGINA " counter(page) " / " counter(pages);
-   font:7.5pt Arial,Helvetica,sans-serif;
-   color:#718092;
-  }
+  margin:0;
  }
  html,body{background:#fff!important;margin:0!important;padding:0!important}
  body>*:not(#verbPrint){display:none!important}
@@ -43,7 +38,12 @@
   transform:translate(-50%,-50%);object-fit:contain;opacity:.045;
   pointer-events:none;z-index:0
  }
- #verbPrint .vp-content{position:relative;z-index:1}
+ #verbPrint .vp-content{
+  position:relative;z-index:1;
+  padding:18mm 17mm 20mm;
+  -webkit-box-decoration-break:clone;
+  box-decoration-break:clone;
+ }
  #verbPrint .vp-head{
   display:grid;grid-template-columns:21mm minmax(0,1fr) 21mm;
   gap:6mm;align-items:center;text-align:center;
@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.2</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.3</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.2</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.3</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
