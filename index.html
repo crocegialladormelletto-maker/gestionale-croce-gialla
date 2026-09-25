@@ -229,7 +229,7 @@
 .vol-route-preview b{color:#133c55}
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.32</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.33</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -950,9 +950,9 @@
 <div class="section"><div class="grid3"><div class="field"><label>Servizio</label><select id="cs"></select></div><div class="field"><label>Ruolo</label><select id="cr"><option>AUTISTA</option><option>CAPO_SERVIZIO</option><option>SOCCORRITORE</option><option>SECONDO_SOCCORRITORE</option><option>ACCOMPAGNATORE</option><option>AFFIANCATO</option></select></div><div class="field"><label>Operatore abilitato</label><select id="cp"></select></div></div><div class="toolbar"><button id="add" class="btn yellow">Assegna</button></div><div id="cmsg"></div></div><div id="clist"></div></div></section>
 
 <section id="people" class="surface hidden"><div class="hero"><h2>Volontari e personale</h2><p>Anagrafica e qualifiche gestite separatamente.</p></div><div class="pad">
-<div class="section"><h3>Scheda personale</h3><div class="grid4"><div class="field"><label>Badge *</label><input id="pb"></div><div class="field"><label>Nome *</label><input id="pname"></div><div class="field"><label>Cognome *</label><input id="psurname"></div><div class="field"><label>Stato</label><select id="pstate"><option>ATTIVO</option><option>ASPETTATIVA</option><option>SOSPESO</option><option>CESSATO</option></select></div><div class="field"><label>Telefono</label><input id="pphone"></div><div class="field"><label>Email</label><input id="pemail" type="email"></div><div class="field"><label>Data di nascita</label><input id="pbirth" type="date"></div><div class="field"><label>Data ingresso</label><input id="pentry" type="date"></div><div class="field"><label>Dipendente</label><select id="pdep"><option value="false">No</option><option value="true">Sì</option></select></div></div>
+<div class="section"><h3>Scheda personale · dati modificabili</h3><p class="muted">Apri una persona dall’elenco, modifica i campi necessari e premi «Salva modifiche». È possibile modificare anche il numero badge: il gestionale aggiorna automaticamente i collegamenti della persona e, se presente, anche il login dell’app volontari.</p><div class="grid4"><div class="field"><label>Badge *</label><input id="pb"></div><div class="field"><label>Nome *</label><input id="pname"></div><div class="field"><label>Cognome *</label><input id="psurname"></div><div class="field"><label>Stato</label><select id="pstate"><option>ATTIVO</option><option>ASPETTATIVA</option><option>SOSPESO</option><option>CESSATO</option></select></div><div class="field"><label>Telefono</label><input id="pphone"></div><div class="field"><label>Email</label><input id="pemail" type="email"></div><div class="field"><label>Data di nascita</label><input id="pbirth" type="date"></div><div class="field"><label>Data ingresso</label><input id="pentry" type="date"></div><div class="field"><label>Data uscita</label><input id="pexit" type="date"></div><div class="field"><label>Codice fiscale</label><input id="pcf" maxlength="16" style="text-transform:uppercase"></div><div class="field"><label>Indirizzo di residenza</label><input id="paddress"></div><div class="field"><label>Comune</label><input id="pcity"></div><div class="field"><label>Provincia</label><input id="pprovince" maxlength="2" style="text-transform:uppercase"></div><div class="field"><label>CAP</label><input id="pcap" inputmode="numeric" maxlength="5"></div><div class="field"><label>Dipendente</label><select id="pdep"><option value="false">No</option><option value="true">Sì</option></select></div><div class="field"><label>Ore minime mensili</label><input id="pminm" type="number" min="0" step="1" value="28"></div><div class="field"><label>Ore minime trimestrali</label><input id="pmint" type="number" min="0" step="1" value="84"></div></div>
 <div class="field" style="margin-top:10px"><label>Qualifiche</label><div id="pquals" class="inline-checks"></div></div>
-<div class="toolbar"><button id="pnew" class="btn secondary">Nuova scheda</button><button id="psave" class="btn yellow">Salva</button></div><div id="pmsg"></div>
+<div class="toolbar"><button id="pnew" class="btn secondary">Nuova scheda</button><button id="psave" class="btn yellow">Salva modifiche</button></div><div id="pmsg"></div>
 <div class="section" style="margin-top:14px"><h3>Accesso app volontario</h3>
 <p class="muted">Seleziona o salva una scheda volontario. Puoi creare un PIN personale, generarne uno temporaneo lasciando il campo vuoto, resettarlo o disattivare l'accesso.</p>
 <div class="grid3">
@@ -1604,7 +1604,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.32';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN':'Versione 13.33';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -3233,7 +3233,8 @@ window.removeCrew=async id=>{
  msg('cmsg','Operatore rimosso dal servizio selezionato.','ok');await loadCrew(service);
 };
 
-function resetPerson(){adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';msg('pdocMsg','');$('pdocPerson').textContent='';$('pdocList').innerHTML='<div class="notice">Seleziona un volontario e premi «Documenti» per consultare il suo archivio.</div>';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pbirth').value='';$('pentry').value='';$('pdep').value='false';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
+let editingPersonBadge=null;
+function resetPerson(){editingPersonBadge=null;adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';msg('pdocMsg','');$('pdocPerson').textContent='';$('pdocList').innerHTML='<div class="notice">Seleziona un volontario e premi «Documenti» per consultare il suo archivio.</div>';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pbirth').value='';$('pentry').value='';$('pexit').value='';$('pcf').value='';$('paddress').value='';$('pcity').value='';$('pprovince').value='';$('pcap').value='';$('pdep').value='false';$('pminm').value='28';$('pmint').value='84';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
 $('pnew').onclick=resetPerson;
 async function loadPeopleView(){
  await refreshMaster();
@@ -3244,7 +3245,7 @@ async function loadPeopleView(){
   const mh=hours.find(x=>x.badge===p.badge)||{};
   const mese=Number(mh.ore_mese||0), trim=Number(mh.ore_trimestre||0);
   const minM=Number(mh.ore_minime_mensili||p.ore_minime_mensili||28), minT=Number(mh.ore_minime_trimestrali||p.ore_minime_trimestrali||84);
-  return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo)+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs||'—')+'</td><td><b>'+esc(mese.toFixed(2))+'</b> / '+esc(minM)+'</td><td><b>'+esc(trim.toFixed(2))+'</b> / '+esc(minT)+'</td><td>'+esc(p.telefono||'—')+'</td><td><button class="btn secondary" data-edit-person="'+esc(p.badge)+'">Apri</button> <button class="btn blue" type="button" data-person-documents="'+esc(p.badge)+'">📁 Documenti</button></td></tr>';
+  return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo)+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs||'—')+'</td><td><b>'+esc(mese.toFixed(2))+'</b> / '+esc(minM)+'</td><td><b>'+esc(trim.toFixed(2))+'</b> / '+esc(minT)+'</td><td>'+esc(p.telefono||'—')+'</td><td><button class="btn secondary" data-edit-person="'+esc(p.badge)+'">Apri / modifica</button> <button class="btn blue" type="button" data-person-documents="'+esc(p.badge)+'">📁 Documenti</button></td></tr>';
  }).join('');
  document.querySelectorAll('[data-edit-person]').forEach(b=>b.onclick=()=>window.editPerson(b.dataset.editPerson));
  document.querySelectorAll('[data-person-documents]').forEach(b=>b.onclick=()=>{window.editPerson(b.dataset.personDocuments);$('pdocSection').scrollIntoView({behavior:'smooth',block:'start'});});
@@ -3296,14 +3297,21 @@ $('pdocRefresh').onclick=()=>{
  const badge=$('pb').value.trim();
  if(badge)loadAdminPersonDocuments(badge);
 };
-window.editPerson=badge=>{const p=people.find(x=>x.badge===badge);if(!p)return;$('pb').value=p.badge;$('pb').disabled=true;$('pname').value=p.nome||'';$('psurname').value=p.cognome||'';$('pstate').value=p.stato_anagrafico||'ATTIVO';$('pphone').value=p.telefono||'';$('pemail').value=p.email||'';$('pbirth').value=p.data_nascita||'';$('pentry').value=p.data_ingresso||'';$('pdep').value=String(!!p.dipendente);$('paccessbadge').value=p.badge;$('paccesspin').value='';renderQualChecks(pq.filter(x=>x.badge_personale===badge).map(x=>x.codice_qualifica));loadVolunteerAccessStatus(badge);loadAdminPersonDocuments(badge);window.scrollTo({top:0,behavior:'smooth'})};
+window.editPerson=badge=>{const p=people.find(x=>x.badge===badge);if(!p)return;editingPersonBadge=p.badge;$('pb').value=p.badge;$('pb').disabled=false;$('pname').value=p.nome||'';$('psurname').value=p.cognome||'';$('pstate').value=p.stato_anagrafico||'ATTIVO';$('pphone').value=p.telefono||'';$('pemail').value=p.email||'';$('pbirth').value=p.data_nascita||'';$('pentry').value=p.data_ingresso||'';$('pexit').value=p.data_uscita||'';$('pcf').value=p.codice_fiscale||'';$('paddress').value=p.indirizzo||'';$('pcity').value=p.comune||'';$('pprovince').value=p.provincia||'';$('pcap').value=p.cap||'';$('pdep').value=String(!!p.dipendente);$('pminm').value=String(p.ore_minime_mensili??28);$('pmint').value=String(p.ore_minime_trimestrali??84);$('paccessbadge').value=p.badge;$('paccesspin').value='';renderQualChecks(pq.filter(x=>x.badge_personale===badge).map(x=>x.codice_qualifica));loadVolunteerAccessStatus(badge);loadAdminPersonDocuments(badge);window.scrollTo({top:0,behavior:'smooth'})};
 $('psave').onclick=async()=>{
- const badge=$('pb').value.trim();if(!badge||!$('pname').value.trim()||!$('psurname').value.trim())return msg('pmsg','Badge, nome e cognome sono obbligatori.','warn');
- const row={badge,nome:$('pname').value.trim(),cognome:$('psurname').value.trim(),nome_completo:$('pname').value.trim()+' '+$('psurname').value.trim(),telefono:$('pphone').value.trim()||null,email:$('pemail').value.trim()||null,data_nascita:$('pbirth').value||null,data_ingresso:$('pentry').value||null,dipendente:$('pdep').value==='true',stato_anagrafico:$('pstate').value,attivo:$('pstate').value==='ATTIVO'};
- const r=await sb.from('personale').upsert(row,{onConflict:'badge'});if(r.error)return msg('pmsg',r.error.message,'err');
- const selected=[...document.querySelectorAll('[data-qual]:checked')].map(x=>x.dataset.qual);await sb.from('personale_qualifiche').delete().eq('badge_personale',badge);
+ let badge=$('pb').value.trim();if(!badge||!$('pname').value.trim()||!$('psurname').value.trim())return msg('pmsg','Badge, nome e cognome sono obbligatori.','warn');
+ const oldBadge=editingPersonBadge;
+ if(oldBadge&&badge!==oldBadge){
+  if(!confirm('Modificare il numero badge da '+oldBadge+' a '+badge+'? Verranno aggiornati automaticamente anche i collegamenti della persona e l’accesso all’app volontari.'))return;
+  msg('pmsg','Aggiornamento numero badge...');
+  try{await invokeRenameVolunteerBadge(oldBadge,badge);editingPersonBadge=badge}
+  catch(e){return msg('pmsg',e.message||String(e),'err')}
+ }
+ const row={badge,nome:$('pname').value.trim(),cognome:$('psurname').value.trim(),nome_completo:$('pname').value.trim()+' '+$('psurname').value.trim(),telefono:$('pphone').value.trim()||null,email:$('pemail').value.trim()||null,data_nascita:$('pbirth').value||null,data_ingresso:$('pentry').value||null,data_uscita:$('pexit').value||null,codice_fiscale:$('pcf').value.trim().toUpperCase()||null,indirizzo:$('paddress').value.trim()||null,comune:$('pcity').value.trim()||null,provincia:$('pprovince').value.trim().toUpperCase()||null,cap:$('pcap').value.trim()||null,dipendente:$('pdep').value==='true',ore_minime_mensili:Number($('pminm').value||28),ore_minime_trimestrali:Number($('pmint').value||84),stato_anagrafico:$('pstate').value,attivo:$('pstate').value==='ATTIVO'};
+ const r=editingPersonBadge?await sb.from('personale').update(row).eq('badge',badge):await sb.from('personale').upsert(row,{onConflict:'badge'});if(r.error)return msg('pmsg',r.error.message,'err');
+ const selected=[...document.querySelectorAll('[data-qual]:checked')].map(x=>x.dataset.qual);const dq=await sb.from('personale_qualifiche').delete().eq('badge_personale',badge);if(dq.error)return msg('pmsg','Anagrafica salvata, errore aggiornamento qualifiche: '+dq.error.message,'err');
  if(selected.length){const ins=await sb.from('personale_qualifiche').insert(selected.map(c=>({badge_personale:badge,codice_qualifica:c,attiva:true})));if(ins.error)return msg('pmsg','Anagrafica salvata, errore qualifiche: '+ins.error.message,'err')}
- msg('pmsg','Scheda volontario salvata.','ok');await loadPeopleView();window.editPerson(badge)
+ msg('pmsg','Scheda personale aggiornata.','ok');await loadPeopleView();window.editPerson(badge)
 };
 
 
@@ -4799,6 +4807,19 @@ $('monitorStatus').onclick=loadMonitorAccessStatus;
 $('monitorCreate').onclick=async()=>{try{const d=await invokeMonitorAccess('CREATE_OR_RESET',$('monitorPassword').value.trim());$('monitorAccessState').value='ATTIVO';$('monitorPassword').value='';msg('monitorAccessMsg',d.password_temporanea?'Monitor attivato. Username: monitor · Password temporanea: '+d.password_temporanea+' — conservala in modo riservato.':'Monitor attivato e password aggiornata.','ok')}catch(e){msg('monitorAccessMsg',e.message,'err')}};
 $('monitorDisable').onclick=async()=>{if(!confirm('Disattivare l\'accesso Monitor sede?'))return;try{await invokeMonitorAccess('DISABLE');$('monitorAccessState').value='DISATTIVATO';msg('monitorAccessMsg','Accesso Monitor sede disattivato.','ok')}catch(e){msg('monitorAccessMsg',e.message,'err')}};
 
+async function invokeRenameVolunteerBadge(oldBadge,newBadge){
+ const s=await sb.auth.getSession();
+ const token=s.data.session?.access_token;
+ if(!token)throw new Error('Sessione amministratore scaduta. Esci e accedi di nuovo.');
+ const r=await sb.functions.invoke('rinomina-badge-volontario',{body:{old_badge:oldBadge,new_badge:newBadge},headers:{Authorization:'Bearer '+token}});
+ if(r.error){
+  let detail=r.error.message||'Errore modifica badge';
+  try{if(r.error.context&&typeof r.error.context.json==='function'){const body=await r.error.context.json();if(body?.error)detail=body.error}}catch(_){}
+  throw new Error(detail);
+ }
+ if(r.data?.error)throw new Error(r.data.error);
+ return r.data||{};
+}
 async function invokeVolunteerAccess(action,badge,pin){
  const s=await sb.auth.getSession();
  const token=s.data.session?.access_token;
