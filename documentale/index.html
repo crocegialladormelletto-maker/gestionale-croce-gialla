@@ -233,8 +233,8 @@ Consigliere: Ragazzini Luisa</textarea></div>
       <div class="field" style="margin-top:10px"><label>Deliberazioni / decisioni assunte</label><textarea id="vDecisions" style="min-height:150px" placeholder="Riporta le deliberazioni approvate."></textarea></div>
       <div class="grid3" style="margin-top:10px">
        <div class="field"><label>Esito votazione</label><textarea id="vVote" placeholder="Es. 6 favorevoli, 0 contrari, 1 assente"></textarea></div>
-       <div class="field"><label>Presidente della seduta</label><input id="vPresident"></div>
-       <div class="field"><label>Segretario verbalizzante</label><input id="vSecretary"></div>
+       <div class="field"><label>Presidente della seduta</label><input id="vPresident" value="Musso Paolo"></div>
+       <div class="field"><label>Segretario verbalizzante</label><input id="vSecretary" value="Ronco Meri"></div>
       </div>
       <div class="field" style="margin-top:10px"><label>Note</label><textarea id="vNotes"></textarea></div>
       <div class="toolbar"><button id="vSave" class="btn yellow" type="button">💾 Salva verbale</button></div><div id="vmsg"></div>
@@ -435,8 +435,10 @@ function resetMinuteForm(){
  currentMinuteId=null;currentMinute=null;$('vTitle').textContent='Nuovo verbale';
  $('vType').value='CONSIGLIO_DIRETTIVO';$('vDate').value=today();$('vStart').value='';$('vEnd').value='';$('vPlace').value='Sede Croce Gialla Emergenza ODV';
  $('vStatus').value='BOZZA';$('vApprovalDate').value='';$('vHeading').value='Verbale del Consiglio Direttivo';
- ['vAbsent','vGuests','vProceedings','vDecisions','vVote','vPresident','vSecretary','vNotes','vAiNotes'].forEach(id=>$(id).value='');
+ ['vAbsent','vGuests','vProceedings','vDecisions','vVote','vNotes','vAiNotes'].forEach(id=>$(id).value='');
  $('vPresent').value=CONSIGLIO_DIRETTIVO_PRESENTI;
+ $('vPresident').value='Musso Paolo';
+ $('vSecretary').value='Ronco Meri';
  setMinuteAgenda();updateNextMinuteCode();
  msg('vmsg','');msg('vAiMsg','');
 }
