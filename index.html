@@ -303,6 +303,129 @@
 .vol-route-preview{margin:9px 0;padding:9px 10px;border-left:4px solid #14a2bd;background:#eaf8fc;border-radius:6px;color:#1c4054;font-size:13px;line-height:1.55}
 .vol-route-preview div+div{margin-top:5px}
 .vol-route-preview b{color:#133c55}
+
+/* === APP VOLONTARI V13.41 · HOME COLORATA RIPRISTINATA === */
+#volApp{max-width:760px!important;margin:0 auto!important;padding:0 8px 18px!important}
+#volApp .vol-layout{display:block!important;margin-top:8px!important}
+#volApp .vol-side{display:none!important}
+#volApp .vol-mobile-bar{display:none!important}
+#volApp .vol-main{width:100%!important;max-width:100%!important;margin:0!important;min-width:0!important}
+#volApp #volHomeSection{overflow:hidden!important;border-radius:10px!important}
+#volApp .vol-home-head{padding:14px 14px 9px!important}
+#volApp .vol-home-head h1{font-size:clamp(20px,5.2vw,30px)!important;line-height:1.08!important}
+#volApp .vol-home-head p{font-size:12px!important}
+#volApp .vol-home-pad{padding:0 12px 18px!important}
+#volApp .vol-home-grid{
+ display:grid!important;
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ align-items:start!important;
+ gap:20px 8px!important;
+ width:100%!important;
+ padding:20px 8px 22px!important;
+ margin:0!important;
+ background:#fff!important;
+ border:1px solid #e3e8ee!important;
+ border-radius:6px!important;
+ overflow:hidden!important;
+}
+#volApp .vol-home-tile{
+ width:100%!important;
+ min-width:0!important;
+ max-width:none!important;
+ height:auto!important;
+ margin:0!important;
+ padding:0 2px 4px!important;
+ border:0!important;
+ background:transparent!important;
+ display:flex!important;
+ flex-direction:column!important;
+ align-items:center!important;
+ justify-content:flex-start!important;
+ gap:9px!important;
+ color:#202a35!important;
+ text-align:center!important;
+ text-decoration:none!important;
+ overflow:visible!important;
+}
+#volApp .vol-home-icon{
+ width:86px!important;
+ height:86px!important;
+ min-width:86px!important;
+ min-height:86px!important;
+ max-width:86px!important;
+ max-height:86px!important;
+ flex:0 0 86px!important;
+ display:flex!important;
+ align-items:center!important;
+ justify-content:center!important;
+ border-radius:999px!important;
+ overflow:hidden!important;
+ box-sizing:border-box!important;
+ padding:0!important;
+ margin:0 auto!important;
+}
+#volApp .vol-home-icon svg,
+#volApp .vol-home-icon img{
+ display:block!important;
+ width:42px!important;
+ height:42px!important;
+ min-width:42px!important;
+ min-height:42px!important;
+ max-width:42px!important;
+ max-height:42px!important;
+ margin:0!important;
+ padding:0!important;
+ object-fit:contain!important;
+ border:0!important;
+ border-radius:0!important;
+ box-shadow:none!important;
+ transform:none!important;
+}
+#volApp .vol-home-icon svg{stroke:currentColor!important}
+#volApp .vol-home-label{
+ display:block!important;
+ width:100%!important;
+ max-width:125px!important;
+ margin:0 auto!important;
+ font-size:13px!important;
+ font-weight:850!important;
+ line-height:1.16!important;
+ text-transform:uppercase!important;
+ overflow-wrap:anywhere!important;
+ color:#202a35!important;
+}
+#volApp .vol-home-turn-head{margin:20px 0 10px!important}
+#volApp .vol-home-turn-head h2{font-size:24px!important}
+#volApp .vol-home-turns{width:100%!important}
+@media(max-width:430px){
+ #volApp{padding:0 5px 14px!important}
+ #volApp .top .head{padding:8px!important}
+ #volApp .crest-img{width:43px!important;height:43px!important}
+ #volApp .vol-home-pad{padding:0 8px 14px!important}
+ #volApp .vol-home-grid{gap:18px 4px!important;padding:18px 3px 20px!important}
+ #volApp .vol-home-icon{
+  width:78px!important;height:78px!important;
+  min-width:78px!important;min-height:78px!important;
+  max-width:78px!important;max-height:78px!important;
+  flex-basis:78px!important;
+ }
+ #volApp .vol-home-icon svg,#volApp .vol-home-icon img{
+  width:37px!important;height:37px!important;
+  min-width:37px!important;min-height:37px!important;
+  max-width:37px!important;max-height:37px!important;
+ }
+ #volApp .vol-home-label{font-size:11px!important;max-width:108px!important}
+}
+@media(max-width:340px){
+ #volApp .vol-home-icon{
+  width:70px!important;height:70px!important;
+  min-width:70px!important;min-height:70px!important;
+  max-width:70px!important;max-height:70px!important;
+  flex-basis:70px!important;
+ }
+ #volApp .vol-home-label{font-size:10px!important}
+}
+
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.36</div></div><div class="loginbody">
@@ -1341,7 +1464,6 @@
  </div><div class="stripe"></div></div>
 
  <div class="vol-layout">
-  <div class="vol-mobile-bar"><button type="button" id="volMenuToggle" aria-controls="volSide" aria-expanded="false" aria-label="Apri menu">☰ <span>Menu</span></button><b>CROCE GIALLA</b><button type="button" id="volGoHome" aria-label="Torna alla Home">⌂ Home</button></div>
   <aside id="volSide" class="vol-side" aria-label="Menu APP Volontari">
    <div class="vol-side-head"><b>👋 Area volontario</b><span>Scegli una sezione</span></div>
    <button type="button" class="vol-nav active" data-vol-target="volHomeSection">⌂ Home</button>
@@ -1361,7 +1483,7 @@
 
   <main class="vol-main">
 <section id="volHomeSection" class="surface vol-panel vol-panel-home">
- <div class="vol-home-head"><h1>CROCE GIALLA EMERGENZA ODV</h1><p>La tua area volontario · v13.40</p></div>
+ <div class="vol-home-head"><h1>CROCE GIALLA EMERGENZA ODV</h1><p>La tua area volontario · v13.41</p></div>
  <div class="vol-home-pad">
   <div id="volmsg"></div>
   <div class="vol-home-grid" aria-label="Accessi rapidi ai calendari"><button type="button" class="vol-home-tile" data-vol-home-target="volRosterSection"><span class="vol-home-icon vol-home-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h6l3-4h6v10h-5"/><circle cx="8" cy="16" r="4"/><path d="M18 6h3M18 10h3"/></svg></span><span class="vol-home-label">ASSISTENZE</span></button>
@@ -1681,7 +1803,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.40':'Versione 13.36';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.41':'Versione 13.36';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5477,7 +5599,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.40-20260925-volunteer-refresh';
+const CGE_APP_BUILD='13.41-20260925-home-ripristinata';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
