@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.12</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.13</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.12</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.13</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -280,7 +280,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
       <div id="cvFirstBox" class="box" style="margin-top:12px">
        <div class="actions" style="justify-content:space-between"><b id="cvFirstTitle">Convocazione</b><span id="cvFirstBadge" class="pill b">UNICA</span></div>
        <div class="grid3" style="margin-top:9px">
-        <div class="field"><label id="cvDateLabel">Data riunione *</label><input id="cvDate" type="date"></div>
+        <div class="field"><label id="cvDateLabel">Data riunione *</label><input id="cvDate" type="date" min="2020-01-01" max="2100-12-31"></div>
         <div class="field"><label id="cvTime1Label">Ora *</label><input id="cvTime1" type="time"></div>
         <div class="field"><label>Luogo</label><input id="cvPlace" placeholder="Es. Sede Croce Gialla"></div>
        </div>
@@ -290,7 +290,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
       <div id="cvSecondBox" class="box hidden" style="margin-top:12px">
        <div class="actions" style="justify-content:space-between"><b>2ª Convocazione — riunione effettiva</b><span class="pill g">EFFETTIVA</span></div>
        <div class="grid2" style="margin-top:9px">
-        <div class="field"><label>Data seconda convocazione *</label><input id="cvDate2" type="date"></div>
+        <div class="field"><label>Data seconda convocazione *</label><input id="cvDate2" type="date" min="2020-01-01" max="2100-12-31"></div>
         <div class="field"><label>Ora seconda convocazione *</label><input id="cvTime2" type="time"></div>
        </div>
        <div class="field" style="margin-top:9px"><label>Testo della seconda convocazione</label><textarea id="cvText2" style="min-height:150px"></textarea></div>
@@ -909,6 +909,12 @@ function resetCallForm(){
 function fmtCallDate(v){
  const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:(v||'');
 }
+function validCallDate(v){
+ const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+ if(!m)return false;
+ const y=Number(m[1]);
+ return y>=2020&&y<=2100;
+}
 function generateCallText(){
  if(!$('cvDate').value)return msg('cvmsg','Inserisci prima la data della convocazione.','warn');
  const assembly=$('cvType').value==='ASSEMBLEA_SOCI';
@@ -938,6 +944,7 @@ function callParams(){
 async function saveNewAssemblyPair(finalize=false){
  if(!$('cvDate').value||!$('cvTime1').value)return msg('cvmsg','Inserisci data e ora della prima convocazione.','warn');
  if(!$('cvDate2').value||!$('cvTime2').value)return msg('cvmsg','Inserisci data e ora della seconda convocazione.','warn');
+ if(!validCallDate($('cvDate').value)||!validCallDate($('cvDate2').value))return msg('cvmsg','Inserisci l’anno completo a 4 cifre, ad esempio 2026.','warn');
  if(!$('cvText').value.trim()||!$('cvText2').value.trim()){
   const d1=fmtCallDate($('cvDate').value),d2=fmtCallDate($('cvDate2').value);
   const t1=$('cvTime1').value,t2=$('cvTime2').value,place=$('cvPlace').value.trim()||'Sede Croce Gialla Emergenza ODV';
@@ -971,6 +978,7 @@ async function saveCall(finalize=false){
    return;
   }
   if(!$('cvDate').value)return msg('cvmsg','Inserisci la data della riunione.','warn');
+  if(!validCallDate($('cvDate').value))return msg('cvmsg','Inserisci l’anno completo a 4 cifre, ad esempio 2026.','warn');
   if(!$('cvTime1').value)return msg('cvmsg','Inserisci l’orario della convocazione.','warn');
   const previous=$('cvStatus').value||'BOZZA';
   if(currentCall?.fase_convocazione==='PRIMA')$('cvStatus').value='DESERTA';
