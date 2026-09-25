@@ -286,7 +286,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.33</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.34</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -644,6 +644,7 @@
    <button id="ndPrint" type="button" class="btn blue">🖨 Stampa / Salva PDF</button>
    <button id="ndEmailSend" type="button" class="btn secondary">✉ Prepara email</button>
   </div>
+  <div id="ndActionMsg" style="margin-top:8px"></div>
   <div class="notice">L’invio email automatico con PDF allegato richiede un servizio di posta dedicato, non ancora configurato. «Prepara email» apre solo una bozza: allega tu il PDF e verifica l’invio.</div>
  </div>
 </section>
@@ -1979,7 +1980,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.33</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.34</span></div>'+
  '</div>';
 }
 function openFoglioPrintWindow(){
@@ -2201,7 +2202,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.33'
+  versione_app:'V13.34'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -5062,7 +5063,7 @@ async function downloadSingleBackupDataset(){
   const {rows}=await backupFetchDataset(code);
   const base='CGE_'+backupSafeName(code)+'_'+backupTimestamp();
   if(format==='CSV')backupDownloadFile(base+'.csv',backupRowsToCsv(rows),'text/csv;charset=utf-8');
-  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.33',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
+  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.34',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
   await backupLogExport(format,code,rows.length);
   msg('backupDatasetMsg','Esportazione completata: '+rows.length+' record.','ok');
   await loadBackupExport();
@@ -5088,7 +5089,7 @@ async function downloadFullBackup(){
   const backup={
    formato:'CGE_BACKUP_V1',
    associazione:'Croce Gialla Emergenza ODV',
-   versione_app:'V13.33',
+   versione_app:'V13.34',
    generato_il:new Date().toISOString(),
    contiene_credenziali_accesso:false,
    documenti_binari_inclusi:false,
@@ -5432,4 +5433,4 @@ if('serviceWorker' in navigator){
 applyVolunteerOnlyLogin();refreshPwaInstallUI();
 try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&$('vbadge')){$('vbadge').value=remembered;$('vremember').checked=true}}catch(_){}
 (async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
-</script><script src="/gestionale-croce-gialla/note-debito.js?v=20260924b"></script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
+</script><script src="/gestionale-croce-gialla/note-debito.js?v=20260925a"></script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
