@@ -1,0 +1,22 @@
+{
+  "id": "/gestionale-croce-gialla/app-volontari-v13-43",
+  "name": "Croce Gialla Emergenza - Volontari",
+  "short_name": "Croce Gialla",
+  "start_url": "/gestionale-croce-gialla/app-volontari-v13-43.html?appv=13.43",
+  "scope": "/gestionale-croce-gialla/",
+  "display": "standalone",
+  "theme_color": "#12375d",
+  "background_color": "#f2f5f8",
+  "icons": [
+    {
+      "src": "/gestionale-croce-gialla/icons/icon-192-v6.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/gestionale-croce-gialla/icons/icon-512-v6.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
