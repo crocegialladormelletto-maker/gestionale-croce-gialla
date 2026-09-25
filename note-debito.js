@@ -9,7 +9,7 @@
  const niceDate=x=>x?String(x).slice(0,10).split('-').reverse().join('/'):'—';
  const isAdmin=()=>prof?.ruolo==='AMMINISTRATORE';
  let active=null,createBusy=false,saveBusy=false,seq=0;
- function info(text,kind=''){msg('ndMsg',text,kind)}
+ function info(text,kind=''){msg('ndMsg',text,kind);msg('ndActionMsg',text,kind)}
  function amountPreview(){
   const gross=Number(el('ndAmount').value||0),discount=Number(el('ndDiscount').value||0);
   el('ndTotal').value=money(Math.max(0,gross-discount));
@@ -30,8 +30,10 @@
   el('ndForm').querySelectorAll('input,textarea,select').forEach(node=>node.disabled=!draft);
   el('ndSave').classList.toggle('hidden',!draft);
   el('ndIssue').classList.toggle('hidden',!draft);
-  el('ndPrint').disabled=draft;
-  el('ndEmailSend').disabled=draft;
+  el('ndPrint').disabled=false;
+  el('ndEmailSend').disabled=false;
+  el('ndPrint').title=draft?'Prima emetti la Nota di Debito per ottenere il documento definitivo.':'Stampa o salva la Nota di Debito in PDF.';
+  el('ndEmailSend').title=draft?'Prima emetti la Nota di Debito.':'Prepara il messaggio email per il destinatario.';
   el('ndNoDuplicate').textContent=draft
    ?'Bozza: controlla numerazione, intestatario, importo, sconto e dati di pagamento prima di emettere.'
    :'Nota emessa. Per correzioni successive rivolgersi all’Amministrazione.';
@@ -102,21 +104,40 @@
  async function save(){
   if(!isAdmin()||!active||active.stato!=='BOZZA'||saveBusy)return false;
   let row;try{row=payload()}catch(e){info(e.message,'warn');return false}
-  saveBusy=true;el('ndSave').disabled=true;
-  const r=await sb.from('note_di_debito').update(row).eq('id',active.id).eq('stato','BOZZA').select('*').single();
-  saveBusy=false;el('ndSave').disabled=false;
-  if(r.error){info(r.error.message,'err');return false}
-  fill(r.data);info('Bozza salvata.','ok');return true;
+  saveBusy=true;el('ndSave').disabled=true;el('ndIssue').disabled=true;
+  info('Salvataggio della bozza in corso…');
+  try{
+   const r=await sb.from('note_di_debito').update(row).eq('id',active.id).eq('stato','BOZZA').select('*').single();
+   if(r.error){info('Errore nel salvataggio: '+r.error.message,'err');return false}
+   fill(r.data);info('Bozza salvata correttamente.','ok');return true;
+  }catch(e){
+   info('Errore nel salvataggio: '+(e.message||String(e)),'err');return false;
+  }finally{
+   saveBusy=false;
+   if(active?.stato==='BOZZA'){el('ndSave').disabled=false;el('ndIssue').disabled=false}
+  }
  }
+ async function issue(){
+  if(!isAdmin()||!active||active.stato!=='BOZZA')return info('La Nota di Debito non è più in stato BOZZA.','warn');
+  if(!confirm('Emettere DEFINITIVAMENTE '+active.numero+'? Dopo l’emissione la Nota di Debito non sarà più modificabile.'))return;
+  const ok=await save();
+  if(!ok)return;
+  info('Emissione della Nota di Debito in corso…');
+  el('ndIssue').disabled=true;
+  try{
+   const r=await sb.rpc('cge_emetti_nota_debito',{p_id:active.id});
+   if(r.error){info('Errore durante l’emissione: '+r.error.message,'err');el('ndIssue').disabled=false;return}
+   await read(active.id);
+   info('Nota di Debito emessa correttamente. Ora puoi usare Stampa / Salva PDF e Prepara email.','ok');
+  }catch(e){
+   info('Errore durante l’emissione: '+(e.message||String(e)),'err');
+   if(active?.stato==='BOZZA')el('ndIssue').disabled=false;
+  }
+ }
+ window.ndSaveDraft=save;
+ window.ndIssueNote=issue;
  el('ndSave').onclick=save;
- el('ndIssue').onclick=async()=>{
-  if(!isAdmin()||!active||active.stato!=='BOZZA')return;
-  if(!await save())return;
-  if(!confirm('Emettere DEFINITIVAMENTE '+active.numero+'? Dopo l’emissione la Nota di Debito non sarà più modificabile. Controlla il progressivo anche rispetto a eventuali documenti PDF creati fuori dal gestionale.'))return;
-  const r=await sb.rpc('cge_emetti_nota_debito',{p_id:active.id});
-  if(r.error)return info(r.error.message,'err');
-  await read(active.id);info('Nota emessa. Ora puoi stampare o salvare il PDF.','ok');
- };
+ el('ndIssue').onclick=issue;
  function printHtml(n){
   const line=(k,v)=>'<div style="margin:6px 0"><b>'+safe(k)+':</b> '+safe(v||'—')+'</div>';
   return '<div class="print-page" style="font-family:Arial,sans-serif;color:#182c3a">'+
@@ -147,7 +168,8 @@
     '<div style="margin-top:15px;border-top:2px solid #e6c741;padding-top:8px">Sostieni la Croce Gialla con il tuo 5×1000: C.F. <b>91023880031</b></div></div>';
  }
  el('ndPrint').onclick=()=>{
-  if(!isAdmin()||!active||active.stato!=='EMESSA')return info('Emetti prima la Nota di Debito.','warn');
+  if(!isAdmin()||!active)return info('Nota di Debito non disponibile.','warn');
+  if(active.stato!=='EMESSA')return info('La Nota di Debito è ancora in BOZZA: premi prima “Emetti Nota di Debito”, poi potrai stamparla o salvarla in PDF.','warn');
   const print=el('printSheet'),oldTitle=document.title;
   document.body.classList.remove('print-roster','print-emergency','print-assistance');
   print.innerHTML=printHtml(active);
@@ -156,7 +178,8 @@
   window.addEventListener('afterprint',restore);window.print();
  };
  el('ndEmailSend').onclick=()=>{
-  if(!isAdmin()||!active||active.stato!=='EMESSA')return;
+  if(!isAdmin()||!active)return info('Nota di Debito non disponibile.','warn');
+  if(active.stato!=='EMESSA')return info('La Nota di Debito è ancora in BOZZA: emettila prima di preparare l’email al destinatario.','warn');
   if(!active.email)return info('Inserisci l’indirizzo email corretto quando la nota è ancora in bozza.','warn');
   if(!confirm('Aprire un messaggio email indirizzato a '+active.email+'? Salva prima il PDF e ALLEGALO manualmente: il gestionale non invia automaticamente file o email.'))return;
   const subject='Croce Gialla Emergenza ODV – Nota di Debito '+active.numero;
