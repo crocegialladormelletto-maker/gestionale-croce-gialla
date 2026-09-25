@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.3</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.4</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.3</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.4</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -494,14 +494,15 @@ async function saveMinute(){
   const params=minuteParams();let id=currentMinuteId,code=currentMinute?.verbale_codice||'';
   if(wasEdit){const r=await sb.rpc('cge_verbale_modifica',{p_id:id,...params});if(r.error)throw r.error}
   else{const r=await sb.rpc('cge_verbale_crea',params);if(r.error)throw r.error;id=r.data?.[0]?.id;code=r.data?.[0]?.verbale_codice||'';if(!id)throw new Error('Numero verbale non restituito.')}
-  resetMinuteFilters();$('vYear').value=Number(String(params.p_data_riunione).slice(0,4));await loadMinutesList();openMinute(id);
+  resetMinuteFilters();$('vYear').value=Number(String(params.p_data_riunione).slice(0,4));await loadMinutesList();await openMinute(id,false);
   msg('vmsg',wasEdit?'Verbale aggiornato.':'Verbale '+code+' creato.','ok');
  }catch(e){msg('vmsg',e.message||String(e),'err')}finally{minutesBusy=false;$('vSave').disabled=false}
 }
 function renderMinutes(){
  $('vCount').textContent=minutesRows.length;
- $('vBody').innerHTML=minutesRows.length?minutesRows.map(v=>'<tr><td><b>'+esc(v.verbale_codice)+'</b></td><td>'+esc(v.data_riunione||'—')+(v.ora_inizio?'<br><span class="muted">'+esc(String(v.ora_inizio).slice(0,5))+(v.ora_fine?' – '+esc(String(v.ora_fine).slice(0,5)):'')+'</span>':'')+'</td><td>'+esc(minuteTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.titolo)+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='APPROVATO'?'g':v.stato==='ANNULLATO'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc([v.presidente,v.segretario].filter(Boolean).join(' / ')||'—')+'</td><td><button class="btn secondary" data-vopen="'+esc(v.id)+'">Apri</button></td></tr>').join(''):'<tr><td colspan="7">Nessun verbale trovato.</td></tr>';
- $('vBody').querySelectorAll('[data-vopen]').forEach(b=>b.onclick=()=>openMinute(b.dataset.vopen));
+ $('vBody').innerHTML=minutesRows.length?minutesRows.map(v=>'<tr><td><b>'+esc(v.verbale_codice)+'</b></td><td>'+esc(v.data_riunione||'—')+(v.ora_inizio?'<br><span class="muted">'+esc(String(v.ora_inizio).slice(0,5))+(v.ora_fine?' – '+esc(String(v.ora_fine).slice(0,5)):'')+'</span>':'')+'</td><td>'+esc(minuteTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.titolo)+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='APPROVATO'?'g':v.stato==='ANNULLATO'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc([v.presidente,v.segretario].filter(Boolean).join(' / ')||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-vopen="'+esc(v.id)+'">Apri</button><button class="btn yellow" type="button" data-vprint="'+esc(v.id)+'">🖨️ Stampa PDF</button></div></td></tr>').join(''):'<tr><td colspan="7">Nessun verbale trovato.</td></tr>';
+ $('vBody').querySelectorAll('[data-vopen]').forEach(b=>b.onclick=()=>openMinute(b.dataset.vopen,false));
+ $('vBody').querySelectorAll('[data-vprint]').forEach(b=>b.onclick=()=>openMinute(b.dataset.vprint,true));
 }
 async function loadMinutesList(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
@@ -517,14 +518,33 @@ async function loadMinutes(){
  if(!currentMinuteId)resetMinuteForm();
  await loadMinutesList();
 }
-function openMinute(id){
- const v=minutesRows.find(x=>x.id===id);if(!v)return;
- resetMinuteFilters();currentMinuteId=v.id;currentMinute=v;$('vTitle').textContent='Modifica verbale';$('vCode').textContent=v.verbale_codice+' · '+v.data_riunione;
- $('vType').value=v.tipo_riunione;$('vDate').value=v.data_riunione||'';$('vStart').value=v.ora_inizio?String(v.ora_inizio).slice(0,5):'';$('vEnd').value=v.ora_fine?String(v.ora_fine).slice(0,5):'';
- $('vPlace').value=v.luogo||'';$('vStatus').value=v.stato||'BOZZA';$('vApprovalDate').value=v.data_approvazione||'';$('vHeading').value=v.titolo||'';
- $('vPresent').value=v.presenti||'';$('vAbsent').value=v.assenti||'';$('vGuests').value=v.invitati||'';setMinuteAgenda(v.ordine_giorno||'');$('vProceedings').value=v.svolgimento||'';
- $('vDecisions').value=v.deliberazioni||'';$('vVote').value=v.votazione||'';$('vPresident').value=v.presidente||'';$('vSecretary').value=v.segretario||'';$('vNotes').value=v.note||'';
- $('vTitle').scrollIntoView({behavior:'smooth',block:'center'});msg('vmsg','');
+async function openMinute(id,printAfter=false){
+ try{
+  msg('vListMsg','Apertura verbale...');
+  let v=minutesRows.find(x=>String(x.id)===String(id));
+  if(!v){
+   const r=await sb.rpc('cge_verbali_elenco',{p_search:null,p_tipo:null,p_stato:null,p_anno:null});
+   if(r.error)throw r.error;
+   v=(r.data||[]).find(x=>String(x.id)===String(id));
+  }
+  if(!v)throw new Error('Verbale non trovato nell’archivio.');
+  currentMinuteId=v.id;currentMinute=v;
+  $('vTitle').textContent='Modifica verbale';$('vCode').textContent=v.verbale_codice+' · '+v.data_riunione;
+  $('vType').value=v.tipo_riunione||'CONSIGLIO_DIRETTIVO';$('vDate').value=v.data_riunione||'';
+  $('vStart').value=v.ora_inizio?String(v.ora_inizio).slice(0,5):'';$('vEnd').value=v.ora_fine?String(v.ora_fine).slice(0,5):'';
+  $('vPlace').value=v.luogo||'';$('vStatus').value=v.stato||'BOZZA';$('vApprovalDate').value=v.data_approvazione||'';$('vHeading').value=v.titolo||'';
+  $('vPresent').value=v.presenti||CONSIGLIO_DIRETTIVO_PRESENTI;$('vAbsent').value=v.assenti||'';$('vGuests').value=v.invitati||'';
+  setMinuteAgenda(v.ordine_giorno||'');$('vProceedings').value=v.svolgimento||'';$('vDecisions').value=v.deliberazioni||'';$('vVote').value=v.votazione||'';
+  $('vPresident').value=v.presidente||'Musso Paolo';$('vSecretary').value=v.segretario||'Ronco Meri';$('vNotes').value=v.note||'';
+  msg('vListMsg','');msg('vmsg','Verbale '+v.verbale_codice+' aperto.','ok');
+  if(printAfter){
+   setTimeout(()=>printMinute(),150);
+  }else{
+   $('vTitle').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+ }catch(e){
+  msg('vListMsg',e.message||String(e),'err');
+ }
 }
 function printMinute(){
  const p={
