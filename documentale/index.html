@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.8</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.9</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.8</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.9</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -850,14 +850,14 @@ function updateCallLayout(forceDefaults=false){
  $('cvType').disabled=!!currentCallId;
  if(currentCallId&&assembly){
   const first=currentCall?.fase_convocazione==='PRIMA';
-  $('cvFirstTitle').textContent=first?'1ª Convocazione — DESERTA':'2ª Convocazione — riunione effettiva';
+  $('cvFirstTitle').textContent=first?'1ª Convocazione — avviso con entrambe le date':'2ª Convocazione — riunione effettiva';
   $('cvFirstBadge').textContent=first?'DESERTA':'EFFETTIVA';
   $('cvFirstBadge').className='pill '+(first?'r':'g');
   $('cvDateLabel').textContent=first?'Data 1ª convocazione *':'Data 2ª convocazione *';
   $('cvTime1Label').textContent=first?'Ora 1ª convocazione *':'Ora 2ª convocazione *';
   $('cvTextLabel').textContent=first?'Testo della prima convocazione':'Testo della seconda convocazione';
  }else if(pair){
-  $('cvFirstTitle').textContent='1ª Convocazione — DESERTA';
+  $('cvFirstTitle').textContent='1ª Convocazione — avviso con entrambe le date';
   $('cvFirstBadge').textContent='DESERTA';
   $('cvFirstBadge').className='pill r';
   $('cvDateLabel').textContent='Data prima convocazione *';
@@ -912,7 +912,7 @@ function generateCallText(){
  if(assembly&&!currentCallId){
   if(!$('cvDate2').value||!$('cvTime2').value)return msg('cvmsg','Inserisci anche data e ora della seconda convocazione.','warn');
   const d2=fmtCallDate($('cvDate2').value),t2=$('cvTime2').value;
-  $('cvText').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in prima convocazione il giorno '+d1+' alle ore '+t1+', presso '+place+'. La prima convocazione è prevista come deserta. La seduta effettiva si terrà in seconda convocazione il giorno '+d2+' alle ore '+t2+'.';
+  $('cvText').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in prima convocazione il giorno '+d1+' alle ore '+t1+' e, occorrendo, in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+', per discutere e deliberare sui punti indicati nell’ordine del giorno.\n\nSi raccomanda la partecipazione.';
   $('cvText2').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+', per discutere e deliberare sui punti indicati nell’ordine del giorno.\n\nSi raccomanda la partecipazione.';
  }else{
   const label=assembly?(currentCall?.fase_convocazione==='PRIMA'?'prima':'seconda'):'';
@@ -933,6 +933,12 @@ function callParams(){
 async function saveNewAssemblyPair(finalize=false){
  if(!$('cvDate').value||!$('cvTime1').value)return msg('cvmsg','Inserisci data e ora della prima convocazione.','warn');
  if(!$('cvDate2').value||!$('cvTime2').value)return msg('cvmsg','Inserisci data e ora della seconda convocazione.','warn');
+ if(!$('cvText').value.trim()||!$('cvText2').value.trim()){
+  const d1=fmtCallDate($('cvDate').value),d2=fmtCallDate($('cvDate2').value);
+  const t1=$('cvTime1').value,t2=$('cvTime2').value,place=$('cvPlace').value.trim()||'Sede Croce Gialla Emergenza ODV';
+  if(!$('cvText').value.trim())$('cvText').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in prima convocazione il giorno '+d1+' alle ore '+t1+' e, occorrendo, in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+', per discutere e deliberare sui punti indicati nell’ordine del giorno.\n\nSi raccomanda la partecipazione.';
+  if(!$('cvText2').value.trim())$('cvText2').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+', per discutere e deliberare sui punti indicati nell’ordine del giorno.\n\nSi raccomanda la partecipazione.';
+ }
  const body={
   p_data_prima:$('cvDate').value,p_ora_prima:$('cvTime1').value,
   p_data_seconda:$('cvDate2').value,p_ora_seconda:$('cvTime2').value,
@@ -1032,7 +1038,8 @@ function printCall(){
  const agendaEntries=[...$('cvAgendaPoints').querySelectorAll('textarea')].map(x=>x.value.trim()).filter(Boolean);
  const agenda=agendaEntries.length?'<section class="vp-section"><h3>Ordine del giorno</h3><ol class="vp-agenda">'+agendaEntries.map(x=>'<li><span>'+esc(x)+'</span></li>').join('')+'</ol></section>':'';
  const info=(t,x)=>'<div class="vp-box"><small>'+esc(t)+'</small>'+esc(clean(x)||'—')+'</div>';
- const phaseText=v.fase==='PRIMA'?'1ª convocazione — DESERTA':v.fase==='SECONDA'?'2ª convocazione — RIUNIONE EFFETTIVA':callTypeLabel(v.tipo);
+ const phaseText=v.fase==='PRIMA'?'1ª convocazione':v.fase==='SECONDA'?'2ª convocazione':callTypeLabel(v.tipo);
+ const publicStatus=(v.stato==='DESERTA'&&v.fase==='PRIMA')?'':v.stato;
  $('verbPrint').innerHTML=
   '<img class="vp-watermark" src="'+orgLogo+'" alt="" aria-hidden="true">'+
   '<div class="vp-content"><header class="vp-head"><img class="vp-logo" src="'+orgLogo+'" alt="Logo Croce Gialla">'+
@@ -1041,7 +1048,7 @@ function printCall(){
   '<div class="vp-contact">crocegialladormelletto@crocegiallaemergenza.it</div><div class="vp-contact">PEC: crocegiallaemergenza@pec.it</div></div>'+
   '<img class="vp-logo" src="'+orgLogo+'" alt="" aria-hidden="true"></header><div class="vp-accent"></div>'+
   '<div class="vp-kicker">Convocazione</div><h2 class="vp-title">'+esc(clean(v.titolo)||'Convocazione')+'</h2>'+
-  '<div class="vp-type">'+esc(phaseText)+'</div><div class="vp-document"><span class="vp-number">'+esc(v.codice)+'</span><span class="vp-status">'+esc(v.stato)+'</span></div>'+
+  '<div class="vp-type">'+esc(phaseText)+'</div><div class="vp-document"><span class="vp-number">'+esc(v.codice)+'</span>'+(publicStatus?'<span class="vp-status">'+esc(publicStatus)+'</span>':'')+'</div>'+
   '<section class="vp-section"><h3>Destinatari</h3><div class="vp-text">'+esc(clean(v.destinatari))+'</div></section>'+
   '<section class="vp-section"><h3>Oggetto</h3><div class="vp-text">'+esc(clean(v.oggetto))+'</div></section>'+
   '<div class="vp-meta">'+info('Data',italianDate(v.data))+info('Ora',shortTime(v.ora))+info('Luogo',v.luogo)+info('Firmatario',v.firmatario)+'</div>'+
