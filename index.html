@@ -49,90 +49,87 @@
  .print-footer{margin-top:14px;border-top:1px solid #c5cbd0;padding-top:5px;font-size:7.5pt;color:#5b6570;display:flex;justify-content:space-between}
  .no-print{display:none!important}
 
- /* Nota di Debito: A4 verticale, una pagina, impaginazione piena e bilanciata. */
+ /* Nota di Debito: A4 verticale, una pagina, contenuti distribuiti senza vuoti eccessivi. */
  .nd-print-page{
   page:ndPortrait;
   width:100%!important;
   max-width:none!important;
-  min-height:270mm!important;
   margin:0!important;
   padding:0!important;
-  display:flex!important;
-  flex-direction:column!important;
-  font-size:10.4pt!important;
-  line-height:1.24!important;
+  font-size:11pt!important;
+  line-height:1.28!important;
   break-inside:avoid-page!important;
   page-break-inside:avoid!important;
   zoom:1;
  }
  .nd-print-page .nd-print-head{
-  margin-bottom:10px!important;
-  padding-bottom:8px!important;
-  gap:10px!important;
+  margin-bottom:12px!important;
+  padding-bottom:9px!important;
+  gap:12px!important;
  }
- .nd-print-page .print-logo{width:64px!important;height:64px!important}
- .nd-print-page .print-org h1{font-size:16pt!important;line-height:1.08!important}
- .nd-print-page .print-org div{font-size:8.5pt!important;line-height:1.2!important}
- .nd-print-page .print-doc h2{font-size:14pt!important;line-height:1.08!important}
- .nd-print-page .print-doc b{font-size:10.5pt!important}
+ .nd-print-page .print-logo{width:70px!important;height:70px!important}
+ .nd-print-page .print-org h1{font-size:17pt!important;line-height:1.08!important}
+ .nd-print-page .print-org div{font-size:9pt!important;line-height:1.25!important}
+ .nd-print-page .print-doc h2{font-size:15pt!important;line-height:1.08!important}
+ .nd-print-page .print-doc b{font-size:11pt!important}
  .nd-print-page .nd-print-box{
   min-height:0!important;
-  padding:8px 10px!important;
-  margin:0 0 9px!important;
+  padding:11px 12px!important;
+  margin:0 0 11px!important;
   break-inside:avoid-page!important;
   page-break-inside:avoid!important;
  }
- .nd-print-page .nd-service-box{margin-top:2px!important}
- .nd-print-page .nd-line{margin:3px 0!important;line-height:1.2!important}
+ .nd-print-page .nd-recipient-box{min-height:39mm!important}
+ .nd-print-page .nd-service-box{min-height:43mm!important;margin-top:2px!important}
+ .nd-print-page .nd-payment-box{min-height:44mm!important}
+ .nd-print-page .nd-line{margin:4px 0!important;line-height:1.24!important}
  .nd-print-page .nd-description{
   white-space:pre-wrap;
-  margin:6px 0 2px!important;
-  line-height:1.22!important;
+  margin:8px 0 3px!important;
+  line-height:1.28!important;
  }
  .nd-print-page .nd-amount-table{
   width:100%!important;
   border-collapse:collapse!important;
-  margin:8px 0 10px!important;
+  margin:10px 0 12px!important;
   break-inside:avoid-page!important;
   page-break-inside:avoid!important;
  }
  .nd-print-page .nd-amount-table th,.nd-print-page .nd-amount-table td{
-  padding:5px 6px!important;
-  font-size:9.3pt!important;
-  line-height:1.18!important;
+  padding:7px 8px!important;
+  font-size:10pt!important;
+  line-height:1.2!important;
  }
  .nd-print-page .nd-total{
   text-align:right!important;
-  font-size:17pt!important;
-  line-height:1.08!important;
+  font-size:18pt!important;
+  line-height:1.1!important;
   font-weight:bold!important;
   color:#12375d!important;
-  margin:6px 0 12px!important;
-  padding:6px 0!important;
+  margin:8px 0 14px!important;
+  padding:8px 0!important;
   border-top:2px solid #12375d!important;
   border-bottom:2px solid #12375d!important;
   break-inside:avoid!important;
  }
  .nd-print-page .nd-iban{
-  margin:6px 0!important;
+  margin:8px 0!important;
   font-weight:bold!important;
-  font-size:11.5pt!important;
+  font-size:12pt!important;
  }
  .nd-print-page .nd-tax{
-  font-size:7.8pt!important;
-  margin-top:4px!important;
-  line-height:1.3!important;
+  font-size:8.3pt!important;
+  margin-top:8px!important;
+  line-height:1.35!important;
   break-inside:avoid!important;
  }
  .nd-print-page .nd-five{
-  margin-top:auto!important;
+  margin-top:12px!important;
   border-top:2px solid #e6c741!important;
-  padding-top:7px!important;
-  padding-bottom:2px!important;
-  font-size:8.8pt!important;
+  padding-top:8px!important;
+  font-size:9.2pt!important;
   break-inside:avoid!important;
  }
-}
 
 
 .tablet-shell{max-width:1240px;margin:auto;padding:12px}.tablet-top{background:var(--n);border-radius:16px;overflow:hidden;color:#fff}.tablet-top .head{padding:14px 18px}.tablet-top .brand small{color:var(--y)}.tablet-top .brand strong{font-size:25px}.tablet-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:15px 0}.tablet-toolbar .btn{min-height:43px}.tablet-service-card{border:1px solid var(--l);border-left:7px solid #3477c9;border-radius:13px;padding:14px;margin:10px 0;background:#fff}.tablet-service-card.pending{border-left-color:#a93138}.tablet-service-card.running{border-left-color:#9b6515;background:#fffdf2}.tablet-service-card.done{border-left-color:#15734f;background:#f3fbf7}.tablet-service-head{display:flex;flex-wrap:wrap;gap:9px;align-items:center;justify-content:space-between}.tablet-hour{font-weight:1000;color:var(--n);font-size:29px}.tablet-vehicle{font-size:22px;background:#fff0a1;color:var(--n);font-weight:1000;padding:5px 12px;border-radius:9px}.tablet-pill{background:#eef2f6;color:var(--n);border-radius:20px;padding:5px 10px;font-size:12px;font-weight:950}.tablet-flow{font-size:16px;font-weight:850;line-height:1.5;margin:8px 0}.tablet-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.tablet-actions .btn{padding:13px 17px;min-height:44px}.tablet-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.tablet-fields .field label{font-size:12px}.tablet-fields input,.tablet-fields select,.tablet-fields textarea{font-size:16px;min-height:43px}.tablet-section-title{font-size:17px;color:var(--n);border-bottom:3px solid var(--y);padding-bottom:8px}.tablet-credentials{border:1px solid var(--l);border-radius:12px;padding:12px;margin:9px 0}.tablet-credentials .field{min-width:180px;flex:1}.tablet-empty{padding:25px;text-align:center;color:var(--m);background:#f5f7fa;border-radius:11px}.tablet-sheet-bar{position:sticky;bottom:5px;z-index:5;background:#fffdf0;border:1px solid #f3dd75;border-radius:12px;padding:10px;box-shadow:0 3px 14px #0002}
@@ -373,7 +370,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.37</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.38</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -2067,7 +2064,7 @@ function buildFoglioPrint(f){
    '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>'+
 
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.37</span></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.38</span></div>'+
  '</div>';
 }
 function openFoglioPrintWindow(){
@@ -2289,7 +2286,7 @@ async function saveTravelSheet(silent=false){
   km_partenza:kmStart,
   km_arrivo:kmEnd,
   annotazioni:$('fvNotes').value.trim()||null,
-  versione_app:'V13.37'
+  versione_app:'V13.38'
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
@@ -5150,7 +5147,7 @@ async function downloadSingleBackupDataset(){
   const {rows}=await backupFetchDataset(code);
   const base='CGE_'+backupSafeName(code)+'_'+backupTimestamp();
   if(format==='CSV')backupDownloadFile(base+'.csv',backupRowsToCsv(rows),'text/csv;charset=utf-8');
-  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.37',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
+  else backupDownloadFile(base+'.json',JSON.stringify({formato:'CGE_DATASET_V1',versione_app:'V13.38',dataset:code,generato_il:new Date().toISOString(),righe:rows.length,dati:rows},null,2),'application/json;charset=utf-8');
   await backupLogExport(format,code,rows.length);
   msg('backupDatasetMsg','Esportazione completata: '+rows.length+' record.','ok');
   await loadBackupExport();
@@ -5176,7 +5173,7 @@ async function downloadFullBackup(){
   const backup={
    formato:'CGE_BACKUP_V1',
    associazione:'Croce Gialla Emergenza ODV',
-   versione_app:'V13.37',
+   versione_app:'V13.38',
    generato_il:new Date().toISOString(),
    contiene_credenziali_accesso:false,
    documenti_binari_inclusi:false,
@@ -5520,4 +5517,4 @@ if('serviceWorker' in navigator){
 applyVolunteerOnlyLogin();refreshPwaInstallUI();
 try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&$('vbadge')){$('vbadge').value=remembered;$('vremember').checked=true}}catch(_){}
 (async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
-</script><script src="/gestionale-croce-gialla/note-debito.js?v=20260925b"></script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
+</script><script src="/gestionale-croce-gialla/note-debito.js?v=20260925c"></script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260924a"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
