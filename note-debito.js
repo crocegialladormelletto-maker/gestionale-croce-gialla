@@ -139,33 +139,33 @@
  el('ndSave').onclick=save;
  el('ndIssue').onclick=issue;
  function printHtml(n){
-  const line=(k,v)=>'<div style="margin:6px 0"><b>'+safe(k)+':</b> '+safe(v||'—')+'</div>';
-  return '<div class="print-page" style="font-family:Arial,sans-serif;color:#182c3a">'+
-    '<div class="print-head"><img class="print-logo" src="'+LOGO_URL+'" alt="">'+
+  const line=(k,v)=>'<div class="nd-line"><b>'+safe(k)+':</b> '+safe(v||'—')+'</div>';
+  return '<div class="print-page nd-print-page" style="font-family:Arial,sans-serif;color:#182c3a">'+
+    '<div class="print-head nd-print-head"><img class="print-logo" src="'+LOGO_URL+'" alt="">'+
     '<div class="print-org"><h1>CROCE GIALLA EMERGENZA ODV</h1>'+
     '<div>Via I° Maggio 1 · 28040 Dormelletto (NO)</div>'+
     '<div>C.F. 91023880031 · P. IVA 02809130038</div>'+
     '<div>Tel. 0322 282730 · tesoreria@crocegiallaemergenza.it</div></div>'+
     '<div class="print-doc"><h2>NOTA DI DEBITO</h2><b>'+safe(n.numero)+'</b><div>'+niceDate(n.data_documento)+'</div></div></div>'+
-    '<div class="print-box"><b>DESTINATARIO / INTESTATARIO</b>'+
+    '<div class="print-box nd-print-box"><b>DESTINATARIO / INTESTATARIO</b>'+
     line('Nome e cognome / intestatario',n.intestatario)+line('C.F. / P. IVA',n.cf_piva)+
     line('Indirizzo',n.indirizzo)+line('CAP · Comune · Provincia',[n.cap,n.comune,n.provincia].filter(Boolean).join(' · '))+'</div>'+
-    '<div class="print-box" style="margin-top:12px"><b>DETTAGLIO DEL SERVIZIO</b>'+
+    '<div class="print-box nd-print-box nd-service-box"><b>DETTAGLIO DEL SERVIZIO</b>'+
     line('Data servizio',niceDate(n.data_servizio))+line('Foglio Viaggio',n.numero_foglio)+
-    '<div style="white-space:pre-wrap;margin:10px 0">'+safe(n.descrizione)+'</div></div>'+
-    '<table style="width:100%;border-collapse:collapse;margin:16px 0" border="1" cellpadding="7">'+
+    '<div class="nd-description">'+safe(n.descrizione)+'</div></div>'+
+    '<table class="nd-amount-table" border="1">'+
     '<thead><tr><th style="text-align:left">Descrizione</th><th>Prezzo</th><th>Sconto</th><th>Importo</th></tr></thead>'+
     '<tbody><tr><td>'+safe(n.descrizione)+'</td><td>'+money(n.importo)+'</td><td>'+money(n.sconto)+'</td><td>'+money(n.totale)+'</td></tr></tbody></table>'+
-    '<div style="text-align:right;font-size:17pt;font-weight:bold;color:#12375d;margin:12px 0">TOTALE DA CORRISPONDERE: '+money(n.totale)+'</div>'+
-    '<div class="print-box"><b>MODALITÀ DI PAGAMENTO</b>'+
+    '<div class="nd-total">TOTALE DA CORRISPONDERE: '+money(n.totale)+'</div>'+
+    '<div class="print-box nd-print-box"><b>MODALITÀ DI PAGAMENTO</b>'+
     line('Metodo',n.modalita_pagamento||'Da concordare')+
     line('Già pagato',n.data_pagamento?'Sì · '+niceDate(n.data_pagamento):'No')+
     line('Banca','UniCredit - filiale di Borgomanero')+
-    '<div style="margin:8px 0;font-weight:bold;font-size:13pt">IBAN: IT84M0200845222000107312436</div>'+
+    '<div class="nd-iban">IBAN: IT84M0200845222000107312436</div>'+
     line('Causale',n.numero)+'</div>'+
-    '<div style="font-size:8pt;margin-top:14px;line-height:1.5">Operazione senza applicazione dell’Iva ai sensi dell’art. 1, commi 54–89, L. 190/2014, come modificata dalle L. 208/2015 e L. 145/2018.<br>'+
+    '<div class="nd-tax">Operazione senza applicazione dell’Iva ai sensi dell’art. 1, commi 54–89, L. 190/2014, come modificata dalle L. 208/2015 e L. 145/2018.<br>'+
     'Imposta di bollo: esente ai sensi dell’art. 82, comma 5, D.Lgs. 117/2017.</div>'+
-    '<div style="margin-top:15px;border-top:2px solid #e6c741;padding-top:8px">Sostieni la Croce Gialla con il tuo 5×1000: C.F. <b>91023880031</b></div></div>';
+    '<div class="nd-five">Sostieni la Croce Gialla con il tuo 5×1000: C.F. <b>91023880031</b></div></div>';
  }
  el('ndPrint').onclick=()=>{
   if(!isAdmin()||!active)return info('Nota di Debito non disponibile.','warn');
