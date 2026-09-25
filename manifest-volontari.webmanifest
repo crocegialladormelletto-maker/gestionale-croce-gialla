@@ -1,7 +1,7 @@
 {
   "name": "Croce Gialla Emergenza",
   "short_name": "Croce Gialla",
-  "start_url": "/gestionale-croce-gialla/?area=volontari",
+  "start_url": "/gestionale-croce-gialla/?area=volontari&appv=13.34",
   "scope": "/gestionale-croce-gialla/",
   "display": "standalone",
   "theme_color": "#12375d",
