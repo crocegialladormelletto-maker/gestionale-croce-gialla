@@ -11,10 +11,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=13.35">
-<link rel="icon" type="image/png" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/gestionale-croce-gialla/icons/icon-512.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/gestionale-croce-gialla/icons/apple-touch-icon.png">
+<link rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=13.36">
+<link rel="icon" type="image/png" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192-v6.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/gestionale-croce-gialla/icons/icon-512-v6.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192-v6.png">
 <style>
 :root{--n:#12375d;--y:#ffdb17;--b:#f2f5f8;--i:#1c3347;--m:#64798b;--l:#d9e2ea;--g:#15734f;--r:#a93138;--o:#9b6515}
 *{box-sizing:border-box}body{margin:0;background:var(--b);color:var(--i);font:14px/1.45 system-ui,-apple-system,Segoe UI,Arial}button,input,select,textarea{font:inherit}.hidden{display:none!important}
@@ -285,7 +285,7 @@
 .vol-route-preview b{color:#133c55}
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.35</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.36</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -1661,7 +1661,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.35':'Versione 13.35';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.35':'Versione 13.36';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }

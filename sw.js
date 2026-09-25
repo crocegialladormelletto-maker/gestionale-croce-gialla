@@ -1,12 +1,11 @@
 // Questa versione aggiorna la PWA esistente senza richiedere una nuova installazione.
-const CACHE_NAME = 'cge-volontari-static-v5';
+const CACHE_NAME = 'cge-volontari-static-v6';
 const APP_BASE = '/gestionale-croce-gialla/';
 const STATIC_ASSETS = new Set([
   APP_BASE + 'manifest.json',
-  APP_BASE + 'icons/icon-192.png',
-  APP_BASE + 'icons/icon-512.png',
-  APP_BASE + 'icons/apple-touch-icon.png',
-]);
+  APP_BASE + 'icons/icon-192-v6.png',
+  APP_BASE + 'icons/icon-512-v6.png',
+  ]);
 
 self.addEventListener('install', event => {
   event.waitUntil(
