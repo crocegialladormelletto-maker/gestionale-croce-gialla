@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.5</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.6</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.5</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.6</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -207,8 +207,8 @@
        <div class="field"><label>Ora inizio</label><input id="vStart" type="time"></div>
        <div class="field"><label>Ora fine</label><input id="vEnd" type="time"></div>
        <div class="field"><label>Luogo</label><input id="vPlace" placeholder="Es. Sede Croce Gialla"></div>
-       <div class="field"><label>Stato</label><select id="vStatus"><option>BOZZA</option><option>APPROVATO</option><option>ANNULLATO</option></select></div>
-       <div class="field"><label>Data approvazione</label><input id="vApprovalDate" type="date"></div>
+       <div class="field"><label>Stato (automatico)</label><select id="vStatus" disabled><option>BOZZA</option><option>APPROVATO</option><option>ANNULLATO</option></select></div>
+       <div class="field"><label>Data approvazione (interna)</label><input id="vApprovalDate" type="date" disabled></div>
        <div class="field"><label>Titolo</label><input id="vHeading" placeholder="Verbale del Consiglio Direttivo"></div>
       </div>
       <div class="grid3" style="margin-top:10px">
@@ -243,7 +243,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
        <div class="toolbar"><button id="vSignedUpload" class="btn blue" type="button">📤 Carica / sostituisci PDF firmato</button><button id="vSignedOpen" class="btn secondary hidden" type="button">📄 Apri PDF firmato</button><button id="vSignedDownload" class="btn secondary hidden" type="button">⬇ Scarica PDF firmato</button></div>
        <div id="vSignedInfo"></div>
       </div>
-      <div class="toolbar"><button id="vSave" class="btn yellow" type="button">💾 Salva verbale</button></div><div id="vmsg"></div>
+      <div class="toolbar"><button id="vSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="vApprove" class="btn blue" type="button">✅ Approva verbale</button></div><div id="vmsg"></div>
      </div>
 
      <div class="section">
@@ -518,6 +518,12 @@ async function openProtocol(id){
 }
 
 function minuteTypeLabel(v){return ({CONSIGLIO_DIRETTIVO:'Consiglio Direttivo',ASSEMBLEA_SOCI:'Assemblea Soci',RIUNIONE_OPERATIVA:'Riunione operativa',ALTRO:'Altro'})[v]||v||'—'}
+function updateMinuteStateUI(){
+ const approved=$('vStatus').value==='APPROVATO';
+ $('vSave').textContent=approved?'💾 Salva modifiche':'💾 Salva bozza';
+ $('vApprove').disabled=approved||minutesBusy;
+ $('vApprove').textContent=approved?'✅ Verbale approvato':'✅ Approva verbale';
+}
 function resetMinuteForm(){
  currentMinuteId=null;currentMinute=null;$('vTitle').textContent='Nuovo verbale';
  $('vType').value='CONSIGLIO_DIRETTIVO';$('vDate').value=today();$('vStart').value='';$('vEnd').value='';$('vPlace').value='Sede Croce Gialla Emergenza ODV';
@@ -527,7 +533,7 @@ function resetMinuteForm(){
  $('vPresident').value='Musso Paolo';
  $('vSecretary').value='Ronco Meri';
  setMinuteAgenda();updateNextMinuteCode();
- $('vSignedFile').value='';renderSignedMinuteInfo();
+ $('vSignedFile').value='';renderSignedMinuteInfo();updateMinuteStateUI();
  msg('vmsg','');msg('vAiMsg','');
 }
 function minuteParams(){
@@ -573,18 +579,48 @@ async function useMinuteAI(mode){
   minutesAiBusy=false;$('vAiGenerate').disabled=false;$('vAiImprove').disabled=false;
  }
 }
-async function saveMinute(){
+async function saveMinute(approve=false){
  if(prof?.ruolo!=='AMMINISTRATORE'||minutesBusy)return;
  if(!$('vDate').value)return msg('vmsg','Inserisci la data della riunione.','warn');
  if(!$('vHeading').value.trim())return msg('vmsg','Inserisci il titolo del verbale.','warn');
- minutesBusy=true;$('vSave').disabled=true;const wasEdit=!!currentMinuteId;msg('vmsg',wasEdit?'Aggiornamento verbale...':'Creazione verbale...');
+
+ const previousStatus=$('vStatus').value||'BOZZA';
+ const previousApproval=$('vApprovalDate').value||'';
+ if(approve){
+  $('vStatus').value='APPROVATO';
+  if(!$('vApprovalDate').value)$('vApprovalDate').value=today();
+ }else if(!currentMinuteId){
+  $('vStatus').value='BOZZA';
+  $('vApprovalDate').value='';
+ }
+
+ minutesBusy=true;$('vSave').disabled=true;$('vApprove').disabled=true;
+ const wasEdit=!!currentMinuteId;
+ msg('vmsg',approve?'Approvazione del verbale...':(wasEdit?'Aggiornamento verbale...':'Salvataggio bozza...'));
  try{
   const params=minuteParams();let id=currentMinuteId,code=currentMinute?.verbale_codice||'';
-  if(wasEdit){const r=await sb.rpc('cge_verbale_modifica',{p_id:id,...params});if(r.error)throw r.error}
-  else{const r=await sb.rpc('cge_verbale_crea',params);if(r.error)throw r.error;id=r.data?.[0]?.id;code=r.data?.[0]?.verbale_codice||'';if(!id)throw new Error('Numero verbale non restituito.')}
-  resetMinuteFilters();$('vYear').value=Number(String(params.p_data_riunione).slice(0,4));await loadMinutesList();await openMinute(id,false);
-  msg('vmsg',wasEdit?'Verbale aggiornato.':'Verbale '+code+' creato.','ok');
- }catch(e){msg('vmsg',e.message||String(e),'err')}finally{minutesBusy=false;$('vSave').disabled=false}
+  if(wasEdit){
+   const r=await sb.rpc('cge_verbale_modifica',{p_id:id,...params});
+   if(r.error)throw r.error;
+  }else{
+   const r=await sb.rpc('cge_verbale_crea',params);
+   if(r.error)throw r.error;
+   id=r.data?.[0]?.id;code=r.data?.[0]?.verbale_codice||'';
+   if(!id)throw new Error('Numero verbale non restituito.');
+  }
+  resetMinuteFilters();
+  $('vYear').value=Number(String(params.p_data_riunione).slice(0,4));
+  await loadMinutesList();
+  await openMinute(id,false);
+  if(approve)msg('vmsg','Verbale '+(currentMinute?.verbale_codice||code)+' approvato correttamente.','ok');
+  else msg('vmsg',wasEdit?'Verbale aggiornato.':'Bozza '+code+' salvata.','ok');
+ }catch(e){
+  $('vStatus').value=previousStatus;
+  $('vApprovalDate').value=previousApproval;
+  msg('vmsg',e.message||String(e),'err');
+ }finally{
+  minutesBusy=false;$('vSave').disabled=false;updateMinuteStateUI();
+ }
 }
 function renderMinutes(){
  $('vCount').textContent=minutesRows.length;
@@ -635,6 +671,7 @@ async function openMinute(id,printAfter=false){
   setMinuteAgenda(v.ordine_giorno||'');$('vProceedings').value=v.svolgimento||'';$('vDecisions').value=v.deliberazioni||'';$('vVote').value=v.votazione||'';
   $('vPresident').value=v.presidente||'Musso Paolo';$('vSecretary').value=v.segretario||'Ronco Meri';$('vNotes').value=v.note||'';
   await loadSignedMinute(v.id);
+  updateMinuteStateUI();
   msg('vListMsg','');msg('vmsg','Verbale '+v.verbale_codice+' aperto.','ok');
   if(printAfter){
    setTimeout(()=>printMinute(),150);
@@ -695,12 +732,12 @@ $('vExit').onclick=()=>{resetMinuteForm();resetMinuteFilters();loadMinutesList()
 $('vAddAgenda').onclick=()=>addMinuteAgendaPoint();
 $('vAiGenerate').onclick=()=>useMinuteAI('genera');$('vAiImprove').onclick=()=>useMinuteAI('migliora');
 $('vDate').addEventListener('change',updateNextMinuteCode);
-$('vSave').onclick=saveMinute;$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
+$('vSave').onclick=()=>saveMinute(false);$('vApprove').onclick=()=>saveMinute(true);$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
 $('vSignedUpload').onclick=uploadSignedMinute;$('vSignedOpen').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,false);$('vSignedDownload').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,true);
 $('vSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadMinutesList()}};
 $('vClear').onclick=()=>{resetMinuteFilters();loadMinutesList()};
 $('vType').onchange=()=>{if(!currentMinuteId){const t=minuteTypeLabel($('vType').value);$('vHeading').value=t==='Consiglio Direttivo'?'Verbale del Consiglio Direttivo':t==='Assemblea Soci'?'Verbale dell’Assemblea dei Soci':t==='Riunione operativa'?'Verbale riunione operativa':'Verbale riunione'}};
-$('vStatus').onchange=()=>{if($('vStatus').value==='APPROVATO'&&!$('vApprovalDate').value)$('vApprovalDate').value=$('vDate').value||today()};
+
 
 async function loadDue(){
  msg('duemsg','Caricamento scadenze...');const r=await sb.rpc('cge_protocollo_elenco',{p_search:null,p_tipo:null,p_categoria:null,p_stato:'ATTIVO',p_dal:null,p_al:null,p_solo_scadenze:true});
