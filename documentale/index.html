@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.4</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.5</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.4</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.5</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -237,6 +237,12 @@ Consigliere: Ragazzini Luisa</textarea></div>
        <div class="field"><label>Segretario verbalizzante</label><input id="vSecretary" value="Ronco Meri"></div>
       </div>
       <div class="field" style="margin-top:10px"><label>Note</label><textarea id="vNotes"></textarea></div>
+      <div class="box" style="margin-top:12px">
+       <div class="actions" style="justify-content:space-between"><div><b>✍️ Verbale firmato</b><div class="muted">Carica la copia PDF firmata del verbale già salvato. Il file resta privato e accessibile solo all’Amministrazione.</div></div><span class="pill g">PDF</span></div>
+       <div class="field" style="margin-top:9px"><label>PDF firmato</label><input id="vSignedFile" type="file" accept=".pdf,application/pdf"><span class="muted">Solo PDF · massimo 15 MB.</span></div>
+       <div class="toolbar"><button id="vSignedUpload" class="btn blue" type="button">📤 Carica / sostituisci PDF firmato</button><button id="vSignedOpen" class="btn secondary hidden" type="button">📄 Apri PDF firmato</button><button id="vSignedDownload" class="btn secondary hidden" type="button">⬇ Scarica PDF firmato</button></div>
+       <div id="vSignedInfo"></div>
+      </div>
       <div class="toolbar"><button id="vSave" class="btn yellow" type="button">💾 Salva verbale</button></div><div id="vmsg"></div>
      </div>
 
@@ -272,8 +278,89 @@ const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoR
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>new Date().toISOString().slice(0,10),dt=x=>x?new Date(x).toLocaleString('it-IT'):'—';
 let prof=null,rows=[],attachments=[],currentId=null,currentDoc=null,busy=false,loadSeq=0;
-let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false,minutesAiBusy=false;
+let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false,minutesAiBusy=false,signedMinuteFiles={};
 const CONSIGLIO_DIRETTIVO_PRESENTI="Presidente: Musso Paolo\nVice Presidente: Fontana Stefano\nSegretario: Ronco Meri\nConsigliere: Milan Roberto\nConsigliere: Pedercini Sabrina\nConsigliere: Broggio Emanuele\nConsigliere: Ragazzini Luisa";
+function renderSignedMinuteInfo(){
+ const upload=$('vSignedUpload'),open=$('vSignedOpen'),down=$('vSignedDownload'),info=$('vSignedInfo');
+ if(!upload||!info)return;
+ upload.disabled=!currentMinuteId;
+ const f=currentMinuteId?signedMinuteFiles[String(currentMinuteId)]:null;
+ open.classList.toggle('hidden',!f);down.classList.toggle('hidden',!f);
+ if(!currentMinuteId){
+  info.innerHTML='<div class="notice warn">Salva prima il verbale; poi potrai caricare il PDF firmato.</div>';
+ }else if(f){
+  info.innerHTML='<div class="notice ok"><b>PDF firmato presente:</b> '+esc(f.nome_file)+' · '+esc(bytes(f.dimensione_bytes))+' · caricato il '+esc(dt(f.caricato_il))+'</div>';
+ }else{
+  info.innerHTML='<div class="muted" style="margin-top:7px">Nessun PDF firmato caricato per questo verbale.</div>';
+ }
+}
+async function loadSignedMinute(id){
+ if(!id)return;
+ const r=await sb.from('verbali_firmati').select('verbale_id,storage_path,nome_file,dimensione_bytes,caricato_il').eq('verbale_id',id).maybeSingle();
+ if(r.error){msg('vSignedInfo','Errore caricamento PDF firmato: '+r.error.message,'err');return}
+ if(r.data)signedMinuteFiles[String(id)]=r.data;else delete signedMinuteFiles[String(id)];
+ renderSignedMinuteInfo();
+}
+async function uploadSignedMinute(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ if(!currentMinuteId)return msg('vSignedInfo','Salva prima il verbale.','warn');
+ const file=$('vSignedFile').files?.[0];
+ if(!file)return msg('vSignedInfo','Seleziona il PDF firmato da caricare.','warn');
+ if(!/\.pdf$/i.test(file.name)||file.type&&file.type!=='application/pdf')return msg('vSignedInfo','Puoi caricare solamente file PDF.','warn');
+ if(file.size>15728640)return msg('vSignedInfo','Il PDF supera il limite di 15 MB.','warn');
+ const old=signedMinuteFiles[String(currentMinuteId)]||null;
+ const path=currentMinuteId+'/'+Date.now()+'-'+safeFile(file.name);
+ $('vSignedUpload').disabled=true;msg('vSignedInfo','Caricamento del PDF firmato...');
+ try{
+  const up=await sb.storage.from('verbali-firmati').upload(path,file,{contentType:'application/pdf',upsert:false});
+  if(up.error)throw up.error;
+  const user=await sb.auth.getUser();
+  const reg=await sb.from('verbali_firmati').upsert({
+   verbale_id:currentMinuteId,storage_path:path,nome_file:file.name,dimensione_bytes:file.size,
+   caricato_il:new Date().toISOString(),caricato_da:user.data.user?.id||null
+  },{onConflict:'verbale_id'});
+  if(reg.error){
+   await sb.storage.from('verbali-firmati').remove([path]);
+   throw reg.error;
+  }
+  if(old?.storage_path&&old.storage_path!==path)await sb.storage.from('verbali-firmati').remove([old.storage_path]);
+  $('vSignedFile').value='';
+  await loadSignedMinute(currentMinuteId);
+  await loadMinutesList();
+  msg('vSignedInfo','PDF firmato caricato correttamente.','ok');
+ }catch(e){
+  msg('vSignedInfo',e.message||String(e),'err');
+ }finally{
+  $('vSignedUpload').disabled=false;
+ }
+}
+async function openSignedMinute(id,download=false){
+ let popup=null;
+ if(!download)popup=window.open('about:blank','_blank');
+ try{
+  let f=signedMinuteFiles[String(id)];
+  if(!f){
+   const r=await sb.from('verbali_firmati').select('verbale_id,storage_path,nome_file,dimensione_bytes,caricato_il').eq('verbale_id',id).maybeSingle();
+   if(r.error)throw r.error;
+   if(!r.data)throw new Error('PDF firmato non presente.');
+   f=r.data;signedMinuteFiles[String(id)]=f;
+  }
+  const r=await sb.storage.from('verbali-firmati').download(f.storage_path);
+  if(r.error)throw r.error;
+  const url=URL.createObjectURL(r.data);
+  if(download){
+   const a=document.createElement('a');a.href=url;a.download=f.nome_file||'verbale-firmato.pdf';document.body.appendChild(a);a.click();a.remove();
+  }else if(popup){
+   popup.location.href=url;
+  }else{
+   const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+  }
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+ }catch(e){
+  if(popup)popup.close();
+  msg('vSignedInfo',e.message||String(e),'err');
+ }
+}
 function resetMinuteFilters(){
  $('vSearch').value='';$('vYear').value=new Date().getFullYear();
  $('vFilterType').value='';$('vFilterStatus').value='';
@@ -440,6 +527,7 @@ function resetMinuteForm(){
  $('vPresident').value='Musso Paolo';
  $('vSecretary').value='Ronco Meri';
  setMinuteAgenda();updateNextMinuteCode();
+ $('vSignedFile').value='';renderSignedMinuteInfo();
  msg('vmsg','');msg('vAiMsg','');
 }
 function minuteParams(){
@@ -500,17 +588,27 @@ async function saveMinute(){
 }
 function renderMinutes(){
  $('vCount').textContent=minutesRows.length;
- $('vBody').innerHTML=minutesRows.length?minutesRows.map(v=>'<tr><td><b>'+esc(v.verbale_codice)+'</b></td><td>'+esc(v.data_riunione||'—')+(v.ora_inizio?'<br><span class="muted">'+esc(String(v.ora_inizio).slice(0,5))+(v.ora_fine?' – '+esc(String(v.ora_fine).slice(0,5)):'')+'</span>':'')+'</td><td>'+esc(minuteTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.titolo)+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='APPROVATO'?'g':v.stato==='ANNULLATO'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc([v.presidente,v.segretario].filter(Boolean).join(' / ')||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-vopen="'+esc(v.id)+'">Apri</button><button class="btn yellow" type="button" data-vprint="'+esc(v.id)+'">🖨️ Stampa PDF</button></div></td></tr>').join(''):'<tr><td colspan="7">Nessun verbale trovato.</td></tr>';
+ $('vBody').innerHTML=minutesRows.length?minutesRows.map(v=>{
+  const signed=signedMinuteFiles[String(v.id)];
+  return '<tr><td><b>'+esc(v.verbale_codice)+'</b>'+(signed?'<br><span class="pill g">✍️ PDF FIRMATO</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_inizio?'<br><span class="muted">'+esc(String(v.ora_inizio).slice(0,5))+(v.ora_fine?' – '+esc(String(v.ora_fine).slice(0,5)):'')+'</span>':'')+'</td><td>'+esc(minuteTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.titolo)+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='APPROVATO'?'g':v.stato==='ANNULLATO'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc([v.presidente,v.segretario].filter(Boolean).join(' / ')||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-vopen="'+esc(v.id)+'">Apri</button><button class="btn yellow" type="button" data-vprint="'+esc(v.id)+'">🖨️ Stampa PDF</button>'+(signed?'<button class="btn blue" type="button" data-vsigned="'+esc(v.id)+'">✍️ Apri firmato</button>':'')+'</div></td></tr>';
+ }).join(''):'<tr><td colspan="7">Nessun verbale trovato.</td></tr>';
  $('vBody').querySelectorAll('[data-vopen]').forEach(b=>b.onclick=()=>openMinute(b.dataset.vopen,false));
  $('vBody').querySelectorAll('[data-vprint]').forEach(b=>b.onclick=()=>openMinute(b.dataset.vprint,true));
+ $('vBody').querySelectorAll('[data-vsigned]').forEach(b=>b.onclick=()=>openSignedMinute(b.dataset.vsigned,false));
 }
 async function loadMinutesList(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
  msg('vListMsg','Caricamento verbali...');
  const year=$('vYear').value?Number($('vYear').value):null;
  const r=await sb.rpc('cge_verbali_elenco',{p_search:$('vSearch').value.trim()||null,p_tipo:$('vFilterType').value||null,p_stato:$('vFilterStatus').value||null,p_anno:year});
- if(r.error){minutesRows=[];renderMinutes();return msg('vListMsg',r.error.message,'err')}
- minutesRows=r.data||[];renderMinutes();updateNextMinuteCode();msg('vListMsg','');
+ if(r.error){minutesRows=[];signedMinuteFiles={};renderMinutes();return msg('vListMsg',r.error.message,'err')}
+ minutesRows=r.data||[];
+ signedMinuteFiles={};
+ if(minutesRows.length){
+  const sf=await sb.from('verbali_firmati').select('verbale_id,storage_path,nome_file,dimensione_bytes,caricato_il').in('verbale_id',minutesRows.map(v=>v.id));
+  if(!sf.error)(sf.data||[]).forEach(x=>signedMinuteFiles[String(x.verbale_id)]=x);
+ }
+ renderMinutes();updateNextMinuteCode();msg('vListMsg','');
 }
 async function loadMinutes(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
@@ -536,6 +634,7 @@ async function openMinute(id,printAfter=false){
   $('vPresent').value=v.presenti||CONSIGLIO_DIRETTIVO_PRESENTI;$('vAbsent').value=v.assenti||'';$('vGuests').value=v.invitati||'';
   setMinuteAgenda(v.ordine_giorno||'');$('vProceedings').value=v.svolgimento||'';$('vDecisions').value=v.deliberazioni||'';$('vVote').value=v.votazione||'';
   $('vPresident').value=v.presidente||'Musso Paolo';$('vSecretary').value=v.segretario||'Ronco Meri';$('vNotes').value=v.note||'';
+  await loadSignedMinute(v.id);
   msg('vListMsg','');msg('vmsg','Verbale '+v.verbale_codice+' aperto.','ok');
   if(printAfter){
    setTimeout(()=>printMinute(),150);
@@ -597,6 +696,7 @@ $('vAddAgenda').onclick=()=>addMinuteAgendaPoint();
 $('vAiGenerate').onclick=()=>useMinuteAI('genera');$('vAiImprove').onclick=()=>useMinuteAI('migliora');
 $('vDate').addEventListener('change',updateNextMinuteCode);
 $('vSave').onclick=saveMinute;$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
+$('vSignedUpload').onclick=uploadSignedMinute;$('vSignedOpen').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,false);$('vSignedDownload').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,true);
 $('vSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadMinutesList()}};
 $('vClear').onclick=()=>{resetMinuteFilters();loadMinutesList()};
 $('vType').onchange=()=>{if(!currentMinuteId){const t=minuteTypeLabel($('vType').value);$('vHeading').value=t==='Consiglio Direttivo'?'Verbale del Consiglio Direttivo':t==='Assemblea Soci'?'Verbale dell’Assemblea dei Soci':t==='Riunione operativa'?'Verbale riunione operativa':'Verbale riunione'}};
