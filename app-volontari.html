@@ -26,11 +26,13 @@ a{display:inline-block;margin-top:8px;background:#12375d;color:#fff;text-decorat
 <h1>Croce Gialla Emergenza</h1>
 <div class="badge">APP VOLONTARI · v13.35</div>
 <div class="spin"></div>
-<p id="status">Aggiornamento dell’app in corso…</p>
-<a id="manual" hidden href="/gestionale-croce-gialla/?area=volontari&appv=13.35">Apri l’app</a>
+<p id="status">Preparazione della nuova app…</p>
+<p id="installHelp" hidden><b>Su iPhone:</b> tocca il pulsante Condividi di Safari, scegli <b>“Aggiungi alla schermata Home”</b> e poi apri la nuova icona Croce Gialla.</p>
+<a id="manual" hidden href="/gestionale-croce-gialla/?area=volontari&appv=13.35&fresh=1">Apri solo l’anteprima aggiornata</a>
 </div>
 <script>
 (async()=>{
+ const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
  const target='/gestionale-croce-gialla/?area=volontari&appv=13.35&fresh='+Date.now();
  try{
   if('serviceWorker' in navigator){
@@ -42,9 +44,15 @@ a{display:inline-block;margin-top:8px;background:#12375d;color:#fff;text-decorat
    await Promise.all(keys.filter(k=>k.startsWith('cge-volontari-static-')).map(k=>caches.delete(k)));
   }
  }catch(_){}
- document.getElementById('status').textContent='Versione aggiornata. Apertura in corso…';
- setTimeout(()=>location.replace(target),500);
- setTimeout(()=>document.getElementById('manual').hidden=false,2500);
+ if(standalone){
+  document.getElementById('status').textContent='Versione aggiornata. Apertura in corso…';
+  setTimeout(()=>location.replace(target),350);
+ }else{
+  document.querySelector('.spin').style.display='none';
+  document.getElementById('status').textContent='Nuova App Volontari v13.35 pronta per l’installazione.';
+  document.getElementById('installHelp').hidden=false;
+  document.getElementById('manual').hidden=false;
+ }
 })();
 </script>
 </body>
