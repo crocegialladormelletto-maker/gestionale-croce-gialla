@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="theme-color" content="#12375d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Croce Gialla">
+<title>Croce Gialla Volontari</title>
+<link rel="manifest" href="/gestionale-croce-gialla/manifest-volontari-v2.webmanifest?v=13.35">
+<link rel="apple-touch-icon" sizes="180x180" href="/gestionale-croce-gialla/icons/apple-touch-icon.png?v=13.35">
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f2f5f8;color:#12375d;font:16px system-ui,-apple-system,Segoe UI,Arial}
+.card{width:min(92vw,430px);background:#fff;border:1px solid #d9e2ea;border-radius:18px;padding:24px;text-align:center;box-shadow:0 10px 35px #12375d18}
+h1{font-size:22px;margin:0 0 8px}.badge{display:inline-block;background:#ffdb17;padding:6px 12px;border-radius:999px;font-weight:900;margin:8px 0 14px}
+p{color:#64798b}.spin{width:42px;height:42px;border:5px solid #d9e2ea;border-top-color:#12375d;border-radius:50%;margin:18px auto;animation:s 1s linear infinite}@keyframes s{to{transform:rotate(360deg)}}
+a{display:inline-block;margin-top:8px;background:#12375d;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:800}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Croce Gialla Emergenza</h1>
+<div class="badge">APP VOLONTARI · v13.35</div>
+<div class="spin"></div>
+<p id="status">Aggiornamento dell’app in corso…</p>
+<a id="manual" hidden href="/gestionale-croce-gialla/?area=volontari&appv=13.35">Apri l’app</a>
+</div>
+<script>
+(async()=>{
+ const target='/gestionale-croce-gialla/?area=volontari&appv=13.35&fresh='+Date.now();
+ try{
+  if('serviceWorker' in navigator){
+   const regs=await navigator.serviceWorker.getRegistrations();
+   await Promise.all(regs.filter(r=>r.scope.includes('/gestionale-croce-gialla/')).map(r=>r.unregister()));
+  }
+  if('caches' in window){
+   const keys=await caches.keys();
+   await Promise.all(keys.filter(k=>k.startsWith('cge-volontari-static-')).map(k=>caches.delete(k)));
+  }
+ }catch(_){}
+ document.getElementById('status').textContent='Versione aggiornata. Apertura in corso…';
+ setTimeout(()=>location.replace(target),500);
+ setTimeout(()=>document.getElementById('manual').hidden=false,2500);
+})();
+</script>
+</body>
+</html>
