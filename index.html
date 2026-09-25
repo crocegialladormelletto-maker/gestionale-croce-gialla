@@ -437,6 +437,15 @@
 .ops-kpi-card small{display:block;color:#667987;font-weight:800;font-size:11px;line-height:1.15}
 .ops-kpi-card b{display:block;color:#12375d;font-size:28px;line-height:1.1;margin-top:6px}
 .ops-kpi-alert b{color:#a12a31}
+.ops-vehicles{margin:0 0 12px;padding:12px;background:#fff;border:1px solid #dbe4eb;border-radius:12px}
+.ops-vehicle-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.ops-vehicle-card{border:1px solid #dbe4eb;border-radius:10px;padding:10px;background:#fbfdfe}
+.ops-vehicle-card strong{display:block;font-size:18px;color:#12375d}
+.ops-vehicle-card small{display:block;margin-top:3px;color:#667987}
+.ops-vehicle-card .pill{margin-top:6px;display:inline-block}
+.ops-vehicle-busy{border-left:5px solid #e0a800}
+.ops-vehicle-alert{border-left:5px solid #b52d36}
+.ops-vehicle-ok{border-left:5px solid #2d9a69}
 .ops-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .ops-card{margin:0!important;min-width:0}
 .ops-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:9px}
@@ -453,10 +462,12 @@
 .ops-empty{padding:12px;border:1px dashed #ccd8e2;border-radius:9px;color:#607787;background:#fbfdfe}
 @media(max-width:980px){
  .ops-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ops-vehicle-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .ops-board{grid-template-columns:1fr}
 }
 @media(max-width:520px){
  .ops-board-wrap{padding:9px;margin-left:-3px;margin-right:-3px}
+ .ops-vehicle-grid{grid-template-columns:1fr 1fr}
  .ops-kpi{grid-template-columns:1fr 1fr;gap:6px}
  .ops-kpi-card{padding:9px;min-height:68px}
  .ops-kpi-card b{font-size:24px}
@@ -560,6 +571,10 @@
   <div class="ops-kpi-card ops-kpi-alert"><small>PROBLEMI DA VERIFICARE</small><b id="dashOpsProblemCount">0</b></div>
  </div>
  <div id="dashOpsMsg"></div>
+ <div class="ops-vehicles">
+  <div class="ops-title"><h3>🚑 Stato mezzi</h3><span class="muted">Situazione operativa immediata</span></div>
+  <div id="dashVehicleStatus" class="ops-vehicle-grid"></div>
+ </div>
  <div class="ops-board">
   <section class="section ops-card">
    <div class="ops-title"><h3>👥 Equipaggi di oggi</h3><button type="button" class="btn secondary jump" data-v="emergency">Apri turnari</button></div>
@@ -2997,21 +3012,36 @@ async function loadOperationalDashboard(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  const day=todaySafe(),now=new Date();
  msg('dashOpsMsg','Aggiornamento quadro operativo...');
- const [emg,dim,sv,fg,exp]=await Promise.all([
+ const [emg,dim,sv,fg,exp,mz]=await Promise.all([
   sb.rpc('cge_emergenza_turni_v2',{p_dal:day,p_al:day}),
   sb.rpc('cge_dimissioni_turni',{p_dal:day,p_al:day}),
   sb.from('v_servizi_gestionale').select('*').eq('data_servizio',day).neq('stato_gestionale','ANNULLATO').order('ora_partenza_prevista'),
   sb.from('fogli_viaggio').select('id,numero_foglio,stato,mezzo,tipo_servizio,servizio_giornaliero_id,data_servizio,creato_il').eq('data_servizio',day).order('creato_il'),
-  sb.from('v_mezzi_scadenze_gestionale').select('*').in('stato_scadenza',['SCADUTA','ENTRO_30_GIORNI']).order('data_scadenza').limit(20)
+  sb.from('v_mezzi_scadenze_gestionale').select('*').in('stato_scadenza',['SCADUTA','ENTRO_30_GIORNI']).order('data_scadenza').limit(20),
+  sb.from('mezzi').select('codice,targa,tipologia,attivo,stato_operativo,km_attuali').order('codice')
  ]);
- const errors=[emg,dim,sv,fg,exp].filter(x=>x.error).map(x=>x.error.message);
- const emgRows=emg.data||[],dimRows=dim.data||[],services=sv.data||[],fogli=fg.data||[],expRows=exp.data||[];
+ const errors=[emg,dim,sv,fg,exp,mz].filter(x=>x.error).map(x=>x.error.message);
+ const emgRows=emg.data||[],dimRows=dim.data||[],services=sv.data||[],fogli=fg.data||[],expRows=exp.data||[],mezzi=mz.data||[];
 
  const crewGroups=dashOpsGroup(emgRows).length+dashOpsGroup(dimRows).length;
  $('dashOpsCrewCount').textContent=String(crewGroups);
  $('dashOpsServiceCount').textContent=String(services.length);
  $('dashOpsTravelOpen').textContent=String(fogli.filter(x=>x.stato==='APERTO').length);
  $('dashOpsTravelClosed').textContent=String(fogli.filter(x=>x.stato==='CHIUSO').length);
+
+ $('dashVehicleStatus').innerHTML=mezzi.length?mezzi.map(m=>{
+  const todayServices=services.filter(x=>x.mezzo===m.codice);
+  const openSheet=fogli.some(x=>x.mezzo===m.codice&&x.stato==='APERTO');
+  const status=String(m.stato_operativo||'DISPONIBILE').toUpperCase();
+  const alert=!m.attivo||!['DISPONIBILE','OPERATIVO'].includes(status);
+  const busy=openSheet||todayServices.some(x=>['IN CORSO','PRESO IN CARICO'].includes(String(x.stato_gestionale||x.stato_operativo||'').toUpperCase()));
+  const cls=alert?'ops-vehicle-alert':busy?'ops-vehicle-busy':'ops-vehicle-ok';
+  const badge=alert?(m.attivo?status:'NON ATTIVO'):busy?'IMPEGNATO':'DISPONIBILE';
+  return '<div class="ops-vehicle-card '+cls+'"><strong>Mezzo '+esc(m.codice)+'</strong>'+
+   '<small>'+esc(m.targa||'Targa —')+(m.km_attuali!==null&&m.km_attuali!==undefined?' · '+esc(m.km_attuali)+' km':'')+'</small>'+
+   '<span class="pill '+(alert?'r':busy?'':'g')+'">'+esc(badge)+'</span>'+
+   '<small>'+todayServices.length+' servizio/i oggi'+(openSheet?' · foglio aperto':'')+'</small></div>';
+ }).join(''):'<div class="ops-empty">Impossibile caricare lo stato dei mezzi.</div>';
 
  $('dashTodayCrews').innerHTML=
   dashOpsCrewBlock('🚨 Emergenza 118',emgRows,true)+
@@ -3055,7 +3085,10 @@ async function loadOperationalDashboard(){
   if(!(members.some(x=>x.ruolo==='AUTISTA')&&members.some(x=>x.ruolo==='SOCCORRITORE')))
    problems.push({level:'warn',title:'Dimissioni '+fascia+' incomplete',detail:'Autista e soccorritore non risultano entrambi presenti.'});
  });
- expRows.filter(x=>x.stato_scadenza==='SCADUTA').forEach(x=>problems.push({
+ mezzi.filter(m=>!m.attivo||!['DISPONIBILE','OPERATIVO'].includes(String(m.stato_operativo||'').toUpperCase())).forEach(m=>problems.push({
+  level:'alert',title:'Mezzo '+(m.codice||'—')+' non disponibile',detail:'Stato mezzo: '+(m.stato_operativo||'NON ATTIVO')
+ }));
+  expRows.filter(x=>x.stato_scadenza==='SCADUTA').forEach(x=>problems.push({
   level:'alert',title:'Scadenza mezzo superata',detail:'Mezzo '+(x.mezzo||'—')+' · '+(x.tipo_scadenza||'Scadenza')+' · '+(x.data_scadenza||'')
  }));
 
@@ -3070,8 +3103,12 @@ async function loadOperationalDashboard(){
  ).join(''):'<div class="ops-row ops-row-ok"><strong>✅ Nessun problema operativo rilevato per oggi.</strong></div>';
  $('dashTodayProblems').querySelectorAll('[data-dash-problem-service]').forEach(b=>b.onclick=()=>openService(b.dataset.dashProblemService));
 
- $('dashOpsUpdated').textContent='Aggiornato '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+ $('dashOpsUpdated').textContent='Aggiornato '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+' · auto 60s';
  msg('dashOpsMsg',errors.length?'Alcuni dati non sono stati caricati: '+errors.join(' · '):'',errors.length?'warn':'');
+ if(window._dashOpsTimer)clearTimeout(window._dashOpsTimer);
+ window._dashOpsTimer=setTimeout(()=>{
+  if(!$('dash').classList.contains('hidden'))loadOperationalDashboard();
+ },60000);
 }
 async function dashboard(){
  void loadOperationalDashboard();
