@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.11</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.12</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.11</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.12</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -273,7 +273,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
 
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Tipo convocazione *</label><select id="cvType"><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea dei Soci</option></select></div>
-       <div class="field"><label>Stato (automatico)</label><select id="cvStatus" disabled><option>BOZZA</option><option>DEFINITIVA</option><option>DESERTA</option><option>ANNULLATA</option></select></div>
+       <div class="field"><label id="cvStatusLabel">Stato</label><select id="cvStatus"><option>BOZZA</option><option>DEFINITIVA</option><option>DESERTA</option><option>ANNULLATA</option></select></div>
        <div class="field" style="grid-column:span 2"><label>Titolo</label><input id="cvHeading"></div>
       </div>
 
@@ -848,6 +848,11 @@ function updateCallLayout(forceDefaults=false){
  const pair=isNewAssemblyPair();
  $('cvSecondBox').classList.toggle('hidden',!pair);
  $('cvType').disabled=!!currentCallId;
+ const firstSaved=currentCallId&&assembly&&currentCall?.fase_convocazione==='PRIMA';
+ $('cvStatus').disabled=!!firstSaved;
+ $('cvStatusLabel').textContent=pair?'Stato 2ª convocazione':(firstSaved?'Stato 1ª convocazione':'Stato');
+ if(firstSaved)$('cvStatus').value='DESERTA';
+ else if($('cvStatus').value==='DESERTA')$('cvStatus').value='BOZZA';
  if(currentCallId&&assembly){
   const first=currentCall?.fase_convocazione==='PRIMA';
   $('cvFirstTitle').textContent=first?'1ª Convocazione — avviso con entrambe le date':'2ª Convocazione — riunione effettiva';
@@ -885,7 +890,7 @@ function updateCallStateUI(){
  const final=$('cvStatus').value==='DEFINITIVA';
  const firstDesert=phase==='PRIMA';
  if(isNewAssemblyPair()){
-  $('cvSave').textContent='💾 Crea le 2 convocazioni';
+  $('cvSave').textContent=final?'💾 Crea le 2 convocazioni (2ª definitiva)':'💾 Crea le 2 convocazioni';
   $('cvFinalize').textContent='✅ Crea coppia definitiva';
   $('cvFinalize').disabled=callsBusy;
  }else{
@@ -945,7 +950,7 @@ async function saveNewAssemblyPair(finalize=false){
   p_luogo:$('cvPlace').value.trim()||null,p_destinatari:$('cvRecipients').value.trim()||null,
   p_oggetto:$('cvObject').value.trim()||null,p_ordine_giorno:callAgendaText()||null,
   p_testo_prima:$('cvText').value.trim()||null,p_testo_seconda:$('cvText2').value.trim()||null,
-  p_firmatario:$('cvSigner').value.trim()||null,p_stato_seconda:finalize?'DEFINITIVA':'BOZZA'
+  p_firmatario:$('cvSigner').value.trim()||null,p_stato_seconda:finalize?'DEFINITIVA':($('cvStatus').value==='DEFINITIVA'?'DEFINITIVA':'BOZZA')
  };
  const r=await sb.rpc('cge_convocazioni_assemblea_crea',body);if(r.error)throw r.error;
  const created=r.data||[];
@@ -970,7 +975,7 @@ async function saveCall(finalize=false){
   const previous=$('cvStatus').value||'BOZZA';
   if(currentCall?.fase_convocazione==='PRIMA')$('cvStatus').value='DESERTA';
   else if(finalize)$('cvStatus').value='DEFINITIVA';
-  else if(!currentCallId)$('cvStatus').value='BOZZA';
+  else if($('cvStatus').value==='DESERTA')$('cvStatus').value='BOZZA';
   const params=callParams();let id=currentCallId,code=currentCall?.convocazione_codice||'';
   if(currentCallId){
    const r=await sb.rpc('cge_convocazione_modifica',{p_id:id,...params});if(r.error){$('cvStatus').value=previous;throw r.error}
@@ -1063,6 +1068,7 @@ $('cvAddAgenda').onclick=()=>addCallAgendaPoint();
 $('cvGenerateText').onclick=generateCallText;
 $('cvDate').addEventListener('change',updateNextCallCode);
 $('cvType').onchange=()=>{if(!currentCallId)updateCallLayout(true)};
+$('cvStatus').onchange=updateCallStateUI;
 $('cvSave').onclick=()=>saveCall(false);$('cvFinalize').onclick=()=>saveCall(true);$('cvPrint').onclick=printCall;$('cvFind').onclick=loadCallsList;
 $('cvSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadCallsList()}};
 $('cvClear').onclick=()=>{resetCallFilters();loadCallsList()};
