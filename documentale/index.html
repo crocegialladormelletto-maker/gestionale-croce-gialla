@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.10</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.11</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.10</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.11</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -1038,8 +1038,8 @@ function printCall(){
  const agendaEntries=[...$('cvAgendaPoints').querySelectorAll('textarea')].map(x=>x.value.trim()).filter(Boolean);
  const agenda=agendaEntries.length?'<section class="vp-section"><h3>Ordine del giorno</h3><ol class="vp-agenda">'+agendaEntries.map(x=>'<li><span>'+esc(x)+'</span></li>').join('')+'</ol></section>':'';
  const info=(t,x)=>'<div class="vp-box"><small>'+esc(t)+'</small>'+esc(clean(x)||'—')+'</div>';
- const phaseText=v.fase==='PRIMA'?'1ª convocazione — DESERTA':v.fase==='SECONDA'?'2ª convocazione':callTypeLabel(v.tipo);
- const publicStatus=v.fase==='PRIMA'&&v.stato==='DESERTA'?'':v.stato;
+ const phaseText=v.fase==='PRIMA'?'1ª convocazione':v.fase==='SECONDA'?'2ª convocazione':callTypeLabel(v.tipo);
+ const publicStatus=(v.stato==='DESERTA'&&v.fase==='PRIMA')?'':v.stato;
  $('verbPrint').innerHTML=
   '<img class="vp-watermark" src="'+orgLogo+'" alt="" aria-hidden="true">'+
   '<div class="vp-content"><header class="vp-head"><img class="vp-logo" src="'+orgLogo+'" alt="Logo Croce Gialla">'+
