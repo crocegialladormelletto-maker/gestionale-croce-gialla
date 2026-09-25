@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.21</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.22</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.21</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.22</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -230,6 +230,17 @@ Consigliere: Broggio Emanuele
 Consigliere: Ragazzini Luisa</textarea></div>
        <div class="field"><label id="vAbsentLabel">Assenti</label><textarea id="vAbsent" placeholder="Un nominativo per riga"></textarea></div>
        <div class="field"><label id="vGuestsLabel">Invitati / altri presenti</label><textarea id="vGuests" placeholder="Facoltativo"></textarea></div>
+      </div>
+      <div id="vAssemblyBox" class="box hidden" style="margin-top:12px">
+       <div class="actions" style="justify-content:space-between"><div><b>🏛️ Dati Assemblea dei Soci</b><div class="muted">Collega il verbale alla convocazione: data, ora, luogo e ordine del giorno vengono importati automaticamente.</div></div><span class="pill g">ASSEMBLEA</span></div>
+       <div class="field" style="margin-top:9px"><label>Convocazione di riferimento</label><select id="vAssemblyCall"><option value="">— Seleziona una convocazione —</option></select></div>
+       <div class="grid4" style="margin-top:9px">
+        <div class="field"><label>Soci aventi diritto</label><input id="vAssemblyEligible" type="number" min="0" step="1" placeholder="0"></div>
+        <div class="field"><label>Soci presenti</label><input id="vAssemblyPresentCount" type="number" min="0" step="1" placeholder="0"></div>
+        <div class="field"><label>Deleghe</label><input id="vAssemblyDelegations" type="number" min="0" step="1" placeholder="0"></div>
+        <div class="field"><label>Quorum</label><select id="vAssemblyQuorum"><option value="">Da verificare</option><option value="RAGGIUNTO">Raggiunto</option><option value="NON_RAGGIUNTO">Non raggiunto</option><option value="NON_RICHIESTO">Non richiesto</option></select></div>
+       </div>
+       <div id="vAssemblyInfo" class="muted" style="margin-top:7px"></div>
       </div>
       <div class="field" style="margin-top:10px"><label>Ordine del giorno</label><div id="vAgendaPoints" class="agenda-points"></div><div class="toolbar"><button id="vAddAgenda" class="btn secondary" type="button">＋ Aggiungi punto</button></div><small class="muted">In stampa compaiono solo i punti compilati.</small></div>
       <div class="ai-box">
@@ -367,7 +378,7 @@ const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoR
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>new Date().toISOString().slice(0,10),dt=x=>x?new Date(x).toLocaleString('it-IT'):'—';
 let prof=null,rows=[],attachments=[],currentId=null,currentDoc=null,busy=false,loadSeq=0,signedArchiveRows=[];
-let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false,minutesAiBusy=false,signedMinuteFiles={};
+let minutesRows=[],currentMinuteId=null,currentMinute=null,minutesBusy=false,minutesAiBusy=false,signedMinuteFiles={},assemblyMinuteCalls=[];
 let callsRows=[],currentCallId=null,currentCall=null,callsBusy=false,signedCallFiles={},currentCallGroup=[],whatsAppHistory=[],whatsAppSentMap={};
 const CONSIGLIO_DIRETTIVO_PRESENTI="Presidente: Musso Paolo\nVice Presidente: Fontana Stefano\nSegretario: Ronco Meri\nConsigliere: Milan Roberto\nConsigliere: Pedercini Sabrina\nConsigliere: Broggio Emanuele\nConsigliere: Ragazzini Luisa";
 function renderSignedMinuteInfo(){
@@ -696,9 +707,84 @@ async function openProtocol(id){
 }
 
 function minuteTypeLabel(v){return ({CONSIGLIO_DIRETTIVO:'Consiglio Direttivo',ASSEMBLEA_SOCI:'Assemblea Soci',RIUNIONE_OPERATIVA:'Riunione operativa',ALTRO:'Altro'})[v]||v||'—'}
+function assemblyCallLabel(v){
+ const phase=v.fase_convocazione==='PRIMA'?'1ª convocazione':v.fase_convocazione==='SECONDA'?'2ª convocazione':'Convocazione';
+ const d=v.data_riunione?fmtCallDate(v.data_riunione):'—';
+ const t=v.ora_prima?String(v.ora_prima).slice(0,5):'';
+ return (v.convocazione_codice||'Convocazione')+' · '+phase+' · '+d+(t?' ore '+t:'');
+}
+async function loadAssemblyMinuteCalls(selectedId=null,applySelection=false){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const select=$('vAssemblyCall');if(!select)return;
+ const r=await sb.rpc('cge_convocazioni_elenco',{p_search:null,p_tipo:'ASSEMBLEA_SOCI',p_stato:null,p_anno:null});
+ if(r.error){assemblyMinuteCalls=[];select.innerHTML='<option value="">Errore caricamento convocazioni</option>';return msg('vmsg','Convocazioni Assemblea: '+r.error.message,'err')}
+ assemblyMinuteCalls=(r.data||[]).filter(x=>x.stato!=='ANNULLATA');
+ select.innerHTML='<option value="">— Seleziona una convocazione —</option>'+assemblyMinuteCalls.map(v=>'<option value="'+esc(v.id)+'">'+esc(assemblyCallLabel(v))+'</option>').join('');
+ if(selectedId&&assemblyMinuteCalls.some(x=>String(x.id)===String(selectedId)))select.value=String(selectedId);
+ if(applySelection&&select.value)applyAssemblyCallToMinute();
+}
+function applyAssemblyCallToMinute(){
+ const id=$('vAssemblyCall').value;
+ const v=assemblyMinuteCalls.find(x=>String(x.id)===String(id));
+ if(!v){$('vAssemblyInfo').textContent='';return}
+ $('vDate').value=v.data_riunione||'';
+ $('vStart').value=v.ora_prima?String(v.ora_prima).slice(0,5):'';
+ $('vPlace').value=v.luogo||'Sede Croce Gialla Emergenza ODV';
+ setMinuteAgenda(v.ordine_giorno||'');
+ const phase=v.fase_convocazione==='PRIMA'?'1ª convocazione':v.fase_convocazione==='SECONDA'?'2ª convocazione':'convocazione';
+ $('vHeading').value='Verbale dell’Assemblea dei Soci - '+phase;
+ $('vAssemblyInfo').innerHTML='Collegata a <b>'+esc(v.convocazione_codice||'')+'</b> · '+esc(phase)+'. Data, ora, luogo e ordine del giorno importati.';
+ updateNextMinuteCode();
+}
+function clearAssemblyMinuteFields(){
+ if($('vAssemblyCall'))$('vAssemblyCall').value='';
+ if($('vAssemblyEligible'))$('vAssemblyEligible').value='';
+ if($('vAssemblyPresentCount'))$('vAssemblyPresentCount').value='';
+ if($('vAssemblyDelegations'))$('vAssemblyDelegations').value='';
+ if($('vAssemblyQuorum'))$('vAssemblyQuorum').value='';
+ if($('vAssemblyInfo'))$('vAssemblyInfo').textContent='';
+}
+async function loadAssemblyMinuteDetails(id){
+ clearAssemblyMinuteFields();
+ if($('vType').value!=='ASSEMBLEA_SOCI'||!id){return}
+ const r=await sb.from('verbali_assemblea_dettagli').select('verbale_id,convocazione_id,soci_aventi_diritto,soci_presenti,deleghe,quorum').eq('verbale_id',id).maybeSingle();
+ if(r.error)throw r.error;
+ await loadAssemblyMinuteCalls(r.data?.convocazione_id||null,false);
+ if(r.data){
+  $('vAssemblyEligible').value=r.data.soci_aventi_diritto??'';
+  $('vAssemblyPresentCount').value=r.data.soci_presenti??'';
+  $('vAssemblyDelegations').value=r.data.deleghe??'';
+  $('vAssemblyQuorum').value=r.data.quorum||'';
+  const linked=assemblyMinuteCalls.find(x=>String(x.id)===String(r.data.convocazione_id));
+  if(linked)$('vAssemblyInfo').innerHTML='Collegata a <b>'+esc(linked.convocazione_codice||'')+'</b> · '+esc(linked.fase_convocazione==='PRIMA'?'1ª convocazione':linked.fase_convocazione==='SECONDA'?'2ª convocazione':'Convocazione')+'.';
+ }
+}
+async function saveAssemblyMinuteDetails(id){
+ if(!id)return;
+ if($('vType').value!=='ASSEMBLEA_SOCI'){
+  const del=await sb.from('verbali_assemblea_dettagli').delete().eq('verbale_id',id);
+  if(del.error)throw del.error;
+  return;
+ }
+ const toInt=id=>{const v=$(id).value;return v===''?null:Number(v)};
+ const user=await sb.auth.getUser();
+ const r=await sb.from('verbali_assemblea_dettagli').upsert({
+  verbale_id:id,
+  convocazione_id:$('vAssemblyCall').value||null,
+  soci_aventi_diritto:toInt('vAssemblyEligible'),
+  soci_presenti:toInt('vAssemblyPresentCount'),
+  deleghe:toInt('vAssemblyDelegations'),
+  quorum:$('vAssemblyQuorum').value||null,
+  modificato_da:user.data.user?.id||null,
+  updated_at:new Date().toISOString()
+ },{onConflict:'verbale_id'});
+ if(r.error)throw r.error;
+}
 function updateMinuteTypeUI(resetDefaults=false){
  const type=$('vType').value;
  const isAssembly=type==='ASSEMBLEA_SOCI';
+ $('vAssemblyBox').classList.toggle('hidden',!isAssembly);
+ if(isAssembly&&!currentMinuteId&&assemblyMinuteCalls.length===0)loadAssemblyMinuteCalls(null,false);
  $('vPresentLabel').textContent=isAssembly?'Soci presenti':'Presenti';
  $('vAbsentLabel').textContent=isAssembly?'Soci assenti':'Assenti';
  $('vGuestsLabel').textContent=isAssembly?'Invitati / altri partecipanti':'Invitati / altri presenti';
@@ -755,7 +841,7 @@ function resetMinuteForm(){
  $('vPresent').value=CONSIGLIO_DIRETTIVO_PRESENTI;
  $('vPresident').value='Musso Paolo';
  $('vSecretary').value='Ronco Meri';
- setMinuteAgenda();updateMinuteTypeUI(false);updateNextMinuteCode();
+ setMinuteAgenda();clearAssemblyMinuteFields();updateMinuteTypeUI(false);updateNextMinuteCode();
  $('vSignedFile').value='';renderSignedMinuteInfo();updateMinuteStateUI();
  msg('vmsg','');msg('vAiMsg','');
 }
@@ -831,6 +917,7 @@ async function saveMinute(approve=false){
    id=r.data?.[0]?.id;code=r.data?.[0]?.verbale_codice||'';
    if(!id)throw new Error('Numero verbale non restituito.');
   }
+  await saveAssemblyMinuteDetails(id);
   resetMinuteFilters();
   $('vYear').value=Number(String(params.p_data_riunione).slice(0,4));
   await loadMinutesList();
@@ -890,9 +977,10 @@ async function openMinute(id,printAfter=false){
   $('vType').value=v.tipo_riunione||'CONSIGLIO_DIRETTIVO';updateMinuteTypeUI(false);$('vDate').value=v.data_riunione||'';
   $('vStart').value=v.ora_inizio?String(v.ora_inizio).slice(0,5):'';$('vEnd').value=v.ora_fine?String(v.ora_fine).slice(0,5):'';
   $('vPlace').value=v.luogo||'';$('vStatus').value=v.stato||'BOZZA';$('vApprovalDate').value=v.data_approvazione||'';$('vHeading').value=v.titolo||'';
-  $('vPresent').value=v.presenti||CONSIGLIO_DIRETTIVO_PRESENTI;$('vAbsent').value=v.assenti||'';$('vGuests').value=v.invitati||'';
+  $('vPresent').value=v.presenti||(v.tipo_riunione==='CONSIGLIO_DIRETTIVO'?CONSIGLIO_DIRETTIVO_PRESENTI:'');$('vAbsent').value=v.assenti||'';$('vGuests').value=v.invitati||'';
   setMinuteAgenda(v.ordine_giorno||'');$('vProceedings').value=v.svolgimento||'';$('vDecisions').value=v.deliberazioni||'';$('vVote').value=v.votazione||'';
   $('vPresident').value=v.presidente||'Musso Paolo';$('vSecretary').value=v.segretario||'Ronco Meri';$('vNotes').value=v.note||'';
+  if(v.tipo_riunione==='ASSEMBLEA_SOCI')await loadAssemblyMinuteDetails(v.id);else clearAssemblyMinuteFields();
   await loadSignedMinute(v.id);
   updateMinuteStateUI();
   msg('vListMsg','');msg('vmsg','Verbale '+v.verbale_codice+' aperto.','ok');
@@ -910,7 +998,8 @@ function printMinute(){
   verbale_codice:currentMinute?.verbale_codice||'BOZZA NON SALVATA',
   tipo_riunione:$('vType').value,data_riunione:$('vDate').value,ora_inizio:$('vStart').value,ora_fine:$('vEnd').value,luogo:$('vPlace').value,titolo:$('vHeading').value,
   ordine_giorno:minuteAgendaText(),presenti:$('vPresent').value,assenti:$('vAbsent').value,invitati:$('vGuests').value,svolgimento:$('vProceedings').value,
-  deliberazioni:$('vDecisions').value,votazione:$('vVote').value,presidente:$('vPresident').value,segretario:$('vSecretary').value,note:$('vNotes').value,stato:$('vStatus').value
+  deliberazioni:$('vDecisions').value,votazione:$('vVote').value,presidente:$('vPresident').value,segretario:$('vSecretary').value,note:$('vNotes').value,stato:$('vStatus').value,
+  convocazione_label:$('vAssemblyCall')?.selectedOptions?.[0]?.textContent||'',soci_aventi_diritto:$('vAssemblyEligible')?.value||'',soci_presenti_num:$('vAssemblyPresentCount')?.value||'',deleghe:$('vAssemblyDelegations')?.value||'',quorum:$('vAssemblyQuorum')?.selectedOptions?.[0]?.textContent||''
  };
  const clean=v=>String(v||'').trim();
  const shortTime=v=>v?String(v).slice(0,5):'';
@@ -921,6 +1010,12 @@ function printMinute(){
  const agenda=agendaEntries.length?'<section class="vp-section"><h3>Ordine del giorno</h3><ol class="vp-agenda">'+agendaEntries.map(x=>'<li><span>'+esc(x)+'</span></li>').join('')+'</ol></section>':'';
  const info=(title,value)=>'<div class="vp-box"><small>'+esc(title)+'</small>'+esc(clean(value)||'—')+'</div>';
  const time=[shortTime(p.ora_inizio),shortTime(p.ora_fine)].filter(Boolean).join(' – ');
+ const assemblyMeta=p.tipo_riunione==='ASSEMBLEA_SOCI'
+  ?'<section class="vp-section"><h3>Dati Assemblea dei Soci</h3><div class="vp-meta">'+
+    info('Convocazione di riferimento',p.convocazione_label&& !p.convocazione_label.startsWith('—')?p.convocazione_label:'—')+
+    info('Soci aventi diritto',p.soci_aventi_diritto||'—')+info('Soci presenti',p.soci_presenti_num||'—')+
+    info('Deleghe',p.deleghe||'0')+info('Quorum',p.quorum||'Da verificare')+'</div></section>'
+  :'';
  $('verbPrint').innerHTML=
   '<img class="vp-watermark" src="'+orgLogo+'" alt="" aria-hidden="true">'+
   '<div class="vp-content"><header class="vp-head">'+
@@ -938,7 +1033,8 @@ function printMinute(){
   '<div class="vp-document"><span class="vp-number">'+esc(p.verbale_codice)+'</span><span class="vp-status">'+esc(p.stato)+'</span></div>'+
   '<div class="vp-meta">'+info('Data della riunione',italianDate(p.data_riunione))+info('Orario',time)+
     info('Luogo',p.luogo)+info('Presidente / Segretario',[p.presidente,p.segretario].filter(Boolean).join(' / '))+'</div>'+
-  sec('Presenti',p.presenti)+sec('Assenti',p.assenti)+sec('Invitati / altri presenti',p.invitati)+agenda+
+  assemblyMeta+
+  sec(p.tipo_riunione==='ASSEMBLEA_SOCI'?'Soci presenti':'Presenti',p.presenti)+sec(p.tipo_riunione==='ASSEMBLEA_SOCI'?'Soci assenti':'Assenti',p.assenti)+sec(p.tipo_riunione==='ASSEMBLEA_SOCI'?'Invitati / altri partecipanti':'Invitati / altri presenti',p.invitati)+agenda+
   sec('Svolgimento della seduta',p.svolgimento)+sec('Deliberazioni e decisioni assunte',p.deliberazioni)+
   sec('Esito della votazione',p.votazione)+sec('Note',p.note)+
   '<div class="vp-sign"><div><div class="vp-sign-line">Il Presidente<b>'+esc(clean(p.presidente))+'</b></div></div>'+
@@ -955,6 +1051,7 @@ $('vNewBoard').onclick=()=>newMinuteOfType('CONSIGLIO_DIRETTIVO');
 $('vNewAssembly').onclick=()=>newMinuteOfType('ASSEMBLEA_SOCI');
 $('vExit').onclick=()=>{resetMinuteForm();resetMinuteFilters();loadMinutesList();$('vBody').scrollIntoView({behavior:'smooth',block:'start'})};
 $('vAddAgenda').onclick=()=>addMinuteAgendaPoint();
+$('vAssemblyCall').onchange=applyAssemblyCallToMinute;
 $('vAiGenerate').onclick=()=>useMinuteAI('genera');$('vAiImprove').onclick=()=>useMinuteAI('migliora');
 $('vDate').addEventListener('change',updateNextMinuteCode);
 $('vSave').onclick=()=>saveMinute(false);$('vApprove').onclick=()=>saveMinute(true);$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
