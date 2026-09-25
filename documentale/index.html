@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.19</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.20</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.19</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.20</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -326,7 +326,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
        <input id="cvWaPhone" type="hidden" value="">
        <div class="field" style="margin-top:9px"><label>Messaggio WhatsApp</label><textarea id="cvWaMessage" style="min-height:180px"></textarea></div>
        <div class="toolbar"><button id="cvWaGenerate" class="btn secondary" type="button">✨ Prepara messaggio</button><button id="cvWaOpen" class="btn blue" type="button">📲 Apri gruppo WhatsApp</button><button id="cvWaPdf" class="btn blue" type="button">📎 Gruppo WhatsApp + PDF firmato</button><button id="cvWaLog" class="btn yellow" type="button">✅ Registra invio effettuato</button></div>
-       <div class="muted">Su telefono, se supportato, il gestionale apre la condivisione del PDF firmato con il messaggio; scegli WhatsApp. Su PC scarica il PDF e apre WhatsApp Web, così puoi allegarlo subito. La registrazione dell’invio resta manuale per evitare falsi “inviato”.</div>
+       <div class="muted">Il gestionale crea sempre il testo WhatsApp, scarica il PDF firmato e apre WhatsApp. Seleziona il gruppo “Comunicazioni Croce Gialla”, allega il PDF appena scaricato e invia. La registrazione dell’invio resta manuale per evitare falsi “inviato”.</div>
        <div id="cvWaMsg"></div>
        <div id="cvWaHistory" style="margin-top:10px"></div>
       </div>
@@ -922,20 +922,30 @@ $('vType').onchange=()=>{if(!currentMinuteId){const t=minuteTypeLabel($('vType')
 
 const WHATSAPP_COMUNICAZIONI_GROUP='Gruppo WhatsApp Comunicazioni Croce Gialla';
 function buildCallWhatsAppMessage(){
- const type=$('cvType').value==='ASSEMBLEA_SOCI'?'Assemblea dei Soci':'Consiglio Direttivo';
- const phase=currentCall?.fase_convocazione==='PRIMA'?'1ª convocazione':currentCall?.fase_convocazione==='SECONDA'?'2ª convocazione':'';
+ const isAssembly=$('cvType').value==='ASSEMBLEA_SOCI';
+ const phase=currentCall?.fase_convocazione==='PRIMA'?'PRIMA':currentCall?.fase_convocazione==='SECONDA'?'SECONDA':'UNICA';
+ const phaseLabel=phase==='PRIMA'?'1ª convocazione':phase==='SECONDA'?'2ª convocazione':'';
  const heading=$('cvHeading').value.trim()||'Convocazione';
- const body=$('cvText').value.trim();
  const agenda=callAgendaText();
  const signer=$('cvSigner').value.trim()||'Musso Paolo';
- let out='*Croce Gialla Emergenza ODV*\n\n*'+heading+'*';
- if(phase)out+='\n'+phase;
- out+='\n\n';
- if(body)out+=body;
- else{
-  const d=fmtCallDate($('cvDate').value),t=$('cvTime1').value||'';
-  out+='Convocazione '+type+(d?' del '+d:'')+(t?' alle ore '+t:'')+'.';
+ const d=fmtCallDate($('cvDate').value),t=$('cvTime1').value||'';
+ const place=$('cvPlace').value.trim()||'Sede Croce Gialla Emergenza ODV';
+ let body=$('cvText').value.trim();
+
+ // Per la 2ª convocazione il testo viene sempre ricostruito dai dati correnti,
+ // così WhatsApp non resta mai senza testo anche se il campo salvato fosse vuoto o vecchio.
+ if(isAssembly&&phase==='SECONDA'){
+  body='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in seconda convocazione il giorno '+d+
+   (t?' alle ore '+t:'')+', presso '+place+', per discutere e deliberare sui punti indicati nell’ordine del giorno.\n\nSi raccomanda la partecipazione.';
  }
+ if(!body){
+  body=isAssembly
+   ?'I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea'+(phase==='PRIMA'?' in prima convocazione':phase==='SECONDA'?' in seconda convocazione':'')+' il giorno '+d+(t?' alle ore '+t:'')+', presso '+place+'.'
+   :'I componenti del Consiglio Direttivo della Croce Gialla Emergenza ODV sono convocati il giorno '+d+(t?' alle ore '+t:'')+', presso '+place+'.';
+ }
+ let out='*Croce Gialla Emergenza ODV*\n\n*'+heading+'*';
+ if(phaseLabel)out+='\n*'+phaseLabel+'*';
+ out+='\n\n'+body;
  if(agenda)out+='\n\n*Ordine del giorno*\n'+agenda;
  out+='\n\nIl Presidente\n'+signer;
  return out;
@@ -984,36 +994,22 @@ async function shareCallWhatsAppPdf(){
   }
   f=q.data;signedCallFiles[String(currentCallId)]=f;
  }
- const message=$('cvWaMessage').value.trim()||buildCallWhatsAppMessage();
+ const message=buildCallWhatsAppMessage();
  $('cvWaMessage').value=message;
  const waUrl='https://wa.me/?text='+encodeURIComponent(message);
  const fileName=f.nome_file||'convocazione-firmata.pdf';
- const nativeShare=!!(navigator.share&&typeof File!=='undefined');
- let fallbackPopup=null;
- if(!nativeShare)fallbackPopup=window.open('about:blank','_blank');
- msg('cvWaMsg','Preparazione del PDF firmato per WhatsApp...');
+ const popup=window.open('about:blank','_blank');
+ msg('cvWaMsg','Preparazione del PDF firmato e del testo WhatsApp...');
  try{
   const r=await sb.storage.from('convocazioni-firmate').download(f.storage_path);
   if(r.error)throw r.error;
-  const pdfFile=new File([r.data],fileName,{type:'application/pdf'});
-  const canShare=nativeShare&&(!navigator.canShare||navigator.canShare({files:[pdfFile]}));
-  if(canShare){
-   try{
-    await navigator.share({title:currentCall?.convocazione_codice||'Convocazione',text:message,files:[pdfFile]});
-    msg('cvWaMsg','Condivisione aperta. Seleziona WhatsApp e invia il messaggio con il PDF; poi registra l’invio effettuato.','ok');
-    return;
-   }catch(e){
-    if(e?.name==='AbortError'){msg('cvWaMsg','Condivisione annullata.','warn');return}
-   }
-  }
   const blobUrl=URL.createObjectURL(r.data);
   const a=document.createElement('a');a.href=blobUrl;a.download=fileName;document.body.appendChild(a);a.click();a.remove();
-  if(fallbackPopup)fallbackPopup.location.href=waUrl;
-  else window.open(waUrl,'_blank','noopener');
+  if(popup)popup.location.href=waUrl;else window.open(waUrl,'_blank','noopener');
   setTimeout(()=>URL.revokeObjectURL(blobUrl),60000);
-  msg('cvWaMsg','PDF firmato scaricato e WhatsApp aperto. Allega il PDF alla chat e, dopo l’invio, registra l’operazione.','ok');
+  msg('cvWaMsg','Testo WhatsApp creato e PDF firmato scaricato. In WhatsApp scegli “Comunicazioni Croce Gialla”, allega il PDF appena scaricato e invia.','ok');
  }catch(e){
-  if(fallbackPopup)fallbackPopup.close();
+  if(popup)popup.close();
   msg('cvWaMsg',e.message||String(e),'err');
  }
 }
