@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.29</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.30</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.29</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.30</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -386,8 +386,8 @@ Consigliere: Ragazzini Luisa</textarea></div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Ricerca</label><input id="actSearch" placeholder="Documento, descrizione, operatore…"></div>
        <div class="field"><label>Operatore</label><select id="actUser"><option value="">Tutti</option></select></div>
-       <div class="field"><label>Tipo</label><select id="actEntity"><option value="">Tutti</option><option value="VERBALE">Verbale</option><option value="CONVOCAZIONE">Convocazione</option><option value="ACCESSO">Accesso</option></select></div>
-       <div class="field"><label>Azione</label><select id="actAction"><option value="">Tutte</option><option value="CREAZIONE">Creazione</option><option value="MODIFICA">Modifica</option><option value="APPROVAZIONE">Approvazione</option><option value="FINALIZZAZIONE">Finalizzazione</option><option value="DUPLICAZIONE">Duplicazione</option><option value="PDF_CARICATO">PDF caricato</option><option value="PDF_SOSTITUITO">PDF sostituito</option><option value="PDF_ELIMINATO">PDF eliminato</option><option value="ANNULLAMENTO">Annullamento</option><option value="DESERTA">Convocazione deserta</option><option value="ACCESSO_ABILITATO">Accesso abilitato</option><option value="ACCESSO_MODIFICATO">Accesso modificato</option><option value="ACCESSO_DISATTIVATO">Accesso disattivato</option><option value="ACCESSO_RIATTIVATO">Accesso riattivato</option></select></div>
+       <div class="field"><label>Tipo</label><select id="actEntity"><option value="">Tutti</option><option value="VERBALE">Verbale</option><option value="CONVOCAZIONE">Convocazione</option><option value="ACCESSO">Accesso</option><option value="FASCICOLO">Fascicolo</option></select></div>
+       <div class="field"><label>Azione</label><select id="actAction"><option value="">Tutte</option><option value="CREAZIONE">Creazione</option><option value="MODIFICA">Modifica</option><option value="APPROVAZIONE">Approvazione</option><option value="FINALIZZAZIONE">Finalizzazione</option><option value="DUPLICAZIONE">Duplicazione</option><option value="PDF_CARICATO">PDF caricato</option><option value="PDF_SOSTITUITO">PDF sostituito</option><option value="PDF_ELIMINATO">PDF eliminato</option><option value="ANNULLAMENTO">Annullamento</option><option value="DESERTA">Convocazione deserta</option><option value="ACCESSO_ABILITATO">Accesso abilitato</option><option value="ACCESSO_MODIFICATO">Accesso modificato</option><option value="ACCESSO_DISATTIVATO">Accesso disattivato</option><option value="ACCESSO_RIATTIVATO">Accesso riattivato</option><option value="ESPORTAZIONE_FASCICOLO">Esportazione fascicolo</option></select></div>
       </div>
       <div class="grid2" style="margin-top:10px">
        <div class="field"><label>Dal</label><input id="actFrom" type="date"></div>
@@ -444,6 +444,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
 <div id="verbPrint" class="hidden"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co',KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
@@ -655,6 +656,96 @@ function dossierPill(ok,label){
 function dossierSearchText(x){
  return [x.typeLabel,x.title,x.date,x.calls.map(c=>c.convocazione_codice).join(' '),x.minute?.verbale_codice||'',x.minute?.titolo||''].join(' ').toLowerCase();
 }
+
+function dossierFileName(x){
+ const code=x.calls?.[0]?.convocazione_codice||x.minute?.verbale_codice||'riunione';
+ return safeFile('Fascicolo_'+String(x.typeLabel||'Riunione').replace(/\s+/g,'_')+'_'+(x.date||today())+'_'+code)+'.zip';
+}
+function dossierSummaryText(x){
+ const lines=[
+  'CROCE GIALLA EMERGENZA ODV',
+  'RIEPILOGO FASCICOLO RIUNIONE',
+  '',
+  'Tipo: '+(x.typeLabel||'—'),
+  'Titolo/Oggetto: '+(x.title||'—'),
+  'Data riunione: '+(x.date||'—'),
+  'Stato fascicolo: '+(x.complete?'COMPLETO':'DA COMPLETARE'),
+  ''
+ ];
+ lines.push('CONVOCAZIONI');
+ if(x.calls?.length){
+  x.calls.forEach(call=>{
+   const phase=call.fase_convocazione==='PRIMA'?'1ª convocazione':call.fase_convocazione==='SECONDA'?'2ª convocazione':'Convocazione';
+   const f=x.callSigned?.[String(call.id)]||null;
+   lines.push('- '+(call.convocazione_codice||'—')+' · '+phase+' · '+(call.data_riunione||'—')+' · PDF firmato: '+(f?'SI':'NO'));
+  });
+ }else lines.push('- Nessuna convocazione collegata');
+ lines.push('');
+ lines.push('VERBALE');
+ if(x.minute){
+  lines.push('- '+(x.minute.verbale_codice||'—')+' · Stato: '+(x.minute.stato||'—')+' · PDF firmato: '+(x.minuteSigned?'SI':'NO'));
+ }else lines.push('- Nessun verbale collegato');
+ const missing=[];
+ (x.calls||[]).forEach(call=>{if(!x.callSigned?.[String(call.id)])missing.push('PDF firmato '+(call.convocazione_codice||'convocazione'))});
+ if(!x.minute)missing.push('Verbale collegato');
+ else{
+  if(x.minute.stato!=='APPROVATO')missing.push('Verbale approvato');
+  if(!x.minuteSigned)missing.push('PDF firmato '+(x.minute.verbale_codice||'verbale'));
+ }
+ lines.push('');
+ lines.push('DOCUMENTI MANCANTI');
+ if(missing.length)missing.forEach(v=>lines.push('- '+v));else lines.push('- Nessuno');
+ lines.push('');
+ lines.push('Esportato dal Gestionale Documentale Croce Gialla Emergenza ODV il '+new Date().toLocaleString('it-IT')+'.');
+ return lines.join('\r\n');
+}
+async function exportDossier(key){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const x=dossierRows.find(v=>String(v.key)===String(key));
+ if(!x)return msg('fMsg','Fascicolo non trovato.','err');
+ if(typeof JSZip==='undefined')return msg('fMsg','Modulo ZIP non disponibile. Ricarica la pagina e riprova.','err');
+ const btn=$('fList').querySelector('[data-fexport="'+CSS.escape(String(key))+'"]');
+ if(btn)btn.disabled=true;
+ msg('fMsg','Preparazione del fascicolo ZIP...');
+ try{
+  const zip=new JSZip();
+  const docs=zip.folder('Documenti_firmati');
+  let included=0;
+
+  for(const call of (x.calls||[])){
+   const f=x.callSigned?.[String(call.id)]||null;
+   if(!f?.storage_path)continue;
+   const r=await sb.storage.from('convocazioni-firmate').download(f.storage_path);
+   if(r.error)throw new Error('Convocazione '+(call.convocazione_codice||'')+': '+r.error.message);
+   const phase=call.fase_convocazione==='PRIMA'?'01_Prima_convocazione':call.fase_convocazione==='SECONDA'?'02_Seconda_convocazione':'01_Convocazione';
+   docs.file(safeFile(phase+'_'+(call.convocazione_codice||'convocazione')+'_'+(f.nome_file||'firmata.pdf')),r.data);
+   included++;
+  }
+
+  if(x.minute&&x.minuteSigned?.storage_path){
+   const r=await sb.storage.from('verbali-firmati').download(x.minuteSigned.storage_path);
+   if(r.error)throw new Error('Verbale '+(x.minute.verbale_codice||'')+': '+r.error.message);
+   docs.file(safeFile('03_Verbale_'+(x.minute.verbale_codice||'verbale')+'_'+(x.minuteSigned.nome_file||'firmato.pdf')),r.data);
+   included++;
+  }
+
+  zip.file('RIEPILOGO_FASCICOLO.txt',dossierSummaryText(x));
+  const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=dossierFileName(x);document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+
+  const code=(x.calls||[]).map(v=>v.convocazione_codice).filter(Boolean).join(' / ')||x.minute?.verbale_codice||'FASCICOLO';
+  const entityId=x.minute?.id||x.calls?.[0]?.id||null;
+  await sb.rpc('cge_documentale_registra_evento',{
+   p_azione:'ESPORTAZIONE_FASCICOLO',p_entita:'FASCICOLO',p_entita_id:entityId,p_codice_documento:code,
+   p_descrizione:'Esportato fascicolo '+x.typeLabel+' · '+(x.date||'data non definita'),
+   p_dettagli:{chiave:x.key,stato:x.complete?'COMPLETO':'DA_COMPLETARE',file_inclusi:included}
+  });
+  msg('fMsg','Fascicolo esportato: '+included+' PDF firmati + riepilogo.','ok');
+ }catch(e){msg('fMsg','Esportazione non riuscita: '+(e.message||String(e)),'err')}
+ finally{if(btn)btn.disabled=false}
+}
 function renderDossiers(){
  let list=dossierRows.slice();
  const q=$('fSearch').value.trim().toLowerCase(),type=$('fType').value,status=$('fStatus').value;
@@ -674,13 +765,14 @@ function renderDossiers(){
    ?'<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(minute.verbale_codice)+' · '+esc(minute.titolo||'Verbale')+'</b><br><span class="muted">'+esc(minuteTypeLabel(minute.tipo_riunione))+' · '+esc(minute.stato||'')+'</span></div><div>'+dossierPill(minute.stato==='APPROVATO','Approvato')+dossierPill(!!x.minuteSigned,'PDF firmato')+'</div></div><div class="toolbar"><button class="btn secondary" type="button" data-fminute="'+esc(minute.id)+'">Apri verbale</button>'+(x.minuteSigned?'<button class="btn blue" type="button" data-fminutepdf="'+esc(minute.id)+'">📄 PDF firmato</button>':'')+'</div></div>'
    :'<div class="notice warn">Verbale non ancora collegato a questa riunione.</div>';
   const note=assembly?'Per l’Assemblea il controllo considera entrambe le convocazioni e i relativi PDF firmati.':'';
-  return '<div class="section" style="margin:12px 0"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">'+esc(x.typeLabel)+' · '+esc(x.title)+'</h3><div class="muted">'+esc(x.date||'Data non definita')+(note?'<br>'+esc(note):'')+'</div></div><span class="pill '+(x.complete?'g':'r')+'" style="font-size:11px">'+(x.complete?'✓ COMPLETO':'DA COMPLETARE')+'</span></div><div style="margin-top:8px"><b>Convocazioni</b>'+callRows+'<b>Verbale</b>'+minuteHtml+'</div></div>';
+  return '<div class="section" style="margin:12px 0"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">'+esc(x.typeLabel)+' · '+esc(x.title)+'</h3><div class="muted">'+esc(x.date||'Data non definita')+(note?'<br>'+esc(note):'')+'</div></div><div class="actions"><span class="pill '+(x.complete?'g':'r')+'" style="font-size:11px">'+(x.complete?'✓ COMPLETO':'DA COMPLETARE')+'</span><button class="btn yellow" type="button" data-fexport="'+esc(x.key)+'">📦 Esporta fascicolo</button></div></div><div style="margin-top:8px"><b>Convocazioni</b>'+callRows+'<b>Verbale</b>'+minuteHtml+'</div></div>';
  }).join(''):'<div class="notice">Nessun fascicolo trovato con i filtri selezionati.</div>';
 
  $('fList').querySelectorAll('[data-fcall]').forEach(b=>b.onclick=async()=>{view('calls');await openCall(b.dataset.fcall,false)});
  $('fList').querySelectorAll('[data-fcallpdf]').forEach(b=>b.onclick=()=>openSignedCall(b.dataset.fcallpdf,false));
  $('fList').querySelectorAll('[data-fminute]').forEach(b=>b.onclick=async()=>{view('minutes');await openMinute(b.dataset.fminute,false)});
  $('fList').querySelectorAll('[data-fminutepdf]').forEach(b=>b.onclick=()=>openSignedMinute(b.dataset.fminutepdf,false));
+ $('fList').querySelectorAll('[data-fexport]').forEach(b=>b.onclick=()=>exportDossier(b.dataset.fexport));
 }
 async function loadDossiers(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
@@ -691,13 +783,13 @@ async function loadDossiers(){
    sb.rpc('cge_verbali_elenco',{p_search:null,p_tipo:null,p_stato:null,p_anno:null}),
    sb.from('verbali_assemblea_dettagli').select('verbale_id,convocazione_id'),
    sb.from('verbali_consiglio_dettagli').select('verbale_id,convocazione_id'),
-   sb.from('convocazioni_firmate').select('convocazione_id'),
-   sb.from('verbali_firmati').select('verbale_id')
+   sb.from('convocazioni_firmate').select('convocazione_id,storage_path,nome_file,dimensione_bytes,caricato_il'),
+   sb.from('verbali_firmati').select('verbale_id,storage_path,nome_file,dimensione_bytes,caricato_il')
   ]);
   for(const r of [cr,mr,ar,br,cs,ms])if(r.error)throw r.error;
   const calls=cr.data||[],minutes=mr.data||[],minuteById=Object.fromEntries(minutes.map(v=>[String(v.id),v]));
-  const callSigned={};(cs.data||[]).forEach(x=>callSigned[String(x.convocazione_id)]=true);
-  const minuteSigned={};(ms.data||[]).forEach(x=>minuteSigned[String(x.verbale_id)]=true);
+  const callSigned={};(cs.data||[]).forEach(x=>callSigned[String(x.convocazione_id)]=x);
+  const minuteSigned={};(ms.data||[]).forEach(x=>minuteSigned[String(x.verbale_id)]=x);
   const boardRelByCall={};(br.data||[]).forEach(x=>boardRelByCall[String(x.convocazione_id)]=x);
   const assemblyRelByCall={};(ar.data||[]).forEach(x=>assemblyRelByCall[String(x.convocazione_id)]=x);
   const usedMinutes=new Set(),out=[];
@@ -706,7 +798,7 @@ async function loadDossiers(){
    const rel=boardRelByCall[String(call.id)]||null,minute=rel?minuteById[String(rel.verbale_id)]||null:null;
    if(minute)usedMinutes.add(String(minute.id));
    const complete=!!callSigned[String(call.id)]&&!!minute&&minute.stato==='APPROVATO'&&!!minuteSigned[String(minute.id)];
-   out.push({key:'B:'+call.id,type:'CONSIGLIO_DIRETTIVO',typeLabel:'Consiglio Direttivo',title:call.oggetto||call.titolo||'Riunione',date:call.data_riunione||'',calls:[call],minute,callSigned,minuteSigned:minute?!!minuteSigned[String(minute.id)]:false,complete});
+   out.push({key:'B:'+call.id,type:'CONSIGLIO_DIRETTIVO',typeLabel:'Consiglio Direttivo',title:call.oggetto||call.titolo||'Riunione',date:call.data_riunione||'',calls:[call],minute,callSigned,minuteSigned:minute?(minuteSigned[String(minute.id)]||null):null,complete});
   });
 
   const groups={};
@@ -724,7 +816,7 @@ async function loadDossiers(){
   });
 
   minutes.filter(v=>['CONSIGLIO_DIRETTIVO','ASSEMBLEA_SOCI'].includes(v.tipo_riunione)&&!usedMinutes.has(String(v.id))).forEach(v=>{
-   out.push({key:'M:'+v.id,type:v.tipo_riunione,typeLabel:minuteTypeLabel(v.tipo_riunione),title:v.titolo||'Verbale senza convocazione',date:v.data_riunione||'',calls:[],minute:v,callSigned,minuteSigned:!!minuteSigned[String(v.id)],complete:false});
+   out.push({key:'M:'+v.id,type:v.tipo_riunione,typeLabel:minuteTypeLabel(v.tipo_riunione),title:v.titolo||'Verbale senza convocazione',date:v.data_riunione||'',calls:[],minute:v,callSigned,minuteSigned:minuteSigned[String(v.id)]||null,complete:false});
   });
   dossierRows=out.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
   renderDossiers();msg('fMsg','');
@@ -1789,7 +1881,7 @@ function activityActionLabel(v){
   CREAZIONE:'Creazione',MODIFICA:'Modifica',APPROVAZIONE:'Approvazione',FINALIZZAZIONE:'Finalizzazione',
   DUPLICAZIONE:'Duplicazione',PDF_CARICATO:'PDF caricato',PDF_SOSTITUITO:'PDF sostituito',PDF_ELIMINATO:'PDF eliminato',
   ANNULLAMENTO:'Annullamento',DESERTA:'Convocazione deserta',ACCESSO_ABILITATO:'Accesso abilitato',
-  ACCESSO_MODIFICATO:'Accesso modificato',ACCESSO_DISATTIVATO:'Accesso disattivato',ACCESSO_RIATTIVATO:'Accesso riattivato'
+  ACCESSO_MODIFICATO:'Accesso modificato',ACCESSO_DISATTIVATO:'Accesso disattivato',ACCESSO_RIATTIVATO:'Accesso riattivato',ESPORTAZIONE_FASCICOLO:'Esportazione fascicolo'
  })[v]||v||'—';
 }
 function activityPillClass(v){
