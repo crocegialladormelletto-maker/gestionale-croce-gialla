@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.22</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.23</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.22</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.23</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -713,6 +713,13 @@ function assemblyCallLabel(v){
  const t=v.ora_prima?String(v.ora_prima).slice(0,5):'';
  return (v.convocazione_codice||'Convocazione')+' · '+phase+' · '+d+(t?' ore '+t:'');
 }
+function assemblyCallPrintLabel(){
+ const id=$('vAssemblyCall')?.value||'';
+ const v=assemblyMinuteCalls.find(x=>String(x.id)===String(id));
+ if(!v)return '';
+ const phase=v.fase_convocazione==='PRIMA'?'1ª convocazione':v.fase_convocazione==='SECONDA'?'2ª convocazione':'Convocazione';
+ return (v.convocazione_codice||'Convocazione')+' · '+phase;
+}
 async function loadAssemblyMinuteCalls(selectedId=null,applySelection=false){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
  const select=$('vAssemblyCall');if(!select)return;
@@ -999,7 +1006,7 @@ function printMinute(){
   tipo_riunione:$('vType').value,data_riunione:$('vDate').value,ora_inizio:$('vStart').value,ora_fine:$('vEnd').value,luogo:$('vPlace').value,titolo:$('vHeading').value,
   ordine_giorno:minuteAgendaText(),presenti:$('vPresent').value,assenti:$('vAbsent').value,invitati:$('vGuests').value,svolgimento:$('vProceedings').value,
   deliberazioni:$('vDecisions').value,votazione:$('vVote').value,presidente:$('vPresident').value,segretario:$('vSecretary').value,note:$('vNotes').value,stato:$('vStatus').value,
-  convocazione_label:$('vAssemblyCall')?.selectedOptions?.[0]?.textContent||'',soci_aventi_diritto:$('vAssemblyEligible')?.value||'',soci_presenti_num:$('vAssemblyPresentCount')?.value||'',deleghe:$('vAssemblyDelegations')?.value||'',quorum:$('vAssemblyQuorum')?.selectedOptions?.[0]?.textContent||''
+  convocazione_label:assemblyCallPrintLabel(),soci_aventi_diritto:$('vAssemblyEligible')?.value||'',soci_presenti_num:$('vAssemblyPresentCount')?.value||'',deleghe:$('vAssemblyDelegations')?.value||'',quorum:$('vAssemblyQuorum')?.selectedOptions?.[0]?.textContent||''
  };
  const clean=v=>String(v||'').trim();
  const shortTime=v=>v?String(v).slice(0,5):'';
