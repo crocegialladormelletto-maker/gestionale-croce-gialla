@@ -633,7 +633,7 @@
 <button class="nav" data-v="new">✚ Nuovo servizio</button>
 <button class="nav" data-v="crew">👥 Equipaggi</button>
 <button class="nav sep" data-v="people" data-admin-only="true">🪪 Volontari</button>
-<button class="nav" type="button" data-admin-only="true" onclick="location.href='personale-formazione/'">🎓 Personale e formazione</button>
+<button class="nav" type="button" data-admin-only="true" data-href="personale-formazione/">🎓 Personale e formazione</button>
 <button class="nav" data-v="shifts">🕒 Turni</button>
 <button class="nav" data-v="availability">📅 Disponibilità</button>
 <button class="nav sep" data-v="vehicles">🚐 Mezzi e scadenze</button>
@@ -2115,7 +2115,7 @@ async function view(v,options={}){
  selectView(v);
  return result;
 }
-document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>view(b.dataset.v));
+document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>{if(b.dataset.href){location.href=b.dataset.href;return}view(b.dataset.v)});
 function volunteerGoTo(target){
  const el=$(target);if(!el)return;
  $('volApp').querySelector('.vol-layout')?.classList.remove('vol-menu-open');
