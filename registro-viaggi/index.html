@@ -43,7 +43,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.17</div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.18</div></div>
 
   <section id="dashboard" class="view">
     <div class="notice"><span class="demo">DATI DEMO:</span> questa prima versione contiene alcuni viaggi di esempio, cancellabili dall'Archivio.</div>
@@ -116,16 +116,29 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   </section>
 
   <section id="statistiche" class="view">
-    <div class="panel" style="padding:14px"><div class="section-title"><div><h2 style="margin:0">Statistiche mensili</h2><div id="statoMeseStatistiche" style="font-size:12px;font-weight:800;color:#526077;margin-top:6px"></div></div><input id="meseStatistiche" type="month" onchange="renderStats()" style="padding:10px;border:1px solid #ccd5e2;border-radius:9px"></div></div>
+    <div class="panel" style="padding:14px">
+      <div class="section-title">
+        <div><h2 style="margin:0">Statistiche mensili</h2><div id="statoMeseStatistiche" style="font-size:12px;font-weight:800;color:#526077;margin-top:6px"></div><div id="snapshotInfo" style="font-size:12px;color:#68758a;margin-top:4px"></div></div>
+        <input id="meseStatistiche" type="month" onchange="renderStats()" style="padding:10px;border:1px solid #ccd5e2;border-radius:9px">
+      </div>
+    </div>
     <div class="cards">
       <div class="card"><div class="lab">VIAGGI TOTALI</div><div id="sViaggi" class="val">0</div></div>
       <div class="card"><div class="lab">KM TOTALI</div><div id="sKm" class="val">0</div></div>
       <div class="card"><div class="lab">IMPORTI TOTALI</div><div id="sImporti" class="val">€ 0</div></div>
       <div class="card"><div class="lab">MEDIA KM / VIAGGIO</div><div id="sMedia" class="val">0</div></div>
+      <div class="card"><div class="lab">SERVIZI CON SCHEDA 118</div><div id="s118" class="val">0</div></div>
+      <div class="card"><div class="lab">RICHIESTE PRIVATE</div><div id="sPrivati" class="val">0</div></div>
+      <div class="card"><div class="lab">IMPORTO MEDIO / VIAGGIO</div><div id="sImportoMedio" class="val">€ 0</div></div>
+      <div class="card"><div class="lab">VIAGGI CON INCASSO</div><div id="sPagati" class="val">0</div></div>
     </div>
     <div class="grid2">
       <div class="panel"><h2>Viaggi per mezzo</h2><div id="barsStats" class="bars"></div></div>
+      <div class="panel"><h2>Tipo servizio</h2><div id="tipoStats"></div></div>
+      <div class="panel"><h2>Richiedente servizio</h2><div id="richiedenteStats"></div></div>
+      <div class="panel"><h2>Metodi di pagamento e incassi</h2><div id="pagamentiStats"></div></div>
       <div class="panel"><h2>Destinazioni più frequenti</h2><div id="destStats"></div></div>
+      <div class="panel"><h2>Riepilogo mese</h2><div id="riepilogoStats"></div></div>
     </div>
   </section>
 
@@ -159,16 +172,48 @@ const vehicles=[
 ];
 const key='cge_registro_viaggi_v1';
 const closedKey='cge_registro_viaggi_mesi_chiusi_v1';
+const statsKey='cge_registro_viaggi_statistiche_chiuse_v1';
+function getStatsSnapshots(){try{return JSON.parse(localStorage.getItem(statsKey)||'{}')}catch(e){return {}}}
+function saveStatsSnapshots(v){localStorage.setItem(statsKey,JSON.stringify(v))}
+function countField(a,field){const o={};a.forEach(x=>{const k=(x[field]||'Non specificato').trim()||'Non specificato';o[k]=(o[k]||0)+1});return o}
+function buildMonthStats(ym){
+  const a=getTrips().filter(x=>(x.data||'').startsWith(ym));
+  const km=a.reduce((s,x)=>s+(+x.km||0),0);
+  const importi=a.reduce((s,x)=>s+(+x.importo||0),0);
+  const pagamenti={};
+  a.forEach(x=>{const k=(x.metodoPagamento||'Non specificato').trim()||'Non specificato';if(!pagamenti[k])pagamenti[k]={viaggi:0,importo:0};pagamenti[k].viaggi++;pagamenti[k].importo+=(+x.importo||0)});
+  return {
+    mese:ym,
+    viaggi:a.length,
+    km,
+    importi,
+    mediaKm:a.length?km/a.length:0,
+    schede118:a.filter(x=>(x.scheda118||'').trim()).length,
+    privati:a.filter(x=>(x.richiedenteServizio||'').toUpperCase()==='PRIVATO').length,
+    importoMedio:a.length?importi/a.length:0,
+    viaggiConIncasso:a.filter(x=>(+x.importo||0)>0).length,
+    perMezzo:countField(a,'mezzo'),
+    perTipo:countField(a,'tipoServizio'),
+    perRichiedente:countField(a,'richiedenteServizio'),
+    destinazioni:countField(a,'destinazione'),
+    pagamenti,
+    generatoIl:new Date().toISOString()
+  };
+}
 function currentYM(){return new Date().toISOString().slice(0,7)}
 function getClosedMonths(){try{return JSON.parse(localStorage.getItem(closedKey)||'{}')}catch(e){return {}}}
 function saveClosedMonths(v){localStorage.setItem(closedKey,JSON.stringify(v))}
 function autoCloseMonths(){
-  const a=getTrips(), current=currentYM(), closed=getClosedMonths();
-  a.forEach(x=>{
-    const ym=(x.data||'').slice(0,7);
-    if(ym && ym<current && closed[ym]!==false) closed[ym]=true;
+  const a=getTrips(), current=currentYM(), closed=getClosedMonths(), snaps=getStatsSnapshots();
+  const months=[...new Set(a.map(x=>(x.data||'').slice(0,7)).filter(Boolean))];
+  months.forEach(ym=>{
+    if(ym<current && closed[ym]!==false){
+      closed[ym]=true;
+      if(!snaps[ym]) snaps[ym]=buildMonthStats(ym);
+    }
   });
   saveClosedMonths(closed);
+  saveStatsSnapshots(snaps);
 }
 function isMonthClosed(ym){
   if(!ym) return false;
@@ -246,7 +291,15 @@ function clearFilters(){fSearch.value='';fDal.value='';fAl.value='';fMezzo.value
 function countsByVehicle(a){return vehicles.map(v=>({name:v.name,n:a.filter(x=>x.mezzo===v.name).length}))}
 function renderBars(target,a){const c=countsByVehicle(a),mx=Math.max(1,...c.map(x=>x.n));document.getElementById(target).innerHTML=c.map(x=>'<div class="barrow"><b>'+x.name+'</b><div class="bar"><i style="width:'+(x.n/mx*100)+'%"></i></div><span>'+x.n+' viaggi</span></div>').join('')}
 function renderDashboard(){const a=getTrips(),now=new Date(),ym=now.toISOString().slice(0,7),m=a.filter(x=>x.data.startsWith(ym));kViaggi.textContent=m.length;kKm.textContent=m.reduce((s,x)=>s+(+x.km||0),0).toLocaleString('it-IT');kImporti.textContent=money(m.reduce((s,x)=>s+(+x.importo||0),0));const c=countsByVehicle(m).sort((x,y)=>y.n-x.n);kMezzo.textContent=c[0]&&c[0].n?c[0].name.replace('Ambulanza ',''):'–';const u=a.slice().sort((x,y)=>y.data.localeCompare(x.data)).slice(0,5);ultimi.innerHTML=u.length?'<div class="tablewrap"><table style="min-width:0"><thead><tr><th>Data</th><th>Mezzo</th><th>Destinazione</th><th>Km</th></tr></thead><tbody>'+u.map(x=>'<tr><td>'+esc(x.data)+'</td><td>'+esc(x.mezzo)+'</td><td>'+esc(x.destinazione)+'</td><td>'+x.km+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">Nessun viaggio</div>';renderBars('barsDashboard',m)}
-function renderStats(){const ym=(meseStatistiche&&meseStatistiche.value)||'';if(document.getElementById('statoMeseStatistiche'))statoMeseStatistiche.textContent=monthStatusText(ym);const a=getTrips().filter(x=>!ym||x.data.startsWith(ym)),km=a.reduce((s,x)=>s+(+x.km||0),0),imp=a.reduce((s,x)=>s+(+x.importo||0),0);sViaggi.textContent=a.length;sKm.textContent=km.toLocaleString('it-IT');sImporti.textContent=money(imp);sMedia.textContent=a.length?Math.round(km/a.length):0;renderBars('barsStats',a);const d={};a.forEach(x=>{if(x.destinazione)d[x.destinazione]=(d[x.destinazione]||0)+1});const rows=Object.entries(d).sort((a,b)=>b[1]-a[1]).slice(0,8);destStats.innerHTML=rows.length?'<table style="min-width:0"><thead><tr><th>Destinazione</th><th>Viaggi</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+r[1]+'</td></tr>').join('')+'</tbody></table>':'<div class="empty">Nessun dato</div>'}
+function statsTable(obj,valueLabel='Viaggi'){
+  const rows=Object.entries(obj||{}).sort((a,b)=>b[1]-a[1]);
+  return rows.length?'<table style="min-width:0"><thead><tr><th>Voce</th><th>'+valueLabel+'</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+r[1]+'</td></tr>').join('')+'</tbody></table>':'<div class="empty">Nessun dato</div>';
+}
+function paymentTable(obj){
+  const rows=Object.entries(obj||{}).sort((a,b)=>b[1].importo-a[1].importo);
+  return rows.length?'<table style="min-width:0"><thead><tr><th>Metodo</th><th>Viaggi</th><th>Importo</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+r[1].viaggi+'</td><td>'+money(r[1].importo)+'</td></tr>').join('')+'</tbody></table>':'<div class="empty">Nessun dato</div>';
+}
+function renderStats(){const ym=(meseStatistiche&&meseStatistiche.value)||'';if(document.getElementById('statoMeseStatistiche'))statoMeseStatistiche.textContent=monthStatusText(ym);const closed=isMonthClosed(ym),snaps=getStatsSnapshots();const s=(closed&&snaps[ym])?snaps[ym]:buildMonthStats(ym);sViaggi.textContent=s.viaggi;sKm.textContent=Math.round(s.km).toLocaleString('it-IT');sImporti.textContent=money(s.importi);sMedia.textContent=Math.round(s.mediaKm);s118.textContent=s.schede118;sPrivati.textContent=s.privati;sImportoMedio.textContent=money(s.importoMedio);sPagati.textContent=s.viaggiConIncasso;const fake=[];Object.entries(s.perMezzo||{}).forEach(([name,n])=>{for(let i=0;i<n;i++)fake.push({mezzo:name})});renderBars('barsStats',fake);tipoStats.innerHTML=statsTable(s.perTipo);richiedenteStats.innerHTML=statsTable(s.perRichiedente);pagamentiStats.innerHTML=paymentTable(s.pagamenti);const destRows=Object.entries(s.destinazioni||{}).sort((a,b)=>b[1]-a[1]).slice(0,10);destStats.innerHTML=destRows.length?'<table style="min-width:0"><thead><tr><th>Destinazione</th><th>Viaggi</th></tr></thead><tbody>'+destRows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+r[1]+'</td></tr>').join('')+'</tbody></table>':'<div class="empty">Nessun dato</div>';riepilogoStats.innerHTML='<table style="min-width:0"><tbody><tr><th>Mese</th><td>'+esc(ym||'—')+'</td></tr><tr><th>Stato</th><td>'+(closed?'Chiuso':'Aperto')+'</td></tr><tr><th>Viaggi</th><td>'+s.viaggi+'</td></tr><tr><th>Km</th><td>'+Math.round(s.km).toLocaleString('it-IT')+'</td></tr><tr><th>Importi</th><td>'+money(s.importi)+'</td></tr><tr><th>Schede 118</th><td>'+s.schede118+'</td></tr></tbody></table>';snapshotInfo.textContent=closed&&s.generatoIl?'Statistiche consolidate alla chiusura del mese':'Statistiche aggiornate in tempo reale';}
 function exportCSV(){const a=getTrips();const cols=['numero','data','tipoServizio','richiedenteServizio','scheda118','oraPartenza','partenza','oraDest','destinazione','oraFine','autista','capo','soc1','soc2','accompagnatore','importo','rsa','ospedale','note'];const line=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const csv='\ufeff'+cols.join(';')+'\n'+a.map(x=>cols.map(c=>line(x[c])).join(';')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),el=document.createElement('a');el.href=url;el.download='registro_viaggi_croce_gialla.csv';el.click();URL.revokeObjectURL(url)}
 function resetDemo(){if(confirm('Ripristinare i dati demo? I viaggi attuali saranno sostituiti.')){saveTrips(demoData())}}
 function clearAll(){if(confirm('ATTENZIONE: cancellare tutti i viaggi registrati?'))saveTrips([])}
