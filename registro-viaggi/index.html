@@ -56,7 +56,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione operativa V2.0</div></div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione operativa V2.1</div></div></div>
 
   <section id="dashboard" class="view">
     <div class="notice"><b>REGISTRO OPERATIVO:</b> i dati sono salvati nel database condiviso e protetti da accesso autenticato.</div>
@@ -137,6 +137,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
     <div class="cards">
       <div class="card"><div class="lab">VIAGGI TOTALI</div><div id="sViaggi" class="val">0</div></div>
       <div class="card"><div class="lab">KM TOTALI</div><div id="sKm" class="val">0</div></div>
+      <div class="card"><div class="lab">KM EMERGENZA / URGENZA</div><div id="sKmEmergenza" class="val">0</div><div class="sub">solo servizi Emergenza / Urgenza</div></div>
       <div class="card"><div class="lab">IMPORTI TOTALI</div><div id="sImporti" class="val">€ 0</div></div>
       <div class="card"><div class="lab">MEDIA KM / VIAGGIO</div><div id="sMedia" class="val">0</div></div>
       <div class="card"><div class="lab">SERVIZI CON SCHEDA 118</div><div id="s118" class="val">0</div></div>
@@ -177,6 +178,6 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="app.js?v=2.0"></script>
+<script src="app.js?v=2.1"></script>
 </body>
 </html>
