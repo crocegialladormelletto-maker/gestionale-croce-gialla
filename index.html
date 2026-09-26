@@ -222,6 +222,35 @@
  #dash .dim-dash-main,#dash .dim-dash-side{height:auto!important;max-height:none!important;overflow:visible!important}
 }
 
+/* Centralino desktop: replica in modo esplicito le tre colonne indipendenti
+   dell'Amministrazione (menu sinistro, contenuto centrale, colonna destra). */
+@media (min-width:1121px) and (min-height:500px){
+ body.cge-role-centralino #dash .dim-dash-layout{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(310px,360px)!important;
+  height:calc(100vh - 300px)!important;
+  height:calc(100dvh - 300px)!important;
+  min-height:280px!important;
+  overflow:hidden!important;
+  align-items:stretch!important;
+ }
+ body.cge-role-centralino #dash .dim-dash-main,
+ body.cge-role-centralino #dash .dim-dash-side{
+  min-height:0!important;
+  min-width:0!important;
+  height:100%!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior-y:contain!important;
+  scrollbar-gutter:stable!important;
+ }
+ body.cge-role-centralino #dash .dim-dash-side{
+  position:static!important;
+  align-self:stretch!important;
+ }
+}
+
 
 .as-month-grid .as-month-date{min-height:76px}
 .as-month-grid .as-month-date .as-month-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
@@ -2093,6 +2122,8 @@ function centralinoLoginEmail(){return 'centralino@access.crocegiallaemergenza.i
 function monitorLoginEmail(){return 'monitor@access.crocegiallaemergenza.it'}
 function applyRoleUI(){
  const isCentral=prof?.ruolo==='CENTRALINO';
+ document.body.classList.toggle('cge-role-centralino',isCentral);
+ document.body.classList.toggle('cge-role-amministrazione',prof?.ruolo==='AMMINISTRATORE');
  document.querySelectorAll('[data-admin-only="true"]').forEach(x=>{
   if(isCentral)x.classList.add('hidden');
   else if(x.tagName!=='SECTION')x.classList.remove('hidden');
