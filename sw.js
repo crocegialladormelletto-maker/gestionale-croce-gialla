@@ -1,5 +1,5 @@
 // Questa versione aggiorna la PWA esistente senza richiedere una nuova installazione.
-const CACHE_NAME = 'cge-volontari-static-v21';
+const CACHE_NAME = 'cge-volontari-static-v22';
 const APP_BASE = '/gestionale-croce-gialla/';
 const STATIC_ASSETS = new Set([
   APP_BASE + 'manifest.json',
