@@ -617,7 +617,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.50</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.51</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -2161,7 +2161,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.50':'Versione 13.50';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.51':'Versione 13.51';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -3273,6 +3273,18 @@ function dashOpsGroup(rows){
  });
  return [...map.entries()].sort((a,b)=>dashOpsFasciaOrder(a[0])-dashOpsFasciaOrder(b[0]));
 }
+function dashOpsCurrentEmergencyFascia(){
+ const parts=new Intl.DateTimeFormat('en-GB',{
+  timeZone:'Europe/Rome',hour:'2-digit',minute:'2-digit',hour12:false
+ }).formatToParts(new Date());
+ const hh=Number(parts.find(x=>x.type==='hour')?.value||0)%24;
+ const mm=Number(parts.find(x=>x.type==='minute')?.value||0);
+ const mins=hh*60+mm;
+ if(mins>=7*60&&mins<14*60)return 'MATTINO';
+ if(mins>=14*60&&mins<19*60)return 'POMERIGGIO';
+ if(mins>=19*60)return 'SERA';
+ return 'NOTTE';
+}
 function dashOpsCrewBlock(title,rows,showVehicle){
  const groups=dashOpsGroup(rows);
  if(!groups.length)return '<div class="ops-empty">'+esc(title)+': nessuna iscrizione per oggi.</div>';
@@ -3309,18 +3321,27 @@ async function loadOperationalDashboard(){
  $('dashOpsTravelOpen').textContent=String(fogli.filter(x=>x.stato==='APERTO').length);
  $('dashOpsTravelClosed').textContent=String(fogli.filter(x=>x.stato==='CHIUSO').length);
 
+ const activeEmergencyFascia=dashOpsCurrentEmergencyFascia();
+ const emergencyVehicles=new Set(
+  emgRows.filter(x=>x.fascia===activeEmergencyFascia&&x.mezzo).map(x=>String(x.mezzo))
+ );
  $('dashVehicleStatus').innerHTML=mezzi.length?mezzi.map(m=>{
   const todayServices=services.filter(x=>x.mezzo===m.codice);
   const openSheet=fogli.some(x=>x.mezzo===m.codice&&x.stato==='APERTO');
   const status=String(m.stato_operativo||'DISPONIBILE').toUpperCase();
   const alert=!m.attivo||!['DISPONIBILE','OPERATIVO'].includes(status);
-  const busy=openSheet||todayServices.some(x=>['IN CORSO','PRESO IN CARICO'].includes(String(x.stato_gestionale||x.stato_operativo||'').toUpperCase()));
+  const emergencyBusy=emergencyVehicles.has(String(m.codice));
+  const serviceBusy=openSheet||todayServices.some(x=>['IN CORSO','PRESO IN CARICO'].includes(String(x.stato_gestionale||x.stato_operativo||'').toUpperCase()));
+  const busy=emergencyBusy||serviceBusy;
   const cls=alert?'ops-vehicle-alert':busy?'ops-vehicle-busy':'ops-vehicle-ok';
-  const badge=alert?(m.attivo?status:'NON ATTIVO'):busy?'IMPEGNATO':'DISPONIBILE';
+  const badge=alert?(m.attivo?status:'NON ATTIVO'):emergencyBusy?'EMERGENZA 118':busy?'IMPEGNATO':'DISPONIBILE';
+  const detail=emergencyBusy
+   ?'In turno Emergenza 118 · '+activeEmergencyFascia+' '+volFasciaOrario(activeEmergencyFascia)
+   :todayServices.length+' servizio/i oggi'+(openSheet?' · foglio aperto':'');
   return '<div class="ops-vehicle-card '+cls+'"><strong>Mezzo '+esc(m.codice)+'</strong>'+
    '<small>'+esc(m.targa||'Targa —')+(m.km_attuali!==null&&m.km_attuali!==undefined?' · '+esc(m.km_attuali)+' km':'')+'</small>'+
    '<span class="pill '+(alert?'r':busy?'':'g')+'">'+esc(badge)+'</span>'+
-   '<small>'+todayServices.length+' servizio/i oggi'+(openSheet?' · foglio aperto':'')+'</small></div>';
+   '<small>'+esc(detail)+'</small></div>';
  }).join(''):'<div class="ops-empty">Impossibile caricare lo stato dei mezzi.</div>';
 
  $('dashTodayCrews').innerHTML=
@@ -6223,7 +6244,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.50-20260926-centralino-colonne-indipendenti';
+const CGE_APP_BUILD='13.51-20260926-stato-mezzi-emergenza';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
