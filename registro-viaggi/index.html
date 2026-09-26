@@ -56,7 +56,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione operativa V2.2</div></div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione operativa V2.3</div></div></div>
 
   <section id="dashboard" class="view">
     <div class="notice"><b>REGISTRO OPERATIVO:</b> i dati sono salvati nel database condiviso e protetti da accesso autenticato.</div>
@@ -87,7 +87,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
           <div class="field"><label>COGNOME PAZIENTE</label><input id="cognomePaziente" placeholder="Cognome"></div>
                     <div class="field"><label>MEZZO</label><select id="mezzo" required></select></div>
           <div class="field"><label>TARGA</label><input id="targa" readonly required></div>
-          <div class="field"><label>KM INIZIALI</label><input id="kmIniziali" type="number" min="0" step="1" required></div>
+          <div class="field"><label>KM INIZIALI</label><input id="kmIniziali" type="number" min="0" step="1" required><div id="kmContinuityHint" style="font-size:11px;color:#68758a;min-height:14px"></div></div>
           <div class="field"><label>KM FINALI</label><input id="kmFinali" type="number" min="0" step="1" required></div>
           <div class="field"><label>KM PERCORSI</label><input id="km" type="number" min="0" step="1" readonly></div>
           <div class="field"><label>ORA PARTENZA</label><input id="oraPartenza" type="time"></div>
@@ -154,6 +154,9 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
       <div class="panel"><h2>Destinazioni più frequenti</h2><div id="destStats"></div></div>
       <div class="panel"><h2>Riepilogo mese</h2><div id="riepilogoStats"></div></div>
     </div>
+    <div class="panel" style="margin-top:20px"><div class="section-title"><div><h2 style="margin:0">Statistiche annuali</h2><div style="font-size:12px;color:#68758a;margin-top:4px">Riepilogo da gennaio a dicembre</div></div><input id="annoStatistiche" type="number" min="2020" max="2100" style="padding:10px;border:1px solid #ccd5e2;border-radius:9px;width:110px"></div></div>
+    <div class="cards"><div class="card"><div class="lab">VIAGGI ANNO</div><div id="aViaggi" class="val">0</div></div><div class="card"><div class="lab">KM ANNO</div><div id="aKm" class="val">0</div></div><div class="card"><div class="lab">KM EMERGENZA ANNO</div><div id="aKmEmergenza" class="val">0</div></div><div class="card"><div class="lab">IMPORTI ANNO</div><div id="aImporti" class="val">€ 0</div></div></div>
+    <div class="grid2"><div class="panel"><h2>KM annuali per mezzo</h2><div id="aKmMezzo"></div></div><div class="panel"><h2>KM per mese</h2><div id="aKmMese"></div></div></div>
   </section>
 
   <section id="mezzi" class="view">
@@ -179,6 +182,6 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="app.js?v=2.2"></script>
+<script src="app.js?v=2.3"></script>
 </body>
 </html>
