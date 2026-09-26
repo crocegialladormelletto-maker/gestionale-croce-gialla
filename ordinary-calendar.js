@@ -43,12 +43,14 @@ function ordDrawDay(){
   .sort((a,b)=>String(a.ora_partenza_prevista||'99:99').localeCompare(String(b.ora_partenza_prevista||'99:99')));
  $('ordDayList').innerHTML=services.length?services.map(s=>{
   const crew=ordCrew.filter(x=>x.servizio_id===s.id),st=ordStatus(s,crew);
+  const editable=s.data_servizio>=todaySafe()&&!['ANNULLATO','CHIUSO','TERMINATO','DA CONTABILIZZARE'].includes(String(s.stato_gestionale||'').toUpperCase());
   const names=crew.length?crew.map(x=>{
    const name=people.find(p=>p.badge===x.badge_personale)?.nome_completo||x.badge_personale;
-   return '<div class="dim-person">• '+esc(name)+' · '+esc(ordRoles.find(r=>r[0]===x.ruolo)?.[1]||x.ruolo)+'</div>';
+   return '<div class="dim-person">• '+esc(name)+' · '+esc(ordRoles.find(r=>r[0]===x.ruolo)?.[1]||x.ruolo)+
+    (editable?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:6px" data-ord-remove="'+esc(x.id)+'">Rimuovi</button>':'')+
+    '</div>';
   }).join(''):'<div class="muted">Nessun componente assegnato.</div>';
   const patient=[s.paziente_nome,s.paziente_cognome].filter(Boolean).join(' ');
-  const editable=s.data_servizio>=todaySafe()&&!['ANNULLATO','CHIUSO','TERMINATO','DA CONTABILIZZARE'].includes(String(s.stato_gestionale||'').toUpperCase());
   return '<div class="dim-slot ord-card" data-ord-id="'+esc(s.id)+'"><b>🚐 '+esc(s.tipo_servizio)+'</b> '+
    '<span class="pill '+(st.ok?'g':'')+'">'+esc(st.label)+'</span>'+
    '<div class="muted">Partenza: '+esc(s.luogo_partenza||'—')+' → '+esc(s.destinazione||s.ospedale_destinazione||'—')+
@@ -63,6 +65,7 @@ function ordDrawDay(){
    '<div class="ord-editor" id="ordEditor-'+esc(s.id)+'"></div></div>';
  }).join(''):'<div class="notice">Nessun servizio ordinario programmato per questo giorno. Per crearne uno scegli «Nuovo servizio».</div>';
  $('ordDayList').querySelectorAll('[data-ord-add]').forEach(b=>b.onclick=()=>ordOpen(b.dataset.ordAdd));
+ $('ordDayList').querySelectorAll('[data-ord-remove]').forEach(b=>b.onclick=()=>ordRemoveAssignment(b.dataset.ordRemove));
  $('ordDayList').querySelectorAll('[data-ord-open]').forEach(b=>b.onclick=()=>openService(b.dataset.ordOpen));
 }
 async function loadOrdinaryCalendar(){
@@ -78,7 +81,7 @@ async function loadOrdinaryCalendar(){
  const services=(response.data||[]).filter(s=>ordType(s.tipo_servizio)&&
    String(s.stato||'').toUpperCase()!=='ANNULLATO'&&String(s.stato_gestionale||'').toUpperCase()!=='ANNULLATO');
  const cr=services.length?await sb.from('servizi_equipaggio')
-  .select('servizio_id,badge_personale,ruolo').in('servizio_id',services.map(s=>s.id)):
+  .select('id,servizio_id,badge_personale,ruolo').in('servizio_id',services.map(s=>s.id)):
   {data:[],error:null};
  if(seq!==ordSeq)return;
  if(cr.error)return msg('ordMsg','Errore lettura equipaggi: '+cr.error.message,'err');
@@ -143,6 +146,25 @@ async function ordAssign(id){
   else msg('ordMsg',e.message||String(e),'err');
  }finally{ordBusy=false;const btn=$('ordEditor-'+id)?.querySelector('[data-ord-confirm]');if(btn)btn.disabled=false}
 }
+async function ordRemoveAssignment(id){
+ if(ordBusy||!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const row=ordCrew.find(x=>x.id===id);
+ if(!row)return msg('ordMsg','Componente non trovato. Aggiorna il calendario.','warn');
+ const service=ordItems.find(x=>x.id===row.servizio_id);
+ if(!service)return msg('ordMsg','Servizio non trovato. Aggiorna il calendario.','warn');
+ const name=people.find(p=>p.badge===row.badge_personale)?.nome_completo||row.badge_personale;
+ const role=ordRoles.find(r=>r[0]===row.ruolo)?.[1]||row.ruolo;
+ if(!confirm('Rimuovere '+name+' ('+role+') dall’equipaggio del servizio '+service.tipo_servizio+' del '+service.data_servizio+'?'))return;
+ ordBusy=true;msg('ordMsg','Rimozione componente in corso...');
+ try{
+  const r=await sb.from('servizi_equipaggio').delete().eq('id',id).eq('servizio_id',row.servizio_id);
+  if(r.error)throw r.error;
+  await loadOrdinaryCalendar();
+  msg('ordMsg','Componente rimosso. Puoi assegnare subito la persona o il ruolo corretto.','ok');
+ }catch(e){msg('ordMsg',e.message||String(e),'err')}
+ finally{ordBusy=false}
+}
+
 function ordMove(n){
  if(n===0){ordCursor=new Date();ordDay=todaySafe()}
  else{ordCursor=new Date(ordCursor.getFullYear(),ordCursor.getMonth()+n,1);ordDay=calYmd(ordCursor)}
