@@ -35,7 +35,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · V1.0</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · V1.1</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -49,7 +49,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · V1.0</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · V1.1</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -69,6 +69,10 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
       <div class="stat"><small>SCADUTE</small><b id="kpiExpired">0</b></div>
       <div class="stat"><small>ENTRO 30 GIORNI</small><b id="kpi30">0</b></div>
      </div>
+     <div class="section">
+      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🫀 Certificazione DAE</h3><div class="muted">Controllo obbligatorio per tutti i volontari. Avviso automatico da 30 giorni prima della scadenza.</div></div><span id="daeAlertCount" class="pill b">0 da verificare</span></div>
+      <div id="daeAlertList"></div>
+     </div>
      <div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">⚠️ Scadenze più urgenti</h3><div class="muted">Qualifiche e attestati da controllare.</div></div><button class="btn secondary jump" data-go="deadlines">Vedi tutte</button></div><div id="urgentList"></div></div>
      <div class="section"><h3>📊 Copertura qualifiche</h3><div id="coverage"></div></div>
     </div>
@@ -85,7 +89,17 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
        <div class="field"><label>Badge</label><input id="pBadge" disabled></div><div class="field"><label>Nome</label><input id="pName" disabled></div><div class="field"><label>Cognome</label><input id="pSurname" disabled></div><div class="field"><label>Stato</label><input id="pState" disabled></div>
        <div class="field"><label>Telefono</label><input id="pPhone" disabled></div><div class="field"><label>Email</label><input id="pEmail" disabled></div><div class="field"><label>Data ingresso</label><input id="pEntry" disabled></div><div class="field"><label>Data nascita</label><input id="pBirth" disabled></div>
       </div>
-      <div class="section"><h3>🎓 Qualifiche della persona</h3><div id="personQualList"></div>
+      <div class="section">
+       <h3>🫀 Certificazione DAE</h3>
+       <div class="grid3">
+        <div class="field"><label>Data conseguimento / rinnovo</label><input id="daeFrom" type="date"></div>
+        <div class="field"><label>Data scadenza *</label><input id="daeTo" type="date"></div>
+        <div class="field"><label>Stato</label><input id="daeState" disabled></div>
+       </div>
+       <div class="actions" style="margin-top:8px"><button id="saveDae" class="btn yellow">Salva certificazione DAE</button></div><div id="daeMsg"></div>
+       <div class="muted" style="margin-top:6px">La scadenza DAE viene controllata automaticamente e genera un avviso a partire da 30 giorni prima.</div>
+      </div>
+      <div class="section"><h3>🎓 Altre qualifiche della persona</h3><div id="personQualList"></div>
        <div class="grid3" style="margin-top:10px"><div class="field"><label>Aggiungi qualifica</label><select id="newQual"></select></div><div class="field"><label>Valida dal</label><input id="newQualFrom" type="date"></div><div class="field"><label>Valida al</label><input id="newQualTo" type="date"></div></div>
        <div class="actions" style="margin-top:8px"><button id="addQual" class="btn yellow">Aggiungi / aggiorna qualifica</button></div><div id="personQualMsg"></div>
       </div>
@@ -120,6 +134,12 @@ const today=()=>new Date().toISOString().slice(0,10);
 const fmt=d=>d?new Date(d+'T00:00:00').toLocaleDateString('it-IT'):'—';
 function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c+'">'+esc(t)+'</div>':''}
 let people=[],defs=[],pquals=[],docs=[],selectedBadge=null;
+const DAE_CODES=['DAE','BLSD_DAE','BLSD','DAE_BLSD'];
+function daeDef(){return defs.find(q=>DAE_CODES.includes(String(q.codice||'').toUpperCase())||/\bDAE\b|BLSD/i.test(String(q.nome||'')))||null}
+function daeCode(){return daeDef()?.codice||'DAE'}
+function daeRow(badge){const code=daeCode();return pquals.find(q=>q.badge_personale===badge&&q.codice_qualifica===code)||null}
+function daeRequiredRows(){return people.filter(personActive).map(p=>({person:p,row:daeRow(p.badge)}))}
+
 
 function view(id){document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hidden',s.id!==id));document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='deadlines')renderDeadlines();if(id==='qualifications')renderQualificationCards()}
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>view(b.dataset.view));
@@ -131,7 +151,16 @@ function stateFor(d){const n=daysTo(d);return n<0?{key:'SCADUTA',label:'Scaduta'
 function personName(b){return people.find(p=>p.badge===b)?.nome_completo||b}
 function personActive(p){return p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO'}
 
+async function ensureDaeDefinition(){
+ const q=await sb.from('qualifiche').select('codice,nome,attiva,ordine').or('codice.eq.DAE,nome.ilike.%DAE%,nome.ilike.%BLSD%').limit(20);
+ if(q.error)return;
+ if((q.data||[]).some(x=>/\bDAE\b|BLSD/i.test(String(x.nome||''))||String(x.codice||'').toUpperCase()==='DAE'))return;
+ const max=await sb.from('qualifiche').select('ordine').order('ordine',{ascending:false}).limit(1);
+ const ordine=(max.data?.[0]?.ordine||0)+10;
+ await sb.from('qualifiche').insert({codice:'DAE',nome:'Certificazione DAE / BLSD',attiva:true,ordine});
+}
 async function loadAll(){
+ await ensureDaeDefinition();
  const [pr,qr,pqr,dr]=await Promise.all([
   sb.from('personale').select('*').order('cognome'),
   sb.from('qualifiche').select('*').eq('attiva',true).order('ordine'),
@@ -145,7 +174,7 @@ async function loadAll(){
 }
 function allDeadlines(){
  const a=[];
- pquals.forEach(q=>{if(q.valida_al)a.push({badge:q.badge_personale,type:'QUALIFICA',name:qName(q.codice_qualifica),date:q.valida_al,raw:q})});
+ pquals.forEach(q=>{if(q.valida_al)a.push({badge:q.badge_personale,type:'QUALIFICA',name:q.codice_qualifica===daeCode()?'Certificazione DAE':qName(q.codice_qualifica),date:q.valida_al,raw:q})});
  docs.forEach(d=>{if(d.data_scadenza)a.push({badge:d.badge_personale,type:'DOCUMENTO',name:d.titolo||d.nome_file_originale||d.categoria,date:d.data_scadenza,raw:d})});
  return a.sort((x,y)=>String(x.date).localeCompare(String(y.date)));
 }
@@ -153,6 +182,15 @@ function renderDashboard(){
  const dl=allDeadlines(),exp=dl.filter(x=>daysTo(x.date)<0),soon=dl.filter(x=>daysTo(x.date)>=0&&daysTo(x.date)<=30);
  $('kpiActive').textContent=people.filter(personActive).length;
  $('kpiQuals').textContent=pquals.length;$('kpiExpired').textContent=exp.length;$('kpi30').textContent=soon.length;
+ const daeRows=daeRequiredRows();
+ const daeAlerts=daeRows.filter(x=>!x.row?.valida_al||daysTo(x.row.valida_al)<=30);
+ $('daeAlertCount').textContent=daeAlerts.length+' da verificare';
+ $('daeAlertCount').className='pill '+(daeAlerts.length?'r':'g');
+ $('daeAlertList').innerHTML=daeAlerts.length?daeAlerts.map(x=>{
+  if(!x.row?.valida_al)return '<div class="box" style="margin:7px 0;border-left:5px solid #b52d36"><b>'+esc(x.person.nome_completo||x.person.badge)+'</b> <span class="pill r">Scadenza DAE mancante</span><br><span class="muted">Badge '+esc(x.person.badge)+' · inserire la data di scadenza.</span></div>';
+  const d=daysTo(x.row.valida_al),s=stateFor(x.row.valida_al);
+  return '<div class="box" style="margin:7px 0;border-left:5px solid '+(d<0?'#b52d36':'#d6a100')+'"><b>'+esc(x.person.nome_completo||x.person.badge)+'</b> <span class="pill '+s.cls+'">'+esc(d<0?'DAE scaduto':'DAE in scadenza')+'</span><br><span class="muted">Scadenza '+esc(fmt(x.row.valida_al))+' · '+esc(d<0?Math.abs(d)+' gg fa':d===0?'oggi':d+' gg')+'</span></div>';
+ }).join(''):'<div class="notice ok">Tutte le certificazioni DAE risultano oltre i 30 giorni dalla scadenza.</div>';
  const urgent=dl.filter(x=>daysTo(x.date)<=60).slice(0,10);
  $('urgentList').innerHTML=urgent.length?urgent.map(x=>{const s=stateFor(x.date);return '<div class="box" style="margin:7px 0"><b>'+esc(personName(x.badge))+'</b> · '+esc(x.name)+' <span class="pill '+s.cls+'">'+esc(s.label)+'</span><br><span class="muted">'+esc(x.type==='QUALIFICA'?'Qualifica':'Documento')+' · '+esc(fmt(x.date))+' · '+esc(daysTo(x.date)<0?Math.abs(daysTo(x.date))+' gg fa':daysTo(x.date)+' gg')+'</span></div>'}).join(''):'<div class="notice ok">Nessuna scadenza urgente registrata.</div>';
  $('coverage').innerHTML=defs.map(q=>{const n=new Set(pquals.filter(x=>x.codice_qualifica===q.codice).map(x=>x.badge_personale)).size;return '<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><b>'+esc(qName(q.codice))+'</b><span class="pill b">'+n+' persone</span></div></div>'}).join('');
@@ -178,7 +216,7 @@ function renderPeople(){
 ['peopleSearch','peopleState','peopleQual'].forEach(id=>$(id).oninput=renderPeople);
 
 function renderPersonQuals(){
- const rows=pquals.filter(q=>q.badge_personale===selectedBadge).sort((a,b)=>qName(a.codice_qualifica).localeCompare(qName(b.codice_qualifica)));
+ const rows=pquals.filter(q=>q.badge_personale===selectedBadge&&q.codice_qualifica!==daeCode()).sort((a,b)=>qName(a.codice_qualifica).localeCompare(qName(b.codice_qualifica)));
  $('personQualList').innerHTML=rows.length?rows.map(q=>'<div class="qualRow"><div><b>'+esc(qName(q.codice_qualifica))+'</b><div class="muted">'+esc(q.codice_qualifica)+'</div></div><div class="field"><label>Valida dal</label><input type="date" value="'+esc(q.valida_dal||'')+'" data-qfrom="'+esc(q.codice_qualifica)+'"></div><div class="field"><label>Valida al</label><input type="date" value="'+esc(q.valida_al||'')+'" data-qto="'+esc(q.codice_qualifica)+'"></div><div class="actions"><button class="btn secondary" data-qsave="'+esc(q.codice_qualifica)+'">Salva</button><button class="btn danger" data-qremove="'+esc(q.codice_qualifica)+'">Rimuovi</button></div></div>').join(''):'<div class="notice">Nessuna qualifica registrata.</div>';
  document.querySelectorAll('[data-qsave]').forEach(b=>b.onclick=()=>saveQualDates(b.dataset.qsave));
  document.querySelectorAll('[data-qremove]').forEach(b=>b.onclick=()=>removeQual(b.dataset.qremove));
@@ -191,7 +229,11 @@ function openPerson(badge){
  selectedBadge=badge;const p=people.find(x=>x.badge===badge);if(!p)return;
  $('personDetail').classList.remove('hidden');$('personTitle').textContent=p.nome_completo||'Scheda personale';$('personSub').textContent='Badge '+p.badge;
  $('pBadge').value=p.badge||'';$('pName').value=p.nome||'';$('pSurname').value=p.cognome||'';$('pState').value=p.stato_anagrafico||'ATTIVO';$('pPhone').value=p.telefono||'';$('pEmail').value=p.email||'';$('pEntry').value=p.data_ingresso||'';$('pBirth').value=p.data_nascita||'';
- $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');renderPersonQuals();renderPersonDocs();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
+ $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');
+ const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';
+ if(!dr?.valida_al)$('daeState').value='SCADENZA DA INSERIRE';
+ else {const dd=daysTo(dr.valida_al);$('daeState').value=dd<0?'SCADUTA':dd<=30?'IN SCADENZA ENTRO 30 GG':'VALIDA';}
+ renderPersonQuals();renderPersonDocs();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
 
@@ -205,6 +247,19 @@ async function removeQual(code){
  const r=await sb.from('personale_qualifiche').delete().eq('badge_personale',selectedBadge).eq('codice_qualifica',code);
  if(r.error)return msg('personQualMsg',r.error.message,'err');msg('personQualMsg','Qualifica rimossa.','ok');await loadAll();
 }
+$('saveDae').onclick=async()=>{
+ if(!selectedBadge)return msg('daeMsg','Seleziona un volontario.','warn');
+ if(!$('daeTo').value)return msg('daeMsg','Inserisci la data di scadenza DAE.','warn');
+ const code=daeCode(),from=$('daeFrom').value||null,to=$('daeTo').value;
+ const existing=daeRow(selectedBadge);
+ const payload={attiva:true,valida_dal:from,valida_al:to};
+ const r=existing
+  ? await sb.from('personale_qualifiche').update(payload).eq('badge_personale',selectedBadge).eq('codice_qualifica',code)
+  : await sb.from('personale_qualifiche').insert({badge_personale:selectedBadge,codice_qualifica:code,...payload});
+ if(r.error)return msg('daeMsg',r.error.message,'err');
+ msg('daeMsg','Certificazione DAE salvata. L’avviso partirà automaticamente 30 giorni prima della scadenza.','ok');
+ await loadAll();
+};
 $('addQual').onclick=async()=>{
  if(!selectedBadge||!$('newQual').value)return msg('personQualMsg','Seleziona una qualifica.','warn');
  const code=$('newQual').value,from=$('newQualFrom').value||null,to=$('newQualTo').value||null;
@@ -223,7 +278,7 @@ function renderDeadlines(){
 function renderQualificationCards(){
  $('qualificationCards').innerHTML=defs.map(q=>{
   const rows=pquals.filter(x=>x.codice_qualifica===q.codice),active=rows.filter(x=>!x.valida_al||daysTo(x.valida_al)>=0).length,expired=rows.filter(x=>x.valida_al&&daysTo(x.valida_al)<0).length,soon=rows.filter(x=>x.valida_al&&daysTo(x.valida_al)>=0&&daysTo(x.valida_al)<=30).length;
-  return '<div class="box"><div class="actions" style="justify-content:space-between"><h3 style="margin:0">'+esc(qName(q.codice))+'</h3><span class="pill b">'+rows.length+' totali</span></div><div class="stats" style="margin-top:10px;grid-template-columns:repeat(3,1fr)"><div class="stat"><small>VALIDE</small><b style="font-size:20px">'+active+'</b></div><div class="stat"><small>SCADUTE</small><b style="font-size:20px">'+expired+'</b></div><div class="stat"><small>30 GG</small><b style="font-size:20px">'+soon+'</b></div></div></div>'
+  return '<div class="box"><div class="actions" style="justify-content:space-between"><h3 style="margin:0">'+esc(q.codice===daeCode()?'Certificazione DAE':qName(q.codice))+'</h3><span class="pill b">'+rows.length+' totali</span></div><div class="stats" style="margin-top:10px;grid-template-columns:repeat(3,1fr)"><div class="stat"><small>VALIDE</small><b style="font-size:20px">'+active+'</b></div><div class="stat"><small>SCADUTE</small><b style="font-size:20px">'+expired+'</b></div><div class="stat"><small>30 GG</small><b style="font-size:20px">'+soon+'</b></div></div></div>'
  }).join('');
 }
 
