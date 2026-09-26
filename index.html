@@ -994,8 +994,8 @@
    <div class="section"><h3>Descrizione e importi</h3>
     <div class="field"><label>Descrizione del servizio *</label><textarea id="ndDescription" rows="4" required></textarea></div>
     <div class="grid3">
-     <div class="field"><label>Importo €</label><input id="ndAmount" type="number" min="0" step="0.01"></div>
-     <div class="field"><label>Sconto €</label><input id="ndDiscount" type="number" min="0" step="0.01"></div>
+     <div class="field"><label>Importo €</label><input id="ndAmount" type="number" min="0" step="1"></div>
+     <div class="field"><label>Sconto €</label><input id="ndDiscount" type="number" min="0" step="1"></div>
      <div class="field"><label>Totale €</label><input id="ndTotal" disabled></div>
     </div>
    </div>
@@ -1091,9 +1091,9 @@
 
    <div class="section" id="fvEconomicSection"><h3>Importi e supplementi</h3>
     <div class="grid4">
-     <div class="field"><label>Importo base €</label><input id="fvBase" type="number" min="0" step="0.01"></div>
-     <div class="field"><label>Supplemento sedia €</label><input id="fvChairAmount" type="number" min="0" step="0.01"></div>
-     <div class="field"><label>Supplemento bariatrica €</label><input id="fvBariAmount" type="number" min="0" step="0.01"></div>
+     <div class="field"><label>Importo base €</label><input id="fvBase" type="number" min="0" step="1"></div>
+     <div class="field"><label>Supplemento sedia €</label><input id="fvChairAmount" type="number" min="0" step="1"></div>
+     <div class="field"><label>Supplemento bariatrica €</label><input id="fvBariAmount" type="number" min="0" step="1"></div>
      <div class="field"><label>Totale calcolato €</label><input id="fvGrandTotal" disabled></div>
     </div>
     <div class="inline-checks" style="margin-top:10px">
@@ -1214,9 +1214,9 @@
 </div></div>
 <div class="section"><h3>Economico</h3>
   <div class="grid4">
-   <div class="field"><label>Importo previsto €</label><input id="dAmount" type="number" min="0" step="0.01"><div class="muted" id="dTariffBaseInfo"></div></div>
-   <div class="field"><label>Sconto €</label><input id="dDiscount" type="number" min="0" step="0.01"></div>
-   <div class="field"><label>Importo finale €</label><input id="dFinal" type="number" min="0" step="0.01"></div>
+   <div class="field"><label>Importo previsto €</label><input id="dAmount" type="number" min="0" step="1"><div class="muted" id="dTariffBaseInfo"></div></div>
+   <div class="field"><label>Sconto €</label><input id="dDiscount" type="number" min="0" step="1"></div>
+   <div class="field"><label>Importo finale €</label><input id="dFinal" type="number" min="0" step="1"></div>
    <div class="field"><label>Pagamento previsto</label><select id="dPayMode"><option value="">—</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>ALTRO</option></select></div>
   </div>
  </div>
@@ -1303,14 +1303,14 @@
 <div class="field"><label>Tariffario</label><select id="tar"><option value="">Nessuno / tariffa concordata</option></select></div>
 <div class="field"><label>Destinazione tariffaria</label><select id="tarDest"><option value="">—</option></select></div>
 <div class="field"><label>Fascia</label><select id="tarNight"><option value="false">DIURNO</option><option value="true">NOTTURNO</option></select></div>
-<div class="field"><label>Importo previsto €</label><input id="imp" type="number" step="0.01" min="0"></div>
+<div class="field"><label>Importo previsto €</label><input id="imp" type="number" step="1" min="0"></div>
 </div>
 <div id="tarAdjustment" class="section hidden" style="margin:10px 0;background:#f4f9fd">
 <h3 style="margin:0 0 5px">↕ Variazione tariffa per questo servizio</h3>
 <p class="muted">Aumenta o riduci l’importo selezionato, senza modificare i prezzi del tariffario generale.</p>
 <div class="grid3">
 <div class="field"><label for="tarChangeType">Operazione</label><select id="tarChangeType"><option value="NONE">Nessuna variazione</option><option value="PLUS">＋ Aumenta la tariffa</option><option value="MINUS">− Riduci la tariffa</option></select></div>
-<div class="field"><label for="tarChangeValue">Importo variazione €</label><input id="tarChangeValue" type="number" min="0.01" max="10000" step="0.01" placeholder="Es. 5,00" disabled></div>
+<div class="field"><label for="tarChangeValue">Importo variazione €</label><input id="tarChangeValue" type="number" min="1" max="10000" step="1" placeholder="Es. 5" disabled></div>
 <div class="field"><label for="tarBasePrice">Tariffa originale €</label><input id="tarBasePrice" type="text" value="—" readonly tabindex="-1"></div>
 </div><div class="muted" style="margin-top:7px">L’importo aggiornato viene riportato in «Importo previsto €» e vale solo per il servizio corrente.</div>
 </div>
@@ -1437,12 +1437,12 @@
 <div id="tariffPane_TS_BORGOMANERO" class="section hidden" data-tariff-pane="TS_BORGOMANERO"><h3>Trasporto semplice · Ospedale Borgomanero</h3><p class="muted">Da sede – H Borgomanero A/R · supplementi: sedia cingolata/motorizzata €15 · barella bariatrica €20 · fermo mezzo €18/ora. Prezzo notturno distinto non indicato: concordare col Centralino.</p><div class="table"><table><thead><tr><th>Destinazione</th><th>Prezzo riportato nel tariffario</th></tr></thead><tbody></tbody></table></div></div>
 <div id="tariffPane_TS_NOVARA_DOBLO" class="section hidden" data-tariff-pane="TS_NOVARA_DOBLO"><h3>Trasporto semplice · Ospedale Novara</h3><p class="muted">Da sede – H Novara A/R · supplementi: sedia cingolata/motorizzata €15 · barella bariatrica €20 · fermo mezzo €18/ora. Prezzo notturno distinto non indicato: concordare col Centralino.</p><div class="table"><table><thead><tr><th>Destinazione</th><th>Prezzo riportato nel tariffario</th></tr></thead><tbody></tbody></table></div></div>
 </div>
-<div class="section" data-admin-only="true"><h3>Modifica una tariffa della scheda selezionata</h3><div class="grid4"><div class="field"><label>Tariffario selezionato</label><select id="ttar"></select></div><div class="field"><label>Destinazione</label><input id="tdest"></div><div class="field"><label>Tipo mezzo</label><select id="ttype" disabled><option>AMBULANZA</option><option>TRASPORTO SEMPLICE</option></select></div><div class="field"><label>Importo €</label><input id="tday" type="number" min="0" step="0.01"></div><div class="field"><label>Notturno € (solo se previsto)</label><input id="tnight" type="number" min="0" step="0.01"></div><div class="field"><label>Provincia</label><input id="tprov"></div></div><div class="toolbar"><button id="tsave" class="btn yellow">Aggiungi / aggiorna tariffa</button></div><div id="tmsg"></div></div>
+<div class="section" data-admin-only="true"><h3>Modifica una tariffa della scheda selezionata</h3><div class="grid4"><div class="field"><label>Tariffario selezionato</label><select id="ttar"></select></div><div class="field"><label>Destinazione</label><input id="tdest"></div><div class="field"><label>Tipo mezzo</label><select id="ttype" disabled><option>AMBULANZA</option><option>TRASPORTO SEMPLICE</option></select></div><div class="field"><label>Importo €</label><input id="tday" type="number" min="0" step="1"></div><div class="field"><label>Notturno € (solo se previsto)</label><input id="tnight" type="number" min="0" step="1"></div><div class="field"><label>Provincia</label><input id="tprov"></div></div><div class="toolbar"><button id="tsave" class="btn yellow">Aggiungi / aggiorna tariffa</button></div><div id="tmsg"></div></div>
 </div></section>
 
 <section id="accounting" class="surface hidden"><div class="hero"><h2>Contabilità servizi</h2></div><div class="pad">
 <div class="stats"><div class="stat"><small>TOTALE DA INCASSARE</small><b id="accDue">€ 0</b></div><div class="stat"><small>PAGATI</small><b id="accPaid">0</b></div><div class="stat"><small>PARZIALI</small><b id="accPart">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="accCount">0</b></div></div>
-<div class="section"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="0.01"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
+<div class="section"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="1"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
 <div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto</th><th>Pagamento</th><th>Stato gestionale</th></tr></thead><tbody id="accBody"></tbody></table></div></div></section>
 
 <section id="communications" class="surface hidden">
@@ -2192,7 +2192,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.51':'Versione 13.51';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.52';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -6386,7 +6386,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.51-20260926-stato-mezzi-emergenza';
+const CGE_APP_BUILD='13.52-20260926-importi-euro-interi';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
