@@ -23,7 +23,8 @@
 input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padding:9px 10px;background:#fff;color:#253746}
 .btn{border:0;border-radius:8px;padding:9px 12px;font-weight:850;cursor:pointer}.yellow{background:var(--y);color:var(--n)}.secondary{background:#eef2f6;color:var(--n)}.blue{background:var(--n);color:#fff}.danger{background:#fbe9ea;color:var(--r)}
 .actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.muted{color:var(--m);font-size:12px}.notice{padding:10px 12px;border-radius:9px;margin:9px 0;background:#edf6ff;border:1px solid #cfe4fa}.ok{background:#eaf8f1;color:#176a4b}.err{background:#fff0f0;color:#a32b34}.warn{background:#fff7df;color:#875d12}
-.pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:900;background:#e7edf3}.pill.g{background:#e7f6ef;color:#176a4b}.pill.r{background:#fdebed;color:#9d2730}.pill.w{background:#fff4c9;color:#795a00}.pill.b{background:#e8f1fb;color:#1d5488}
+.pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:900;background:#e7edf3}.pill.g{background:#e7f6ef;color:#176a4b}.pill.r{background:#fdebed;color:#9d2730}.pill.o{background:#ffe8cc;color:#9a4c00}.pill.w{background:#fff4c9;color:#795a00}.pill.b{background:#e8f1fb;color:#1d5488}
+.dae-red{border-left:5px solid #b52d36}.dae-orange{border-left:5px solid #e67e22}.dae-yellow{border-left:5px solid #d6a100}.dae-green{border-left:5px solid #2d9a69}.dae-gray{border-left:5px solid #8b98a5}
 .table{overflow:auto;border:1px solid var(--l);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:9px;border-bottom:1px solid #e7edf2;text-align:left;vertical-align:top}th{background:#f1f5f8;color:var(--n);font-size:12px}
 .login{min-height:100vh;display:grid;place-items:center;padding:18px}.loginCard{width:min(520px,100%);background:#fff;border:1px solid var(--l);border-radius:18px;overflow:hidden}.loginHead{padding:22px;text-align:center;background:linear-gradient(120deg,#fff0a1,#fffbe6)}.loginHead img{width:90px}.loginBody{padding:18px}
 .qualRow{display:grid;grid-template-columns:minmax(170px,1.2fr) 130px 130px auto;gap:8px;align-items:end;padding:9px;border:1px solid var(--l);border-radius:10px;margin:7px 0}
@@ -35,7 +36,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · V1.2</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · V1.3</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -49,7 +50,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · V1.2</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · V1.3</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -91,14 +92,21 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
        <div class="field"><label>Telefono</label><input id="pPhone" disabled></div><div class="field"><label>Email</label><input id="pEmail" disabled></div><div class="field"><label>Data ingresso</label><input id="pEntry" disabled></div><div class="field"><label>Data nascita</label><input id="pBirth" disabled></div>
       </div>
       <div class="section">
-       <h3>🫀 Certificazione DAE</h3>
-       <div class="grid3">
+       <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🫀 Certificazione DAE</h3><div class="muted">Rinnovo, attestato e storico della certificazione.</div></div><span id="daePersonBadge" class="pill b">—</span></div>
+       <div class="grid4" style="margin-top:10px">
         <div class="field"><label>Data conseguimento / rinnovo</label><input id="daeFrom" type="date"></div>
         <div class="field"><label>Data scadenza *</label><input id="daeTo" type="date"></div>
+        <div class="field"><label>Ente formatore</label><input id="daeProvider" placeholder="Es. IRC, AREU, ente formatore..."></div>
+        <div class="field"><label>N. attestato</label><input id="daeCertificateNo" placeholder="Facoltativo"></div>
+       </div>
+       <div class="grid2" style="margin-top:8px">
+        <div class="field"><label>Attestato DAE (PDF/JPG/PNG/WEBP)</label><input id="daeFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"></div>
         <div class="field"><label>Stato</label><input id="daeState" disabled></div>
        </div>
-       <div class="actions" style="margin-top:8px"><button id="saveDae" class="btn yellow">Salva certificazione DAE</button></div><div id="daeMsg"></div>
-       <div class="muted" style="margin-top:6px">La scadenza DAE viene controllata automaticamente e genera un avviso a partire da 30 giorni prima.</div>
+       <div class="field" style="margin-top:8px"><label>Note</label><input id="daeNotes" placeholder="Annotazioni sul rinnovo"></div>
+       <div class="actions" style="margin-top:8px"><button id="saveDae" class="btn yellow">🔄 Registra rinnovo DAE</button></div><div id="daeMsg"></div>
+       <div class="muted" style="margin-top:6px">Ogni rinnovo viene salvato nello storico. L’avviso scatta automaticamente 30 giorni prima della scadenza.</div>
+       <div class="section" style="margin-top:12px"><h3>📚 Storico DAE</h3><div id="daeHistory"></div></div>
       </div>
       <div class="section"><h3>🎓 Altre qualifiche della persona</h3><div id="personQualList"></div>
        <div class="grid3" style="margin-top:10px"><div class="field"><label>Aggiungi qualifica</label><select id="newQual"></select></div><div class="field"><label>Valida dal</label><input id="newQualFrom" type="date"></div><div class="field"><label>Valida al</label><input id="newQualTo" type="date"></div></div>
@@ -118,7 +126,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
    </section>
 
    <section id="dae" class="surface hidden">
-    <div class="hero"><h2>🫀 Certificazioni DAE</h2><p>Situazione completa delle scadenze DAE di tutti i volontari.</p></div>
+    <div class="hero"><h2>🫀 Certificazioni DAE</h2><p>Scadenze, rinnovi, attestati e organizzazione dei corsi DAE.</p></div>
     <div class="pad">
      <div class="stats">
       <div class="stat"><small>VOLONTARI ATTIVI</small><b id="daeTotal">0</b></div>
@@ -126,14 +134,43 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
       <div class="stat"><small>ENTRO 30 GIORNI</small><b id="daeSoon">0</b></div>
       <div class="stat"><small>SCADENZA MANCANTE</small><b id="daeMissing">0</b></div>
      </div>
+
      <div class="section">
-      <div class="grid3">
-       <div class="field"><label>Filtro stato</label><select id="daeFilterState"><option value="">Tutti</option><option value="SCADUTA">Scaduti</option><option value="PROSSIMA">Entro 30 giorni</option><option value="VALIDA">Oltre 30 giorni</option><option value="MANCANTE">Scadenza mancante</option></select></div>
-       <div class="field"><label>Cerca volontario</label><input id="daeSearch" placeholder="Nome, cognome o badge"></div>
-       <div class="field"><label>Ordinamento</label><select id="daeSort"><option value="URGENZA">Per urgenza</option><option value="NOME">Per nome</option><option value="BADGE">Per badge</option></select></div>
+      <div class="actions" style="justify-content:space-between;align-items:center">
+       <div><h3 style="margin:0">🎓 Formazione da organizzare</h3><div class="muted">Volontari con DAE scaduto o in scadenza entro 60 giorni.</div></div>
+       <div class="actions"><span id="daeCourseCandidateCount" class="pill w">0 persone</span><button id="daeCreateCourse" class="btn yellow">Crea gruppo corso DAE</button></div>
+      </div>
+      <div id="daeCourseMsg"></div><div id="daeCourses"></div>
+     </div>
+
+     <div id="daeQuickRenew" class="section hidden">
+      <div class="actions" style="justify-content:space-between"><div><h3 id="daeQuickTitle" style="margin:0">🔄 Rinnovo rapido DAE</h3><div id="daeQuickSubtitle" class="muted"></div></div><button id="daeQuickClose" class="btn secondary">Chiudi</button></div>
+      <input id="daeQuickBadge" type="hidden">
+      <div class="grid4" style="margin-top:10px">
+       <div class="field"><label>Data rinnovo</label><input id="daeQuickFrom" type="date"></div>
+       <div class="field"><label>Nuova scadenza *</label><input id="daeQuickTo" type="date"></div>
+       <div class="field"><label>Ente formatore</label><input id="daeQuickProvider"></div>
+       <div class="field"><label>N. attestato</label><input id="daeQuickNumber"></div>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+       <div class="field"><label>Attestato DAE</label><input id="daeQuickFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"></div>
+       <div class="field"><label>Note</label><input id="daeQuickNotes"></div>
+      </div>
+      <div class="actions" style="margin-top:8px"><button id="daeQuickSave" class="btn yellow">Salva rinnovo</button></div><div id="daeQuickMsg"></div>
+     </div>
+
+     <div class="section">
+      <div class="actions" style="justify-content:space-between;align-items:end">
+       <div class="grid3" style="flex:1">
+        <div class="field"><label>Filtro stato</label><select id="daeFilterState"><option value="">Tutti</option><option value="NON_IN_REGOLA">Non in regola</option><option value="SCADUTA">Scaduti</option><option value="PROSSIMA">Entro 30 giorni</option><option value="ATTENZIONE">31–60 giorni</option><option value="VALIDA">Oltre 60 giorni</option><option value="MANCANTE">Scadenza mancante</option></select></div>
+        <div class="field"><label>Cerca volontario</label><input id="daeSearch" placeholder="Nome, cognome o badge"></div>
+        <div class="field"><label>Ordinamento</label><select id="daeSort"><option value="URGENZA">Per urgenza</option><option value="NOME">Per nome</option><option value="BADGE">Per badge</option></select></div>
+       </div>
+       <div class="actions"><button id="daeOnlyNotCompliant" class="btn danger">Mostra non in regola</button><button id="daePrint" class="btn secondary">🖨 Stampa elenco</button><button id="daeExport" class="btn blue">⬇ Esporta CSV</button></div>
       </div>
      </div>
-     <div class="table"><table><thead><tr><th>Badge</th><th>Volontario</th><th>Data rinnovo</th><th>Scadenza</th><th>Mancano</th><th>Stato</th><th></th></tr></thead><tbody id="daeBody"></tbody></table></div>
+     <div class="notice">Semaforo: <span class="pill r">Scaduto</span> <span class="pill o">≤ 30 giorni</span> <span class="pill w">31–60 giorni</span> <span class="pill g">&gt; 60 giorni</span> <span class="pill">Scadenza mancante</span></div>
+     <div class="table"><table><thead><tr><th>Badge</th><th>Volontario</th><th>Data rinnovo</th><th>Scadenza</th><th>Mancano</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="daeBody"></tbody></table></div>
     </div>
    </section>
 
@@ -154,10 +191,9 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const today=()=>new Date().toISOString().slice(0,10);
 const fmt=d=>d?new Date(d+'T00:00:00').toLocaleDateString('it-IT'):'—';
 function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c+'">'+esc(t)+'</div>':''}
-let people=[],defs=[],pquals=[],docs=[],selectedBadge=null;
-const DAE_CODES=['DAE','BLSD_DAE','BLSD','DAE_BLSD'];
-function daeDef(){return defs.find(q=>DAE_CODES.includes(String(q.codice||'').toUpperCase())||/\bDAE\b|BLSD/i.test(String(q.nome||'')))||null}
-function daeCode(){return daeDef()?.codice||'DAE'}
+let people=[],defs=[],pquals=[],docs=[],daeHistoryRows=[],daeCourses=[],daeCoursePeople=[],selectedBadge=null,lastDaeRenderedRows=[];
+function daeDef(){return defs.find(q=>String(q.codice||'').toUpperCase()==='DAE')||null}
+function daeCode(){return 'DAE'}
 function daeRow(badge){const code=daeCode();return pquals.find(q=>q.badge_personale===badge&&q.codice_qualifica===code)||null}
 function daeRequiredRows(){return people.filter(personActive).map(p=>({person:p,row:daeRow(p.badge)}))}
 
@@ -171,26 +207,35 @@ function daysTo(d){return Math.ceil((new Date(d+'T00:00:00')-new Date(today()+'T
 function stateFor(d){const n=daysTo(d);return n<0?{key:'SCADUTA',label:'Scaduta',cls:'r'}:n<=30?{key:'PROSSIMA',label:'Entro 30 gg',cls:'w'}:{key:'FUTURA',label:'Regolare',cls:'g'}}
 function personName(b){return people.find(p=>p.badge===b)?.nome_completo||b}
 function personActive(p){return p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO'}
+function daeStatus(date){
+ if(!date)return {key:'MANCANTE',label:'Scadenza mancante',cls:'',row:'dae-gray',days:null};
+ const d=daysTo(date);
+ if(d<0)return {key:'SCADUTA',label:'Scaduta',cls:'r',row:'dae-red',days:d};
+ if(d<=30)return {key:'PROSSIMA',label:'Entro 30 gg',cls:'o',row:'dae-orange',days:d};
+ if(d<=60)return {key:'ATTENZIONE',label:'31–60 gg',cls:'w',row:'dae-yellow',days:d};
+ return {key:'VALIDA',label:'Valida',cls:'g',row:'dae-green',days:d};
+}
 
 async function ensureDaeDefinition(){
- const q=await sb.from('qualifiche').select('codice,nome,attiva,ordine').or('codice.eq.DAE,nome.ilike.%DAE%,nome.ilike.%BLSD%').limit(20);
+ const q=await sb.from('qualifiche').select('codice').eq('codice','DAE').maybeSingle();
  if(q.error)return;
- if((q.data||[]).some(x=>/\bDAE\b|BLSD/i.test(String(x.nome||''))||String(x.codice||'').toUpperCase()==='DAE'))return;
- const max=await sb.from('qualifiche').select('ordine').order('ordine',{ascending:false}).limit(1);
- const ordine=(max.data?.[0]?.ordine||0)+10;
- await sb.from('qualifiche').insert({codice:'DAE',nome:'Certificazione DAE / BLSD',attiva:true,ordine});
+ if(q.data)return;
+ await sb.from('qualifiche').insert({codice:'DAE',nome:'Certificazione DAE',descrizione:'Certificazione DAE / BLSD con controllo scadenza',categoria:'FORMATIVA',richiede_scadenza:true,attiva:true,ordine:15});
 }
 async function loadAll(){
  await ensureDaeDefinition();
- const [pr,qr,pqr,dr]=await Promise.all([
+ const [pr,qr,pqr,dr,hr,cr,cpr]=await Promise.all([
   sb.from('personale').select('*').order('cognome'),
   sb.from('qualifiche').select('*').eq('attiva',true).order('ordine'),
   sb.from('personale_qualifiche').select('*').eq('attiva',true),
-  sb.from('documenti_personale').select('id,badge_personale,categoria,titolo,nome_file_originale,data_scadenza,note,created_at').order('created_at',{ascending:false})
+  sb.from('documenti_personale').select('id,badge_personale,categoria,titolo,nome_file_originale,storage_path,mime_type,dimensione_bytes,data_scadenza,note,created_at').order('created_at',{ascending:false}),
+  sb.from('dae_certificazioni_storico').select('*').order('valida_al',{ascending:false}),
+  sb.from('dae_corsi').select('*').order('created_at',{ascending:false}),
+  sb.from('dae_corsi_partecipanti').select('*')
  ]);
- const err=[pr.error,qr.error,pqr.error,dr.error].find(Boolean);if(err){alert(err.message);return}
- people=pr.data||[];defs=qr.data||[];pquals=pqr.data||[];docs=dr.data||[];
- renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderQualificationCards();
+ const err=[pr.error,qr.error,pqr.error,dr.error,hr.error,cr.error,cpr.error].find(Boolean);if(err){alert(err.message);return}
+ people=pr.data||[];defs=qr.data||[];pquals=pqr.data||[];docs=dr.data||[];daeHistoryRows=hr.data||[];daeCourses=cr.data||[];daeCoursePeople=cpr.data||[];
+ renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderQualificationCards();renderDaeCourses();
  if(selectedBadge&&people.some(p=>p.badge===selectedBadge))openPerson(selectedBadge);
 }
 function allDeadlines(){
@@ -251,10 +296,9 @@ function openPerson(badge){
  $('personDetail').classList.remove('hidden');$('personTitle').textContent=p.nome_completo||'Scheda personale';$('personSub').textContent='Badge '+p.badge;
  $('pBadge').value=p.badge||'';$('pName').value=p.nome||'';$('pSurname').value=p.cognome||'';$('pState').value=p.stato_anagrafico||'ATTIVO';$('pPhone').value=p.telefono||'';$('pEmail').value=p.email||'';$('pEntry').value=p.data_ingresso||'';$('pBirth').value=p.data_nascita||'';
  $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');
- const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';
- if(!dr?.valida_al)$('daeState').value='SCADENZA DA INSERIRE';
- else {const dd=daysTo(dr.valida_al);$('daeState').value=dd<0?'SCADUTA':dd<=30?'IN SCADENZA ENTRO 30 GG':'VALIDA';}
- renderPersonQuals();renderPersonDocs();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
+ const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';$('daeProvider').value='';$('daeCertificateNo').value='';$('daeNotes').value='';$('daeFile').value='';$('daePersonBadge').textContent='Badge '+badge;
+ const ds=daeStatus(dr?.valida_al);$('daeState').value=ds.label.toUpperCase();
+ renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
 
@@ -268,19 +312,60 @@ async function removeQual(code){
  const r=await sb.from('personale_qualifiche').delete().eq('badge_personale',selectedBadge).eq('codice_qualifica',code);
  if(r.error)return msg('personQualMsg',r.error.message,'err');msg('personQualMsg','Qualifica rimossa.','ok');await loadAll();
 }
+async function uploadDaeAttestato(badge,file,expiry,title){
+ if(!file)return null;
+ const allowed=['application/pdf','image/jpeg','image/png','image/webp'];
+ if(!allowed.includes(file.type))throw new Error('Formato attestato non consentito. Usa PDF, JPG, PNG o WEBP.');
+ if(file.size>10485760)throw new Error('L’attestato supera il limite di 10 MB.');
+ const ext={'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type]||'bin';
+ const path=badge+'/dae-'+crypto.randomUUID()+'.'+ext;
+ const up=await sb.storage.from('documenti-volontari').upload(path,file,{contentType:file.type,upsert:false});
+ if(up.error)throw up.error;
+ const u=await sb.auth.getUser();
+ const meta=await sb.from('documenti_personale').insert({
+  badge_personale:badge,categoria:'ATTESTATO',titolo:title||'Attestato DAE',
+  nome_file_originale:file.name,storage_path:path,mime_type:file.type,dimensione_bytes:file.size,
+  data_scadenza:expiry||null,note:'Attestato collegato al rinnovo DAE',uploaded_by:u.data.user?.id||null
+ }).select('id').single();
+ if(meta.error){await sb.storage.from('documenti-volontari').remove([path]);throw meta.error}
+ return meta.data.id;
+}
+async function renewDae({badge,from,to,provider,number,notes,file,msgId}){
+ if(!badge)return msg(msgId,'Seleziona un volontario.','warn');
+ if(!to)return msg(msgId,'Inserisci la nuova data di scadenza DAE.','warn');
+ if(from&&to<from)return msg(msgId,'La scadenza non può precedere la data di rinnovo.','warn');
+ try{
+  msg(msgId,'Salvataggio rinnovo DAE...');
+  const docId=await uploadDaeAttestato(badge,file,to,'Attestato DAE · '+fmt(to));
+  const r=await sb.rpc('cge_rinnova_dae',{
+   p_badge:badge,p_valida_dal:from||null,p_valida_al:to,
+   p_ente_formatore:provider||null,p_numero_attestato:number||null,
+   p_documento_id:docId,p_note:notes||null
+  });
+  if(r.error)throw r.error;
+  msg(msgId,'Rinnovo DAE registrato e archiviato nello storico.','ok');
+  await loadAll();
+  return true;
+ }catch(e){msg(msgId,e.message||String(e),'err');return false}
+}
 $('saveDae').onclick=async()=>{
- if(!selectedBadge)return msg('daeMsg','Seleziona un volontario.','warn');
- if(!$('daeTo').value)return msg('daeMsg','Inserisci la data di scadenza DAE.','warn');
- const code=daeCode(),from=$('daeFrom').value||null,to=$('daeTo').value;
- const existing=daeRow(selectedBadge);
- const payload={attiva:true,valida_dal:from,valida_al:to};
- const r=existing
-  ? await sb.from('personale_qualifiche').update(payload).eq('badge_personale',selectedBadge).eq('codice_qualifica',code)
-  : await sb.from('personale_qualifiche').insert({badge_personale:selectedBadge,codice_qualifica:code,...payload});
- if(r.error)return msg('daeMsg',r.error.message,'err');
- msg('daeMsg','Certificazione DAE salvata. L’avviso partirà automaticamente 30 giorni prima della scadenza.','ok');
- await loadAll();
+ const ok=await renewDae({badge:selectedBadge,from:$('daeFrom').value,to:$('daeTo').value,provider:$('daeProvider').value.trim(),number:$('daeCertificateNo').value.trim(),notes:$('daeNotes').value.trim(),file:$('daeFile').files?.[0],msgId:'daeMsg'});
+ if(ok){$('daeProvider').value='';$('daeCertificateNo').value='';$('daeNotes').value='';$('daeFile').value='';}
 };
+function renderDaeHistory(){
+ const rows=daeHistoryRows.filter(x=>x.badge_personale===selectedBadge);
+ $('daeHistory').innerHTML=rows.length?rows.map(x=>'<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><b>'+esc(fmt(x.valida_dal))+' → '+esc(fmt(x.valida_al))+'</b><span class="pill '+daeStatus(x.valida_al).cls+'">'+esc(daeStatus(x.valida_al).label)+'</span></div>'+
+  '<div class="muted">'+esc(x.ente_formatore||'Ente non indicato')+(x.numero_attestato?' · Attestato '+esc(x.numero_attestato):'')+' · registrato '+esc(new Date(x.created_at).toLocaleString('it-IT'))+'</div>'+
+  (x.note?'<div style="margin-top:5px">'+esc(x.note)+'</div>':'')+
+  (x.documento_id?'<div class="actions" style="margin-top:7px"><button class="btn secondary" data-dae-doc="'+esc(x.documento_id)+'">Apri attestato</button></div>':'')+'</div>').join(''):'<div class="notice">Nessun rinnovo storico registrato.</div>';
+ document.querySelectorAll('[data-dae-doc]').forEach(b=>b.onclick=()=>openDaeDocument(b.dataset.daeDoc));
+}
+async function openDaeDocument(id){
+ const d=docs.find(x=>x.id===id);if(!d)return alert('Attestato non trovato.');
+ const r=await sb.storage.from('documenti-volontari').createSignedUrl(d.storage_path,120);
+ if(r.error)return alert(r.error.message);
+ window.open(r.data.signedUrl,'_blank','noopener');
+}
 $('addQual').onclick=async()=>{
  if(!selectedBadge||!$('newQual').value)return msg('personQualMsg','Seleziona una qualifica.','warn');
  const code=$('newQual').value,from=$('newQualFrom').value||null,to=$('newQualTo').value||null;
@@ -296,42 +381,81 @@ function renderDeadlines(){
 }
 ['deadlineWindow','deadlineType','deadlineState'].forEach(id=>$(id).onchange=renderDeadlines);
 
+function daeBaseRows(){
+ return people.filter(personActive).map(person=>{const row=daeRow(person.badge),s=daeStatus(row?.valida_al);return {person,row,...s}});
+}
 function renderDaeView(){
- const active=people.filter(personActive);
- const rows=active.map(p=>{
-  const q=daeRow(p.badge);
-  let state='MANCANTE',label='Scadenza mancante',cls='r',days=null;
-  if(q?.valida_al){
-   days=daysTo(q.valida_al);
-   if(days<0){state='SCADUTA';label='Scaduta';cls='r'}
-   else if(days<=30){state='PROSSIMA';label='Entro 30 gg';cls='w'}
-   else {state='VALIDA';label='Valida';cls='g'}
-  }
-  return {person:p,row:q,state,label,cls,days};
- });
- $('daeTotal').textContent=active.length;
- $('daeExpired').textContent=rows.filter(x=>x.state==='SCADUTA').length;
- $('daeSoon').textContent=rows.filter(x=>x.state==='PROSSIMA').length;
- $('daeMissing').textContent=rows.filter(x=>x.state==='MANCANTE').length;
+ const rows=daeBaseRows();
+ $('daeTotal').textContent=rows.length;$('daeExpired').textContent=rows.filter(x=>x.key==='SCADUTA').length;$('daeSoon').textContent=rows.filter(x=>x.key==='PROSSIMA').length;$('daeMissing').textContent=rows.filter(x=>x.key==='MANCANTE').length;
+ const candidates=rows.filter(x=>x.key==='SCADUTA'||x.key==='PROSSIMA'||x.key==='ATTENZIONE');
+ $('daeCourseCandidateCount').textContent=candidates.length+' persone';
  const stateFilter=$('daeFilterState').value||'',search=$('daeSearch').value.trim().toLowerCase(),sort=$('daeSort').value||'URGENZA';
  let filtered=rows.filter(x=>{
-  if(stateFilter&&x.state!==stateFilter)return false;
+  if(stateFilter==='NON_IN_REGOLA'&&!['SCADUTA','MANCANTE'].includes(x.key))return false;
+  if(stateFilter&&stateFilter!=='NON_IN_REGOLA'&&x.key!==stateFilter)return false;
   const txt=(x.person.badge+' '+(x.person.nome_completo||'')+' '+(x.person.nome||'')+' '+(x.person.cognome||'')).toLowerCase();
-  if(search&&!txt.includes(search))return false;
-  return true;
+  return !search||txt.includes(search);
  });
  if(sort==='NOME')filtered.sort((a,b)=>(a.person.nome_completo||'').localeCompare(b.person.nome_completo||'','it'));
  else if(sort==='BADGE')filtered.sort((a,b)=>String(a.person.badge).localeCompare(String(b.person.badge),'it',{numeric:true}));
- else filtered.sort((a,b)=>{
-   const rank=s=>s==='SCADUTA'?0:s==='MANCANTE'?1:s==='PROSSIMA'?2:3;
-   const r=rank(a.state)-rank(b.state);if(r)return r;
-   if(a.days==null&&b.days!=null)return -1;if(a.days!=null&&b.days==null)return 1;
-   return (a.days??99999)-(b.days??99999);
- });
- $('daeBody').innerHTML=filtered.map(x=>'<tr><td>'+esc(x.person.badge)+'</td><td><b>'+esc(x.person.nome_completo||((x.person.nome||'')+' '+(x.person.cognome||'')))+'</b></td><td>'+esc(x.row?.valida_dal?fmt(x.row.valida_dal):'—')+'</td><td>'+esc(x.row?.valida_al?fmt(x.row.valida_al):'—')+'</td><td>'+esc(x.days==null?'—':x.days<0?Math.abs(x.days)+' gg fa':x.days===0?'Oggi':x.days+' gg')+'</td><td><span class="pill '+x.cls+'">'+esc(x.label)+'</span></td><td><button class="btn secondary" data-dae-open="'+esc(x.person.badge)+'">Apri scheda</button></td></tr>').join('')||'<tr><td colspan="7">Nessun volontario trovato.</td></tr>';
+ else filtered.sort((a,b)=>{const rank={SCADUTA:0,MANCANTE:1,PROSSIMA:2,ATTENZIONE:3,VALIDA:4};const r=rank[a.key]-rank[b.key];return r||((a.days??99999)-(b.days??99999))});
+ lastDaeRenderedRows=filtered;
+ $('daeBody').innerHTML=filtered.map(x=>'<tr class="'+x.row+'"><td>'+esc(x.person.badge)+'</td><td><b>'+esc(x.person.nome_completo||((x.person.nome||'')+' '+(x.person.cognome||'')))+'</b></td><td>'+esc(x.row?.valida_dal?fmt(x.row.valida_dal):'—')+'</td><td>'+esc(x.row?.valida_al?fmt(x.row.valida_al):'—')+'</td><td>'+esc(x.days==null?'—':x.days<0?Math.abs(x.days)+' gg fa':x.days===0?'Oggi':x.days+' gg')+'</td><td><span class="pill '+x.cls+'">'+esc(x.label)+'</span></td><td><div class="actions"><button class="btn yellow" data-dae-renew="'+esc(x.person.badge)+'">🔄 Rinnova</button><button class="btn secondary" data-dae-open="'+esc(x.person.badge)+'">Scheda</button></div></td></tr>').join('')||'<tr><td colspan="7">Nessun volontario trovato.</td></tr>';
  document.querySelectorAll('[data-dae-open]').forEach(b=>b.onclick=()=>{view('people');openPerson(b.dataset.daeOpen)});
+ document.querySelectorAll('[data-dae-renew]').forEach(b=>b.onclick=()=>openQuickDaeRenew(b.dataset.daeRenew));
 }
+function openQuickDaeRenew(badge){
+ const p=people.find(x=>x.badge===badge),q=daeRow(badge);if(!p)return;
+ $('daeQuickBadge').value=badge;$('daeQuickTitle').textContent='🔄 Rinnovo rapido DAE · '+(p.nome_completo||badge);$('daeQuickSubtitle').textContent='Badge '+badge+(q?.valida_al?' · scadenza attuale '+fmt(q.valida_al):' · nessuna scadenza registrata');
+ $('daeQuickFrom').value=today();$('daeQuickTo').value='';$('daeQuickProvider').value='';$('daeQuickNumber').value='';$('daeQuickNotes').value='';$('daeQuickFile').value='';msg('daeQuickMsg','');
+ $('daeQuickRenew').classList.remove('hidden');$('daeQuickRenew').scrollIntoView({behavior:'smooth',block:'center'});
+}
+$('daeQuickClose').onclick=()=>{$('daeQuickRenew').classList.add('hidden');msg('daeQuickMsg','')};
+$('daeQuickSave').onclick=async()=>{
+ const ok=await renewDae({badge:$('daeQuickBadge').value,from:$('daeQuickFrom').value,to:$('daeQuickTo').value,provider:$('daeQuickProvider').value.trim(),number:$('daeQuickNumber').value.trim(),notes:$('daeQuickNotes').value.trim(),file:$('daeQuickFile').files?.[0],msgId:'daeQuickMsg'});
+ if(ok)$('daeQuickRenew').classList.add('hidden');
+};
+$('daeOnlyNotCompliant').onclick=()=>{$('daeFilterState').value='NON_IN_REGOLA';renderDaeView()};
 ['daeFilterState','daeSearch','daeSort'].forEach(id=>{$(id).oninput=renderDaeView;$(id).onchange=renderDaeView});
+
+function daeExportRows(){return lastDaeRenderedRows.map(x=>({Badge:x.person.badge,Volontario:x.person.nome_completo||'',Rinnovo:x.row?.valida_dal||'',Scadenza:x.row?.valida_al||'',Stato:x.label,Giorni:x.days??''}))}
+$('daeExport').onclick=()=>{
+ const rows=daeExportRows(),headers=['Badge','Volontario','Rinnovo','Scadenza','Stato','Giorni'];
+ const q=v=>'"'+String(v??'').replaceAll('"','""')+'"';
+ const csv='\ufeff'+headers.join(';')+'\n'+rows.map(r=>headers.map(h=>q(r[h])).join(';')).join('\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Elenco_DAE_'+today()+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
+};
+$('daePrint').onclick=()=>{
+ const rows=lastDaeRenderedRows,w=window.open('','_blank');if(!w)return;
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Elenco DAE</title><style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #aaa;padding:7px;text-align:left}h1{margin:0 0 4px}small{color:#555}</style></head><body><h1>Croce Gialla Emergenza ODV</h1><h2>Elenco certificazioni DAE</h2><small>Aggiornato al '+new Date().toLocaleDateString('it-IT')+'</small><table><thead><tr><th>Badge</th><th>Volontario</th><th>Rinnovo</th><th>Scadenza</th><th>Stato</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(x.person.badge)+'</td><td>'+esc(x.person.nome_completo||'')+'</td><td>'+esc(x.row?.valida_dal?fmt(x.row.valida_dal):'—')+'</td><td>'+esc(x.row?.valida_al?fmt(x.row.valida_al):'—')+'</td><td>'+esc(x.label)+'</td></tr>').join('')+'</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>');w.document.close();
+};
+
+async function createDaeCourse(){
+ const candidates=daeBaseRows().filter(x=>x.key==='SCADUTA'||x.key==='PROSSIMA'||x.key==='ATTENZIONE');
+ if(!candidates.length)return msg('daeCourseMsg','Nessun volontario da inserire nel gruppo corso.','warn');
+ if(!confirm('Creare un gruppo corso DAE con '+candidates.length+' volontari scaduti o in scadenza entro 60 giorni?'))return;
+ const cr=await sb.from('dae_corsi').insert({titolo:'Rinnovo DAE · '+new Date().toLocaleDateString('it-IT'),stato:'DA ORGANIZZARE'}).select('id').single();
+ if(cr.error)return msg('daeCourseMsg',cr.error.message,'err');
+ const ins=await sb.from('dae_corsi_partecipanti').insert(candidates.map(x=>({corso_id:cr.data.id,badge_personale:x.person.badge,stato:'DA CONVOCARE'})));
+ if(ins.error)return msg('daeCourseMsg',ins.error.message,'err');
+ msg('daeCourseMsg','Gruppo corso creato con '+candidates.length+' volontari.','ok');await loadAll();
+}
+$('daeCreateCourse').onclick=createDaeCourse;
+function renderDaeCourses(){
+ $('daeCourses').innerHTML=daeCourses.length?daeCourses.slice(0,6).map(corso=>{
+  const parts=daeCoursePeople.filter(x=>x.corso_id===corso.id);
+  return '<div class="box" style="margin:8px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(corso.titolo)+'</b><br><span class="muted">'+esc(corso.data_corso?fmt(corso.data_corso):'Data da definire')+(corso.luogo?' · '+esc(corso.luogo):'')+(corso.ente_formatore?' · '+esc(corso.ente_formatore):'')+'</span></div><span class="pill b">'+parts.length+' partecipanti · '+esc(corso.stato)+'</span></div>'+
+   '<div class="actions" style="margin-top:8px"><button class="btn secondary" data-course-edit="'+esc(corso.id)+'">Programma</button></div>'+
+   '<div id="course-'+esc(corso.id)+'" class="hidden" style="margin-top:8px"><div class="grid3"><div class="field"><label>Data corso</label><input type="date" data-course-date value="'+esc(corso.data_corso||'')+'"></div><div class="field"><label>Luogo</label><input data-course-place value="'+esc(corso.luogo||'')+'"></div><div class="field"><label>Ente formatore</label><input data-course-provider value="'+esc(corso.ente_formatore||'')+'"></div></div><div class="actions" style="margin-top:7px"><button class="btn yellow" data-course-save="'+esc(corso.id)+'">Salva programmazione</button></div><div class="muted" style="margin-top:7px">'+parts.map(p=>esc(personName(p.badge_personale))).join(' · ')+'</div></div></div>';
+ }).join(''):'<div class="notice">Nessun gruppo corso DAE creato.</div>';
+ document.querySelectorAll('[data-course-edit]').forEach(b=>b.onclick=()=>document.getElementById('course-'+b.dataset.courseEdit).classList.toggle('hidden'));
+ document.querySelectorAll('[data-course-save]').forEach(b=>b.onclick=()=>saveDaeCourse(b.dataset.courseSave));
+}
+async function saveDaeCourse(id){
+ const box=document.getElementById('course-'+id),data=box.querySelector('[data-course-date]').value||null,luogo=box.querySelector('[data-course-place]').value.trim()||null,ente=box.querySelector('[data-course-provider]').value.trim()||null;
+ const r=await sb.from('dae_corsi').update({data_corso:data,luogo,ente_formatore:ente,stato:data?'PROGRAMMATO':'DA ORGANIZZARE',updated_at:new Date().toISOString()}).eq('id',id);
+ if(r.error)return msg('daeCourseMsg',r.error.message,'err');msg('daeCourseMsg','Corso aggiornato.','ok');await loadAll();
+}
 
 function renderQualificationCards(){
  $('qualificationCards').innerHTML=defs.map(q=>{
