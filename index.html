@@ -474,6 +474,16 @@
  .ops-board-head h2{font-size:19px}
 }
 
+
+/* === V13.48 · DUPLICA SERVIZIO === */
+.duplicate-dialog{width:min(760px,calc(100vw - 24px));border:0;border-radius:16px;padding:0;box-shadow:0 22px 70px #0005;color:var(--n)}
+.duplicate-dialog::backdrop{background:#071b2d99;backdrop-filter:blur(2px)}
+.duplicate-dialog form{padding:18px}
+.duplicate-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.duplicate-head h2{margin:0;color:var(--n)}
+.duplicate-head p{margin:3px 0 0}
+#duplicatePreparedNotice{margin-bottom:12px;border-left:5px solid #2d9a69}
+
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.36</div></div><div class="loginbody">
@@ -1040,8 +1050,8 @@
  </div>
 </section>
 
-<section id="serviceDetail" class="surface hidden">
-<div class="hero"><div class="actions" style="justify-content:space-between"><div><h2 id="dtitle">Dettaglio servizio</h2><p id="dsubtitle">Gestione operativa completa del servizio.</p></div><button id="dBack" class="btn secondary">← Torna ai servizi</button></div></div>
+<section id="serviceDetail" class="surface hidden"><div class="notice" style="margin:8px 12px 0"><b>SVILUPPO V13.48</b> · Funzione Duplica servizio in prova.</div>
+<div class="hero"><div class="actions" style="justify-content:space-between"><div><h2 id="dtitle">Dettaglio servizio</h2><p id="dsubtitle">Gestione operativa completa del servizio.</p></div><div class="actions"><button id="dDuplicate" class="btn yellow" type="button">📑 Duplica servizio</button><button id="dBack" class="btn secondary">← Torna ai servizi</button></div></div></div>
 <div class="pad">
 <div class="stats">
  <div class="stat"><small>STATO OPERATIVO</small><b id="dStatOp" style="font-size:16px">—</b></div>
@@ -1158,7 +1168,36 @@
 </div>
 </section>
 
-<section id="new" class="surface hidden"><div class="hero"><h2>Nuovo servizio ordinario</h2><p id="newServiceTimesHelp">Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.</p></div><div class="pad"><form id="form">
+
+<dialog id="duplicateServiceDialog" class="duplicate-dialog">
+ <form method="dialog" id="duplicateServiceForm">
+  <div class="duplicate-head">
+   <div><h2>📑 Duplica servizio</h2><p id="duplicateSourceSummary" class="muted">Crea una nuova scheda partendo dal servizio selezionato.</p></div>
+   <button type="button" id="duplicateCancelTop" class="btn secondary">✕</button>
+  </div>
+  <div class="notice warn">La copia non viene salvata automaticamente. Dopo questo passaggio potrai controllare tutti i dati nel modulo Nuovo servizio.</div>
+  <div class="grid2">
+   <div class="field"><label>Nuova data *</label><input id="duplicateDate" type="date" required></div>
+   <div class="field"><label>Mezzo proposto</label><input id="duplicateVehicleInfo" disabled></div>
+  </div>
+  <label class="check" style="margin:10px 0"><input id="duplicateKeepTimes" type="checkbox" checked> Mantieni gli stessi orari programmati</label>
+  <div id="duplicateTimes" class="grid3">
+   <div class="field"><label>Partenza</label><input id="duplicateStart" type="time"></div>
+   <div class="field" id="duplicatePatientLoadBox"><label>Carico paziente</label><input id="duplicateLoad" type="time"></div>
+   <div class="field" id="duplicateDestinationBox"><label>Arrivo destinazione</label><input id="duplicateDestinationTime" type="time"></div>
+   <div class="field hidden" id="duplicateAssistStartBox"><label>Inizio assistenza</label><input id="duplicateAssistStart" type="time"></div>
+   <div class="field hidden" id="duplicateAssistEndBox"><label>Fine assistenza</label><input id="duplicateAssistEnd" type="time"></div>
+   <div class="field"><label>Rientro previsto</label><input id="duplicateReturn" type="time"></div>
+  </div>
+  <div class="actions" style="justify-content:flex-end;margin-top:14px">
+   <button type="button" id="duplicateCancel" class="btn secondary">Annulla</button>
+   <button type="submit" class="btn yellow">Prepara la copia</button>
+  </div>
+  <div id="duplicateMsg"></div>
+ </form>
+</dialog>
+
+<section id="new" class="surface hidden"><div class="notice" style="margin:8px 12px 0"><b>SVILUPPO V13.48</b> · Duplica servizio in prova.</div><div class="hero"><h2>Nuovo servizio ordinario</h2><p id="newServiceTimesHelp">Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.</p></div><div class="pad"><div id="duplicatePreparedNotice" class="notice ok hidden"></div><form id="form">
 <div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data *</label><input id="d" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label id="newDepartureLabel">Partenza prevista *</label><input id="op" type="time" required></div><div class="field hidden" id="newPatientLoadTime"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field" id="newDestinationTime"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field hidden" id="newAssistanceStartTime"><label>Inizio assistenza</label><input id="asStart" type="time"></div><div class="field hidden" id="newAssistanceEndTime"><label>Fine assistenza</label><input id="asEnd" type="time"></div><div class="field"><label id="newReturnLabel">Rientro previsto</label><input id="or" type="time"></div></div></div>
 <div class="section" id="newPatientSection"><h3>Paziente / utente</h3>
 <div class="box" style="margin-bottom:12px">
@@ -1798,9 +1837,163 @@ function resetNewServiceForm(){
  $('patientLookupText').value='';
  msg('patientLookupMsg','');msg('fmsg','');
  $('tarQuote').innerHTML='';
+ if($('duplicatePreparedNotice')){$('duplicatePreparedNotice').classList.add('hidden');$('duplicatePreparedNotice').textContent=''}
  populateServiceTariffOptions();
  updateManifestationTimes();
 }
+
+let duplicateSourceService=null;
+
+function duplicateTime(v){return String(v||'').slice(0,5)}
+function duplicateSetTimesDisabled(){
+ const disabled=$('duplicateKeepTimes').checked;
+ ['duplicateStart','duplicateLoad','duplicateDestinationTime','duplicateAssistStart','duplicateAssistEnd','duplicateReturn']
+  .forEach(id=>{$(id).disabled=disabled});
+}
+function duplicateFillDialog(service){
+ if(!service||!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ duplicateSourceService=service;
+ const isEvent=isAssistanceManifestation(service.tipo_servizio);
+ $('duplicateSourceSummary').textContent='Servizio del '+(service.data_servizio||'—')+' · '+(service.tipo_servizio||'Servizio')+
+  ' · '+([service.paziente_cognome,service.paziente_nome].filter(Boolean).join(' ')||service.destinazione||service.ospedale_destinazione||'');
+ $('duplicateDate').value='';
+ $('duplicateDate').min=todaySafe();
+ $('duplicateVehicleInfo').value='Mezzo '+(service.mezzo||'—');
+ $('duplicateStart').value=duplicateTime(service.ora_partenza_prevista||service.ora_prevista);
+ $('duplicateLoad').value=duplicateTime(service.ora_carico_paziente_prevista);
+ $('duplicateDestinationTime').value=duplicateTime(service.ora_arrivo_destinazione_prevista);
+ $('duplicateAssistStart').value=duplicateTime(service.ora_inizio_assistenza_prevista);
+ $('duplicateAssistEnd').value=duplicateTime(service.ora_fine_assistenza_prevista);
+ $('duplicateReturn').value=duplicateTime(service.ora_rientro_previsto);
+ $('duplicatePatientLoadBox').classList.toggle('hidden',isEvent);
+ $('duplicateDestinationBox').classList.toggle('hidden',isEvent);
+ $('duplicateAssistStartBox').classList.toggle('hidden',!isEvent);
+ $('duplicateAssistEndBox').classList.toggle('hidden',!isEvent);
+ $('duplicateKeepTimes').checked=true;
+ duplicateSetTimesDisabled();
+ msg('duplicateMsg','');
+ const dlg=$('duplicateServiceDialog');
+ if(typeof dlg.showModal==='function')dlg.showModal();else dlg.setAttribute('open','');
+ setTimeout(()=>$('duplicateDate').focus(),50);
+}
+async function duplicateServiceRequest(id){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ let service=currentService?.id===id?currentService:null;
+ if(!service){
+  const r=await sb.from('servizi_giornalieri').select('*').eq('id',id).single();
+  if(r.error)return msg('smsg','Impossibile caricare il servizio da duplicare: '+r.error.message,'err');
+  service=r.data;
+ }
+ duplicateFillDialog(service);
+}
+function duplicateInferNight(service){
+ if(!service?.tariffa_destinazione_id)return false;
+ const row=tariffDestinations.find(x=>x.tariffa_destinazione_id===service.tariffa_destinazione_id);
+ if(!row||service.importo_calcolato===null||service.importo_calcolato===undefined)return false;
+ const base=Number(service.importo_calcolato);
+ const diurno=Number(row.importo_diurno),notturno=Number(row.importo_notturno);
+ return Number.isFinite(notturno)&&Math.abs(notturno-base)<0.005 &&
+  (!Number.isFinite(diurno)||Math.abs(diurno-base)>=0.005);
+}
+function duplicatePrepareNewForm(service,opts){
+ resetNewServiceForm();
+ $('d').value=opts.date;
+ $('m').value=service.mezzo||'';
+ populateServiceTariffOptions();
+ $('t').value=service.tipo_servizio||'';
+ updateManifestationTimes();
+
+ $('op').value=opts.start||'';
+ $('oc').value=opts.load||'';
+ $('odest').value=opts.destinationTime||'';
+ $('asStart').value=opts.assistStart||'';
+ $('asEnd').value=opts.assistEnd||'';
+ $('or').value=opts.returnTime||'';
+
+ servicePatientId=service.paziente_id||null;
+ $('pn').value=service.paziente_nome||'';
+ $('pc').value=service.paziente_cognome||'';
+ $('cf').value=service.codice_fiscale||'';
+ $('dn').value=service.data_nascita||'';
+ $('tel').value=service.telefono||'';
+ $('patientAddress').value=service.paziente_indirizzo||'';
+ $('patientEmail').value=service.paziente_email||'';
+ $('patientRemember').checked=false;
+ if(servicePatientId)msg('patientLookupMsg','Paziente collegato alla stessa anagrafica del servizio originale.','ok');
+
+ $('lp').value=service.luogo_partenza||'';
+ $('ip').value=service.indirizzo_partenza||'';
+ $('dest').value=service.destinazione||'';
+ $('idest').value=service.indirizzo_destinazione||'';
+ $('strutt').value=service.ospedale_destinazione||'';
+
+ $('newSediaMotorizzata').checked=!!service.sedia_motorizzata;
+ $('newBarellaBariatrica').checked=!!service.barella_bariatrica;
+
+ const eventContact=extractEventContact(service.note);
+ $('eventRefName').value=eventContact.name||'';
+ $('eventRefPhone').value=eventContact.phone||'';
+ $('note').value=isAssistanceManifestation(service.tipo_servizio)?eventContact.notes:(service.note||'');
+
+ const equipmentTotal=(service.sedia_motorizzata?15:0)+(service.barella_bariatrica?20:0);
+ const hasTariff=service.tariffario_id&&tariffs.some(t=>t.id===service.tariffario_id);
+ if(hasTariff){
+  $('tar').value=service.tariffario_id;
+  refreshTariffDestinations();
+  if([...$('tarDest').options].some(o=>o.value===service.tariffa_destinazione_id))$('tarDest').value=service.tariffa_destinazione_id||'';
+  $('tarNight').value=duplicateInferNight(service)?'true':'false';
+  const base=Number(service.importo_calcolato);
+  const adjustedBase=Number(service.importo_previsto)-equipmentTotal;
+  if(Number.isFinite(base)&&Number.isFinite(adjustedBase)){
+   const diff=Math.round((adjustedBase-base)*100)/100;
+   if(Math.abs(diff)>=0.01){
+    $('tarChangeType').value=diff>0?'PLUS':'MINUS';
+    $('tarChangeValue').disabled=false;
+    $('tarChangeValue').value=Math.abs(diff).toFixed(2);
+   }
+  }
+  updateTariffQuote();
+ }else{
+  $('tar').value='';
+  refreshTariffDestinations();
+  const manual=service.importo_previsto===null||service.importo_previsto===undefined?null:
+   Math.max(0,Number(service.importo_previsto)-equipmentTotal);
+  $('imp').value=manual===null?'':manual.toFixed(2);
+  updateTariffQuote();
+ }
+
+ const notice=$('duplicatePreparedNotice');
+ notice.textContent='📑 Copia preparata dal servizio del '+(service.data_servizio||'—')+
+  '. Controlla data, orari, mezzo, tariffa e dati del servizio. L’equipaggio NON viene copiato automaticamente.';
+ notice.classList.remove('hidden');
+ msg('fmsg','La copia è pronta ma non è ancora salvata. Verifica i dati e premi «Salva servizio» solo quando sono corretti.','warn');
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+$('duplicateKeepTimes').onchange=duplicateSetTimesDisabled;
+$('duplicateCancel').onclick=$('duplicateCancelTop').onclick=()=>{
+ const dlg=$('duplicateServiceDialog');if(typeof dlg.close==='function')dlg.close();else dlg.removeAttribute('open');
+ duplicateSourceService=null;
+};
+$('duplicateServiceForm').onsubmit=async e=>{
+ e.preventDefault();
+ if(!duplicateSourceService)return;
+ if(!$('duplicateDate').value)return msg('duplicateMsg','Seleziona la nuova data del servizio.','warn');
+ const keep=$('duplicateKeepTimes').checked,src=duplicateSourceService;
+ const opts={
+  date:$('duplicateDate').value,
+  start:keep?duplicateTime(src.ora_partenza_prevista||src.ora_prevista):$('duplicateStart').value,
+  load:keep?duplicateTime(src.ora_carico_paziente_prevista):$('duplicateLoad').value,
+  destinationTime:keep?duplicateTime(src.ora_arrivo_destinazione_prevista):$('duplicateDestinationTime').value,
+  assistStart:keep?duplicateTime(src.ora_inizio_assistenza_prevista):$('duplicateAssistStart').value,
+  assistEnd:keep?duplicateTime(src.ora_fine_assistenza_prevista):$('duplicateAssistEnd').value,
+  returnTime:keep?duplicateTime(src.ora_rientro_previsto):$('duplicateReturn').value
+ };
+ const dlg=$('duplicateServiceDialog');if(typeof dlg.close==='function')dlg.close();else dlg.removeAttribute('open');
+ selectView('new');
+ duplicatePrepareNewForm(src,opts);
+ duplicateSourceService=null;
+};
+
 async function view(v,options={}){
  if(prof?.ruolo==='CENTRALINO'&&['people','accounting','accessi','activityLog','backup'].includes(v))v='dash';
  if(v==='new'){
@@ -3213,8 +3406,9 @@ async function loadServices(){
  if(r.error)return msg('smsg','Errore ricerca servizi: '+r.error.message,'err');
  const rows=r.data||[];
  servicesCache=rows;
- $('tbody').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(x.data_servizio)+'</b><br>'+esc((x.ora_partenza_prevista||'').slice(0,5))+(x.ora_carico_paziente_prevista?'<br><span class="muted">Carico '+esc(x.ora_carico_paziente_prevista.slice(0,5))+'</span>':'')+'</td><td>'+esc(x.mezzo)+'<br><span class="muted">'+esc(x.targa||'')+'</span></td><td>'+esc(x.tipo_servizio||'—')+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+esc(x.luogo_partenza||'—')+' → '+esc(x.destinazione||x.ospedale_destinazione||'—')+'</td><td>'+esc(x.componenti_equipaggio??0)+' componenti</td><td><span class="pill">'+esc(x.stato_gestionale)+'</span></td><td class="'+(prof?.ruolo==='CENTRALINO'?'hidden':'')+'"><span class="pill b">'+esc(x.stato_pagamento||'—')+'</span></td><td><button class="btn secondary" data-open-service="'+esc(x.id)+'">Apri</button></td></tr>').join(''):'<tr><td colspan="9">Nessun servizio trovato con questi filtri.</td></tr>';
+ $('tbody').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(x.data_servizio)+'</b><br>'+esc((x.ora_partenza_prevista||'').slice(0,5))+(x.ora_carico_paziente_prevista?'<br><span class="muted">Carico '+esc(x.ora_carico_paziente_prevista.slice(0,5))+'</span>':'')+'</td><td>'+esc(x.mezzo)+'<br><span class="muted">'+esc(x.targa||'')+'</span></td><td>'+esc(x.tipo_servizio||'—')+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+esc(x.luogo_partenza||'—')+' → '+esc(x.destinazione||x.ospedale_destinazione||'—')+'</td><td>'+esc(x.componenti_equipaggio??0)+' componenti</td><td><span class="pill">'+esc(x.stato_gestionale)+'</span></td><td class="'+(prof?.ruolo==='CENTRALINO'?'hidden':'')+'"><span class="pill b">'+esc(x.stato_pagamento||'—')+'</span></td><td><div class="actions"><button class="btn secondary" data-open-service="'+esc(x.id)+'">Apri</button><button class="btn yellow" data-duplicate-service="'+esc(x.id)+'">📑 Duplica</button></div></td></tr>').join(''):'<tr><td colspan="9">Nessun servizio trovato con questi filtri.</td></tr>';
  $('tbody').querySelectorAll('[data-open-service]').forEach(button=>button.onclick=()=>openService(button.dataset.openService));
+ $('tbody').querySelectorAll('[data-duplicate-service]').forEach(button=>button.onclick=()=>duplicateServiceRequest(button.dataset.duplicateService));
  msg('smsg',rows.length+' '+(rows.length===1?'servizio trovato':'servizi trovati')+(rows.length===500?' · Mostrati i primi 500: restringi date o ricerca per risultati più precisi.':''),'ok');
 }
 $('refresh').onclick=loadServices;
@@ -3370,6 +3564,7 @@ async function loadServiceDetail(id=currentServiceId){
  msg('dCrewMsg','');
 }
 
+$('dDuplicate').onclick=()=>{if(currentService)duplicateFillDialog(currentService)};
 $('dBack').onclick=()=>view('services');
 
 function updateDetailEquipmentAmount(){
@@ -5867,7 +6062,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.47-20260925-dashboard-operativa';
+const CGE_APP_BUILD='13.48-dev-duplica-servizio-20260926';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
