@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Registro Viaggi – Croce Gialla Emergenza</title>
+<style>
+:root{--bg:#f4f7fb;--panel:#fff;--text:#152033;--muted:#68758a;--line:#dde4ee;--yellow:#f7c928;--nav:#18253a;--blue:#2879e8;--green:#2c9a62;--orange:#e78a26;--red:#d84d4d;--purple:#7b61c9;--shadow:0 8px 26px rgba(21,32,51,.08)}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+.app{display:flex;min-height:100vh}.sidebar{width:255px;background:var(--nav);color:white;padding:20px 14px;position:fixed;left:0;top:0;bottom:0;overflow:auto}
+.brand{display:flex;gap:12px;align-items:center;padding:4px 8px 22px}.logo{width:46px;height:46px;border-radius:12px;background:var(--yellow);color:#111;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px}.brand b{font-size:16px}.brand small{display:block;color:#aeb9c9;margin-top:4px}
+.navbtn{width:100%;border:0;color:white;padding:13px 14px;margin:5px 0;border-radius:11px;text-align:left;font-weight:700;cursor:pointer;font-size:14px}.navbtn.active{outline:3px solid rgba(255,255,255,.18)}
+.n1{background:#2879e8}.n2{background:#2c9a62}.n3{background:#7559c8}.n4{background:#e78a26}.n5{background:#2a8fa0}.n6{background:#d85656}.n7{background:#53657d}
+.main{margin-left:255px;width:calc(100% - 255px);padding:24px}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{background:#fff6ce;border:1px solid #ecd76d;padding:9px 13px;border-radius:999px;font-weight:700}
+.view{display:none}.view.active{display:block}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow)}.card{padding:18px}.card .lab{color:var(--muted);font-size:13px;font-weight:700}.card .val{font-size:28px;font-weight:800;margin-top:7px}.card .sub{font-size:12px;color:var(--muted);margin-top:6px}
+.panel{padding:18px;margin-bottom:18px}.panel h2{font-size:17px;margin:0 0 16px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:12px;font-weight:800;color:#526077}.field input,.field select,.field textarea{width:100%;padding:10px 11px;border:1px solid #ccd5e2;border-radius:9px;background:white;font-size:14px}.field textarea{min-height:82px;resize:vertical}.span2{grid-column:span 2}.span4{grid-column:span 4}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.btn{border:0;border-radius:9px;padding:11px 15px;font-weight:800;cursor:pointer}.primary{background:var(--green);color:white}.secondary{background:var(--blue);color:white}.warning{background:var(--orange);color:white}.danger{background:var(--red);color:white}.light{background:#edf2f8;color:#22304a}
+.filters{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:10px;margin-bottom:14px}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:1040px;background:#fff}th,td{padding:10px 9px;border-bottom:1px solid #e6ebf2;text-align:left;font-size:12px}th{background:#edf2f8;color:#43516a;position:sticky;top:0}.mini{padding:6px 8px;border:0;border-radius:7px;color:white;font-size:11px;font-weight:800;cursor:pointer}
+.empty{padding:30px;text-align:center;color:var(--muted)}.bars{display:flex;flex-direction:column;gap:10px}.barrow{display:grid;grid-template-columns:130px 1fr 70px;align-items:center;gap:10px;font-size:13px}.bar{height:13px;background:#edf1f6;border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);border-radius:999px}
+.vehiclegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.vehicle{border:1px solid var(--line);border-radius:13px;padding:16px;background:white}.vehicle strong{font-size:18px}.vehicle span{display:block;color:var(--muted);margin-top:7px}
+.notice{background:#fff8da;border:1px solid #ecd982;border-radius:11px;padding:12px 14px;font-size:13px;margin-bottom:16px}.demo{color:#9a6600;font-weight:800}.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px}
+@media(max-width:1050px){.cards,.vehiclegrid{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:repeat(2,1fr)}.span4{grid-column:span 2}.filters{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+@media(max-width:720px){.sidebar{position:static;width:100%;height:auto}.app{display:block}.main{margin:0;width:100%;padding:14px}.cards,.vehiclegrid,.formgrid{grid-template-columns:1fr}.span2,.span4{grid-column:span 1}.filters{grid-template-columns:1fr}.topbar{align-items:flex-start;gap:10px}.badge{font-size:12px}}
+@media print{.sidebar,.topbar,.actions,.filters,.no-print{display:none!important}.main{margin:0;width:100%;padding:0}.panel,.card{box-shadow:none;border:1px solid #bbb}.view{display:none!important}.view.active{display:block!important}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">CG</div><div><b>Registro Viaggi</b><small>Croce Gialla Emergenza</small></div></div>
+  <button class="navbtn n1 active" data-view="dashboard">▦ Dashboard</button>
+  <button class="navbtn n2" data-view="nuovo">＋ Nuovo viaggio</button>
+  <button class="navbtn n3" data-view="archivio">▤ Archivio viaggi</button>
+  <button class="navbtn n4" data-view="statistiche">▥ Statistiche</button>
+  <button class="navbtn n5" data-view="mezzi">▣ Mezzi</button>
+  <button class="navbtn n6" data-view="equipaggi">♟ Equipaggi</button>
+  <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
+</aside>
+<main class="main">
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova</div></div>
+
+  <section id="dashboard" class="view active">
+    <div class="notice"><span class="demo">DATI DEMO:</span> questa prima versione contiene alcuni viaggi di esempio, cancellabili dall'Archivio.</div>
+    <div class="cards">
+      <div class="card"><div class="lab">VIAGGI NEL MESE</div><div id="kViaggi" class="val">0</div><div class="sub">registrati nel mese corrente</div></div>
+      <div class="card"><div class="lab">KM NEL MESE</div><div id="kKm" class="val">0</div><div class="sub">chilometri registrati</div></div>
+      <div class="card"><div class="lab">IMPORTI NEL MESE</div><div id="kImporti" class="val">€ 0</div><div class="sub">totale importi</div></div>
+      <div class="card"><div class="lab">MEZZO PIÙ USATO</div><div id="kMezzo" class="val">–</div><div class="sub">numero viaggi nel mese</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h2>Ultimi viaggi</h2><div id="ultimi"></div></div>
+      <div class="panel"><h2>Utilizzo mezzi</h2><div id="barsDashboard" class="bars"></div></div>
+    </div>
+  </section>
+
+  <section id="nuovo" class="view">
+    <div class="panel">
+      <div class="section-title"><h2 id="formTitle">Nuovo viaggio</h2><button class="btn light no-print" onclick="resetForm()">Pulisci campi</button></div>
+      <form id="tripForm">
+        <input type="hidden" id="editId">
+        <div class="formgrid">
+          <div class="field"><label>N° VIAGGIO</label><input id="numero" readonly></div>
+          <div class="field"><label>DATA</label><input id="data" type="date" required></div>
+          <div class="field"><label>AMBULANZA / MEZZO</label><select id="mezzo" required></select></div>
+          <div class="field"><label>TARGA</label><input id="targa" readonly></div>
+          <div class="field"><label>KM PERCORSI</label><input id="km" type="number" min="0" step="1" required></div>
+          <div class="field"><label>ORA PARTENZA</label><input id="oraPartenza" type="time"></div>
+          <div class="field"><label>LUOGO PARTENZA</label><input id="partenza" list="luoghi" placeholder="es. Sede"></div>
+          <div class="field"><label>ORA DESTINAZIONE</label><input id="oraDest" type="time"></div>
+          <div class="field span2"><label>LUOGO DESTINAZIONE / FINE</label><input id="destinazione" list="luoghi" placeholder="Comune, ospedale o struttura"></div>
+          <div class="field"><label>ORA FINE</label><input id="oraFine" type="time"></div>
+          <div class="field"><label>IMPORTO €</label><input id="importo" type="number" min="0" step="1"></div>
+          <div class="field"><label>AUTISTA</label><input id="autista"></div>
+          <div class="field"><label>CAPO EQUIPAGGIO</label><input id="capo"></div>
+          <div class="field"><label>SOCCORRITORE 1</label><input id="soc1"></div>
+          <div class="field"><label>SOCCORRITORE 2</label><input id="soc2"></div>
+          <div class="field"><label>ACCOMPAGNATORE</label><input id="accompagnatore"></div>
+          <div class="field"><label>RSA</label><input id="rsa" placeholder="Facoltativo"></div>
+          <div class="field span2"><label>OSPEDALE / CLINICA</label><input id="ospedale" placeholder="Facoltativo"></div>
+          <div class="field span4"><label>NOTE</label><textarea id="note"></textarea></div>
+        </div>
+        <div class="actions"><button class="btn primary" type="submit">Salva viaggio</button><button class="btn light" type="button" onclick="showView('archivio')">Vai all'archivio</button></div>
+      </form>
+      <datalist id="luoghi"><option value="Sede"><option value="Arona"><option value="Borgomanero"><option value="Dormelletto"><option value="Castelletto Sopra Ticino"><option value="Novara"><option value="Verbania"><option value="Oleggio"><option value="Oleggio Castello"></datalist>
+    </div>
+  </section>
+
+  <section id="archivio" class="view">
+    <div class="panel">
+      <div class="section-title"><h2>Archivio viaggi</h2><div class="actions" style="margin:0"><button class="btn secondary" onclick="exportCSV()">Esporta Excel/CSV</button><button class="btn light" onclick="window.print()">Stampa / PDF</button></div></div>
+      <div class="filters">
+        <input id="fSearch" placeholder="Cerca viaggio, luogo, equipaggio..." oninput="renderArchivio()">
+        <input id="fDal" type="date" onchange="renderArchivio()">
+        <input id="fAl" type="date" onchange="renderArchivio()">
+        <select id="fMezzo" onchange="renderArchivio()"></select>
+        <button class="btn light" onclick="clearFilters()">Azzera filtri</button>
+      </div>
+      <div class="tablewrap"><table><thead><tr><th>N°</th><th>Data</th><th>Mezzo</th><th>Targa</th><th>Km</th><th>Partenza</th><th>Destinazione</th><th>Equipaggio</th><th>Importo</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="statistiche" class="view">
+    <div class="cards">
+      <div class="card"><div class="lab">VIAGGI TOTALI</div><div id="sViaggi" class="val">0</div></div>
+      <div class="card"><div class="lab">KM TOTALI</div><div id="sKm" class="val">0</div></div>
+      <div class="card"><div class="lab">IMPORTI TOTALI</div><div id="sImporti" class="val">€ 0</div></div>
+      <div class="card"><div class="lab">MEDIA KM / VIAGGIO</div><div id="sMedia" class="val">0</div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h2>Viaggi per mezzo</h2><div id="barsStats" class="bars"></div></div>
+      <div class="panel"><h2>Destinazioni più frequenti</h2><div id="destStats"></div></div>
+    </div>
+  </section>
+
+  <section id="mezzi" class="view">
+    <div class="panel"><h2>Mezzi configurati</h2><div id="vehicleGrid" class="vehiclegrid"></div></div>
+  </section>
+
+  <section id="equipaggi" class="view">
+    <div class="panel"><h2>Equipaggi</h2><p style="color:var(--muted)">In questa sezione potremo collegare l'elenco volontari e rendere i nominativi selezionabili da tendina. Nella versione prova i nomi possono essere digitati liberamente.</p>
+    <div class="notice">Prossimo passaggio consigliato: sincronizzare l'anagrafica volontari con il database, mantenendo il Registro Viaggi separato dal gestionale operativo.</div></div>
+  </section>
+
+  <section id="impostazioni" class="view">
+    <div class="panel"><h2>Impostazioni registro</h2>
+      <div class="formgrid">
+        <div class="field span2"><label>DENOMINAZIONE</label><input value="Croce Gialla Emergenza ODV"></div>
+        <div class="field"><label>ANNO REGISTRO</label><input value="2026" type="number"></div>
+        <div class="field"><label>PROSSIMO NUMERO</label><input id="nextNumberSetting" readonly></div>
+      </div>
+      <div class="actions"><button class="btn warning" onclick="resetDemo()">Ripristina dati demo</button><button class="btn danger" onclick="clearAll()">Cancella tutti i viaggi</button></div>
+    </div>
+  </section>
+</main>
+</div>
+<script>
+const vehicles=[
+ {name:'Ambulanza 06',plate:'EW048NX'},
+ {name:'Ambulanza 07',plate:'HB021TN'},
+ {name:'Ambulanza 08',plate:'HB022TN'},
+ {name:'Ambulanza 09',plate:'HD918LC'}
+];
+const key='cge_registro_viaggi_v1';
+function iso(d){return new Date(d).toISOString().slice(0,10)}
+function demoData(){
+ const now=new Date(); const d=n=>{const x=new Date(now);x.setDate(x.getDate()-n);return iso(x)}
+ return [
+ {id:'d1',numero:1,data:d(2),mezzo:'Ambulanza 09',targa:'HD918LC',km:74,oraPartenza:'08:15',partenza:'Sede',oraDest:'09:05',destinazione:'Ospedale Borgomanero',oraFine:'10:10',importo:90,autista:'Mario Rossi',capo:'Luca Bianchi',soc1:'',soc2:'',accompagnatore:'',rsa:'',ospedale:'Ospedale Borgomanero',note:'DATO DEMO'},
+ {id:'d2',numero:2,data:d(5),mezzo:'Ambulanza 07',targa:'HB021TN',km:48,oraPartenza:'14:00',partenza:'Sede',oraDest:'14:35',destinazione:'Arona',oraFine:'15:20',importo:75,autista:'Anna Verdi',capo:'Paolo Neri',soc1:'',soc2:'',accompagnatore:'',rsa:'',ospedale:'',note:'DATO DEMO'},
+ {id:'d3',numero:3,data:d(8),mezzo:'Ambulanza 08',targa:'HB022TN',km:112,oraPartenza:'10:20',partenza:'Sede',oraDest:'11:25',destinazione:'Novara',oraFine:'13:10',importo:120,autista:'Mario Rossi',capo:'Anna Verdi',soc1:'',soc2:'',accompagnatore:'',rsa:'',ospedale:'Ospedale Maggiore Novara',note:'DATO DEMO'}
+ ];
+}
+function getTrips(){let a=localStorage.getItem(key);if(!a){localStorage.setItem(key,JSON.stringify(demoData()));a=localStorage.getItem(key)}return JSON.parse(a||'[]')}
+function saveTrips(a){localStorage.setItem(key,JSON.stringify(a));renderAll()}
+function nextNum(){const a=getTrips();return a.length?Math.max(...a.map(x=>+x.numero||0))+1:1}
+function money(n){return '€ '+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function showView(id){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='nuovo'&&!document.getElementById('editId').value)resetForm();window.scrollTo(0,0)}
+document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>showView(b.dataset.view));
+function initSelects(){mezzo.innerHTML='<option value="">Seleziona mezzo</option>'+vehicles.map(v=>'<option>'+v.name+'</option>').join('');fMezzo.innerHTML='<option value="">Tutti i mezzi</option>'+vehicles.map(v=>'<option>'+v.name+'</option>').join('');vehicleGrid.innerHTML=vehicles.map(v=>'<div class="vehicle"><strong>'+v.name+'</strong><span>Targa: <b>'+v.plate+'</b></span><span>Stato: disponibile</span></div>').join('')}
+mezzo.onchange=()=>{const v=vehicles.find(x=>x.name===mezzo.value);targa.value=v?v.plate:''}
+function resetForm(){tripForm.reset();editId.value='';numero.value=nextNum();data.value=iso(new Date());formTitle.textContent='Nuovo viaggio';targa.value=''}
+tripForm.onsubmit=e=>{e.preventDefault();const ids=['numero','data','mezzo','targa','km','oraPartenza','partenza','oraDest','destinazione','oraFine','importo','autista','capo','soc1','soc2','accompagnatore','rsa','ospedale','note'];let obj={};ids.forEach(i=>obj[i]=document.getElementById(i).value);obj.numero=+obj.numero;obj.km=+obj.km||0;obj.importo=+obj.importo||0;let a=getTrips();if(editId.value){obj.id=editId.value;a=a.map(x=>x.id===obj.id?obj:x)}else{obj.id='v'+Date.now();a.push(obj)}saveTrips(a);resetForm();showView('archivio')}
+function renderArchivio(){let a=getTrips().slice().sort((x,y)=>y.data.localeCompare(x.data)||y.numero-x.numero);const q=fSearch.value.toLowerCase().trim(),dal=fDal.value,al=fAl.value,m=fMezzo.value;a=a.filter(x=>{const blob=Object.values(x).join(' ').toLowerCase();return(!q||blob.includes(q))&&(!dal||x.data>=dal)&&(!al||x.data<=al)&&(!m||x.mezzo===m)});archiveBody.innerHTML=a.length?a.map(x=>'<tr><td><b>'+x.numero+'</b></td><td>'+esc(x.data)+'</td><td>'+esc(x.mezzo)+'</td><td>'+esc(x.targa)+'</td><td>'+x.km+'</td><td>'+esc(x.partenza)+'</td><td>'+esc(x.destinazione)+'</td><td>'+esc([x.autista,x.capo,x.soc1,x.soc2].filter(Boolean).join(', '))+'</td><td>'+money(x.importo)+'</td><td><button class="mini" style="background:#2879e8" onclick="editTrip(\''+x.id+'\')">Modifica</button> <button class="mini" style="background:#d84d4d" onclick="deleteTrip(\''+x.id+'\')">Elimina</button></td></tr>').join(''):'<tr><td colspan="10" class="empty">Nessun viaggio trovato</td></tr>'}
+function editTrip(id){const x=getTrips().find(t=>t.id===id);if(!x)return;Object.keys(x).forEach(k=>{const el=document.getElementById(k);if(el)el.value=x[k]??''});editId.value=x.id;formTitle.textContent='Modifica viaggio N° '+x.numero;showView('nuovo')}
+function deleteTrip(id){if(confirm('Eliminare questo viaggio?'))saveTrips(getTrips().filter(x=>x.id!==id))}
+function clearFilters(){fSearch.value='';fDal.value='';fAl.value='';fMezzo.value='';renderArchivio()}
+function countsByVehicle(a){return vehicles.map(v=>({name:v.name,n:a.filter(x=>x.mezzo===v.name).length}))}
+function renderBars(target,a){const c=countsByVehicle(a),mx=Math.max(1,...c.map(x=>x.n));document.getElementById(target).innerHTML=c.map(x=>'<div class="barrow"><b>'+x.name+'</b><div class="bar"><i style="width:'+(x.n/mx*100)+'%"></i></div><span>'+x.n+' viaggi</span></div>').join('')}
+function renderDashboard(){const a=getTrips(),now=new Date(),ym=now.toISOString().slice(0,7),m=a.filter(x=>x.data.startsWith(ym));kViaggi.textContent=m.length;kKm.textContent=m.reduce((s,x)=>s+(+x.km||0),0).toLocaleString('it-IT');kImporti.textContent=money(m.reduce((s,x)=>s+(+x.importo||0),0));const c=countsByVehicle(m).sort((x,y)=>y.n-x.n);kMezzo.textContent=c[0]&&c[0].n?c[0].name.replace('Ambulanza ',''):'–';const u=a.slice().sort((x,y)=>y.data.localeCompare(x.data)).slice(0,5);ultimi.innerHTML=u.length?'<div class="tablewrap"><table style="min-width:0"><thead><tr><th>Data</th><th>Mezzo</th><th>Destinazione</th><th>Km</th></tr></thead><tbody>'+u.map(x=>'<tr><td>'+esc(x.data)+'</td><td>'+esc(x.mezzo)+'</td><td>'+esc(x.destinazione)+'</td><td>'+x.km+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">Nessun viaggio</div>';renderBars('barsDashboard',m)}
+function renderStats(){const a=getTrips(),km=a.reduce((s,x)=>s+(+x.km||0),0),imp=a.reduce((s,x)=>s+(+x.importo||0),0);sViaggi.textContent=a.length;sKm.textContent=km.toLocaleString('it-IT');sImporti.textContent=money(imp);sMedia.textContent=a.length?Math.round(km/a.length):0;renderBars('barsStats',a);const d={};a.forEach(x=>{if(x.destinazione)d[x.destinazione]=(d[x.destinazione]||0)+1});const rows=Object.entries(d).sort((a,b)=>b[1]-a[1]).slice(0,8);destStats.innerHTML=rows.length?'<table style="min-width:0"><thead><tr><th>Destinazione</th><th>Viaggi</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+r[1]+'</td></tr>').join('')+'</tbody></table>':'<div class="empty">Nessun dato</div>'}
+function exportCSV(){const a=getTrips();const cols=['numero','data','mezzo','targa','km','oraPartenza','partenza','oraDest','destinazione','oraFine','autista','capo','soc1','soc2','accompagnatore','importo','rsa','ospedale','note'];const line=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const csv='\ufeff'+cols.join(';')+'\n'+a.map(x=>cols.map(c=>line(x[c])).join(';')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),el=document.createElement('a');el.href=url;el.download='registro_viaggi_croce_gialla.csv';el.click();URL.revokeObjectURL(url)}
+function resetDemo(){if(confirm('Ripristinare i dati demo? I viaggi attuali saranno sostituiti.')){saveTrips(demoData())}}
+function clearAll(){if(confirm('ATTENZIONE: cancellare tutti i viaggi registrati?'))saveTrips([])}
+function renderAll(){renderDashboard();renderArchivio();renderStats();nextNumberSetting.value=nextNum()}
+initSelects();resetForm();renderAll();
+</script>
+</body>
+</html>
