@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Croce Gialla · Personale e Formazione</title>
+<style>
+:root{--n:#12375d;--y:#f4d447;--l:#dbe4eb;--m:#657989;--g:#2d9a69;--r:#b52d36;--w:#d6a100;--bg:#f4f7f9}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#253746}
+.hidden{display:none!important}.top{background:#fff;border-bottom:1px solid var(--l);position:sticky;top:0;z-index:10}
+.head{max-width:1500px;margin:auto;padding:10px 16px;display:flex;align-items:center;gap:12px}.head img{width:58px;height:58px;object-fit:contain}
+.brand{flex:1}.brand small{display:block;color:#d95522;font-weight:900}.brand strong{display:block;color:var(--n);font-size:18px}
+.wrap{max-width:1500px;margin:auto;padding:16px}.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px}
+.side{background:#fff;border:1px solid var(--l);border-radius:14px;padding:10px;height:max-content;position:sticky;top:92px}
+.nav{display:block;width:100%;border:1px solid var(--l);border-radius:9px;padding:10px 11px;margin:5px 0;text-align:left;background:#eef3f7;color:var(--n);font-weight:800;cursor:pointer}.nav.active{background:#fff0a7;border-color:#dec64f}
+.surface{background:#fff;border:1px solid var(--l);border-radius:16px;overflow:hidden}.hero{padding:20px;background:linear-gradient(120deg,#fff0a1,#fffbe6 58%,#fff);border-bottom:1px solid #eee2a4}
+.hero h1,.hero h2{margin:0 0 5px;color:var(--n)}.hero p{margin:0}.pad{padding:16px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.stat,.box{background:#fff;border:1px solid var(--l);border-radius:12px;padding:12px}
+.stat small{font-size:10px;font-weight:900;color:var(--m)}.stat b{display:block;font-size:26px;color:var(--n);margin-top:3px}
+.section{border:1px solid var(--l);border-radius:13px;padding:13px;margin:11px 0}.section h3{margin:0 0 10px;color:var(--n)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:4px}.field label{font-size:11px;font-weight:900;color:var(--n)}
+input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padding:9px 10px;background:#fff;color:#253746}
+.btn{border:0;border-radius:8px;padding:9px 12px;font-weight:850;cursor:pointer}.yellow{background:var(--y);color:var(--n)}.secondary{background:#eef2f6;color:var(--n)}.blue{background:var(--n);color:#fff}.danger{background:#fbe9ea;color:var(--r)}
+.actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.muted{color:var(--m);font-size:12px}.notice{padding:10px 12px;border-radius:9px;margin:9px 0;background:#edf6ff;border:1px solid #cfe4fa}.ok{background:#eaf8f1;color:#176a4b}.err{background:#fff0f0;color:#a32b34}.warn{background:#fff7df;color:#875d12}
+.pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:900;background:#e7edf3}.pill.g{background:#e7f6ef;color:#176a4b}.pill.r{background:#fdebed;color:#9d2730}.pill.w{background:#fff4c9;color:#795a00}.pill.b{background:#e8f1fb;color:#1d5488}
+.table{overflow:auto;border:1px solid var(--l);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:9px;border-bottom:1px solid #e7edf2;text-align:left;vertical-align:top}th{background:#f1f5f8;color:var(--n);font-size:12px}
+.login{min-height:100vh;display:grid;place-items:center;padding:18px}.loginCard{width:min(520px,100%);background:#fff;border:1px solid var(--l);border-radius:18px;overflow:hidden}.loginHead{padding:22px;text-align:center;background:linear-gradient(120deg,#fff0a1,#fffbe6)}.loginHead img{width:90px}.loginBody{padding:18px}
+.qualRow{display:grid;grid-template-columns:minmax(170px,1.2fr) 130px 130px auto;gap:8px;align-items:end;padding:9px;border:1px solid var(--l);border-radius:10px;margin:7px 0}
+.personSelected{background:#fffbea}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;overflow:auto}.nav{min-width:180px}.stats{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.stats,.grid2,.grid3,.grid4{grid-template-columns:1fr}.qualRow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="login" class="login">
+ <div class="loginCard">
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · V1.0</div></div>
+  <div class="loginBody">
+   <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
+   <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
+   <button id="loginBtn" class="btn yellow" style="width:100%;margin-top:12px">Accedi</button>
+   <div id="loginMsg"></div>
+   <div class="notice">Accesso riservato all'Amministrazione. Usa le stesse credenziali del Gestionale Operativo.</div>
+  </div>
+ </div>
+</div>
+
+<div id="app" class="hidden">
+ <div class="top"><div class="head">
+  <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · V1.0</strong><div id="who" class="muted"></div></div>
+  <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
+ </div></div>
+ <div class="wrap"><div class="layout">
+  <aside class="side">
+   <button class="nav active" data-view="dashboard">⌂ Dashboard</button>
+   <button class="nav" data-view="people">👥 Personale</button>
+   <button class="nav" data-view="deadlines">⏰ Scadenze</button>
+   <button class="nav" data-view="qualifications">🎓 Qualifiche</button>
+  </aside>
+  <main>
+   <section id="dashboard" class="surface">
+    <div class="hero"><h1>Dashboard formazione</h1><p>Situazione del personale, qualifiche e scadenze formative.</p></div>
+    <div class="pad">
+     <div class="stats">
+      <div class="stat"><small>PERSONALE ATTIVO</small><b id="kpiActive">0</b></div>
+      <div class="stat"><small>QUALIFICHE ATTIVE</small><b id="kpiQuals">0</b></div>
+      <div class="stat"><small>SCADUTE</small><b id="kpiExpired">0</b></div>
+      <div class="stat"><small>ENTRO 30 GIORNI</small><b id="kpi30">0</b></div>
+     </div>
+     <div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">⚠️ Scadenze più urgenti</h3><div class="muted">Qualifiche e attestati da controllare.</div></div><button class="btn secondary jump" data-go="deadlines">Vedi tutte</button></div><div id="urgentList"></div></div>
+     <div class="section"><h3>📊 Copertura qualifiche</h3><div id="coverage"></div></div>
+    </div>
+   </section>
+
+   <section id="people" class="surface hidden">
+    <div class="hero"><h2>👥 Personale</h2><p>Anagrafica collegata al Gestionale Operativo.</p></div>
+    <div class="pad">
+     <div class="section"><div class="grid3"><div class="field"><label>Cerca</label><input id="peopleSearch" placeholder="Nome, cognome o badge"></div><div class="field"><label>Stato</label><select id="peopleState"><option value="">Tutti</option><option>ATTIVO</option><option>ASPETTATIVA</option><option>SOSPESO</option><option>CESSATO</option></select></div><div class="field"><label>Qualifica</label><select id="peopleQual"><option value="">Tutte</option></select></div></div></div>
+     <div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Qualifiche</th><th>Prossima scadenza</th><th></th></tr></thead><tbody id="peopleBody"></tbody></table></div>
+     <div id="personDetail" class="section hidden" style="margin-top:14px">
+      <div class="actions" style="justify-content:space-between"><div><h3 id="personTitle" style="margin:0">Scheda personale</h3><div id="personSub" class="muted"></div></div><button id="closePerson" class="btn secondary">Chiudi</button></div>
+      <div class="grid4" style="margin-top:10px">
+       <div class="field"><label>Badge</label><input id="pBadge" disabled></div><div class="field"><label>Nome</label><input id="pName" disabled></div><div class="field"><label>Cognome</label><input id="pSurname" disabled></div><div class="field"><label>Stato</label><input id="pState" disabled></div>
+       <div class="field"><label>Telefono</label><input id="pPhone" disabled></div><div class="field"><label>Email</label><input id="pEmail" disabled></div><div class="field"><label>Data ingresso</label><input id="pEntry" disabled></div><div class="field"><label>Data nascita</label><input id="pBirth" disabled></div>
+      </div>
+      <div class="section"><h3>🎓 Qualifiche della persona</h3><div id="personQualList"></div>
+       <div class="grid3" style="margin-top:10px"><div class="field"><label>Aggiungi qualifica</label><select id="newQual"></select></div><div class="field"><label>Valida dal</label><input id="newQualFrom" type="date"></div><div class="field"><label>Valida al</label><input id="newQualTo" type="date"></div></div>
+       <div class="actions" style="margin-top:8px"><button id="addQual" class="btn yellow">Aggiungi / aggiorna qualifica</button></div><div id="personQualMsg"></div>
+      </div>
+      <div class="section"><h3>📁 Attestati e documenti</h3><div id="personDocs"></div></div>
+     </div>
+    </div>
+   </section>
+
+   <section id="deadlines" class="surface hidden">
+    <div class="hero"><h2>⏰ Scadenze formazione</h2><p>Controllo qualifiche e attestati in scadenza.</p></div>
+    <div class="pad">
+     <div class="section"><div class="grid3"><div class="field"><label>Finestra</label><select id="deadlineWindow"><option value="30">Entro 30 giorni</option><option value="60">Entro 60 giorni</option><option value="90" selected>Entro 90 giorni</option><option value="3650">Tutte</option></select></div><div class="field"><label>Tipo</label><select id="deadlineType"><option value="">Tutti</option><option value="QUALIFICA">Qualifiche</option><option value="DOCUMENTO">Attestati/documenti</option></select></div><div class="field"><label>Stato</label><select id="deadlineState"><option value="">Tutti</option><option value="SCADUTA">Scadute</option><option value="PROSSIMA">In scadenza</option><option value="FUTURA">Future</option></select></div></div></div>
+     <div class="table"><table><thead><tr><th>Persona</th><th>Tipo</th><th>Elemento</th><th>Scadenza</th><th>Mancano</th><th>Stato</th></tr></thead><tbody id="deadlineBody"></tbody></table></div>
+    </div>
+   </section>
+
+   <section id="qualifications" class="surface hidden">
+    <div class="hero"><h2>🎓 Qualifiche</h2><p>Panoramica delle abilitazioni utilizzate dal gestionale operativo.</p></div>
+    <div class="pad"><div id="qualificationCards" class="grid2"></div></div>
+   </section>
+  </main>
+ </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+<script>
+const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co', KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
+const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+const fmt=d=>d?new Date(d+'T00:00:00').toLocaleDateString('it-IT'):'—';
+function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c+'">'+esc(t)+'</div>':''}
+let people=[],defs=[],pquals=[],docs=[],selectedBadge=null;
+
+function view(id){document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hidden',s.id!==id));document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='deadlines')renderDeadlines();if(id==='qualifications')renderQualificationCards()}
+document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>view(b.dataset.view));
+document.querySelectorAll('.jump').forEach(b=>b.onclick=()=>view(b.dataset.go));
+
+function qName(code){const q=defs.find(x=>x.codice===code);const n=q?.nome||code;return code==='ALLEGATO_A'||/operatore\s+allegato\s*a/i.test(n)?'Accompagnatore':n}
+function daysTo(d){return Math.ceil((new Date(d+'T00:00:00')-new Date(today()+'T00:00:00'))/86400000)}
+function stateFor(d){const n=daysTo(d);return n<0?{key:'SCADUTA',label:'Scaduta',cls:'r'}:n<=30?{key:'PROSSIMA',label:'Entro 30 gg',cls:'w'}:{key:'FUTURA',label:'Regolare',cls:'g'}}
+function personName(b){return people.find(p=>p.badge===b)?.nome_completo||b}
+function personActive(p){return p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO'}
+
+async function loadAll(){
+ const [pr,qr,pqr,dr]=await Promise.all([
+  sb.from('personale').select('*').order('cognome'),
+  sb.from('qualifiche').select('*').eq('attiva',true).order('ordine'),
+  sb.from('personale_qualifiche').select('*').eq('attiva',true),
+  sb.from('documenti_personale').select('id,badge_personale,categoria,titolo,nome_file_originale,data_scadenza,note,created_at').order('created_at',{ascending:false})
+ ]);
+ const err=[pr.error,qr.error,pqr.error,dr.error].find(Boolean);if(err){alert(err.message);return}
+ people=pr.data||[];defs=qr.data||[];pquals=pqr.data||[];docs=dr.data||[];
+ renderDashboard();populateFilters();renderPeople();renderDeadlines();renderQualificationCards();
+ if(selectedBadge&&people.some(p=>p.badge===selectedBadge))openPerson(selectedBadge);
+}
+function allDeadlines(){
+ const a=[];
+ pquals.forEach(q=>{if(q.valida_al)a.push({badge:q.badge_personale,type:'QUALIFICA',name:qName(q.codice_qualifica),date:q.valida_al,raw:q})});
+ docs.forEach(d=>{if(d.data_scadenza)a.push({badge:d.badge_personale,type:'DOCUMENTO',name:d.titolo||d.nome_file_originale||d.categoria,date:d.data_scadenza,raw:d})});
+ return a.sort((x,y)=>String(x.date).localeCompare(String(y.date)));
+}
+function renderDashboard(){
+ const dl=allDeadlines(),exp=dl.filter(x=>daysTo(x.date)<0),soon=dl.filter(x=>daysTo(x.date)>=0&&daysTo(x.date)<=30);
+ $('kpiActive').textContent=people.filter(personActive).length;
+ $('kpiQuals').textContent=pquals.length;$('kpiExpired').textContent=exp.length;$('kpi30').textContent=soon.length;
+ const urgent=dl.filter(x=>daysTo(x.date)<=60).slice(0,10);
+ $('urgentList').innerHTML=urgent.length?urgent.map(x=>{const s=stateFor(x.date);return '<div class="box" style="margin:7px 0"><b>'+esc(personName(x.badge))+'</b> · '+esc(x.name)+' <span class="pill '+s.cls+'">'+esc(s.label)+'</span><br><span class="muted">'+esc(x.type==='QUALIFICA'?'Qualifica':'Documento')+' · '+esc(fmt(x.date))+' · '+esc(daysTo(x.date)<0?Math.abs(daysTo(x.date))+' gg fa':daysTo(x.date)+' gg')+'</span></div>'}).join(''):'<div class="notice ok">Nessuna scadenza urgente registrata.</div>';
+ $('coverage').innerHTML=defs.map(q=>{const n=new Set(pquals.filter(x=>x.codice_qualifica===q.codice).map(x=>x.badge_personale)).size;return '<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><b>'+esc(qName(q.codice))+'</b><span class="pill b">'+n+' persone</span></div></div>'}).join('');
+}
+function populateFilters(){
+ const prev=$('peopleQual').value;$('peopleQual').innerHTML='<option value="">Tutte</option>'+defs.map(q=>'<option value="'+esc(q.codice)+'">'+esc(qName(q.codice))+'</option>').join('');$('peopleQual').value=prev;
+ $('newQual').innerHTML='<option value="">Seleziona</option>'+defs.map(q=>'<option value="'+esc(q.codice)+'">'+esc(qName(q.codice))+'</option>').join('');
+}
+function nextPersonDeadline(badge){return allDeadlines().filter(x=>x.badge===badge&&daysTo(x.date)>=0)[0]||null}
+function renderPeople(){
+ const search=$('peopleSearch').value.trim().toLowerCase(),state=$('peopleState').value,qf=$('peopleQual').value;
+ const rows=people.filter(p=>{
+  const text=(p.badge+' '+(p.nome_completo||'')+' '+(p.nome||'')+' '+(p.cognome||'')).toLowerCase();
+  if(search&&!text.includes(search))return false;if(state&&(p.stato_anagrafico||'ATTIVO')!==state)return false;
+  if(qf&&!pquals.some(q=>q.badge_personale===p.badge&&q.codice_qualifica===qf))return false;return true;
+ });
+ $('peopleBody').innerHTML=rows.map(p=>{
+  const qs=pquals.filter(q=>q.badge_personale===p.badge).map(q=>qName(q.codice_qualifica)).join(', ')||'—';
+  const nx=nextPersonDeadline(p.badge);return '<tr class="'+(selectedBadge===p.badge?'personSelected':'')+'"><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs)+'</td><td>'+(nx?esc(nx.name)+'<br><span class="muted">'+esc(fmt(nx.date))+'</span>':'—')+'</td><td><button class="btn secondary" data-open-person="'+esc(p.badge)+'">Apri</button></td></tr>'
+ }).join('')||'<tr><td colspan="6">Nessuna persona trovata.</td></tr>';
+ document.querySelectorAll('[data-open-person]').forEach(b=>b.onclick=()=>openPerson(b.dataset.openPerson));
+}
+['peopleSearch','peopleState','peopleQual'].forEach(id=>$(id).oninput=renderPeople);
+
+function renderPersonQuals(){
+ const rows=pquals.filter(q=>q.badge_personale===selectedBadge).sort((a,b)=>qName(a.codice_qualifica).localeCompare(qName(b.codice_qualifica)));
+ $('personQualList').innerHTML=rows.length?rows.map(q=>'<div class="qualRow"><div><b>'+esc(qName(q.codice_qualifica))+'</b><div class="muted">'+esc(q.codice_qualifica)+'</div></div><div class="field"><label>Valida dal</label><input type="date" value="'+esc(q.valida_dal||'')+'" data-qfrom="'+esc(q.codice_qualifica)+'"></div><div class="field"><label>Valida al</label><input type="date" value="'+esc(q.valida_al||'')+'" data-qto="'+esc(q.codice_qualifica)+'"></div><div class="actions"><button class="btn secondary" data-qsave="'+esc(q.codice_qualifica)+'">Salva</button><button class="btn danger" data-qremove="'+esc(q.codice_qualifica)+'">Rimuovi</button></div></div>').join(''):'<div class="notice">Nessuna qualifica registrata.</div>';
+ document.querySelectorAll('[data-qsave]').forEach(b=>b.onclick=()=>saveQualDates(b.dataset.qsave));
+ document.querySelectorAll('[data-qremove]').forEach(b=>b.onclick=()=>removeQual(b.dataset.qremove));
+}
+function renderPersonDocs(){
+ const rows=docs.filter(d=>d.badge_personale===selectedBadge);
+ $('personDocs').innerHTML=rows.length?rows.map(d=>{const s=d.data_scadenza?stateFor(d.data_scadenza):null;return '<div class="box" style="margin:7px 0"><b>'+esc(d.titolo||d.nome_file_originale||d.categoria)+'</b>'+(s?' <span class="pill '+s.cls+'">'+esc(s.label)+'</span>':'')+'<br><span class="muted">'+esc(d.categoria||'Documento')+(d.data_scadenza?' · Scadenza '+esc(fmt(d.data_scadenza)):' · Nessuna scadenza')+'</span>'+(d.note?'<br>'+esc(d.note):'')+'</div>'}).join(''):'<div class="notice">Nessun documento o attestato registrato.</div>';
+}
+function openPerson(badge){
+ selectedBadge=badge;const p=people.find(x=>x.badge===badge);if(!p)return;
+ $('personDetail').classList.remove('hidden');$('personTitle').textContent=p.nome_completo||'Scheda personale';$('personSub').textContent='Badge '+p.badge;
+ $('pBadge').value=p.badge||'';$('pName').value=p.nome||'';$('pSurname').value=p.cognome||'';$('pState').value=p.stato_anagrafico||'ATTIVO';$('pPhone').value=p.telefono||'';$('pEmail').value=p.email||'';$('pEntry').value=p.data_ingresso||'';$('pBirth').value=p.data_nascita||'';
+ $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');renderPersonQuals();renderPersonDocs();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
+
+async function saveQualDates(code){
+ if(!selectedBadge)return;const from=document.querySelector('[data-qfrom="'+CSS.escape(code)+'"]').value||null,to=document.querySelector('[data-qto="'+CSS.escape(code)+'"]').value||null;
+ const r=await sb.from('personale_qualifiche').update({valida_dal:from,valida_al:to}).eq('badge_personale',selectedBadge).eq('codice_qualifica',code);
+ if(r.error)return msg('personQualMsg',r.error.message,'err');msg('personQualMsg','Validità aggiornata.','ok');await loadAll();
+}
+async function removeQual(code){
+ if(!selectedBadge||!confirm('Rimuovere questa qualifica dalla persona selezionata?'))return;
+ const r=await sb.from('personale_qualifiche').delete().eq('badge_personale',selectedBadge).eq('codice_qualifica',code);
+ if(r.error)return msg('personQualMsg',r.error.message,'err');msg('personQualMsg','Qualifica rimossa.','ok');await loadAll();
+}
+$('addQual').onclick=async()=>{
+ if(!selectedBadge||!$('newQual').value)return msg('personQualMsg','Seleziona una qualifica.','warn');
+ const code=$('newQual').value,from=$('newQualFrom').value||null,to=$('newQualTo').value||null;
+ const existing=pquals.find(q=>q.badge_personale===selectedBadge&&q.codice_qualifica===code);
+ const r=existing?await sb.from('personale_qualifiche').update({attiva:true,valida_dal:from,valida_al:to}).eq('badge_personale',selectedBadge).eq('codice_qualifica',code):await sb.from('personale_qualifiche').insert({badge_personale:selectedBadge,codice_qualifica:code,attiva:true,valida_dal:from,valida_al:to});
+ if(r.error)return msg('personQualMsg',r.error.message,'err');msg('personQualMsg','Qualifica salvata.','ok');await loadAll();
+};
+
+function renderDeadlines(){
+ const windowDays=Number($('deadlineWindow').value||90),type=$('deadlineType').value,state=$('deadlineState').value;
+ const rows=allDeadlines().filter(x=>{const d=daysTo(x.date);if(d>windowDays)return false;if(type&&x.type!==type)return false;const s=stateFor(x.date);if(state&&s.key!==state)return false;return true});
+ $('deadlineBody').innerHTML=rows.map(x=>{const d=daysTo(x.date),s=stateFor(x.date);return '<tr><td><b>'+esc(personName(x.badge))+'</b><br><span class="muted">Badge '+esc(x.badge)+'</span></td><td>'+esc(x.type==='QUALIFICA'?'Qualifica':'Documento')+'</td><td>'+esc(x.name)+'</td><td>'+esc(fmt(x.date))+'</td><td>'+esc(d<0?Math.abs(d)+' gg fa':d===0?'Oggi':d+' gg')+'</td><td><span class="pill '+s.cls+'">'+esc(s.label)+'</span></td></tr>'}).join('')||'<tr><td colspan="6">Nessuna scadenza nei filtri selezionati.</td></tr>';
+}
+['deadlineWindow','deadlineType','deadlineState'].forEach(id=>$(id).onchange=renderDeadlines);
+
+function renderQualificationCards(){
+ $('qualificationCards').innerHTML=defs.map(q=>{
+  const rows=pquals.filter(x=>x.codice_qualifica===q.codice),active=rows.filter(x=>!x.valida_al||daysTo(x.valida_al)>=0).length,expired=rows.filter(x=>x.valida_al&&daysTo(x.valida_al)<0).length,soon=rows.filter(x=>x.valida_al&&daysTo(x.valida_al)>=0&&daysTo(x.valida_al)<=30).length;
+  return '<div class="box"><div class="actions" style="justify-content:space-between"><h3 style="margin:0">'+esc(qName(q.codice))+'</h3><span class="pill b">'+rows.length+' totali</span></div><div class="stats" style="margin-top:10px;grid-template-columns:repeat(3,1fr)"><div class="stat"><small>VALIDE</small><b style="font-size:20px">'+active+'</b></div><div class="stat"><small>SCADUTE</small><b style="font-size:20px">'+expired+'</b></div><div class="stat"><small>30 GG</small><b style="font-size:20px">'+soon+'</b></div></div></div>'
+ }).join('');
+}
+
+async function enter(){
+ const u=await sb.auth.getUser();if(!u.data.user)return;
+ const r=await sb.from('accessi_app').select('nome,ruolo,attivo').single();
+ if(r.error||!r.data?.attivo||r.data.ruolo!=='AMMINISTRATORE'){await sb.auth.signOut();return msg('loginMsg','Accesso consentito esclusivamente all’Amministrazione.','err')}
+ $('login').classList.add('hidden');$('app').classList.remove('hidden');$('who').textContent=(r.data.nome||'Amministrazione')+' · '+u.data.user.email;await loadAll();
+}
+$('loginBtn').onclick=async()=>{msg('loginMsg','Accesso in corso...');const r=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('pw').value});if(r.error)return msg('loginMsg',r.error.message,'err');enter()};
+$('pw').onkeydown=e=>{if(e.key==='Enter')$('loginBtn').click()};
+$('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
+$('backMain').onclick=()=>location.href='../';
+sb.auth.getSession().then(x=>{if(x.data.session)enter()});
+</script>
+</body>
+</html>
