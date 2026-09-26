@@ -43,7 +43,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.12</div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.13</div></div>
 
   <section id="dashboard" class="view active">
     <div class="notice"><span class="demo">DATI DEMO:</span> questa prima versione contiene alcuni viaggi di esempio, cancellabili dall'Archivio.</div>
@@ -166,9 +166,9 @@ function iso(d){return new Date(d).toISOString().slice(0,10)}
 function demoData(){
  const now=new Date(); const d=n=>{const x=new Date(now);x.setDate(x.getDate()-n);return iso(x)}
  return [
- {id:'d1',numero:1,data:d(2),mezzo:'Ambulanza 09',targa:'HD918LC',km:74,oraPartenza:'08:15',partenza:'Sede',oraDest:'09:05',destinazione:'Ospedale Borgomanero',oraFine:'10:10',importo:90,autista:'Mario Rossi',capo:'Luca Bianchi',soc1:'',soc2:'',accompagnatore:'',rsa:'',ospedale:'Ospedale Borgomanero',note:'DATO DEMO'},
- {id:'d2',numero:2,data:d(5),mezzo:'Ambulanza 07',targa:'HB021TN',km:48,oraPartenza:'14:00',partenza:'Sede',oraDest:'14:35',destinazione:'Arona',oraFine:'15:20',importo:75,autista:'Anna Verdi',capo:'Paolo Neri',soc1:'',soc2:'',accompagnatore:'',rsa:'',ospedale:'',note:'DATO DEMO'},
- {id:'d3',numero:3,data:d(8),mezzo:'Ambulanza 08',targa:'HB022TN',km:112,oraPartenza:'10:20',partenza:'Sede',oraDest:'11:25',destinazione:'Novara',oraFine:'13:10',importo:120,autista:'Mario Rossi',capo:'Anna Verdi',soc1:'',soc2:'',accompagnatore:'',rsa:'',ospedale:'Ospedale Maggiore Novara',note:'DATO DEMO'}
+ {id:'d1',numero:1,data:d(2),mezzo:'Ambulanza 09',targa:'HB022TN',km:74,oraPartenza:'08:15',partenza:'Sede',oraDest:'09:05',destinazione:'Ospedale Borgomanero',oraFine:'10:10',importo:90,autista:'Mario Rossi',capo:'Luca Bianchi',soc1:'',soc2:'',accompagnatore:'',rsa:'',ospedale:'Ospedale Borgomanero',note:'DATO DEMO'},
+ {id:'d2',numero:2,data:d(5),mezzo:'Ambulanza 07',targa:'HD918LC',km:48,oraPartenza:'14:00',partenza:'Sede',oraDest:'14:35',destinazione:'Arona',oraFine:'15:20',importo:75,autista:'Anna Verdi',capo:'Paolo Neri',soc1:'',soc2:'',accompagnatore:'',rsa:'',ospedale:'',note:'DATO DEMO'},
+ {id:'d3',numero:3,data:d(8),mezzo:'Ambulanza 08',targa:'HB021TN',km:112,oraPartenza:'10:20',partenza:'Sede',oraDest:'11:25',destinazione:'Novara',oraFine:'13:10',importo:120,autista:'Mario Rossi',capo:'Anna Verdi',soc1:'',soc2:'',accompagnatore:'',rsa:'',ospedale:'Ospedale Maggiore Novara',note:'DATO DEMO'}
  ];
 }
 function getTrips(){let a=localStorage.getItem(key);if(!a){localStorage.setItem(key,JSON.stringify(demoData()));a=localStorage.getItem(key)}return JSON.parse(a||'[]')}
