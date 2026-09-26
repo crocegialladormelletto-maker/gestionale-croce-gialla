@@ -563,7 +563,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.56</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.57</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -617,7 +617,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.56</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.57</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -3855,9 +3855,14 @@ $('form').onsubmit=async e=>{
   if(!row.nome||!row.cognome)return msg('fmsg','Nome e cognome necessari per memorizzare il paziente.','warn');
   if(row.codice_fiscale&&row.codice_fiscale.length!==16)return msg('fmsg','Controlla il codice fiscale del paziente.','warn');
   if(!$('patientEmail').checkValidity())return msg('fmsg','Controlla l’indirizzo e-mail del paziente.','warn');
-  const pr=await sb.from('anagrafica_pazienti').insert(row).select('id').single();
-  if(pr.error)return msg('fmsg','Anagrafica non salvata: '+pr.error.message+' Se il paziente esiste già, cercalo e selezionalo.','err');
-  linkedPatient=pr.data.id;servicePatientId=linkedPatient;
+  const duplicate=await patientFindDuplicate(row);
+  if(duplicate){
+   linkedPatient=duplicate.id;servicePatientId=linkedPatient;
+  }else{
+   const pr=await sb.from('anagrafica_pazienti').insert(row).select('id').single();
+   if(pr.error)return msg('fmsg','Anagrafica non salvata: '+pr.error.message,'err');
+   linkedPatient=pr.data.id;servicePatientId=linkedPatient;
+  }
  }
  const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:isEvent?null:($('odest').value||null),ora_inizio_assistenza_prevista:isEvent?($('asStart').value||null):null,ora_fine_assistenza_prevista:isEvent?($('asEnd').value||null):null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?price.base:null,importo_finale:amount,sedia_motorizzata:$('newSediaMotorizzata').checked,barella_bariatrica:$('newBarellaBariatrica').checked,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
  const r=await sb.from('servizi_giornalieri').insert(p).select('id').single();
@@ -3883,6 +3888,29 @@ function patientServiceRow(){
  indirizzo:$('patientAddress').value.trim()||null,email:$('patientEmail').value.trim().toLowerCase()||null};
 }
 function patientCardLabel(p){return [p.cognome,p.nome,p.data_nascita||'',p.codice_fiscale||''].filter(Boolean).join(' · ')}
+function patientNormText(v){return String(v||'').trim().toLocaleLowerCase('it-IT').replace(/\s+/g,' ')}
+function patientNormPhone(v){return String(v||'').replace(/\D/g,'')}
+async function patientFindDuplicate(row,excludeId=null){
+ if(!['CENTRALINO','AMMINISTRATORE'].includes(prof?.ruolo)||!row?.nome||!row?.cognome)return null;
+ if(row.codice_fiscale){
+  const cf=await sb.from('anagrafica_pazienti').select(PATIENT_FIELDS).eq('codice_fiscale',row.codice_fiscale).limit(5);
+  if(!cf.error){
+   const found=(cf.data||[]).find(p=>p.id!==excludeId);
+   if(found)return found;
+  }
+ }
+ const sameName=await sb.from('anagrafica_pazienti').select(PATIENT_FIELDS)
+  .ilike('nome',row.nome.trim()).ilike('cognome',row.cognome.trim()).limit(50);
+ if(sameName.error)return null;
+ const phone=patientNormPhone(row.telefono),email=patientNormText(row.email),dob=row.data_nascita||'';
+ return (sameName.data||[]).find(p=>{
+  if(p.id===excludeId)return false;
+  const sameDob=!!dob&&dob===(p.data_nascita||'');
+  const sameEmail=!!email&&email===patientNormText(p.email);
+  const samePhone=phone.length>=6&&phone===patientNormPhone(p.telefono);
+  return sameDob||sameEmail||samePhone;
+ })||null;
+}
 async function patientFind(term){
  if(!['CENTRALINO','AMMINISTRATORE'].includes(prof?.ruolo))return {data:[],error:{message:'Accesso non autorizzato'}};
  const q=String(term||'').trim();
@@ -4004,6 +4032,15 @@ $('paSave').onclick=async()=>{
  if(!row.nome||!row.cognome)return msg('paMsg','Nome e cognome obbligatori.','warn');
  if(row.codice_fiscale&&row.codice_fiscale.length!==16)return msg('paMsg','Controlla codice fiscale: sono richiesti 16 caratteri.','warn');
  if(!$('paEmail').checkValidity())return msg('paMsg','Controlla il formato dell’indirizzo e-mail.','warn');
+ const duplicate=await patientFindDuplicate(row,adminPatientId);
+ if(duplicate){
+  if(!adminPatientId){
+   patientAdminOpen(duplicate,true);
+   await loadPatientDirectory();
+   return msg('paMsg','Paziente già presente in anagrafica: ho aperto la scheda esistente. Non è stato creato alcun doppione.','warn');
+  }
+  return msg('paMsg','Salvataggio bloccato: esiste già un’altra anagrafica compatibile con questi dati. Apri la scheda esistente invece di creare un doppione.','warn');
+ }
  const query=adminPatientId?
  sb.from('anagrafica_pazienti').update(row).eq('id',adminPatientId):
  sb.from('anagrafica_pazienti').insert(row);
@@ -6413,7 +6450,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.56-20260926-elimina-paziente';
+const CGE_APP_BUILD='13.57-20260926-no-doppi-pazienti';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
