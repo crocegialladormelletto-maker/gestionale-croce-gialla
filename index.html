@@ -4158,14 +4158,18 @@ function emCover(t){
 }
 function emEntry(t,a){
  const name=people.find(p=>p.badge===a.badge_personale)?.nome_completo||a.badge_personale,
- unavailable=String(a.risposta||'').toUpperCase()==='NON DISPONIBILE';
- return '<div class="em-entry '+(unavailable?'em-unavailable':'')+'"><strong>'+esc(name)+'</strong><small>Mezzo '+esc(t.mezzo||'—')+' · '+esc(calTime(t.ora_inizio))+'–'+esc(calTime(t.ora_fine))+(emHour(t.ora_fine)<=emHour(t.ora_inizio)?' (+1g)':'')+'</small><br><span class="pill '+(unavailable?'r':'g')+'">'+(unavailable?'Non disponibile':'Assegnato')+'</span></div>'
+ unavailable=String(a.risposta||'').toUpperCase()==='NON DISPONIBILE',
+ editable=t.data_turno>=todaySafe()&&['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo);
+ return '<div class="em-entry '+(unavailable?'em-unavailable':'')+'"><strong>'+esc(name)+'</strong><small>Mezzo '+esc(t.mezzo||'—')+' · '+esc(calTime(t.ora_inizio))+'–'+esc(calTime(t.ora_fine))+(emHour(t.ora_fine)<=emHour(t.ora_inizio)?' (+1g)':'')+'</small><br><span class="pill '+(unavailable?'r':'g')+'">'+(unavailable?'Non disponibile':'Assegnato')+'</span>'+
+  (editable?'<button type="button" class="btn danger" style="padding:3px 7px;margin:5px 0 0" data-em-turn-remove="'+esc(a.id)+'">Rimuovi</button>':'')+'</div>'
 }
 function emFasciaEntry(row){
+ const editable=row.giorno>=todaySafe()&&['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo);
  return '<div class="em-entry em-definitive"><strong>'+esc(row.nome_completo||row.badge_personale)+
   '</strong><small>Iscritto alla fascia '+esc(row.fascia)+
   ' · '+(row.mezzo?'Mezzo '+esc(row.mezzo):'mezzo non assegnato')+
-  '</small><br><span class="pill g">Definitivo</span></div>';
+  '</small><br><span class="pill g">Definitivo</span>'+
+  (editable?'<button type="button" class="btn danger" style="padding:3px 7px;margin:5px 0 0" data-em-fascia-remove="'+esc(row.id)+'">Rimuovi</button>':'')+'</div>';
 }
 function emgAssignedMezzo(rows){
  return rows.find(row=>row.mezzo)?.mezzo||'';
@@ -4255,9 +4259,36 @@ function emRender(){
  $('emCount').textContent=shown.length+' '+(shown.length===1?'turno programmato':'turni programmati')+
   (!emVehicle?' · '+emFasciaRows.length+' iscrizioni definitive per fascia':' · iscrizioni per fascia non legate al mezzo');
  $('emDays').innerHTML=days.map(emRenderDay).join('');
+ $('emDays').querySelectorAll('[data-em-turn-remove]').forEach(button=>button.onclick=()=>emRemoveTurnAssignment(button.dataset.emTurnRemove));
+ $('emDays').querySelectorAll('[data-em-fascia-remove]').forEach(button=>button.onclick=()=>emRemoveFasciaAssignment(button.dataset.emFasciaRemove));
  rosterCrewBind('emDays');
  $('emDays').querySelectorAll('[data-emg-mezzo-save]').forEach(button=>button.onclick=()=>emgAssignMezzo(button));
 }
+async function emRemoveTurnAssignment(id){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const row=emAssignments.find(x=>x.id===id);
+ if(!row)return msg('emMsg','Componente non trovato. Aggiorna il turnario.','warn');
+ const turn=emTurns.find(t=>t.id===row.turno_id);
+ const name=people.find(p=>p.badge===row.badge_personale)?.nome_completo||row.badge_personale;
+ if(!confirm('Rimuovere '+name+' dal turno Emergenza 118'+(turn?' del '+turn.data_turno:'')+'?'))return;
+ const r=await sb.from('turni_personale').delete().eq('id',id).eq('turno_id',row.turno_id);
+ if(r.error)return msg('emMsg','Rimozione non riuscita: '+r.error.message,'err');
+ await loadEmergencyRoster();
+ msg('emMsg','Componente rimosso. Ricontrolla la copertura dell’equipaggio.','ok');
+}
+async function emRemoveFasciaAssignment(id){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const row=emFasciaRows.find(x=>x.id===id)||emgAdminRows.find(x=>x.id===id);
+ if(!row)return msg('emMsg','Componente non trovato. Aggiorna il turnario.','warn');
+ const name=row.nome_completo||row.badge_personale;
+ if(!confirm('Rimuovere '+name+' dalla fascia Emergenza 118 '+row.giorno+' · '+row.fascia+'?'))return;
+ const r=await sb.rpc('cge_emergenza_rimuovi_v2',{p_id:id});
+ if(r.error)return msg('emMsg','Rimozione non riuscita: '+r.error.message,'err');
+ await loadEmergenzaAdmin();
+ await loadEmergencyRoster(true);
+ msg('emMsg','Componente rimosso dalla fascia.','ok');
+}
+
 async function loadEmergencyRoster(skipAdmin=false){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  if(!skipAdmin)void loadEmergenzaAdmin();
@@ -4275,7 +4306,7 @@ async function loadEmergencyRoster(skipAdmin=false){
  }
  const turns=(r.data||[]).filter(t=>!['ANNULLATO','CANCELLATO'].includes(String(t.stato||'').toUpperCase()));
  const assigned=turns.length?await sb.from('turni_personale')
-  .select('turno_id,badge_personale,ruolo,risposta,confermato')
+  .select('id,turno_id,badge_personale,ruolo,risposta,confermato')
   .in('turno_id',turns.map(t=>t.id)):{data:[],error:null};
  if(seq!==emRosterSeq)return;
  if(assigned.error)return msg('emMsg','Errore lettura equipaggi: '+assigned.error.message,'err');
@@ -4567,7 +4598,7 @@ function emgRenderDay(kind){
   mezzo=emgAssignedMezzo(slot),
   peopleHtml=slot.map(row=>'<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
    ' · <b>'+esc(emgRoleLabel(row.ruolo))+'</b>'+
-   (admin&&prof?.ruolo==='AMMINISTRATORE'?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-emg-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
+   (admin&&['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-emg-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
    '</div>').join(''),
   missing=['AUTISTA','CAPO_SERVIZIO'].filter(role=>!slot.some(x=>x.ruolo===role)).map(emgRoleLabel),
   state=covered?'Completo · autista e capo servizio presenti':'Da completare · mancano '+missing.join(' e ');
@@ -4678,14 +4709,14 @@ async function emgJoin(day,fascia){
  finally{emgVolBusy=false}
 }
 async function emgRemove(id){
- if(prof?.ruolo!=='AMMINISTRATORE'||emgAdminBusy)return;
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||emgAdminBusy)return;
  const row=emgAdminRows.find(x=>x.id===id);
  if(!row)return;
  if(!confirm('Rimuovere '+row.nome_completo+' dal turno definitivo '+row.giorno+' · '+row.fascia+'?'))return;
  emgAdminBusy=true;
  msg('emgAdminMsg','Aggiornamento turno...');
  try{
-  const r=await sb.rpc('cge_emergenza_rimuovi',{p_id:id});
+  const r=await sb.rpc('cge_emergenza_rimuovi_v2',{p_id:id});
   if(r.error)throw r.error;
   await loadEmergenzaAdmin();
   if(!$('emergency').classList.contains('hidden'))await loadEmergencyRoster(true);
@@ -4743,7 +4774,10 @@ function asMonthRenderSelected(){
   const crew=asMonthCrew.filter(row=>row.servizio_id===s.id);
   const crewHtml=crew.length?crew.map(row=>{
    const name=people.find(p=>p.badge===row.badge_personale)?.nome_completo||row.badge_personale;
-   return '<div class="dim-person">• '+esc(name)+' · <b>'+esc(EM_ROLES.find(x=>x[0]===row.ruolo)?.[1]||row.ruolo)+'</b></div>';
+   const editable=s.data_servizio>=todaySafe()&&!['ANNULLATO','CHIUSO','TERMINATO','DA CONTABILIZZARE'].includes(String(s.stato_gestionale||'').toUpperCase());
+   return '<div class="dim-person">• '+esc(name)+' · <b>'+esc(EM_ROLES.find(x=>x[0]===row.ruolo)?.[1]||row.ruolo)+'</b>'+
+    (editable?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:6px" data-as-service-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
+    '</div>';
   }).join(''):'<div class="muted">Nessun operatore ancora assegnato.</div>';
   const times='Partenza '+(calTime(s.ora_partenza_prevista)||'—')+
    ' · Inizio '+(calTime(s.ora_inizio_assistenza_prevista)||'—')+
@@ -4757,6 +4791,8 @@ function asMonthRenderSelected(){
  }).join(''):'<div class="notice">Nessuna manifestazione programmata in questa data. Per inserirne una, utilizza «Nuovo servizio».</div>';
  $('asMonthDay').querySelectorAll('[data-as-month-open]').forEach(button=>
   button.onclick=()=>asMonthOpenService(button.dataset.asMonthOpen));
+ $('asMonthDay').querySelectorAll('[data-as-service-remove]').forEach(button=>
+  button.onclick=()=>asRemoveServiceCrew(button.dataset.asServiceRemove));
 }
 async function loadAssistanceMonth(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
@@ -4776,7 +4812,7 @@ async function loadAssistanceMonth(){
  const services=(result.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio)
   &&String(s.stato||'').toUpperCase()!=='ANNULLATO');
  const crew=services.length?
-  await sb.from('servizi_equipaggio').select('servizio_id,badge_personale,ruolo')
+  await sb.from('servizi_equipaggio').select('id,servizio_id,badge_personale,ruolo')
    .in('servizio_id',services.map(s=>s.id)):
   {data:[],error:null};
  if(seq!==asMonthSeq)return;
@@ -4843,15 +4879,19 @@ function asCover(t){
 }
 function asEntry(t,a){
  const name=people.find(p=>p.badge===a.badge_personale)?.nome_completo||a.badge_personale,
- unavailable=String(a.risposta||'').toUpperCase()==='NON DISPONIBILE';
- return '<div class="em-entry '+(unavailable?'em-unavailable':'')+'"><strong>'+esc(name)+'</strong><small>Mezzo '+esc(t.mezzo||'—')+' · '+esc(calTime(t.ora_inizio))+'–'+esc(calTime(t.ora_fine))+(emHour(t.ora_fine)<=emHour(t.ora_inizio)?' (+1g)':'')+'</small><br><span class="pill '+(unavailable?'r':'g')+'">'+(unavailable?'Non disponibile':'Assegnato')+'</span></div>'
+ unavailable=String(a.risposta||'').toUpperCase()==='NON DISPONIBILE',
+ editable=t.data_turno>=todaySafe()&&['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo);
+ return '<div class="em-entry '+(unavailable?'em-unavailable':'')+'"><strong>'+esc(name)+'</strong><small>Mezzo '+esc(t.mezzo||'—')+' · '+esc(calTime(t.ora_inizio))+'–'+esc(calTime(t.ora_fine))+(emHour(t.ora_fine)<=emHour(t.ora_inizio)?' (+1g)':'')+'</small><br><span class="pill '+(unavailable?'r':'g')+'">'+(unavailable?'Non disponibile':'Assegnato')+'</span>'+
+  (editable?'<button type="button" class="btn danger" style="padding:3px 7px;margin:5px 0 0" data-as-turn-remove="'+esc(a.id)+'">Rimuovi</button>':'')+'</div>'
 }
 function asServiceName(s){return s.ospedale_destinazione||s.tipo_servizio_altro||s.tipo_servizio||'Assistenza manifestazione'}
 function asServiceTime(s){return (calTime(s.ora_inizio_assistenza_prevista)||calTime(s.ora_partenza_prevista)||'—')+'–'+(calTime(s.ora_fine_assistenza_prevista)||calTime(s.ora_rientro_previsto)||'—')}
 function asServiceCrewEntry(s,a){
- const p=people.find(p=>p.badge===a.badge_personale),name=p?.nome_completo||a.badge_personale||'Operatore';
+ const p=people.find(p=>p.badge===a.badge_personale),name=p?.nome_completo||a.badge_personale||'Operatore',
+ editable=s.data_servizio>=todaySafe()&&!['ANNULLATO','CHIUSO','TERMINATO','DA CONTABILIZZARE'].includes(String(s.stato_gestionale||'').toUpperCase())&&['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo);
  return '<div class="em-entry as-service-assignment"><strong>'+esc(name)+'</strong>'+
- '<small>Mezzo '+esc(s.mezzo||'—')+' · '+esc(asServiceTime(s))+'</small></div>';
+ '<small>Mezzo '+esc(s.mezzo||'—')+' · '+esc(asServiceTime(s))+'</small>'+
+ (editable?'<button type="button" class="btn danger" style="padding:3px 7px;margin:5px 0 0" data-as-service-remove="'+esc(a.id)+'">Rimuovi</button>':'')+'</div>';
 }
 function asServiceRow(s){
  const crew=asServiceAssignments.filter(a=>a.servizio_id===s.id);
@@ -4908,8 +4948,33 @@ function asRender(){
  $('asCount').textContent=shownServices.length+' '+(shownServices.length===1?'servizio':'servizi')+' · '+shown.length+' '+(shown.length===1?'turno':'turni')+' di assistenza';
  $('asDays').innerHTML=days.map(asRenderDay).join('');
  $('asDays').querySelectorAll('[data-as-open-service]').forEach(b=>b.onclick=()=>openService(b.dataset.asOpenService));
+ $('asDays').querySelectorAll('[data-as-service-remove]').forEach(b=>b.onclick=()=>asRemoveServiceCrew(b.dataset.asServiceRemove));
+ $('asDays').querySelectorAll('[data-as-turn-remove]').forEach(b=>b.onclick=()=>asRemoveTurnCrew(b.dataset.asTurnRemove));
  rosterCrewBind('asDays');
  renderAssistanceCandidates();
+}
+
+async function asRemoveServiceCrew(id){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const row=asServiceAssignments.find(x=>x.id===id)||asMonthCrew.find(x=>x.id===id);
+ if(!row)return msg('asMsg','Componente non trovato. Aggiorna il turnario.','warn');
+ const name=people.find(p=>p.badge===row.badge_personale)?.nome_completo||row.badge_personale;
+ if(!confirm('Rimuovere '+name+' dall’equipaggio di questa assistenza?'))return;
+ const r=await sb.from('servizi_equipaggio').delete().eq('id',id).eq('servizio_id',row.servizio_id);
+ if(r.error)return msg('asMsg','Rimozione non riuscita: '+r.error.message,'err');
+ await loadAssistanceRoster();
+ msg('asMsg','Componente rimosso. Ora puoi inserire la persona o il ruolo corretto.','ok');
+}
+async function asRemoveTurnCrew(id){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const row=asAssignments.find(x=>x.id===id);
+ if(!row)return msg('asMsg','Componente non trovato. Aggiorna il turnario.','warn');
+ const name=people.find(p=>p.badge===row.badge_personale)?.nome_completo||row.badge_personale;
+ if(!confirm('Rimuovere '+name+' da questo turno di assistenza?'))return;
+ const r=await sb.from('turni_personale').delete().eq('id',id).eq('turno_id',row.turno_id);
+ if(r.error)return msg('asMsg','Rimozione non riuscita: '+r.error.message,'err');
+ await loadAssistanceRoster();
+ msg('asMsg','Componente rimosso dal turno.','ok');
 }
 
 function renderAssistanceCandidates(){
@@ -4964,8 +5029,8 @@ async function loadAssistanceRoster(){
  asTurns=(r.data||[]).filter(t=>!['ANNULLATO','CANCELLATO'].includes(String(t.stato||'').toUpperCase()));
  asServices=(sv.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio));
  const [turnCrew,serviceCrew]=await Promise.all([
-  asTurns.length?sb.from('turni_personale').select('turno_id,badge_personale,ruolo,risposta,confermato').in('turno_id',asTurns.map(t=>t.id)):Promise.resolve({data:[],error:null}),
-  asServices.length?sb.from('servizi_equipaggio').select('servizio_id,badge_personale,ruolo').in('servizio_id',asServices.map(s=>s.id)):Promise.resolve({data:[],error:null})
+  asTurns.length?sb.from('turni_personale').select('id,turno_id,badge_personale,ruolo,risposta,confermato').in('turno_id',asTurns.map(t=>t.id)):Promise.resolve({data:[],error:null}),
+  asServices.length?sb.from('servizi_equipaggio').select('id,servizio_id,badge_personale,ruolo').in('servizio_id',asServices.map(s=>s.id)):Promise.resolve({data:[],error:null})
  ]);
  if(seq!==asLoadSequence)return;
  const crewError=turnCrew.error||serviceCrew.error;
@@ -6072,7 +6137,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.49-dev-archivio-equipaggio-20260926';
+const CGE_APP_BUILD='13.49-dev-rimuovi-equipaggi-20260926';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
