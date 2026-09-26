@@ -222,15 +222,54 @@
  #dash .dim-dash-main,#dash .dim-dash-side{height:auto!important;max-height:none!important;overflow:visible!important}
 }
 
-/* Centralino desktop: replica in modo esplicito le tre colonne indipendenti
-   dell'Amministrazione (menu sinistro, contenuto centrale, colonna destra). */
-@media (min-width:1121px) and (min-height:500px){
+/* Centralino desktop: colonne realmente indipendenti.
+   1) menu laterale; 2) area di lavoro; 3) colonna destra della Dashboard. */
+@media (min-width:901px) and (min-height:500px){
+ body.cge-role-centralino{overflow:hidden!important}
+ body.cge-role-centralino #app.shell{
+  height:100vh!important;
+  height:100dvh!important;
+  max-height:100dvh!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+ }
+ body.cge-role-centralino #app>.top{flex:0 0 auto!important}
+ body.cge-role-centralino #app>.layout{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  grid-template-columns:225px minmax(0,1fr)!important;
+  align-items:stretch!important;
+  overflow:hidden!important;
+ }
+ body.cge-role-centralino #app>.layout>.side{
+  position:static!important;
+  top:auto!important;
+  align-self:stretch!important;
+  height:100%!important;
+  max-height:none!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior-y:contain!important;
+  scrollbar-gutter:stable!important;
+ }
+ body.cge-role-centralino #app>.layout>main{
+  height:100%!important;
+  min-height:0!important;
+  min-width:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior-y:contain!important;
+  scrollbar-gutter:stable!important;
+  padding-right:2px!important;
+ }
  body.cge-role-centralino #dash .dim-dash-layout{
   display:grid!important;
-  grid-template-columns:minmax(0,1fr) minmax(310px,360px)!important;
-  height:calc(100vh - 300px)!important;
-  height:calc(100dvh - 300px)!important;
-  min-height:280px!important;
+  grid-template-columns:minmax(0,1fr) minmax(280px,350px)!important;
+  height:clamp(300px,55vh,640px)!important;
+  min-height:300px!important;
   overflow:hidden!important;
   align-items:stretch!important;
  }
@@ -248,6 +287,15 @@
  body.cge-role-centralino #dash .dim-dash-side{
   position:static!important;
   align-self:stretch!important;
+ }
+}
+@media print{
+ body.cge-role-centralino{overflow:visible!important}
+ body.cge-role-centralino #app.shell,
+ body.cge-role-centralino #app>.layout,
+ body.cge-role-centralino #app>.layout>.side,
+ body.cge-role-centralino #app>.layout>main{
+  height:auto!important;max-height:none!important;overflow:visible!important;
  }
 }
 
@@ -569,7 +617,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.49</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.50</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -2113,7 +2161,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.49':'Versione 13.49';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.50':'Versione 13.50';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -6175,7 +6223,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.49-20260926-equipaggi-rimuovi-archivio';
+const CGE_APP_BUILD='13.50-20260926-centralino-colonne-indipendenti';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
