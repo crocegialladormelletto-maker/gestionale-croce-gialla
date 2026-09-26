@@ -43,7 +43,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.20</div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.21</div></div>
 
   <section id="dashboard" class="view">
     <div class="notice"><span class="demo">DATI DEMO:</span> questa prima versione contiene alcuni viaggi di esempio, cancellabili dall'Archivio.</div>
@@ -89,10 +89,10 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
           <div class="field"><label>METODO DI PAGAMENTO</label><select id="metodoPagamento"></select></div>
           <div class="field"><label>N° RICEVUTA</label><input id="numeroRicevuta" placeholder="Numero ricevuta"></div>
           <div class="field"><label>IMPORTO €</label><input id="importo" type="number" min="1" max="10000" step="1"></div>
-          <div class="field"><label>AUTISTA</label><input id="autista"></div>
-          <div class="field"><label>CAPO EQUIPAGGIO</label><input id="capo"></div>
-          <div class="field"><label>SOCCORRITORE 1</label><input id="soc1"></div>
-          <div class="field"><label>SOCCORRITORE 2</label><input id="soc2"></div>
+          <div class="field"><label>AUTISTA</label><select id="autista"></select></div>
+          <div class="field"><label>CAPO EQUIPAGGIO</label><select id="capo"></select></div>
+          <div class="field"><label>SOCCORRITORE 1</label><select id="soc1"></select></div>
+          <div class="field"><label>SOCCORRITORE 2</label><select id="soc2"></select></div>
           <div class="field span4"><label>NOTE</label><textarea id="note"></textarea></div>
         </div>
         <div class="actions"><button class="btn primary" type="submit">Salva viaggio</button><button class="btn light" type="button" onclick="showView('archivio')">Vai all'archivio</button></div>
@@ -228,6 +228,33 @@ const serviceTypes=['Emergenza / Urgenza','Dimissione','Trasferimento','Visita',
 const richiedenti=['C.O NOVARA','PRIVATO','RSA','COMUNE','SOCIETA\' SPORTIVA'];
 const tipiLuogoCarico=['Casa','Scuola','Impianto sportivo','Altro'];
 const metodiPagamento=['Bonifico','Bonifico istantaneo','Contante','POS'];
+const personale=[
+ {badge:'02',nome:'Paolo Musso',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'04',nome:'Roberto Milan',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'05',nome:'Meri Ronco',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'06',nome:'Mirco Milan',autista:false,capo:true,soc:true,secondo:false},
+ {badge:'13',nome:'Stefano Fontana',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'19',nome:'Andrea Martinoli',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'20',nome:'Giulia Dal Molin',autista:false,capo:false,soc:true,secondo:false},
+ {badge:'23',nome:'Luisa Ragazzini',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'24',nome:'Leonardo Di Leva',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'33',nome:'Emanuele Broggio',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'36',nome:'Salvatore Rizzo',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'37',nome:'Francesca Brughera',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'38',nome:'Massimiliano Marani',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'39',nome:'Greta Farinaccio',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'40',nome:'Massimiliano Prataiolo',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'41',nome:'Ivan Di Leva',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'42',nome:'Raffaella De Laurenzo',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'44',nome:'Agnese Erniani',autista:false,capo:false,soc:true,secondo:false},
+ {badge:'46',nome:'Dario Zaninetta',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'47',nome:'Brianti Filippo',autista:false,capo:false,soc:true,secondo:false},
+ {badge:'48',nome:'Valeria Avarino',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'49',nome:'Elena Martignoni',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'50',nome:'Lorenzo Piani',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'51',nome:'Valeria Avarino',autista:true,capo:true,soc:true,secondo:true},
+ {badge:'52',nome:'Silvia Avarino',autista:true,capo:true,soc:true,secondo:true}
+];
 const ospedali=['','Ospedale SS. Trinità - Borgomanero','Ospedale Maggiore della Carità - Novara','Ospedale Santissima Trinità - Arona','Ospedale Castelli - Verbania','Ospedale San Biagio - Domodossola','Ospedale degli Infermi - Biella','Ospedale Sant’Andrea - Vercelli','Ospedale Cardinal Massaia - Asti','Ospedale Santa Croce e Carle - Cuneo','Ospedale Mauriziano - Torino','Ospedale Molinette - Torino','Ospedale San Luigi Gonzaga - Orbassano','Ospedale Maggiore Policlinico - Milano','Ospedale Niguarda - Milano','Ospedale San Raffaele - Milano','Humanitas - Rozzano','Ospedale di Circolo - Varese','Ospedale Sant’Anna - Como','Ospedale Papa Giovanni XXIII - Bergamo','Spedali Civili - Brescia','Policlinico San Matteo - Pavia','Ospedale Santa Chiara - Trento','AOU Verona','AOU Padova','Ospedale Maggiore - Bologna','AOU Careggi - Firenze','AOU Pisana - Pisa','Ospedale di Livorno','Ospedale Misericordia - Grosseto'];
 function iso(d){return new Date(d).toISOString().slice(0,10)}
 function demoData(){
@@ -259,6 +286,11 @@ function initSelects(){
   tipoLuogoCarico.innerHTML='<option value="">Seleziona tipo luogo</option>'+tipiLuogoCarico.map(v=>'<option>'+v+'</option>').join('');
   metodoPagamento.innerHTML='<option value="">Seleziona metodo</option>'+metodiPagamento.map(v=>'<option>'+v+'</option>').join('');
   ospedale.innerHTML=ospedali.map(v=>'<option value="'+v+'">'+(v||'Nessun ospedale/clinica')+'</option>').join('');
+  const fillRole=(id,filter,label)=>{const el=document.getElementById(id);el.innerHTML='<option value="">Seleziona '+label+'</option>'+personale.filter(filter).map(p=>'<option value="'+p.nome+'">'+p.badge+' · '+p.nome+'</option>').join('')};
+  fillRole('autista',p=>p.autista,'autista');
+  fillRole('capo',p=>p.capo,'capo equipaggio');
+  fillRole('soc1',p=>p.soc,'soccorritore');
+  fillRole('soc2',p=>p.secondo||p.soc,'secondo soccorritore');
 }
 function renderComboList(id,filter){
   const list=document.getElementById(id+'List'); if(!list)return;
