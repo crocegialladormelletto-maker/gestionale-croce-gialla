@@ -62,29 +62,28 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
       <form id="tripForm">
         <input type="hidden" id="editId">
         <div class="formgrid">
-          <div class="field"><label>N° VIAGGIO</label><input id="numero" readonly></div>
+          <div class="field"><label>N°</label><input id="numero" type="number" min="1" max="250" step="1" required></div>
           <div class="field"><label>DATA</label><input id="data" type="date" required></div>
-          <div class="field"><label>AMBULANZA / MEZZO</label><select id="mezzo" required></select></div>
+          <div class="field"><label>N° AMBULANZA</label><select id="mezzo" required></select></div>
           <div class="field"><label>TARGA</label><input id="targa" readonly></div>
-          <div class="field"><label>KM PERCORSI</label><input id="km" type="number" min="0" step="1" required></div>
+          <div class="field"><label>KM</label><input id="km" type="number" min="1" max="5000" step="1" required></div>
           <div class="field"><label>ORA PARTENZA</label><input id="oraPartenza" type="time"></div>
-          <div class="field"><label>LUOGO PARTENZA</label><input id="partenza" list="luoghi" placeholder="es. Sede"></div>
+          <div class="field"><label>LUOGO PARTENZA</label><select id="partenza"></select></div>
           <div class="field"><label>ORA DESTINAZIONE</label><input id="oraDest" type="time"></div>
-          <div class="field span2"><label>LUOGO DESTINAZIONE / FINE</label><input id="destinazione" list="luoghi" placeholder="Comune, ospedale o struttura"></div>
+          <div class="field span2"><label>LUOGO FINE</label><select id="destinazione"></select></div>
           <div class="field"><label>ORA FINE</label><input id="oraFine" type="time"></div>
-          <div class="field"><label>IMPORTO €</label><input id="importo" type="number" min="0" step="1"></div>
+          <div class="field"><label>IMPORTO €</label><input id="importo" type="number" min="1" max="10000" step="1"></div>
           <div class="field"><label>AUTISTA</label><input id="autista"></div>
           <div class="field"><label>CAPO EQUIPAGGIO</label><input id="capo"></div>
           <div class="field"><label>SOCCORRITORE 1</label><input id="soc1"></div>
           <div class="field"><label>SOCCORRITORE 2</label><input id="soc2"></div>
           <div class="field"><label>ACCOMPAGNATORE</label><input id="accompagnatore"></div>
-          <div class="field"><label>RSA</label><input id="rsa" placeholder="Facoltativo"></div>
-          <div class="field span2"><label>OSPEDALE / CLINICA</label><input id="ospedale" placeholder="Facoltativo"></div>
+          <div class="field"><label>RSA</label><select id="rsa"></select></div>
+          <div class="field span2"><label>OSPEDALE / CLINICA</label><select id="ospedale"></select></div>
           <div class="field span4"><label>NOTE</label><textarea id="note"></textarea></div>
         </div>
         <div class="actions"><button class="btn primary" type="submit">Salva viaggio</button><button class="btn light" type="button" onclick="showView('archivio')">Vai all'archivio</button></div>
       </form>
-      <datalist id="luoghi"><option value="Sede"><option value="Arona"><option value="Borgomanero"><option value="Dormelletto"><option value="Castelletto Sopra Ticino"><option value="Novara"><option value="Verbania"><option value="Oleggio"><option value="Oleggio Castello"></datalist>
     </div>
   </section>
 
@@ -98,7 +97,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
         <select id="fMezzo" onchange="renderArchivio()"></select>
         <button class="btn light" onclick="clearFilters()">Azzera filtri</button>
       </div>
-      <div class="tablewrap"><table><thead><tr><th>N°</th><th>Data</th><th>Mezzo</th><th>Targa</th><th>Km</th><th>Partenza</th><th>Destinazione</th><th>Equipaggio</th><th>Importo</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
+      <div class="tablewrap"><table><thead><tr><th>N°</th><th>N° Ambulanza</th><th>Targa</th><th>Km</th><th>Data</th><th>Ora partenza</th><th>Luogo partenza</th><th>Ora destinazione</th><th>Luogo fine</th><th>Ora fine</th><th>Autista</th><th>Capo equipaggio</th><th>Soccorritore 1</th><th>Soccorritore 2</th><th>Accompagnatore</th><th>Importo</th><th>RSA</th><th>Ospedale / Clinica</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
     </div>
   </section>
 
@@ -144,6 +143,9 @@ const vehicles=[
  {name:'Ambulanza 09',plate:'HD918LC'}
 ];
 const key='cge_registro_viaggi_v1';
+const comuni=['Sede','Agrate Conturbia','Arona','Baveno','Biandrate','Boca','Bogogno','Bolzano Novarese','Borgo Ticino','Borgomanero','Briga Novarese','Cameri','Carpignano Sesia','Casalbeltrame','Casaleggio Novara','Casalino','Casalvolone','Castelletto Sopra Ticino','Cavaglio d’Agogna','Cavallirio','Cerano','Colazza','Comignago','Cressa','Cureggio','Divignano','Dormelletto','Fara Novarese','Fontaneto d’Agogna','Galliate','Garbagna Novarese','Gargallo','Gattico-Veruno','Ghemme','Gozzano','Granozzo con Monticello','Invorio','Landiona','Lesa','Maggiora','Mandello Vitta','Marano Ticino','Massino Visconti','Meina','Mezzomerico','Miasino','Momo','Nebbiuno','Nibbiola','Novara','Oleggio','Oleggio Castello','Orta San Giulio','Paruzzaro','Pella','Pettenasco','Pisano','Pogno','Pombia','Prato Sesia','Recetto','Romagnano Sesia','Romentino','San Maurizio d’Opaglio','San Nazzaro Sesia','San Pietro Mosezzo','Sillavengo','Sizzano','Soriso','Sozzago','Suno','Terdobbiate','Trecate','Vaprio d’Agogna','Varallo Pombia','Vespolate','Vicolungo','Vinzaglio','Borgosesia','Gattinara','Santhià','Vercelli','Cannobio','Domodossola','Gravellona Toce','Omegna','Stresa','Verbania'];
+const rsaList=['','RSA - Provincia di Novara','RSA - Provincia di Vercelli','RSA - Provincia di Biella','RSA - Provincia del Verbano-Cusio-Ossola','RSA - Provincia di Torino'];
+const ospedali=['','Ospedale SS. Trinità - Borgomanero','Ospedale Maggiore della Carità - Novara','Ospedale Santissima Trinità - Arona','Ospedale Castelli - Verbania','Ospedale San Biagio - Domodossola','Ospedale degli Infermi - Biella','Ospedale Sant’Andrea - Vercelli','Ospedale Cardinal Massaia - Asti','Ospedale Santa Croce e Carle - Cuneo','Ospedale Mauriziano - Torino','Ospedale Molinette - Torino','Ospedale San Luigi Gonzaga - Orbassano','Ospedale Maggiore Policlinico - Milano','Ospedale Niguarda - Milano','Ospedale San Raffaele - Milano','Humanitas - Rozzano','Ospedale di Circolo - Varese','Ospedale Sant’Anna - Como','Ospedale Papa Giovanni XXIII - Bergamo','Spedali Civili - Brescia','Policlinico San Matteo - Pavia','Ospedale Santa Chiara - Trento','AOU Verona','AOU Padova','Ospedale Maggiore - Bologna','AOU Careggi - Firenze','AOU Pisana - Pisa','Ospedale di Livorno','Ospedale Misericordia - Grosseto'];
 function iso(d){return new Date(d).toISOString().slice(0,10)}
 function demoData(){
  const now=new Date(); const d=n=>{const x=new Date(now);x.setDate(x.getDate()-n);return iso(x)}
@@ -160,7 +162,16 @@ function money(n){return '€ '+Number(n||0).toLocaleString('it-IT',{minimumFrac
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function showView(id){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='nuovo'&&!document.getElementById('editId').value)resetForm();window.scrollTo(0,0)}
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>showView(b.dataset.view));
-function initSelects(){mezzo.innerHTML='<option value="">Seleziona mezzo</option>'+vehicles.map(v=>'<option>'+v.name+'</option>').join('');fMezzo.innerHTML='<option value="">Tutti i mezzi</option>'+vehicles.map(v=>'<option>'+v.name+'</option>').join('');vehicleGrid.innerHTML=vehicles.map(v=>'<div class="vehicle"><strong>'+v.name+'</strong><span>Targa: <b>'+v.plate+'</b></span><span>Stato: disponibile</span></div>').join('')}
+function initSelects(){
+  mezzo.innerHTML='<option value="">Seleziona ambulanza</option>'+vehicles.map(v=>'<option>'+v.name+'</option>').join('');
+  fMezzo.innerHTML='<option value="">Tutti i mezzi</option>'+vehicles.map(v=>'<option>'+v.name+'</option>').join('');
+  vehicleGrid.innerHTML=vehicles.map(v=>'<div class="vehicle"><strong>'+v.name+'</strong><span>Targa: <b>'+v.plate+'</b></span><span>Stato: disponibile</span></div>').join('');
+  const locOpts=comuni.map(v=>'<option value="'+v+'">'+v+'</option>').join('');
+  partenza.innerHTML=locOpts;
+  destinazione.innerHTML=locOpts;
+  rsa.innerHTML=rsaList.map(v=>'<option value="'+v+'">'+(v||'Nessuna RSA')+'</option>').join('');
+  ospedale.innerHTML=ospedali.map(v=>'<option value="'+v+'">'+(v||'Nessun ospedale/clinica')+'</option>').join('');
+}
 mezzo.onchange=()=>{const v=vehicles.find(x=>x.name===mezzo.value);targa.value=v?v.plate:''}
 function resetForm(){tripForm.reset();editId.value='';numero.value=nextNum();data.value=iso(new Date());formTitle.textContent='Nuovo viaggio';targa.value=''}
 tripForm.onsubmit=e=>{e.preventDefault();const ids=['numero','data','mezzo','targa','km','oraPartenza','partenza','oraDest','destinazione','oraFine','importo','autista','capo','soc1','soc2','accompagnatore','rsa','ospedale','note'];let obj={};ids.forEach(i=>obj[i]=document.getElementById(i).value);obj.numero=+obj.numero;obj.km=+obj.km||0;obj.importo=+obj.importo||0;let a=getTrips();if(editId.value){obj.id=editId.value;a=a.map(x=>x.id===obj.id?obj:x)}else{obj.id='v'+Date.now();a.push(obj)}saveTrips(a);resetForm();showView('archivio')}
