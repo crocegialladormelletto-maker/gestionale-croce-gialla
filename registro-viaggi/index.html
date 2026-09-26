@@ -43,7 +43,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.19</div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.20</div></div>
 
   <section id="dashboard" class="view">
     <div class="notice"><span class="demo">DATI DEMO:</span> questa prima versione contiene alcuni viaggi di esempio, cancellabili dall'Archivio.</div>
@@ -80,7 +80,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
           <div class="field"><label>ORA PARTENZA</label><input id="oraPartenza" type="time"></div>
           <div class="field"><label>LUOGO PARTENZA</label><div class="combo"><input id="partenza" autocomplete="off" placeholder="Seleziona o digita"><button type="button" onclick="toggleCombo('partenza')">▼</button><div id="partenzaList" class="combo-list"></div></div></div>
           <div class="field"><label>ORA DESTINAZIONE</label><input id="oraDest" type="time"></div>
-          <div class="field"><label>LUOGO CARICO</label><select id="luogoCarico"></select></div>
+          <div class="field"><label>LUOGO CARICO</label><div class="combo"><input id="luogoCarico" autocomplete="off" placeholder="Seleziona o digita"><button type="button" onclick="toggleCombo('luogoCarico')">▼</button><div id="luogoCaricoList" class="combo-list"></div></div></div>
           <div class="field"><label>TIPO LUOGO CARICO</label><select id="tipoLuogoCarico"></select></div>
           <div class="field" id="altroLuogoWrap" style="display:none"><label>SPECIFICA ALTRO</label><input id="altroLuogoCarico" placeholder="Specifica il luogo"></div>
           <div class="field"><label>LUOGO FINE</label><div class="combo"><input id="destinazione" autocomplete="off" placeholder="Seleziona o digita"><button type="button" onclick="toggleCombo('destinazione')">▼</button><div id="destinazioneList" class="combo-list"></div></div></div>
@@ -253,8 +253,8 @@ function initSelects(){
   richiedenteServizio.innerHTML='<option value="">Seleziona richiedente</option>'+richiedenti.map(v=>'<option>'+v+'</option>').join('');
   vehicleGrid.innerHTML=vehicles.map(v=>'<div class="vehicle"><strong>'+v.name+'</strong><span>Targa: <b>'+v.plate+'</b></span><span>Stato: disponibile</span></div>').join('');
   const locOpts=comuni.map(v=>'<option value="'+v+'">'+v+'</option>').join('');
-  luogoCarico.innerHTML=locOpts;
   renderComboList('partenza','');
+  renderComboList('luogoCarico','');
   renderComboList('destinazione','');
   tipoLuogoCarico.innerHTML='<option value="">Seleziona tipo luogo</option>'+tipiLuogoCarico.map(v=>'<option>'+v+'</option>').join('');
   metodoPagamento.innerHTML='<option value="">Seleziona metodo</option>'+metodiPagamento.map(v=>'<option>'+v+'</option>').join('');
@@ -271,7 +271,7 @@ function toggleCombo(id){
   const list=document.getElementById(id+'List'); renderComboList(id,document.getElementById(id).value); list.classList.toggle('open');
 }
 function selectCombo(id,value){document.getElementById(id).value=value;document.getElementById(id+'List').classList.remove('open')}
-['partenza','destinazione'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',()=>{renderComboList(id,el.value);document.getElementById(id+'List').classList.add('open')});el.addEventListener('focus',()=>renderComboList(id,el.value))});
+['partenza','luogoCarico','destinazione'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',()=>{renderComboList(id,el.value);document.getElementById(id+'List').classList.add('open')});el.addEventListener('focus',()=>renderComboList(id,el.value))});
 document.addEventListener('click',e=>{if(!e.target.closest('.combo'))document.querySelectorAll('.combo-list').forEach(x=>x.classList.remove('open'))});
 mezzo.onchange=()=>{const v=vehicles.find(x=>x.name===mezzo.value);targa.value=v?v.plate:''};
 function calcKm(){const i=Number(kmIniziali.value),f=Number(kmFinali.value);km.value=(Number.isFinite(i)&&Number.isFinite(f)&&f>=i)?(f-i):''}
