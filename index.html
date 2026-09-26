@@ -3464,7 +3464,9 @@ async function loadServiceDetail(id=currentServiceId){
  const accountingPromise=isCentral?Promise.resolve({data:null,error:null}):sb.from('v_contabilita_servizi').select('*').eq('servizio_id',id).maybeSingle();
  const [sr,cr,ar,hr,fr]=await Promise.all([
   sb.from('servizi_giornalieri').select('*').eq('id',id).single(),
-  sb.from('servizi_equipaggio').select('*').eq('servizio_id',id).order('assegnato_il'),
+  sb.from('servizi_equipaggio')
+   .select('id,servizio_id,badge_personale,ruolo,confermato,assegnato_il,personale!servizi_equipaggio_badge_personale_fkey(nome_completo)')
+   .eq('servizio_id',id).order('assegnato_il'),
   accountingPromise,
   sb.from('servizi_giornalieri_storico_stati').select('*').eq('servizio_id',id).order('cambiato_il',{ascending:false}).limit(30),
   sb.from('fogli_viaggio').select('id,numero_foglio,stato,mezzo,versione_app').eq('servizio_giornaliero_id',id).maybeSingle()
@@ -3542,11 +3544,17 @@ async function loadServiceDetail(id=currentServiceId){
  $('dSave').disabled=locked;
 
  const crew=cr.data||[];
- $('dCrewList').innerHTML=crew.length?crew.map(x=>{
-  const p=people.find(z=>z.badge===x.badge_personale);
-  const canRemove=!['IN CORSO','DA CONTABILIZZARE','CHIUSO','ANNULLATO'].includes(s.stato_gestionale);
-  return '<div class="box"><b>'+esc(p?.nome_completo||x.badge_personale)+'</b> · '+esc(x.ruolo)+(canRemove?' <button class="btn danger" style="float:right" data-dcrew-remove="'+esc(x.id)+'">Rimuovi</button>':'')+'</div>';
- }).join(''):'<div class="notice">Nessun componente assegnato.</div>';
+ if(cr.error){
+  $('dCrewList').innerHTML='<div class="notice err"><b>Equipaggio non caricato.</b><br>'+esc(cr.error.message)+'</div>';
+  msg('dCrewMsg','Errore nella lettura dell’equipaggio: '+cr.error.message,'err');
+ }else{
+  $('dCrewList').innerHTML=crew.length?crew.map(x=>{
+   const p=people.find(z=>z.badge===x.badge_personale);
+   const nome=x.personale?.nome_completo||p?.nome_completo||x.badge_personale;
+   const canRemove=!['IN CORSO','DA CONTABILIZZARE','CHIUSO','ANNULLATO'].includes(s.stato_gestionale);
+   return '<div class="box"><b>'+esc(nome)+'</b> · '+esc(x.ruolo)+(canRemove?' <button class="btn danger" style="float:right" data-dcrew-remove="'+esc(x.id)+'">Rimuovi</button>':'')+'</div>';
+  }).join(''):'<div class="notice">Nessun componente assegnato a questo specifico servizio.</div>';
+ }
  document.querySelectorAll('[data-dcrew-remove]').forEach(b=>b.onclick=()=>removeDetailCrew(b.dataset.dcrewRemove));
  detailCrewCandidates();
  const crewLocked=['IN CORSO','DA CONTABILIZZARE','CHIUSO','ANNULLATO'].includes(s.stato_gestionale);
@@ -3563,7 +3571,7 @@ async function loadServiceDetail(id=currentServiceId){
  $('dAccounting').classList.toggle('hidden',isCentral||!(s.stato_gestionale==='DA CONTABILIZZARE'||!['PAGATO','NON DOVUTO'].includes(s.stato_pagamento)));
  msg('dActionMsg','');
  msg('dSaveMsg','');
- msg('dCrewMsg','');
+ if(!cr.error)msg('dCrewMsg','');
 }
 
 $('dDuplicate').onclick=()=>{if(currentService)duplicateFillDialog(currentService)};
@@ -6064,7 +6072,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.49-dev-emergenza-equipaggio-base-20260926';
+const CGE_APP_BUILD='13.49-dev-archivio-equipaggio-20260926';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
