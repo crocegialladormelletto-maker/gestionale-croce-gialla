@@ -35,7 +35,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · V1.1</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · V1.2</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -49,7 +49,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · V1.1</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · V1.2</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -57,6 +57,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
    <button class="nav active" data-view="dashboard">⌂ Dashboard</button>
    <button class="nav" data-view="people">👥 Personale</button>
    <button class="nav" data-view="deadlines">⏰ Scadenze</button>
+   <button class="nav" data-view="dae">🫀 DAE</button>
    <button class="nav" data-view="qualifications">🎓 Qualifiche</button>
   </aside>
   <main>
@@ -116,6 +117,26 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
     </div>
    </section>
 
+   <section id="dae" class="surface hidden">
+    <div class="hero"><h2>🫀 Certificazioni DAE</h2><p>Situazione completa delle scadenze DAE di tutti i volontari.</p></div>
+    <div class="pad">
+     <div class="stats">
+      <div class="stat"><small>VOLONTARI ATTIVI</small><b id="daeTotal">0</b></div>
+      <div class="stat"><small>SCADUTI</small><b id="daeExpired">0</b></div>
+      <div class="stat"><small>ENTRO 30 GIORNI</small><b id="daeSoon">0</b></div>
+      <div class="stat"><small>SCADENZA MANCANTE</small><b id="daeMissing">0</b></div>
+     </div>
+     <div class="section">
+      <div class="grid3">
+       <div class="field"><label>Filtro stato</label><select id="daeFilterState"><option value="">Tutti</option><option value="SCADUTA">Scaduti</option><option value="PROSSIMA">Entro 30 giorni</option><option value="VALIDA">Oltre 30 giorni</option><option value="MANCANTE">Scadenza mancante</option></select></div>
+       <div class="field"><label>Cerca volontario</label><input id="daeSearch" placeholder="Nome, cognome o badge"></div>
+       <div class="field"><label>Ordinamento</label><select id="daeSort"><option value="URGENZA">Per urgenza</option><option value="NOME">Per nome</option><option value="BADGE">Per badge</option></select></div>
+      </div>
+     </div>
+     <div class="table"><table><thead><tr><th>Badge</th><th>Volontario</th><th>Data rinnovo</th><th>Scadenza</th><th>Mancano</th><th>Stato</th><th></th></tr></thead><tbody id="daeBody"></tbody></table></div>
+    </div>
+   </section>
+
    <section id="qualifications" class="surface hidden">
     <div class="hero"><h2>🎓 Qualifiche</h2><p>Panoramica delle abilitazioni utilizzate dal gestionale operativo.</p></div>
     <div class="pad"><div id="qualificationCards" class="grid2"></div></div>
@@ -141,7 +162,7 @@ function daeRow(badge){const code=daeCode();return pquals.find(q=>q.badge_person
 function daeRequiredRows(){return people.filter(personActive).map(p=>({person:p,row:daeRow(p.badge)}))}
 
 
-function view(id){document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hidden',s.id!==id));document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='deadlines')renderDeadlines();if(id==='qualifications')renderQualificationCards()}
+function view(id){document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hidden',s.id!==id));document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='deadlines')renderDeadlines();if(id==='dae')renderDaeView();if(id==='qualifications')renderQualificationCards()}
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>view(b.dataset.view));
 document.querySelectorAll('.jump').forEach(b=>b.onclick=()=>view(b.dataset.go));
 
@@ -169,7 +190,7 @@ async function loadAll(){
  ]);
  const err=[pr.error,qr.error,pqr.error,dr.error].find(Boolean);if(err){alert(err.message);return}
  people=pr.data||[];defs=qr.data||[];pquals=pqr.data||[];docs=dr.data||[];
- renderDashboard();populateFilters();renderPeople();renderDeadlines();renderQualificationCards();
+ renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderQualificationCards();
  if(selectedBadge&&people.some(p=>p.badge===selectedBadge))openPerson(selectedBadge);
 }
 function allDeadlines(){
@@ -274,6 +295,43 @@ function renderDeadlines(){
  $('deadlineBody').innerHTML=rows.map(x=>{const d=daysTo(x.date),s=stateFor(x.date);return '<tr><td><b>'+esc(personName(x.badge))+'</b><br><span class="muted">Badge '+esc(x.badge)+'</span></td><td>'+esc(x.type==='QUALIFICA'?'Qualifica':'Documento')+'</td><td>'+esc(x.name)+'</td><td>'+esc(fmt(x.date))+'</td><td>'+esc(d<0?Math.abs(d)+' gg fa':d===0?'Oggi':d+' gg')+'</td><td><span class="pill '+s.cls+'">'+esc(s.label)+'</span></td></tr>'}).join('')||'<tr><td colspan="6">Nessuna scadenza nei filtri selezionati.</td></tr>';
 }
 ['deadlineWindow','deadlineType','deadlineState'].forEach(id=>$(id).onchange=renderDeadlines);
+
+function renderDaeView(){
+ const active=people.filter(personActive);
+ const rows=active.map(p=>{
+  const q=daeRow(p.badge);
+  let state='MANCANTE',label='Scadenza mancante',cls='r',days=null;
+  if(q?.valida_al){
+   days=daysTo(q.valida_al);
+   if(days<0){state='SCADUTA';label='Scaduta';cls='r'}
+   else if(days<=30){state='PROSSIMA';label='Entro 30 gg';cls='w'}
+   else {state='VALIDA';label='Valida';cls='g'}
+  }
+  return {person:p,row:q,state,label,cls,days};
+ });
+ $('daeTotal').textContent=active.length;
+ $('daeExpired').textContent=rows.filter(x=>x.state==='SCADUTA').length;
+ $('daeSoon').textContent=rows.filter(x=>x.state==='PROSSIMA').length;
+ $('daeMissing').textContent=rows.filter(x=>x.state==='MANCANTE').length;
+ const stateFilter=$('daeFilterState').value||'',search=$('daeSearch').value.trim().toLowerCase(),sort=$('daeSort').value||'URGENZA';
+ let filtered=rows.filter(x=>{
+  if(stateFilter&&x.state!==stateFilter)return false;
+  const txt=(x.person.badge+' '+(x.person.nome_completo||'')+' '+(x.person.nome||'')+' '+(x.person.cognome||'')).toLowerCase();
+  if(search&&!txt.includes(search))return false;
+  return true;
+ });
+ if(sort==='NOME')filtered.sort((a,b)=>(a.person.nome_completo||'').localeCompare(b.person.nome_completo||'','it'));
+ else if(sort==='BADGE')filtered.sort((a,b)=>String(a.person.badge).localeCompare(String(b.person.badge),'it',{numeric:true}));
+ else filtered.sort((a,b)=>{
+   const rank=s=>s==='SCADUTA'?0:s==='MANCANTE'?1:s==='PROSSIMA'?2:3;
+   const r=rank(a.state)-rank(b.state);if(r)return r;
+   if(a.days==null&&b.days!=null)return -1;if(a.days!=null&&b.days==null)return 1;
+   return (a.days??99999)-(b.days??99999);
+ });
+ $('daeBody').innerHTML=filtered.map(x=>'<tr><td>'+esc(x.person.badge)+'</td><td><b>'+esc(x.person.nome_completo||((x.person.nome||'')+' '+(x.person.cognome||'')))+'</b></td><td>'+esc(x.row?.valida_dal?fmt(x.row.valida_dal):'—')+'</td><td>'+esc(x.row?.valida_al?fmt(x.row.valida_al):'—')+'</td><td>'+esc(x.days==null?'—':x.days<0?Math.abs(x.days)+' gg fa':x.days===0?'Oggi':x.days+' gg')+'</td><td><span class="pill '+x.cls+'">'+esc(x.label)+'</span></td><td><button class="btn secondary" data-dae-open="'+esc(x.person.badge)+'">Apri scheda</button></td></tr>').join('')||'<tr><td colspan="7">Nessun volontario trovato.</td></tr>';
+ document.querySelectorAll('[data-dae-open]').forEach(b=>b.onclick=()=>{view('people');openPerson(b.dataset.daeOpen)});
+}
+['daeFilterState','daeSearch','daeSort'].forEach(id=>{$(id).oninput=renderDaeView;$(id).onchange=renderDaeView});
 
 function renderQualificationCards(){
  $('qualificationCards').innerHTML=defs.map(q=>{
