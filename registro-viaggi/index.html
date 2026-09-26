@@ -34,8 +34,8 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 <div class="app">
 <aside class="sidebar">
   <div class="brand"><div class="logo">CG</div><div><b>Registro Viaggi</b><small>Croce Gialla Emergenza</small></div></div>
-  <button class="navbtn n1 active" data-view="dashboard">▦ Dashboard</button>
-  <button class="navbtn n2" data-view="nuovo">＋ Nuovo viaggio</button>
+  <button class="navbtn n1" data-view="dashboard">▦ Dashboard</button>
+  <button class="navbtn n2 active" data-view="nuovo">＋ Nuovo viaggio</button>
   <button class="navbtn n3" data-view="archivio">▤ Archivio viaggi</button>
   <button class="navbtn n4" data-view="statistiche">▥ Statistiche</button>
   <button class="navbtn n5" data-view="mezzi">▣ Mezzi</button>
@@ -43,9 +43,9 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.15</div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.16</div></div>
 
-  <section id="dashboard" class="view active">
+  <section id="dashboard" class="view">
     <div class="notice"><span class="demo">DATI DEMO:</span> questa prima versione contiene alcuni viaggi di esempio, cancellabili dall'Archivio.</div>
     <div class="cards">
       <div class="card"><div class="lab">VIAGGI NEL MESE</div><div id="kViaggi" class="val">0</div><div class="sub">registrati nel mese corrente</div></div>
@@ -59,7 +59,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
     </div>
   </section>
 
-  <section id="nuovo" class="view">
+  <section id="nuovo" class="view active">
     <div class="panel">
       <div class="section-title"><h2 id="formTitle">Nuovo viaggio</h2><button class="btn light no-print" onclick="resetForm()">Pulisci campi</button></div>
       <form id="tripForm">
