@@ -43,7 +43,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.14</div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.15</div></div>
 
   <section id="dashboard" class="view active">
     <div class="notice"><span class="demo">DATI DEMO:</span> questa prima versione contiene alcuni viaggi di esempio, cancellabili dall'Archivio.</div>
@@ -72,8 +72,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
           <div class="field"><label>N° SCHEDA 118</label><input id="scheda118" placeholder="Inserisci numero scheda"></div>
           <div class="field"><label>NOME PAZIENTE</label><input id="nomePaziente" placeholder="Nome"></div>
           <div class="field"><label>COGNOME PAZIENTE</label><input id="cognomePaziente" placeholder="Cognome"></div>
-          <div class="field"><label>N° RICEVUTA</label><input id="numeroRicevuta" placeholder="Numero ricevuta"></div>
-          <div class="field"><label>N° AMBULANZA</label><select id="mezzo" required></select></div>
+                    <div class="field"><label>N° AMBULANZA</label><select id="mezzo" required></select></div>
           <div class="field"><label>TARGA</label><select id="targa" required></select></div>
           <div class="field"><label>KM INIZIALI</label><input id="kmIniziali" type="number" min="0" step="1" required></div>
           <div class="field"><label>KM FINALI</label><input id="kmFinali" type="number" min="0" step="1" required></div>
@@ -87,6 +86,8 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
           <div class="field"><label>LUOGO FINE</label><div class="combo"><input id="destinazione" autocomplete="off" placeholder="Seleziona o digita"><button type="button" onclick="toggleCombo('destinazione')">▼</button><div id="destinazioneList" class="combo-list"></div></div></div>
           <div class="field"><label>OSPEDALE / CLINICA</label><select id="ospedale"></select></div>
           <div class="field"><label>ORA FINE</label><input id="oraFine" type="time"></div>
+          <div class="field"><label>METODO DI PAGAMENTO</label><select id="metodoPagamento"></select></div>
+          <div class="field"><label>N° RICEVUTA</label><input id="numeroRicevuta" placeholder="Numero ricevuta"></div>
           <div class="field"><label>IMPORTO €</label><input id="importo" type="number" min="1" max="10000" step="1"></div>
           <div class="field"><label>AUTISTA</label><input id="autista"></div>
           <div class="field"><label>CAPO EQUIPAGGIO</label><input id="capo"></div>
@@ -110,7 +111,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
         <select id="fMezzo" onchange="renderArchivio()"></select>
         <button class="btn light" onclick="clearFilters()">Azzera filtri</button>
       </div>
-      <div class="tablewrap"><table><thead><tr><th>N°</th><th>Tipo servizio</th><th>Richiedente servizio</th><th>N° scheda 118</th><th>Nome paziente</th><th>Cognome paziente</th><th>N° ricevuta</th><th>N° Ambulanza</th><th>Targa</th><th>Km iniziali</th><th>Km finali</th><th>Km percorsi</th><th>Data</th><th>Ora partenza</th><th>Luogo partenza</th><th>Ora destinazione</th><th>Luogo carico</th><th>Tipo luogo carico</th><th>Specifica altro</th><th>Luogo fine</th><th>Ora fine</th><th>Autista</th><th>Capo equipaggio</th><th>Soccorritore 1</th><th>Soccorritore 2</th><th>Accompagnatore</th><th>Importo</th><th>Ospedale / Clinica</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
+      <div class="tablewrap"><table><thead><tr><th>N°</th><th>Tipo servizio</th><th>Richiedente servizio</th><th>N° scheda 118</th><th>Nome paziente</th><th>Cognome paziente</th><th>N° Ambulanza</th><th>Targa</th><th>Km iniziali</th><th>Km finali</th><th>Km percorsi</th><th>Data</th><th>Ora partenza</th><th>Luogo partenza</th><th>Ora destinazione</th><th>Luogo carico</th><th>Tipo luogo carico</th><th>Specifica altro</th><th>Luogo fine</th><th>Ora fine</th><th>Autista</th><th>Capo equipaggio</th><th>Soccorritore 1</th><th>Soccorritore 2</th><th>Accompagnatore</th><th>Metodo pagamento</th><th>N° ricevuta</th><th>Importo</th><th>Ospedale / Clinica</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
     </div>
   </section>
 
@@ -161,6 +162,7 @@ const comuni=['Sede','Agrate Conturbia','Arona','Baveno','Biandrate','Boca','Bog
 const serviceTypes=['Emergenza / Urgenza','Dimissione','Trasferimento','Visita','Trasporto semplice','Assistenza manifestazione','Servizio sociale','Altro'];
 const richiedenti=['C.O NOVARA','PRIVATO','RSA','COMUNE','SOCIETA\' SPORTIVA'];
 const tipiLuogoCarico=['Casa','Scuola','Impianto sportivo','Altro'];
+const metodiPagamento=['Bonifico','Bonifico istantaneo','Contante','POS'];
 const ospedali=['','Ospedale SS. Trinità - Borgomanero','Ospedale Maggiore della Carità - Novara','Ospedale Santissima Trinità - Arona','Ospedale Castelli - Verbania','Ospedale San Biagio - Domodossola','Ospedale degli Infermi - Biella','Ospedale Sant’Andrea - Vercelli','Ospedale Cardinal Massaia - Asti','Ospedale Santa Croce e Carle - Cuneo','Ospedale Mauriziano - Torino','Ospedale Molinette - Torino','Ospedale San Luigi Gonzaga - Orbassano','Ospedale Maggiore Policlinico - Milano','Ospedale Niguarda - Milano','Ospedale San Raffaele - Milano','Humanitas - Rozzano','Ospedale di Circolo - Varese','Ospedale Sant’Anna - Como','Ospedale Papa Giovanni XXIII - Bergamo','Spedali Civili - Brescia','Policlinico San Matteo - Pavia','Ospedale Santa Chiara - Trento','AOU Verona','AOU Padova','Ospedale Maggiore - Bologna','AOU Careggi - Firenze','AOU Pisana - Pisa','Ospedale di Livorno','Ospedale Misericordia - Grosseto'];
 function iso(d){return new Date(d).toISOString().slice(0,10)}
 function demoData(){
@@ -190,6 +192,7 @@ function initSelects(){
   renderComboList('partenza','');
   renderComboList('destinazione','');
   tipoLuogoCarico.innerHTML='<option value="">Seleziona tipo luogo</option>'+tipiLuogoCarico.map(v=>'<option>'+v+'</option>').join('');
+  metodoPagamento.innerHTML='<option value="">Seleziona metodo</option>'+metodiPagamento.map(v=>'<option>'+v+'</option>').join('');
   ospedale.innerHTML=ospedali.map(v=>'<option value="'+v+'">'+(v||'Nessun ospedale/clinica')+'</option>').join('');
 }
 function renderComboList(id,filter){
@@ -214,7 +217,7 @@ tipoLuogoCarico.onchange=()=>{const isAltro=tipoLuogoCarico.value==='Altro';altr
 function syncPaziente118(){const has118=(document.getElementById('scheda118').value||'').trim()!=='';const nome=document.getElementById('nomePaziente');const cognome=document.getElementById('cognomePaziente');if(has118){nome.value='';cognome.value='';nome.setAttribute('disabled','disabled');cognome.setAttribute('disabled','disabled');nome.setAttribute('readonly','readonly');cognome.setAttribute('readonly','readonly');nome.style.background='#eef1f5';cognome.style.background='#eef1f5';nome.placeholder='Disattivato: presente scheda 118';cognome.placeholder='Disattivato: presente scheda 118'}else{nome.removeAttribute('disabled');cognome.removeAttribute('disabled');nome.removeAttribute('readonly');cognome.removeAttribute('readonly');nome.style.background='white';cognome.style.background='white';nome.placeholder='Nome';cognome.placeholder='Cognome'}}
 scheda118.addEventListener('input',syncPaziente118);scheda118.addEventListener('change',syncPaziente118);scheda118.addEventListener('keyup',syncPaziente118);
 function resetForm(){tripForm.reset();editId.value='';numero.value=nextNum();data.value=iso(new Date());formTitle.textContent='Nuovo viaggio';targa.value='';mezzo.value='';km.value='';altroLuogoWrap.style.display='none';syncPaziente118()}
-tripForm.onsubmit=e=>{e.preventDefault();const ids=['numero','data','tipoServizio','richiedenteServizio','scheda118','nomePaziente','cognomePaziente','numeroRicevuta','mezzo','targa','kmIniziali','kmFinali','km','oraPartenza','partenza','oraDest','luogoCarico','tipoLuogoCarico','altroLuogoCarico','destinazione','oraFine','importo','autista','capo','soc1','soc2' ,'accompagnatore','ospedale','note'];let obj={};ids.forEach(i=>obj[i]=document.getElementById(i).value);obj.numero=+obj.numero;obj.km=+obj.km||0;obj.importo=+obj.importo||0;let a=getTrips();if(editId.value){obj.id=editId.value;a=a.map(x=>x.id===obj.id?obj:x)}else{obj.id='v'+Date.now();a.push(obj)}saveTrips(a);resetForm();showView('archivio')}
+tripForm.onsubmit=e=>{e.preventDefault();const ids=['numero','data','tipoServizio','richiedenteServizio','scheda118','nomePaziente','cognomePaziente','mezzo','targa','kmIniziali','kmFinali','km','oraPartenza','partenza','oraDest','luogoCarico','tipoLuogoCarico','altroLuogoCarico','destinazione','oraFine','metodoPagamento','numeroRicevuta','importo','autista','capo','soc1','soc2' ,'accompagnatore','ospedale','note'];let obj={};ids.forEach(i=>obj[i]=document.getElementById(i).value);obj.numero=+obj.numero;obj.km=+obj.km||0;obj.importo=+obj.importo||0;let a=getTrips();if(editId.value){obj.id=editId.value;a=a.map(x=>x.id===obj.id?obj:x)}else{obj.id='v'+Date.now();a.push(obj)}saveTrips(a);resetForm();showView('archivio')}
 function renderArchivio(){let a=getTrips().slice().sort((x,y)=>y.data.localeCompare(x.data)||y.numero-x.numero);const q=fSearch.value.toLowerCase().trim(),dal=fDal.value,al=fAl.value,m=fMezzo.value,ym=(meseArchivio&&meseArchivio.value)||'';a=a.filter(x=>!ym||x.data.startsWith(ym));a=a.filter(x=>{const blob=Object.values(x).join(' ').toLowerCase();return(!q||blob.includes(q))&&(!dal||x.data>=dal)&&(!al||x.data<=al)&&(!m||x.mezzo===m)});archiveBody.innerHTML=a.length?a.map(x=>'<tr><td><b>'+x.numero+'</b></td><td>'+esc(x.data)+'</td><td>'+esc(x.mezzo)+'</td><td>'+esc(x.targa)+'</td><td>'+x.km+'</td><td>'+esc(x.partenza)+'</td><td>'+esc(x.destinazione)+'</td><td>'+esc([x.autista,x.capo,x.soc1,x.soc2].filter(Boolean).join(', '))+'</td><td>'+money(x.importo)+'</td><td><button class="mini" style="background:#2879e8" onclick="editTrip(\''+x.id+'\')">Modifica</button> <button class="mini" style="background:#d84d4d" onclick="deleteTrip(\''+x.id+'\')">Elimina</button></td></tr>').join(''):'<tr><td colspan="10" class="empty">Nessun viaggio trovato</td></tr>'}
 function editTrip(id){const x=getTrips().find(t=>t.id===id);if(!x)return;Object.keys(x).forEach(k=>{const el=document.getElementById(k);if(el)el.value=x[k]??''});editId.value=x.id;altroLuogoWrap.style.display=(x.tipoLuogoCarico==='Altro')?'flex':'none';syncPaziente118();formTitle.textContent='Modifica viaggio N° '+x.numero;showView('nuovo')}
 function deleteTrip(id){if(confirm('Eliminare questo viaggio?'))saveTrips(getTrips().filter(x=>x.id!==id))}
