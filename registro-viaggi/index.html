@@ -19,7 +19,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 .view{display:none}.view.active{display:block}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
 .card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow)}.card{padding:18px}.card .lab{color:var(--muted);font-size:13px;font-weight:700}.card .val{font-size:28px;font-weight:800;margin-top:7px}.card .sub{font-size:12px;color:var(--muted);margin-top:6px}
 .panel{padding:18px;margin-bottom:18px}.panel h2{font-size:17px;margin:0 0 16px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:12px;font-weight:800;color:#526077}.field input,.field select,.field textarea{width:100%;padding:10px 11px;border:1px solid #ccd5e2;border-radius:9px;background:white;font-size:14px}.field textarea{min-height:82px;resize:vertical}.span2{grid-column:span 2}.span4{grid-column:span 4}
+.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:12px;font-weight:800;color:#526077}.field input,.field select,.field textarea{width:100%;padding:10px 11px;border:1px solid #ccd5e2;border-radius:9px;background:white;font-size:14px}.combo{position:relative}.combo input{padding-right:36px}.combo button{position:absolute;right:1px;top:1px;bottom:1px;width:34px;border:0;border-left:1px solid #d8dee8;background:#f7f9fc;border-radius:0 8px 8px 0;cursor:pointer;font-size:14px}.combo-list{display:none;position:absolute;z-index:50;left:0;right:0;top:100%;max-height:220px;overflow:auto;background:#fff;border:1px solid #ccd5e2;border-radius:0 0 9px 9px;box-shadow:0 10px 20px rgba(0,0,0,.12)}.combo-list.open{display:block}.combo-list div{padding:9px 11px;cursor:pointer;font-size:14px}.combo-list div:hover{background:#edf4ff}.field textarea{min-height:82px;resize:vertical}.span2{grid-column:span 2}.span4{grid-column:span 4}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.btn{border:0;border-radius:9px;padding:11px 15px;font-weight:800;cursor:pointer}.primary{background:var(--green);color:white}.secondary{background:var(--blue);color:white}.warning{background:var(--orange);color:white}.danger{background:var(--red);color:white}.light{background:#edf2f8;color:#22304a}
 .filters{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:10px;margin-bottom:14px}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:1040px;background:#fff}th,td{padding:10px 9px;border-bottom:1px solid #e6ebf2;text-align:left;font-size:12px}th{background:#edf2f8;color:#43516a;position:sticky;top:0}.mini{padding:6px 8px;border:0;border-radius:7px;color:white;font-size:11px;font-weight:800;cursor:pointer}
 .empty{padding:30px;text-align:center;color:var(--muted)}.bars{display:flex;flex-direction:column;gap:10px}.barrow{display:grid;grid-template-columns:130px 1fr 70px;align-items:center;gap:10px;font-size:13px}.bar{height:13px;background:#edf1f6;border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);border-radius:999px}
@@ -43,7 +43,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.10</div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Gestione autonoma dei viaggi e dei chilometri dei mezzi</p></div><div class="badge">Versione prova V1.11</div></div>
 
   <section id="dashboard" class="view active">
     <div class="notice"><span class="demo">DATI DEMO:</span> questa prima versione contiene alcuni viaggi di esempio, cancellabili dall'Archivio.</div>
@@ -79,12 +79,12 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
           <div class="field"><label>KM FINALI</label><input id="kmFinali" type="number" min="0" step="1" required></div>
           <div class="field"><label>KM PERCORSI</label><input id="km" type="number" min="0" step="1" readonly></div>
           <div class="field"><label>ORA PARTENZA</label><input id="oraPartenza" type="time"></div>
-          <div class="field"><label>LUOGO PARTENZA</label><input id="partenza" list="comuniList" placeholder="Seleziona o digita"></div>
+          <div class="field"><label>LUOGO PARTENZA</label><div class="combo"><input id="partenza" autocomplete="off" placeholder="Seleziona o digita"><button type="button" onclick="toggleCombo('partenza')">▼</button><div id="partenzaList" class="combo-list"></div></div></div>
           <div class="field"><label>ORA DESTINAZIONE</label><input id="oraDest" type="time"></div>
           <div class="field"><label>LUOGO CARICO</label><select id="luogoCarico"></select></div>
           <div class="field"><label>TIPO LUOGO CARICO</label><select id="tipoLuogoCarico"></select></div>
           <div class="field" id="altroLuogoWrap" style="display:none"><label>SPECIFICA ALTRO</label><input id="altroLuogoCarico" placeholder="Specifica il luogo"></div>
-          <div class="field"><label>LUOGO FINE</label><input id="destinazione" list="comuniList" placeholder="Seleziona o digita"></div>
+          <div class="field"><label>LUOGO FINE</label><div class="combo"><input id="destinazione" autocomplete="off" placeholder="Seleziona o digita"><button type="button" onclick="toggleCombo('destinazione')">▼</button><div id="destinazioneList" class="combo-list"></div></div></div>
           <div class="field"><label>OSPEDALE / CLINICA</label><select id="ospedale"></select></div>
           <div class="field"><label>ORA FINE</label><input id="oraFine" type="time"></div>
           <div class="field"><label>IMPORTO €</label><input id="importo" type="number" min="1" max="10000" step="1"></div>
@@ -97,7 +97,6 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
         </div>
         <div class="actions"><button class="btn primary" type="submit">Salva viaggio</button><button class="btn light" type="button" onclick="showView('archivio')">Vai all'archivio</button></div>
       </form>
-      <datalist id="comuniList"></datalist>
     </div>
   </section>
 
@@ -187,11 +186,25 @@ function initSelects(){
   richiedenteServizio.innerHTML='<option value="">Seleziona richiedente</option>'+richiedenti.map(v=>'<option>'+v+'</option>').join('');
   vehicleGrid.innerHTML=vehicles.map(v=>'<div class="vehicle"><strong>'+v.name+'</strong><span>Targa: <b>'+v.plate+'</b></span><span>Stato: disponibile</span></div>').join('');
   const locOpts=comuni.map(v=>'<option value="'+v+'">'+v+'</option>').join('');
-  comuniList.innerHTML=locOpts;
   luogoCarico.innerHTML=locOpts;
+  renderComboList('partenza','');
+  renderComboList('destinazione','');
   tipoLuogoCarico.innerHTML='<option value="">Seleziona tipo luogo</option>'+tipiLuogoCarico.map(v=>'<option>'+v+'</option>').join('');
   ospedale.innerHTML=ospedali.map(v=>'<option value="'+v+'">'+(v||'Nessun ospedale/clinica')+'</option>').join('');
 }
+function renderComboList(id,filter){
+  const list=document.getElementById(id+'List'); if(!list)return;
+  const q=(filter||'').toLowerCase();
+  const vals=comuni.filter(v=>!q||v.toLowerCase().includes(q));
+  list.innerHTML=vals.map(v=>'<div onclick="selectCombo(\''+id+'\',\''+v.replace(/'/g,"\\'")+'\')">'+v+'</div>').join('');
+}
+function toggleCombo(id){
+  document.querySelectorAll('.combo-list').forEach(x=>{if(x.id!==id+'List')x.classList.remove('open')});
+  const list=document.getElementById(id+'List'); renderComboList(id,document.getElementById(id).value); list.classList.toggle('open');
+}
+function selectCombo(id,value){document.getElementById(id).value=value;document.getElementById(id+'List').classList.remove('open')}
+['partenza','destinazione'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',()=>{renderComboList(id,el.value);document.getElementById(id+'List').classList.add('open')});el.addEventListener('focus',()=>renderComboList(id,el.value))});
+document.addEventListener('click',e=>{if(!e.target.closest('.combo'))document.querySelectorAll('.combo-list').forEach(x=>x.classList.remove('open'))});
 mezzo.onchange=()=>{const v=vehicles.find(x=>x.name===mezzo.value);targa.value=v?v.plate:''};
 function calcKm(){const i=Number(kmIniziali.value),f=Number(kmFinali.value);km.value=(Number.isFinite(i)&&Number.isFinite(f)&&f>=i)?(f-i):''}
 kmIniziali.addEventListener('input',calcKm);
