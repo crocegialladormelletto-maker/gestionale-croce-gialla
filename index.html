@@ -563,7 +563,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.57</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.58</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -617,7 +617,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.57</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.58</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1164,6 +1164,7 @@
   <button id="dAccounting" class="btn secondary">🧾 Vai alla contabilità</button>
   <button id="dClose" class="btn yellow">Chiudi servizio</button>
   <button id="dCancel" class="btn danger">Annulla servizio</button>
+  <button id="dDelete" class="btn danger" type="button">🗑 Elimina servizio</button>
  </div>
  <div id="dActionMsg"></div>
 </div>
@@ -3706,6 +3707,18 @@ async function loadServiceDetail(id=currentServiceId){
  $('dFinish').classList.toggle('hidden',!(['PRESO IN CARICO','IN CORSO'].includes(s.stato)&&s.stato_gestionale!=='ANNULLATO'));
  $('dClose').classList.toggle('hidden',!(s.stato==='COMPLETATO'&&s.stato_gestionale!=='CHIUSO'));
  $('dCancel').classList.toggle('hidden',['COMPLETATO','ANNULLATO','CHIUSO'].includes(s.stato_gestionale)||s.stato==='COMPLETATO');
+ if($('dDelete')){
+  const deleteBlocked=
+   s.data_servizio<todaySafe()||
+   !!s.ora_partenza_effettiva||
+   !!s.iniziato_il||
+   !!s.terminato_il||
+   ['PRESO IN CARICO','IN CORSO','COMPLETATO'].includes(String(s.stato||'').toUpperCase())||
+   ['IN CORSO','DA CONTABILIZZARE','CHIUSO'].includes(String(s.stato_gestionale||'').toUpperCase());
+  $('dDelete').classList.toggle('hidden',!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo));
+  $('dDelete').disabled=deleteBlocked;
+  $('dDelete').title=deleteBlocked?'Servizio già avviato, concluso o passato: usa Annulla / storico.':'Elimina definitivamente il servizio inserito per errore';
+ }
  $('dAccounting').classList.toggle('hidden',isCentral||!(s.stato_gestionale==='DA CONTABILIZZARE'||!['PAGATO','NON DOVUTO'].includes(s.stato_pagamento)));
  msg('dActionMsg','');
  msg('dSaveMsg','');
@@ -3794,6 +3807,26 @@ $('dStart').onclick=()=>detailAction('AVVIA');
 $('dFinish').onclick=()=>detailAction('TERMINA');
 $('dClose').onclick=()=>detailAction('CHIUDI');
 $('dCancel').onclick=()=>detailAction('ANNULLA');
+$('dDelete').onclick=async()=>{
+ if(!currentServiceId||!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const s=currentService||{};
+ const when=[s.data_servizio,String(s.ora_partenza_prevista||s.ora_prevista||'').slice(0,5)].filter(Boolean).join(' ');
+ const patient=[s.paziente_cognome,s.paziente_nome].filter(Boolean).join(' ');
+ const label=[when,s.mezzo?'Mezzo '+s.mezzo:'',s.tipo_servizio||'',patient].filter(Boolean).join(' · ');
+ const ok=confirm('ELIMINARE DEFINITIVAMENTE questo servizio?\n\n'+label+'\n\nVerranno rimossi anche equipaggio, notifiche e l’eventuale Foglio Viaggio APERTO collegato.\nUn Foglio Viaggio chiuso, un pagamento o una Nota di Debito bloccano automaticamente l’eliminazione.\n\nQuesta operazione non può essere annullata.');
+ if(!ok)return;
+ $('dDelete').disabled=true;
+ msg('dActionMsg','Eliminazione definitiva in corso...');
+ const r=await sb.rpc('cge_elimina_servizio_errato',{p_servizio:currentServiceId});
+ if(r.error){
+  $('dDelete').disabled=false;
+  return msg('dActionMsg','Servizio non eliminato: '+r.error.message,'err');
+ }
+ currentServiceId=null;currentService=null;currentFoglioId=null;currentFoglio=null;
+ await view('services');
+ await loadServices();
+ msg('smsg','Servizio eliminato definitivamente.','ok');
+};
 
 $('dAccounting').onclick=async()=>{if(prof?.ruolo==='CENTRALINO')return;const id=currentServiceId;await view('accounting');if(id&&$('accService'))$('accService').value=id;};
 
@@ -6450,7 +6483,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.57-20260926-no-doppi-pazienti';
+const CGE_APP_BUILD='13.58-20260926-elimina-servizio';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
