@@ -65,7 +65,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
           <div class="field"><label>N°</label><input id="numero" type="number" min="1" max="250" step="1" required></div>
           <div class="field"><label>DATA</label><input id="data" type="date" required></div>
           <div class="field"><label>N° AMBULANZA</label><select id="mezzo" required></select></div>
-          <div class="field"><label>TARGA</label><input id="targa" readonly></div>
+          <div class="field"><label>TARGA</label><select id="targa" required></select></div>
           <div class="field"><label>KM</label><input id="km" type="number" min="1" max="5000" step="1" required></div>
           <div class="field"><label>ORA PARTENZA</label><input id="oraPartenza" type="time"></div>
           <div class="field"><label>LUOGO PARTENZA</label><select id="partenza"></select></div>
@@ -165,6 +165,7 @@ document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>showView(b.dataset
 function initSelects(){
   mezzo.innerHTML='<option value="">Seleziona ambulanza</option>'+vehicles.map(v=>'<option>'+v.name+'</option>').join('');
   fMezzo.innerHTML='<option value="">Tutti i mezzi</option>'+vehicles.map(v=>'<option>'+v.name+'</option>').join('');
+  targa.innerHTML='<option value="">Seleziona targa</option>'+vehicles.map(v=>'<option>'+v.plate+'</option>').join('');
   vehicleGrid.innerHTML=vehicles.map(v=>'<div class="vehicle"><strong>'+v.name+'</strong><span>Targa: <b>'+v.plate+'</b></span><span>Stato: disponibile</span></div>').join('');
   const locOpts=comuni.map(v=>'<option value="'+v+'">'+v+'</option>').join('');
   partenza.innerHTML=locOpts;
@@ -172,8 +173,9 @@ function initSelects(){
   rsa.innerHTML=rsaList.map(v=>'<option value="'+v+'">'+(v||'Nessuna RSA')+'</option>').join('');
   ospedale.innerHTML=ospedali.map(v=>'<option value="'+v+'">'+(v||'Nessun ospedale/clinica')+'</option>').join('');
 }
-mezzo.onchange=()=>{const v=vehicles.find(x=>x.name===mezzo.value);targa.value=v?v.plate:''}
-function resetForm(){tripForm.reset();editId.value='';numero.value=nextNum();data.value=iso(new Date());formTitle.textContent='Nuovo viaggio';targa.value=''}
+mezzo.onchange=()=>{const v=vehicles.find(x=>x.name===mezzo.value);targa.value=v?v.plate:''};
+targa.onchange=()=>{const v=vehicles.find(x=>x.plate===targa.value);mezzo.value=v?v.name:''}
+function resetForm(){tripForm.reset();editId.value='';numero.value=nextNum();data.value=iso(new Date());formTitle.textContent='Nuovo viaggio';targa.value='';mezzo.value=''}
 tripForm.onsubmit=e=>{e.preventDefault();const ids=['numero','data','mezzo','targa','km','oraPartenza','partenza','oraDest','destinazione','oraFine','importo','autista','capo','soc1','soc2','accompagnatore','rsa','ospedale','note'];let obj={};ids.forEach(i=>obj[i]=document.getElementById(i).value);obj.numero=+obj.numero;obj.km=+obj.km||0;obj.importo=+obj.importo||0;let a=getTrips();if(editId.value){obj.id=editId.value;a=a.map(x=>x.id===obj.id?obj:x)}else{obj.id='v'+Date.now();a.push(obj)}saveTrips(a);resetForm();showView('archivio')}
 function renderArchivio(){let a=getTrips().slice().sort((x,y)=>y.data.localeCompare(x.data)||y.numero-x.numero);const q=fSearch.value.toLowerCase().trim(),dal=fDal.value,al=fAl.value,m=fMezzo.value;a=a.filter(x=>{const blob=Object.values(x).join(' ').toLowerCase();return(!q||blob.includes(q))&&(!dal||x.data>=dal)&&(!al||x.data<=al)&&(!m||x.mezzo===m)});archiveBody.innerHTML=a.length?a.map(x=>'<tr><td><b>'+x.numero+'</b></td><td>'+esc(x.data)+'</td><td>'+esc(x.mezzo)+'</td><td>'+esc(x.targa)+'</td><td>'+x.km+'</td><td>'+esc(x.partenza)+'</td><td>'+esc(x.destinazione)+'</td><td>'+esc([x.autista,x.capo,x.soc1,x.soc2].filter(Boolean).join(', '))+'</td><td>'+money(x.importo)+'</td><td><button class="mini" style="background:#2879e8" onclick="editTrip(\''+x.id+'\')">Modifica</button> <button class="mini" style="background:#d84d4d" onclick="deleteTrip(\''+x.id+'\')">Elimina</button></td></tr>').join(''):'<tr><td colspan="10" class="empty">Nessun viaggio trovato</td></tr>'}
 function editTrip(id){const x=getTrips().find(t=>t.id===id);if(!x)return;Object.keys(x).forEach(k=>{const el=document.getElementById(k);if(el)el.value=x[k]??''});editId.value=x.id;formTitle.textContent='Modifica viaggio N° '+x.numero;showView('nuovo')}
