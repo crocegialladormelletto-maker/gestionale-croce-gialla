@@ -563,7 +563,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.53</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.54</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -617,7 +617,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.53</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.54</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1398,7 +1398,7 @@
  </div>
  <div id="vehicleCards" class="grid2" style="margin-top:10px"></div>
 </div>
-<div class="section" data-admin-only="true">
+<div class="section">
  <div class="actions" style="justify-content:space-between;align-items:center">
   <div><h3 id="exFormTitle" style="margin:0">➕ Nuova scadenza</h3><div class="muted">Inserisci una nuova scadenza oppure usa “Modifica” nella tabella per correggerne una già registrata.</div></div>
   <span id="exEditBadge" class="pill b hidden">MODIFICA IN CORSO</span>
@@ -1415,7 +1415,7 @@
    <div class="field"><label>Filtra stato</label><select id="exFilterState"><option value="">Tutte</option><option value="SCADUTA">Scadute</option><option value="PROSSIMA">Entro 30 giorni</option><option value="FUTURA">Future</option><option value="COMPLETATA">Completate</option></select></div>
   </div>
  </div>
- <div class="table" style="margin-top:10px"><table><thead><tr><th>Mezzo</th><th>Scadenza</th><th>Data</th><th>Mancano</th><th>Descrizione</th><th>Stato</th><th data-admin-only="true">Azioni</th></tr></thead><tbody id="exbody"></tbody></table></div>
+ <div class="table" style="margin-top:10px"><table><thead><tr><th>Mezzo</th><th>Scadenza</th><th>Data</th><th>Mancano</th><th>Descrizione</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="exbody"></tbody></table></div>
 </div>
 </div></section>
 
@@ -2655,7 +2655,7 @@ async function loadTravelSheets(){
  msg('fvMsg','');
 }
 async function deleteTravelSheet(id){
- if(prof?.ruolo!=='AMMINISTRATORE')return;
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  let f=(currentFoglio?.id===id?currentFoglio:null);
  if(!f){const r=await sb.from('fogli_viaggio').select('id,numero_foglio,stato,pdf_path').eq('id',id).maybeSingle();
    if(r.error)return msg('fvMsg','Impossibile verificare il Foglio Viaggio: '+r.error.message,'err');
@@ -5226,6 +5226,7 @@ async function loadVehiclesView(){
  await refreshMaster();
  const ex=await sb.from('mezzi_scadenze').select('*').order('data_scadenza');
  const expiries=ex.data||[];
+ const canManageExpiry=['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo);
  const isAdmin=prof?.ruolo==='AMMINISTRATORE';
  const todayDate=new Date(today()+'T00:00:00');
 
@@ -5275,8 +5276,8 @@ async function loadVehiclesView(){
    const s=expiryState(x);
    const days=s.days==null?'—':(s.days<0?Math.abs(s.days)+' gg fa':s.days===0?'Oggi':s.days+' gg');
    return '<tr><td><b>'+esc(x.mezzo)+'</b></td><td>'+esc(x.tipo_scadenza)+'</td><td>'+esc(x.data_scadenza)+'</td><td>'+esc(days)+'</td><td>'+esc(x.descrizione||'')+'</td><td><span class="pill '+s.cls+'">'+esc(s.label)+'</span></td>'+
-    (isAdmin?'<td><div class="actions"><button type="button" class="btn secondary" data-edit-expiry="'+esc(x.id)+'">✏ Modifica</button><button type="button" class="btn danger" data-delete-expiry="'+esc(x.id)+'">🗑 Cancella</button></div></td>':'')+'</tr>';
-  }).join(''):'<tr><td colspan="'+(isAdmin?7:6)+'">Nessuna scadenza per i filtri selezionati.</td></tr>';
+    (canManageExpiry?'<td><div class="actions"><button type="button" class="btn secondary" data-edit-expiry="'+esc(x.id)+'">✏ Modifica</button><button type="button" class="btn danger" data-delete-expiry="'+esc(x.id)+'">🗑 Cancella</button></div></td>':'<td>—</td>')+'</tr>';
+  }).join(''):'<tr><td colspan="7">Nessuna scadenza per i filtri selezionati.</td></tr>';
   $('exbody').querySelectorAll('[data-edit-expiry]').forEach(b=>b.onclick=()=>editVehicleExpiry(b.dataset.editExpiry,expiries));
   $('exbody').querySelectorAll('[data-delete-expiry]').forEach(b=>b.onclick=()=>deleteVehicleExpiry(b.dataset.deleteExpiry,expiries));
  };
@@ -5314,7 +5315,7 @@ function editVehicleExpiry(id,rows){
  $('exm').scrollIntoView({behavior:'smooth',block:'center'});
 }
 async function deleteVehicleExpiry(id,rows){
- if(prof?.ruolo!=='AMMINISTRATORE')return alert('Solo Amministrazione può cancellare le scadenze.');
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return alert('Accesso non autorizzato.');
  const x=(rows||[]).find(v=>v.id===id);
  if(!x)return alert('Scadenza non trovata. Aggiorna la pagina.');
  if(!confirm('Cancellare DEFINITIVAMENTE la scadenza '+x.tipo_scadenza+' del mezzo '+x.mezzo+' prevista per il '+x.data_scadenza+'?\n\nQuesta operazione non può essere annullata.'))return;
@@ -5336,7 +5337,7 @@ window.saveVehicle=async code=>{
 $('vehRefresh').onclick=loadVehiclesView;
 $('excancel').onclick=resetVehicleExpiryForm;
 $('exsave').onclick=async()=>{
- if(prof?.ruolo!=='AMMINISTRATORE')return msg('exmsg','Solo Amministrazione può inserire o modificare scadenze.','warn');
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return msg('exmsg','Accesso non autorizzato.','warn');
  if(!$('exm').value||!$('extype').value.trim()||!$('exdate').value)return msg('exmsg','Completa mezzo, tipo e data.','warn');
  const payload={mezzo:$('exm').value,tipo_scadenza:$('extype').value.trim(),data_scadenza:$('exdate').value,descrizione:$('exdesc').value.trim()||null};
  const editId=$('exeditid').value;
