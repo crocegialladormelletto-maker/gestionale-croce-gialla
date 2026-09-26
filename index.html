@@ -563,7 +563,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.49</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.52</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -617,7 +617,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.51</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.52</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1384,10 +1384,36 @@
 <div class="section"><div class="grid4"><div class="field"><label>Operatore *</label><select id="avp"></select></div><div class="field"><label>Da *</label><input id="avfrom" type="datetime-local"></div><div class="field"><label>A *</label><input id="avto" type="datetime-local"></div><div class="field"><label>Tipo</label><select id="avtype"><option>DISPONIBILE</option><option>INDISPONIBILE</option><option>PREFERENZA</option></select></div><div class="field"><label>Mezzo preferito</label><select id="avm"></select></div><div class="field"><label>Note</label><input id="avnote"></div></div><div class="toolbar"><button id="avsave" class="btn yellow">Salva disponibilità</button></div><div id="avmsg"></div></div>
 <div class="table"><table><thead><tr><th>Operatore</th><th>Da</th><th>A</th><th>Tipo</th><th>Mezzo</th><th>Note</th></tr></thead><tbody id="avbody"></tbody></table></div></div></section>
 
-<section id="vehicles" class="surface hidden"><div class="hero"><h2>Mezzi, manutenzioni e scadenze</h2></div><div class="pad">
-<div id="vehicleCards" class="grid2"></div>
-<div class="section"><h3>Aggiungi scadenza</h3><div class="grid4"><div class="field"><label>Mezzo</label><select id="exm"></select></div><div class="field"><label>Tipo scadenza</label><input id="extype" placeholder="Revisione, assicurazione..."></div><div class="field"><label>Data</label><input id="exdate" type="date"></div><div class="field"><label>Descrizione</label><input id="exdesc"></div></div><div class="toolbar"><button id="exsave" class="btn yellow">Salva scadenza</button></div><div id="exmsg"></div></div>
-<div class="table"><table><thead><tr><th>Mezzo</th><th>Scadenza</th><th>Data</th><th>Descrizione</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="exbody"></tbody></table></div></div></section>
+<section id="vehicles" class="surface hidden"><div class="hero"><h2>🚑 Mezzi, manutenzioni e scadenze</h2><p>Situazione operativa della flotta e controllo delle prossime scadenze.</p></div><div class="pad">
+<div class="stats">
+ <div class="stat"><small>MEZZI TOTALI</small><b id="vehTotal">0</b></div>
+ <div class="stat"><small>DISPONIBILI</small><b id="vehAvailable">0</b></div>
+ <div class="stat"><small>NON DISPONIBILI</small><b id="vehUnavailable">0</b></div>
+ <div class="stat"><small>SCADENZE DA VERIFICARE</small><b id="vehExpiryAlert">0</b></div>
+</div>
+<div class="section">
+ <div class="actions" style="justify-content:space-between;align-items:center">
+  <div><h3 style="margin:0">📡 Stato operativo mezzi</h3><div class="muted">Il Centralino può aggiornare lo stato operativo; Amministrazione gestisce anche chilometri, note e scadenze.</div></div>
+  <button id="vehRefresh" type="button" class="btn secondary">↻ Aggiorna</button>
+ </div>
+ <div id="vehicleCards" class="grid2" style="margin-top:10px"></div>
+</div>
+<div class="section" data-admin-only="true">
+ <h3>➕ Aggiungi scadenza</h3>
+ <div class="grid4"><div class="field"><label>Mezzo</label><select id="exm"></select></div><div class="field"><label>Tipo scadenza</label><input id="extype" placeholder="Revisione, assicurazione, tagliando..."></div><div class="field"><label>Data</label><input id="exdate" type="date"></div><div class="field"><label>Descrizione</label><input id="exdesc" placeholder="Dettagli facoltativi"></div></div>
+ <div class="toolbar"><button id="exsave" class="btn yellow">Salva scadenza</button></div><div id="exmsg"></div>
+</div>
+<div class="section">
+ <div class="actions" style="justify-content:space-between;align-items:end">
+  <div><h3 style="margin:0">📅 Scadenze flotta</h3><div class="muted">Rosso = scaduta · giallo = entro 30 giorni · verde = oltre 30 giorni.</div></div>
+  <div class="actions">
+   <div class="field"><label>Filtra mezzo</label><select id="exFilterVehicle"><option value="">Tutti i mezzi</option></select></div>
+   <div class="field"><label>Filtra stato</label><select id="exFilterState"><option value="">Tutte</option><option value="SCADUTA">Scadute</option><option value="PROSSIMA">Entro 30 giorni</option><option value="FUTURA">Future</option><option value="COMPLETATA">Completate</option></select></div>
+  </div>
+ </div>
+ <div class="table" style="margin-top:10px"><table><thead><tr><th>Mezzo</th><th>Scadenza</th><th>Data</th><th>Mancano</th><th>Descrizione</th><th>Stato</th><th data-admin-only="true">Azioni</th></tr></thead><tbody id="exbody"></tbody></table></div>
+</div>
+</div></section>
 
 <section id="tariffs" class="surface hidden"><div class="hero"><h2>Tariffari</h2><p>Quattro tariffari distinti per origine e tipologia di mezzo. Seleziona una scheda: i prezzi non vengono mescolati.</p></div><div class="pad">
 <div class="section"><div class="actions" id="tariffTabs" role="group" aria-label="Tariffari separati">
@@ -5193,13 +5219,69 @@ async function loadAvailability(){
 $('avsave').onclick=async()=>{if(!$('avp').value||!$('avfrom').value||!$('avto').value)return msg('avmsg','Completa operatore e intervallo.','warn');const r=await sb.from('disponibilita_personale').insert({badge_personale:$('avp').value,inizio:new Date($('avfrom').value).toISOString(),fine:new Date($('avto').value).toISOString(),tipo:$('avtype').value,preferenza_mezzo:$('avm').value||null,note:$('avnote').value.trim()||null});if(r.error)return msg('avmsg',r.error.message,'err');msg('avmsg','Disponibilità salvata.','ok');loadAvailability()};
 
 async function loadVehiclesView(){
- await refreshMaster();const ex=await sb.from('mezzi_scadenze').select('*').order('data_scadenza');const expiries=ex.data||[];
- $('vehicleCards').innerHTML=vehicles.map(v=>'<div class="box"><h3 style="margin-top:0">Mezzo '+esc(v.codice)+' · '+esc(v.targa)+'</h3><div class="grid2"><div class="field"><label>Stato</label><select id="vs_'+v.codice+'"><option '+(v.stato_operativo==='DISPONIBILE'?'selected':'')+'>DISPONIBILE</option><option '+(v.stato_operativo==='IN SERVIZIO'?'selected':'')+'>IN SERVIZIO</option><option '+(v.stato_operativo==='MANUTENZIONE'?'selected':'')+'>MANUTENZIONE</option><option '+(v.stato_operativo==='FUORI SERVIZIO'?'selected':'')+'>FUORI SERVIZIO</option></select></div><div class="field"><label>Km attuali</label><input id="vk_'+v.codice+'" type="number" value="'+esc(v.km_attuali||'')+'"></div></div><div class="field"><label>Note</label><input id="vn_'+v.codice+'" value="'+esc(v.note||'')+'"></div><div class="toolbar"><button class="btn secondary" onclick="saveVehicle(\''+v.codice+'\')">Salva mezzo</button></div></div>').join('');
- $('exbody').innerHTML=expiries.length?expiries.map(x=>'<tr><td>'+esc(x.mezzo)+'</td><td>'+esc(x.tipo_scadenza)+'</td><td>'+esc(x.data_scadenza)+'</td><td>'+esc(x.descrizione||'')+'</td><td>'+(x.completata?'<span class="pill g">Completata</span>':(x.data_scadenza<today()?'<span class="pill r">Scaduta</span>':'<span class="pill">Da fare</span>'))+'</td><td><button type="button" class="btn danger" data-delete-expiry="'+esc(x.id)+'">🗑 Cancella</button></td></tr>').join(''):'<tr><td colspan="6">Nessuna scadenza.</td></tr>';
- $('exbody').querySelectorAll('[data-delete-expiry]').forEach(b=>b.onclick=()=>deleteVehicleExpiry(b.dataset.deleteExpiry,expiries));
+ await refreshMaster();
+ const ex=await sb.from('mezzi_scadenze').select('*').order('data_scadenza');
+ const expiries=ex.data||[];
+ const isAdmin=prof?.ruolo==='AMMINISTRATORE';
+ const todayDate=new Date(today()+'T00:00:00');
+
+ const expiryState=x=>{
+  if(x.completata)return {key:'COMPLETATA',label:'Completata',cls:'g',days:null};
+  const d=new Date(x.data_scadenza+'T00:00:00');
+  const days=Math.ceil((d-todayDate)/86400000);
+  if(days<0)return {key:'SCADUTA',label:'Scaduta',cls:'r',days};
+  if(days<=30)return {key:'PROSSIMA',label:'Entro 30 gg',cls:'',days};
+  return {key:'FUTURA',label:'Regolare',cls:'g',days};
+ };
+ const alerts=expiries.filter(x=>!x.completata&&expiryState(x).days<=30);
+
+ $('vehTotal').textContent=vehicles.length;
+ $('vehAvailable').textContent=vehicles.filter(v=>v.stato_operativo==='DISPONIBILE').length;
+ $('vehUnavailable').textContent=vehicles.filter(v=>v.stato_operativo!=='DISPONIBILE').length;
+ $('vehExpiryAlert').textContent=alerts.length;
+
+ $('vehicleCards').innerHTML=vehicles.map(v=>{
+  const state=v.stato_operativo||'DISPONIBILE';
+  const stateCls=state==='DISPONIBILE'?'g':(state==='IN SERVIZIO'?'':'r');
+  const next=expiries.filter(x=>x.mezzo===v.codice&&!x.completata).sort((a,b)=>String(a.data_scadenza).localeCompare(String(b.data_scadenza)))[0];
+  const nextTxt=next?(next.tipo_scadenza+' · '+next.data_scadenza):'Nessuna scadenza registrata';
+  return '<div class="box" style="border-left:5px solid '+(state==='DISPONIBILE'?'#2d9a69':state==='IN SERVIZIO'?'#d6a100':'#b52d36')+'">'+
+   '<div class="actions" style="justify-content:space-between"><h3 style="margin:0">Mezzo '+esc(v.codice)+(v.targa?' · '+esc(v.targa):'')+'</h3><span class="pill '+stateCls+'">'+esc(state)+'</span></div>'+
+   '<div class="grid2" style="margin-top:10px">'+
+    '<div class="field"><label>Stato operativo</label><select id="vs_'+v.codice+'"><option '+(state==='DISPONIBILE'?'selected':'')+'>DISPONIBILE</option><option '+(state==='IN SERVIZIO'?'selected':'')+'>IN SERVIZIO</option><option '+(state==='MANUTENZIONE'?'selected':'')+'>MANUTENZIONE</option><option '+(state==='FUORI SERVIZIO'?'selected':'')+'>FUORI SERVIZIO</option></select></div>'+
+    '<div class="field"><label>Km attuali</label><input id="vk_'+v.codice+'" type="number" value="'+esc(v.km_attuali||'')+'" '+(isAdmin?'':'disabled')+'></div>'+
+   '</div>'+
+   '<div class="field" style="margin-top:8px"><label>Note / anomalie</label><input id="vn_'+v.codice+'" value="'+esc(v.note||'')+'" placeholder="Nessuna nota" '+(isAdmin?'':'disabled')+'></div>'+
+   '<div class="notice" style="margin-top:8px"><b>Prossima scadenza:</b> '+esc(nextTxt)+'</div>'+
+   '<div class="toolbar"><button class="btn secondary" onclick="saveVehicle(\''+v.codice+'\')">Salva stato'+(isAdmin?' e dati':'')+'</button></div>'+
+  '</div>';
+ }).join('');
+
+ const vf=$('exFilterVehicle');
+ if(vf){
+  const previous=vf.value;
+  vf.innerHTML='<option value="">Tutti i mezzi</option>'+vehicles.map(v=>'<option value="'+esc(v.codice)+'">Mezzo '+esc(v.codice)+'</option>').join('');
+  vf.value=previous;
+ }
+ const renderExpiries=()=>{
+  const vehicleFilter=$('exFilterVehicle')?.value||'';
+  const stateFilter=$('exFilterState')?.value||'';
+  const rows=expiries.filter(x=>(!vehicleFilter||x.mezzo===vehicleFilter)&&(!stateFilter||expiryState(x).key===stateFilter));
+  $('exbody').innerHTML=rows.length?rows.map(x=>{
+   const s=expiryState(x);
+   const days=s.days==null?'—':(s.days<0?Math.abs(s.days)+' gg fa':s.days===0?'Oggi':s.days+' gg');
+   return '<tr><td><b>'+esc(x.mezzo)+'</b></td><td>'+esc(x.tipo_scadenza)+'</td><td>'+esc(x.data_scadenza)+'</td><td>'+esc(days)+'</td><td>'+esc(x.descrizione||'')+'</td><td><span class="pill '+s.cls+'">'+esc(s.label)+'</span></td>'+
+    (isAdmin?'<td><button type="button" class="btn danger" data-delete-expiry="'+esc(x.id)+'">🗑 Cancella</button></td>':'')+'</tr>';
+  }).join(''):'<tr><td colspan="'+(isAdmin?7:6)+'">Nessuna scadenza per i filtri selezionati.</td></tr>';
+  $('exbody').querySelectorAll('[data-delete-expiry]').forEach(b=>b.onclick=()=>deleteVehicleExpiry(b.dataset.deleteExpiry,expiries));
+ };
+ renderExpiries();
+ if($('exFilterVehicle'))$('exFilterVehicle').onchange=renderExpiries;
+ if($('exFilterState'))$('exFilterState').onchange=renderExpiries;
+ applyRoleUI();
 }
 async function deleteVehicleExpiry(id,rows){
- if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ if(prof?.ruolo!=='AMMINISTRATORE')return alert('Solo Amministrazione può cancellare le scadenze.');
  const x=(rows||[]).find(v=>v.id===id);
  if(!x)return alert('Scadenza non trovata. Aggiorna la pagina.');
  if(!confirm('Cancellare DEFINITIVAMENTE la scadenza '+x.tipo_scadenza+' del mezzo '+x.mezzo+' prevista per il '+x.data_scadenza+'?\n\nQuesta operazione non può essere annullata.'))return;
@@ -5208,8 +5290,25 @@ async function deleteVehicleExpiry(id,rows){
  if(!r.data)return alert('Scadenza non più presente o accesso non autorizzato.');
  await loadVehiclesView();
 }
-window.saveVehicle=async code=>{const r=await sb.from('mezzi').update({stato_operativo:$('vs_'+code).value,km_attuali:$('vk_'+code).value?Number($('vk_'+code).value):null,note:$('vn_'+code).value.trim()||null,updated_at:new Date().toISOString()}).eq('codice',code);if(r.error)return alert(r.error.message);loadVehiclesView()};
-$('exsave').onclick=async()=>{if(!$('exm').value||!$('extype').value.trim()||!$('exdate').value)return msg('exmsg','Completa mezzo, tipo e data.','warn');const r=await sb.from('mezzi_scadenze').insert({mezzo:$('exm').value,tipo_scadenza:$('extype').value.trim(),data_scadenza:$('exdate').value,descrizione:$('exdesc').value.trim()||null});if(r.error)return msg('exmsg',r.error.message,'err');msg('exmsg','Scadenza inserita.','ok');loadVehiclesView()};
+window.saveVehicle=async code=>{
+ const payload={stato_operativo:$('vs_'+code).value,updated_at:new Date().toISOString()};
+ if(prof?.ruolo==='AMMINISTRATORE'){
+  payload.km_attuali=$('vk_'+code).value?Number($('vk_'+code).value):null;
+  payload.note=$('vn_'+code).value.trim()||null;
+ }
+ const r=await sb.from('mezzi').update(payload).eq('codice',code);
+ if(r.error)return alert(r.error.message);
+ await loadVehiclesView();
+};
+$('vehRefresh').onclick=loadVehiclesView;
+$('exsave').onclick=async()=>{
+ if(prof?.ruolo!=='AMMINISTRATORE')return msg('exmsg','Solo Amministrazione può inserire scadenze.','warn');
+ if(!$('exm').value||!$('extype').value.trim()||!$('exdate').value)return msg('exmsg','Completa mezzo, tipo e data.','warn');
+ const r=await sb.from('mezzi_scadenze').insert({mezzo:$('exm').value,tipo_scadenza:$('extype').value.trim(),data_scadenza:$('exdate').value,descrizione:$('exdesc').value.trim()||null});
+ if(r.error)return msg('exmsg',r.error.message,'err');
+ $('extype').value='';$('exdate').value='';$('exdesc').value='';
+ msg('exmsg','Scadenza inserita.','ok');loadVehiclesView();
+};
 
 function showTariffGroup(code){
  if(!TARIFF_CATEGORIES.some(x=>x[0]===code))return;
