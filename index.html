@@ -615,7 +615,7 @@
 </div>
 <div class="section"><h3>🔎 Cerca un servizio</h3><p class="muted">Trova servizi futuri o passati per paziente, manifestazione, destinazione, tipo servizio, mezzo o numero Foglio Viaggio.</p><div class="grid3"><div class="field"><label>Parola da cercare</label><input id="dashServiceSearch" placeholder="Es. Borgomanero, cognome, manifestazione…" autocomplete="off"></div><div class="field"><label>Data (facoltativa)</label><input id="dashServiceDate" type="date"></div><div class="field"><label>&nbsp;</label><div class="actions"><button id="dashServiceFind" class="btn yellow" type="button">🔎 Cerca servizi</button><button id="dashServiceAll" class="btn secondary" type="button">Tutti i servizi</button></div></div></div><div id="dashServiceMsg"></div></div><div class="grid2"><div class="section"><h3>Prossimi servizi</h3><div id="next"></div></div><div class="section"><h3>Scadenze mezzi</h3><div id="nextExp"></div></div></div>
 </div><aside class="dim-dash-side section">
- <h3>🚑 Turni DIMISSIONI</h3><div class="muted">Iscrizioni definitive dei volontari: per ogni fascia servono un autista e un soccorritore.</div>
+ <h3>🚑 Turni DIMISSIONI</h3><div class="muted">Iscrizioni definitive dei volontari: l’equipaggio base è completo con un autista e un capo servizio; possono poi essere aggiunti gli altri componenti.</div>
  <div class="actions" style="justify-content:space-between;margin-top:10px"><b id="dimAdminTitle"></b><div class="actions">
  <button id="dimAdminPrev" class="btn secondary" type="button">←</button>
  <button id="dimAdminToday" class="btn yellow" type="button">Oggi</button>
@@ -736,6 +736,7 @@
 </section>
 
 <section id="emergency" class="surface hidden">
+ <div class="notice" style="margin:8px 12px 0"><b>SVILUPPO V13.49</b> · Emergenza 118: equipaggio base completo con Autista + Capo servizio.</div>
  <div class="hero">
   <div class="em-header">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Croce Gialla Emergenza">
@@ -1647,13 +1648,13 @@
    </section>
 
 <section id="volEmgSection" class="surface vol-panel vol-panel-emergenza">
-    <div class="hero"><h2>🚨 Turni EMERGENZA 118</h2><p>Iscriviti direttamente a un turno definitivo: scegli giorno, fascia e ruolo. Ogni fascia richiede almeno un autista e un soccorritore.</p></div>
+    <div class="hero"><h2>🚨 Turni EMERGENZA 118</h2><p>Iscriviti direttamente a un turno definitivo: scegli giorno, fascia e ruolo. Ogni fascia è completa con almeno un autista e un capo servizio; gli altri componenti possono essere aggiunti normalmente.</p></div>
     <div class="pad">
      <div class="actions" style="justify-content:space-between"><b id="emgVolTitle"></b><div class="actions">
       <button id="emgVolPrev" class="btn secondary" type="button">←</button><button id="emgVolToday" class="btn yellow" type="button">Oggi</button>
       <button id="emgVolNext" class="btn secondary" type="button">→</button><button id="emgVolRefresh" class="btn secondary" type="button">↻ Aggiorna</button>
      </div></div>
-     <p class="muted">Verde: autista e soccorritore presenti. Giallo: turno da completare. L'iscrizione è definitiva e non si può cancellare autonomamente.</p>
+     <p class="muted">Verde: autista e capo servizio presenti (equipaggio base completo). Giallo: turno da completare. L'iscrizione è definitiva e non si può cancellare autonomamente.</p>
      <div id="emgVolMsg"></div><div class="dim-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
      <div id="emgVolGrid" class="dim-month-grid"></div><h3 id="emgVolDayTitle" style="margin-top:15px"></h3><div id="emgVolDay"></div>
     </div>
@@ -3192,8 +3193,9 @@ function dashOpsCrewBlock(title,rows,showVehicle){
  if(!groups.length)return '<div class="ops-empty">'+esc(title)+': nessuna iscrizione per oggi.</div>';
  return '<div style="margin-bottom:10px"><b>'+esc(title)+'</b>'+groups.map(([fascia,members])=>{
   const mezzo=showVehicle?(members.find(x=>x.mezzo)?.mezzo||''):'';
-  const hasAut=members.some(x=>x.ruolo==='AUTISTA'),hasSoc=members.some(x=>x.ruolo==='SOCCORRITORE'),
-   covered=hasAut&&hasSoc;
+  const requiredSecondRole=showVehicle?'CAPO_SERVIZIO':'SOCCORRITORE';
+  const hasAut=members.some(x=>x.ruolo==='AUTISTA'),hasSecond=members.some(x=>x.ruolo===requiredSecondRole),
+   covered=hasAut&&hasSecond;
   return '<div class="ops-row '+(covered?'ops-row-ok':'ops-row-warn')+'">'+
    '<div class="ops-crew-line"><strong>'+esc(fascia)+' · '+esc(volFasciaOrario(fascia))+'</strong>'+
    '<span class="pill '+(covered?'g':'')+'">'+(covered?'COPERTO':'DA COMPLETARE')+'</span></div>'+
@@ -3269,8 +3271,8 @@ async function loadOperationalDashboard(){
   serviceId:x.id
  }));
  dashOpsGroup(emgRows).forEach(([fascia,members])=>{
-  if(!(members.some(x=>x.ruolo==='AUTISTA')&&members.some(x=>x.ruolo==='SOCCORRITORE')))
-   problems.push({level:'alert',title:'Emergenza 118 '+fascia+' incompleta',detail:'Autista e soccorritore non risultano entrambi presenti.'});
+  if(!(members.some(x=>x.ruolo==='AUTISTA')&&members.some(x=>x.ruolo==='CAPO_SERVIZIO')))
+   problems.push({level:'alert',title:'Emergenza 118 '+fascia+' incompleta',detail:'Autista e capo servizio non risultano entrambi presenti.'});
   if(!members.find(x=>x.mezzo)?.mezzo)
    problems.push({level:'warn',title:'Emergenza 118 '+fascia+' senza mezzo',detail:'Assegna il mezzo all’equipaggio della fascia.'});
  });
@@ -4521,7 +4523,7 @@ $('dimAdminRefresh').onclick=loadDimissioniAdmin;
 const EMG_FASCE=[['MATTINO','Mattino'],['POMERIGGIO','Pomeriggio'],['SERA','Sera'],['NOTTE','Notte']];
 function emgRoleLabel(role){return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':role==='SECONDO_SOCCORRITORE'?'Secondo soccorritore':'Soccorritore'}
 function emgRowsFor(rows,day,fascia){return rows.filter(row=>row.giorno===day&&row.fascia===fascia)}
-function emgSlotCovered(rows){return rows.some(row=>row.ruolo==='AUTISTA')&&rows.some(row=>row.ruolo==='SOCCORRITORE')}
+function emgSlotCovered(rows){return rows.some(row=>row.ruolo==='AUTISTA')&&rows.some(row=>row.ruolo==='CAPO_SERVIZIO')}
 function emgDayTitle(day){return new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(day+'T12:00:00')).replace(/^./,c=>c.toUpperCase())}
 function emgRenderMonth(kind){
  const admin=kind==='Admin',cursor=admin?emgAdminCursor:emgVolCursor,
@@ -4559,8 +4561,8 @@ function emgRenderDay(kind){
    ' · <b>'+esc(emgRoleLabel(row.ruolo))+'</b>'+
    (admin&&prof?.ruolo==='AMMINISTRATORE'?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-emg-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
    '</div>').join(''),
-  missing=['AUTISTA','SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)).map(emgRoleLabel),
-  state=covered?'Coperto · autista e soccorritore presenti':'Da completare · mancano '+missing.join(' e ');
+  missing=['AUTISTA','CAPO_SERVIZIO'].filter(role=>!slot.some(x=>x.ruolo===role)).map(emgRoleLabel),
+  state=covered?'Completo · autista e capo servizio presenti':'Da completare · mancano '+missing.join(' e ');
   const eligible=['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)&&vfcalQualificationRows.some(q=>
    q.codice_qualifica===role&&(!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
   const action=!admin&&day>=todayY&&!mine?
@@ -6062,7 +6064,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.48-20260926-duplica-servizio';
+const CGE_APP_BUILD='13.49-dev-emergenza-equipaggio-base-20260926';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
