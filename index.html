@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.61</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.62</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1489,7 +1489,7 @@
    <div class="field"><label>Costo chilometrico €/km</label><input id="rcKmRate" type="number" min="0" step="0.01" value="1.20" readonly></div>
    <div class="field"><label>Diritto di chiamata €</label><input id="rcFixed" type="number" min="0" step="1" value="20" readonly></div>
    <div class="field"><label>Autostrada / pedaggi €</label><input id="rcTolls" type="number" min="0" step="0.10" value="0"><div class="muted" id="rcTollSource" style="margin-top:5px">Da calcolare</div></div>
-   <div class="field"><label>Km autostrada stimati</label><input id="rcMotorwayKm" type="number" min="0" step="0.1" value="0" readonly></div>
+   <div class="field"><label>Km autostrada stimati</label><input id="rcMotorwayKm" type="number" min="0" step="0.1" value="0" placeholder="Calcolati o inseriti manualmente"></div>
    <div class="field"><label>Tariffa stima €/km autostrada</label><input id="rcTollKmRate" type="number" min="0" step="0.001" value="0.090"></div>
    <div class="field" data-admin-only="true"><label>Pedaggio reale della tratta</label><div class="actions"><button id="rcSaveToll" type="button" class="btn secondary">💾 Memorizza pedaggio</button></div><div class="muted" style="margin-top:5px">Salva il valore attuale per riutilizzarlo automaticamente.</div></div>
    <div class="field"><label>Gasolio €/litro</label><input id="rcFuelPrice" type="number" min="0" step="0.001" value="2.334"></div>
@@ -2281,7 +2281,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.61';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.62';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5787,6 +5787,7 @@ if($('rcSaveToll'))$('rcSaveToll').onclick=routeCalcSaveToll;
 if($('rcUseService'))$('rcUseService').onclick=routeCalcUseInService;
 ['rcKm','rcTolls','rcFuelPrice','rcConsumption','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
 if($('rcTollKmRate'))$('rcTollKmRate').oninput=()=>{const mk=routeCalcNum('rcMotorwayKm');if(!$('rcTollSource').textContent.startsWith('✓'))routeCalcResolveToll(mk);else routeCalcRecompute()};
+if($('rcMotorwayKm'))$('rcMotorwayKm').oninput=()=>{const mk=routeCalcNum('rcMotorwayKm');if(!$('rcTollSource').textContent.startsWith('✓'))routeCalcResolveToll(mk);else routeCalcRecompute()};
 ['rcVehicleType','rcReturn','rcChair','rcBariatric'].forEach(id=>{if($(id))$(id).onchange=routeCalcRecompute});
 routeCalcRecompute();
 routeCalcUpdateFuelPrice(false);
@@ -6852,7 +6853,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.61-20260927-toll-hybrid';
+const CGE_APP_BUILD='13.62-20260927-motorway-km-editable';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
