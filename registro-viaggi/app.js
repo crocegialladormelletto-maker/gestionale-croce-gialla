@@ -110,8 +110,10 @@ function clearFilters(){$('fSearch').value='';$('fDal').value='';$('fAl').value=
 function tripDateTime(x,which){
   const t=which==='start'?x.ora_partenza:x.ora_fine;
   if(!x.data||!t)return null;
-  const d=new Date(x.data+'T'+t+':00');
-  if(which==='end'&&x.ora_partenza&&x.ora_fine&&x.ora_fine<x.ora_partenza)d.setDate(d.getDate()+1);
+  const time=String(t).slice(0,8);
+  const d=new Date(x.data+'T'+time);
+  if(Number.isNaN(d.getTime()))return null;
+  if(which==='end'&&x.ora_partenza&&x.ora_fine&&String(x.ora_fine).slice(0,8)<String(x.ora_partenza).slice(0,8))d.setDate(d.getDate()+1);
   return d
 }
 function crewBadges(x){return [x.autista_badge,x.capo_badge,x.soccorritore_1_badge,x.soccorritore_2_badge].filter(Boolean)}
