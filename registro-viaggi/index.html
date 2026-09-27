@@ -57,7 +57,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn" style="background:#53657d" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione Stabile 2.11</div></div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione Stabile 2.12</div></div></div>
 
   <section id="dashboard" class="view">
     <div class="notice"><b>REGISTRO OPERATIVO:</b> i dati sono salvati nel database condiviso e protetti da accesso autenticato.</div>\n    <div id="restAlert" class="rest-alert" style="display:none"></div>
@@ -103,7 +103,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
           <div class="field"><label>ORA FINE</label><input id="oraFine" type="time"></div>
           <div class="field"><label>METODO DI PAGAMENTO</label><select id="metodoPagamento"></select></div>
           <div class="field"><label>N° RICEVUTA</label><input id="numeroRicevuta" placeholder="Numero ricevuta"></div>
-          <div class="field"><label>IMPORTO €</label><input id="importo" type="number" min="1" max="10000" step="1"></div>
+          <div class="field"><label>IMPORTO €</label><input id="importo" type="number" min="1" max="10000" step="1" placeholder="Inserisci importo"></div>
           <div class="field"><label>AUTISTA</label><select id="autista"></select></div>
           <div class="field"><label>CAPO EQUIPAGGIO</label><select id="capo"></select></div>
           <div class="field"><label>SOCCORRITORE 1</label><select id="soc1"></select></div>
@@ -193,6 +193,6 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="app.js?v=2.11"></script>
+<script src="app.js?v=2.12"></script>
 </body>
 </html>
