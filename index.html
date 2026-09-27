@@ -1489,7 +1489,8 @@
    <div class="field"><label>Costo chilometrico €/km</label><input id="rcKmRate" type="number" min="0" step="0.01" value="1.20" readonly></div>
    <div class="field"><label>Diritto di chiamata €</label><input id="rcFixed" type="number" min="0" step="1" value="20" readonly></div>
    <div class="field"><label>Autostrada / pedaggi €</label><input id="rcTolls" type="number" min="0" step="0.50" value="0"></div>
-   <div class="field"><label>Durata stimata (ore)</label><input id="rcHours" type="number" min="0" step="0.1" placeholder="Calcolata o manuale"></div>
+   <div class="field"><label>Fermo mezzo (ore)</label><input id="rcStopHours" type="number" min="0" step="0.5" value="0"></div>
+   <div class="field"><label>Fermo mezzo €/ora</label><input id="rcStopRate" type="number" min="0" step="1" value="20" readonly></div>
    <div class="field"><label>Margine da applicare %</label><input id="rcMargin" type="number" min="0" step="1" value="0"></div>
   </div>
  </div>
@@ -1498,6 +1499,7 @@
   <div class="stat"><small>COSTO KM</small><b id="rcKmCost">€ 0,00</b></div>
   <div class="stat"><small>DIRITTO CHIAMATA</small><b id="rcCallCost">€ 0,00</b></div>
   <div class="stat"><small>AUTOSTRADA / PEDAGGI</small><b id="rcTollCost">€ 0,00</b></div>
+  <div class="stat"><small>FERMO MEZZO</small><b id="rcStopCost">€ 0,00</b></div>
   <div class="stat"><small>COSTO COMPLESSIVO</small><b id="rcTotalCost">€ 0,00</b></div>
  </div>
  <div class="section" style="margin-top:10px;background:#eef8f2">
@@ -5538,25 +5540,29 @@ function routeCalcApplyVehicleRates(){
  const simple=$('rcVehicleType').value==='TRASPORTO SEMPLICE';
  $('rcKmRate').value=simple?'1.00':'1.20';
  $('rcFixed').value=simple?'15':'20';
+ if($('rcStopRate'))$('rcStopRate').value=simple?'15':'20';
 }
 function routeCalcRecompute(){
  if(!$('rcKm'))return;
  routeCalcApplyVehicleRates();
  const km=routeCalcNum('rcKm'),kmRate=routeCalcNum('rcKmRate'),fixed=routeCalcNum('rcFixed'),
-  tolls=routeCalcNum('rcTolls'),margin=routeCalcNum('rcMargin');
- const kmCost=km*kmRate;
+  tolls=routeCalcNum('rcTolls'),stopHours=routeCalcNum('rcStopHours'),stopRate=routeCalcNum('rcStopRate'),
+  margin=routeCalcNum('rcMargin');
+ const kmCost=km*kmRate,stopCost=stopHours*stopRate;
  const equipment=($('rcChair')?.checked?15:0)+($('rcBariatric')?.checked?20:0);
- const total=kmCost+fixed+tolls+equipment;
+ const total=kmCost+fixed+tolls+stopCost+equipment;
  const suggested=total*(1+margin/100);
  $('rcKmCost').textContent=euro(kmCost);
  $('rcCallCost').textContent=euro(fixed);
  $('rcTollCost').textContent=euro(tolls);
+ $('rcStopCost').textContent=euro(stopCost);
  $('rcTotalCost').textContent=euro(total);
  $('rcSuggested').textContent=euro(suggested);
  $('rcSuggested').dataset.value=suggested.toFixed(2);
  $('rcBreakdown').textContent=km>0?
   km.toFixed(1)+' km × '+euro(kmRate)+'/km · diritto chiamata '+euro(fixed)+
   (tolls?' · pedaggi '+euro(tolls):'')+
+  (stopHours?' · fermo '+stopHours.toFixed(1)+' h × '+euro(stopRate)+'/h':'')+
   (equipment?' · dotazioni '+euro(equipment):'')+
   (margin?' · margine '+margin.toFixed(0)+'%':''):
   'Inserisci o calcola i chilometri per ottenere la stima.';
@@ -5592,9 +5598,8 @@ async function routeCalcAutomatic(){
   const data=await rr.json(),route=data?.routes?.[0];
   if(!route)throw new Error('Nessun percorso stradale trovato.');
   $('rcKm').value=(Number(route.distance||0)/1000).toFixed(1);
-  $('rcHours').value=(Number(route.duration||0)/3600).toFixed(1);
   routeCalcRecompute();
-  msg('rcMsg','Percorso calcolato: '+$('rcKm').value+' km · circa '+$('rcHours').value+' ore. Verifica il risultato prima di usarlo.','ok');
+  msg('rcMsg','Percorso calcolato: '+$('rcKm').value+' km. Verifica il risultato prima di usarlo.','ok');
  }catch(e){
   msg('rcMsg','Calcolo automatico non riuscito: '+(e?.message||e)+'. Puoi aprire Google Maps e inserire i km manualmente.','warn');
  }finally{
@@ -5611,12 +5616,12 @@ function routeCalcGoogleMaps(){
  window.open(url,'_blank','noopener');
 }
 function routeCalcReset(){
- ['rcLoad','rcDest','rcKm','rcHours'].forEach(id=>{if($(id))$(id).value=''});
+ ['rcLoad','rcDest','rcKm'].forEach(id=>{if($(id))$(id).value=''});
  if($('rcStart'))$('rcStart').value='Croce Gialla Emergenza ODV, Via I Maggio 1, Dormelletto NO';
  if($('rcReturn'))$('rcReturn').checked=true;
  if($('rcChair'))$('rcChair').checked=false;if($('rcBariatric'))$('rcBariatric').checked=false;
  if($('rcVehicleType'))$('rcVehicleType').value='AMBULANZA';
- ['rcTolls','rcMargin'].forEach(id=>{if($(id))$(id).value='0'});
+ ['rcTolls','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).value='0'});
  routeCalcApplyVehicleRates();
  msg('rcMsg','');routeCalcRecompute();
 }
@@ -5640,7 +5645,7 @@ if($('rcCalculateRoute'))$('rcCalculateRoute').onclick=routeCalcAutomatic;
 if($('rcOpenMaps'))$('rcOpenMaps').onclick=routeCalcGoogleMaps;
 if($('rcReset'))$('rcReset').onclick=routeCalcReset;
 if($('rcUseService'))$('rcUseService').onclick=routeCalcUseInService;
-['rcKm','rcHours','rcTolls','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
+['rcKm','rcTolls','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
 ['rcVehicleType','rcReturn','rcChair','rcBariatric'].forEach(id=>{if($(id))$(id).onchange=routeCalcRecompute});
 routeCalcRecompute();
 
