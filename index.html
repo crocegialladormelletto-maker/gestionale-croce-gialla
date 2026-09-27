@@ -5694,9 +5694,11 @@ async function routeCalcSaveToll(){
  const key=routeCalcRouteKey(),amount=routeCalcNum('rcTolls');
  if(!key.origine||!key.destinazione)return msg('rcMsg','Inserisci partenza e destinazione.','warn');
  const row={origine:key.origine,destinazione:key.destinazione,via:key.via||null,andata_ritorno:key.andata_ritorno,importo:amount,attivo:true,note:'Pedaggio verificato manualmente'};
- const existing=await sb.from('pedaggi_tratte').select('id').eq('origine',key.origine).eq('destinazione',key.destinazione).eq('andata_ritorno',key.andata_ritorno);
+ let existingQ=sb.from('pedaggi_tratte').select('id').eq('origine',key.origine).eq('destinazione',key.destinazione).eq('andata_ritorno',key.andata_ritorno);
+ existingQ=key.via?existingQ.eq('via',key.via):existingQ.is('via',null);
+ const existing=await existingQ.maybeSingle();
  if(existing.error)return msg('rcMsg','Impossibile verificare i pedaggi salvati: '+existing.error.message,'err');
- const match=(existing.data||[]).find(x=>true);
+ const match=existing.data;
  let r;
  if(match){
    let q=sb.from('pedaggi_tratte').update(row).eq('id',match.id).select('id');
