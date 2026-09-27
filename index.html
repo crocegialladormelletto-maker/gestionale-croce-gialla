@@ -1484,21 +1484,20 @@
  <div class="section" style="margin-top:12px;background:#f7fafc">
   <h3 style="margin-top:0">Parametri di costo</h3>
   <div class="grid4">
+   <div class="field"><label>Tipo mezzo</label><select id="rcVehicleType"><option value="AMBULANZA">Ambulanza</option><option value="TRASPORTO SEMPLICE">Trasporto semplice</option></select></div>
    <div class="field"><label>Km totali</label><input id="rcKm" type="number" min="0" step="0.1" placeholder="Calcolati o inseriti manualmente"></div>
+   <div class="field"><label>Costo chilometrico €/km</label><input id="rcKmRate" type="number" min="0" step="0.01" value="1.20" readonly></div>
+   <div class="field"><label>Diritto di chiamata €</label><input id="rcFixed" type="number" min="0" step="1" value="20" readonly></div>
+   <div class="field"><label>Autostrada / pedaggi €</label><input id="rcTolls" type="number" min="0" step="0.50" value="0"></div>
    <div class="field"><label>Durata stimata (ore)</label><input id="rcHours" type="number" min="0" step="0.1" placeholder="Calcolata o manuale"></div>
-   <div class="field"><label>Gasolio €/litro</label><input id="rcFuelPrice" type="number" min="0" step="0.01" value="2.34"></div>
-   <div class="field"><label>Consumo km/l</label><input id="rcConsumption" type="number" min="1" step="0.1" value="12"></div>
-   <div class="field"><label>Usura/manutenzione €/km</label><input id="rcWear" type="number" min="0" step="0.01" value="0"></div>
-   <div class="field"><label>Costo personale €/ora</label><input id="rcStaffHour" type="number" min="0" step="0.50" value="0"></div>
-   <div class="field"><label>Costi fissi / diritto chiamata €</label><input id="rcFixed" type="number" min="0" step="1" value="20"></div>
    <div class="field"><label>Margine da applicare %</label><input id="rcMargin" type="number" min="0" step="1" value="0"></div>
   </div>
  </div>
 
  <div class="stats" style="margin-top:12px">
-  <div class="stat"><small>CARBURANTE</small><b id="rcFuelCost">€ 0,00</b></div>
-  <div class="stat"><small>USURA / MANUTENZIONE</small><b id="rcWearCost">€ 0,00</b></div>
-  <div class="stat"><small>PERSONALE</small><b id="rcStaffCost">€ 0,00</b></div>
+  <div class="stat"><small>COSTO KM</small><b id="rcKmCost">€ 0,00</b></div>
+  <div class="stat"><small>DIRITTO CHIAMATA</small><b id="rcCallCost">€ 0,00</b></div>
+  <div class="stat"><small>AUTOSTRADA / PEDAGGI</small><b id="rcTollCost">€ 0,00</b></div>
   <div class="stat"><small>COSTO COMPLESSIVO</small><b id="rcTotalCost">€ 0,00</b></div>
  </div>
  <div class="section" style="margin-top:10px;background:#eef8f2">
@@ -5534,24 +5533,32 @@ function routeCalcNum(id){
  const v=Number($(id)?.value);
  return Number.isFinite(v)&&v>=0?v:0;
 }
+function routeCalcApplyVehicleRates(){
+ if(!$('rcVehicleType'))return;
+ const simple=$('rcVehicleType').value==='TRASPORTO SEMPLICE';
+ $('rcKmRate').value=simple?'1.00':'1.20';
+ $('rcFixed').value=simple?'15':'20';
+}
 function routeCalcRecompute(){
  if(!$('rcKm'))return;
- const km=routeCalcNum('rcKm'),hours=routeCalcNum('rcHours'),fuelPrice=routeCalcNum('rcFuelPrice'),
-  consumption=Math.max(0.1,routeCalcNum('rcConsumption')||12),wearRate=routeCalcNum('rcWear'),
-  staffRate=routeCalcNum('rcStaffHour'),fixed=routeCalcNum('rcFixed'),margin=routeCalcNum('rcMargin');
- const fuel=(km/consumption)*fuelPrice,wear=km*wearRate,staff=hours*staffRate;
+ routeCalcApplyVehicleRates();
+ const km=routeCalcNum('rcKm'),kmRate=routeCalcNum('rcKmRate'),fixed=routeCalcNum('rcFixed'),
+  tolls=routeCalcNum('rcTolls'),margin=routeCalcNum('rcMargin');
+ const kmCost=km*kmRate;
  const equipment=($('rcChair')?.checked?15:0)+($('rcBariatric')?.checked?20:0);
- const total=fuel+wear+staff+fixed+equipment;
+ const total=kmCost+fixed+tolls+equipment;
  const suggested=total*(1+margin/100);
- $('rcFuelCost').textContent=euro(fuel);
- $('rcWearCost').textContent=euro(wear);
- $('rcStaffCost').textContent=euro(staff);
+ $('rcKmCost').textContent=euro(kmCost);
+ $('rcCallCost').textContent=euro(fixed);
+ $('rcTollCost').textContent=euro(tolls);
  $('rcTotalCost').textContent=euro(total);
  $('rcSuggested').textContent=euro(suggested);
  $('rcSuggested').dataset.value=suggested.toFixed(2);
  $('rcBreakdown').textContent=km>0?
-  km.toFixed(1)+' km · '+hours.toFixed(1)+' h · costi fissi '+euro(fixed)+
-  (equipment?' · dotazioni '+euro(equipment):'')+(margin?' · margine '+margin.toFixed(0)+'%':''):
+  km.toFixed(1)+' km × '+euro(kmRate)+'/km · diritto chiamata '+euro(fixed)+
+  (tolls?' · pedaggi '+euro(tolls):'')+
+  (equipment?' · dotazioni '+euro(equipment):'')+
+  (margin?' · margine '+margin.toFixed(0)+'%':''):
   'Inserisci o calcola i chilometri per ottenere la stima.';
 }
 function routeCalcPoints(){
@@ -5608,8 +5615,9 @@ function routeCalcReset(){
  if($('rcStart'))$('rcStart').value='Croce Gialla Emergenza ODV, Via I Maggio 1, Dormelletto NO';
  if($('rcReturn'))$('rcReturn').checked=true;
  if($('rcChair'))$('rcChair').checked=false;if($('rcBariatric'))$('rcBariatric').checked=false;
- ['rcWear','rcStaffHour','rcMargin'].forEach(id=>{if($(id))$(id).value='0'});
- if($('rcFixed'))$('rcFixed').value='20';if($('rcFuelPrice'))$('rcFuelPrice').value='2.34';if($('rcConsumption'))$('rcConsumption').value='12';
+ if($('rcVehicleType'))$('rcVehicleType').value='AMBULANZA';
+ ['rcTolls','rcMargin'].forEach(id=>{if($(id))$(id).value='0'});
+ routeCalcApplyVehicleRates();
  msg('rcMsg','');routeCalcRecompute();
 }
 function routeCalcUseInService(){
@@ -5622,7 +5630,7 @@ function routeCalcUseInService(){
  if(dest&&$('dest'))$('dest').value=dest;
  const route=[...routeCalcPoints(),...($('rcReturn').checked?[$('rcStart').value.trim()]:[])].filter(Boolean).join(' → ');
  if($('note')){
-  const txt='Fuori tariffario · '+km.toFixed(1)+' km · stima '+euro(amount)+' · '+route;
+  const txt='Fuori tariffario · '+($('rcVehicleType')?.value||'MEZZO')+' · '+km.toFixed(1)+' km · stima '+euro(amount)+' · '+route;
   $('note').value=[$('note').value.trim(),txt].filter(Boolean).join('\n');
  }
  if($('tarQuote'))$('tarQuote').innerHTML='<div class="notice ok"><b>Importo fuori tariffario riportato dal calcolatore: '+euro(amount)+'</b><br>Km stimati: '+km.toFixed(1)+'</div>';
@@ -5632,8 +5640,8 @@ if($('rcCalculateRoute'))$('rcCalculateRoute').onclick=routeCalcAutomatic;
 if($('rcOpenMaps'))$('rcOpenMaps').onclick=routeCalcGoogleMaps;
 if($('rcReset'))$('rcReset').onclick=routeCalcReset;
 if($('rcUseService'))$('rcUseService').onclick=routeCalcUseInService;
-['rcKm','rcHours','rcFuelPrice','rcConsumption','rcWear','rcStaffHour','rcFixed','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
-['rcReturn','rcChair','rcBariatric'].forEach(id=>{if($(id))$(id).onchange=routeCalcRecompute});
+['rcKm','rcHours','rcTolls','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
+['rcVehicleType','rcReturn','rcChair','rcBariatric'].forEach(id=>{if($(id))$(id).onchange=routeCalcRecompute});
 routeCalcRecompute();
 
 function showTariffGroup(code){
