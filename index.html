@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.82</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.83</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -2358,7 +2358,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.82';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.83';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -6321,10 +6321,10 @@ async function routeCalcPrintQuote(){
  '.header{display:grid;grid-template-columns:110px 1fr;gap:18px;align-items:center;padding-bottom:14px;border-bottom:4px solid #f2c300}'+
  '.logo img{max-width:96px;max-height:86px}'+
  '.org{text-align:right}.org h1{margin:0;font-size:21px;letter-spacing:.2px}.org .meta{margin-top:5px;color:#52606d;line-height:1.45}'+
- '.docline{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;margin-top:14px;padding:10px 12px;background:#f8fafc;border:1px solid #dbe3ec;border-radius:9px}'+
+ '.docline{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;margin-top:14px;padding:10px 12px;background:#e8f1ff;border:1px solid #93b4e8;border-radius:9px}'+
  '.docline .title{font-size:20px;font-weight:900}.tag{padding:6px 10px;border-radius:7px;background:#eef2f7;font-weight:800;white-space:nowrap}'+
  '.section{margin-top:13px;border:1px solid #dbe3ec;border-radius:10px;overflow:hidden}'+
- '.section-title{padding:8px 11px;background:#f4f7fb;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.45px;color:#27415f}'+
+ '.section-title{padding:8px 11px;background:#dbeafe;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.45px;color:#123b72}'+
  '.section-body{padding:11px 12px}'+
  '.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}'+
  '.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 16px}'+
@@ -6332,13 +6332,13 @@ async function routeCalcPrintQuote(){
  '.value{font-size:13px;font-weight:700;margin-top:3px;line-height:1.35}'+
  '.route{font-size:13px;font-weight:700;line-height:1.5}'+
  '.money-row{display:grid;grid-template-columns:1.1fr .9fr;gap:12px;margin-top:14px}'+
- '.total{background:#edf8f0;border:2px solid #8dc89b;border-radius:11px;padding:14px}'+
- '.advance{background:#eef6ff;border:2px solid #9ec5f5;border-radius:11px;padding:14px}'+
+ '.total{background:#dcfce7;border:2px solid #22c55e;border-radius:11px;padding:14px}'+
+ '.advance{background:#dbeafe;border:2px solid #3b82f6;border-radius:11px;padding:14px}'+
  '.money-label{font-size:11px;text-transform:uppercase;font-weight:900;color:#475569}'+
  '.amount{font-size:30px;font-weight:900;margin-top:5px}'+
  '.advance .amount{font-size:25px}'+
  '.clause{margin-top:8px;font-weight:900;line-height:1.35}'+
- '.confirm{margin-top:14px;padding:12px 14px;border-left:5px solid #f2c300;background:#fffbea;font-weight:900;line-height:1.4}'+
+ '.confirm{margin-top:14px;padding:12px 14px;border-left:6px solid #f59e0b;background:#fef3c7;font-weight:900;line-height:1.4;color:#7c2d12}'+
  '.footer-zone{margin-top:auto;padding-top:18px}.five{display:grid;grid-template-columns:245px 1fr;gap:16px;align-items:center;background:#fff8d8;border:2px solid #f2c300;border-radius:12px;padding:12px 15px}.five-image{display:flex;align-items:center;justify-content:center}.five-image img{display:block;max-width:235px;width:100%;height:auto}.five h3{margin:0 0 5px;font-size:16px}.five p{margin:0;line-height:1.45;font-size:12px}.five-cf{margin-top:7px;font-weight:900;font-size:13px;color:#172033}.payment{margin-top:14px;border-top:2px solid #dbe3ec;padding-top:12px;padding-bottom:2px}'+
  '.payment h3{font-size:12px;margin:0 0 7px;text-transform:uppercase;color:#334155}'+
  '.payment-lines{white-space:pre-line;line-height:1.55;font-size:12px}'+
@@ -6389,13 +6389,13 @@ async function routeCalcPrintQuote(){
  '<div class="confirm">Il presente preventivo deve essere confermato via e-mail a trasporti@crocegiallaemergenza.it</div>'+
 
  '<div class="footer-zone">'+
-  '<div class="five">'+
-   '<div class="five-image"><img src="'+fiveImg+'" alt="5x1000"></div>'+
-   '<div><h3>Sostieni Croce Gialla Emergenza ODV con il tuo 5×1000</h3><p>Un gesto che non costa nulla e ci aiuta a mantenere efficienti mezzi, attrezzature e servizi per il territorio.</p><div class="five-cf">Codice fiscale: 91023880031</div></div>'+
-  '</div>'+
   '<div class="payment">'+
    '<h3>Metodo di pagamento</h3>'+
    '<div class="payment-lines">'+esc(paymentText)+'</div>'+
+  '</div>'+
+  '<div class="five" style="margin-top:14px">'+
+   '<div class="five-image"><img src="'+fiveImg+'" alt="5x1000"></div>'+
+   '<div><h3>Sostieni Croce Gialla Emergenza ODV con il tuo 5×1000</h3><p>Un gesto che non costa nulla e ci aiuta a mantenere efficienti mezzi, attrezzature e servizi per il territorio.</p><div class="five-cf">Codice fiscale: 91023880031</div></div>'+
   '</div>'+
  '</div>'+
 
@@ -7502,7 +7502,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.82-20260927-quote-wait-5x1000-image';
+const CGE_APP_BUILD='13.83-20260927-quote-bright-colors-payment-above-5x1000';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
