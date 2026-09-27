@@ -573,6 +573,16 @@
 .duplicate-head p{margin:3px 0 0}
 #duplicatePreparedNotice{margin-bottom:12px;border-left:5px solid #2d9a69}
 
+
+/* Tariffari: colori distinti per categoria */
+#tariffTabs [data-tariff-code]{border:2px solid transparent!important;transition:transform .12s ease,box-shadow .12s ease,opacity .12s ease}
+#tariffTabs [data-tariff-code="DEA_BORGOMANERO"]{background:#ffd400!important;color:#102f5a!important}
+#tariffTabs [data-tariff-code="DEA_NOVARA"]{background:#2563eb!important;color:#fff!important}
+#tariffTabs [data-tariff-code="TS_BORGOMANERO"]{background:#16a34a!important;color:#fff!important}
+#tariffTabs [data-tariff-code="TS_NOVARA_DOBLO"]{background:#7c3aed!important;color:#fff!important}
+#tariffTabs [data-tariff-code][aria-pressed="false"]{opacity:.86}
+#tariffTabs [data-tariff-code][aria-pressed="true"]{opacity:1;transform:translateY(-1px);border-color:#102f5a!important;box-shadow:0 0 0 3px rgba(16,47,90,.16),0 5px 12px rgba(16,47,90,.16)}
+#tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.58</div></div><div class="loginbody">
