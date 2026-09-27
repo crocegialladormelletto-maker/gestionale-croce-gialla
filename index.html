@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.78</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.79</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -2358,7 +2358,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.78';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.79';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -6298,7 +6298,6 @@ async function routeCalcPrintQuote(){
  }
  const quoteNumber=routeCalcFormatQuoteNumber(rcCurrentCustomerQuoteNumber,saved?.data_preventivo);
  const paymentText=routeCalcPaymentText(rcCurrentCustomerQuoteNumber,saved?.data_preventivo);
- const notes=paymentText;
  const vehicle=$('rcVehicleType')?.value==='TRASPORTO SEMPLICE'?'Trasporto semplice':'Ambulanza';
  const start=$('rcStart')?.value.trim()||'—';
  const load=$('rcLoad')?.value.trim()||'';
@@ -6311,45 +6310,95 @@ async function routeCalcPrintQuote(){
  const route=[start,load,dest,round?start:''].filter(Boolean).join(' → ');
  const extras=[chair?'Sedia cingolata / motorizzata':'',bariatric?'Barella bariatrica':''].filter(Boolean);
  const logo='https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70';
- const html='<!doctype html><html><head><meta charset="utf-8"><title>Preventivo Croce Gialla Emergenza</title>'+
+
+ const html='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(quoteNumber)+'</title>'+
  '<style>'+
- 'body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff}'+
- '.page{max-width:850px;margin:0 auto;padding:32px}'+
- '.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:4px solid #f4c400;padding-bottom:16px;margin-bottom:24px}'+
- '.head img{width:92px;height:auto}.brand{text-align:right}.brand h1{font-size:22px;margin:0 0 5px}.brand div{font-size:12px;color:#475569;line-height:1.5}'+
- '.title{font-size:24px;font-weight:800;margin:0 0 18px}.box{border:1px solid #dbe3ec;border-radius:10px;padding:16px;margin:12px 0}'+
- '.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.label{font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700}.value{font-size:15px;font-weight:700;margin-top:3px}'+
- '.total{background:#eef8f2;border:2px solid #86c59c;border-radius:12px;padding:18px;margin-top:18px}.total .amount{font-size:32px;font-weight:900}'+
- '.advance{background:#eef6ff;border:1px solid #93c5fd;border-radius:10px;padding:14px;margin-top:12px}'+
- '.muted{color:#64748b;font-size:12px}.notes{white-space:pre-wrap}.foot{margin-top:30px;padding-top:14px;border-top:1px solid #dbe3ec;font-size:11px;color:#64748b;line-height:1.5}'+
- '@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.page{padding:12mm}.no-print{display:none}}'+
+ '@page{size:A4;margin:12mm}'+
+ '*{box-sizing:border-box}'+
+ 'body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff;font-size:12px}'+
+ '.page{width:100%;max-width:794px;margin:0 auto}'+
+ '.header{display:grid;grid-template-columns:110px 1fr;gap:18px;align-items:center;padding-bottom:14px;border-bottom:4px solid #f2c300}'+
+ '.logo img{max-width:96px;max-height:86px}'+
+ '.org{text-align:right}.org h1{margin:0;font-size:21px;letter-spacing:.2px}.org .meta{margin-top:5px;color:#52606d;line-height:1.45}'+
+ '.docline{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;margin-top:14px;padding:10px 12px;background:#f8fafc;border:1px solid #dbe3ec;border-radius:9px}'+
+ '.docline .title{font-size:20px;font-weight:900}.tag{padding:6px 10px;border-radius:7px;background:#eef2f7;font-weight:800;white-space:nowrap}'+
+ '.section{margin-top:13px;border:1px solid #dbe3ec;border-radius:10px;overflow:hidden}'+
+ '.section-title{padding:8px 11px;background:#f4f7fb;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.45px;color:#27415f}'+
+ '.section-body{padding:11px 12px}'+
+ '.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}'+
+ '.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 16px}'+
+ '.label{font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:800;letter-spacing:.35px}'+
+ '.value{font-size:13px;font-weight:700;margin-top:3px;line-height:1.35}'+
+ '.route{font-size:13px;font-weight:700;line-height:1.5}'+
+ '.money-row{display:grid;grid-template-columns:1.1fr .9fr;gap:12px;margin-top:14px}'+
+ '.total{background:#edf8f0;border:2px solid #8dc89b;border-radius:11px;padding:14px}'+
+ '.advance{background:#eef6ff;border:2px solid #9ec5f5;border-radius:11px;padding:14px}'+
+ '.money-label{font-size:11px;text-transform:uppercase;font-weight:900;color:#475569}'+
+ '.amount{font-size:30px;font-weight:900;margin-top:5px}'+
+ '.advance .amount{font-size:25px}'+
+ '.clause{margin-top:8px;font-weight:900;line-height:1.35}'+
+ '.confirm{margin-top:14px;padding:12px 14px;border-left:5px solid #f2c300;background:#fffbea;font-weight:900;line-height:1.4}'+
+ '.payment{margin-top:13px;border-top:2px solid #dbe3ec;padding-top:12px}'+
+ '.payment h3{font-size:12px;margin:0 0 7px;text-transform:uppercase;color:#334155}'+
+ '.payment-lines{white-space:pre-line;line-height:1.55;font-size:12px}'+
+ '.small{font-size:11px;color:#64748b}'+
+ '@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{max-width:none}.no-print{display:none}}'+
  '</style></head><body><div class="page">'+
- '<div class="head"><img src="'+logo+'" alt="Croce Gialla"><div class="brand"><h1>Croce Gialla Emergenza ODV</h1><div>Via I° Maggio 1 · 28040 Dormelletto (NO)<br>Preventivo del '+routeCalcQuoteDate()+'</div></div></div>'+
- '<div class="title">Preventivo servizio di trasporto <span style="font-size:16px;color:#475569">· '+esc(quoteNumber)+'</span></div>'+
- '<div class="box"><div class="grid">'+
- '<div><div class="label">Cliente / destinatario</div><div class="value">'+esc(customer)+'</div></div>'+
- '<div><div class="label">Tipo di mezzo</div><div class="value">'+esc(vehicle)+'</div></div>'+
- (cf?'<div><div class="label">Codice fiscale</div><div class="value">'+esc(cf)+'</div></div>':'')+
- (address?'<div><div class="label">Indirizzo</div><div class="value">'+esc(address)+'</div></div>':'')+
- (email?'<div><div class="label">E-mail</div><div class="value">'+esc(email)+'</div></div>':'')+
- (phone?'<div><div class="label">Telefono</div><div class="value">'+esc(phone)+'</div></div>':'')+
- '</div></div>'+
- '<div class="box"><div class="label">Percorso previsto</div><div class="value">'+esc(route)+'</div>'+
- '<div class="grid" style="margin-top:14px"><div><div class="label">Km stimati</div><div class="value">'+km.toFixed(1)+' km</div></div>'+
- '<div><div class="label">Rientro</div><div class="value">'+(round?'Compreso':'Non compreso')+'</div></div></div>'+
- (extras.length?'<div style="margin-top:14px"><div class="label">Dotazioni richieste</div><div class="value">'+esc(extras.join(' · '))+'</div></div>':'')+
+
+ '<div class="header">'+
+  '<div class="logo"><img src="'+logo+'" alt="Croce Gialla"></div>'+
+  '<div class="org"><h1>Croce Gialla Emergenza ODV</h1><div class="meta">Via I° Maggio 1 · 28040 Dormelletto (NO)<br>Servizi sanitari e trasporti socio-sanitari</div></div>'+
  '</div>'+
- 
- '<div class="total"><div class="label">Importo preventivato</div><div class="amount">'+euro(amount)+'</div><div class="muted">Importo complessivo previsto per il servizio sopra indicato.</div></div>'+
- '<div class="advance"><div class="label">Anticipo richiesto alla conferma</div><div class="value" style="font-size:22px">'+esc(advanceText)+'</div><div class="muted">L’anticipo viene imputato al saldo finale del servizio.</div><div style="margin-top:8px;font-weight:900"><strong>L’anticipo non verrà restituito in caso di disdetta nelle 36 ore precedenti il servizio.</strong></div></div>'+'<div class="box" style="margin-top:14px"><div class="label">Conferma del preventivo</div><div class="value" style="font-weight:900">Il presente preventivo deve essere confermato via e-mail a trasporti@crocegiallaemergenza.it</div></div>'+
- '<div class="box"><div class="label">Metodo di pagamento</div><div class="value notes">'+esc(paymentText)+'</div></div>'+
- 
+
+ '<div class="docline">'+
+  '<div class="title">Preventivo servizio di trasporto</div>'+
+  '<div class="tag">'+esc(quoteNumber)+'</div>'+
+  '<div class="tag">'+routeCalcQuoteDate()+'</div>'+
+ '</div>'+
+
+ '<div class="section">'+
+  '<div class="section-title">Cliente / destinatario</div>'+
+  '<div class="section-body"><div class="grid2">'+
+   '<div><div class="label">Cliente</div><div class="value">'+esc(customer)+'</div></div>'+
+   (cf?'<div><div class="label">Codice fiscale</div><div class="value">'+esc(cf)+'</div></div>':'<div></div>')+
+   (address?'<div><div class="label">Indirizzo</div><div class="value">'+esc(address)+'</div></div>':'<div></div>')+
+   (email?'<div><div class="label">E-mail</div><div class="value">'+esc(email)+'</div></div>':'<div></div>')+
+   (phone?'<div><div class="label">Telefono</div><div class="value">'+esc(phone)+'</div></div>':'')+
+  '</div></div>'+
+ '</div>'+
+
+ '<div class="section">'+
+  '<div class="section-title">Servizio richiesto</div>'+
+  '<div class="section-body">'+
+   '<div class="grid3">'+
+    '<div><div class="label">Tipo di mezzo</div><div class="value">'+esc(vehicle)+'</div></div>'+
+    '<div><div class="label">Km stimati</div><div class="value">'+km.toFixed(1)+' km</div></div>'+
+    '<div><div class="label">Rientro</div><div class="value">'+(round?'Compreso':'Non compreso')+'</div></div>'+
+   '</div>'+
+   '<div style="margin-top:11px"><div class="label">Percorso previsto</div><div class="route">'+esc(route)+'</div></div>'+
+   (extras.length?'<div style="margin-top:11px"><div class="label">Dotazioni richieste</div><div class="value">'+esc(extras.join(' · '))+'</div></div>':'')+
+  '</div>'+
+ '</div>'+
+
+ '<div class="money-row">'+
+  '<div class="total"><div class="money-label">Importo preventivato</div><div class="amount">'+euro(amount)+'</div><div class="small">Importo complessivo previsto per il servizio indicato.</div></div>'+
+  '<div class="advance"><div class="money-label">Anticipo richiesto</div><div class="amount">'+esc(advanceText)+'</div><div class="small">L’anticipo viene imputato al saldo finale del servizio.</div><div class="clause"><strong>L’anticipo non verrà restituito in caso di disdetta nelle 36 ore precedenti il servizio.</strong></div></div>'+
+ '</div>'+
+
+ '<div class="confirm">Il presente preventivo deve essere confermato via e-mail a trasporti@crocegiallaemergenza.it</div>'+
+
+ '<div class="payment">'+
+  '<h3>Metodo di pagamento</h3>'+
+  '<div class="payment-lines">'+esc(paymentText)+'</div>'+
+ '</div>'+
+
  '</div><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>';
 
  const w=window.open('','_blank');
  if(!w)return msg('rcMsg','Il browser ha bloccato la finestra di stampa. Consenti i popup per questo sito.','warn');
  w.document.open();w.document.write(html);w.document.close();
 }
+
 function routeCalcUseInService(){
  const amount=Number($('rcSuggested')?.dataset.value||0),km=routeCalcNum('rcKm'),dest=$('rcDest')?.value.trim();
  if(!km||!amount)return msg('rcMsg','Calcola prima il percorso e l’importo.','warn');
@@ -7446,7 +7495,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.78-20260927-remove-quote-footer';
+const CGE_APP_BUILD='13.79-20260927-quote-print-redesign';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
