@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.71</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.72</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1551,6 +1551,21 @@
    <button id="rcUseService" type="button" class="btn yellow">Usa nel Nuovo servizio</button>
   </div>
  </div>
+
+ <div class="section" style="margin-top:10px;background:#fff">
+  <div class="actions" style="justify-content:space-between;align-items:center">
+   <div><h3 style="margin:0">🧾 Preventivo cliente</h3><div class="muted">Dati riportati esclusivamente nella stampa da consegnare o inviare al cliente.</div></div>
+  </div>
+  <div class="grid3" style="margin-top:10px">
+   <div class="field"><label>Cliente / destinatario</label><input id="rcQuoteCustomer" placeholder="Nome, cognome, RSA, struttura..."></div>
+   <div class="field"><label>E-mail cliente</label><input id="rcQuoteEmail" type="email" placeholder="cliente@email.it"></div>
+   <div class="field"><label>Telefono</label><input id="rcQuotePhone" placeholder="Facoltativo"></div>
+  </div>
+  <div class="field" style="margin-top:10px"><label>Note da riportare nel preventivo</label><textarea id="rcQuoteNotes" rows="3" placeholder="Es. attesa prevista, modalità di pagamento, condizioni particolari..."></textarea></div>
+  <div class="toolbar">
+   <button id="rcPrintQuote" type="button" class="btn yellow">🖨 Stampa preventivo cliente</button>
+  </div>
+ </div>
  <p class="muted" style="margin-bottom:0">Percorso stimato tramite dati OpenStreetMap/OSRM. Verifica sempre km e importo prima di confermare il servizio; il calcolo non modifica i tariffari ufficiali.</p>
 </div>
 
@@ -2315,7 +2330,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.71';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.72';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5997,6 +6012,7 @@ function routeCalcReset(){
  if($('rcVignetteSource'))$('rcVignetteSource').textContent='Nessuna vignetta rilevata';
  if($('rcTunnelSource'))$('rcTunnelSource').textContent='Nessun traforo rilevato';
  if($('rcSavedQuoteInfo'))$('rcSavedQuoteInfo').textContent='Nessun preventivo salvato caricato.';
+ ['rcQuoteCustomer','rcQuoteEmail','rcQuotePhone','rcQuoteNotes'].forEach(id=>{if($(id))$(id).value=''});
  if($('rcTollSource')){$('rcTollSource').textContent='Da calcolare';$('rcTollSource').style.color=''}
  if($('rcStart'))$('rcStart').value='Via I° Maggio 1, 28040 Dormelletto NO, Italia';
  if($('rcReturn'))$('rcReturn').checked=true;
@@ -6073,6 +6089,66 @@ async function routeCalcSaveQuote(){
  if($('rcSavedQuoteInfo'))$('rcSavedQuoteInfo').textContent='Preventivo verificato salvato · '+row.km_totali.toFixed(1)+' km · '+euro(row.importo_suggerito);
  msg('rcMsg','Preventivo della tratta salvato correttamente.','ok');
 }
+
+function routeCalcQuoteDate(){
+ return new Date().toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function routeCalcPrintQuote(){
+ const amount=Number($('rcSuggested')?.dataset.value||0);
+ const advanceText=$('rcAdvanceSuggested')?.textContent||euro(0);
+ const km=routeCalcNum('rcKm');
+ const customer=$('rcQuoteCustomer')?.value.trim()||'Cliente';
+ const email=$('rcQuoteEmail')?.value.trim()||'';
+ const phone=$('rcQuotePhone')?.value.trim()||'';
+ const notes=$('rcQuoteNotes')?.value.trim()||'';
+ const vehicle=$('rcVehicleType')?.value==='TRASPORTO SEMPLICE'?'Trasporto semplice':'Ambulanza';
+ const start=$('rcStart')?.value.trim()||'—';
+ const load=$('rcLoad')?.value.trim()||'';
+ const dest=$('rcDest')?.value.trim()||'—';
+ const round=!!$('rcReturn')?.checked;
+ const chair=!!$('rcChair')?.checked;
+ const bariatric=!!$('rcBariatric')?.checked;
+ if(!amount||!km||!dest)return msg('rcMsg','Calcola prima il percorso e l’importo del preventivo.','warn');
+
+ const route=[start,load,dest,round?start:''].filter(Boolean).join(' → ');
+ const extras=[chair?'Sedia cingolata / motorizzata':'',bariatric?'Barella bariatrica':''].filter(Boolean);
+ const logo='https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70';
+ const html='<!doctype html><html><head><meta charset="utf-8"><title>Preventivo Croce Gialla Emergenza</title>'+
+ '<style>'+
+ 'body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff}'+
+ '.page{max-width:850px;margin:0 auto;padding:32px}'+
+ '.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:4px solid #f4c400;padding-bottom:16px;margin-bottom:24px}'+
+ '.head img{width:92px;height:auto}.brand{text-align:right}.brand h1{font-size:22px;margin:0 0 5px}.brand div{font-size:12px;color:#475569;line-height:1.5}'+
+ '.title{font-size:24px;font-weight:800;margin:0 0 18px}.box{border:1px solid #dbe3ec;border-radius:10px;padding:16px;margin:12px 0}'+
+ '.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.label{font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700}.value{font-size:15px;font-weight:700;margin-top:3px}'+
+ '.total{background:#eef8f2;border:2px solid #86c59c;border-radius:12px;padding:18px;margin-top:18px}.total .amount{font-size:32px;font-weight:900}'+
+ '.advance{background:#eef6ff;border:1px solid #93c5fd;border-radius:10px;padding:14px;margin-top:12px}'+
+ '.muted{color:#64748b;font-size:12px}.notes{white-space:pre-wrap}.foot{margin-top:30px;padding-top:14px;border-top:1px solid #dbe3ec;font-size:11px;color:#64748b;line-height:1.5}'+
+ '@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.page{padding:12mm}.no-print{display:none}}'+
+ '</style></head><body><div class="page">'+
+ '<div class="head"><img src="'+logo+'" alt="Croce Gialla"><div class="brand"><h1>Croce Gialla Emergenza ODV</h1><div>Via I° Maggio 1 · 28040 Dormelletto (NO)<br>Preventivo del '+routeCalcQuoteDate()+'</div></div></div>'+
+ '<div class="title">Preventivo servizio di trasporto</div>'+
+ '<div class="box"><div class="grid">'+
+ '<div><div class="label">Cliente / destinatario</div><div class="value">'+esc(customer)+'</div></div>'+
+ '<div><div class="label">Tipo di mezzo</div><div class="value">'+esc(vehicle)+'</div></div>'+
+ (email?'<div><div class="label">E-mail</div><div class="value">'+esc(email)+'</div></div>':'')+
+ (phone?'<div><div class="label">Telefono</div><div class="value">'+esc(phone)+'</div></div>':'')+
+ '</div></div>'+
+ '<div class="box"><div class="label">Percorso previsto</div><div class="value">'+esc(route)+'</div>'+
+ '<div class="grid" style="margin-top:14px"><div><div class="label">Km stimati</div><div class="value">'+km.toFixed(1)+' km</div></div>'+
+ '<div><div class="label">Rientro</div><div class="value">'+(round?'Compreso':'Non compreso')+'</div></div></div>'+
+ (extras.length?'<div style="margin-top:14px"><div class="label">Dotazioni richieste</div><div class="value">'+esc(extras.join(' · '))+'</div></div>':'')+
+ '</div>'+
+ (notes?'<div class="box"><div class="label">Note</div><div class="value notes">'+esc(notes)+'</div></div>':'')+
+ '<div class="total"><div class="label">Importo preventivato</div><div class="amount">'+euro(amount)+'</div><div class="muted">Importo complessivo previsto per il servizio sopra indicato.</div></div>'+
+ '<div class="advance"><div class="label">Anticipo richiesto alla conferma</div><div class="value" style="font-size:22px">'+esc(advanceText)+'</div><div class="muted">L’anticipo viene imputato al saldo finale del servizio.</div></div>'+
+ '<div class="foot">Il presente preventivo è formulato sulla base del percorso e delle condizioni indicate. Eventuali variazioni richieste dal cliente, soste aggiuntive, variazioni del percorso o costi straordinari non prevedibili potranno comportare un aggiornamento dell’importo. Il servizio si intende confermato secondo le modalità concordate con Croce Gialla Emergenza ODV.</div>'+
+ '</div><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>';
+
+ const w=window.open('','_blank');
+ if(!w)return msg('rcMsg','Il browser ha bloccato la finestra di stampa. Consenti i popup per questo sito.','warn');
+ w.document.open();w.document.write(html);w.document.close();
+}
 function routeCalcUseInService(){
  const amount=Number($('rcSuggested')?.dataset.value||0),km=routeCalcNum('rcKm'),dest=$('rcDest')?.value.trim();
  if(!km||!amount)return msg('rcMsg','Calcola prima il percorso e l’importo.','warn');
@@ -6096,6 +6172,7 @@ if($('rcFuelRefresh'))$('rcFuelRefresh').onclick=()=>routeCalcUpdateFuelPrice(tr
 if($('rcSaveToll'))$('rcSaveToll').onclick=routeCalcSaveToll;
 if($('rcLoadSavedQuote'))$('rcLoadSavedQuote').onclick=()=>routeCalcLoadSavedQuote(true);
 if($('rcSaveQuote'))$('rcSaveQuote').onclick=routeCalcSaveQuote;
+if($('rcPrintQuote'))$('rcPrintQuote').onclick=routeCalcPrintQuote;
 if($('rcUseService'))$('rcUseService').onclick=routeCalcUseInService;
 ['rcKm','rcTolls','rcVignetteCost','rcTunnelCost','rcFuelPrice','rcConsumption','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
 if($('rcTollKmRate'))$('rcTollKmRate').oninput=()=>{const mk=routeCalcNum('rcMotorwayKm');if(!$('rcTollSource').textContent.startsWith('✓'))routeCalcResolveToll(mk);else routeCalcRecompute()};
@@ -7165,7 +7242,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.71-20260927-saved-quotes-advance';
+const CGE_APP_BUILD='13.72-20260927-print-customer-quote';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
