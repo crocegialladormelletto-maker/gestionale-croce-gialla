@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="it">
+<!-- VERSIONE STABILE E DEFINITIVA 1.0 - 27/09/2026 -->
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="app-version" content="1.0-definitiva-2026-09-27">
+<title>Amministrazione Timbrature - Croce Gialla Emergenza ODV</title>
+<style>
+:root{--y:#ffdf00;--b:#173b72;--bg:#f4f7fb;--bd:#d7deea;--g:#15803d;--r:#b42318;--o:#a85b00;--m:#667085}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#142033}
+.topHeader{background:#102f5a;color:#fff;border-bottom:4px solid var(--y);padding:12px 18px;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.topHeaderInner{display:flex;justify-content:space-between;align-items:center;gap:16px;max-width:1400px;margin:0 auto}
+.topHeaderLeft{display:flex;align-items:center;gap:14px;min-width:0}
+.topHeaderLogo{width:46px;height:46px;border-radius:12px;background:var(--y);color:#102f5a;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
+.topHeaderText h1{margin:0;font-size:20px;line-height:1.1;font-weight:900}
+.topHeaderSub{margin-top:4px;font-size:13px;color:rgba(255,255,255,.82);font-weight:500}
+.topHeaderRight{display:flex;align-items:center;gap:10px;flex:0 0 auto;flex-wrap:wrap}.headerMonth{font-size:13px;font-weight:800;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:8px 12px;border-radius:999px}
+.wrap{max-width:1240px;margin:22px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--bd);border-radius:18px;padding:20px;box-shadow:0 8px 25px rgba(20,32,51,.07);margin-bottom:18px}
+.hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+label{display:block;font-weight:800;margin:8px 0 5px}input,select{width:100%;padding:11px;border:2px solid var(--bd);border-radius:10px;font-size:16px;background:#fff}
+button{border:0;border-radius:10px;padding:11px 14px;font-weight:900;cursor:pointer}.primary{background:var(--b);color:#fff}.green{background:var(--g);color:#fff}.danger{background:var(--r);color:#fff}.secondary{background:#e8eef8;color:#17335f}.orange{background:#fff0dc;color:#7a4300}
+button:disabled{opacity:.45;cursor:not-allowed}
+.notice{margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff7cc;border:1px solid #eed56a}.ok{background:#eaf8ef;border-color:#9bd5ab;color:#135c2a}.err{background:#fdecec;border-color:#f2aaaa;color:#8c1d18}.warn{background:#fff3e8;border-color:#f3bb80;color:#8a3f00}
+.muted{color:var(--m);font-size:13px}table{width:100%;border-collapse:collapse;font-size:14px;margin-top:12px}th,td{padding:8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}th{background:#f7f9fc}
+.pill{display:inline-block;padding:3px 7px;border-radius:99px;font-size:11px;font-weight:900}.live{background:#eaf8ef;color:#135c2a}.hist{background:#fff3e8;color:#8a3f00}.closed{background:#fdecec;color:#8c1d18}.open{background:#eaf8ef;color:#135c2a}.deleted{opacity:.5;text-decoration:line-through}
+.login{max-width:500px;margin:24px auto}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.printOnly{display:none}.mini{font-size:12px;padding:6px 8px;margin-right:4px}
+.kpi{padding:16px;border:1px solid var(--bd);border-radius:14px;background:#f8fafc}.kpi span{display:block;color:var(--m);font-size:12px;font-weight:800;text-transform:uppercase}.kpi b{display:block;font-size:30px;margin-top:5px}.kpi small{display:block;margin-top:4px;color:var(--m)}
+.alertBox{border:2px solid #f1b0ad;background:#fff0f0;border-radius:14px;padding:14px}.alertBox.okBox{border-color:#9bd5ab;background:#eefaf2}.blink{animation:blink 1.2s infinite}@keyframes blink{50%{box-shadow:0 0 0 5px rgba(180,35,24,.15)}}
+.anom{padding:10px 12px;border-left:5px solid var(--r);background:#fff6f6;border-radius:8px;margin:7px 0}.anom.warnA{border-left-color:#c77a00;background:#fffaf0}.serviceNow{padding:10px 12px;border-left:5px solid var(--g);background:#f1fbf4;border-radius:8px;margin:7px 0}
+.monthState{font-weight:900;padding:8px 12px;border-radius:999px;display:inline-block}
+.adminShell{display:grid;grid-template-columns:245px minmax(0,1fr);gap:18px;align-items:start}
+.sideMenu{position:sticky;top:16px;background:#102f5a;border-radius:18px;padding:14px;box-shadow:0 8px 25px rgba(20,32,51,.12)}
+.sideTitle{color:#fff;font-weight:900;font-size:14px;padding:8px 10px 13px;border-bottom:1px solid rgba(255,255,255,.15);margin-bottom:10px}
+.sideBtn{width:100%;text-align:left;margin:5px 0;padding:13px 12px;border-radius:11px;color:#fff;background:#214a7c;display:flex;align-items:center;gap:10px}
+.sideLabel{flex:1}.menuBadge{min-width:26px;height:26px;padding:0 7px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;background:#fff;color:#102f5a;box-shadow:0 1px 5px rgba(0,0,0,.18)}
+.menuBadge.dangerBadge{background:#d92d20;color:#fff}.menuBadge.okBadge{background:#20a35a;color:#fff}.menuBadge.neutralBadge{background:#dbe7f4;color:#173b72}
+.sideBtn:hover{filter:brightness(1.08)}.sideBtn.active{background:var(--y);color:#102f5a;box-shadow:0 0 0 2px rgba(255,223,0,.25)}
+.sideBtn[data-page="timbrature"]{background:#2e5f9a}.sideBtn[data-page="anomalie"]{background:#9b3138}.sideBtn[data-page="riepiloghi"]{background:#24705a}.sideBtn[data-page="chiusura"]{background:#7e4a12}.sideBtn[data-page="dipendenti"]{background:#5a4b91}.sideBtn[data-page="audit"]{background:#46576d}.sideBtn[data-page="stampe"]{background:#166d82}
+.sideBtn.active[data-page]{background:var(--y);color:#102f5a}
+.adminMain{min-width:0}.adminPage{display:none}.adminPage.active{display:block}
+.pageHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.pageHead h2{margin:0}
+.mobileMenuBtn{display:none;background:#102f5a;color:#fff}
+@media(max-width:900px){.grid,.grid4{grid-template-columns:1fr 1fr}.adminShell{grid-template-columns:1fr}.sideMenu{position:static;display:none}.sideMenu.open{display:block}.mobileMenuBtn{display:inline-block}}
+@media(max-width:700px){.topHeaderInner{flex-direction:column;align-items:flex-start}.topHeaderRight{width:100%;justify-content:flex-start}.topHeaderText h1{font-size:18px}.topHeaderSub{font-size:12px}}
+@media(max-width:600px){.grid,.grid4{grid-template-columns:1fr}}
+@media print{header,.noPrint,#loginBox{display:none!important}.printOnly{display:block}.wrap{max-width:none;margin:0;padding:0}.card{box-shadow:none;border:0;padding:0}.printTable th,.printTable td{border:1px solid #333;padding:7px}.printTable th{background:#eee!important}}
+</style>
+</head>
+<body>
+<header class="topHeader">
+  <div class="topHeaderInner">
+    <div class="topHeaderLeft">
+      <div class="topHeaderLogo">CG</div>
+      <div class="topHeaderText">
+        <h1>Amministrazione Timbrature</h1>
+        <div class="topHeaderSub">Croce Gialla Emergenza ODV · Area riservata</div>
+      </div>
+    </div>
+    <div class="topHeaderRight">
+      <span id="headerSelectedMonth" class="headerMonth">Mese: --</span>
+      <span id="headerMonthState" class="monthState open">MESE APERTO</span>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+<div id="loginBox" class="card login">
+<h2>Accesso Amministrazione</h2>
+<div class="muted">Usa le stesse credenziali del Gestionale Croce Gialla.</div>
+<label>Email</label><input id="email" type="email" value="tesoreria@crocegiallaemergenza.it" autocomplete="username">
+<label>Password</label><input id="password" type="password" autocomplete="current-password">
+<button id="loginBtn" class="primary" style="width:100%;margin-top:12px">ACCEDI</button>
+<div id="loginMsg" class="notice">Accesso riservato all'account Amministrazione.</div>
+</div>
+
+<div id="panel" class="hidden">
+<div class="adminShell">
+<aside id="sideMenu" class="sideMenu noPrint">
+<div class="sideTitle">AMMINISTRAZIONE TIMBRATURE</div>
+<button class="sideBtn active" data-page="dashboard">🏠 <span class="sideLabel">Dashboard</span><span id="dashboardBadge" class="menuBadge neutralBadge">—</span></button>
+<button class="sideBtn" data-page="timbrature">🕒 <span class="sideLabel">Timbrature</span></button>
+<button class="sideBtn" data-page="anomalie">⚠️ <span class="sideLabel">Anomalie</span><span id="anomalyBadge" class="menuBadge okBadge">0</span></button>
+<button class="sideBtn" data-page="riepiloghi">📊 Riepiloghi mensili</button>
+<button class="sideBtn" data-page="chiusura">🔒 Chiusura mese</button>
+<button class="sideBtn" data-page="dipendenti">👥 Dipendenti / PIN</button>
+<button class="sideBtn" data-page="audit">🧾 Audit</button>
+<button class="sideBtn" data-page="stampe">🖨️ Stampe</button>
+</aside>
+<main class="adminMain">
+<div class="card noPrint"><div class="toolbar">
+<div><button id="mobileMenuBtn" class="mobileMenuBtn">☰ MENU</button><h2 style="margin:8px 0 0">Pannello amministrazione</h2><div id="who" class="muted">Database centrale</div></div>
+<div><span id="monthState" class="monthState open">MESE APERTO</span> <button id="logoutBtn" class="secondary">ESCI</button></div>
+</div></div>
+
+<section id="page-dashboard" class="adminPage active"><div class="pageHead"><div><h2>Dashboard</h2><div class="muted">Situazione generale delle timbrature</div></div></div><div class="card noPrint">
+<div class="toolbar"><div><h3 style="margin:0">Dashboard controllo</h3><div class="muted">Controlli automatici sulle timbrature registrate. Le segnalazioni servono come supporto operativo e vanno verificate dall'amministrazione.</div></div><button id="refreshTop" class="secondary">↻ AGGIORNA</button></div>
+<div class="grid4" style="margin-top:14px">
+<div class="kpi"><span>In servizio ora</span><b id="kpiNow">0</b><small id="kpiNowNames">Nessuno</small></div>
+<div class="kpi"><span>Ore registrate mese</span><b id="kpiHours">0:00</b><small>Mese selezionato</small></div>
+<div class="kpi"><span>Anomalie mese</span><b id="kpiAnom">0</b><small>Incluse 11 ore / incomplete</small></div>
+<div class="kpi"><span>Riposi &lt; 11 ore</span><b id="kpiRest">0</b><small>Controllo automatico</small></div>
+</div>
+<div id="currentService"></div>
+<div id="anomalyBox" style="margin-top:14px"></div>
+</div></section>
+
+<section id="page-riepiloghi" class="adminPage"><div class="pageHead"><div><h2>Riepiloghi mensili</h2><div class="muted">Ore, giornate e controlli per dipendente</div></div></div>
+<div class="card noPrint">
+<h3>Riepilogo mensile dipendenti</h3>
+<div id="monthlySummary"></div>
+</div></section>
+
+<section id="page-chiusura" class="adminPage"><div class="pageHead"><div><h2>Chiusura mese</h2><div class="muted">Backup e blocco amministrativo del periodo</div></div></div>
+<div class="card noPrint">
+<div class="toolbar"><div><h3 style="margin:0">Mese di lavoro</h3><div class="muted">La chiusura blocca inserimenti, modifiche ed eliminazioni del mese.</div></div><div><button id="closeMonthBtn" class="danger">🔒 CHIUDI MESE</button> <button id="reopenMonthBtn" class="orange hidden">🔓 RIAPRI MESE</button></div></div>
+<div id="monthMsg" class="notice">Prima della chiusura verifica che non siano presenti anomalie.</div>
+</div></section>
+
+<section id="page-dipendenti" class="adminPage"><div class="pageHead"><div><h2>Dipendenti / PIN</h2><div class="muted">Gestione accessi alla postazione timbrature</div></div></div>
+<div class="card noPrint">
+<h3>Gestione PIN dipendenti</h3>
+<div class="grid"><div><label>Dipendente</label><select id="pinEmp"></select></div><div><label>Nuovo PIN</label><input id="pinVal" type="password" inputmode="numeric" maxlength="8" placeholder="4-8 cifre"></div><div style="display:flex;align-items:end"><button id="savePin" class="primary" style="width:100%">SALVA PIN</button></div></div>
+<div id="pinMsg" class="notice">Il PIN viene salvato sul database centrale come hash, non in chiaro.</div>
+</div></section>
+
+<section id="page-timbrature" class="adminPage"><div class="pageHead"><div><h2>Timbrature</h2><div class="muted">Registro, filtri e inserimento storico</div></div></div>
+<div class="card noPrint">
+<h3>Inserisci timbratura storica</h3>
+<div class="grid"><div><label>Dipendente</label><select id="histEmp"></select></div><div><label>Tipo</label><select id="histType"><option>ENTRATA</option><option>USCITA</option></select></div><div><label>Data e ora</label><input id="histDt" type="datetime-local" min="2026-09-01T00:00"></div></div>
+<label>Nota interna / fonte</label><input id="histNote" placeholder="Es. foglio firme, foglio viaggio, turno">
+<button id="addHist" class="green" style="margin-top:12px">AGGIUNGI TIMBRATURA</button>
+<div id="histMsg" class="notice">La nota resta interna e non compare nella stampa mensile.</div>
+</div>
+
+<div class="card noPrint">
+<h3>Filtro e stampa mensile</h3>
+<div class="grid"><div><label>Dipendente</label><select id="filterEmp"></select></div><div><label>Mese</label><input id="month" type="month" min="2026-09"></div><div style="display:flex;align-items:end;gap:8px"><button id="refreshBtn" class="secondary" style="flex:1">AGGIORNA</button><button id="printBtn" class="primary" style="flex:1">STAMPA</button></div></div>
+<div class="muted">La stampa mostra esclusivamente Data, Entrata e Uscita. Il riepilogo resta solo nell'area amministrativa.</div>
+</div>
+
+<div class="card">
+<div id="printHead" class="printOnly"></div>
+<h3 class="noPrint">Registro timbrature</h3>
+<div id="register"></div>
+</div></section>
+
+<section id="page-anomalie" class="adminPage"><div class="pageHead"><div><h2>Anomalie</h2><div class="muted">Controlli automatici da verificare</div></div><button id="refreshAnomalies" class="secondary">↻ AGGIORNA</button></div><div class="card noPrint"><div id="anomalyPageBox"></div></div></section>
+
+<section id="page-audit" class="adminPage"><div class="pageHead"><div><h2>Audit</h2><div class="muted">Storico delle modifiche e delle operazioni amministrative</div></div></div>
+<div class="card noPrint">
+<h3>Tracciabilità modifiche</h3>
+<div class="muted">Correzioni, eliminazioni, chiusure e riaperture restano registrate nell'audit interno.</div>
+<div id="audit"></div>
+</div></section>
+
+<section id="page-stampe" class="adminPage"><div class="pageHead"><div><h2>Stampe</h2><div class="muted">Registro mensile per dipendente</div></div></div>
+<div class="card noPrint">
+<div class="grid"><div><label>Dipendente</label><select id="printEmp"></select></div><div><label>Mese</label><input id="printMonth" type="month" min="2026-09"></div><div style="display:flex;align-items:end"><button id="printMonthlyBtn" class="primary" style="width:100%">🖨️ STAMPA REGISTRO</button></div></div>
+<div class="notice">La stampa contiene solo Data, Entrata e Uscita.</div>
+</div></section>
+</main></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+<script>
+const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co',KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4',ADMIN_API=SUPABASE_URL+'/functions/v1/timbrature-admin-api';
+const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+let people=[],events=[],context=[],auditRows=[],months=[],monthClosed=false;const $=x=>document.getElementById(x);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+function msg(id,t,k=''){const e=$(id);e.textContent=t;e.className='notice '+k}
+function dt(s){return new Date(s).toLocaleString('it-IT')} function time(s){return new Date(s).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
+function localInput(s){const d=new Date(s),z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,16)}
+function fmtMin(m){m=Math.max(0,Math.round(m||0));return Math.floor(m/60)+':'+pad(m%60)}
+function monthKey(s){const d=new Date(s);return d.toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'}).slice(0,7)}
+function person(b){return people.find(p=>p.badge===b)?.nome_completo||b}
+async function token(){const {data}=await sb.auth.getSession();return data.session?.access_token||''}
+async function api(body){const t=await token();if(!t)throw new Error('Sessione non valida. Accedi di nuovo.');const r=await fetch(ADMIN_API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw new Error(j.error||'Errore');return j}
+async function login(){try{const email=$('email').value.trim().toLowerCase(),password=$('password').value;const {error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;const a=await sb.from('accessi_app').select('nome,ruolo,attivo').single();if(a.error||!a.data?.attivo||a.data.ruolo!=='AMMINISTRATORE'){await sb.auth.signOut();throw new Error('Questo account non è abilitato come Amministratore.')}showPanel(a.data.nome||email);await loadData()}catch(e){msg('loginMsg',e.message||'Accesso non riuscito','err')}}
+function showPanel(name){$('loginBox').classList.add('hidden');$('panel').classList.remove('hidden');$('password').value='';$('who').textContent=name+' · Database centrale'}
+async function logout(){await sb.auth.signOut();location.reload()}
+async function loadData(){try{const r=await api({action:'data',badge:$('filterEmp').value||null,month:$('month').value||null});people=r.people||[];events=r.events||[];context=r.context||[];auditRows=r.audit||[];months=r.months||[];fillPeople();renderAll()}catch(e){alert(e.message)}}
+function fillPeople(){for(const id of ['pinEmp','histEmp','filterEmp','printEmp']){const sel=$(id),cur=sel.value;sel.innerHTML=(id==='filterEmp'?'<option value="">Tutti</option>':'')+people.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+'</option>').join('');if([...sel.options].some(o=>o.value===cur))sel.value=cur}}
+function selectedMonthClosed(){const m=$('month').value;return !!months.find(x=>String(x.mese).slice(0,7)===m&&x.chiuso)}
+function analyzeBadge(badge,arr){
+ const xs=arr.filter(e=>e.badge===badge&&!e.eliminato_at).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+ let open=null,lastExit=null,total=0;const days=new Set(),an=[];
+ for(const e of xs){
+  if(e.tipo==='ENTRATA'){
+   if(open)an.push({type:'DOPPIA ENTRATA',at:e.evento_at,badge,msg:'Entrata registrata mentre risultava già un turno aperto.'});
+   if(lastExit){const rest=(new Date(e.evento_at)-new Date(lastExit.evento_at))/60000;if(rest<660)an.push({type:'RIPOSO < 11 ORE',at:e.evento_at,badge,msg:'Riposo '+fmtMin(rest)+' tra uscita '+time(lastExit.evento_at)+' e nuova entrata '+time(e.evento_at)+'.',rest:true})}
+   open=e;
+  }else{
+   if(!open)an.push({type:'USCITA SENZA ENTRATA',at:e.evento_at,badge,msg:'Uscita senza una precedente entrata aperta.'});
+   else{const dur=(new Date(e.evento_at)-new Date(open.evento_at))/60000;if(dur>=0){total+=dur;days.add(new Date(open.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'}));if(dur>840)an.push({type:'DURATA TURNO ANOMALA',at:e.evento_at,badge,msg:'Turno registrato di '+fmtMin(dur)+' (controllo tecnico oltre 14 ore).'})}open=null}
+   lastExit=e;
+  }
+ }
+ if(open)an.push({type:'ENTRATA SENZA USCITA',at:open.evento_at,badge,msg:'Turno ancora aperto.'});
+ return {total,days:days.size,an,open,last:xs[xs.length-1]||null};
+}
+function monthlyAnalyses(){
+ const m=$('month').value,base=context.filter(e=>!e.eliminato_at&&monthKey(e.evento_at)<=m);
+ return people.map(p=>{
+  const all=analyzeBadge(p.badge,base);
+  const monthEvents=context.filter(e=>e.badge===p.badge&&!e.eliminato_at&&monthKey(e.evento_at)===m);
+  const mon=analyzeBadge(p.badge,monthEvents);
+  const relAn=all.an.filter(a=>monthKey(a.at)===m);
+  return {...p,total:mon.total,days:mon.days,an:relAn,rest:relAn.filter(a=>a.rest).length,open:all.open,last:all.last};
+ });
+}
+function renderDashboard(){
+ const analyses=monthlyAnalyses(),inNow=analyses.filter(x=>x.open),total=analyses.reduce((s,x)=>s+x.total,0),allAn=analyses.flatMap(x=>x.an);
+ const modified=auditRows.filter(a=>['UPDATE','DELETE'].includes(a.azione)&&monthKey(a.avvenuto_il)===$('month').value);
+ const anomalyCount=allAn.length+modified.length;
+ $('anomalyBadge').textContent=anomalyCount;$('anomalyBadge').className='menuBadge '+(anomalyCount?'dangerBadge':'okBadge');
+ $('dashboardBadge').textContent=anomalyCount?'⚠':'✓';$('dashboardBadge').className='menuBadge '+(anomalyCount?'dangerBadge':'okBadge');
+ $('kpiNow').textContent=inNow.length;$('kpiNowNames').textContent=inNow.length?inNow.map(x=>x.nome_completo).join(', '):'Nessuno';
+ $('kpiHours').textContent=fmtMin(total);$('kpiAnom').textContent=anomalyCount;$('kpiRest').textContent=allAn.filter(a=>a.rest).length;
+ $('currentService').innerHTML=inNow.length?'<h4>Attualmente in servizio</h4>'+inNow.map(x=>'<div class="serviceNow"><b>'+esc(x.nome_completo)+'</b> · entrata '+dt(x.open.evento_at)+'</div>').join(''):'';
+ const box=$('anomalyBox'),box2=$('anomalyPageBox');let html;if(!allAn.length&&!modified.length){html='<b>✅ Nessuna anomalia rilevata nel mese selezionato.</b>';box.className='alertBox okBox';box2.className='alertBox okBox'}else{html='<b>⚠ Anomalie da verificare</b>'+allAn.map(a=>'<div class="anom '+(a.type==='RIPOSO < 11 ORE'?'':'warnA')+'"><b>'+esc(person(a.badge))+' · '+esc(a.type)+'</b><br>'+esc(dt(a.at))+' · '+esc(a.msg)+'</div>').join('')+modified.map(a=>'<div class="anom warnA"><b>'+esc(a.badge?person(a.badge):'Amministrazione')+' · TIMBRATURA MODIFICATA</b><br>'+esc(dt(a.avvenuto_il))+' · '+esc(a.azione)+'</div>').join('');box.className='alertBox blink';box2.className='alertBox blink'}box.innerHTML=html;box2.innerHTML=html
+}
+function renderSummary(){
+ const rows=monthlyAnalyses();$('monthlySummary').innerHTML='<table><thead><tr><th>Dipendente</th><th>Ore registrate</th><th>Giornate</th><th>Riposi &lt; 11h</th><th>Anomalie</th><th>Stato attuale</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><b>'+esc(x.nome_completo)+'</b></td><td>'+fmtMin(x.total)+'</td><td>'+x.days+'</td><td>'+x.rest+'</td><td>'+x.an.length+'</td><td>'+(x.open?'🟢 In servizio':'Fuori servizio')+'</td></tr>').join('')+'</tbody></table>'
+}
+function renderMonthState(){
+ monthClosed=selectedMonthClosed();const mv=$('month').value;let monthLabel=mv;if(/^\d{4}-\d{2}$/.test(mv)){const [yy,mm]=mv.split('-');monthLabel=new Date(Number(yy),Number(mm)-1,1).toLocaleDateString('it-IT',{month:'long',year:'numeric'});monthLabel=monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1)}$('headerSelectedMonth').textContent='Mese: '+monthLabel;
+ $('monthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('monthState').className='monthState '+(monthClosed?'closed':'open');$('headerMonthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('headerMonthState').className='monthState '+(monthClosed?'closed':'open');
+ $('closeMonthBtn').classList.toggle('hidden',monthClosed);$('reopenMonthBtn').classList.toggle('hidden',!monthClosed);$('addHist').disabled=monthClosed;
+ msg('monthMsg',monthClosed?'Il mese è chiuso: inserimenti, modifiche ed eliminazioni sono bloccati.':'Mese aperto. Prima della chiusura verifica eventuali anomalie.',monthClosed?'warn':'ok')
+}
+async function closeMonth(){const an=monthlyAnalyses().flatMap(x=>x.an);if(an.length&&!confirm('Sono presenti '+an.length+' anomalie. Vuoi chiudere comunque il mese?'))return;if(!confirm('Confermi la chiusura del mese '+$('month').value+'?'))return;const note=prompt('Nota di chiusura (facoltativa):','Verificato da amministrazione')||'';try{await api({action:'close_month',month:$('month').value,note});await loadData()}catch(e){alert(e.message)}}
+async function reopenMonth(){const reason=prompt('Motivo della riapertura del mese:','');if(!reason?.trim())return;try{await api({action:'reopen_month',month:$('month').value,reason});await loadData()}catch(e){alert(e.message)}}
+async function savePin(){try{await api({action:'set_pin',badge:$('pinEmp').value,pin:$('pinVal').value.trim(),motivo:'Modifica PIN dipendente'});$('pinVal').value='';msg('pinMsg','PIN dipendente aggiornato.','ok')}catch(e){msg('pinMsg',e.message,'err')}}
+async function addHist(){try{if(monthClosed)throw new Error('Il mese selezionato è chiuso.');const v=$('histDt').value;if(!v)throw new Error('Inserisci data e ora.');await api({action:'historical',badge:$('histEmp').value,tipo:$('histType').value,evento_at:new Date(v).toISOString(),nota_interna:$('histNote').value.trim(),motivo:$('histNote').value.trim()||'Inserimento storico'});$('histNote').value='';msg('histMsg','Timbratura storica inserita.','ok');await loadData()}catch(e){msg('histMsg',e.message,'err')}}
+async function editEvent(id){if(monthClosed)return alert('Il mese è chiuso. Riaprilo prima di modificare.');const e=events.find(x=>x.id===id);if(!e)return;const tipo=prompt('Tipo (ENTRATA o USCITA):',e.tipo);if(!tipo)return;const orario=prompt('Data e ora (AAAA-MM-GGTHH:MM):',localInput(e.evento_at));if(!orario)return;const motivo=prompt('Motivo obbligatorio della modifica:','Correzione errore materiale');if(!motivo?.trim())return;const nota=prompt('Nota interna:',e.nota_interna||'');try{await api({action:'update',id,tipo,evento_at:new Date(orario).toISOString(),nota_interna:nota,motivo});await loadData()}catch(err){alert(err.message)}}
+async function deleteEvent(id){if(monthClosed)return alert('Il mese è chiuso. Riaprilo prima di eliminare.');const motivo=prompt('Motivo obbligatorio dell’eliminazione:','Inserimento errato');if(!motivo?.trim())return;if(!confirm('Confermi l’eliminazione? Rimarrà registrata nell’audit.'))return;try{await api({action:'delete',id,motivo});await loadData()}catch(e){alert(e.message)}}
+function printRows(){const alive=events.filter(e=>!e.eliminato_at),by={};for(const e of alive){const d=new Date(e.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});by[d]??={i:[],o:[]};(e.tipo==='ENTRATA'?by[d].i:by[d].o).push(e)}let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th></tr></thead><tbody>';for(const d of Object.keys(by).sort()){const v=by[d],n=Math.max(v.i.length,v.o.length,1);for(let j=0;j<n;j++)h+='<tr><td>'+new Date(d+'T12:00').toLocaleDateString('it-IT')+'</td><td>'+(v.i[j]?time(v.i[j].evento_at):'')+'</td><td>'+(v.o[j]?time(v.o[j].evento_at):'')+'</td></tr>'}return h+'</tbody></table>'}
+function renderRegister(){let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':monthClosed?'🔒 Mese chiuso':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}h+='</tbody></table>';$('register').innerHTML=events.length?h:'<div class="muted">Nessuna timbratura.</div>';const fe=$('filterEmp').value;$('printHead').innerHTML='<h2 style="text-align:center;margin-bottom:4px">Croce Gialla Emergenza ODV</h2><h3 style="text-align:center;margin:0">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</h3><p style="text-align:center">'+esc($('month').value||'')+'</p>'}
+function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
+function renderAll(){renderMonthState();renderDashboard();renderSummary();renderRegister();renderAudit()}
+function showPage(name){document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
+function printFromSection(){const pe=$('printEmp').value,pm=$('printMonth').value;if(!pe||!pm)return alert('Seleziona dipendente e mese.');$('filterEmp').value=pe;$('month').value=pm;loadData().then(()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows();window.print();$('register').innerHTML=old})}
+document.querySelectorAll('.sideBtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$('mobileMenuBtn').onclick=()=>$('sideMenu').classList.toggle('open');$('refreshAnomalies').onclick=loadData;$('printMonthlyBtn').onclick=printFromSection;
+$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=loadData;$('refreshTop').onclick=loadData;$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
+$('printBtn').onclick=()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows();window.print();$('register').innerHTML=old};$('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+const d=new Date();const currentMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');$('month').value=currentMonth;$('printMonth').value=currentMonth;
+(async()=>{const {data}=await sb.auth.getSession();if(data.session){const a=await sb.from('accessi_app').select('nome,ruolo,attivo').single();if(!a.error&&a.data?.attivo&&a.data.ruolo==='AMMINISTRATORE'){showPanel(a.data.nome||'Amministratore');await loadData()}}})();
+</script>
+</body></html>
