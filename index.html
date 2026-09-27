@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.59</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.60</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1465,7 +1465,7 @@
  </div>
 
  <div class="grid3" style="margin-top:12px">
-  <div class="field"><label>Partenza</label><input id="rcStart" value="Croce Gialla Emergenza ODV, Via I Maggio 1, Dormelletto NO"></div>
+  <div class="field"><label>Partenza</label><input id="rcStart" value="Via I° Maggio 1, 28040 Dormelletto NO, Italia"></div>
   <div class="field"><label>Carico paziente (facoltativo)</label><input id="rcLoad" placeholder="Es. Oleggio Castello NO"></div>
   <div class="field"><label>Destinazione *</label><input id="rcDest" placeholder="Comune, ospedale o indirizzo"></div>
  </div>
@@ -2278,7 +2278,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.59';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.60';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5616,12 +5616,29 @@ function routeCalcPoints(){
  return [$('rcStart')?.value.trim(),$('rcLoad')?.value.trim(),$('rcDest')?.value.trim()].filter(Boolean);
 }
 async function routeCalcGeocode(q){
- const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=it&q='+encodeURIComponent(q);
- const r=await fetch(url,{headers:{'Accept':'application/json'}});
- if(!r.ok)throw new Error('Geocodifica non disponibile ('+r.status+').');
- const data=await r.json();
- if(!data?.length)throw new Error('Località non trovata: '+q);
- return {lat:Number(data[0].lat),lon:Number(data[0].lon),label:data[0].display_name||q};
+ const raw=String(q||'').trim();
+ const attempts=[raw];
+
+ // Per la sede e per indirizzi complessi prova automaticamente versioni più semplici.
+ if(/croce\s+gialla/i.test(raw)&&raw.includes(','))attempts.push(raw.split(',').slice(1).join(',').trim());
+ attempts.push(
+  raw.replace(/Croce\s+Gialla\s+Emergenza\s+ODV,?\s*/i,'')
+     .replace(/Via\s+I(?:°|º)?\s+Maggio/i,'Via Primo Maggio')
+ );
+ if(!/italia/i.test(raw))attempts.push(raw+', Italia');
+
+ const seen=new Set();
+ for(const candidate of attempts.map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean)){
+  if(seen.has(candidate.toLowerCase()))continue;
+  seen.add(candidate.toLowerCase());
+  const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=it&addressdetails=1&q='+encodeURIComponent(candidate);
+  const r=await fetch(url,{headers:{'Accept':'application/json','Accept-Language':'it'}});
+  if(!r.ok)continue;
+  const data=await r.json();
+  if(data?.length)return {lat:Number(data[0].lat),lon:Number(data[0].lon),label:data[0].display_name||candidate};
+  await routeCalcSleep(500);
+ }
+ throw new Error('Località non trovata: '+raw);
 }
 function routeCalcSleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 async function routeCalcAutomatic(){
@@ -5662,7 +5679,7 @@ function routeCalcGoogleMaps(){
 }
 function routeCalcReset(){
  ['rcLoad','rcDest','rcKm'].forEach(id=>{if($(id))$(id).value=''});
- if($('rcStart'))$('rcStart').value='Croce Gialla Emergenza ODV, Via I Maggio 1, Dormelletto NO';
+ if($('rcStart'))$('rcStart').value='Via I° Maggio 1, 28040 Dormelletto NO, Italia';
  if($('rcReturn'))$('rcReturn').checked=true;
  if($('rcChair'))$('rcChair').checked=false;if($('rcBariatric'))$('rcBariatric').checked=false;
  if($('rcVehicleType'))$('rcVehicleType').value='AMBULANZA';
@@ -6758,7 +6775,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.59-20260927-fuel-calculator';
+const CGE_APP_BUILD='13.60-20260927-route-geocode-fallback';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
