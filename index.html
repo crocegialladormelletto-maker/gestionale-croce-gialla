@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.62</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.63</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1489,7 +1489,7 @@
    <div class="field"><label>Costo chilometrico €/km</label><input id="rcKmRate" type="number" min="0" step="0.01" value="1.20" readonly></div>
    <div class="field"><label>Diritto di chiamata €</label><input id="rcFixed" type="number" min="0" step="1" value="20" readonly></div>
    <div class="field"><label>Autostrada / pedaggi €</label><input id="rcTolls" type="number" min="0" step="0.10" value="0"><div class="muted" id="rcTollSource" style="margin-top:5px">Da calcolare</div></div>
-   <div class="field"><label>Km autostrada stimati</label><input id="rcMotorwayKm" type="number" min="0" step="0.1" value="0" placeholder="Calcolati o inseriti manualmente"></div>
+   <div class="field"><label>Km autostrada stimati</label><input id="rcMotorwayKm" type="number" min="0" step="0.1" value="0" placeholder="Calcolati automaticamente · modificabili"></div>
    <div class="field"><label>Tariffa stima €/km autostrada</label><input id="rcTollKmRate" type="number" min="0" step="0.001" value="0.090"></div>
    <div class="field" data-admin-only="true"><label>Pedaggio reale della tratta</label><div class="actions"><button id="rcSaveToll" type="button" class="btn secondary">💾 Memorizza pedaggio</button></div><div class="muted" style="margin-top:5px">Salva il valore attuale per riutilizzarlo automaticamente.</div></div>
    <div class="field"><label>Gasolio €/litro</label><input id="rcFuelPrice" type="number" min="0" step="0.001" value="2.334"></div>
@@ -2281,7 +2281,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.62';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.63';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5663,7 +5663,26 @@ function routeCalcMotorwayKm(route){
  for(const st of steps){
   const ref=String(st.ref||'').toUpperCase();
   const name=String(st.name||'').toUpperCase();
-  if(/(^|[\s,;])A\d{1,3}([\s,;]|$)/.test(ref)||/AUTOSTRADA|TANGENZIALE/.test(name))meters+=Number(st.distance||0);
+  const destinations=String(st.destinations||'').toUpperCase();
+  const classes=Array.isArray(st.driving_side)?[]:(Array.isArray(st.classes)?st.classes:[]);
+  const mode=String(st.mode||'').toUpperCase();
+  const roadText=[ref,name,destinations,classes.join(' '),mode].join(' ');
+  const isMotorway=
+    /(^|[\s,;\/])A\d{1,3}([\s,;\/]|$)/.test(roadText) ||
+    /AUTOSTRADA|MOTORWAY|TANGENZIALE|BRETELLA/.test(roadText) ||
+    classes.some(c=>/motorway|toll/i.test(String(c)));
+  if(isMotorway)meters+=Number(st.distance||0);
+ }
+ // Fallback euristico: OSRM può omettere ref/classi in alcuni tratti italiani.
+ // Se non ha rilevato nulla ma il viaggio è lungo, prova a stimare la quota autostradale
+ // solo se almeno uno step richiama ingressi/uscite/caselli/autostrade.
+ if(meters<=0){
+  const hasHighwayHint=steps.some(st=>{
+   const t=[st.ref,st.name,st.destinations,st.exits].filter(Boolean).join(' ').toUpperCase();
+   return /AUTOSTRADA|A\d{1,3}|CASELL|SVINCOL|TANGENZIALE/.test(t);
+  });
+  const total=Number(route?.distance||0);
+  if(hasHighwayHint&&total>50000)meters=total*0.65;
  }
  return meters/1000;
 }
@@ -5685,7 +5704,7 @@ async function routeCalcResolveToll(motorwayKm){
  const rate=routeCalcNum('rcTollKmRate');
  const est=Math.max(0,motorwayKm)*rate;
  $('rcTolls').value=est.toFixed(2);
- $('rcTollSource').textContent=motorwayKm>0?'≈ Stima automatica su '+motorwayKm.toFixed(1)+' km autostradali':'Nessun tratto autostradale rilevato';
+ $('rcTollSource').textContent=motorwayKm>0?'≈ Calcolo automatico su '+motorwayKm.toFixed(1)+' km autostradali':'Nessun tratto autostradale rilevato automaticamente';
  $('rcTollSource').style.color=motorwayKm>0?'#92400e':'#475569';
  routeCalcRecompute();
 }
@@ -5732,6 +5751,7 @@ async function routeCalcAutomatic(){
   $('rcKm').value=(Number(route.distance||0)/1000).toFixed(1);
   const motorwayKm=routeCalcMotorwayKm(route);
   $('rcMotorwayKm').value=motorwayKm.toFixed(1);
+  if($('rcTollSource')){$('rcTollSource').textContent='Calcolo automatico in corso…';$('rcTollSource').style.color=''}
   await routeCalcResolveToll(motorwayKm);
   routeCalcRecompute();
   msg('rcMsg','Percorso calcolato: '+$('rcKm').value+' km · autostrada rilevata '+motorwayKm.toFixed(1)+' km. Pedaggio '+$('rcTollSource').textContent+'.','ok');
@@ -6853,7 +6873,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.62-20260927-motorway-km-editable';
+const CGE_APP_BUILD='13.63-20260927-motorway-auto-priority';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
