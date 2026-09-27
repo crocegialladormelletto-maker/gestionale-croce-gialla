@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.64</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.65</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1514,7 +1514,17 @@
   <div class="stat"><small>FERMO MEZZO</small><b id="rcStopCost">€ 0,00</b></div>
   <div class="stat"><small>COSTO COMPLESSIVO</small><b id="rcTotalCost">€ 0,00</b></div>
  </div>
- <div class="section" style="margin-top:10px;background:#eef8f2">
+ <div class="section" style="margin-top:10px;background:#fff7ed;border:1px solid #fdba74">
+  <div class="actions" style="justify-content:space-between;align-items:center">
+   <div>
+    <small class="muted">COSTI VIVI</small>
+    <div style="font-size:28px;font-weight:900" id="rcLiveCosts">€ 0,00</div>
+    <div class="muted" id="rcLiveCostsBreakdown">Carburante, pedaggi, vignette, trafori e dotazioni.</div>
+   </div>
+   <span class="pill warn">SPESE EFFETTIVE</span>
+  </div>
+ </div>
+<div class="section" style="margin-top:10px;background:#eef8f2">
   <div class="actions" style="justify-content:space-between;align-items:center">
    <div><small class="muted">IMPORTO SUGGERITO</small><div style="font-size:28px;font-weight:900" id="rcSuggested">€ 0,00</div>
     <div class="muted" id="rcBreakdown">Inserisci o calcola i chilometri per ottenere la stima.</div>
@@ -2286,7 +2296,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.64';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.65';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5566,7 +5576,8 @@ function routeCalcRecompute(){
   margin=routeCalcNum('rcMargin');
  const kmCost=km*kmRate,stopCost=stopHours*stopRate,fuelCost=(km/consumption)*fuelPrice;
  const equipment=($('rcChair')?.checked?15:0)+($('rcBariatric')?.checked?20:0);
- const total=kmCost+fixed+tolls+vignette+tunnelCost+fuelCost+stopCost+equipment;
+ const liveCosts=tolls+vignette+tunnelCost+fuelCost+equipment;
+ const total=kmCost+fixed+liveCosts+stopCost;
  const suggested=total*(1+margin/100);
  $('rcKmCost').textContent=euro(kmCost);
  $('rcCallCost').textContent=euro(fixed);
@@ -5576,6 +5587,16 @@ function routeCalcRecompute(){
  $('rcFuelCost').textContent=euro(fuelCost);
  $('rcStopCost').textContent=euro(stopCost);
  $('rcTotalCost').textContent=euro(total);
+ if($('rcLiveCosts'))$('rcLiveCosts').textContent=euro(liveCosts);
+ if($('rcLiveCostsBreakdown')){
+   const parts=[];
+   if(fuelCost)parts.push('Gasolio '+euro(fuelCost));
+   if(tolls)parts.push('Autostrada '+euro(tolls));
+   if(vignette)parts.push('Vignette '+euro(vignette));
+   if(tunnelCost)parts.push('Trafori '+euro(tunnelCost));
+   if(equipment)parts.push('Dotazioni '+euro(equipment));
+   $('rcLiveCostsBreakdown').textContent=parts.length?parts.join(' · '):'Nessun costo vivo calcolato.';
+ }
  $('rcSuggested').textContent=euro(suggested);
  $('rcSuggested').dataset.value=suggested.toFixed(2);
  $('rcBreakdown').textContent=km>0?
@@ -6937,7 +6958,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.64-20260927-vignettes-tunnels';
+const CGE_APP_BUILD='13.65-20260927-live-costs';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
