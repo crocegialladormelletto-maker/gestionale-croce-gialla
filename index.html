@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.63</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.64</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1491,6 +1491,9 @@
    <div class="field"><label>Autostrada / pedaggi €</label><input id="rcTolls" type="number" min="0" step="0.10" value="0"><div class="muted" id="rcTollSource" style="margin-top:5px">Da calcolare</div></div>
    <div class="field"><label>Km autostrada stimati</label><input id="rcMotorwayKm" type="number" min="0" step="0.1" value="0" placeholder="Calcolati automaticamente · modificabili"></div>
    <div class="field"><label>Tariffa stima €/km autostrada</label><input id="rcTollKmRate" type="number" min="0" step="0.001" value="0.090"></div>
+   <div class="field"><label>Vignette / bolli esteri €</label><input id="rcVignetteCost" type="number" min="0" step="0.10" value="0"><div id="rcVignetteSource" class="muted" style="margin-top:5px">Nessuna vignetta rilevata</div></div>
+   <div class="field"><label>Trafori / pedaggi speciali €</label><input id="rcTunnelCost" type="number" min="0" step="0.10" value="0"><div id="rcTunnelSource" class="muted" style="margin-top:5px">Nessun traforo rilevato</div></div>
+   <div class="field"><label><input id="rcVignetteOwned" type="checkbox"> Vignetta già disponibile</label><div class="muted">Se selezionata, non aggiunge il costo della vignetta al servizio.</div></div>
    <div class="field" data-admin-only="true"><label>Pedaggio reale della tratta</label><div class="actions"><button id="rcSaveToll" type="button" class="btn secondary">💾 Memorizza pedaggio</button></div><div class="muted" style="margin-top:5px">Salva il valore attuale per riutilizzarlo automaticamente.</div></div>
    <div class="field"><label>Gasolio €/litro</label><input id="rcFuelPrice" type="number" min="0" step="0.001" value="2.334"></div>
    <div class="field"><label>Consumo medio km/l</label><input id="rcConsumption" type="number" min="1" step="0.1" value="12"></div>
@@ -1505,6 +1508,8 @@
   <div class="stat"><small>COSTO KM</small><b id="rcKmCost">€ 0,00</b></div>
   <div class="stat"><small>DIRITTO CHIAMATA</small><b id="rcCallCost">€ 0,00</b></div>
   <div class="stat"><small>AUTOSTRADA / PEDAGGI</small><b id="rcTollCost">€ 0,00</b></div>
+  <div class="stat"><small>VIGNETTE ESTERE</small><b id="rcVignetteStat">€ 0,00</b></div>
+  <div class="stat"><small>TRAFORI / PEDAGGI SPECIALI</small><b id="rcTunnelStat">€ 0,00</b></div>
   <div class="stat"><small>CARBURANTE</small><b id="rcFuelCost">€ 0,00</b></div>
   <div class="stat"><small>FERMO MEZZO</small><b id="rcStopCost">€ 0,00</b></div>
   <div class="stat"><small>COSTO COMPLESSIVO</small><b id="rcTotalCost">€ 0,00</b></div>
@@ -2281,7 +2286,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.63';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.64';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5553,17 +5558,21 @@ function routeCalcRecompute(){
  if(!$('rcKm'))return;
  routeCalcApplyVehicleRates();
  const km=routeCalcNum('rcKm'),kmRate=routeCalcNum('rcKmRate'),fixed=routeCalcNum('rcFixed'),
-  tolls=routeCalcNum('rcTolls'),fuelPrice=routeCalcNum('rcFuelPrice'),
+  tolls=routeCalcNum('rcTolls'),vignetteRaw=routeCalcNum('rcVignetteCost'),
+  vignette=$('rcVignetteOwned')?.checked?0:vignetteRaw,
+  tunnelCost=routeCalcNum('rcTunnelCost'),fuelPrice=routeCalcNum('rcFuelPrice'),
   consumption=Math.max(0.1,routeCalcNum('rcConsumption')||12),
   stopHours=routeCalcNum('rcStopHours'),stopRate=routeCalcNum('rcStopRate'),
   margin=routeCalcNum('rcMargin');
  const kmCost=km*kmRate,stopCost=stopHours*stopRate,fuelCost=(km/consumption)*fuelPrice;
  const equipment=($('rcChair')?.checked?15:0)+($('rcBariatric')?.checked?20:0);
- const total=kmCost+fixed+tolls+fuelCost+stopCost+equipment;
+ const total=kmCost+fixed+tolls+vignette+tunnelCost+fuelCost+stopCost+equipment;
  const suggested=total*(1+margin/100);
  $('rcKmCost').textContent=euro(kmCost);
  $('rcCallCost').textContent=euro(fixed);
  $('rcTollCost').textContent=euro(tolls);
+ $('rcVignetteStat').textContent=euro(vignette);
+ $('rcTunnelStat').textContent=euro(tunnelCost);
  $('rcFuelCost').textContent=euro(fuelCost);
  $('rcStopCost').textContent=euro(stopCost);
  $('rcTotalCost').textContent=euro(total);
@@ -5572,6 +5581,8 @@ function routeCalcRecompute(){
  $('rcBreakdown').textContent=km>0?
   km.toFixed(1)+' km × '+euro(kmRate)+'/km · diritto chiamata '+euro(fixed)+
   (tolls?' · pedaggi '+euro(tolls):'')+
+  (vignette?' · vignette '+euro(vignette):'')+
+  (tunnelCost?' · trafori '+euro(tunnelCost):'')+
   (fuelCost?' · carburante '+euro(fuelCost)+' ('+fuelPrice.toFixed(3)+' €/l)':'')+
   (stopHours?' · fermo '+stopHours.toFixed(1)+' h × '+euro(stopRate)+'/h':'')+
   (equipment?' · dotazioni '+euro(equipment):'')+
@@ -5656,6 +5667,53 @@ function routeCalcRouteKey(){
   destinazione:routeCalcNormalizePlace(pts[pts.length-1]||''),
   andata_ritorno:!!$('rcReturn')?.checked
  };
+}
+
+function routeCalcForeignCosts(coords,route){
+ const simple=$('rcVehicleType')?.value==='TRASPORTO SEMPLICE';
+ const round=!!$('rcReturn')?.checked;
+ const labels=(coords||[]).map(x=>String(x.label||'').toUpperCase()).join(' | ');
+ const steps=(route?.legs||[]).flatMap(l=>l.steps||[]);
+ const road=steps.map(st=>[st.name,st.ref,st.destinations,st.exits].filter(Boolean).join(' ')).join(' | ').toUpperCase();
+
+ let vignette=0, vignetteParts=[];
+ if(/SVIZZERA|SUISSE|SCHWEIZ|SWITZERLAND/.test(labels)){
+   vignette+=42.42; vignetteParts.push('Svizzera 2026: CHF 40 ≈ € 42,42');
+ }
+ if(/AUSTRIA|ÖSTERREICH/.test(labels)){
+   vignette+=9.60; vignetteParts.push('Austria: vignetta 1 giorno € 9,60');
+ }
+ if(/SLOVENIA|SLOVENIJA/.test(labels)){
+   const sl=simple?16:32;
+   vignette+=sl; vignetteParts.push('Slovenia: vignetta 7 giorni '+(simple?'2A':'2B')+' '+euro(sl));
+ }
+
+ let tunnel=0, tunnelParts=[];
+ const add=(name,oneway,ret)=>{const v=round?ret:oneway;tunnel+=v;tunnelParts.push(name+' '+euro(v));};
+
+ if(/MONT.?BLANC|MONTE.?BIANCO|TUNNEL DU MONT BLANC/.test(road)){
+   add('Monte Bianco',simple?56.40:74.70,simple?70.40:93.80);
+ }
+ if(/FR[ÉE]JUS|FREJUS/.test(road)){
+   add('Fréjus',simple?56.40:74.70,simple?70.40:93.80);
+ }
+ if(/GRAND.?SAINT.?BERNARD|GRAN.?SAN.?BERNARDO/.test(road)){
+   add('Gran San Bernardo',simple?33.50:52.50,simple?53.50:84.00);
+ }
+
+ const mult=round?2:1;
+ if(/BRENNER|BRENNERO|A13/.test(road)){const v=12.50*mult;tunnel+=v;tunnelParts.push('Brennero '+euro(v))}
+ if(/TAUERN|KATSCHBERG|A10/.test(road)){const v=15*mult;tunnel+=v;tunnelParts.push('Tauern/Katschberg '+euro(v))}
+ if(/KARAWANKEN|KARAVANKE|A11/.test(road)){const v=9*mult;tunnel+=v;tunnelParts.push('Karawanken '+euro(v))}
+ if(/ARLBERG|S16/.test(road)){const v=13*mult;tunnel+=v;tunnelParts.push('Arlberg '+euro(v))}
+ if(/BOSRUCK/.test(road)){const v=7*mult;tunnel+=v;tunnelParts.push('Bosruck '+euro(v))}
+ if(/GLEINALM/.test(road)){const v=12*mult;tunnel+=v;tunnelParts.push('Gleinalm '+euro(v))}
+
+ $('rcVignetteCost').value=vignette.toFixed(2);
+ $('rcTunnelCost').value=tunnel.toFixed(2);
+ $('rcVignetteSource').textContent=vignetteParts.length?vignetteParts.join(' · '):'Nessuna vignetta rilevata automaticamente';
+ $('rcTunnelSource').textContent=tunnelParts.length?tunnelParts.join(' · '):'Nessun traforo/pedaggio speciale rilevato automaticamente';
+ routeCalcRecompute();
 }
 function routeCalcMotorwayKm(route){
  const steps=(route?.legs||[]).flatMap(l=>l.steps||[]);
@@ -5753,6 +5811,7 @@ async function routeCalcAutomatic(){
   $('rcMotorwayKm').value=motorwayKm.toFixed(1);
   if($('rcTollSource')){$('rcTollSource').textContent='Calcolo automatico in corso…';$('rcTollSource').style.color=''}
   await routeCalcResolveToll(motorwayKm);
+  routeCalcForeignCosts(coords,route);
   routeCalcRecompute();
   msg('rcMsg','Percorso calcolato: '+$('rcKm').value+' km · autostrada rilevata '+motorwayKm.toFixed(1)+' km. Pedaggio '+$('rcTollSource').textContent+'.','ok');
  }catch(e){
@@ -5773,6 +5832,11 @@ function routeCalcGoogleMaps(){
 function routeCalcReset(){
  ['rcLoad','rcDest','rcKm'].forEach(id=>{if($(id))$(id).value=''});
  if($('rcMotorwayKm'))$('rcMotorwayKm').value='0';
+ if($('rcVignetteCost'))$('rcVignetteCost').value='0';
+ if($('rcTunnelCost'))$('rcTunnelCost').value='0';
+ if($('rcVignetteOwned'))$('rcVignetteOwned').checked=false;
+ if($('rcVignetteSource'))$('rcVignetteSource').textContent='Nessuna vignetta rilevata';
+ if($('rcTunnelSource'))$('rcTunnelSource').textContent='Nessun traforo rilevato';
  if($('rcTollSource')){$('rcTollSource').textContent='Da calcolare';$('rcTollSource').style.color=''}
  if($('rcStart'))$('rcStart').value='Via I° Maggio 1, 28040 Dormelletto NO, Italia';
  if($('rcReturn'))$('rcReturn').checked=true;
@@ -5805,10 +5869,10 @@ if($('rcReset'))$('rcReset').onclick=routeCalcReset;
 if($('rcFuelRefresh'))$('rcFuelRefresh').onclick=()=>routeCalcUpdateFuelPrice(true);
 if($('rcSaveToll'))$('rcSaveToll').onclick=routeCalcSaveToll;
 if($('rcUseService'))$('rcUseService').onclick=routeCalcUseInService;
-['rcKm','rcTolls','rcFuelPrice','rcConsumption','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
+['rcKm','rcTolls','rcVignetteCost','rcTunnelCost','rcFuelPrice','rcConsumption','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
 if($('rcTollKmRate'))$('rcTollKmRate').oninput=()=>{const mk=routeCalcNum('rcMotorwayKm');if(!$('rcTollSource').textContent.startsWith('✓'))routeCalcResolveToll(mk);else routeCalcRecompute()};
 if($('rcMotorwayKm'))$('rcMotorwayKm').oninput=()=>{const mk=routeCalcNum('rcMotorwayKm');if(!$('rcTollSource').textContent.startsWith('✓'))routeCalcResolveToll(mk);else routeCalcRecompute()};
-['rcVehicleType','rcReturn','rcChair','rcBariatric'].forEach(id=>{if($(id))$(id).onchange=routeCalcRecompute});
+['rcVehicleType','rcReturn','rcChair','rcBariatric','rcVignetteOwned'].forEach(id=>{if($(id))$(id).onchange=routeCalcRecompute});
 routeCalcRecompute();
 routeCalcUpdateFuelPrice(false);
 
@@ -6873,7 +6937,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.63-20260927-motorway-auto-priority';
+const CGE_APP_BUILD='13.64-20260927-vignettes-tunnels';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
