@@ -56,7 +56,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione Stabile 2.3</div></div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione Stabile 2.4</div></div></div>
 
   <section id="dashboard" class="view">
     <div class="notice"><b>REGISTRO OPERATIVO:</b> i dati sono salvati nel database condiviso e protetti da accesso autenticato.</div>
@@ -82,6 +82,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
           <div class="field"><label>DATA</label><input id="data" type="date" required></div>
           <div class="field"><label>TIPO SERVIZIO</label><select id="tipoServizio" required></select></div>
           <div class="field"><label>RICHIEDENTE SERVIZIO</label><select id="richiedenteServizio" required></select></div>
+          <div class="field"><label>N° FOGLIO MARCIA</label><input id="numeroFoglioMarcia" placeholder="Inserisci numero foglio marcia" required></div>
           <div class="field"><label>N° SCHEDA 118</label><input id="scheda118" placeholder="Inserisci numero scheda"></div>
           <div class="field"><label>NOME PAZIENTE</label><input id="nomePaziente" placeholder="Nome"></div>
           <div class="field"><label>COGNOME PAZIENTE</label><input id="cognomePaziente" placeholder="Cognome"></div>
@@ -123,7 +124,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
         <select id="fMezzo" onchange="renderArchivio()"></select>
         <button class="btn light" onclick="clearFilters()">Azzera filtri</button>
       </div>
-      <div class="tablewrap"><table><thead><tr><th>N°</th><th>Tipo servizio</th><th>Richiedente servizio</th><th>N° scheda 118</th><th>Nome paziente</th><th>Cognome paziente</th><th>Mezzo</th><th>Targa</th><th>Km iniziali</th><th>Km finali</th><th>Km percorsi</th><th>Data</th><th>Ora partenza</th><th>Luogo partenza</th><th>Ora destinazione</th><th>Luogo carico</th><th>Tipo luogo carico</th><th>Specifica altro</th><th>Luogo fine</th><th>Ora fine</th><th>Autista</th><th>Capo equipaggio</th><th>Soccorritore 1</th><th>Soccorritore 2</th><th>Metodo pagamento</th><th>N° ricevuta</th><th>Importo</th><th>Ospedale / Clinica</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
+      <div class="tablewrap"><table><thead><tr><th>N°</th><th>N° Foglio Marcia</th><th>Tipo servizio</th><th>Richiedente servizio</th><th>N° scheda 118</th><th>Nome paziente</th><th>Cognome paziente</th><th>Mezzo</th><th>Targa</th><th>Km iniziali</th><th>Km finali</th><th>Km percorsi</th><th>Data</th><th>Ora partenza</th><th>Luogo partenza</th><th>Ora destinazione</th><th>Luogo carico</th><th>Tipo luogo carico</th><th>Specifica altro</th><th>Luogo fine</th><th>Ora fine</th><th>Autista</th><th>Capo equipaggio</th><th>Soccorritore 1</th><th>Soccorritore 2</th><th>Metodo pagamento</th><th>N° ricevuta</th><th>Importo</th><th>Ospedale / Clinica</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
     </div>
   </section>
 
@@ -182,6 +183,6 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="app.js?v=2.3"></script>
+<script src="app.js?v=2.4"></script>
 </body>
 </html>
