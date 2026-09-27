@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.76</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.77</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1559,6 +1559,8 @@
   </div>
   <div class="grid3" style="margin-top:10px">
    <div class="field"><label>Cliente / destinatario</label><input id="rcQuoteCustomer" placeholder="Nome, cognome, RSA, struttura..."></div>
+   <div class="field"><label>Codice fiscale</label><input id="rcQuoteCf" maxlength="16" style="text-transform:uppercase" placeholder="Codice fiscale"></div>
+   <div class="field"><label>Indirizzo completo</label><input id="rcQuoteAddress" placeholder="Via, numero civico, CAP, Comune, Provincia"></div>
    <div class="field"><label>E-mail cliente</label><input id="rcQuoteEmail" type="email" placeholder="cliente@email.it"></div>
    <div class="field"><label>Telefono</label><input id="rcQuotePhone" placeholder="Facoltativo"></div>
   </div>
@@ -2356,7 +2358,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.76';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.77';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -6038,7 +6040,7 @@ function routeCalcReset(){
  if($('rcVignetteSource'))$('rcVignetteSource').textContent='Nessuna vignetta rilevata';
  if($('rcTunnelSource'))$('rcTunnelSource').textContent='Nessun traforo rilevato';
  if($('rcSavedQuoteInfo'))$('rcSavedQuoteInfo').textContent='Nessun preventivo salvato caricato.';
- ['rcQuoteCustomer','rcQuoteEmail','rcQuotePhone'].forEach(id=>{if($(id))$(id).value=''});
+ ['rcQuoteCustomer','rcQuoteCf','rcQuoteAddress','rcQuoteEmail','rcQuotePhone'].forEach(id=>{if($(id))$(id).value=''});
  rcCurrentCustomerQuoteId=null;rcCurrentCustomerQuoteNumber=null;
  if($('rcQuoteState'))$('rcQuoteState').value='BOZZA';
  routeCalcRefreshPaymentBox();
@@ -6152,6 +6154,8 @@ function routeCalcCustomerQuoteData(){
  const percorso=[start,load,dest,round?start:''].filter(Boolean).join(' → ');
  return {
    cliente:$('rcQuoteCustomer')?.value.trim()||'',
+   codice_fiscale:$('rcQuoteCf')?.value.trim().toUpperCase()||null,
+   indirizzo_cliente:$('rcQuoteAddress')?.value.trim()||null,
    email:$('rcQuoteEmail')?.value.trim()||null,
    telefono:$('rcQuotePhone')?.value.trim()||null,
    origine:start,
@@ -6216,7 +6220,10 @@ async function routeCalcLoadQuoteArchive(){
   return '<tr>'+
    '<td><b>'+esc(routeCalcFormatQuoteNumber(x.numero_progressivo,x.data_preventivo))+'</b></td>'+
    '<td>'+esc(x.data_preventivo||'')+'</td>'+
-   '<td>'+esc(x.cliente||'—')+(x.email?'<br><span class="muted">'+esc(x.email)+'</span>':'')+'</td>'+
+   '<td>'+esc(x.cliente||'—')+
+   (x.codice_fiscale?'<br><span class="muted">CF '+esc(x.codice_fiscale)+'</span>':'')+
+   (x.indirizzo_cliente?'<br><span class="muted">'+esc(x.indirizzo_cliente)+'</span>':'')+
+   (x.email?'<br><span class="muted">'+esc(x.email)+'</span>':'')+'</td>'+
    '<td>'+esc(x.percorso||'—')+'<br><span class="muted">'+Number(x.km_totali||0).toFixed(1)+' km</span></td>'+
    '<td>'+esc(x.tipo_mezzo||'—')+'</td>'+
    '<td>'+euro(x.importo_totale)+'</td>'+
@@ -6254,6 +6261,8 @@ async function routeCalcPrintArchivedQuote(id){
  if($('rcQuoteNumber'))$('rcQuoteNumber').value=routeCalcFormatQuoteNumber(x.numero_progressivo,x.data_preventivo);
  if($('rcQuoteState'))$('rcQuoteState').value=x.stato||'BOZZA';
  $('rcQuoteCustomer').value=x.cliente||'';
+ $('rcQuoteCf').value=x.codice_fiscale||'';
+ $('rcQuoteAddress').value=x.indirizzo_cliente||'';
  $('rcQuoteEmail').value=x.email||'';
  $('rcQuotePhone').value=x.telefono||'';
  $('rcQuoteNotes').value=routeCalcPaymentText(x.numero_progressivo,x.data_preventivo);
@@ -6278,6 +6287,8 @@ async function routeCalcPrintQuote(){
  const advanceText=$('rcAdvanceSuggested')?.textContent||euro(0);
  const km=routeCalcNum('rcKm');
  const customer=$('rcQuoteCustomer')?.value.trim()||'Cliente';
+ const cf=$('rcQuoteCf')?.value.trim().toUpperCase()||'';
+ const address=$('rcQuoteAddress')?.value.trim()||'';
  const email=$('rcQuoteEmail')?.value.trim()||'';
  const phone=$('rcQuotePhone')?.value.trim()||'';
  let saved=null;
@@ -6318,6 +6329,8 @@ async function routeCalcPrintQuote(){
  '<div class="box"><div class="grid">'+
  '<div><div class="label">Cliente / destinatario</div><div class="value">'+esc(customer)+'</div></div>'+
  '<div><div class="label">Tipo di mezzo</div><div class="value">'+esc(vehicle)+'</div></div>'+
+ (cf?'<div><div class="label">Codice fiscale</div><div class="value">'+esc(cf)+'</div></div>':'')+
+ (address?'<div><div class="label">Indirizzo</div><div class="value">'+esc(address)+'</div></div>':'')+
  (email?'<div><div class="label">E-mail</div><div class="value">'+esc(email)+'</div></div>':'')+
  (phone?'<div><div class="label">Telefono</div><div class="value">'+esc(phone)+'</div></div>':'')+
  '</div></div>'+
@@ -7433,7 +7446,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.76-20260927-quote-confirmation-payment-bottom';
+const CGE_APP_BUILD='13.77-20260927-quote-client-cf-address';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
