@@ -1434,10 +1434,10 @@
 <div class="grid2"><div class="notice"><b>Sedia cingolata / motorizzata · € 15,00</b></div>
 <div class="notice"><b>Barella bariatrica · € 20,00</b></div></div></div>
 <div id="tariffGroupPanels">
-<div id="tariffPane_DEA_BORGOMANERO" class="section" data-tariff-pane="DEA_BORGOMANERO"><h3>Ambulanza · Ospedale Borgomanero</h3><div class="table"><table><thead><tr><th>Destinazione</th><th>Diurno</th><th>Notturno</th></tr></thead><tbody></tbody></table></div></div>
-<div id="tariffPane_DEA_NOVARA" class="section hidden" data-tariff-pane="DEA_NOVARA"><h3>Ambulanza · Ospedale Novara</h3><div class="table"><table><thead><tr><th>Destinazione</th><th>Diurno</th><th>Notturno</th></tr></thead><tbody></tbody></table></div></div>
-<div id="tariffPane_TS_BORGOMANERO" class="section hidden" data-tariff-pane="TS_BORGOMANERO"><h3>Trasporto semplice · Ospedale Borgomanero</h3><p class="muted">Da sede – H Borgomanero A/R · supplementi: sedia cingolata/motorizzata €15 · barella bariatrica €20 · fermo mezzo €18/ora. Prezzo notturno distinto non indicato: concordare col Centralino.</p><div class="table"><table><thead><tr><th>Destinazione</th><th>Prezzo riportato nel tariffario</th></tr></thead><tbody></tbody></table></div></div>
-<div id="tariffPane_TS_NOVARA_DOBLO" class="section hidden" data-tariff-pane="TS_NOVARA_DOBLO"><h3>Trasporto semplice · Ospedale Novara</h3><p class="muted">Da sede – H Novara A/R · supplementi: sedia cingolata/motorizzata €15 · barella bariatrica €20 · fermo mezzo €18/ora. Prezzo notturno distinto non indicato: concordare col Centralino.</p><div class="table"><table><thead><tr><th>Destinazione</th><th>Prezzo riportato nel tariffario</th></tr></thead><tbody></tbody></table></div></div>
+<div id="tariffPane_DEA_BORGOMANERO" class="section" data-tariff-pane="DEA_BORGOMANERO"><h3>Ambulanza · Ospedale Borgomanero</h3><div class="table"><table><thead><tr><th>Destinazione</th><th>Diurno</th><th>Notturno</th><th>Azioni</th></tr></thead><tbody></tbody></table></div></div>
+<div id="tariffPane_DEA_NOVARA" class="section hidden" data-tariff-pane="DEA_NOVARA"><h3>Ambulanza · Ospedale Novara</h3><div class="table"><table><thead><tr><th>Destinazione</th><th>Diurno</th><th>Notturno</th><th>Azioni</th></tr></thead><tbody></tbody></table></div></div>
+<div id="tariffPane_TS_BORGOMANERO" class="section hidden" data-tariff-pane="TS_BORGOMANERO"><h3>Trasporto semplice · Ospedale Borgomanero</h3><p class="muted">Da sede – H Borgomanero A/R · supplementi: sedia cingolata/motorizzata €15 · barella bariatrica €20 · fermo mezzo €18/ora. Prezzo notturno distinto non indicato: concordare col Centralino.</p><div class="table"><table><thead><tr><th>Destinazione</th><th>Prezzo riportato nel tariffario</th><th>Azioni</th></tr></thead><tbody></tbody></table></div></div>
+<div id="tariffPane_TS_NOVARA_DOBLO" class="section hidden" data-tariff-pane="TS_NOVARA_DOBLO"><h3>Trasporto semplice · Ospedale Novara</h3><p class="muted">Da sede – H Novara A/R · supplementi: sedia cingolata/motorizzata €15 · barella bariatrica €20 · fermo mezzo €18/ora. Prezzo notturno distinto non indicato: concordare col Centralino.</p><div class="table"><table><thead><tr><th>Destinazione</th><th>Prezzo riportato nel tariffario</th><th>Azioni</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="section" data-admin-only="true"><h3>Modifica una tariffa della scheda selezionata</h3><div class="grid4"><div class="field"><label>Tariffario selezionato</label><select id="ttar"></select></div><div class="field"><label>Destinazione</label><input id="tdest"></div><div class="field"><label>Tipo mezzo</label><select id="ttype" disabled><option>AMBULANZA</option><option>TRASPORTO SEMPLICE</option></select></div><div class="field"><label>Importo €</label><input id="tday" type="number" min="0" step="1"></div><div class="field"><label>Notturno € (solo se previsto)</label><input id="tnight" type="number" min="0" step="1"></div><div class="field"><label>Provincia</label><input id="tprov"></div></div><div class="toolbar"><button id="tsave" class="btn yellow">Aggiungi / aggiorna tariffa</button></div><div id="tmsg"></div></div>
 </div></section>
@@ -5475,14 +5475,25 @@ async function loadTariffsView(){
   const rows=tariffManagementRows.filter(x=>x.tariffari?.codice===code&&x.tipo_mezzo===type);
   const tbody=pane.querySelector('tbody'),simple=tariffSimple(code);
   tbody.innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.destinazione)+'</td><td>'+euro(x.importo_diurno)+'</td>'+
-   (simple?'':'<td>'+(x.importo_notturno==null?'—':euro(x.importo_notturno))+'</td>')+'</tr>').join(''):
-   '<tr><td colspan="'+(simple?2:3)+'">Nessuna destinazione caricata per questo tariffario.</td></tr>';
+   (simple?'':'<td>'+(x.importo_notturno==null?'—':euro(x.importo_notturno))+'</td>')+
+   '<td>'+(prof?.ruolo==='AMMINISTRATORE'?'<button class="btn danger" type="button" onclick="deleteTariffDestination(\''+x.tariffa_destinazione_id+'\',\''+String(x.destinazione||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">Cancella</button>':'—')+'</td></tr>').join(''):
+   '<tr><td colspan="'+(simple?3:4)+'">Nessuna destinazione caricata per questo tariffario.</td></tr>';
  }
  showTariffGroup(tariffViewCode);
  msg('tmsg','');
 }
 document.querySelectorAll('[data-tariff-code]').forEach(b=>b.onclick=()=>showTariffGroup(b.dataset.tariffCode));
 $('ttar').onchange=()=>{const t=tariffs.find(x=>x.id===$('ttar').value);if(t)showTariffGroup(t.codice)};
+async function deleteTariffDestination(id,destinazione){
+ if(prof?.ruolo!=='AMMINISTRATORE')return msg('tmsg','Solo Amministrazione può cancellare una tariffa.','warn');
+ if(!id)return;
+ if(!confirm('Cancellare la tariffa per «'+destinazione+'»?\n\nQuesta operazione elimina la voce dal tariffario.'))return;
+ const r=await sb.from('tariffe_destinazioni').delete().eq('tariffa_destinazione_id',id);
+ if(r.error)return msg('tmsg','Impossibile cancellare la tariffa: '+r.error.message,'err');
+ await loadTariffsView();
+ msg('tmsg','Tariffa «'+destinazione+'» cancellata correttamente.','ok');
+}
+
 $('tsave').onclick=async()=>{
  if(prof?.ruolo!=='AMMINISTRATORE')return msg('tmsg','Solo Amministrazione può modificare i prezzi.','warn');
  const tariff=tariffs.find(t=>t.id===$('ttar').value);
