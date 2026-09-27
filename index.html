@@ -6291,6 +6291,7 @@ async function routeCalcPrintQuote(){
  const email=$('rcQuoteEmail')?.value.trim()||'';
  const phone=$('rcQuotePhone')?.value.trim()||'';
  const km=routeCalcNum('rcKm');
+ const dest=$('rcDest')?.value.trim()||'—';
  if(!amount||!km||dest==='—')return msg('rcMsg','Calcola prima il percorso e l’importo del preventivo.','warn');
  const w=window.open('','_blank');
  if(!w)return msg('rcMsg','Il browser ha bloccato la finestra di stampa. Consenti i popup per questo sito.','warn');
@@ -6305,7 +6306,6 @@ async function routeCalcPrintQuote(){
  const vehicle=$('rcVehicleType')?.value==='TRASPORTO SEMPLICE'?'Trasporto semplice':'Ambulanza';
  const start=$('rcStart')?.value.trim()||'—';
  const load=$('rcLoad')?.value.trim()||'';
- const dest=$('rcDest')?.value.trim()||'—';
  const round=!!$('rcReturn')?.checked;
  const chair=!!$('rcChair')?.checked;
  const bariatric=!!$('rcBariatric')?.checked;
