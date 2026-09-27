@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.70</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.71</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1524,6 +1524,25 @@
    <span class="pill warn">SPESE EFFETTIVE</span>
   </div>
  </div>
+<div class="section" style="margin-top:10px;background:#eef6ff;border:1px solid #93c5fd">
+  <div class="actions" style="justify-content:space-between;align-items:center">
+   <div>
+    <small class="muted">ANTICIPO CONSIGLIATO</small>
+    <div style="font-size:28px;font-weight:900" id="rcAdvanceSuggested">€ 0,00</div>
+    <div class="muted" id="rcAdvanceBreakdown">Copre i costi vivi e una quota dei costi operativi.</div>
+   </div>
+   <span class="pill b">ACCONTO</span>
+  </div>
+ </div>
+<div class="section" style="margin-top:10px;background:#f8fafc" data-admin-only="true">
+  <div class="actions" style="justify-content:space-between;align-items:center">
+   <div><b>Preventivo tratta verificato</b><div class="muted" id="rcSavedQuoteInfo">Nessun preventivo salvato caricato.</div></div>
+   <div class="actions">
+    <button id="rcLoadSavedQuote" type="button" class="btn secondary">↻ Cerca preventivo salvato</button>
+    <button id="rcSaveQuote" type="button" class="btn yellow">💾 Salva / aggiorna preventivo</button>
+   </div>
+  </div>
+ </div>
 <div class="section" style="margin-top:10px;background:#eef8f2">
   <div class="actions" style="justify-content:space-between;align-items:center">
    <div><small class="muted">IMPORTO SUGGERITO</small><div style="font-size:28px;font-weight:900" id="rcSuggested">€ 0,00</div>
@@ -2296,7 +2315,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.70';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.71';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5577,8 +5596,11 @@ function routeCalcRecompute(){
  const kmCost=km*kmRate,stopCost=stopHours*stopRate,fuelCost=(km/consumption)*fuelPrice;
  const equipment=($('rcChair')?.checked?15:0)+($('rcBariatric')?.checked?20:0);
  const liveCosts=tolls+vignette+tunnelCost+fuelCost+equipment;
- const total=kmCost+fixed+liveCosts+stopCost;
+ const operationalBase=kmCost+fixed+stopCost;
+ const total=operationalBase+liveCosts;
  const suggested=total*(1+margin/100);
+ const advanceRaw=liveCosts+(operationalBase*0.30);
+ const advance=Math.min(suggested,Math.ceil(advanceRaw/10)*10);
  $('rcKmCost').textContent=euro(kmCost);
  $('rcCallCost').textContent=euro(fixed);
  $('rcTollCost').textContent=euro(tolls);
@@ -5597,6 +5619,9 @@ function routeCalcRecompute(){
    if(equipment)parts.push('Dotazioni '+euro(equipment));
    $('rcLiveCostsBreakdown').textContent=parts.length?parts.join(' · '):'Nessun costo vivo calcolato.';
  }
+ if($('rcAdvanceSuggested'))$('rcAdvanceSuggested').textContent=euro(advance);
+ if($('rcAdvanceBreakdown'))$('rcAdvanceBreakdown').textContent=
+   'Costi vivi '+euro(liveCosts)+' + 30% costi operativi '+euro(operationalBase*0.30)+' · arrotondato ai 10 € superiori.';
  $('rcSuggested').textContent=euro(suggested);
  $('rcSuggested').dataset.value=suggested.toFixed(2);
  $('rcBreakdown').textContent=km>0?
@@ -5929,6 +5954,11 @@ async function routeCalcAutomatic(){
    if(i<points.length-1)await routeCalcSleep(1100);
   }
   if($('rcReturn').checked)coords.push(coords[0]);
+  const saved=await routeCalcLoadSavedQuote(false);
+  if(saved){
+    msg('rcMsg','Preventivo verificato trovato e caricato automaticamente.','ok');
+    return;
+  }
   const coordText=coords.map(x=>x.lon+','+x.lat).join(';');
   const url='https://router.project-osrm.org/route/v1/driving/'+coordText+'?overview=false&steps=true';
   const rr=await fetch(url);
@@ -5966,6 +5996,7 @@ function routeCalcReset(){
  if($('rcVignetteOwned'))$('rcVignetteOwned').checked=false;
  if($('rcVignetteSource'))$('rcVignetteSource').textContent='Nessuna vignetta rilevata';
  if($('rcTunnelSource'))$('rcTunnelSource').textContent='Nessun traforo rilevato';
+ if($('rcSavedQuoteInfo'))$('rcSavedQuoteInfo').textContent='Nessun preventivo salvato caricato.';
  if($('rcTollSource')){$('rcTollSource').textContent='Da calcolare';$('rcTollSource').style.color=''}
  if($('rcStart'))$('rcStart').value='Via I° Maggio 1, 28040 Dormelletto NO, Italia';
  if($('rcReturn'))$('rcReturn').checked=true;
@@ -5975,6 +6006,72 @@ function routeCalcReset(){
  if($('rcConsumption'))$('rcConsumption').value='12';
  routeCalcApplyVehicleRates();
  msg('rcMsg','');routeCalcRecompute();
+}
+
+function routeCalcQuoteRow(){
+ const key=routeCalcRouteKey();
+ const equipment=($('rcChair')?.checked?15:0)+($('rcBariatric')?.checked?20:0);
+ const km=routeCalcNum('rcKm'),kmRate=routeCalcNum('rcKmRate'),fixed=routeCalcNum('rcFixed');
+ const tolls=routeCalcNum('rcTolls'),vignette=$('rcVignetteOwned')?.checked?0:routeCalcNum('rcVignetteCost');
+ const tunnels=routeCalcNum('rcTunnelCost'),fuel=Number(String($('rcFuelCost')?.textContent||'').replace(/[^0-9,.-]/g,'').replace('.','').replace(',','.'))||0;
+ const stop=routeCalcNum('rcStopHours')*routeCalcNum('rcStopRate');
+ const live=tolls+vignette+tunnels+fuel+equipment;
+ const total=km*kmRate+fixed+live+stop;
+ const suggested=Number($('rcSuggested')?.dataset.value||0);
+ return {
+  origine:key.origine,via:key.via||null,destinazione:key.destinazione,andata_ritorno:key.andata_ritorno,
+  tipo_mezzo:$('rcVehicleType').value,km_totali:km,km_autostrada:routeCalcNum('rcMotorwayKm'),
+  costo_km:km*kmRate,diritto_chiamata:fixed,pedaggi:tolls,vignette:vignette,trafori:tunnels,
+  carburante:fuel,fermo_mezzo:stop,dotazioni:equipment,costi_vivi:live,costo_complessivo:total,
+  importo_suggerito:suggested,prezzo_gasolio:routeCalcNum('rcFuelPrice'),consumo_km_l:routeCalcNum('rcConsumption'),
+  note:'Preventivo verificato dal calcolatore',verificato:true,attivo:true
+ };
+}
+async function routeCalcLoadSavedQuote(showMessage=true){
+ const key=routeCalcRouteKey();
+ if(!key.origine||!key.destinazione)return false;
+ let q=sb.from('preventivi_tratte').select('*')
+  .eq('origine',key.origine).eq('destinazione',key.destinazione)
+  .eq('andata_ritorno',key.andata_ritorno).eq('tipo_mezzo',$('rcVehicleType').value).eq('attivo',true);
+ q=key.via?q.eq('via',key.via):q.is('via',null);
+ const r=await q.maybeSingle();
+ if(r.error){if(showMessage)msg('rcMsg','Errore ricerca preventivo salvato: '+r.error.message,'err');return false}
+ if(!r.data){
+   if($('rcSavedQuoteInfo'))$('rcSavedQuoteInfo').textContent='Nessun preventivo verificato salvato per questa tratta.';
+   if(showMessage)msg('rcMsg','Nessun preventivo verificato salvato per questa tratta.','warn');
+   return false;
+ }
+ const x=r.data;
+ $('rcKm').value=Number(x.km_totali||0).toFixed(1);
+ $('rcMotorwayKm').value=Number(x.km_autostrada||0).toFixed(1);
+ $('rcTolls').value=Number(x.pedaggi||0).toFixed(2);
+ $('rcVignetteCost').value=Number(x.vignette||0).toFixed(2);
+ $('rcTunnelCost').value=Number(x.trafori||0).toFixed(2);
+ if(x.prezzo_gasolio!=null)$('rcFuelPrice').value=Number(x.prezzo_gasolio).toFixed(3);
+ if(x.consumo_km_l!=null)$('rcConsumption').value=Number(x.consumo_km_l).toFixed(1);
+ $('rcStopHours').value=routeCalcNum('rcStopRate')?Number(x.fermo_mezzo||0)/routeCalcNum('rcStopRate'):0;
+ if($('rcTollSource')){$('rcTollSource').textContent='✓ Preventivo verificato salvato';$('rcTollSource').style.color='#166534'}
+ if($('rcSavedQuoteInfo'))$('rcSavedQuoteInfo').textContent='Caricato preventivo verificato · '+Number(x.km_totali||0).toFixed(1)+' km · importo '+euro(x.importo_suggerito);
+ routeCalcRecompute();
+ if(showMessage)msg('rcMsg','Preventivo verificato caricato automaticamente.','ok');
+ return true;
+}
+async function routeCalcSaveQuote(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return msg('rcMsg','Solo Amministrazione può salvare un preventivo verificato.','warn');
+ const row=routeCalcQuoteRow();
+ if(!row.origine||!row.destinazione||!row.km_totali)return msg('rcMsg','Calcola prima il percorso.','warn');
+ let q=sb.from('preventivi_tratte').select('id')
+  .eq('origine',row.origine).eq('destinazione',row.destinazione)
+  .eq('andata_ritorno',row.andata_ritorno).eq('tipo_mezzo',row.tipo_mezzo);
+ q=row.via?q.eq('via',row.via):q.is('via',null);
+ const ex=await q.maybeSingle();
+ if(ex.error)return msg('rcMsg','Errore verifica preventivo: '+ex.error.message,'err');
+ let r;
+ if(ex.data?.id)r=await sb.from('preventivi_tratte').update({...row,updated_at:new Date().toISOString()}).eq('id',ex.data.id).select('id');
+ else r=await sb.from('preventivi_tratte').insert(row).select('id');
+ if(r.error)return msg('rcMsg','Impossibile salvare il preventivo: '+r.error.message,'err');
+ if($('rcSavedQuoteInfo'))$('rcSavedQuoteInfo').textContent='Preventivo verificato salvato · '+row.km_totali.toFixed(1)+' km · '+euro(row.importo_suggerito);
+ msg('rcMsg','Preventivo della tratta salvato correttamente.','ok');
 }
 function routeCalcUseInService(){
  const amount=Number($('rcSuggested')?.dataset.value||0),km=routeCalcNum('rcKm'),dest=$('rcDest')?.value.trim();
@@ -5997,6 +6094,8 @@ if($('rcOpenMaps'))$('rcOpenMaps').onclick=routeCalcGoogleMaps;
 if($('rcReset'))$('rcReset').onclick=routeCalcReset;
 if($('rcFuelRefresh'))$('rcFuelRefresh').onclick=()=>routeCalcUpdateFuelPrice(true);
 if($('rcSaveToll'))$('rcSaveToll').onclick=routeCalcSaveToll;
+if($('rcLoadSavedQuote'))$('rcLoadSavedQuote').onclick=()=>routeCalcLoadSavedQuote(true);
+if($('rcSaveQuote'))$('rcSaveQuote').onclick=routeCalcSaveQuote;
 if($('rcUseService'))$('rcUseService').onclick=routeCalcUseInService;
 ['rcKm','rcTolls','rcVignetteCost','rcTunnelCost','rcFuelPrice','rcConsumption','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
 if($('rcTollKmRate'))$('rcTollKmRate').oninput=()=>{const mk=routeCalcNum('rcMotorwayKm');if(!$('rcTollSource').textContent.startsWith('✓'))routeCalcResolveToll(mk);else routeCalcRecompute()};
@@ -7066,7 +7165,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.70-20260927-europe-geocoder';
+const CGE_APP_BUILD='13.71-20260927-saved-quotes-advance';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
