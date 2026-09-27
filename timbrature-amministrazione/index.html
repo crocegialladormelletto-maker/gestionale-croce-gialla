@@ -1,37 +1,171 @@
-<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Amministrazione Timbrature - Croce Gialla Emergenza ODV</title><style>
-:root{--y:#ffdf00;--b:#173b72;--bg:#f4f7fb;--bd:#d7deea;--g:#15803d;--r:#b42318;--m:#667085}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#142033}header{background:var(--y);padding:18px 22px;border-bottom:4px solid #111}.wrap{max-width:1180px;margin:24px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--bd);border-radius:18px;padding:20px;box-shadow:0 8px 25px rgba(20,32,51,.07);margin-bottom:18px}.hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}label{display:block;font-weight:800;margin:8px 0 5px}input,select{width:100%;padding:11px;border:2px solid var(--bd);border-radius:10px;font-size:16px;background:#fff}button{border:0;border-radius:10px;padding:11px 14px;font-weight:900;cursor:pointer}.primary{background:var(--b);color:#fff}.green{background:var(--g);color:#fff}.danger{background:var(--r);color:#fff}.secondary{background:#e8eef8;color:#17335f}.notice{margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff7cc;border:1px solid #eed56a}.ok{background:#eaf8ef;border-color:#9bd5ab;color:#135c2a}.err{background:#fdecec;border-color:#f2aaaa;color:#8c1d18}.muted{color:var(--m);font-size:13px}table{width:100%;border-collapse:collapse;font-size:14px;margin-top:12px}th,td{padding:8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}th{background:#f7f9fc}.pill{display:inline-block;padding:3px 7px;border-radius:99px;font-size:11px;font-weight:900}.live{background:#eaf8ef;color:#135c2a}.hist{background:#fff3e8;color:#8a3f00}.deleted{opacity:.5;text-decoration:line-through}.login{max-width:470px;margin:24px auto}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.printOnly{display:none}.mini{font-size:12px;padding:6px 8px;margin-right:4px}@media(max-width:850px){.grid{grid-template-columns:1fr}}@media print{header,.noPrint,#loginBox{display:none!important}.printOnly{display:block}.wrap{max-width:none;margin:0;padding:0}.card{box-shadow:none;border:0;padding:0}.printTable th,.printTable td{border:1px solid #333;padding:7px}.printTable th{background:#eee!important}}
-</style></head><body><header><h1>🔐 Amministrazione Timbrature</h1><div>Croce Gialla Emergenza ODV · Area riservata</div></header><div class="wrap">
-<div id="loginBox" class="card login"><h2>Accesso Amministrazione</h2><label>PIN amministratore</label><input id="adminPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"><button id="loginBtn" class="primary" style="width:100%;margin-top:12px">ACCEDI</button><div id="loginMsg" class="notice">Inserisci il PIN amministratore.</div></div>
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Amministrazione Timbrature - Croce Gialla Emergenza ODV</title>
+<style>
+:root{--y:#ffdf00;--b:#173b72;--bg:#f4f7fb;--bd:#d7deea;--g:#15803d;--r:#b42318;--m:#667085}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#142033}
+header{background:var(--y);padding:18px 22px;border-bottom:4px solid #111}
+.wrap{max-width:1180px;margin:24px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--bd);border-radius:18px;padding:20px;box-shadow:0 8px 25px rgba(20,32,51,.07);margin-bottom:18px}
+.hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+label{display:block;font-weight:800;margin:8px 0 5px}input,select{width:100%;padding:11px;border:2px solid var(--bd);border-radius:10px;font-size:16px;background:#fff}
+button{border:0;border-radius:10px;padding:11px 14px;font-weight:900;cursor:pointer}.primary{background:var(--b);color:#fff}.green{background:var(--g);color:#fff}.danger{background:var(--r);color:#fff}.secondary{background:#e8eef8;color:#17335f}
+.notice{margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff7cc;border:1px solid #eed56a}.ok{background:#eaf8ef;border-color:#9bd5ab;color:#135c2a}.err{background:#fdecec;border-color:#f2aaaa;color:#8c1d18}
+.muted{color:var(--m);font-size:13px}table{width:100%;border-collapse:collapse;font-size:14px;margin-top:12px}th,td{padding:8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}th{background:#f7f9fc}
+.pill{display:inline-block;padding:3px 7px;border-radius:99px;font-size:11px;font-weight:900}.live{background:#eaf8ef;color:#135c2a}.hist{background:#fff3e8;color:#8a3f00}.deleted{opacity:.5;text-decoration:line-through}
+.login{max-width:500px;margin:24px auto}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.printOnly{display:none}.mini{font-size:12px;padding:6px 8px;margin-right:4px}
+@media(max-width:850px){.grid{grid-template-columns:1fr}}
+@media print{header,.noPrint,#loginBox{display:none!important}.printOnly{display:block}.wrap{max-width:none;margin:0;padding:0}.card{box-shadow:none;border:0;padding:0}.printTable th,.printTable td{border:1px solid #333;padding:7px}.printTable th{background:#eee!important}}
+</style>
+</head>
+<body>
+<header><h1>🔐 Amministrazione Timbrature</h1><div>Croce Gialla Emergenza ODV · Area riservata</div></header>
+<div class="wrap">
+<div id="loginBox" class="card login">
+<h2>Accesso Amministrazione</h2>
+<div class="muted">Usa le stesse credenziali del Gestionale Croce Gialla.</div>
+<label>Email</label><input id="email" type="email" value="tesoreria@crocegiallaemergenza.it" autocomplete="username">
+<label>Password</label><input id="password" type="password" autocomplete="current-password">
+<button id="loginBtn" class="primary" style="width:100%;margin-top:12px">ACCEDI</button>
+<div id="loginMsg" class="notice">Accesso riservato all'account Amministrazione.</div>
+</div>
+
 <div id="panel" class="hidden">
-<div class="card noPrint"><div class="toolbar"><div><h2 style="margin:0">Pannello amministrazione</h2><div class="muted">Database centrale · storico dal 01/09/2026 · sessione amministrativa 30 minuti</div></div><button id="logoutBtn" class="secondary">ESCI</button></div></div>
+<div class="card noPrint">
+<div class="toolbar">
+<div><h2 style="margin:0">Pannello amministrazione</h2><div id="who" class="muted">Database centrale · storico dal 01/09/2026</div></div>
+<button id="logoutBtn" class="secondary">ESCI</button>
+</div>
+</div>
 
-<div id="forceChange" class="card noPrint hidden"><h3>⚠ Cambio PIN amministratore obbligatorio</h3><div class="muted">Per sicurezza, sostituisci il PIN iniziale prima di utilizzare il sistema.</div><div class="grid"><div><label>Nuovo PIN amministratore</label><input id="newAdminPinFirst" type="password" inputmode="numeric" maxlength="8"></div><div style="display:flex;align-items:end"><button id="changeAdminFirst" class="primary" style="width:100%">SALVA NUOVO PIN</button></div></div><div id="firstMsg" class="notice">Il PIN deve contenere da 4 a 8 cifre.</div></div>
+<div class="card noPrint">
+<h3>Gestione PIN dipendenti</h3>
+<div class="grid">
+<div><label>Dipendente</label><select id="pinEmp"></select></div>
+<div><label>Nuovo PIN</label><input id="pinVal" type="password" inputmode="numeric" maxlength="8" placeholder="4-8 cifre"></div>
+<div style="display:flex;align-items:end"><button id="savePin" class="primary" style="width:100%">SALVA PIN</button></div>
+</div>
+<div id="pinMsg" class="notice">Il PIN del dipendente viene salvato nel database centrale.</div>
+</div>
 
-<div id="mainAdmin">
-<div class="card noPrint"><h3>Gestione PIN</h3><div class="grid"><div><label>Dipendente</label><select id="pinEmp"></select></div><div><label>Nuovo PIN dipendente</label><input id="pinVal" type="password" inputmode="numeric" maxlength="8"></div><div style="display:flex;align-items:end"><button id="savePin" class="primary" style="width:100%">SALVA PIN DIPENDENTE</button></div></div><hr style="border:0;border-top:1px solid #ddd;margin:18px 0"><div class="grid"><div><label>Nuovo PIN amministratore</label><input id="newAdminPin" type="password" inputmode="numeric" maxlength="8"></div><div style="display:flex;align-items:end"><button id="changeAdmin" class="secondary" style="width:100%">CAMBIA PIN AMMINISTRATORE</button></div></div><div id="pinMsg" class="notice">I PIN vengono salvati sul database centrale come hash crittografico.</div></div>
+<div class="card noPrint">
+<h3>Inserisci timbratura storica</h3>
+<div class="grid">
+<div><label>Dipendente</label><select id="histEmp"></select></div>
+<div><label>Tipo</label><select id="histType"><option>ENTRATA</option><option>USCITA</option></select></div>
+<div><label>Data e ora</label><input id="histDt" type="datetime-local" min="2026-09-01T00:00"></div>
+</div>
+<label>Nota interna / fonte</label><input id="histNote" placeholder="Es. foglio firme, foglio viaggio, turno">
+<button id="addHist" class="green" style="margin-top:12px">AGGIUNGI TIMBRATURA</button>
+<div id="histMsg" class="notice">La nota resta interna e non compare nella stampa mensile.</div>
+</div>
 
-<div class="card noPrint"><h3>Inserisci timbratura storica</h3><div class="grid"><div><label>Dipendente</label><select id="histEmp"></select></div><div><label>Tipo</label><select id="histType"><option>ENTRATA</option><option>USCITA</option></select></div><div><label>Data e ora</label><input id="histDt" type="datetime-local" min="2026-09-01T00:00"></div></div><label>Nota interna / fonte</label><input id="histNote" placeholder="Es. foglio firme, foglio viaggio, turno"><button id="addHist" class="green" style="margin-top:12px">AGGIUNGI TIMBRATURA</button><div id="histMsg" class="notice">La nota resta interna e non compare nella stampa mensile.</div></div>
+<div class="card noPrint">
+<h3>Filtro e stampa mensile</h3>
+<div class="grid">
+<div><label>Dipendente</label><select id="filterEmp"></select></div>
+<div><label>Mese</label><input id="month" type="month" min="2026-09"></div>
+<div style="display:flex;align-items:end;gap:8px"><button id="refreshBtn" class="secondary" style="flex:1">AGGIORNA</button><button id="printBtn" class="primary" style="flex:1">STAMPA</button></div>
+</div>
+<div class="muted">La stampa mostra esclusivamente Data, Entrata e Uscita.</div>
+</div>
 
-<div class="card noPrint"><h3>Filtro e stampa mensile</h3><div class="grid"><div><label>Dipendente</label><select id="filterEmp"></select></div><div><label>Mese</label><input id="month" type="month" min="2026-09"></div><div style="display:flex;align-items:end;gap:8px"><button id="refreshBtn" class="secondary" style="flex:1">AGGIORNA</button><button id="printBtn" class="primary" style="flex:1">STAMPA</button></div></div><div class="muted">La stampa mostra esclusivamente Data, Entrata e Uscita.</div></div>
+<div class="card">
+<div id="printHead" class="printOnly"></div>
+<h3 class="noPrint">Registro timbrature</h3>
+<div id="register"></div>
+</div>
 
-<div class="card"><div id="printHead" class="printOnly"></div><h3 class="noPrint">Registro timbrature</h3><div id="register"></div></div>
+<div class="card noPrint">
+<h3>Tracciabilità modifiche</h3>
+<div class="muted">Le correzioni e le eliminazioni restano registrate nell'audit interno.</div>
+<div id="audit"></div>
+</div>
+</div>
+</div>
 
-<div class="card noPrint"><h3>Tracciabilità modifiche</h3><div class="muted">Le correzioni e le eliminazioni restano registrate nell'audit interno.</div><div id="audit"></div></div>
-</div></div></div><script>
-const API='https://ihottewckpwpwqzpxusl.supabase.co/functions/v1/timbrature-api';let token='',people=[],events=[],auditRows=[],mustChange=false;const $=x=>document.getElementById(x);const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-async function api(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',...(token?{'x-clock-token':token}:{})},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw new Error(j.error||'Errore');return j}
-function msg(id,t,k=''){const e=$(id);e.textContent=t;e.className='notice '+k}function dt(s){return new Date(s).toLocaleString('it-IT')}function localInput(s){const d=new Date(s),z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,16)}
-async function login(){try{const pin=$('adminPin').value.trim();const r=await api({action:'login_admin',pin});token=r.token;sessionStorage.setItem('cge_clock_admin_token',token);mustChange=!!r.cambio_obbligatorio;$('loginBox').classList.add('hidden');$('panel').classList.remove('hidden');$('adminPin').value='';if(mustChange){$('forceChange').classList.remove('hidden');$('mainAdmin').classList.add('hidden')}else{$('forceChange').classList.add('hidden');$('mainAdmin').classList.remove('hidden');await loadData()}}catch(e){msg('loginMsg',e.message,'err')}}
-async function logout(){try{if(token)await api({action:'logout'})}catch{}sessionStorage.removeItem('cge_clock_admin_token');token='';location.reload()}
-async function changeAdmin(first=false){try{const id=first?'newAdminPinFirst':'newAdminPin',pin=$(id).value.trim();await api({action:'admin_set_admin_pin',pin});$(id).value='';if(first){mustChange=false;$('forceChange').classList.add('hidden');$('mainAdmin').classList.remove('hidden');msg('firstMsg','PIN amministratore aggiornato.','ok');await loadData()}else msg('pinMsg','PIN amministratore aggiornato.','ok')}catch(e){msg(first?'firstMsg':'pinMsg',e.message,'err')}}
-async function loadData(){try{const r=await api({action:'admin_data',badge:$('filterEmp').value||null,month:$('month').value||null});people=r.people||[];events=r.events||[];auditRows=r.audit||[];fillPeople();render()}catch(e){if(/Sessione/.test(e.message))logout();else alert(e.message)}}
-function fillPeople(){for(const id of ['pinEmp','histEmp','filterEmp']){const sel=$(id),cur=sel.value;sel.innerHTML=(id==='filterEmp'?'<option value="">Tutti</option>':'')+people.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+'</option>').join('');if([...sel.options].some(o=>o.value===cur))sel.value=cur}}
-async function savePin(){try{await api({action:'admin_set_pin',badge:$('pinEmp').value,pin:$('pinVal').value.trim()});$('pinVal').value='';msg('pinMsg','PIN dipendente aggiornato.','ok')}catch(e){msg('pinMsg',e.message,'err')}}
-async function addHist(){try{const v=$('histDt').value;if(!v)throw new Error('Inserisci data e ora.');await api({action:'admin_add_historical',badge:$('histEmp').value,tipo:$('histType').value,evento_at:new Date(v).toISOString(),nota_interna:$('histNote').value.trim()});$('histNote').value='';msg('histMsg','Timbratura storica inserita.','ok');await loadData()}catch(e){msg('histMsg',e.message,'err')}}
-async function editEvent(id){const e=events.find(x=>x.id===id);if(!e)return;const tipo=prompt('Tipo (ENTRATA o USCITA):',e.tipo);if(!tipo)return;const orario=prompt('Data e ora (AAAA-MM-GGTHH:MM):',localInput(e.evento_at));if(!orario)return;const nota=prompt('Nota interna:',e.nota_interna||'');try{await api({action:'admin_update_event',id,tipo,evento_at:new Date(orario).toISOString(),nota_interna:nota});await loadData()}catch(err){alert(err.message)}}
-async function deleteEvent(id){if(!confirm('Eliminare questa timbratura? La cancellazione resterà registrata nello storico audit.'))return;try{await api({action:'admin_delete_event',id});await loadData()}catch(e){alert(e.message)}}
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+<script>
+const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co';
+const KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
+const ADMIN_API=SUPABASE_URL+'/functions/v1/timbrature-admin-api';
+const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+let people=[],events=[],auditRows=[]; const $=x=>document.getElementById(x);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function msg(id,t,k=''){const e=$(id);e.textContent=t;e.className='notice '+k}
+function dt(s){return new Date(s).toLocaleString('it-IT')}
+function localInput(s){const d=new Date(s),z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,16)}
+async function token(){const {data}=await sb.auth.getSession();return data.session?.access_token||''}
+async function api(body){
+ const t=await token(); if(!t) throw new Error('Sessione non valida. Accedi di nuovo.');
+ const r=await fetch(ADMIN_API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify(body)});
+ const j=await r.json(); if(!r.ok) throw new Error(j.error||'Errore'); return j
+}
+async function login(){
+ try{
+  const email=$('email').value.trim().toLowerCase(),password=$('password').value;
+  const {data,error}=await sb.auth.signInWithPassword({email,password}); if(error) throw error;
+  const a=await sb.from('accessi_app').select('nome,ruolo,attivo').single();
+  if(a.error||!a.data?.attivo||a.data.ruolo!=='AMMINISTRATORE'){await sb.auth.signOut();throw new Error('Questo account non è abilitato come Amministratore.')}
+  $('loginBox').classList.add('hidden');$('panel').classList.remove('hidden');$('password').value='';$('who').textContent=(a.data.nome||email)+' · Database centrale';await loadData();
+ }catch(e){msg('loginMsg',e.message||'Accesso non riuscito','err')}
+}
+async function logout(){await sb.auth.signOut();location.reload()}
+async function loadData(){
+ try{
+  const r=await api({action:'data',badge:$('filterEmp').value||null,month:$('month').value||null});
+  people=r.people||[];events=r.events||[];auditRows=r.audit||[];fillPeople();render();
+ }catch(e){msg('loginMsg',e.message,'err'); if(/Sessione|Accesso/.test(e.message)){await sb.auth.signOut();$('panel').classList.add('hidden');$('loginBox').classList.remove('hidden')}}
+}
+function fillPeople(){
+ for(const id of ['pinEmp','histEmp','filterEmp']){
+  const sel=$(id),cur=sel.value;
+  sel.innerHTML=(id==='filterEmp'?'<option value="">Tutti</option>':'')+people.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+'</option>').join('');
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+ }
+}
+async function savePin(){
+ try{await api({action:'set_pin',badge:$('pinEmp').value,pin:$('pinVal').value.trim()});$('pinVal').value='';msg('pinMsg','PIN dipendente aggiornato.','ok')}
+ catch(e){msg('pinMsg',e.message,'err')}
+}
+async function addHist(){
+ try{
+  const v=$('histDt').value;if(!v)throw new Error('Inserisci data e ora.');
+  await api({action:'historical',badge:$('histEmp').value,tipo:$('histType').value,evento_at:new Date(v).toISOString(),nota_interna:$('histNote').value.trim()});
+  $('histNote').value='';msg('histMsg','Timbratura storica inserita.','ok');await loadData();
+ }catch(e){msg('histMsg',e.message,'err')}
+}
+async function editEvent(id){
+ const e=events.find(x=>x.id===id);if(!e)return;
+ const tipo=prompt('Tipo (ENTRATA o USCITA):',e.tipo);if(!tipo)return;
+ const orario=prompt('Data e ora (AAAA-MM-GGTHH:MM):',localInput(e.evento_at));if(!orario)return;
+ const nota=prompt('Nota interna:',e.nota_interna||'');
+ try{await api({action:'update',id,tipo,evento_at:new Date(orario).toISOString(),nota_interna:nota});await loadData()}catch(err){alert(err.message)}
+}
+async function deleteEvent(id){
+ if(!confirm('Eliminare questa timbratura? La cancellazione resterà registrata nello storico audit.'))return;
+ try{await api({action:'delete',id});await loadData()}catch(e){alert(e.message)}
+}
 function person(b){return people.find(p=>p.badge===b)?.nome_completo||b}
-function printRows(){const alive=events.filter(e=>!e.eliminato_at),by={};for(const e of alive){const d=new Date(e.evento_at).toLocaleDateString('sv-SE');by[d]??={i:[],o:[]};(e.tipo==='ENTRATA'?by[d].i:by[d].o).push(e)}let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th></tr></thead><tbody>';for(const d of Object.keys(by).sort()){const v=by[d],n=Math.max(v.i.length,v.o.length,1);for(let j=0;j<n;j++)h+='<tr><td>'+new Date(d+'T12:00').toLocaleDateString('it-IT')+'</td><td>'+(v.i[j]?new Date(v.i[j].evento_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'')+'</td><td>'+(v.o[j]?new Date(v.o[j].evento_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'')+'</td></tr>'}return h+'</tbody></table>'}
-function render(){let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}h+='</tbody></table>';$('register').innerHTML=events.length?h:'<div class="muted">Nessuna timbratura.</div>';const a=auditRows.slice(0,100);$('audit').innerHTML=a.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>ID evento</th></tr></thead><tbody>'+a.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc(x.evento_id||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>';const fe=$('filterEmp').value;$('printHead').innerHTML='<h2 style="text-align:center;margin-bottom:4px">Croce Gialla Emergenza ODV</h2><h3 style="text-align:center;margin:0">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</h3><p style="text-align:center">'+esc($('month').value||'')+'</p>';$('register').dataset.print=printRows()}
-$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('changeAdminFirst').onclick=()=>changeAdmin(true);$('changeAdmin').onclick=()=>changeAdmin(false);$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=loadData;$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('printBtn').onclick=()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows();window.print();$('register').innerHTML=old};$('adminPin').addEventListener('keydown',e=>{if(e.key==='Enter')login()});const d=new Date();$('month').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-</script></body></html>
+function printRows(){
+ const alive=events.filter(e=>!e.eliminato_at),by={};
+ for(const e of alive){const d=new Date(e.evento_at).toLocaleDateString('sv-SE');by[d]??={i:[],o:[]};(e.tipo==='ENTRATA'?by[d].i:by[d].o).push(e)}
+ let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th></tr></thead><tbody>';
+ for(const d of Object.keys(by).sort()){const v=by[d],n=Math.max(v.i.length,v.o.length,1);for(let j=0;j<n;j++)h+='<tr><td>'+new Date(d+'T12:00').toLocaleDateString('it-IT')+'</td><td>'+(v.i[j]?new Date(v.i[j].evento_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'')+'</td><td>'+(v.o[j]?new Date(v.o[j].evento_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'')+'</td></tr>'}
+ return h+'</tbody></table>';
+}
+function render(){
+ let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';
+ for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}
+ h+='</tbody></table>';$('register').innerHTML=events.length?h:'<div class="muted">Nessuna timbratura.</div>';
+ $('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>ID evento</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc(x.evento_id||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>';
+ const fe=$('filterEmp').value;$('printHead').innerHTML='<h2 style="text-align:center;margin-bottom:4px">Croce Gialla Emergenza ODV</h2><h3 style="text-align:center;margin:0">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</h3><p style="text-align:center">'+esc($('month').value||'')+'</p>';
+}
+$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=loadData;$('filterEmp').onchange=loadData;$('month').onchange=loadData;
+$('printBtn').onclick=()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows();window.print();$('register').innerHTML=old};
+$('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+const d=new Date();$('month').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+(async()=>{const {data}=await sb.auth.getSession();if(data.session){const a=await sb.from('accessi_app').select('nome,ruolo,attivo').single();if(!a.error&&a.data?.attivo&&a.data.ruolo==='AMMINISTRATORE'){$('loginBox').classList.add('hidden');$('panel').classList.remove('hidden');$('who').textContent=(a.data.nome||'Amministratore')+' · Database centrale';await loadData()}}})();
+</script>
+</body></html>
