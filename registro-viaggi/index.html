@@ -21,7 +21,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 .panel{padding:18px;margin-bottom:18px}.panel h2{font-size:17px;margin:0 0 16px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .field{display:flex;flex-direction:column;gap:6px}.field label{font-size:12px;font-weight:800;color:#526077}.field input,.field select,.field textarea{width:100%;padding:10px 11px;border:1px solid #ccd5e2;border-radius:9px;background:white;font-size:14px}.combo{position:relative}.combo input{padding-right:36px}.combo button{position:absolute;right:1px;top:1px;bottom:1px;width:34px;border:0;border-left:1px solid #d8dee8;background:#f7f9fc;border-radius:0 8px 8px 0;cursor:pointer;font-size:14px}.combo-list{display:none;position:absolute;z-index:50;left:0;right:0;top:100%;max-height:220px;overflow:auto;background:#fff;border:1px solid #ccd5e2;border-radius:0 0 9px 9px;box-shadow:0 10px 20px rgba(0,0,0,.12)}.combo-list.open{display:block}.combo-list div{padding:9px 11px;cursor:pointer;font-size:14px}.combo-list div:hover{background:#edf4ff}.field textarea{min-height:82px;resize:vertical}.span2{grid-column:span 2}.span4{grid-column:span 4}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.btn{border:0;border-radius:9px;padding:11px 15px;font-weight:800;cursor:pointer}.primary{background:var(--green);color:white}.secondary{background:var(--blue);color:white}.warning{background:var(--orange);color:white}.danger{background:var(--red);color:white}.light{background:#edf2f8;color:#22304a}
-.filters{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:10px;margin-bottom:14px}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:1040px;background:#fff}th,td{padding:10px 9px;border-bottom:1px solid #e6ebf2;text-align:left;font-size:12px}th{background:#edf2f8;color:#43516a;position:sticky;top:0}.mini{padding:6px 8px;border:0;border-radius:7px;color:white;font-size:11px;font-weight:800;cursor:pointer}
+.filters{display:grid;grid-template-columns:2fr repeat(5,1fr);gap:10px;margin-bottom:14px}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:1040px;background:#fff}th,td{padding:10px 9px;border-bottom:1px solid #e6ebf2;text-align:left;font-size:12px}th{background:#edf2f8;color:#43516a;position:sticky;top:0}.mini{padding:6px 8px;border:0;border-radius:7px;color:white;font-size:11px;font-weight:800;cursor:pointer}
 .empty{padding:30px;text-align:center;color:var(--muted)}.bars{display:flex;flex-direction:column;gap:10px}.barrow{display:grid;grid-template-columns:130px 1fr 70px;align-items:center;gap:10px;font-size:13px}.bar{height:13px;background:#edf1f6;border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);border-radius:999px}
 .vehiclegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.vehicle{border:1px solid var(--line);border-radius:13px;padding:16px;background:white}.vehicle strong{font-size:18px}.vehicle span{display:block;color:var(--muted);margin-top:7px}
 .notice{background:#fff8da;border:1px solid #ecd982;border-radius:11px;padding:12px 14px;font-size:13px;margin-bottom:16px}.demo{color:#9a6600;font-weight:800}.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -53,10 +53,11 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn n4" data-view="statistiche">▥ Statistiche</button>
   <button class="navbtn n5" data-view="mezzi">▣ Mezzi</button>
   <button class="navbtn n6" data-view="equipaggi">♟ Equipaggi</button>
-  <button class="navbtn n7" data-view="impostazioni">⚙ Impostazioni</button>
+  <button class="navbtn n7" data-view="controlli">✓ Controlli</button>
+  <button class="navbtn" style="background:#53657d" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione Stabile 2.7</div></div></div>
+  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione Stabile 2.8</div></div></div>
 
   <section id="dashboard" class="view">
     <div class="notice"><b>REGISTRO OPERATIVO:</b> i dati sono salvati nel database condiviso e protetti da accesso autenticato.</div>
@@ -122,6 +123,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
         <input id="fDal" type="date" onchange="renderArchivio()">
         <input id="fAl" type="date" onchange="renderArchivio()">
         <select id="fMezzo" onchange="renderArchivio()"></select>
+        <select id="fStato" onchange="renderArchivio()"><option value="">Tutti gli stati</option><option value="APERTO">Solo aperti</option><option value="CHIUSO">Solo chiusi</option></select>
         <button class="btn light" onclick="clearFilters()">Azzera filtri</button>
       </div>
       <div class="tablewrap"><table><thead><tr><th>N°</th><th>Stato</th><th>N° Foglio Marcia</th><th>Tipo servizio</th><th>Richiedente servizio</th><th>N° scheda 118</th><th>Nome paziente</th><th>Cognome paziente</th><th>Mezzo</th><th>Targa</th><th>Km iniziali</th><th>Km finali</th><th>Km percorsi</th><th>Data</th><th>Ora partenza</th><th>Luogo partenza</th><th>Ora destinazione</th><th>Luogo carico</th><th>Tipo luogo carico</th><th>Specifica altro</th><th>Luogo fine</th><th>Ora fine</th><th>Autista</th><th>Capo equipaggio</th><th>Soccorritore 1</th><th>Soccorritore 2</th><th>Metodo pagamento</th><th>N° ricevuta</th><th>Importo</th><th>Ospedale / Clinica</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
@@ -169,6 +171,14 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
     <div class="notice">Prossimo passaggio consigliato: sincronizzare l'anagrafica volontari con il database, mantenendo il Registro Viaggi separato dal gestionale operativo.</div></div>
   </section>
 
+  <section id="controlli" class="view">
+    <div class="panel">
+      <div class="section-title"><div><h2 style="margin-bottom:5px">Controlli automatici</h2><div id="controlliSummary" style="font-size:13px;color:#68758a"></div></div><input id="meseControlli" type="month" style="padding:10px;border:1px solid #ccd5e2;border-radius:9px"></div>
+      <div class="notice" style="margin-top:14px"><b>Riposo dipendenti:</b> il controllo delle 11 ore è un avviso gestionale basato sugli orari registrati nei fogli viaggio. Non blocca il salvataggio.</div>
+    </div>
+    <div id="controlliBody"></div>
+  </section>
+
   <section id="impostazioni" class="view">
     <div class="panel">
       <div class="section-title"><div><h2 style="margin-bottom:4px">Amministrazione Registro</h2><div style="color:var(--muted);font-size:13px">Backup, recupero e tracciabilità delle modifiche</div></div><button class="btn secondary" onclick="downloadBackup()">Scarica backup JSON</button></div>
@@ -183,6 +193,6 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="app.js?v=2.7"></script>
+<script src="app.js?v=2.8"></script>
 </body>
 </html>
