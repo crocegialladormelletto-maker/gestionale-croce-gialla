@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.75</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.76</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1574,6 +1574,7 @@ IBAN: IT84M0200845222000107312436
 SWIFT / BIC: UNCRITM1CD8
 Causale: numero preventivo</textarea>
   </div>
+  <div class="notice" style="margin-top:10px"><b>Il preventivo deve essere confermato via e-mail a trasporti@crocegiallaemergenza.it</b></div>
   <div class="toolbar">
    <button id="rcSaveCustomerQuote" type="button" class="btn secondary" data-admin-only="true">💾 Salva preventivo cliente</button>
    <button id="rcPrintQuote" type="button" class="btn yellow">🖨 Stampa preventivo cliente</button>
@@ -2355,7 +2356,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.75';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.76';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -6325,9 +6326,10 @@ async function routeCalcPrintQuote(){
  '<div><div class="label">Rientro</div><div class="value">'+(round?'Compreso':'Non compreso')+'</div></div></div>'+
  (extras.length?'<div style="margin-top:14px"><div class="label">Dotazioni richieste</div><div class="value">'+esc(extras.join(' · '))+'</div></div>':'')+
  '</div>'+
- '<div class="box"><div class="label">Metodo di pagamento</div><div class="value notes">'+esc(paymentText)+'</div></div>'+
+ 
  '<div class="total"><div class="label">Importo preventivato</div><div class="amount">'+euro(amount)+'</div><div class="muted">Importo complessivo previsto per il servizio sopra indicato.</div></div>'+
- '<div class="advance"><div class="label">Anticipo richiesto alla conferma</div><div class="value" style="font-size:22px">'+esc(advanceText)+'</div><div class="muted">L’anticipo viene imputato al saldo finale del servizio.</div><div style="margin-top:8px;font-weight:900"><strong>L’anticipo non verrà restituito in caso di disdetta nelle 36 ore precedenti il servizio.</strong></div></div>'+
+ '<div class="advance"><div class="label">Anticipo richiesto alla conferma</div><div class="value" style="font-size:22px">'+esc(advanceText)+'</div><div class="muted">L’anticipo viene imputato al saldo finale del servizio.</div><div style="margin-top:8px;font-weight:900"><strong>L’anticipo non verrà restituito in caso di disdetta nelle 36 ore precedenti il servizio.</strong></div></div>'+'<div class="box" style="margin-top:14px"><div class="label">Conferma del preventivo</div><div class="value" style="font-weight:900">Il presente preventivo deve essere confermato via e-mail a trasporti@crocegiallaemergenza.it</div></div>'+
+ '<div class="box"><div class="label">Metodo di pagamento</div><div class="value notes">'+esc(paymentText)+'</div></div>'+
  '<div class="foot">Il presente preventivo è formulato sulla base del percorso e delle condizioni indicate. Eventuali variazioni richieste dal cliente, soste aggiuntive, variazioni del percorso o costi straordinari non prevedibili potranno comportare un aggiornamento dell’importo. Il servizio si intende confermato secondo le modalità concordate con Croce Gialla Emergenza ODV.</div>'+
  '</div><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>';
 
@@ -7431,7 +7433,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.75-20260927-advance-cancellation-clause';
+const CGE_APP_BUILD='13.76-20260927-quote-confirmation-payment-bottom';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
