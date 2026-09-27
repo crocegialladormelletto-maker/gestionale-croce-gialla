@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.74</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.75</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1530,6 +1530,7 @@
     <small class="muted">ANTICIPO CONSIGLIATO</small>
     <div style="font-size:28px;font-weight:900" id="rcAdvanceSuggested">€ 0,00</div>
     <div class="muted" id="rcAdvanceBreakdown">Copre i costi vivi e una quota dei costi operativi.</div>
+    <div style="margin-top:8px;font-weight:900"><strong>L’anticipo non verrà restituito in caso di disdetta nelle 36 ore precedenti il servizio.</strong></div>
    </div>
    <span class="pill b">ACCONTO</span>
   </div>
@@ -2354,7 +2355,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.74';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.75';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -6326,7 +6327,7 @@ async function routeCalcPrintQuote(){
  '</div>'+
  '<div class="box"><div class="label">Metodo di pagamento</div><div class="value notes">'+esc(paymentText)+'</div></div>'+
  '<div class="total"><div class="label">Importo preventivato</div><div class="amount">'+euro(amount)+'</div><div class="muted">Importo complessivo previsto per il servizio sopra indicato.</div></div>'+
- '<div class="advance"><div class="label">Anticipo richiesto alla conferma</div><div class="value" style="font-size:22px">'+esc(advanceText)+'</div><div class="muted">L’anticipo viene imputato al saldo finale del servizio.</div></div>'+
+ '<div class="advance"><div class="label">Anticipo richiesto alla conferma</div><div class="value" style="font-size:22px">'+esc(advanceText)+'</div><div class="muted">L’anticipo viene imputato al saldo finale del servizio.</div><div style="margin-top:8px;font-weight:900"><strong>L’anticipo non verrà restituito in caso di disdetta nelle 36 ore precedenti il servizio.</strong></div></div>'+
  '<div class="foot">Il presente preventivo è formulato sulla base del percorso e delle condizioni indicate. Eventuali variazioni richieste dal cliente, soste aggiuntive, variazioni del percorso o costi straordinari non prevedibili potranno comportare un aggiornamento dell’importo. Il servizio si intende confermato secondo le modalità concordate con Croce Gialla Emergenza ODV.</div>'+
  '</div><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>';
 
@@ -7430,7 +7431,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.74-20260927-progressive-quote-payment';
+const CGE_APP_BUILD='13.75-20260927-advance-cancellation-clause';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
