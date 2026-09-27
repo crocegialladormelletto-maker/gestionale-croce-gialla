@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.66</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.67</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -2296,7 +2296,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.66';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.67';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5695,7 +5695,10 @@ function routeCalcForeignCosts(coords,route){
  const round=!!$('rcReturn')?.checked;
  const labels=(coords||[]).map(x=>String(x.label||'').toUpperCase()).join(' | ');
  const steps=(route?.legs||[]).flatMap(l=>l.steps||[]);
- const road=steps.map(st=>[st.name,st.ref,st.destinations,st.exits].filter(Boolean).join(' ')).join(' | ').toUpperCase();
+ const road=steps.map(st=>[
+   st.name,st.ref,st.destinations,st.exits,
+   ...(Array.isArray(st.intersections)?st.intersections.flatMap(i=>[i?.ref,i?.bearings?.join(' ')]):[])
+ ].filter(Boolean).join(' ')).join(' | ').toUpperCase();
 
  let vignette=0, vignetteParts=[];
  if(/SVIZZERA|SUISSE|SCHWEIZ|SWITZERLAND/.test(labels)){
@@ -5704,14 +5707,24 @@ function routeCalcForeignCosts(coords,route){
  const typedDest=String($('rcDest')?.value||'').toUpperCase();
  const inAustria=/AUSTRIA|ÖSTERREICH/.test(labels)||/INNSBRUCK|TIROL|AUSTRIA/.test(typedDest);
  if(inAustria){
-   const usesA12=/(^|[^A-Z0-9])A\s*12([^0-9]|$)|INNTAL/.test(road);
-   const usesA13=/(^|[^A-Z0-9])A\s*13([^0-9]|$)|BRENNER|BRENNERO/.test(road);
-   const usesOtherVignetteRoad=/(^|[^A-Z0-9])A\s*(1|2|3|4|5|6|7|8|9|14|21|22|23|25|26)([^0-9]|$)|S\s*(1|2|3|4|5|6|10|16|31|33|35|36|37)/.test(road);
-   if(usesA12||usesOtherVignetteRoad||(!usesA13&&!/INNSBRUCK/.test(typedDest))){
+   const roadCompact=road.replace(/\s+/g,'');
+   const usesA12=/A12/.test(roadCompact)||/INNTAL/.test(road);
+   const usesA13=/A13/.test(roadCompact)||/BRENNER|BRENNERO/.test(road);
+   const usesOtherVignetteRoad=/A(1|2|3|4|5|6|7|8|9|14|21|22|23|25|26)(?!\d)/.test(roadCompact)||
+     /S(1|2|3|4|5|6|10|16|31|33|35|36|37)(?!\d)/.test(roadCompact);
+
+   // Fallback Innsbruck: OSRM talvolta non restituisce il ref A12 nei singoli step.
+   // Se la destinazione è Innsbruck e il percorso prosegue oltre la sola A13,
+   // considera la vignetta necessaria quando il percorso non risulta limitato al solo corridoio A13.
+   const innsbruck=/INNSBRUCK/.test(typedDest)||/INNSBRUCK/.test(labels);
+   const hasBeyondA13Hints=/A12|INNTAL|HALL|WATTENS|TELFS|ZIRL|KUFSTEIN|SEEFELD/.test(roadCompact+' '+labels+' '+typedDest);
+   const fallbackA12=innsbruck&&hasBeyondA13Hints;
+
+   if(usesA12||usesOtherVignetteRoad||fallbackA12||(!usesA13&&!innsbruck)){
      vignette+=9.60;
-     vignetteParts.push('Austria: vignetta 1 giorno € 9,60');
-   }else if(usesA13&&/INNSBRUCK/.test(typedDest)){
-     vignetteParts.push('Austria: A13 Brennero senza vignetta; vignetta non aggiunta salvo ingresso su A12');
+     vignetteParts.push('Austria: vignetta 1 giorno € 9,60'+((usesA12||fallbackA12)?' · A12/Inntal rilevata':''));
+   }else if(usesA13&&innsbruck){
+     vignetteParts.push('Austria: rilevata A13 Brennero; A12/Inntal non rilevata automaticamente, vignetta non aggiunta');
    }else{
      vignette+=9.60;
      vignetteParts.push('Austria: vignetta 1 giorno € 9,60');
@@ -6971,7 +6984,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.66-20260927-innsbruck-vignette-route';
+const CGE_APP_BUILD='13.67-20260927-a12-inntal-fallback';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
