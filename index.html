@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.73</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.74</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1561,7 +1561,18 @@
    <div class="field"><label>E-mail cliente</label><input id="rcQuoteEmail" type="email" placeholder="cliente@email.it"></div>
    <div class="field"><label>Telefono</label><input id="rcQuotePhone" placeholder="Facoltativo"></div>
   </div>
-  <div class="field" style="margin-top:10px"><label>Note da riportare nel preventivo</label><textarea id="rcQuoteNotes" rows="3" placeholder="Es. attesa prevista, modalità di pagamento, condizioni particolari..."></textarea></div>
+  <div class="grid2" style="margin-top:10px">
+   <div class="field"><label>Numero preventivo</label><input id="rcQuoteNumber" value="Da assegnare al salvataggio" readonly></div>
+   <div class="field"><label>Stato</label><input id="rcQuoteState" value="BOZZA" readonly></div>
+  </div>
+  <div class="field" style="margin-top:10px">
+   <label>Metodo di pagamento</label>
+   <textarea id="rcQuoteNotes" rows="8" readonly>Intestato a Croce Gialla Emergenza ODV
+Banca: Unicredit
+IBAN: IT84M0200845222000107312436
+SWIFT / BIC: UNCRITM1CD8
+Causale: numero preventivo</textarea>
+  </div>
   <div class="toolbar">
    <button id="rcSaveCustomerQuote" type="button" class="btn secondary" data-admin-only="true">💾 Salva preventivo cliente</button>
    <button id="rcPrintQuote" type="button" class="btn yellow">🖨 Stampa preventivo cliente</button>
@@ -2343,7 +2354,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.73';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.52':'Versione 13.74';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -6025,7 +6036,10 @@ function routeCalcReset(){
  if($('rcVignetteSource'))$('rcVignetteSource').textContent='Nessuna vignetta rilevata';
  if($('rcTunnelSource'))$('rcTunnelSource').textContent='Nessun traforo rilevato';
  if($('rcSavedQuoteInfo'))$('rcSavedQuoteInfo').textContent='Nessun preventivo salvato caricato.';
- ['rcQuoteCustomer','rcQuoteEmail','rcQuotePhone','rcQuoteNotes'].forEach(id=>{if($(id))$(id).value=''});
+ ['rcQuoteCustomer','rcQuoteEmail','rcQuotePhone'].forEach(id=>{if($(id))$(id).value=''});
+ rcCurrentCustomerQuoteId=null;rcCurrentCustomerQuoteNumber=null;
+ if($('rcQuoteState'))$('rcQuoteState').value='BOZZA';
+ routeCalcRefreshPaymentBox();
  if($('rcTollSource')){$('rcTollSource').textContent='Da calcolare';$('rcTollSource').style.color=''}
  if($('rcStart'))$('rcStart').value='Via I° Maggio 1, 28040 Dormelletto NO, Italia';
  if($('rcReturn'))$('rcReturn').checked=true;
@@ -6104,6 +6118,27 @@ async function routeCalcSaveQuote(){
 }
 
 
+
+let rcCurrentCustomerQuoteId=null;
+let rcCurrentCustomerQuoteNumber=null;
+
+function routeCalcFormatQuoteNumber(num,dateValue){
+ const n=Number(num||0);
+ const y=String(dateValue||today()).slice(0,4);
+ return n>0?'PREV-'+y+'-'+String(n).padStart(5,'0'):'Da assegnare al salvataggio';
+}
+function routeCalcPaymentText(num,dateValue){
+ const qn=routeCalcFormatQuoteNumber(num,dateValue);
+ return 'Intestato a Croce Gialla Emergenza ODV\n'+
+  'Banca: Unicredit\n'+
+  'IBAN: IT84M0200845222000107312436\n'+
+  'SWIFT / BIC: UNCRITM1CD8\n'+
+  'Causale: '+(num?'Preventivo '+qn:'numero preventivo');
+}
+function routeCalcRefreshPaymentBox(){
+ if($('rcQuoteNumber'))$('rcQuoteNumber').value=routeCalcFormatQuoteNumber(rcCurrentCustomerQuoteNumber);
+ if($('rcQuoteNotes'))$('rcQuoteNotes').value=routeCalcPaymentText(rcCurrentCustomerQuoteNumber);
+}
 function routeCalcCustomerQuoteData(){
  const amount=Number($('rcSuggested')?.dataset.value||0);
  const advanceText=$('rcAdvanceSuggested')?.textContent||'€ 0,00';
@@ -6126,7 +6161,7 @@ function routeCalcCustomerQuoteData(){
    km_totali:routeCalcNum('rcKm'),
    importo_totale:amount,
    anticipo_richiesto:advance,
-   note:$('rcQuoteNotes')?.value.trim()||null,
+   note:routeCalcPaymentText(rcCurrentCustomerQuoteNumber),
    stato:'BOZZA',
    attivo:true
  };
@@ -6136,10 +6171,27 @@ async function routeCalcSaveCustomerQuote(){
  const row=routeCalcCustomerQuoteData();
  if(!row.cliente)return msg('rcQuoteArchiveMsg','Inserisci il cliente / destinatario.','warn');
  if(!row.destinazione||!row.km_totali||!row.importo_totale)return msg('rcQuoteArchiveMsg','Calcola prima percorso e importo del preventivo.','warn');
- const r=await sb.from('preventivi_clienti').insert(row).select('id,numero_progressivo').single();
+
+ let r;
+ if(rcCurrentCustomerQuoteId){
+   r=await sb.from('preventivi_clienti')
+    .update({...row,note:routeCalcPaymentText(rcCurrentCustomerQuoteNumber),updated_at:new Date().toISOString()})
+    .eq('id',rcCurrentCustomerQuoteId)
+    .select('id,numero_progressivo,data_preventivo,stato').single();
+ }else{
+   r=await sb.from('preventivi_clienti').insert(row).select('id,numero_progressivo,data_preventivo,stato').single();
+ }
  if(r.error)return msg('rcQuoteArchiveMsg','Impossibile salvare il preventivo: '+r.error.message,'err');
- msg('rcQuoteArchiveMsg','Preventivo n° '+r.data.numero_progressivo+' salvato correttamente.','ok');
+
+ rcCurrentCustomerQuoteId=r.data.id;
+ rcCurrentCustomerQuoteNumber=r.data.numero_progressivo;
+ if($('rcQuoteNumber'))$('rcQuoteNumber').value=routeCalcFormatQuoteNumber(r.data.numero_progressivo,r.data.data_preventivo);
+ if($('rcQuoteState'))$('rcQuoteState').value=r.data.stato||'BOZZA';
+ if($('rcQuoteNotes'))$('rcQuoteNotes').value=routeCalcPaymentText(r.data.numero_progressivo,r.data.data_preventivo);
+
+ msg('rcQuoteArchiveMsg','Preventivo '+routeCalcFormatQuoteNumber(r.data.numero_progressivo,r.data.data_preventivo)+' salvato correttamente.','ok');
  await routeCalcLoadQuoteArchive();
+ return r.data;
 }
 async function routeCalcLoadQuoteArchive(){
  if(!$('rcQuoteArchiveBody'))return;
@@ -6153,7 +6205,7 @@ async function routeCalcLoadQuoteArchive(){
   const st=String(x.stato||'BOZZA');
   const opts=['BOZZA','INVIATO','ACCETTATO','RIFIUTATO'].map(v=>'<option '+(v===st?'selected':'')+'>'+v+'</option>').join('');
   return '<tr>'+
-   '<td><b>'+esc(x.numero_progressivo)+'</b></td>'+
+   '<td><b>'+esc(routeCalcFormatQuoteNumber(x.numero_progressivo,x.data_preventivo))+'</b></td>'+
    '<td>'+esc(x.data_preventivo||'')+'</td>'+
    '<td>'+esc(x.cliente||'—')+(x.email?'<br><span class="muted">'+esc(x.email)+'</span>':'')+'</td>'+
    '<td>'+esc(x.percorso||'—')+'<br><span class="muted">'+Number(x.km_totali||0).toFixed(1)+' km</span></td>'+
@@ -6173,6 +6225,7 @@ async function routeCalcUpdateCustomerQuoteStatus(id,stato){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
  const r=await sb.from('preventivi_clienti').update({stato,updated_at:new Date().toISOString()}).eq('id',id).select('id');
  if(r.error)return msg('rcQuoteArchiveMsg','Stato non aggiornato: '+r.error.message,'err');
+ if(id===rcCurrentCustomerQuoteId&&$('rcQuoteState'))$('rcQuoteState').value=stato;
  msg('rcQuoteArchiveMsg','Stato preventivo aggiornato.','ok');
 }
 async function routeCalcDeleteCustomerQuote(id,num){
@@ -6187,10 +6240,14 @@ async function routeCalcPrintArchivedQuote(id){
  const r=await sb.from('preventivi_clienti').select('*').eq('id',id).single();
  if(r.error)return msg('rcQuoteArchiveMsg','Preventivo non disponibile: '+r.error.message,'err');
  const x=r.data;
+ rcCurrentCustomerQuoteId=x.id;
+ rcCurrentCustomerQuoteNumber=x.numero_progressivo;
+ if($('rcQuoteNumber'))$('rcQuoteNumber').value=routeCalcFormatQuoteNumber(x.numero_progressivo,x.data_preventivo);
+ if($('rcQuoteState'))$('rcQuoteState').value=x.stato||'BOZZA';
  $('rcQuoteCustomer').value=x.cliente||'';
  $('rcQuoteEmail').value=x.email||'';
  $('rcQuotePhone').value=x.telefono||'';
- $('rcQuoteNotes').value=x.note||'';
+ $('rcQuoteNotes').value=routeCalcPaymentText(x.numero_progressivo,x.data_preventivo);
  $('rcStart').value=x.origine||'';
  $('rcLoad').value=x.via||'';
  $('rcDest').value=x.destinazione||'';
@@ -6207,14 +6264,21 @@ async function routeCalcPrintArchivedQuote(id){
 function routeCalcQuoteDate(){
  return new Date().toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
-function routeCalcPrintQuote(){
+async function routeCalcPrintQuote(){
  const amount=Number($('rcSuggested')?.dataset.value||0);
  const advanceText=$('rcAdvanceSuggested')?.textContent||euro(0);
  const km=routeCalcNum('rcKm');
  const customer=$('rcQuoteCustomer')?.value.trim()||'Cliente';
  const email=$('rcQuoteEmail')?.value.trim()||'';
  const phone=$('rcQuotePhone')?.value.trim()||'';
- const notes=$('rcQuoteNotes')?.value.trim()||'';
+ let saved=null;
+ if(!rcCurrentCustomerQuoteId||!rcCurrentCustomerQuoteNumber){
+   saved=await routeCalcSaveCustomerQuote();
+   if(!saved)return;
+ }
+ const quoteNumber=routeCalcFormatQuoteNumber(rcCurrentCustomerQuoteNumber,saved?.data_preventivo);
+ const paymentText=routeCalcPaymentText(rcCurrentCustomerQuoteNumber,saved?.data_preventivo);
+ const notes=paymentText;
  const vehicle=$('rcVehicleType')?.value==='TRASPORTO SEMPLICE'?'Trasporto semplice':'Ambulanza';
  const start=$('rcStart')?.value.trim()||'—';
  const load=$('rcLoad')?.value.trim()||'';
@@ -6241,7 +6305,7 @@ function routeCalcPrintQuote(){
  '@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.page{padding:12mm}.no-print{display:none}}'+
  '</style></head><body><div class="page">'+
  '<div class="head"><img src="'+logo+'" alt="Croce Gialla"><div class="brand"><h1>Croce Gialla Emergenza ODV</h1><div>Via I° Maggio 1 · 28040 Dormelletto (NO)<br>Preventivo del '+routeCalcQuoteDate()+'</div></div></div>'+
- '<div class="title">Preventivo servizio di trasporto</div>'+
+ '<div class="title">Preventivo servizio di trasporto <span style="font-size:16px;color:#475569">· '+esc(quoteNumber)+'</span></div>'+
  '<div class="box"><div class="grid">'+
  '<div><div class="label">Cliente / destinatario</div><div class="value">'+esc(customer)+'</div></div>'+
  '<div><div class="label">Tipo di mezzo</div><div class="value">'+esc(vehicle)+'</div></div>'+
@@ -6253,7 +6317,7 @@ function routeCalcPrintQuote(){
  '<div><div class="label">Rientro</div><div class="value">'+(round?'Compreso':'Non compreso')+'</div></div></div>'+
  (extras.length?'<div style="margin-top:14px"><div class="label">Dotazioni richieste</div><div class="value">'+esc(extras.join(' · '))+'</div></div>':'')+
  '</div>'+
- (notes?'<div class="box"><div class="label">Note</div><div class="value notes">'+esc(notes)+'</div></div>':'')+
+ '<div class="box"><div class="label">Metodo di pagamento</div><div class="value notes">'+esc(paymentText)+'</div></div>'+
  '<div class="total"><div class="label">Importo preventivato</div><div class="amount">'+euro(amount)+'</div><div class="muted">Importo complessivo previsto per il servizio sopra indicato.</div></div>'+
  '<div class="advance"><div class="label">Anticipo richiesto alla conferma</div><div class="value" style="font-size:22px">'+esc(advanceText)+'</div><div class="muted">L’anticipo viene imputato al saldo finale del servizio.</div></div>'+
  '<div class="foot">Il presente preventivo è formulato sulla base del percorso e delle condizioni indicate. Eventuali variazioni richieste dal cliente, soste aggiuntive, variazioni del percorso o costi straordinari non prevedibili potranno comportare un aggiornamento dell’importo. Il servizio si intende confermato secondo le modalità concordate con Croce Gialla Emergenza ODV.</div>'+
@@ -7359,7 +7423,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.73-20260927-customer-quote-archive';
+const CGE_APP_BUILD='13.74-20260927-progressive-quote-payment';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
