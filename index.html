@@ -1489,6 +1489,9 @@
    <div class="field"><label>Costo chilometrico €/km</label><input id="rcKmRate" type="number" min="0" step="0.01" value="1.20" readonly></div>
    <div class="field"><label>Diritto di chiamata €</label><input id="rcFixed" type="number" min="0" step="1" value="20" readonly></div>
    <div class="field"><label>Autostrada / pedaggi €</label><input id="rcTolls" type="number" min="0" step="0.50" value="0"></div>
+   <div class="field"><label>Gasolio €/litro</label><input id="rcFuelPrice" type="number" min="0" step="0.001" value="2.334"></div>
+   <div class="field"><label>Consumo medio km/l</label><input id="rcConsumption" type="number" min="1" step="0.1" value="12"></div>
+   <div class="field"><label>Prezzo carburante</label><div class="actions"><button id="rcFuelRefresh" type="button" class="btn secondary">↻ Aggiorna MIMIT</button><span id="rcFuelTrend" class="pill b">Manuale</span></div><div id="rcFuelUpdated" class="muted" style="margin-top:5px">Valore modificabile manualmente</div></div>
    <div class="field"><label>Fermo mezzo (ore)</label><input id="rcStopHours" type="number" min="0" step="0.5" value="0"></div>
    <div class="field"><label>Fermo mezzo €/ora</label><input id="rcStopRate" type="number" min="0" step="1" value="20" readonly></div>
    <div class="field"><label>Margine da applicare %</label><input id="rcMargin" type="number" min="0" step="1" value="0"></div>
@@ -1499,6 +1502,7 @@
   <div class="stat"><small>COSTO KM</small><b id="rcKmCost">€ 0,00</b></div>
   <div class="stat"><small>DIRITTO CHIAMATA</small><b id="rcCallCost">€ 0,00</b></div>
   <div class="stat"><small>AUTOSTRADA / PEDAGGI</small><b id="rcTollCost">€ 0,00</b></div>
+  <div class="stat"><small>CARBURANTE</small><b id="rcFuelCost">€ 0,00</b></div>
   <div class="stat"><small>FERMO MEZZO</small><b id="rcStopCost">€ 0,00</b></div>
   <div class="stat"><small>COSTO COMPLESSIVO</small><b id="rcTotalCost">€ 0,00</b></div>
  </div>
@@ -5546,15 +5550,18 @@ function routeCalcRecompute(){
  if(!$('rcKm'))return;
  routeCalcApplyVehicleRates();
  const km=routeCalcNum('rcKm'),kmRate=routeCalcNum('rcKmRate'),fixed=routeCalcNum('rcFixed'),
-  tolls=routeCalcNum('rcTolls'),stopHours=routeCalcNum('rcStopHours'),stopRate=routeCalcNum('rcStopRate'),
+  tolls=routeCalcNum('rcTolls'),fuelPrice=routeCalcNum('rcFuelPrice'),
+  consumption=Math.max(0.1,routeCalcNum('rcConsumption')||12),
+  stopHours=routeCalcNum('rcStopHours'),stopRate=routeCalcNum('rcStopRate'),
   margin=routeCalcNum('rcMargin');
- const kmCost=km*kmRate,stopCost=stopHours*stopRate;
+ const kmCost=km*kmRate,stopCost=stopHours*stopRate,fuelCost=(km/consumption)*fuelPrice;
  const equipment=($('rcChair')?.checked?15:0)+($('rcBariatric')?.checked?20:0);
- const total=kmCost+fixed+tolls+stopCost+equipment;
+ const total=kmCost+fixed+tolls+fuelCost+stopCost+equipment;
  const suggested=total*(1+margin/100);
  $('rcKmCost').textContent=euro(kmCost);
  $('rcCallCost').textContent=euro(fixed);
  $('rcTollCost').textContent=euro(tolls);
+ $('rcFuelCost').textContent=euro(fuelCost);
  $('rcStopCost').textContent=euro(stopCost);
  $('rcTotalCost').textContent=euro(total);
  $('rcSuggested').textContent=euro(suggested);
@@ -5562,10 +5569,48 @@ function routeCalcRecompute(){
  $('rcBreakdown').textContent=km>0?
   km.toFixed(1)+' km × '+euro(kmRate)+'/km · diritto chiamata '+euro(fixed)+
   (tolls?' · pedaggi '+euro(tolls):'')+
+  (fuelCost?' · carburante '+euro(fuelCost)+' ('+fuelPrice.toFixed(3)+' €/l)':'')+
   (stopHours?' · fermo '+stopHours.toFixed(1)+' h × '+euro(stopRate)+'/h':'')+
   (equipment?' · dotazioni '+euro(equipment):'')+
   (margin?' · margine '+margin.toFixed(0)+'%':''):
   'Inserisci o calcola i chilometri per ottenere la stima.';
+}
+
+async function routeCalcUpdateFuelPrice(force=false){
+ if(!$('rcFuelPrice'))return;
+ const cacheKey='cge_fuel_price_mimit_v1';
+ if(!force){
+  try{
+   const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');
+   if(cached?.price&&cached?.fetched_at&&(Date.now()-new Date(cached.fetched_at).getTime())<6*60*60*1000){
+    $('rcFuelPrice').value=Number(cached.price).toFixed(3);
+    const delta=Number(cached.delta||0);
+    $('rcFuelTrend').textContent=delta>0?'↑ +'+delta.toFixed(3):delta<0?'↓ '+delta.toFixed(3):'→ stabile';
+    $('rcFuelTrend').className='pill '+(delta>0?'r':delta<0?'g':'b');
+    $('rcFuelUpdated').textContent='MIMIT · aggiornamento '+(cached.source_date||'recente')+' · cache locale';
+    routeCalcRecompute();return;
+   }
+  }catch(_){}
+ }
+ const btn=$('rcFuelRefresh');if(btn){btn.disabled=true;btn.textContent='Aggiorno…'}
+ try{
+  const {data,error}=await sb.functions.invoke('fuel-price',{body:{}});
+  if(error)throw error;
+  if(!data?.price)throw new Error(data?.error||'Prezzo non disponibile');
+  $('rcFuelPrice').value=Number(data.price).toFixed(3);
+  const delta=Number(data.delta||0);
+  $('rcFuelTrend').textContent=delta>0?'↑ +'+delta.toFixed(3):delta<0?'↓ '+delta.toFixed(3):'→ stabile';
+  $('rcFuelTrend').className='pill '+(delta>0?'r':delta<0?'g':'b');
+  $('rcFuelUpdated').textContent='MIMIT · '+(data.source_date?'aggiornamento '+data.source_date:'dato aggiornato automaticamente');
+  try{localStorage.setItem(cacheKey,JSON.stringify(data))}catch(_){}
+  routeCalcRecompute();
+ }catch(e){
+  $('rcFuelTrend').textContent='Manuale';
+  $('rcFuelTrend').className='pill b';
+  $('rcFuelUpdated').textContent='Aggiornamento automatico non disponibile: puoi modificare il prezzo manualmente.';
+ }finally{
+  if(btn){btn.disabled=false;btn.textContent='↻ Aggiorna MIMIT'}
+ }
 }
 function routeCalcPoints(){
  return [$('rcStart')?.value.trim(),$('rcLoad')?.value.trim(),$('rcDest')?.value.trim()].filter(Boolean);
@@ -5622,6 +5667,7 @@ function routeCalcReset(){
  if($('rcChair'))$('rcChair').checked=false;if($('rcBariatric'))$('rcBariatric').checked=false;
  if($('rcVehicleType'))$('rcVehicleType').value='AMBULANZA';
  ['rcTolls','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).value='0'});
+ if($('rcConsumption'))$('rcConsumption').value='12';
  routeCalcApplyVehicleRates();
  msg('rcMsg','');routeCalcRecompute();
 }
@@ -5644,10 +5690,12 @@ function routeCalcUseInService(){
 if($('rcCalculateRoute'))$('rcCalculateRoute').onclick=routeCalcAutomatic;
 if($('rcOpenMaps'))$('rcOpenMaps').onclick=routeCalcGoogleMaps;
 if($('rcReset'))$('rcReset').onclick=routeCalcReset;
+if($('rcFuelRefresh'))$('rcFuelRefresh').onclick=()=>routeCalcUpdateFuelPrice(true);
 if($('rcUseService'))$('rcUseService').onclick=routeCalcUseInService;
-['rcKm','rcTolls','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
+['rcKm','rcTolls','rcFuelPrice','rcConsumption','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
 ['rcVehicleType','rcReturn','rcChair','rcBariatric'].forEach(id=>{if($(id))$(id).onchange=routeCalcRecompute});
 routeCalcRecompute();
+routeCalcUpdateFuelPrice(false);
 
 function showTariffGroup(code){
  if(!TARIFF_CATEGORIES.some(x=>x[0]===code))return;
@@ -5665,6 +5713,7 @@ function showTariffGroup(code){
 }
 async function loadTariffsView(){
  await refreshMaster();
+ routeCalcUpdateFuelPrice(false);
  applyRoleUI();
  const r=await sb.from('tariffe_destinazioni').select('*,tariffari(codice,nome,origine,valido_dal,note)').order('destinazione');
  if(r.error)return msg('tmsg','Tariffari non disponibili: '+r.error.message,'err');
