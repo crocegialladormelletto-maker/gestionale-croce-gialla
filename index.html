@@ -5496,10 +5496,25 @@ async function loadTariffsView(){
   const pane=$('tariffPane_'+code);if(!pane)continue;
   const rows=tariffManagementRows.filter(x=>x.tariffari?.codice===code&&x.tipo_mezzo===type);
   const tbody=pane.querySelector('tbody'),simple=tariffSimple(code);
-  tbody.innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.destinazione)+'</td><td>'+euro(x.importo_diurno)+'</td>'+
-   (simple?'':'<td>'+(x.importo_notturno==null?'—':euro(x.importo_notturno))+'</td>')+
-   '<td>'+(prof?.ruolo==='AMMINISTRATORE'?'<button class="btn danger" type="button" onclick="deleteTariffDestination(\''+x.id+'\',\''+String(x.destinazione||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">Cancella</button>':'—')+'</td></tr>').join(''):
-   '<tr><td colspan="'+(simple?3:4)+'">Nessuna destinazione caricata per questo tariffario.</td></tr>';
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="'+(simple?3:4)+'">Nessuna destinazione caricata per questo tariffario.</td></tr>';
+  }else{
+    const groups={};
+    rows.forEach(x=>{
+      const prov=(String(x.provincia||'').trim().toUpperCase()||'ALTRO');
+      (groups[prov]??=[]).push(x);
+    });
+    const provOrder=['NO','VB','VC','BI','TO','MI','VA','PV','ALTRO'];
+    const provinceName={NO:'NOVARA',VB:'VERBANO-CUSIO-OSSOLA',VC:'VERCELLI',BI:'BIELLA',TO:'TORINO',MI:'MILANO',VA:'VARESE',PV:'PAVIA',ALTRO:'ALTRE DESTINAZIONI'};
+    const ordered=[...new Set([...provOrder,...Object.keys(groups).sort((a,b)=>a.localeCompare(b,'it'))])].filter(p=>groups[p]?.length);
+    tbody.innerHTML=ordered.map(prov=>{
+      const entries=[...groups[prov]].sort((a,b)=>String(a.destinazione||'').localeCompare(String(b.destinazione||''),'it'));
+      return '<tr class="tariff-province-row" data-prov="'+esc(prov)+'"><td colspan="'+(simple?3:4)+'">'+esc(provinceName[prov]||prov)+' <span class="muted">('+esc(prov)+')</span></td></tr>'+
+      entries.map(x=>'<tr><td>'+esc(x.destinazione)+'</td><td>'+euro(x.importo_diurno)+'</td>'+
+       (simple?'':'<td>'+(x.importo_notturno==null?'—':euro(x.importo_notturno))+'</td>')+
+       '<td>'+(prof?.ruolo==='AMMINISTRATORE'?'<button class="btn danger" type="button" onclick="deleteTariffDestination(\''+x.id+'\',\''+String(x.destinazione||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">Cancella</button>':'—')+'</td></tr>').join('');
+    }).join('');
+  }
  }
  showTariffGroup(tariffViewCode);
  msg('tmsg','');
@@ -6594,4 +6609,26 @@ try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&
   border-color:#c2410c !important;
 }
 
+
+/* Tariffari raggruppati per provincia */
+.tariff-province-row td{
+  background:#eaf2fb !important;
+  color:#163a63;
+  font-weight:900;
+  letter-spacing:.3px;
+  border-top:2px solid #bdd2e8;
+  border-bottom:1px solid #cdddec;
+  padding:10px 12px !important;
+}
+.tariff-province-row[data-prov="NO"] td{background:#e7f0ff !important;color:#174a8b}
+.tariff-province-row[data-prov="VB"] td{background:#e8f7f2 !important;color:#146a58}
+.tariff-province-row[data-prov="VC"] td{background:#fff3df !important;color:#8a5a00}
+.tariff-province-row[data-prov="BI"] td{background:#f2ecff !important;color:#6a3fb0}
+.tariff-province-row[data-prov="TO"] td{background:#fdecef !important;color:#9e2942}
+.tariff-province-row[data-prov="MI"] td{background:#eef1f4 !important;color:#43566d}
+.tariff-province-row[data-prov="VA"] td{background:#edf8e8 !important;color:#4e7a2a}
+.tariff-province-row[data-prov="PV"] td{background:#fff0e8 !important;color:#a14c22}
+.tariff-province-row[data-prov="ALTRO"] td{background:#f2f4f7 !important;color:#4b5563}
+[data-tariff-pane] tbody tr:not(.tariff-province-row):nth-child(even) td{background:#fbfcfe}
+[data-tariff-pane] tbody tr:not(.tariff-province-row):hover td{background:#f4f8fc}
 </style>
