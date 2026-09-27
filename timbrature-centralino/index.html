@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Timbrature dipendenti - Croce Gialla Emergenza ODV</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#142033;--muted:#667085;--green:#15803d;--red:#b42318;--yellow:#f5c518;--blue:#174ea6;--border:#d7deea}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text)}
+header{background:#ffdf00;padding:18px 22px;border-bottom:4px solid #111}
+header h1{margin:0;font-size:25px}header p{margin:6px 0 0;font-weight:700}
+.wrap{max-width:1050px;margin:24px auto;padding:0 16px}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:0 8px 25px rgba(20,32,51,.07)}
+.clock{text-align:center;font-size:44px;font-weight:800;letter-spacing:1px}.date{text-align:center;color:var(--muted);margin:6px 0 22px}
+label{font-weight:800;display:block;margin-bottom:8px}select{width:100%;padding:14px;border:2px solid var(--border);border-radius:12px;font-size:18px;background:#fff}
+.status{margin:16px 0;padding:14px;border-radius:12px;background:#f7f9fc;border:1px solid var(--border);min-height:54px;font-weight:700}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+button{border:0;border-radius:14px;padding:18px 12px;font-size:20px;font-weight:900;cursor:pointer}
+button:disabled{opacity:.35;cursor:not-allowed}.in{background:#16a34a;color:#fff}.out{background:#dc2626;color:#fff}.small{font-size:14px;padding:10px 12px;border-radius:10px;background:#e8eef8;color:#17335f}
+.notice{margin-top:14px;padding:12px 14px;border-radius:12px;background:#fff7cc;border:1px solid #eed56a;font-size:14px}
+.ok{background:#eaf8ef;border-color:#9bd5ab;color:#135c2a}.warn{background:#fff3e8;border-color:#f3bb80;color:#8a3f00}.err{background:#fdecec;border-color:#f2aaaa;color:#8c1d18}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.kpi{background:#f7f9fc;border:1px solid var(--border);border-radius:12px;padding:13px;text-align:center}.kpi b{display:block;font-size:22px;margin-top:4px}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}th,td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:left}th{background:#f7f9fc}.type-in{color:var(--green);font-weight:800}.type-out{color:var(--red);font-weight:800}
+.toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.empty{padding:24px;text-align:center;color:var(--muted)}
+.footer{margin:16px 0 30px;color:var(--muted);font-size:13px;text-align:center}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.clock{font-size:38px}.actions{grid-template-columns:1fr}.kpis{grid-template-columns:1fr}}
+@media print{header,.actions,.toolbar button,.notice,.footer{display:none}.wrap{max-width:none;margin:0}.card{box-shadow:none;border:0}}
+</style>
+</head>
+<body>
+<header><h1>🕒 Timbrature Dipendenti</h1><p>Croce Gialla Emergenza ODV · Postazione Centralino</p></header>
+<div class="wrap">
+  <div class="grid">
+    <section class="card">
+      <div id="clock" class="clock">--:--:--</div>
+      <div id="date" class="date"></div>
+      <label for="employee">Dipendente</label>
+      <select id="employee">
+        <option value="">Seleziona il dipendente…</option>
+        <option>Brughera Francesca</option>
+        <option>Martinoli Andrea</option>
+      </select>
+      <div id="status" class="status">Seleziona il dipendente per visualizzare lo stato.</div>
+      <div class="actions">
+        <button id="btnIn" class="in" disabled>▶ TIMBRA ENTRATA</button>
+        <button id="btnOut" class="out" disabled>■ TIMBRA USCITA</button>
+      </div>
+      <div id="message" class="notice">Le timbrature di questa versione di prova sono memorizzate esclusivamente su questo browser del PC centralino.</div>
+      <div class="kpis">
+        <div class="kpi">Ore oggi<b id="hoursToday">0:00</b></div>
+        <div class="kpi">Ore mese<b id="hoursMonth">0:00</b></div>
+        <div class="kpi">Timbrature mese<b id="countMonth">0</b></div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="toolbar">
+        <div><b>Registro timbrature</b><div style="color:#667085;font-size:13px">Ultime registrazioni su questo PC</div></div>
+        <button id="csv" class="small">Esporta CSV</button>
+      </div>
+      <div id="tableWrap"></div>
+    </section>
+  </div>
+  <div class="footer">Versione prova centralino · Nessuna geolocalizzazione · Data e ora generate automaticamente dal dispositivo.</div>
+</div>
+<script>
+const KEY='cge_timbrature_centralino_v1';
+const el=id=>document.getElementById(id);
+const employee=el('employee'), btnIn=el('btnIn'), btnOut=el('btnOut'), status=el('status'), msg=el('message');
+
+function now(){return new Date()}
+function pad(n){return String(n).padStart(2,'0')}
+function isoLocal(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())}
+function displayDT(s){const d=new Date(s);return d.toLocaleDateString('it-IT')+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return []}}
+function save(a){localStorage.setItem(KEY,JSON.stringify(a))}
+function latestFor(name){return load().filter(x=>x.employee===name).sort((a,b)=>b.ts.localeCompare(a.ts))[0]||null}
+function setMessage(text,kind=''){msg.textContent=text;msg.className='notice '+kind}
+function minutesBetween(a,b){return Math.max(0,Math.round((new Date(b)-new Date(a))/60000))}
+function fmtMin(m){return Math.floor(m/60)+':'+pad(m%60)}
+function calcWorked(name, predicate){
+  const a=load().filter(x=>x.employee===name && predicate(new Date(x.ts))).sort((x,y)=>x.ts.localeCompare(y.ts));
+  let total=0, start=null;
+  for(const x of a){if(x.type==='ENTRATA') start=x.ts; else if(x.type==='USCITA' && start){total+=minutesBetween(start,x.ts);start=null}}
+  return total;
+}
+function refresh(){
+  const n=employee.value, last=n?latestFor(n):null;
+  btnIn.disabled=!n || (last&&last.type==='ENTRATA');
+  btnOut.disabled=!n || !last || last.type==='USCITA';
+  if(!n){status.textContent='Seleziona il dipendente per visualizzare lo stato.'}
+  else if(!last){status.textContent='Nessuna timbratura registrata per '+n+'. Può timbrare ENTRATA.'}
+  else if(last.type==='ENTRATA'){status.textContent='🟢 '+n+' risulta IN SERVIZIO dal '+displayDT(last.ts)}
+  else{status.textContent='🔴 '+n+' risulta FUORI SERVIZIO. Ultima uscita: '+displayDT(last.ts)}
+  const d=now(), sameDay=x=>x.getFullYear()===d.getFullYear()&&x.getMonth()===d.getMonth()&&x.getDate()===d.getDate(), sameMonth=x=>x.getFullYear()===d.getFullYear()&&x.getMonth()===d.getMonth();
+  el('hoursToday').textContent=n?fmtMin(calcWorked(n,sameDay)):'0:00';
+  el('hoursMonth').textContent=n?fmtMin(calcWorked(n,sameMonth)):'0:00';
+  el('countMonth').textContent=n?load().filter(x=>x.employee===n&&sameMonth(new Date(x.ts))).length:'0';
+  renderTable();
+}
+function stamp(type){
+  const n=employee.value;if(!n)return;
+  const a=load(), last=latestFor(n);
+  if(type==='ENTRATA' && last && last.type==='ENTRATA'){setMessage('Entrata non registrata: il dipendente risulta già in servizio.','err');return}
+  if(type==='USCITA' && (!last || last.type==='USCITA')){setMessage('Uscita non registrata: manca una precedente entrata aperta.','err');return}
+  const t=now(), rec={id:Date.now()+'-'+Math.random().toString(16).slice(2),employee:n,type,ts:isoLocal(t)};
+  if(type==='ENTRATA' && last && last.type==='USCITA'){
+    const rest=minutesBetween(last.ts,rec.ts);
+    if(rest<660){setMessage('⚠ Timbratura registrata. Riposo dalla precedente uscita: '+fmtMin(rest)+' (inferiore a 11:00).','warn')}
+    else setMessage('✅ Entrata registrata alle '+t.toLocaleTimeString('it-IT')+'.','ok');
+  } else setMessage('✅ '+(type==='ENTRATA'?'Entrata':'Uscita')+' registrata alle '+t.toLocaleTimeString('it-IT')+'.','ok');
+  a.push(rec);save(a);refresh();
+}
+function renderTable(){
+  const n=employee.value;
+  let a=load().filter(x=>!n||x.employee===n).sort((x,y)=>y.ts.localeCompare(x.ts)).slice(0,30);
+  if(!a.length){el('tableWrap').innerHTML='<div class="empty">Nessuna timbratura registrata.</div>';return}
+  el('tableWrap').innerHTML='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data e ora</th></tr></thead><tbody>'+a.map(x=>'<tr><td>'+x.employee+'</td><td class="'+(x.type==='ENTRATA'?'type-in':'type-out')+'">'+x.type+'</td><td>'+displayDT(x.ts)+'</td></tr>').join('')+'</tbody></table>';
+}
+function exportCsv(){
+ const a=load().sort((x,y)=>x.ts.localeCompare(y.ts));if(!a.length){setMessage('Nessun dato da esportare.','warn');return}
+ const rows=[['Dipendente','Tipo','Data','Ora'],...a.map(x=>{const d=new Date(x.ts);return[x.employee,x.type,d.toLocaleDateString('it-IT'),d.toLocaleTimeString('it-IT')]})];
+ const csv='\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+ const b=new Blob([csv],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),aEl=document.createElement('a');aEl.href=u;aEl.download='timbrature-croce-gialla.csv';aEl.click();URL.revokeObjectURL(u);
+}
+function tick(){const d=now();el('clock').textContent=d.toLocaleTimeString('it-IT');el('date').textContent=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}
+employee.addEventListener('change',refresh);btnIn.addEventListener('click',()=>stamp('ENTRATA'));btnOut.addEventListener('click',()=>stamp('USCITA'));el('csv').addEventListener('click',exportCsv);
+tick();setInterval(tick,1000);refresh();
+</script>
+</body>
+</html>
