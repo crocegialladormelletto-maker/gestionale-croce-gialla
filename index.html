@@ -6310,7 +6310,6 @@ async function routeCalcPrintQuote(){
  const route=[start,load,dest,round?start:''].filter(Boolean).join(' → ');
  const extras=[chair?'Sedia cingolata / motorizzata':'',bariatric?'Barella bariatrica':''].filter(Boolean);
  const logo='https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70';
- const fiveImg='https://crocegialladormelletto-maker.github.io/gestionale-croce-gialla/assets/5x1000.png?v=20260928a';
 
  const html='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(quoteNumber)+'</title>'+
  '<style>'+
@@ -6339,7 +6338,7 @@ async function routeCalcPrintQuote(){
  '.advance .amount{font-size:25px}'+
  '.clause{margin-top:8px;font-weight:900;line-height:1.35}'+
  '.confirm{margin-top:14px;padding:12px 14px;border-left:6px solid #f59e0b;background:#fef3c7;font-weight:900;line-height:1.4;color:#7c2d12}'+
- '.footer-zone{margin-top:auto;padding-top:18px}.five{display:grid;grid-template-columns:245px 1fr;gap:16px;align-items:center;background:#fff8d8;border:2px solid #f2c300;border-radius:12px;padding:12px 15px}.five-image{display:flex;align-items:center;justify-content:center}.five-image img{display:block;max-width:235px;width:100%;height:auto}.five h3{margin:0 0 5px;font-size:16px}.five p{margin:0;line-height:1.45;font-size:12px}.five-cf{margin-top:7px;font-weight:900;font-size:13px;color:#172033}.payment{margin:0 0 14px;background:#eef6ff;border:2px solid #93c5fd;border-radius:11px;padding:10px 14px;text-align:center}'+
+ '.footer-zone{margin-top:auto;padding-top:18px}.five{background:#ffffff;border:2px solid #93c5fd;border-radius:12px;padding:16px 18px;text-align:center}.five-title{font-size:21px;font-weight:900;line-height:1.2;color:#0f2f57;margin-bottom:8px;letter-spacing:.1px}.five-desc{font-size:12.5px;line-height:1.5;color:#334155;max-width:620px;margin:0 auto}.five-cf{margin-top:10px;font-weight:900;font-size:17px;color:#111827}.payment{margin:0 0 14px;background:#eef6ff;border:2px solid #93c5fd;border-radius:11px;padding:10px 14px;text-align:center}'+
  '.payment h3{font-size:13px;margin:0 0 6px;text-transform:uppercase;color:#123b72;text-align:center}'+
  '.payment-lines{white-space:pre-line;line-height:1.5;font-size:12.5px;text-align:center;width:100%;font-weight:700;color:#1e293b}'+
  '.small{font-size:11px;color:#64748b}'+
@@ -6394,8 +6393,9 @@ async function routeCalcPrintQuote(){
    '<div class="payment-lines">'+esc(paymentText)+'</div>'+
   '</div>'+
   '<div class="five">'+
-   '<div class="five-image"><img src="'+fiveImg+'" alt="5x1000"></div>'+
-   '<div><h3>Sostieni Croce Gialla Emergenza ODV con il tuo 5×1000</h3><p>Un gesto che non costa nulla e ci aiuta a mantenere efficienti mezzi, attrezzature e servizi per il territorio.</p><div class="five-cf">Codice fiscale: 91023880031</div></div>'+
+   '<div class="five-title">Sostieni Croce Gialla Emergenza ODV con il tuo 5×1000</div>'+
+   '<div class="five-desc">Un gesto che non costa nulla e ci aiuta a mantenere efficienti mezzi, attrezzature e servizi per il territorio.</div>'+
+   '<div class="five-cf">Codice fiscale: 91023880031</div>'+
   '</div>'+
  '</div>'+
 
