@@ -69,7 +69,7 @@ function syncVehicle(){const v=vehicles.find(x=>x.codice===$('mezzo').value);$('
 function calcKm(){const i=Number($('kmIniziali').value),f=Number($('kmFinali').value);$('km').value=(Number.isFinite(i)&&Number.isFinite(f)&&f>=i)?f-i:''}
 function syncPaziente118(){const has=($('scheda118').value||'').trim()!=='';['nomePaziente','cognomePaziente'].forEach(id=>{const el=$(id);if(has){el.value='';el.disabled=true;el.style.background='#eef1f5';el.placeholder='Disattivato: presente scheda 118'}else{el.disabled=false;el.style.background='white';el.placeholder=id==='nomePaziente'?'Nome':'Cognome'}})}
 function syncImporto(){
-  const is118=$('tipoServizio').value==='Emergenza / Urgenza';
+  const is118=$('tipoServizio').value==='Emergenza / Urgenza'||($('scheda118').value||'').trim()!=='';
   const el=$('importo');
   if(is118){
     el.value='';
@@ -84,7 +84,7 @@ function syncImporto(){
     el.placeholder='Inserisci importo';
   }
 }
-$('mezzo').addEventListener('change',syncVehicle);$('kmIniziali').addEventListener('input',()=>{calcKm();const code=$('mezzo').value;if(!code)return;const last=latestTripForVehicle(code,$('editId').value);if(last&&Number($('kmIniziali').value)!==Number(last.km_finali)){$('kmContinuityHint').textContent='⚠ Attenzione: l’ultimo km finale registrato è '+Number(last.km_finali).toLocaleString('it-IT')+' km';$('kmContinuityHint').style.color='#b46b00'}else if(last){$('kmContinuityHint').textContent='✓ Continuità km corretta: '+Number(last.km_finali).toLocaleString('it-IT')+' km';$('kmContinuityHint').style.color='#2c9a62'}});$('kmFinali').addEventListener('input',calcKm);$('scheda118').addEventListener('input',syncPaziente118);
+$('mezzo').addEventListener('change',syncVehicle);$('scheda118').addEventListener('input',syncImporto);$('kmIniziali').addEventListener('input',()=>{calcKm();const code=$('mezzo').value;if(!code)return;const last=latestTripForVehicle(code,$('editId').value);if(last&&Number($('kmIniziali').value)!==Number(last.km_finali)){$('kmContinuityHint').textContent='⚠ Attenzione: l’ultimo km finale registrato è '+Number(last.km_finali).toLocaleString('it-IT')+' km';$('kmContinuityHint').style.color='#b46b00'}else if(last){$('kmContinuityHint').textContent='✓ Continuità km corretta: '+Number(last.km_finali).toLocaleString('it-IT')+' km';$('kmContinuityHint').style.color='#2c9a62'}});$('kmFinali').addEventListener('input',calcKm);$('scheda118').addEventListener('input',syncPaziente118);
 $('tipoLuogoCarico').addEventListener('change',()=>{const a=$('tipoLuogoCarico').value==='Altro';$('altroLuogoWrap').style.display=a?'flex':'none';if(!a)$('altroLuogoCarico').value=''});
 $('tipoServizio').addEventListener('change',()=>{if($('tipoServizio').value==='Emergenza / Urgenza')$('scheda118').setAttribute('required','required');else $('scheda118').removeAttribute('required');syncImporto()});
 function resetForm(){if(!canEdit())return;$('tripForm').reset();$('editId').value='';$('numero').value='Automatico';$('data').value=iso(new Date());$('formTitle').textContent='Nuovo viaggio';$('km').value='';$('targa').value='';$('kmContinuityHint').textContent='';$('altroLuogoWrap').style.display='none';syncPaziente118();syncImporto()}
