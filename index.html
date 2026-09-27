@@ -6285,16 +6285,20 @@ function routeCalcQuoteDate(){
 async function routeCalcPrintQuote(){
  const amount=Number($('rcSuggested')?.dataset.value||0);
  const advanceText=$('rcAdvanceSuggested')?.textContent||euro(0);
- const km=routeCalcNum('rcKm');
  const customer=$('rcQuoteCustomer')?.value.trim()||'Cliente';
  const cf=$('rcQuoteCf')?.value.trim().toUpperCase()||'';
  const address=$('rcQuoteAddress')?.value.trim()||'';
  const email=$('rcQuoteEmail')?.value.trim()||'';
  const phone=$('rcQuotePhone')?.value.trim()||'';
+ const km=routeCalcNum('rcKm');
+ if(!amount||!km||dest==='—')return msg('rcMsg','Calcola prima il percorso e l’importo del preventivo.','warn');
+ const w=window.open('','_blank');
+ if(!w)return msg('rcMsg','Il browser ha bloccato la finestra di stampa. Consenti i popup per questo sito.','warn');
+ w.document.open();w.document.write('<!doctype html><html><body style="font-family:Arial;padding:30px">Preparazione preventivo…</body></html>');w.document.close();
  let saved=null;
  if(!rcCurrentCustomerQuoteId||!rcCurrentCustomerQuoteNumber){
    saved=await routeCalcSaveCustomerQuote();
-   if(!saved)return;
+   if(!saved){try{w.close()}catch(e){};return;}
  }
  const quoteNumber=routeCalcFormatQuoteNumber(rcCurrentCustomerQuoteNumber,saved?.data_preventivo);
  const paymentText=routeCalcPaymentText(rcCurrentCustomerQuoteNumber,saved?.data_preventivo);
@@ -6305,8 +6309,6 @@ async function routeCalcPrintQuote(){
  const round=!!$('rcReturn')?.checked;
  const chair=!!$('rcChair')?.checked;
  const bariatric=!!$('rcBariatric')?.checked;
- if(!amount||!km||!dest)return msg('rcMsg','Calcola prima il percorso e l’importo del preventivo.','warn');
-
  const route=[start,load,dest,round?start:''].filter(Boolean).join(' → ');
  const extras=[chair?'Sedia cingolata / motorizzata':'',bariatric?'Barella bariatrica':''].filter(Boolean);
  const logo='https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70';
@@ -6401,8 +6403,6 @@ async function routeCalcPrintQuote(){
 
  '</div><script>window.onload=function(){var imgs=Array.from(document.images||[]);var p=imgs.map(function(img){return img.complete?Promise.resolve():new Promise(function(res){img.onload=res;img.onerror=res})});Promise.all(p).then(function(){setTimeout(function(){window.print()},500)})}<\/script></body></html>';
 
- const w=window.open('','_blank');
- if(!w)return msg('rcMsg','Il browser ha bloccato la finestra di stampa. Consenti i popup per questo sito.','warn');
  w.document.open();w.document.write(html);w.document.close();
 }
 
