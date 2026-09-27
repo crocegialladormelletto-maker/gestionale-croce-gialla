@@ -5488,7 +5488,7 @@ async function loadTariffsView(){
   const tbody=pane.querySelector('tbody'),simple=tariffSimple(code);
   tbody.innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.destinazione)+'</td><td>'+euro(x.importo_diurno)+'</td>'+
    (simple?'':'<td>'+(x.importo_notturno==null?'—':euro(x.importo_notturno))+'</td>')+
-   '<td>'+(prof?.ruolo==='AMMINISTRATORE'?'<button class="btn danger" type="button" onclick="deleteTariffDestination(\''+x.tariffa_destinazione_id+'\',\''+String(x.destinazione||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">Cancella</button>':'—')+'</td></tr>').join(''):
+   '<td>'+(prof?.ruolo==='AMMINISTRATORE'?'<button class="btn danger" type="button" onclick="deleteTariffDestination(\''+x.id+'\',\''+String(x.destinazione||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">Cancella</button>':'—')+'</td></tr>').join(''):
    '<tr><td colspan="'+(simple?3:4)+'">Nessuna destinazione caricata per questo tariffario.</td></tr>';
  }
  showTariffGroup(tariffViewCode);
@@ -5500,8 +5500,9 @@ async function deleteTariffDestination(id,destinazione){
  if(prof?.ruolo!=='AMMINISTRATORE')return msg('tmsg','Solo Amministrazione può cancellare una tariffa.','warn');
  if(!id)return;
  if(!confirm('Cancellare la tariffa per «'+destinazione+'»?\n\nQuesta operazione elimina la voce dal tariffario.'))return;
- const r=await sb.from('tariffe_destinazioni').delete().eq('tariffa_destinazione_id',id);
+ const r=await sb.from('tariffe_destinazioni').delete().eq('id',id).select('id,destinazione');
  if(r.error)return msg('tmsg','Impossibile cancellare la tariffa: '+r.error.message,'err');
+ if(!r.data?.length)return msg('tmsg','La tariffa non è stata cancellata. Verifica di essere entrato come Amministrazione.','warn');
  await loadTariffsView();
  msg('tmsg','Tariffa «'+destinazione+'» cancellata correttamente.','ok');
 }
