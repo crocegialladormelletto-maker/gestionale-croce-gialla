@@ -6185,6 +6185,13 @@ async function routeCalcSaveCustomerQuote(){
 
  rcCurrentCustomerQuoteId=r.data.id;
  rcCurrentCustomerQuoteNumber=r.data.numero_progressivo;
+
+ // Salva anche nel record la causale definitiva con il numero progressivo assegnato.
+ const definitivePayment=routeCalcPaymentText(r.data.numero_progressivo,r.data.data_preventivo);
+ await sb.from('preventivi_clienti')
+  .update({note:definitivePayment,updated_at:new Date().toISOString()})
+  .eq('id',r.data.id);
+
  if($('rcQuoteNumber'))$('rcQuoteNumber').value=routeCalcFormatQuoteNumber(r.data.numero_progressivo,r.data.data_preventivo);
  if($('rcQuoteState'))$('rcQuoteState').value=r.data.stato||'BOZZA';
  if($('rcQuoteNotes'))$('rcQuoteNotes').value=routeCalcPaymentText(r.data.numero_progressivo,r.data.data_preventivo);
