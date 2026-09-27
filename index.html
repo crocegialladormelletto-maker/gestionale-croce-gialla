@@ -1450,11 +1450,68 @@
 <button type="button" class="btn secondary" data-tariff-code="DEA_NOVARA">🚑 Ambulanza · Ospedale Novara</button>
 <button type="button" class="btn secondary" data-tariff-code="TS_BORGOMANERO">🚐 Trasporto semplice · Ospedale Borgomanero</button>
 <button type="button" class="btn secondary" data-tariff-code="TS_NOVARA_DOBLO">🚐 Trasporto semplice · Ospedale Novara</button></div>
-<p class="muted" style="margin-top:9px">Tariffari in vigore dal 18/09/2026. Per destinazioni non presenti, chiedere al Centralino; non inventare il prezzo.</p></div>
+<p class="muted" style="margin-top:9px">Tariffari in vigore dal 18/09/2026. Per destinazioni non presenti usa il calcolatore fuori tariffario e verifica sempre il prezzo prima di confermare il servizio.</p></div>
 <div class="section"><h3>♿ Supplementi per dotazioni speciali</h3>
 <p class="muted">Selezionabili nel Nuovo servizio. Sono aggiunti al singolo trasporto, non alle tariffe base.</p>
 <div class="grid2"><div class="notice"><b>Sedia cingolata / motorizzata · € 15,00</b></div>
 <div class="notice"><b>Barella bariatrica · € 20,00</b></div></div></div>
+
+<div class="section" id="routeCalcBox">
+ <div class="actions" style="justify-content:space-between;align-items:center">
+  <div><h3 style="margin:0">🧭 Calcolo fuori tariffario</h3>
+   <div class="muted">Per destinazioni non presenti: calcola il percorso stradale, i km e un costo stimato. I valori restano modificabili.</div>
+  </div>
+  <span class="pill b">STIMA</span>
+ </div>
+
+ <div class="grid3" style="margin-top:12px">
+  <div class="field"><label>Partenza</label><input id="rcStart" value="Croce Gialla Emergenza ODV, Via I Maggio 1, Dormelletto NO"></div>
+  <div class="field"><label>Carico paziente (facoltativo)</label><input id="rcLoad" placeholder="Es. Oleggio Castello NO"></div>
+  <div class="field"><label>Destinazione *</label><input id="rcDest" placeholder="Comune, ospedale o indirizzo"></div>
+ </div>
+ <div class="inline-checks" style="margin-top:10px">
+  <label class="check"><input id="rcReturn" type="checkbox" checked> Rientro al punto di partenza</label>
+  <label class="check"><input id="rcChair" type="checkbox"> Sedia cingolata / motorizzata (+ € 15)</label>
+  <label class="check"><input id="rcBariatric" type="checkbox"> Barella bariatrica (+ € 20)</label>
+ </div>
+ <div class="toolbar">
+  <button id="rcCalculateRoute" type="button" class="btn yellow">🧭 Calcola percorso</button>
+  <button id="rcOpenMaps" type="button" class="btn secondary">🗺 Apri percorso in Google Maps</button>
+  <button id="rcReset" type="button" class="btn secondary">Azzera</button>
+ </div>
+ <div id="rcMsg"></div>
+
+ <div class="section" style="margin-top:12px;background:#f7fafc">
+  <h3 style="margin-top:0">Parametri di costo</h3>
+  <div class="grid4">
+   <div class="field"><label>Km totali</label><input id="rcKm" type="number" min="0" step="0.1" placeholder="Calcolati o inseriti manualmente"></div>
+   <div class="field"><label>Durata stimata (ore)</label><input id="rcHours" type="number" min="0" step="0.1" placeholder="Calcolata o manuale"></div>
+   <div class="field"><label>Gasolio €/litro</label><input id="rcFuelPrice" type="number" min="0" step="0.01" value="2.34"></div>
+   <div class="field"><label>Consumo km/l</label><input id="rcConsumption" type="number" min="1" step="0.1" value="12"></div>
+   <div class="field"><label>Usura/manutenzione €/km</label><input id="rcWear" type="number" min="0" step="0.01" value="0"></div>
+   <div class="field"><label>Costo personale €/ora</label><input id="rcStaffHour" type="number" min="0" step="0.50" value="0"></div>
+   <div class="field"><label>Costi fissi / diritto chiamata €</label><input id="rcFixed" type="number" min="0" step="1" value="20"></div>
+   <div class="field"><label>Margine da applicare %</label><input id="rcMargin" type="number" min="0" step="1" value="0"></div>
+  </div>
+ </div>
+
+ <div class="stats" style="margin-top:12px">
+  <div class="stat"><small>CARBURANTE</small><b id="rcFuelCost">€ 0,00</b></div>
+  <div class="stat"><small>USURA / MANUTENZIONE</small><b id="rcWearCost">€ 0,00</b></div>
+  <div class="stat"><small>PERSONALE</small><b id="rcStaffCost">€ 0,00</b></div>
+  <div class="stat"><small>COSTO COMPLESSIVO</small><b id="rcTotalCost">€ 0,00</b></div>
+ </div>
+ <div class="section" style="margin-top:10px;background:#eef8f2">
+  <div class="actions" style="justify-content:space-between;align-items:center">
+   <div><small class="muted">IMPORTO SUGGERITO</small><div style="font-size:28px;font-weight:900" id="rcSuggested">€ 0,00</div>
+    <div class="muted" id="rcBreakdown">Inserisci o calcola i chilometri per ottenere la stima.</div>
+   </div>
+   <button id="rcUseService" type="button" class="btn yellow">Usa nel Nuovo servizio</button>
+  </div>
+ </div>
+ <p class="muted" style="margin-bottom:0">Percorso stimato tramite dati OpenStreetMap/OSRM. Verifica sempre km e importo prima di confermare il servizio; il calcolo non modifica i tariffari ufficiali.</p>
+</div>
+
 <div id="tariffGroupPanels">
 <div id="tariffPane_DEA_BORGOMANERO" class="section" data-tariff-pane="DEA_BORGOMANERO"><h3>Ambulanza · Ospedale Borgomanero</h3><div class="table"><table><thead><tr><th>Destinazione</th><th>Diurno</th><th>Notturno</th><th>Azioni</th></tr></thead><tbody></tbody></table></div></div>
 <div id="tariffPane_DEA_NOVARA" class="section hidden" data-tariff-pane="DEA_NOVARA"><h3>Ambulanza · Ospedale Novara</h3><div class="table"><table><thead><tr><th>Destinazione</th><th>Diurno</th><th>Notturno</th><th>Azioni</th></tr></thead><tbody></tbody></table></div></div>
@@ -5471,6 +5528,113 @@ $('exsave').onclick=async()=>{
  await loadVehiclesView();
  msg('exmsg',doneMsg,'ok');
 };
+
+
+function routeCalcNum(id){
+ const v=Number($(id)?.value);
+ return Number.isFinite(v)&&v>=0?v:0;
+}
+function routeCalcRecompute(){
+ if(!$('rcKm'))return;
+ const km=routeCalcNum('rcKm'),hours=routeCalcNum('rcHours'),fuelPrice=routeCalcNum('rcFuelPrice'),
+  consumption=Math.max(0.1,routeCalcNum('rcConsumption')||12),wearRate=routeCalcNum('rcWear'),
+  staffRate=routeCalcNum('rcStaffHour'),fixed=routeCalcNum('rcFixed'),margin=routeCalcNum('rcMargin');
+ const fuel=(km/consumption)*fuelPrice,wear=km*wearRate,staff=hours*staffRate;
+ const equipment=($('rcChair')?.checked?15:0)+($('rcBariatric')?.checked?20:0);
+ const total=fuel+wear+staff+fixed+equipment;
+ const suggested=total*(1+margin/100);
+ $('rcFuelCost').textContent=euro(fuel);
+ $('rcWearCost').textContent=euro(wear);
+ $('rcStaffCost').textContent=euro(staff);
+ $('rcTotalCost').textContent=euro(total);
+ $('rcSuggested').textContent=euro(suggested);
+ $('rcSuggested').dataset.value=suggested.toFixed(2);
+ $('rcBreakdown').textContent=km>0?
+  km.toFixed(1)+' km · '+hours.toFixed(1)+' h · costi fissi '+euro(fixed)+
+  (equipment?' · dotazioni '+euro(equipment):'')+(margin?' · margine '+margin.toFixed(0)+'%':''):
+  'Inserisci o calcola i chilometri per ottenere la stima.';
+}
+function routeCalcPoints(){
+ return [$('rcStart')?.value.trim(),$('rcLoad')?.value.trim(),$('rcDest')?.value.trim()].filter(Boolean);
+}
+async function routeCalcGeocode(q){
+ const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=it&q='+encodeURIComponent(q);
+ const r=await fetch(url,{headers:{'Accept':'application/json'}});
+ if(!r.ok)throw new Error('Geocodifica non disponibile ('+r.status+').');
+ const data=await r.json();
+ if(!data?.length)throw new Error('Località non trovata: '+q);
+ return {lat:Number(data[0].lat),lon:Number(data[0].lon),label:data[0].display_name||q};
+}
+function routeCalcSleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+async function routeCalcAutomatic(){
+ const points=routeCalcPoints();
+ if(points.length<2)return msg('rcMsg','Inserisci almeno partenza e destinazione.','warn');
+ const btn=$('rcCalculateRoute');btn.disabled=true;btn.textContent='Calcolo…';
+ msg('rcMsg','Ricerca del percorso in corso…');
+ try{
+  const coords=[];
+  for(let i=0;i<points.length;i++){
+   coords.push(await routeCalcGeocode(points[i]));
+   if(i<points.length-1)await routeCalcSleep(1100);
+  }
+  if($('rcReturn').checked)coords.push(coords[0]);
+  const coordText=coords.map(x=>x.lon+','+x.lat).join(';');
+  const url='https://router.project-osrm.org/route/v1/driving/'+coordText+'?overview=false&steps=false';
+  const rr=await fetch(url);
+  if(!rr.ok)throw new Error('Servizio percorso non disponibile ('+rr.status+').');
+  const data=await rr.json(),route=data?.routes?.[0];
+  if(!route)throw new Error('Nessun percorso stradale trovato.');
+  $('rcKm').value=(Number(route.distance||0)/1000).toFixed(1);
+  $('rcHours').value=(Number(route.duration||0)/3600).toFixed(1);
+  routeCalcRecompute();
+  msg('rcMsg','Percorso calcolato: '+$('rcKm').value+' km · circa '+$('rcHours').value+' ore. Verifica il risultato prima di usarlo.','ok');
+ }catch(e){
+  msg('rcMsg','Calcolo automatico non riuscito: '+(e?.message||e)+'. Puoi aprire Google Maps e inserire i km manualmente.','warn');
+ }finally{
+  btn.disabled=false;btn.textContent='🧭 Calcola percorso';
+ }
+}
+function routeCalcGoogleMaps(){
+ const points=routeCalcPoints();
+ if(points.length<2)return msg('rcMsg','Inserisci almeno partenza e destinazione.','warn');
+ let sequence=[...points];if($('rcReturn').checked)sequence.push(points[0]);
+ const origin=sequence.shift(),destination=sequence.pop(),waypoints=sequence;
+ let url='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+'&destination='+encodeURIComponent(destination)+'&travelmode=driving';
+ if(waypoints.length)url+='&waypoints='+encodeURIComponent(waypoints.join('|'));
+ window.open(url,'_blank','noopener');
+}
+function routeCalcReset(){
+ ['rcLoad','rcDest','rcKm','rcHours'].forEach(id=>{if($(id))$(id).value=''});
+ if($('rcStart'))$('rcStart').value='Croce Gialla Emergenza ODV, Via I Maggio 1, Dormelletto NO';
+ if($('rcReturn'))$('rcReturn').checked=true;
+ if($('rcChair'))$('rcChair').checked=false;if($('rcBariatric'))$('rcBariatric').checked=false;
+ ['rcWear','rcStaffHour','rcMargin'].forEach(id=>{if($(id))$(id).value='0'});
+ if($('rcFixed'))$('rcFixed').value='20';if($('rcFuelPrice'))$('rcFuelPrice').value='2.34';if($('rcConsumption'))$('rcConsumption').value='12';
+ msg('rcMsg','');routeCalcRecompute();
+}
+function routeCalcUseInService(){
+ const amount=Number($('rcSuggested')?.dataset.value||0),km=routeCalcNum('rcKm'),dest=$('rcDest')?.value.trim();
+ if(!km||!amount)return msg('rcMsg','Calcola prima il percorso e l’importo.','warn');
+ selectView('new');
+ if($('tar')){$('tar').value='';refreshTariffDestinations()}
+ if($('tarDest'))$('tarDest').value='';
+ if($('imp')){$('imp').readOnly=false;$('imp').value=amount.toFixed(2)}
+ if(dest&&$('dest'))$('dest').value=dest;
+ const route=[...routeCalcPoints(),...($('rcReturn').checked?[$('rcStart').value.trim()]:[])].filter(Boolean).join(' → ');
+ if($('note')){
+  const txt='Fuori tariffario · '+km.toFixed(1)+' km · stima '+euro(amount)+' · '+route;
+  $('note').value=[$('note').value.trim(),txt].filter(Boolean).join('\n');
+ }
+ if($('tarQuote'))$('tarQuote').innerHTML='<div class="notice ok"><b>Importo fuori tariffario riportato dal calcolatore: '+euro(amount)+'</b><br>Km stimati: '+km.toFixed(1)+'</div>';
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+if($('rcCalculateRoute'))$('rcCalculateRoute').onclick=routeCalcAutomatic;
+if($('rcOpenMaps'))$('rcOpenMaps').onclick=routeCalcGoogleMaps;
+if($('rcReset'))$('rcReset').onclick=routeCalcReset;
+if($('rcUseService'))$('rcUseService').onclick=routeCalcUseInService;
+['rcKm','rcHours','rcFuelPrice','rcConsumption','rcWear','rcStaffHour','rcFixed','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
+['rcReturn','rcChair','rcBariatric'].forEach(id=>{if($(id))$(id).onchange=routeCalcRecompute});
+routeCalcRecompute();
 
 function showTariffGroup(code){
  if(!TARIFF_CATEGORIES.some(x=>x[0]===code))return;
