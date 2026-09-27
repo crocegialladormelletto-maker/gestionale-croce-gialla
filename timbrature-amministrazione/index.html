@@ -12,7 +12,7 @@
 .topHeaderLogo{width:46px;height:46px;border-radius:12px;background:var(--y);color:#102f5a;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
 .topHeaderText h1{margin:0;font-size:20px;line-height:1.1;font-weight:900}
 .topHeaderSub{margin-top:4px;font-size:13px;color:rgba(255,255,255,.82);font-weight:500}
-.topHeaderRight{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.topHeaderRight{display:flex;align-items:center;gap:10px;flex:0 0 auto;flex-wrap:wrap}.headerMonth{font-size:13px;font-weight:800;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:8px 12px;border-radius:999px}
 .wrap{max-width:1240px;margin:22px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--bd);border-radius:18px;padding:20px;box-shadow:0 8px 25px rgba(20,32,51,.07);margin-bottom:18px}
 .hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 label{display:block;font-weight:800;margin:8px 0 5px}input,select{width:100%;padding:11px;border:2px solid var(--bd);border-radius:10px;font-size:16px;background:#fff}
@@ -30,6 +30,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .sideMenu{position:sticky;top:16px;background:#102f5a;border-radius:18px;padding:14px;box-shadow:0 8px 25px rgba(20,32,51,.12)}
 .sideTitle{color:#fff;font-weight:900;font-size:14px;padding:8px 10px 13px;border-bottom:1px solid rgba(255,255,255,.15);margin-bottom:10px}
 .sideBtn{width:100%;text-align:left;margin:5px 0;padding:13px 12px;border-radius:11px;color:#fff;background:#214a7c;display:flex;align-items:center;gap:10px}
+.sideLabel{flex:1}.menuBadge{min-width:26px;height:26px;padding:0 7px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;background:#fff;color:#102f5a;box-shadow:0 1px 5px rgba(0,0,0,.18)}
+.menuBadge.dangerBadge{background:#d92d20;color:#fff}.menuBadge.okBadge{background:#20a35a;color:#fff}.menuBadge.neutralBadge{background:#dbe7f4;color:#173b72}
 .sideBtn:hover{filter:brightness(1.08)}.sideBtn.active{background:var(--y);color:#102f5a;box-shadow:0 0 0 2px rgba(255,223,0,.25)}
 .sideBtn[data-page="timbrature"]{background:#2e5f9a}.sideBtn[data-page="anomalie"]{background:#9b3138}.sideBtn[data-page="riepiloghi"]{background:#24705a}.sideBtn[data-page="chiusura"]{background:#7e4a12}.sideBtn[data-page="dipendenti"]{background:#5a4b91}.sideBtn[data-page="audit"]{background:#46576d}.sideBtn[data-page="stampe"]{background:#166d82}
 .sideBtn.active[data-page]{background:var(--y);color:#102f5a}
@@ -53,6 +55,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       </div>
     </div>
     <div class="topHeaderRight">
+      <span id="headerSelectedMonth" class="headerMonth">Mese: --</span>
       <span id="headerMonthState" class="monthState open">MESE APERTO</span>
     </div>
   </div>
@@ -71,9 +74,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="adminShell">
 <aside id="sideMenu" class="sideMenu noPrint">
 <div class="sideTitle">AMMINISTRAZIONE TIMBRATURE</div>
-<button class="sideBtn active" data-page="dashboard">🏠 Dashboard</button>
-<button class="sideBtn" data-page="timbrature">🕒 Timbrature</button>
-<button class="sideBtn" data-page="anomalie">⚠️ Anomalie</button>
+<button class="sideBtn active" data-page="dashboard">🏠 <span class="sideLabel">Dashboard</span><span id="dashboardBadge" class="menuBadge neutralBadge">—</span></button>
+<button class="sideBtn" data-page="timbrature">🕒 <span class="sideLabel">Timbrature</span></button>
+<button class="sideBtn" data-page="anomalie">⚠️ <span class="sideLabel">Anomalie</span><span id="anomalyBadge" class="menuBadge okBadge">0</span></button>
 <button class="sideBtn" data-page="riepiloghi">📊 Riepiloghi mensili</button>
 <button class="sideBtn" data-page="chiusura">🔒 Chiusura mese</button>
 <button class="sideBtn" data-page="dipendenti">👥 Dipendenti / PIN</button>
@@ -206,8 +209,11 @@ function monthlyAnalyses(){
 function renderDashboard(){
  const analyses=monthlyAnalyses(),inNow=analyses.filter(x=>x.open),total=analyses.reduce((s,x)=>s+x.total,0),allAn=analyses.flatMap(x=>x.an);
  const modified=auditRows.filter(a=>['UPDATE','DELETE'].includes(a.azione)&&monthKey(a.avvenuto_il)===$('month').value);
+ const anomalyCount=allAn.length+modified.length;
+ $('anomalyBadge').textContent=anomalyCount;$('anomalyBadge').className='menuBadge '+(anomalyCount?'dangerBadge':'okBadge');
+ $('dashboardBadge').textContent=anomalyCount?'⚠':'✓';$('dashboardBadge').className='menuBadge '+(anomalyCount?'dangerBadge':'okBadge');
  $('kpiNow').textContent=inNow.length;$('kpiNowNames').textContent=inNow.length?inNow.map(x=>x.nome_completo).join(', '):'Nessuno';
- $('kpiHours').textContent=fmtMin(total);$('kpiAnom').textContent=allAn.length+modified.length;$('kpiRest').textContent=allAn.filter(a=>a.rest).length;
+ $('kpiHours').textContent=fmtMin(total);$('kpiAnom').textContent=anomalyCount;$('kpiRest').textContent=allAn.filter(a=>a.rest).length;
  $('currentService').innerHTML=inNow.length?'<h4>Attualmente in servizio</h4>'+inNow.map(x=>'<div class="serviceNow"><b>'+esc(x.nome_completo)+'</b> · entrata '+dt(x.open.evento_at)+'</div>').join(''):'';
  const box=$('anomalyBox'),box2=$('anomalyPageBox');let html;if(!allAn.length&&!modified.length){html='<b>✅ Nessuna anomalia rilevata nel mese selezionato.</b>';box.className='alertBox okBox';box2.className='alertBox okBox'}else{html='<b>⚠ Anomalie da verificare</b>'+allAn.map(a=>'<div class="anom '+(a.type==='RIPOSO < 11 ORE'?'':'warnA')+'"><b>'+esc(person(a.badge))+' · '+esc(a.type)+'</b><br>'+esc(dt(a.at))+' · '+esc(a.msg)+'</div>').join('')+modified.map(a=>'<div class="anom warnA"><b>'+esc(a.badge?person(a.badge):'Amministrazione')+' · TIMBRATURA MODIFICATA</b><br>'+esc(dt(a.avvenuto_il))+' · '+esc(a.azione)+'</div>').join('');box.className='alertBox blink';box2.className='alertBox blink'}box.innerHTML=html;box2.innerHTML=html
 }
@@ -215,7 +221,8 @@ function renderSummary(){
  const rows=monthlyAnalyses();$('monthlySummary').innerHTML='<table><thead><tr><th>Dipendente</th><th>Ore registrate</th><th>Giornate</th><th>Riposi &lt; 11h</th><th>Anomalie</th><th>Stato attuale</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><b>'+esc(x.nome_completo)+'</b></td><td>'+fmtMin(x.total)+'</td><td>'+x.days+'</td><td>'+x.rest+'</td><td>'+x.an.length+'</td><td>'+(x.open?'🟢 In servizio':'Fuori servizio')+'</td></tr>').join('')+'</tbody></table>'
 }
 function renderMonthState(){
- monthClosed=selectedMonthClosed();$('monthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('monthState').className='monthState '+(monthClosed?'closed':'open');$('headerMonthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('headerMonthState').className='monthState '+(monthClosed?'closed':'open');
+ monthClosed=selectedMonthClosed();const mv=$('month').value;let monthLabel=mv;if(/^\d{4}-\d{2}$/.test(mv)){const [yy,mm]=mv.split('-');monthLabel=new Date(Number(yy),Number(mm)-1,1).toLocaleDateString('it-IT',{month:'long',year:'numeric'});monthLabel=monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1)}$('headerSelectedMonth').textContent='Mese: '+monthLabel;
+ $('monthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('monthState').className='monthState '+(monthClosed?'closed':'open');$('headerMonthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('headerMonthState').className='monthState '+(monthClosed?'closed':'open');
  $('closeMonthBtn').classList.toggle('hidden',monthClosed);$('reopenMonthBtn').classList.toggle('hidden',!monthClosed);$('addHist').disabled=monthClosed;
  msg('monthMsg',monthClosed?'Il mese è chiuso: inserimenti, modifiche ed eliminazioni sono bloccati.':'Mese aperto. Prima della chiusura verifica eventuali anomalie.',monthClosed?'warn':'ok')
 }
