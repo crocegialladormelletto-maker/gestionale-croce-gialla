@@ -6536,4 +6536,51 @@ applyVolunteerOnlyLogin();refreshPwaInstallUI();
 try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&$('vbadge')){$('vbadge').value=remembered;$('vremember').checked=true}}catch(_){}
 (async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
 </script><script src="/gestionale-croce-gialla/note-debito.js?v=20260925f"></script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260926b"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
-<style>.nav[data-v="training"]{background:#65a30d;border-color:#4d7c0f;color:#fff}</style>
+<style>.nav[data-v="training"]{background:#65a30d;border-color:#4d7c0f;color:#fff}
+/* Dashboard: colori forzati pulsanti rapidi */
+#dash .hero{
+  background:linear-gradient(135deg,#eaf4ff 0%,#f5f9ff 55%,#ffffff 100%) !important;
+  border-bottom:1px solid #cfe0f5 !important;
+}
+#dash .hero .actions button{
+  color:#fff !important;
+  border-radius:10px !important;
+  font-weight:800 !important;
+  border-width:1px !important;
+  box-shadow:0 1px 3px rgba(0,0,0,.10) !important;
+}
+#dash .hero .actions button:hover{
+  filter:brightness(.95);
+  transform:translateY(-1px);
+}
+#dash .hero .actions button:nth-of-type(1){
+  background:#f4b400 !important;
+  border-color:#d99a00 !important;
+  color:#0f172a !important;
+}
+#dash .hero .actions button:nth-of-type(2){
+  background:#2563eb !important;
+  border-color:#1d4ed8 !important;
+}
+#dash .hero .actions button:nth-of-type(3){
+  background:#7c3aed !important;
+  border-color:#6d28d9 !important;
+}
+#dash .hero .actions button:nth-of-type(4){
+  background:#dc2626 !important;
+  border-color:#b91c1c !important;
+}
+#dash .hero .actions button:nth-of-type(5){
+  background:#db2777 !important;
+  border-color:#be185d !important;
+}
+#dash .hero .actions button:nth-of-type(6){
+  background:#0f766e !important;
+  border-color:#115e59 !important;
+}
+#dash .hero .actions button:nth-of-type(7){
+  background:#ea580c !important;
+  border-color:#c2410c !important;
+}
+
+</style>
