@@ -6,7 +6,13 @@
 <style>
 :root{--y:#ffdf00;--b:#173b72;--bg:#f4f7fb;--bd:#d7deea;--g:#15803d;--r:#b42318;--o:#a85b00;--m:#667085}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#142033}
-header{background:var(--y);padding:18px 22px;border-bottom:4px solid #111}
+.topHeader{background:#102f5a;color:#fff;border-bottom:4px solid var(--y);padding:12px 18px;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.topHeaderInner{display:flex;justify-content:space-between;align-items:center;gap:16px;max-width:1400px;margin:0 auto}
+.topHeaderLeft{display:flex;align-items:center;gap:14px;min-width:0}
+.topHeaderLogo{width:46px;height:46px;border-radius:12px;background:var(--y);color:#102f5a;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
+.topHeaderText h1{margin:0;font-size:20px;line-height:1.1;font-weight:900}
+.topHeaderSub{margin-top:4px;font-size:13px;color:rgba(255,255,255,.82);font-weight:500}
+.topHeaderRight{display:flex;align-items:center;gap:10px;flex:0 0 auto}
 .wrap{max-width:1240px;margin:22px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--bd);border-radius:18px;padding:20px;box-shadow:0 8px 25px rgba(20,32,51,.07);margin-bottom:18px}
 .hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 label{display:block;font-weight:800;margin:8px 0 5px}input,select{width:100%;padding:11px;border:2px solid var(--bd);border-radius:10px;font-size:16px;background:#fff}
@@ -31,12 +37,26 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .pageHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.pageHead h2{margin:0}
 .mobileMenuBtn{display:none;background:#102f5a;color:#fff}
 @media(max-width:900px){.grid,.grid4{grid-template-columns:1fr 1fr}.adminShell{grid-template-columns:1fr}.sideMenu{position:static;display:none}.sideMenu.open{display:block}.mobileMenuBtn{display:inline-block}}
+@media(max-width:700px){.topHeaderInner{flex-direction:column;align-items:flex-start}.topHeaderRight{width:100%;justify-content:flex-start}.topHeaderText h1{font-size:18px}.topHeaderSub{font-size:12px}}
 @media(max-width:600px){.grid,.grid4{grid-template-columns:1fr}}
 @media print{header,.noPrint,#loginBox{display:none!important}.printOnly{display:block}.wrap{max-width:none;margin:0;padding:0}.card{box-shadow:none;border:0;padding:0}.printTable th,.printTable td{border:1px solid #333;padding:7px}.printTable th{background:#eee!important}}
 </style>
 </head>
 <body>
-<header><h1>🔐 Amministrazione Timbrature</h1><div>Croce Gialla Emergenza ODV · Area riservata</div></header>
+<header class="topHeader">
+  <div class="topHeaderInner">
+    <div class="topHeaderLeft">
+      <div class="topHeaderLogo">CG</div>
+      <div class="topHeaderText">
+        <h1>Amministrazione Timbrature</h1>
+        <div class="topHeaderSub">Croce Gialla Emergenza ODV · Area riservata</div>
+      </div>
+    </div>
+    <div class="topHeaderRight">
+      <span id="headerMonthState" class="monthState open">MESE APERTO</span>
+    </div>
+  </div>
+</header>
 <div class="wrap">
 <div id="loginBox" class="card login">
 <h2>Accesso Amministrazione</h2>
@@ -195,7 +215,7 @@ function renderSummary(){
  const rows=monthlyAnalyses();$('monthlySummary').innerHTML='<table><thead><tr><th>Dipendente</th><th>Ore registrate</th><th>Giornate</th><th>Riposi &lt; 11h</th><th>Anomalie</th><th>Stato attuale</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><b>'+esc(x.nome_completo)+'</b></td><td>'+fmtMin(x.total)+'</td><td>'+x.days+'</td><td>'+x.rest+'</td><td>'+x.an.length+'</td><td>'+(x.open?'🟢 In servizio':'Fuori servizio')+'</td></tr>').join('')+'</tbody></table>'
 }
 function renderMonthState(){
- monthClosed=selectedMonthClosed();$('monthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('monthState').className='monthState '+(monthClosed?'closed':'open');
+ monthClosed=selectedMonthClosed();$('monthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('monthState').className='monthState '+(monthClosed?'closed':'open');$('headerMonthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('headerMonthState').className='monthState '+(monthClosed?'closed':'open');
  $('closeMonthBtn').classList.toggle('hidden',monthClosed);$('reopenMonthBtn').classList.toggle('hidden',!monthClosed);$('addHist').disabled=monthClosed;
  msg('monthMsg',monthClosed?'Il mese è chiuso: inserimenti, modifiche ed eliminazioni sono bloccati.':'Mese aperto. Prima della chiusura verifica eventuali anomalie.',monthClosed?'warn':'ok')
 }
