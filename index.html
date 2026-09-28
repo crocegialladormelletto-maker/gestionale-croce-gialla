@@ -584,7 +584,7 @@
 #tariffTabs [data-tariff-code][aria-pressed="true"]{opacity:1;transform:translateY(-1px);border-color:#102f5a!important;box-shadow:0 0 0 3px rgba(16,47,90,.16),0 5px 12px rgba(16,47,90,.16)}
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 
-/* === V14.01 · STATISTICHE === */
+/* === V14.02 · STATISTICHE === */
 .stats-page-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .stats-kpi{background:#fff;border:1px solid #d8e3ec;border-radius:13px;padding:13px;min-height:92px;cursor:pointer;transition:.15s ease;box-shadow:0 2px 8px #12375d0b}
 .stats-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px #12375d18}
@@ -604,7 +604,7 @@
 @media(max-width:520px){.stats-page-grid{grid-template-columns:1fr 1fr}.stats-kpi b{font-size:22px}.stats-vehicle-row{grid-template-columns:60px 1fr 70px 70px}}
 
 
-/* === V14.01 · REPORT PERSONALIZZATI === */
+/* === V14.02 · REPORT PERSONALIZZATI === */
 .report-builder{margin-top:12px}
 .report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .report-result{margin-top:12px;border:1px solid #d9e3eb;border-radius:12px;overflow:auto;background:#fff}
@@ -617,7 +617,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.01</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.02</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -671,7 +671,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.01</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.02</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -803,6 +803,22 @@
 
   <div class="stats-board">
    <div class="stats-card">
+    <div class="actions" style="justify-content:space-between"><div><h3>🕒 Statistiche turni volontari</h3><div class="muted">Comprende turni generali, Emergenza, Dimissioni e Assistenze nel periodo selezionato.</div></div><button class="btn secondary" type="button" id="statsOpenShifts">Apri Turni</button></div>
+    <div class="report-summary">
+     <div class="stat"><small>TURNI / PRESENZE ASSEGNATE</small><b id="statsShiftAssignments">0</b></div>
+     <div class="stat"><small>VOLONTARI CON TURNI</small><b id="statsShiftPeople">0</b></div>
+     <div class="stat"><small>TURNI GENERALI</small><b id="statsGeneralShifts">0</b></div>
+     <div class="stat"><small>EMERGENZA / DIMISSIONI / ASSISTENZE</small><b id="statsSpecialShifts">0</b></div>
+    </div>
+   </div>
+   <div class="stats-card">
+    <h3>Top volontari per turni</h3><div class="muted">Numero di presenze assegnate nel periodo selezionato.</div>
+    <div id="statsTopShiftVolunteers" style="margin-top:12px"></div>
+   </div>
+  </div>
+
+  <div class="stats-board">
+   <div class="stats-card">
     <h3>Servizi per tipologia</h3><div class="muted">Distribuzione nel periodo selezionato.</div>
     <div class="stats-donut-wrap" style="margin-top:12px"><div id="statsDonut" class="stats-donut"></div><div id="statsLegend" class="stats-legend"></div></div>
    </div>
@@ -840,6 +856,9 @@
       <option value="QUALIFICATIONS">Qualifiche personale</option>
       <option value="DAE_EXPIRY">Scadenze DAE</option>
       <option value="DOCUMENT_EXPIRY">Scadenze documenti</option>
+      <option value="SHIFTS_PERSON">Turni per volontario</option>
+      <option value="SHIFTS_ROLE">Turni per ruolo</option>
+      <option value="SHIFTS_TYPE">Turni per tipologia</option>
     </select></div>
     <div class="field"><label>Dal</label><input id="reportFrom" type="date"></div>
     <div class="field"><label>Al</label><input id="reportTo" type="date"></div>
@@ -2495,7 +2514,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.01':'Versione 14.01';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.02':'Versione 14.02';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -3805,7 +3824,7 @@ function statsEscapeCsv(v){return '"'+String(v??'').replaceAll('"','""')+'"'}
 
 let lastCustomReport=null;
 function reportFormatDate(d){return d?new Date(d+'T12:00:00').toLocaleDateString('it-IT'):'—'}
-function reportTypeNeedsPerson(type){return type==='HOURS_PERSON'}
+function reportTypeNeedsPerson(type){return type==='HOURS_PERSON'||type==='SHIFTS_PERSON'}
 function reportTypeNeedsVehicle(type){return ['SERVICES_VEHICLE','KM_VEHICLE','VEHICLE_USAGE'].includes(type)}
 async function populateReportFilter(){
  const type=$('reportType').value,sel=$('reportFilter');if(!sel)return;
@@ -3873,6 +3892,20 @@ async function createCustomReport(){
     const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]);
     reportRenderTable('Servizi per mezzo',['Mezzo','Numero servizi'],rows,[{label:'SERVIZI',value:rows0.length},{label:'MEZZI',value:rows.length}]);
    }
+  }else if(['SHIFTS_PERSON','SHIFTS_ROLE','SHIFTS_TYPE'].includes(type)){
+   const pr=await sb.from('personale').select('badge,nome_completo,nome,cognome').limit(1000);if(pr.error)throw pr.error;
+   const ss=await loadShiftStatistics(from,to,pr.data||[]);
+   if(type==='SHIFTS_PERSON'){
+    let rows=ss.top;
+    if(filter)rows=Object.entries(ss.byBadge).filter(([b])=>b===filter).map(([badge,n])=>({badge,n,name:statsPersonName((pr.data||[]).find(p=>p.badge===badge))}));
+    reportRenderTable('Turni per volontario',['Badge','Volontario','Turni / presenze'],rows.map(x=>[x.badge,x.name,x.n]),[{label:'PRESENZE',value:rows.reduce((s,x)=>s+x.n,0)},{label:'VOLONTARI',value:rows.length}]);
+   }else if(type==='SHIFTS_ROLE'){
+    const rows=Object.entries(ss.byRole).sort((a,b)=>b[1]-a[1]);
+    reportRenderTable('Turni per ruolo',['Ruolo','Presenze'],rows,[{label:'PRESENZE',value:ss.rows.length},{label:'RUOLI',value:rows.length}]);
+   }else{
+    const rows=Object.entries(ss.byType).sort((a,b)=>b[1]-a[1]);
+    reportRenderTable('Turni per tipologia',['Tipologia','Presenze'],rows,[{label:'PRESENZE',value:ss.rows.length},{label:'TIPOLOGIE',value:rows.length}]);
+   }
   }else if(type==='QUALIFICATIONS'||type==='DAE_EXPIRY'){
    const [qr,pr]=await Promise.all([sb.from('personale_qualifiche').select('badge_personale,codice_qualifica,valida_dal,valida_al,attiva').eq('attiva',true).limit(5000),sb.from('personale').select('badge,nome_completo,nome,cognome').limit(1000)]);
    if(qr.error||pr.error)throw(qr.error||pr.error);const pmap=new Map((pr.data||[]).map(p=>[p.badge,p]));
@@ -3889,6 +3922,37 @@ async function createCustomReport(){
  }catch(e){msg('reportMsg','Errore creazione report: '+(e.message||String(e)),'err')}
 }
 
+
+function shiftKey(row,source){return source+'|'+(row.giorno||row.data_turno||'')+'|'+(row.fascia||row.turno_id||row.id||'')+'|'+(row.badge_personale||'')+'|'+(row.ruolo||'')}
+function shiftPersonNameFromMap(badge,pmap){return statsPersonName(pmap.get(badge))||badge}
+async function loadShiftStatistics(from,to,people){
+ const [tp,tr,emg,dim,ass]=await Promise.all([
+  sb.from('turni_personale').select('turno_id,badge_personale,ruolo,confermato,risposta').limit(5000),
+  sb.from('turni').select('id,data_turno,tipo_turno,ora_inizio,ora_fine,stato').gte('data_turno',from).lte('data_turno',to).limit(5000),
+  sb.from('turni_emergenza_fasce').select('id,giorno,fascia,badge_personale,ruolo').gte('giorno',from).lte('giorno',to).limit(5000),
+  sb.from('turni_dimissioni').select('id,giorno,fascia,badge_personale,ruolo').gte('giorno',from).lte('giorno',to).limit(5000),
+  sb.from('turni_assistenza_fasce').select('id,giorno,fascia,badge_personale,ruolo').gte('giorno',from).lte('giorno',to).limit(5000)
+ ]);
+ const err=tp.error||tr.error||emg.error||dim.error||ass.error;
+ if(err)throw err;
+ const turnMap=new Map((tr.data||[]).map(x=>[x.id,x]));
+ const rows=[];
+ (tp.data||[]).forEach(x=>{
+  const t=turnMap.get(x.turno_id);if(!t)return;
+  if(x.risposta==='NON DISPONIBILE')return;
+  rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—'});
+ });
+ (emg.data||[]).forEach(x=>rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza 118',badge:x.badge_personale,role:x.ruolo||'—'}));
+ (dim.data||[]).forEach(x=>rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—'}));
+ (ass.data||[]).forEach(x=>rows.push({source:'Assistenze',date:x.giorno,type:'Assistenza',badge:x.badge_personale,role:x.ruolo||'—'}));
+ const valid=rows.filter(x=>x.badge);
+ const byBadge={},byRole={},byType={};
+ valid.forEach(x=>{byBadge[x.badge]=(byBadge[x.badge]||0)+1;byRole[x.role]=(byRole[x.role]||0)+1;byType[x.type]=(byType[x.type]||0)+1});
+ const pmap=new Map((people||[]).map(p=>[p.badge,p]));
+ const top=Object.entries(byBadge).map(([badge,n])=>({badge,n,name:shiftPersonNameFromMap(badge,pmap)})).sort((a,b)=>b.n-a.n).slice(0,10);
+ return {rows:valid,byBadge,byRole,byType,top,general:(tp.data||[]).filter(x=>turnMap.has(x.turno_id)&&x.risposta!=='NON DISPONIBILE').length,special:(emg.data||[]).length+(dim.data||[]).length+(ass.data||[]).length};
+}
+
 async function loadStatistics(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
  if(!$('reportFrom').value)reportResetUI();
@@ -3898,15 +3962,22 @@ async function loadStatistics(){
  const [sr,fr,pr]=await Promise.all([
   sb.from('servizi_giornalieri').select('id,data_servizio,categoria_servizio,tipo_servizio,tipo_servizio_altro,mezzo,stato_gestionale').gte('data_servizio',from).lte('data_servizio',to).neq('stato_gestionale','ANNULLATO').limit(5000),
   sb.from('fogli_viaggio').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,km_percorsi,ora_partenza_servizio,ora_arrivo_sede,badge_autista,badge_capo_servizio,badge_soccorritore,badge_secondo,badge_affiancato,badge_accompagnatore').gte('data_servizio',from).lte('data_servizio',to).limit(5000),
-  sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico').eq('attivo',true).limit(1000)
+  sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico').limit(1000)
  ]);
  const err=sr.error||fr.error||pr.error;if(err)return msg('statsMsg','Errore caricamento statistiche: '+err.message,'err');
- const services=sr.data||[],travel=fr.data||[],people=(pr.data||[]).filter(p=>(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
+ const services=sr.data||[],travel=fr.data||[],allPeople=pr.data||[],people=allPeople.filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
  const cats={};services.forEach(x=>{const k=statsTypeLabel(x);cats[k]=(cats[k]||0)+1});
  const emergency=cats['Emergenza / 118']||0,assistance=cats['Assistenze']||0;
  const km=travel.reduce((s,x)=>s+Number(x.km_percorsi||0),0);
  const hours=travel.reduce((s,x)=>s+statsDurationHours(x),0);
  $('statsPeople').textContent=people.length;$('statsServices').textContent=services.length;$('statsEmergency').textContent=emergency;$('statsAssistance').textContent=assistance;$('statsKm').textContent=Math.round(km).toLocaleString('it-IT');$('statsHours').textContent=hours.toLocaleString('it-IT',{maximumFractionDigits:1});
+ const shiftStats=await loadShiftStatistics(from,to,allPeople);
+ $('statsShiftAssignments').textContent=shiftStats.rows.length;
+ $('statsShiftPeople').textContent=Object.keys(shiftStats.byBadge).length;
+ $('statsGeneralShifts').textContent=shiftStats.general;
+ $('statsSpecialShifts').textContent=shiftStats.special;
+ const maxShift=Math.max(1,...shiftStats.top.map(x=>x.n));
+ $('statsTopShiftVolunteers').innerHTML=shiftStats.top.length?shiftStats.top.map(x=>'<div class="stats-top-row"><b>'+esc(x.name)+'</b><div class="stats-top-track"><div class="stats-top-fill" style="width:'+Math.max(2,x.n/maxShift*100)+'%"></div></div><strong>'+x.n+'</strong></div>').join(''):'<div class="notice">Nessun turno assegnato nel periodo.</div>';
  const colors=['#ff7176','#6885e8','#ff8a09','#9ad94f','#70dda0','#d8bd00','#0891b2','#7c3aed'];
  const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]),total=Math.max(1,services.length);let acc=0,parts=[];
  entries.forEach(([k,v],i)=>{const start=acc/total*360;acc+=v;const end=acc/total*360;parts.push(colors[i%colors.length]+' '+start+'deg '+end+'deg')});
@@ -3921,7 +3992,7 @@ async function loadStatistics(){
  const veh={};travel.forEach(x=>{const k=x.mezzo||'—';if(!veh[k])veh[k]={services:0,km:0,hours:0};veh[k].services++;veh[k].km+=Number(x.km_percorsi||0);veh[k].hours+=statsDurationHours(x)});
  const vehRows=Object.entries(veh).sort((a,b)=>b[1].km-a[1].km);
  $('statsVehicles').innerHTML=vehRows.length?'<div class="stats-vehicle-row"><b>Mezzo</b><b>Utilizzo</b><b>Servizi</b><b>Km</b></div>'+vehRows.map(([k,v])=>'<div class="stats-vehicle-row"><b>'+esc(k)+'</b><span>'+v.hours.toLocaleString('it-IT',{maximumFractionDigits:1})+' ore</span><strong>'+v.services+'</strong><strong>'+Math.round(v.km).toLocaleString('it-IT')+'</strong></div>').join(''):'<div class="notice">Nessun foglio viaggio nel periodo.</div>';
- lastStatsSnapshot={from,to,services:services.length,people:people.length,emergency,assistance,km,hours,cats,top,vehicles:vehRows};
+ lastStatsSnapshot={from,to,services:services.length,people:people.length,emergency,assistance,km,hours,cats,top,vehicles:vehRows,shiftStats};
  msg('statsMsg','Dati aggiornati.','ok');
 }
 function openStatsDetail(kind){
@@ -4042,10 +4113,11 @@ $('reportPrint')?.addEventListener('click',()=>{
 $('statsToday')?.addEventListener('click',()=>statsSetPeriod('today'));
 $('stats30')?.addEventListener('click',()=>statsSetPeriod('30'));
 $('statsYear')?.addEventListener('click',()=>statsSetPeriod('year'));
+$('statsOpenShifts')?.addEventListener('click',()=>view('shifts'));
 $('statsRefresh')?.addEventListener('click',loadStatistics);
 $('statsExport')?.addEventListener('click',()=>{
  const s=lastStatsSnapshot;if(!s)return alert('Aggiorna prima le statistiche.');
- const rows=[['Periodo',s.from+' - '+s.to],['Volontari attivi',s.people],['Servizi',s.services],['Emergenza / 118',s.emergency],['Assistenze',s.assistance],['Km',Math.round(s.km)],['Ore',s.hours.toFixed(1)],[],['Tipologia','Servizi'],...Object.entries(s.cats),[],['Top volontari','Ore'],...s.top.map(x=>[x.name,x.h.toFixed(1)]),[],['Mezzo','Servizi','Km','Ore'],...s.vehicles.map(([k,v])=>[k,v.services,Math.round(v.km),v.hours.toFixed(1)])];
+ const rows=[['Periodo',s.from+' - '+s.to],['Volontari attivi',s.people],['Servizi',s.services],['Emergenza / 118',s.emergency],['Assistenze',s.assistance],['Km',Math.round(s.km)],['Ore',s.hours.toFixed(1)],[],['Tipologia','Servizi'],...Object.entries(s.cats),[],['Top volontari','Ore'],...s.top.map(x=>[x.name,x.h.toFixed(1)]),[],['Top turni volontari','Turni'],...(s.shiftStats?.top||[]).map(x=>[x.name,x.n]),[],['Mezzo','Servizi','Km','Ore'],...s.vehicles.map(([k,v])=>[k,v.services,Math.round(v.km),v.hours.toFixed(1)])];
  const csv='\ufeff'+rows.map(r=>r.map(statsEscapeCsv).join(';')).join('\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Statistiche_Croce_Gialla_'+s.from+'_'+s.to+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
 });
 document.querySelectorAll('[data-stats-go]').forEach(x=>x.addEventListener('click',()=>openStatsDetail(x.dataset.statsGo)));
