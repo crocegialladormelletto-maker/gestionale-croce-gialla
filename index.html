@@ -584,7 +584,7 @@
 #tariffTabs [data-tariff-code][aria-pressed="true"]{opacity:1;transform:translateY(-1px);border-color:#102f5a!important;box-shadow:0 0 0 3px rgba(16,47,90,.16),0 5px 12px rgba(16,47,90,.16)}
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 
-/* === V14.08 · STATISTICHE === */
+/* === V14.09 · STATISTICHE === */
 .stats-page-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .stats-kpi{background:#fff;border:1px solid #d8e3ec;border-radius:13px;padding:13px;min-height:92px;cursor:pointer;transition:.15s ease;box-shadow:0 2px 8px #12375d0b}
 .stats-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px #12375d18}
@@ -604,7 +604,7 @@
 @media(max-width:520px){.stats-page-grid{grid-template-columns:1fr 1fr}.stats-kpi b{font-size:22px}.stats-vehicle-row{grid-template-columns:60px 1fr 70px 70px}}
 
 
-/* === V14.08 · REPORT PERSONALIZZATI === */
+/* === V14.09 · REPORT PERSONALIZZATI === */
 .report-builder{margin-top:12px}
 .report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .report-result{margin-top:12px;border:1px solid #d9e3eb;border-radius:12px;overflow:auto;background:#fff}
@@ -616,7 +616,7 @@
 @media(max-width:520px){.report-grid,.report-summary{grid-template-columns:1fr}}
 
 
-/* === V14.08 · STATISTICHE AVANZATE === */
+/* === V14.09 · STATISTICHE AVANZATE === */
 .stats-click{cursor:pointer}.stats-click:hover{text-decoration:underline}
 .stats-detail{margin-top:12px;border:1px solid #cbd9e5;border-radius:14px;background:#fff;overflow:auto}
 .stats-detail-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 14px;background:#eef5fb;border-bottom:1px solid #d6e2eb}
@@ -635,7 +635,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.08</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.09</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -689,7 +689,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.08</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.09</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -2554,7 +2554,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.08':'Versione 14.08';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.09':'Versione 14.09';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -4113,12 +4113,13 @@ async function statsRenderVolunteer(badge){
   '<div><b>Ore per mese</b><div class="stats-mini-bars" style="margin-top:8px">'+(Object.entries(months).length?Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0])).map(([m,h])=>'<div class="stats-mini-row"><span>'+esc(m)+'</span><div class="stats-mini-track"><div class="stats-mini-fill" style="width:'+Math.max(2,h/maxMonth*100)+'%"></div></div><b>'+h.toLocaleString('it-IT',{maximumFractionDigits:1})+' h</b></div>').join(''):'<div class="muted">Nessuna ora.</div>')+'</div></div></div></div></div>';
  box.querySelector('[data-vol-detail]')?.addEventListener('click',()=>statsVolunteerDetail(badge));
 }
-function statsRenderVehicles(services,shiftStats){
+function statsRenderVehicles(services,shiftStats,from,to){
  const map={};['06','07','08','09'].forEach(v=>map[v]={services:0,emergency:0,assistance:0,days:new Set()});
  services.forEach(x=>{const v=String(x.mezzo||'');if(!map[v])return;map[v].services++;map[v].days.add(x.data_servizio);if(statsTypeLabel(x)==='Assistenze')map[v].assistance++});
  const slotSeen=new Set();
  (shiftStats.rows||[]).forEach(x=>{const v=String(x.vehicle||'');if(!map[v]||!v)return;const key=(x.slot||[x.date,x.type].join('|'))+'|'+v;if(slotSeen.has(key))return;slotSeen.add(key);map[v].days.add(x.date);if(x.type==='Emergenza / 118')map[v].emergency++;if(x.type==='Assistenze')map[v].assistance++});
- $('statsVehicleCards').innerHTML=Object.entries(map).map(([v,d])=>'<div class="stats-vehicle-card"><small>MEZZO</small><b>'+esc(v)+'</b><small>Servizi programmati: <strong>'+d.services+'</strong></small><small>Emergenza/118: <strong>'+d.emergency+'</strong></small><small>Assistenze: <strong>'+d.assistance+'</strong></small><small>Giornate di utilizzo: <strong>'+d.days.size+'</strong></small></div>').join('');
+ const periodDays=Math.max(1,statsDaysBetween(from,to));
+ $('statsVehicleCards').innerHTML=Object.entries(map).map(([v,d])=>{const pct=Math.min(100,Math.round(d.days.size/periodDays*100));return '<div class="stats-vehicle-card"><small>MEZZO</small><b>'+esc(v)+'</b><small>Servizi programmati: <strong>'+d.services+'</strong></small><small>Emergenza/118: <strong>'+d.emergency+'</strong></small><small>Assistenze: <strong>'+d.assistance+'</strong></small><small>Giornate di utilizzo: <strong>'+d.days.size+'</strong></small><small>Utilizzo nel periodo: <strong>'+pct+'%</strong></small></div>'}).join('');
 }
 
 async function loadStatistics(){
@@ -4155,7 +4156,7 @@ async function loadStatistics(){
  $('statsDonut').style.background=entries.length?'conic-gradient('+parts.join(',')+')':'#e8eef3';
  $('statsLegend').innerHTML=entries.length?entries.map(([k,v],i)=>'<div class="stats-legend-row stats-click" data-stats-category="'+esc(k)+'"><span class="stats-dot" style="background:'+colors[i%colors.length]+'"></span><span>'+esc(k)+'</span><b>'+v+'</b></div>').join(''):'<div class="notice">Nessuna attività nel periodo.</div>';
  const top=shiftStats.topHours,maxH=Math.max(1,...top.map(x=>x.hours));
- $('statsTopVolunteers').innerHTML=top.length?top.map(x=>'<div class="stats-top-row"><b>'+esc(x.name)+'</b><div class="stats-top-track"><div class="stats-top-fill" style="width:'+Math.max(2,x.hours/maxH*100)+'%"></div></div><strong>'+x.hours.toLocaleString('it-IT',{maximumFractionDigits:1})+' h</strong></div>').join(''):'<div class="notice">Nessuna ora disponibile dai turni caricati nel periodo.</div>';
+ $('statsTopVolunteers').innerHTML=top.length?top.map(x=>'<div class="stats-top-row stats-click" data-stats-volunteer="'+esc(x.badge)+'"><b>'+esc(x.name)+'</b><div class="stats-top-track"><div class="stats-top-fill" style="width:'+Math.max(2,x.hours/maxH*100)+'%"></div></div><strong>'+x.hours.toLocaleString('it-IT',{maximumFractionDigits:1})+' h</strong></div>').join(''):'<div class="notice">Nessuna ora disponibile dai turni caricati nel periodo.</div>';
  const months={};services.forEach(x=>{const k=String(x.data_servizio||'').slice(0,7);if(k)months[k]=(months[k]||0)+1});
  const monthEntries=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0])).slice(-12),maxM=Math.max(1,...monthEntries.map(x=>x[1]));
  $('statsMonthly').innerHTML=monthEntries.length?monthEntries.map(([m,v])=>{const d=new Date(m+'-01T12:00:00'),lab=new Intl.DateTimeFormat('it-IT',{month:'short',year:'2-digit'}).format(d);return '<div class="stats-month"><strong>'+v+'</strong><div class="stats-month-bar" style="height:'+Math.max(3,v/maxM*175)+'px"></div><small>'+esc(lab)+'</small></div>'}).join(''):'<div class="notice">Nessun servizio nel periodo selezionato.</div>';
@@ -4165,7 +4166,7 @@ async function loadStatistics(){
  const volSel=$('statsVolunteerSelect'),keep=volSel.value;
  volSel.innerHTML='<option value="">Seleziona volontario</option>'+allPeople.slice().sort((a,b)=>statsPersonName(a).localeCompare(statsPersonName(b),'it')).map(p=>'<option value="'+esc(p.badge)+'">'+esc(statsPersonName(p))+' · '+esc(p.badge)+'</option>').join('');
  if([...volSel.options].some(o=>o.value===keep))volSel.value=keep;
- statsRenderVehicles(services,shiftStats);
+ statsRenderVehicles(services,shiftStats,from,to);
  await statsLoadComparison();
  if(volSel.value)await statsRenderVolunteer(volSel.value);
  $('statsLegend').querySelectorAll('[data-stats-category]').forEach(x=>x.onclick=()=>statsCategoryDetail(x.dataset.statsCategory));
