@@ -19,6 +19,7 @@
 .nav[data-view="dae"]{background:#dc2626;border-color:#b91c1c}
 .nav[data-view="training"]{background:#7c3aed;border-color:#6d28d9}
 .nav[data-view="qualifications"]{background:#65a30d;border-color:#4d7c0f}
+.nav[data-view="reports"]{background:#0f766e;border-color:#115e59}
 .surface{background:#fff;border:1px solid var(--l);border-radius:16px;overflow:hidden}.hero{padding:20px;background:linear-gradient(135deg,#eaf4ff 0%,#f5f9ff 55%,#ffffff 100%);border-bottom:1px solid #cfe0f5}
 .hero h1,.hero h2{margin:0 0 5px;color:var(--n)}.hero p{margin:0}.pad{padding:16px}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.stat,.box{background:#fff;border:1px solid var(--l);border-radius:12px;padding:12px}
@@ -76,6 +77,28 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .todayPanel h3{margin:0;color:var(--n)}.todayList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
 .todayItem{border:1px solid var(--l);border-radius:11px;padding:10px;background:#fbfdff}.todayItem.today{border-left:6px solid #1d4ed8}.todayItem.soon{border-left:6px solid #d97706}
 .todayItem .when{font-size:11px;font-weight:900;color:var(--m);text-transform:uppercase;letter-spacing:.02em}
+.reportHeader{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}
+.reportTitle{font-size:22px;font-weight:900;color:var(--n)}.reportMeta{font-size:12px;color:var(--m);margin-top:4px}
+.reportSection{border:1px solid var(--l);border-radius:13px;padding:13px;margin:11px 0;break-inside:avoid}
+.reportSection h3{margin:0 0 9px;color:var(--n)}
+.reportMiniGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.reportMini{border:1px solid var(--l);border-radius:10px;padding:10px;background:#fbfdff}
+.reportMini small{font-size:10px;font-weight:900;color:var(--m)}.reportMini b{display:block;font-size:21px;color:var(--n);margin-top:3px}
+.reportCompact{width:100%;border-collapse:collapse;min-width:0}.reportCompact th,.reportCompact td{font-size:11px;padding:7px;border-bottom:1px solid #e7edf2}
+.reportCompact th{background:#f1f5f8}
+@media(max-width:900px){.reportMiniGrid{grid-template-columns:repeat(2,1fr)}}
+@media print{
+ body.printing-report{background:#fff}
+ body.printing-report .top,body.printing-report .side,body.printing-report .reportActions{display:none!important}
+ body.printing-report .wrap{max-width:none;padding:0}.layout{display:block}
+ body.printing-report main>section{display:none!important}
+ body.printing-report #reports{display:block!important;border:0!important;border-radius:0!important}
+ body.printing-report #reports .hero{display:none}
+ body.printing-report #reports .pad{padding:0}
+ body.printing-report .reportSection{break-inside:avoid;border-color:#bbb}
+ body.printing-report .reportMiniGrid{grid-template-columns:repeat(5,1fr)}
+ body.printing-report .reportCompact{font-size:10px}
+}
 
 @media(max-width:1180px){.dashboardQuick{grid-template-columns:repeat(3,1fr)}.dashboardOverview{grid-template-columns:1fr}}
 @media(max-width:980px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;overflow:auto}.nav{min-width:180px}.stats{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}
@@ -99,7 +122,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.0</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.1</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -404,6 +427,19 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
      <div id="qualificationCards" class="grid2"></div>
     </div>
    </section>
+
+   <section id="reports" class="surface hidden">
+    <div class="hero"><h2>📄 Report Personale</h2><p>Riepilogo stampabile di personale, qualifiche, DAE, scadenze, stati e formazione.</p></div>
+    <div class="pad">
+     <div class="reportActions actions" style="justify-content:space-between;margin-bottom:12px">
+      <div class="muted">Il report viene aggiornato automaticamente con i dati presenti nel gestionale.</div>
+      <div class="actions">
+       <button id="refreshPersonnelReport" class="btn secondary">↻ Aggiorna report</button>
+       <button id="printPersonnelReport" class="btn blue">🖨 Stampa / Salva PDF</button>
+      </div>
+     </div>
+     <div id="personnelReport"></div>
+    </div>
   </main>
  </div></div>
 </div>
@@ -447,6 +483,7 @@ function view(id){
   renderTraining();
  }
  if(id==='qualifications'){renderQualificationCards();renderQualificationMatrix()}
+ if(id==='reports')renderPersonnelReport();
 }
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{setTrainingPlanVisible(false);view(b.dataset.view)});
 document.querySelectorAll('.jump').forEach(b=>b.onclick=()=>view(b.dataset.go));
@@ -500,7 +537,7 @@ async function loadAll(){
  const err=[pr.error,qr.error,pqr.error,dr.error,hr.error,cr.error,cpr.error,sr.error,tcr.error,tpr.error].find(Boolean);if(err){alert(err.message);return}
  people=(pr.data||[]).sort((a,b)=>String(a.cognome||a.nome_completo||'').localeCompare(String(b.cognome||b.nome_completo||''),'it',{sensitivity:'base'})||String(a.nome||'').localeCompare(String(b.nome||''),'it',{sensitivity:'base'}));
  defs=(qr.data||[]).filter(q=>!isAccompagnatore(q.codice));pquals=pqr.data||[];docs=dr.data||[];daeHistoryRows=hr.data||[];daeCourses=cr.data||[];daeCoursePeople=cpr.data||[];stateHistoryRows=sr.data||[];trainingCourses=tcr.data||[];trainingPeople=tpr.data||[];
- renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderTraining();renderQualificationCards();renderQualificationMatrix();renderDaeCourses();
+ renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderTraining();renderQualificationCards();renderQualificationMatrix();renderPersonnelReport();renderDaeCourses();
  if(selectedBadge&&people.some(p=>p.badge===selectedBadge))openPerson(selectedBadge);
 }
 function isPermanentOperationalQualification(code){
@@ -1196,6 +1233,65 @@ function renderQualificationMatrix(){
   (persons.length?persons.map(p=>{const cs=complianceForPerson(p);return '<tr><td><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b><br><span class="muted">Badge '+esc(p.badge)+'</span></td><td><span class="compliance '+cs.cls+'" title="'+esc(cs.reason||'')+'">'+esc(cs.icon||'')+' '+esc(cs.label)+'</span></td>'+cols.map(q=>'<td>'+matrixCell(p.badge,q.codice)+'</td>').join('')+'</tr>'}).join(''):'<tr><td colspan="'+(cols.length+2)+'">Nessun volontario trovato.</td></tr>')+
   '</tbody></table>';
 }
+
+function reportPersonLabel(p){
+ return p.nome_completo||(((p.cognome||'')+' '+(p.nome||'')).trim())||p.badge;
+}
+function renderPersonnelReport(){
+ const host=$('personnelReport');if(!host)return;
+ const active=people.filter(personActive);
+ const leave=people.filter(p=>(p.stato_anagrafico||'ATTIVO')==='ASPETTATIVA');
+ const suspended=people.filter(p=>(p.stato_anagrafico||'ATTIVO')==='SOSPESO');
+ const inactive=people.filter(p=>!personActive(p)&&!['ASPETTATIVA','SOSPESO'].includes(p.stato_anagrafico||''));
+ const daeBase=daeBaseRows();
+ const daeMissing=daeBase.filter(x=>x.key==='MANCANTE');
+ const daeExpired=daeBase.filter(x=>x.key==='SCADUTA');
+ const daeSoon=daeBase.filter(x=>x.key==='PROSSIMA');
+ const deadlines=allDeadlines();
+ const due30=deadlines.filter(x=>daysTo(x.date)>=0&&daysTo(x.date)<=30);
+ const overdue=deadlines.filter(x=>daysTo(x.date)<0);
+ const opCodes=defs.filter(d=>/AUTISTA|CAPO.*SERVIZIO|SOCCORRITORE/i.test((d.codice||'')+' '+(d.nome||''))).map(d=>d.codice);
+ const noOperational=active.filter(p=>!pquals.some(q=>q.badge_personale===p.badge&&opCodes.includes(q.codice_qualifica)));
+ const upcomingCourses=trainingCourses.filter(x=>x.data_corso&&daysTo(x.data_corso)>=0&&x.stato!=='ANNULLATO').sort((a,b)=>String(a.data_corso).localeCompare(String(b.data_corso)));
+ const qualRows=defs.map(q=>{
+  const rows=pquals.filter(x=>x.codice_qualifica===q.codice);
+  return {name:q.codice===daeCode()?'Certificazione DAE':qName(q.codice),total:rows.length,valid:rows.filter(x=>!x.valida_al||daysTo(x.valida_al)>=0).length,expired:rows.filter(x=>x.valida_al&&daysTo(x.valida_al)<0).length,soon:rows.filter(x=>x.valida_al&&daysTo(x.valida_al)>=0&&daysTo(x.valida_al)<=30).length};
+ });
+ const statusRows=people.slice().sort((a,b)=>reportPersonLabel(a).localeCompare(reportPersonLabel(b),'it')).map(p=>{
+  const dr=daeRow(p.badge),ops=pquals.filter(q=>q.badge_personale===p.badge&&opCodes.includes(q.codice_qualifica)).map(q=>qName(q.codice_qualifica));
+  return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(reportPersonLabel(p))+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(ops.join(', ')||'—')+'</td><td>'+esc(dr?.valida_al?fmt(dr.valida_al):'Mancante')+'</td></tr>';
+ }).join('');
+ host.innerHTML=
+  '<div class="reportHeader"><div><div class="reportTitle">Croce Gialla Emergenza ODV · Report Personale</div><div class="reportMeta">Situazione aggiornata al '+esc(new Date().toLocaleDateString('it-IT'))+'</div></div></div>'+
+  '<div class="reportSection"><h3>📊 Riepilogo generale</h3><div class="reportMiniGrid">'+
+   '<div class="reportMini"><small>PERSONALE TOTALE</small><b>'+people.length+'</b></div>'+
+   '<div class="reportMini"><small>ATTIVI</small><b>'+active.length+'</b></div>'+
+   '<div class="reportMini"><small>ASPETTATIVA</small><b>'+leave.length+'</b></div>'+
+   '<div class="reportMini"><small>SOSPESI</small><b>'+suspended.length+'</b></div>'+
+   '<div class="reportMini"><small>ALTRI NON ATTIVI</small><b>'+inactive.length+'</b></div>'+
+  '</div></div>'+
+  '<div class="reportSection"><h3>🫀 Situazione DAE</h3><div class="reportMiniGrid">'+
+   '<div class="reportMini"><small>VALIDI</small><b>'+daeBase.filter(x=>x.key==='VALIDA'||x.key==='ATTENZIONE').length+'</b></div>'+
+   '<div class="reportMini"><small>MANCANTI</small><b>'+daeMissing.length+'</b></div>'+
+   '<div class="reportMini"><small>SCADUTI</small><b>'+daeExpired.length+'</b></div>'+
+   '<div class="reportMini"><small>ENTRO 30 GG</small><b>'+daeSoon.length+'</b></div>'+
+   '<div class="reportMini"><small>DA VERIFICARE</small><b>'+(daeMissing.length+daeExpired.length+daeSoon.length)+'</b></div>'+
+  '</div></div>'+
+  '<div class="reportSection"><h3>⏰ Scadenze e operatività</h3><div class="reportMiniGrid">'+
+   '<div class="reportMini"><small>SCADENZE SCADUTE</small><b>'+overdue.length+'</b></div>'+
+   '<div class="reportMini"><small>SCADENZE ENTRO 30 GG</small><b>'+due30.length+'</b></div>'+
+   '<div class="reportMini"><small>SENZA QUALIFICA OPERATIVA</small><b>'+noOperational.length+'</b></div>'+
+   '<div class="reportMini"><small>CORSI FUTURI</small><b>'+upcomingCourses.length+'</b></div>'+
+   '<div class="reportMini"><small>QUALIFICHE CENSITE</small><b>'+defs.length+'</b></div>'+
+  '</div></div>'+
+  '<div class="reportSection"><h3>🎓 Copertura qualifiche</h3><table class="reportCompact"><thead><tr><th>Qualifica</th><th>Totali</th><th>Valide</th><th>Scadute</th><th>Entro 30 gg</th></tr></thead><tbody>'+
+   (qualRows.length?qualRows.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.total+'</td><td>'+x.valid+'</td><td>'+x.expired+'</td><td>'+x.soon+'</td></tr>').join(''):'<tr><td colspan="5">Nessuna qualifica registrata.</td></tr>')+
+  '</tbody></table></div>'+
+  '<div class="reportSection"><h3>📚 Corsi programmati / futuri</h3><table class="reportCompact"><thead><tr><th>Data</th><th>Corso</th><th>Tipo</th><th>Stato</th><th>Sede</th></tr></thead><tbody>'+
+   (upcomingCourses.length?upcomingCourses.slice(0,30).map(x=>'<tr><td>'+esc(fmt(x.data_corso))+'</td><td>'+esc(x.titolo||'—')+'</td><td>'+esc(x.tipo||'—')+'</td><td>'+esc(x.stato||'—')+'</td><td>'+esc(x.sede||'—')+'</td></tr>').join(''):'<tr><td colspan="5">Nessun corso futuro registrato.</td></tr>')+
+  '</tbody></table></div>'+
+  '<div class="reportSection"><h3>👥 Elenco personale e situazione operativa</h3><table class="reportCompact"><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Qualifiche operative</th><th>Scadenza DAE</th></tr></thead><tbody>'+statusRows+'</tbody></table></div>';
+}
 function renderQualificationCards(){
  $('qualificationCards').innerHTML=defs.map(q=>{
   const rows=pquals.filter(x=>x.codice_qualifica===q.codice),active=rows.filter(x=>!x.valida_al||daysTo(x.valida_al)>=0).length,expired=rows.filter(x=>x.valida_al&&daysTo(x.valida_al)<0).length,soon=rows.filter(x=>x.valida_al&&daysTo(x.valida_al)>=0&&daysTo(x.valida_al)<=30).length;
@@ -1204,6 +1300,14 @@ function renderQualificationCards(){
 }
 
 $('matrixSearch')?.addEventListener('input',renderQualificationMatrix);
+$('refreshPersonnelReport')?.addEventListener('click',renderPersonnelReport);
+$('printPersonnelReport')?.addEventListener('click',()=>{
+ renderPersonnelReport();
+ document.body.classList.add('printing-report');
+ window.print();
+ setTimeout(()=>document.body.classList.remove('printing-report'),300);
+});
+window.addEventListener('afterprint',()=>document.body.classList.remove('printing-report'));
 document.querySelectorAll('[data-kpi-go]').forEach(card=>card.onclick=()=>{
  const t=card.dataset.kpiGo;
  if(t==='active'){view('people');$('peopleState').value='ATTIVO';renderPeople()}
