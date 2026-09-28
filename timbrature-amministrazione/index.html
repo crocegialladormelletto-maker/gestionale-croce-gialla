@@ -34,7 +34,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .sideLabel{flex:1}.menuBadge{min-width:26px;height:26px;padding:0 7px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;background:#fff;color:#102f5a;box-shadow:0 1px 5px rgba(0,0,0,.18)}
 .menuBadge.dangerBadge{background:#d92d20;color:#fff}.menuBadge.okBadge{background:#20a35a;color:#fff}.menuBadge.neutralBadge{background:#dbe7f4;color:#173b72}
 .sideBtn:hover{filter:brightness(1.08)}.sideBtn.active{background:var(--y);color:#102f5a;box-shadow:0 0 0 2px rgba(255,223,0,.25)}
-.sideBtn[data-page="timbrature"]{background:#2e5f9a}.sideBtn[data-page="anomalie"]{background:#9b3138}.sideBtn[data-page="riepiloghi"]{background:#24705a}.sideBtn[data-page="chiusura"]{background:#7e4a12}.sideBtn[data-page="dipendenti"]{background:#5a4b91}.sideBtn[data-page="audit"]{background:#46576d}.sideBtn[data-page="stampe"]{background:#166d82}.sideBtn[data-page="causali"]{background:#8b5e12}
+.sideBtn[data-page="timbrature"]{background:#2e5f9a}.sideBtn[data-page="anomalie"]{background:#9b3138}.sideBtn[data-page="riepiloghi"]{background:#24705a}.sideBtn[data-page="chiusura"]{background:#7e4a12}.sideBtn[data-page="dipendenti"]{background:#5a4b91}.sideBtn[data-page="audit"]{background:#46576d}.sideBtn[data-page="stampe"]{background:#166d82}.sideBtn[data-page="causali"]{background:#8b5e12}.sideBtn[data-page="storico"]{background:#3f5f7f}
 .sideBtn.active[data-page]{background:var(--y);color:#102f5a}
 .adminMain{min-width:0}.adminPage{display:none}.adminPage.active{display:block}
 .pageHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.pageHead h2{margin:0}
@@ -77,6 +77,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="sideTitle">AMMINISTRAZIONE TIMBRATURE</div>
 <button class="sideBtn active" data-page="dashboard">🏠 <span class="sideLabel">Dashboard</span><span id="dashboardBadge" class="menuBadge neutralBadge">—</span></button>
 <button class="sideBtn" data-page="timbrature">🕒 <span class="sideLabel">Timbrature</span></button>
+<button class="sideBtn" data-page="storico">📚 <span class="sideLabel">Registro storico</span></button>
 <button class="sideBtn" data-page="anomalie">⚠️ <span class="sideLabel">Anomalie</span><span id="anomalyBadge" class="menuBadge okBadge">0</span></button>
 <button class="sideBtn" data-page="riepiloghi">📊 Riepiloghi mensili</button>
 <button class="sideBtn" data-page="causali">📅 Causali / Assenze</button>
@@ -143,7 +144,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div id="pinMsg" class="notice">Il PIN viene salvato sul database centrale come hash, non in chiaro.</div>
 </div></section>
 
-<section id="page-timbrature" class="adminPage"><div class="pageHead"><div><h2>Timbrature</h2><div class="muted">Registro, filtri e inserimento storico</div></div></div>
+<section id="page-timbrature" class="adminPage"><div class="pageHead"><div><h2>Timbrature</h2><div class="muted">Inserimento manuale di timbrature storiche</div></div></div>
 <div class="card noPrint">
 <h3>Inserisci timbratura storica</h3>
 <div class="grid"><div><label>Dipendente</label><select id="histEmp"></select></div><div><label>Tipo</label><select id="histType"><option>ENTRATA</option><option>USCITA</option></select></div><div><label>Data e ora</label><input id="histDt" type="datetime-local" min="2026-09-01T00:00"></div></div>
@@ -152,6 +153,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div id="histMsg" class="notice">La nota resta interna e non compare nella stampa mensile.</div>
 </div>
 
+</section>
+
+<section id="page-storico" class="adminPage"><div class="pageHead"><div><h2>Registro storico</h2><div class="muted">Consultazione e stampa delle timbrature registrate</div></div></div>
 <div class="card noPrint">
 <h3>Filtro e stampa mensile</h3>
 <div class="grid"><div><label>Dipendente</label><select id="filterEmp"></select></div><div><label>Mese</label><input id="month" type="month" min="2026-09"></div><div style="display:flex;align-items:end;gap:8px"><button id="refreshBtn" class="secondary" style="flex:1">AGGIORNA</button><button id="printBtn" class="primary" style="flex:1">STAMPA</button></div></div>
