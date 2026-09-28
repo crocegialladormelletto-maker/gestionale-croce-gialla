@@ -585,7 +585,7 @@
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.93</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.94</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.93</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.94</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -2376,7 +2376,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.93':'Versione 13.93';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.94':'Versione 13.94';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5889,103 +5889,140 @@ function routeCalcPoints(){
 }
 async function routeCalcGeocode(q){
  const raw=String(q||'').trim();
+ if(!raw)throw new Error('Indirizzo vuoto');
  const upper=raw.toUpperCase();
- const attempts=[raw];
+ const attempts=[];
 
- // Alias europei frequenti: accetta sia il nome italiano sia quello locale.
+ const addAttempt=v=>{
+  v=String(v||'').replace(/\s+/g,' ').replace(/\s+,/g,',').trim();
+  if(v&&!attempts.some(x=>x.toLowerCase()===v.toLowerCase()))attempts.push(v);
+ };
+
+ // Testo originale.
+ addAttempt(raw);
+
+ // Normalizzazione frequente per indirizzi italiani.
+ const normalized=raw
+  .replace(/[’‘]/g,"'")
+  .replace(/\((NO|VB|VC|BI|TO|MI|VA|PV|CO|BG|BS|GE|AL|AT|CN|AO)\)/ig,' $1')
+  .replace(/\bI(?:°|º)\s+Maggio\b/ig,'Primo Maggio')
+  .replace(/\b1°\s+Maggio\b/ig,'Primo Maggio')
+  .replace(/\bS\.\s*/ig,'San ')
+  .replace(/\bS\.S\.\s*/ig,'Strada Statale ')
+  .replace(/\s+/g,' ')
+  .trim();
+ addAttempt(normalized);
+
+ // Alias europei frequenti.
  const aliases=[
-  [/^MONACO( DI BAVIERA)?$/i,'München, Deutschland'],
-  [/^MUNICH$/i,'München, Deutschland'],
-  [/^VIENNA$/i,'Wien, Österreich'],
-  [/^ZURIGO$/i,'Zürich, Schweiz'],
-  [/^GINEVRA$/i,'Genève, Suisse'],
-  [/^BASILEA$/i,'Basel, Schweiz'],
-  [/^BERNA$/i,'Bern, Schweiz'],
-  [/^LUCERNA$/i,'Luzern, Schweiz'],
-  [/^LOSANNA$/i,'Lausanne, Suisse'],
-  [/^COLONIA$/i,'Köln, Deutschland'],
-  [/^NORIMBERGA$/i,'Nürnberg, Deutschland'],
-  [/^PRAGA$/i,'Praha, Česko'],
-  [/^LUBIANA$/i,'Ljubljana, Slovenija'],
-  [/^ZAGABRIA$/i,'Zagreb, Hrvatska'],
-  [/^BRATISLAVA$/i,'Bratislava, Slovensko'],
-  [/^BUDAPEST$/i,'Budapest, Magyarország'],
-  [/^VARSAVIA$/i,'Warszawa, Polska'],
-  [/^CRACOVIA$/i,'Kraków, Polska'],
-  [/^BRUXELLES$/i,'Bruxelles, Belgique'],
-  [/^LUSSEMBURGO$/i,'Luxembourg'],
-  [/^LIONE$/i,'Lyon, France'],
-  [/^MARSIGLIA$/i,'Marseille, France'],
-  [/^NIZZA$/i,'Nice, France'],
-  [/^PARIGI$/i,'Paris, France'],
-  [/^LONDRA$/i,'London, United Kingdom'],
-  [/^COPENAGHEN$/i,'København, Danmark'],
-  [/^STOCCOLMA$/i,'Stockholm, Sverige'],
-  [/^OSLO$/i,'Oslo, Norge'],
-  [/^HELSINKI$/i,'Helsinki, Suomi'],
-  [/^ATENE$/i,'Athina, Greece'],
-  [/^SALONICCO$/i,'Thessaloniki, Greece'],
-  [/^LISBONA$/i,'Lisboa, Portugal'],
-  [/^SIVIGLIA$/i,'Sevilla, España'],
-  [/^MONACO$/i,'Monaco']
+  [/^MONACO( DI BAVIERA)?$/i,'München, Deutschland'],[/^MUNICH$/i,'München, Deutschland'],
+  [/^VIENNA$/i,'Wien, Österreich'],[/^ZURIGO$/i,'Zürich, Schweiz'],[/^GINEVRA$/i,'Genève, Suisse'],
+  [/^BASILEA$/i,'Basel, Schweiz'],[/^BERNA$/i,'Bern, Schweiz'],[/^LUCERNA$/i,'Luzern, Schweiz'],
+  [/^LOSANNA$/i,'Lausanne, Suisse'],[/^COLONIA$/i,'Köln, Deutschland'],[/^NORIMBERGA$/i,'Nürnberg, Deutschland'],
+  [/^PRAGA$/i,'Praha, Česko'],[/^LUBIANA$/i,'Ljubljana, Slovenija'],[/^ZAGABRIA$/i,'Zagreb, Hrvatska'],
+  [/^BRATISLAVA$/i,'Bratislava, Slovensko'],[/^BUDAPEST$/i,'Budapest, Magyarország'],
+  [/^VARSAVIA$/i,'Warszawa, Polska'],[/^CRACOVIA$/i,'Kraków, Polska'],[/^BRUXELLES$/i,'Bruxelles, Belgique'],
+  [/^LUSSEMBURGO$/i,'Luxembourg'],[/^LIONE$/i,'Lyon, France'],[/^MARSIGLIA$/i,'Marseille, France'],
+  [/^NIZZA$/i,'Nice, France'],[/^PARIGI$/i,'Paris, France'],[/^LONDRA$/i,'London, United Kingdom'],
+  [/^COPENAGHEN$/i,'København, Danmark'],[/^STOCCOLMA$/i,'Stockholm, Sverige'],[/^OSLO$/i,'Oslo, Norge'],
+  [/^HELSINKI$/i,'Helsinki, Suomi'],[/^ATENE$/i,'Athina, Greece'],[/^SALONICCO$/i,'Thessaloniki, Greece'],
+  [/^LISBONA$/i,'Lisboa, Portugal'],[/^SIVIGLIA$/i,'Sevilla, España'],[/^MONACO$/i,'Monaco']
  ];
- for(const [rx,val] of aliases)if(rx.test(raw))attempts.unshift(val);
+ for(const [rx,val] of aliases)if(rx.test(raw))addAttempt(val);
 
- // Alias stradali/autostradali frequenti.
  if(/^INNTAL$/i.test(raw)||/^A\s*12$/i.test(raw)||/A\s*12.*INNTAL|INNTAL.*A\s*12/i.test(raw)){
-   attempts.unshift('A12 Inntal Autobahn, Tirol, Austria','Innsbruck, Tirol, Austria');
+  addAttempt('A12 Inntal Autobahn, Tirol, Austria');addAttempt('Innsbruck, Tirol, Austria');
  }
  if(/^BRENNERO$/i.test(raw)||/^BRENNER$/i.test(raw)||/^A\s*13$/i.test(raw)){
-   attempts.unshift('Brenner, Tirol, Austria','A13 Brenner Autobahn, Tirol, Austria');
+  addAttempt('Brenner, Tirol, Austria');addAttempt('A13 Brenner Autobahn, Tirol, Austria');
  }
 
- // Per la sede e per indirizzi complessi prova automaticamente versioni più semplici.
- if(/croce\s+gialla/i.test(raw)&&raw.includes(','))attempts.push(raw.split(',').slice(1).join(',').trim());
- attempts.push(
-  raw.replace(/Croce\s+Gialla\s+Emergenza\s+ODV,?\s*/i,'')
-     .replace(/Via\s+I(?:°|º)?\s+Maggio/i,'Via Primo Maggio')
+ if(/croce\s+gialla/i.test(raw)&&raw.includes(','))addAttempt(raw.split(',').slice(1).join(',').trim());
+ addAttempt(
+  normalized.replace(/Croce\s+Gialla\s+Emergenza\s+ODV,?\s*/i,'')
  );
 
- // Se sembra un indirizzo italiano, prova prima l'Italia; altrimenti ricerca europea senza filtro nazionale.
- const italianHint=/\b(NO|VB|VC|BI|TO|MI|VA|PV|ITALIA|ITALY)\b/.test(upper)||
-   /DORMELLETTO|NOVARA|BORGOMANERO|ARONA|TORINO|MILANO|ROMA|GENOVA|VENEZIA|BOLOGNA|FIRENZE|NAPOLI/.test(upper);
+ // Costruisce varianti robuste per indirizzi italiani con civico/CAP/comune/provincia.
+ const italianHint=/\b(NO|VB|VC|BI|TO|MI|VA|PV|CO|BG|BS|GE|AL|AT|CN|AO|ITALIA|ITALY)\b/.test(upper)||
+  /DORMELLETTO|NOVARA|BORGOMANERO|ARONA|TORINO|MILANO|ROMA|GENOVA|VENEZIA|BOLOGNA|FIRENZE|NAPOLI/.test(upper);
 
- if(!/ITALIA|ITALY/i.test(raw)&&italianHint)attempts.push(raw+', Italia');
+ if(italianHint){
+  if(!/ITALIA|ITALY/i.test(normalized))addAttempt(normalized+', Italia');
 
- const seen=new Set();
- for(const candidate of attempts.map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean)){
-  const key=candidate.toLowerCase();
-  if(seen.has(key))continue;
-  seen.add(key);
+  // Toglie CAP (spesso ridondante o scritto male) e riprova.
+  const noCap=normalized.replace(/\b\d{5}\b/g,'').replace(/\s+,/g,',').replace(/,\s*,/g,',').replace(/\s{2,}/g,' ').trim();
+  addAttempt(noCap);
+  if(!/ITALIA|ITALY/i.test(noCap))addAttempt(noCap+', Italia');
 
-  const countryFilter=italianHint?'&countrycodes=it':'';
-  const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&addressdetails=1'+countryFilter+
-    '&accept-language=it,en,de,fr,es,sl,hr&q='+encodeURIComponent(candidate);
+  // Toglie sigla provincia isolata in coda.
+  const noProvince=noCap.replace(/\b(NO|VB|VC|BI|TO|MI|VA|PV|CO|BG|BS|GE|AL|AT|CN|AO)\b(?=\s*(?:,|Italia|$))/ig,'')
+   .replace(/\s+,/g,',').replace(/,\s*,/g,',').replace(/\s{2,}/g,' ').trim();
+  addAttempt(noProvince);
+  if(!/ITALIA|ITALY/i.test(noProvince))addAttempt(noProvince+', Italia');
 
-  const r=await fetch(url,{headers:{'Accept':'application/json','Accept-Language':'it,en;q=0.9,de;q=0.8,fr;q=0.8'}});
-  if(!r.ok)continue;
-  const data=await r.json();
-  if(data?.length){
-    // Privilegia risultati europei e, per gli indirizzi italiani, risultati italiani.
-    const europe=data.filter(x=>{
-      const lat=Number(x.lat),lon=Number(x.lon);
-      return Number.isFinite(lat)&&Number.isFinite(lon)&&lat>=34&&lat<=72&&lon>=-12&&lon<=45;
-    });
-    const best=(europe.length?europe:data)[0];
-    return {lat:Number(best.lat),lon:Number(best.lon),label:best.display_name||candidate};
+  // Se contiene più parti, prova via+civico+comune e via+comune.
+  const parts=normalized.split(',').map(x=>x.trim()).filter(Boolean);
+  if(parts.length>=2){
+   const street=parts[0];
+   let cityPart=parts.slice(1).join(', ')
+    .replace(/\b\d{5}\b/g,'')
+    .replace(/\b(NO|VB|VC|BI|TO|MI|VA|PV|CO|BG|BS|GE|AL|AT|CN|AO)\b/ig,'')
+    .replace(/ITALIA|ITALY/ig,'')
+    .replace(/\s{2,}/g,' ').replace(/^\s*,|,\s*$/g,'').trim();
+   if(cityPart){
+    addAttempt(street+', '+cityPart+', Italia');
+    const streetNoNumber=street.replace(/\s+\d+[A-Za-z]?\s*$/,'').trim();
+    if(streetNoNumber!==street)addAttempt(streetNoNumber+', '+cityPart+', Italia');
+   }
   }
-  await routeCalcSleep(350);
  }
 
- // Ultimo tentativo senza alcun filtro nazionale, utile per località transfrontaliere.
- const lastUrl='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&accept-language=it,en&q='+encodeURIComponent(raw);
- const last=await fetch(lastUrl,{headers:{'Accept':'application/json','Accept-Language':'it,en;q=0.9'}});
- if(last.ok){
-   const data=await last.json();
-   if(data?.length)return {lat:Number(data[0].lat),lon:Number(data[0].lon),label:data[0].display_name||raw};
+ const europeOk=x=>{
+  const lat=Number(x.lat),lon=Number(x.lon);
+  return Number.isFinite(lat)&&Number.isFinite(lon)&&lat>=34&&lat<=72&&lon>=-12&&lon<=45;
+ };
+
+ // Primo provider: Nominatim.
+ for(const candidate of attempts){
+  try{
+   const countryFilter=italianHint?'&countrycodes=it':'';
+   const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1'+countryFilter+
+    '&accept-language=it,en,de,fr,es,sl,hr&q='+encodeURIComponent(candidate);
+   const r=await fetch(url,{headers:{'Accept':'application/json','Accept-Language':'it,en;q=0.9,de;q=0.8,fr;q=0.8'}});
+   if(r.ok){
+    const data=await r.json();
+    if(data?.length){
+     const valid=data.filter(europeOk);
+     const best=(valid.length?valid:data)[0];
+     return {lat:Number(best.lat),lon:Number(best.lon),label:best.display_name||candidate,provider:'OSM'};
+    }
+   }
+  }catch(_){}
+  await routeCalcSleep(250);
  }
 
- throw new Error('Località non trovata in Europa: '+raw+'. Prova con Comune + Stato oppure un indirizzo completo');
+ // Secondo provider: Photon/Komoot. Utile soprattutto per vie/civici che Nominatim non risolve.
+ for(const candidate of attempts.slice(0,8)){
+  try{
+   const url='https://photon.komoot.io/api/?limit=5&lang=it&q='+encodeURIComponent(candidate);
+   const r=await fetch(url,{headers:{'Accept':'application/json'}});
+   if(!r.ok)continue;
+   const data=await r.json();
+   const features=(data?.features||[]).filter(x=>{
+    const co=x?.geometry?.coordinates||[];
+    const lon=Number(co[0]),lat=Number(co[1]);
+    return Number.isFinite(lat)&&Number.isFinite(lon)&&lat>=34&&lat<=72&&lon>=-12&&lon<=45;
+   });
+   if(features.length){
+    const f=features[0],p=f.properties||{},co=f.geometry.coordinates;
+    const label=[p.name,p.street,p.housenumber,p.city,p.state,p.country].filter(Boolean).join(', ')||candidate;
+    return {lat:Number(co[1]),lon:Number(co[0]),label,provider:'Photon'};
+   }
+  }catch(_){}
+  await routeCalcSleep(180);
+ }
+
+ throw new Error('Indirizzo non trovato: '+raw+'. Prova a scrivere “Via e numero civico, Comune”');
 }
 function routeCalcSleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 
@@ -6162,8 +6199,9 @@ async function routeCalcAutomatic(){
  try{
   const coords=[];
   for(let i=0;i<points.length;i++){
+   msg('rcMsg','Ricerca indirizzo '+(i+1)+'/'+points.length+': '+points[i]+'…');
    coords.push(await routeCalcGeocode(points[i]));
-   if(i<points.length-1)await routeCalcSleep(1100);
+   if(i<points.length-1)await routeCalcSleep(350);
   }
   if($('rcReturn').checked)coords.push(coords[0]);
   const saved=await routeCalcLoadSavedQuote(false);
@@ -6184,7 +6222,7 @@ async function routeCalcAutomatic(){
   await routeCalcResolveToll(motorwayKm);
   routeCalcForeignCosts(coords,route);
   routeCalcRecompute();
-  msg('rcMsg','Percorso calcolato: '+$('rcKm').value+' km · autostrada rilevata '+motorwayKm.toFixed(1)+' km. Pedaggio '+$('rcTollSource').textContent+'.','ok');
+  msg('rcMsg','Percorso calcolato: '+$('rcKm').value+' km · autostrada rilevata '+motorwayKm.toFixed(1)+' km. Indirizzi riconosciuti correttamente.','ok');
  }catch(e){
   msg('rcMsg','Calcolo automatico non riuscito: '+(e?.message||e)+'. Puoi aprire Google Maps e inserire i km manualmente.','warn');
  }finally{
@@ -7677,7 +7715,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.93-20260928-daily-dashboard';
+const CGE_APP_BUILD='13.94-20260928-route-geocoder';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
