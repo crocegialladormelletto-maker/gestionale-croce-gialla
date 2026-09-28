@@ -51,7 +51,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.6</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.7</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -65,7 +65,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.6</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.7</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -287,8 +287,14 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
      </div>
 
      <div class="section">
-      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">📋 Corsi registrati</h3><div class="muted">Consulta i corsi esistenti oppure apri manualmente un nuovo corso generico.</div></div><button id="openGenericTrainingCourse" class="btn yellow">➕ Nuovo corso</button></div>
-      <div class="actions" style="justify-content:space-between"><div></div><div class="actions"><div class="muted">Apri un corso per gestire partecipanti, esiti e attestati.</div></div><div class="field" style="min-width:220px"><label>Stato corso</label><select id="trCourseStateFilter"><option value="">Tutti</option><option>DA PROGRAMMARE</option><option>PROGRAMMATO</option><option>IN SVOLGIMENTO</option><option>SVOLTO</option><option>ANNULLATO</option></select></div><div class="field" style="min-width:240px"><label>Cerca corso</label><input id="trSearch" placeholder="Titolo, tipo, docente..."></div></div></div>
+      <div class="actions" style="justify-content:space-between;align-items:end">
+       <div><h3 style="margin:0">📋 Corsi registrati</h3><div class="muted">Consulta e gestisci i corsi già creati.</div></div>
+       <button id="openGenericTrainingCourse" class="btn yellow">➕ Nuovo corso</button>
+      </div>
+      <div class="actions" style="justify-content:flex-end;align-items:end;margin-top:10px">
+       <div class="field" style="min-width:220px"><label>Stato corso</label><select id="trCourseStateFilter"><option value="">Tutti</option><option>DA PROGRAMMARE</option><option>PROGRAMMATO</option><option>IN SVOLGIMENTO</option><option>SVOLTO</option><option>ANNULLATO</option></select></div>
+       <div class="field" style="min-width:240px"><label>Cerca corso</label><input id="trSearch" placeholder="Titolo, tipo, docente..."></div>
+      </div>
       <div id="trainingCourses"></div>
      </div>
     </div>
