@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Assistenze e Manifestazioni · Croce Gialla Emergenza ODV</title>
+<style>
+:root{--n:#16324a;--n2:#0f263a;--y:#f3c400;--bg:#edf2f6;--l:#d9e2ea;--m:#667788;--g:#176a4b;--r:#a32b34}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#172533}.hidden{display:none!important}
+.top{background:var(--n);color:#fff}.head{max-width:1500px;margin:auto;padding:14px 20px;display:flex;gap:14px;align-items:center}.brand{flex:1}.brand small{display:block;color:var(--y);font-weight:900}.brand strong{font-size:23px}.stripe{height:5px;background:var(--y)}
+.btn{border:0;border-radius:9px;padding:9px 13px;font-weight:850;cursor:pointer}.yellow{background:var(--y);color:var(--n2)}.secondary{background:#eef2f6;color:var(--n)}.blue{background:var(--n);color:#fff}.green{background:#e6f6ee;color:var(--g)}.danger{background:#fdebec;color:var(--r)}
+.shell{max-width:1500px;margin:18px auto;padding:0 16px}.layout{display:grid;grid-template-columns:235px minmax(0,1fr);gap:16px}.side{background:#fff;border:1px solid var(--l);border-radius:14px;padding:10px;height:max-content;position:sticky;top:14px}.nav{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:9px;padding:11px 12px;font-weight:850;color:var(--n);cursor:pointer;margin:3px 0}.nav.active{background:var(--n);color:#fff}
+.surface{background:#fff;border:1px solid var(--l);border-radius:15px;overflow:hidden}.hero{padding:18px 20px;background:#f8fafc;border-bottom:1px solid var(--l)}.hero h1,.hero h2{margin:0;color:var(--n)}.hero p{margin:5px 0 0;color:var(--m)}.pad{padding:18px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.stat{border:1px solid var(--l);border-radius:11px;padding:12px}.stat small{display:block;color:var(--m);font-weight:800}.stat b{display:block;font-size:24px;color:var(--n);margin-top:4px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:11px;font-weight:850;color:var(--n)}input,select,textarea{width:100%;padding:9px 10px;border:1px solid #cbd6df;border-radius:8px;font:inherit;background:#fff}.section{border:1px solid var(--l);border-radius:11px;padding:14px;margin:12px 0}.section h3{margin:0 0 10px;color:var(--n)}.actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.toolbar{margin-bottom:12px}
+.table{overflow:auto;border:1px solid var(--l);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:1000px}th,td{padding:10px;border-bottom:1px solid #e7edf2;text-align:left;vertical-align:top}th{background:#f5f7fa;color:var(--n);font-size:10px;position:sticky;top:0}td{font-size:13px}.pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:900;background:#eef2f6}.p-warn{background:#fff3cc;color:#7b5b00}.p-green{background:#e5f6ee;color:#176a4b}.p-blue{background:#e8f1fb;color:#215b8a}.p-red{background:#fdebec;color:#a32b34}.muted{color:var(--m);font-size:12px}.notice{padding:10px 12px;border-radius:9px;margin:9px 0;background:#edf6ff;border:1px solid #cfe4fa}.notice.ok{background:#eaf8f1;color:#176a4b}.notice.err{background:#fff0f0;color:#a32b34}
+.login{max-width:470px;margin:8vh auto;background:#fff;border:1px solid var(--l);border-radius:16px;overflow:hidden}.login-head{background:var(--n);color:#fff;padding:24px;text-align:center}.login-body{padding:20px}.login-body .field{margin:10px 0}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;overflow:auto}.nav{min-width:max-content}.stats{grid-template-columns:1fr 1fr}.grid4,.grid3,.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="login" class="login hidden">
+ <div class="login-head"><h2 style="margin:0">Croce Gialla Emergenza ODV</h2><div>Gestionale Assistenze e Manifestazioni</div></div>
+ <div class="login-body"><div class="field"><label>Email</label><input id="email" type="email"></div><div class="field"><label>Password</label><input id="pw" type="password"></div><button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="loginMsg"></div></div>
+</div>
+
+<div id="app" class="hidden">
+<div class="top"><div class="head"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Assistenze e Manifestazioni</strong><div id="who" style="font-size:12px;color:#d9e5ee"></div></div><button id="main" class="btn secondary">← Gestionale principale</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div class="shell"><div class="layout">
+<aside class="side">
+ <button class="nav active" data-v="list">📋 Pratiche</button>
+ <button class="nav" data-v="new">✚ Nuova richiesta</button>
+</aside>
+<main>
+<section id="list" class="surface">
+ <div class="hero"><h1>Assistenze e Manifestazioni</h1><p>Richieste, preventivi e servizi confermati in un unico flusso.</p></div>
+ <div class="pad">
+  <div class="stats"><div class="stat"><small>RICHIESTE / PREVENTIVI</small><b id="sOpen">0</b></div><div class="stat"><small>INVIATI</small><b id="sSent">0</b></div><div class="stat"><small>ACCETTATI</small><b id="sAccepted">0</b></div><div class="stat"><small>SERVIZI CREATI</small><b id="sCreated">0</b></div></div>
+  <div class="toolbar"><input id="search" placeholder="Cerca organizzatore, evento, luogo..." style="max-width:420px"><button id="refresh" class="btn secondary">↻ Aggiorna</button><button class="btn yellow navNew">✚ Nuova richiesta</button></div>
+  <div id="listMsg"></div>
+  <div class="table"><table><thead><tr><th>Pratica</th><th>Evento</th><th>Organizzatore</th><th>Data / orari</th><th>Luogo</th><th>Mezzo</th><th>Preventivo</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="rows"></tbody></table></div>
+ </div>
+</section>
+
+<section id="new" class="surface hidden">
+ <div class="hero"><h2 id="formTitle">Nuova richiesta di assistenza</h2><p>La pratica non entra nel calendario operativo finché non viene confermata.</p></div>
+ <div class="pad">
+  <form id="form" onsubmit="return false">
+   <div class="section"><h3>Cliente / organizzatore</h3><div class="grid3">
+    <div class="field"><label>Organizzatore *</label><input id="org" required></div>
+    <div class="field"><label>Codice fiscale / P. IVA</label><input id="cf"></div>
+    <div class="field"><label>Referente</label><input id="ref"></div>
+    <div class="field"><label>Telefono</label><input id="phone"></div>
+    <div class="field"><label>Email</label><input id="mail" type="email"></div>
+   </div></div>
+   <div class="section"><h3>Manifestazione</h3><div class="grid3">
+    <div class="field"><label>Nome evento *</label><input id="event" required></div>
+    <div class="field"><label>Luogo *</label><input id="place" required></div>
+    <div class="field"><label>Indirizzo</label><input id="address"></div>
+    <div class="field"><label>Data *</label><input id="date" type="date" required></div>
+    <div class="field"><label>Partenza dalla sede</label><input id="depart" type="time"></div>
+    <div class="field"><label>Inizio assistenza *</label><input id="start" type="time" required></div>
+    <div class="field"><label>Fine assistenza *</label><input id="end" type="time" required></div>
+    <div class="field"><label>Rientro previsto</label><input id="back" type="time"></div>
+    <div class="field"><label>Mezzo</label><select id="vehicle"><option value="">Da assegnare</option><option>06</option><option>07</option><option>08</option><option>09</option></select></div>
+    <div class="field"><label>Operatori richiesti</label><input id="crew" type="number" min="1" max="20" value="2"></div>
+   </div></div>
+   <div class="section"><h3>Preventivo</h3><div class="grid2">
+    <div class="field"><label>Importo preventivo €</label><input id="amount" type="number" min="0" step="1" value="0"></div>
+    <div class="field"><label>Dotazioni / richieste particolari</label><input id="equipment"></div>
+   </div><div class="field" style="margin-top:10px"><label>Descrizione preventivo</label><textarea id="description" rows="3"></textarea></div></div>
+   <div class="section"><h3>Note</h3><textarea id="notes" rows="4"></textarea></div>
+   <div class="actions"><button id="save" class="btn yellow">Salva pratica</button><button id="cancel" class="btn secondary">Annulla</button></div><div id="formMsg"></div>
+  </form>
+ </div>
+</section>
+
+<section id="detail" class="surface hidden">
+ <div class="hero"><div class="actions" style="justify-content:space-between"><div><h2 id="dTitle">Pratica</h2><p id="dSub"></p></div><button id="back" class="btn secondary">← Elenco</button></div></div>
+ <div class="pad">
+  <div id="detailMsg"></div>
+  <div id="summary"></div>
+  <div class="actions">
+   <button id="edit" class="btn secondary">Modifica</button>
+   <button id="quote" class="btn blue">🖨 Stampa preventivo</button>
+   <button id="markQuote" class="btn secondary">Preventivo preparato</button>
+   <button id="markSent" class="btn secondary">Segna inviato</button>
+   <button id="confirm" class="btn green">✓ Accetta e crea servizio</button>
+   <button id="openService" class="btn yellow hidden">Apri servizio nel gestionale</button>
+  </div>
+ </div>
+</section>
+</main>
+</div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+<script>
+const sb=supabase.createClient('https://ihottewckpwpwqzpxusl.supabase.co','sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>Number(n||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'}),nice=x=>x?String(x).slice(0,10).split('-').reverse().join('/'):'—';
+let prof=null,rows=[],active=null,editing=null;
+function msg(id,t,k=''){const e=$(id);e.innerHTML=t?'<div class="notice '+k+'">'+esc(t)+'</div>':''}
+function view(v){document.querySelectorAll('main>section').forEach(x=>x.classList.toggle('hidden',x.id!==v));document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.v===v))}
+async function enter(){const u=await sb.auth.getUser();if(!u.data.user){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}const r=await sb.from('accessi_app').select('nome,ruolo,attivo').single();if(r.error||!r.data?.attivo||!['AMMINISTRATORE','CENTRALINO'].includes(r.data.ruolo)){await sb.auth.signOut();$('login').classList.remove('hidden');return msg('loginMsg','Accesso riservato ad Amministrazione e Centralino.','err')}prof=r.data;$('who').textContent=(prof.nome||prof.ruolo)+' · '+u.data.user.email;$('login').classList.add('hidden');$('app').classList.remove('hidden');await load()}
+$('go').onclick=async()=>{const r=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('pw').value});if(r.error)return msg('loginMsg','Credenziali non valide.','err');enter()};$('out').onclick=async()=>{await sb.auth.signOut();location.reload()};$('main').onclick=()=>location.href='../';
+document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>b.dataset.v==='new'?openForm():view('list'));document.querySelectorAll('.navNew').forEach(b=>b.onclick=openForm);$('cancel').onclick=()=>view('list');$('back').onclick=()=>view('list');$('refresh').onclick=load;$('search').oninput=render;
+function code(r){return 'ASS-'+String(r.numero||0).padStart(5,'0')}
+async function load(){const r=await sb.from('assistenze_manifestazioni').select('*').order('data_evento',{ascending:false}).order('created_at',{ascending:false});if(r.error)return msg('listMsg',r.error.message,'err');rows=r.data||[];const states=s=>rows.filter(x=>s.includes(x.stato)).length;$('sOpen').textContent=states(['RICHIESTA','PREVENTIVO']);$('sSent').textContent=states(['INVIATO']);$('sAccepted').textContent=states(['ACCETTATO']);$('sCreated').textContent=states(['SERVIZIO CREATO']);render();msg('listMsg','')}
+function pill(s){const c=s==='SERVIZIO CREATO'?'p-green':s==='INVIATO'?'p-blue':s==='RIFIUTATO'||s==='ANNULLATO'?'p-red':'p-warn';return '<span class="pill '+c+'">'+esc(s)+'</span>'}
+function render(){const q=$('search').value.trim().toLowerCase(),a=rows.filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q));$('rows').innerHTML=a.length?a.map(r=>'<tr><td><b>'+code(r)+'</b></td><td><b>'+esc(r.evento)+'</b></td><td>'+esc(r.organizzatore)+'</td><td>'+nice(r.data_evento)+'<br><span class="muted">'+esc((r.ora_inizio||'').slice(0,5))+'–'+esc((r.ora_fine||'').slice(0,5))+'</span></td><td>'+esc(r.luogo)+'</td><td>'+esc(r.mezzo||'Da assegnare')+'</td><td><b>'+money(r.importo_preventivo)+'</b></td><td>'+pill(r.stato)+'</td><td><button class="btn secondary" data-open="'+r.id+'">Apri</button></td></tr>').join(''):'<tr><td colspan="9">Nessuna pratica.</td></tr>';document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openDetail(b.dataset.open))}
+function openForm(row=null){editing=row?.id||null;$('formTitle').textContent=row?'Modifica '+code(row):'Nuova richiesta di assistenza';const m={org:'organizzatore',cf:'codice_fiscale_piva',ref:'referente',phone:'telefono',mail:'email',event:'evento',place:'luogo',address:'indirizzo',date:'data_evento',depart:'ora_partenza',start:'ora_inizio',end:'ora_fine',back:'ora_rientro',vehicle:'mezzo',crew:'numero_operatori',amount:'importo_preventivo',equipment:'dotazioni',description:'descrizione',notes:'note'};for(const[id,k]of Object.entries(m))$(id).value=row?.[k]??(id==='crew'?2:id==='amount'?0:'');view('new')}
+function payload(){return {organizzatore:$('org').value.trim(),codice_fiscale_piva:$('cf').value.trim()||null,referente:$('ref').value.trim()||null,telefono:$('phone').value.trim()||null,email:$('mail').value.trim()||null,evento:$('event').value.trim(),luogo:$('place').value.trim(),indirizzo:$('address').value.trim()||null,data_evento:$('date').value,ora_partenza:$('depart').value||null,ora_inizio:$('start').value,ora_fine:$('end').value,ora_rientro:$('back').value||null,mezzo:$('vehicle').value||null,numero_operatori:Number($('crew').value||2),importo_preventivo:Number($('amount').value||0),dotazioni:$('equipment').value.trim()||null,descrizione:$('description').value.trim()||null,note:$('notes').value.trim()||null,updated_at:new Date().toISOString()}}
+$('save').onclick=async()=>{const p=payload();if(!p.organizzatore||!p.evento||!p.luogo||!p.data_evento||!p.ora_inizio||!p.ora_fine)return msg('formMsg','Compila i campi obbligatori.','err');let r;if(editing)r=await sb.from('assistenze_manifestazioni').update(p).eq('id',editing).select('*').single();else r=await sb.from('assistenze_manifestazioni').insert(p).select('*').single();if(r.error)return msg('formMsg',r.error.message,'err');await load();openDetail(r.data.id)}
+function openDetail(id){active=rows.find(x=>x.id===id);if(!active)return;const r=active;$('dTitle').textContent=code(r)+' · '+r.evento;$('dSub').textContent=r.organizzatore+' · '+nice(r.data_evento)+' · '+r.stato;$('summary').innerHTML='<div class="section"><h3>Manifestazione</h3><div class="grid3"><div><b>Organizzatore</b><br>'+esc(r.organizzatore)+'</div><div><b>Referente</b><br>'+esc(r.referente||'—')+' '+esc(r.telefono||'')+'</div><div><b>Evento</b><br>'+esc(r.evento)+'</div><div><b>Luogo</b><br>'+esc(r.luogo)+(r.indirizzo?'<br>'+esc(r.indirizzo):'')+'</div><div><b>Data e orari</b><br>'+nice(r.data_evento)+' · '+esc((r.ora_inizio||'').slice(0,5))+'–'+esc((r.ora_fine||'').slice(0,5))+'</div><div><b>Mezzo / equipaggio</b><br>'+esc(r.mezzo||'Da assegnare')+' · '+esc(r.numero_operatori)+' operatori</div></div></div><div class="section"><h3>Preventivo</h3><b style="font-size:24px">'+money(r.importo_preventivo)+'</b><p>'+esc(r.descrizione||'Assistenza sanitaria alla manifestazione indicata.')+'</p>'+(r.dotazioni?'<p><b>Dotazioni:</b> '+esc(r.dotazioni)+'</p>':'')+'</div>';const created=r.stato==='SERVIZIO CREATO';$('confirm').classList.toggle('hidden',created);$('openService').classList.toggle('hidden',!created);view('detail')}
+$('edit').onclick=()=>openForm(active);
+async function setState(s){const r=await sb.from('assistenze_manifestazioni').update({stato:s,updated_at:new Date().toISOString()}).eq('id',active.id).select('*').single();if(r.error)return msg('detailMsg',r.error.message,'err');await load();openDetail(r.data.id)}
+$('markQuote').onclick=()=>setState('PREVENTIVO');$('markSent').onclick=()=>setState('INVIATO');
+$('confirm').onclick=async()=>{if(!active.mezzo)return msg('detailMsg','Assegna prima il mezzo alla pratica.','err');if(!confirm('Confermare la pratica e creare il servizio nel gestionale principale? Il servizio comparirà nel calendario operativo.'))return;const r=await sb.rpc('cge_conferma_assistenza_manifestazione',{p_id:active.id});if(r.error)return msg('detailMsg',r.error.message,'err');await load();openDetail(active.id);msg('detailMsg','Servizio creato: ora è visibile nel calendario del gestionale principale.','ok')}
+$('openService').onclick=()=>location.href='../?openService='+encodeURIComponent(active.servizio_id||'');
+$('quote').onclick=()=>{const r=active,w=window.open('','_blank');if(!w)return msg('detailMsg','Consenti i popup per stampare il preventivo.','err');const h='<!doctype html><html><head><meta charset="utf-8"><style>@page{size:A4;margin:15mm}body{font-family:Arial;color:#172533}.head{border-bottom:4px solid #f3c400;padding-bottom:12px;display:flex;justify-content:space-between}.box{border:1px solid #d9e2ea;border-radius:10px;padding:12px;margin-top:14px}.total{text-align:right;font-size:24px;font-weight:900;margin-top:16px}.five{margin-top:40px;border:2px solid #93c5fd;border-radius:12px;padding:14px;text-align:center}</style></head><body><div class="head"><div><h2 style="margin:0">CROCE GIALLA EMERGENZA ODV</h2><div>Via I° Maggio 1 · 28040 Dormelletto (NO)</div><div>C.F. 91023880031 · P. IVA 02809130038</div></div><div style="text-align:right"><h2 style="margin:0">PREVENTIVO</h2><b>'+code(r)+'</b><div>'+nice(new Date().toISOString())+'</div></div></div><div class="box"><h3>Cliente / organizzatore</h3><b>'+esc(r.organizzatore)+'</b><br>'+esc(r.codice_fiscale_piva||'')+'<br>'+esc(r.email||'')+'</div><div class="box"><h3>Assistenza richiesta</h3><b>'+esc(r.evento)+'</b><br>'+nice(r.data_evento)+' · '+esc((r.ora_inizio||'').slice(0,5))+'–'+esc((r.ora_fine||'').slice(0,5))+'<br>'+esc(r.luogo)+(r.indirizzo?'<br>'+esc(r.indirizzo):'')+'<p>'+esc(r.descrizione||'Servizio di assistenza sanitaria alla manifestazione.')+'</p></div><div class="total">TOTALE '+money(r.importo_preventivo)+'</div><div class="five"><b>Sostieni Croce Gialla Emergenza ODV con il tuo 5×1000</b><br>Codice fiscale: <b>91023880031</b></div><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>';w.document.open();w.document.write(h);w.document.close()}
+sb.auth.getSession().then(()=>enter());
+</script>
+</body></html>
