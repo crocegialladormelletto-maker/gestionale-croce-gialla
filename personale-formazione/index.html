@@ -423,11 +423,11 @@ function renderDashboard(){
  $('kpiNoOperational').textContent=noOperational.length;
  $('noOperationalList').innerHTML=noOperational.length?noOperational.map(p=>'<div class="box" style="margin:7px 0"><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b><br><span class="muted">Badge '+esc(p.badge)+' · nessuna qualifica operativa registrata</span></div>').join(''):'<div class="notice ok">Tutti i volontari attivi hanno almeno una qualifica operativa.</div>';
  const daeRows=daeRequiredRows();
- const daeAlerts=daeRows.filter(x=>!x.record?.valida_al||daysTo(x.row.valida_al)<=30);
+ const daeAlerts=daeRows.filter(x=>!x.row?.valida_al||daysTo(x.row.valida_al)<=30);
  $('daeAlertCount').textContent=daeAlerts.length+' da verificare';
  $('daeAlertCount').className='pill '+(daeAlerts.length?'r':'g');
  $('daeAlertList').innerHTML=daeAlerts.length?daeAlerts.map(x=>{
-  if(!x.record?.valida_al)return '<div class="box" style="margin:7px 0;border-left:5px solid #b52d36"><b>'+esc(x.person.nome_completo||x.person.badge)+'</b> <span class="pill r">Scadenza DAE mancante</span><br><span class="muted">Badge '+esc(x.person.badge)+' · inserire la data di scadenza.</span></div>';
+  if(!x.row?.valida_al)return '<div class="box" style="margin:7px 0;border-left:5px solid #b52d36"><b>'+esc(x.person.nome_completo||x.person.badge)+'</b> <span class="pill r">Scadenza DAE mancante</span><br><span class="muted">Badge '+esc(x.person.badge)+' · inserire la data di scadenza.</span></div>';
   const d=daysTo(x.row.valida_al),s=stateFor(x.row.valida_al);
   return '<div class="box" style="margin:7px 0;border-left:5px solid '+(d<0?'#b52d36':'#d6a100')+'"><b>'+esc(x.person.nome_completo||x.person.badge)+'</b> <span class="pill '+s.cls+'">'+esc(d<0?'DAE scaduto':'DAE in scadenza')+'</span><br><span class="muted">Scadenza '+esc(fmt(x.row.valida_al))+' · '+esc(d<0?Math.abs(d)+' gg fa':d===0?'oggi':d+' gg')+'</span></div>';
  }).join(''):'<div class="notice ok">Tutte le certificazioni DAE risultano oltre i 30 giorni dalla scadenza.</div>';
@@ -870,7 +870,7 @@ function matrixCell(badge,code){
  const q=pquals.find(x=>x.badge_personale===badge&&x.codice_qualifica===code);
  if(!q)return '<span class="matrix-none" title="Non assegnata">—</span>';
  const def=defs.find(d=>d.codice===code);
- const hasExpiry=def?.richiede_scadenza===true;
+ const hasExpiry=def?.richiede_scadenza===true&&!isPermanentOperationalQualification(code);
  if(code===daeCode()&&!q.valida_al)return '<span class="matrix-bad" title="DAE: scadenza mancante">●</span>';
  if(hasExpiry&&q.valida_al){
   const d=daysTo(q.valida_al);
