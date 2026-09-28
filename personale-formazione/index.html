@@ -48,7 +48,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.4.3</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.5</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -62,7 +62,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.4.3</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.5</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -95,13 +95,17 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
    <section id="people" class="surface hidden">
     <div class="hero"><h2>👥 Personale</h2><p>Anagrafica collegata al Gestionale Operativo.</p></div>
     <div class="pad">
-     <div class="section"><div class="grid3"><div class="field"><label>Cerca</label><input id="peopleSearch" placeholder="Nome, cognome o badge"></div><div class="field"><label>Stato</label><select id="peopleState"><option value="">Tutti</option><option>ATTIVO</option><option>ASPETTATIVA</option><option>SOSPESO</option><option>CESSATO</option></select></div><div class="field"><label>Qualifica</label><select id="peopleQual"><option value="">Tutte</option></select></div></div></div>
+     <div class="section"><div class="grid3"><div class="field"><label>Cerca</label><input id="peopleSearch" placeholder="Nome, cognome o badge"></div><div class="field"><label>Stato</label><select id="peopleState"><option value="">Tutti</option><option>ATTIVO</option><option>INATTIVO</option><option>ASPETTATIVA</option><option>SOSPESO</option><option>CESSATO</option></select></div><div class="field"><label>Qualifica</label><select id="peopleQual"><option value="">Tutte</option></select></div></div></div>
      <div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Semaforo</th><th>Qualifiche</th><th>Prossima scadenza</th><th></th></tr></thead><tbody id="peopleBody"></tbody></table></div>
      <div id="personDetail" class="section hidden" style="margin-top:14px">
       <div class="actions" style="justify-content:space-between"><div><h3 id="personTitle" style="margin:0">Scheda personale</h3><div id="personSub" class="muted"></div></div><button id="closePerson" class="btn secondary">Chiudi</button></div>
       <div class="grid4" style="margin-top:10px">
-       <div class="field"><label>Badge</label><input id="pBadge" disabled></div><div class="field"><label>Nome</label><input id="pName" disabled></div><div class="field"><label>Cognome</label><input id="pSurname" disabled></div><div class="field"><label>Stato</label><input id="pState" disabled></div>
+       <div class="field"><label>Badge</label><input id="pBadge" disabled></div><div class="field"><label>Nome</label><input id="pName" disabled></div><div class="field"><label>Cognome</label><input id="pSurname" disabled></div><div class="field"><label>Stato attività</label><select id="pState"><option value="ATTIVO">ATTIVO</option><option value="INATTIVO">INATTIVO</option><option value="ASPETTATIVA">ASPETTATIVA</option><option value="SOSPESO">SOSPESO</option><option value="CESSATO">CESSATO</option></select></div>
        <div class="field"><label>Telefono</label><input id="pPhone" disabled></div><div class="field"><label>Email</label><input id="pEmail" disabled></div><div class="field"><label>Data ingresso</label><input id="pEntry" disabled></div><div class="field"><label>Data nascita</label><input id="pBirth" disabled></div>
+      </div>
+      <div class="section">
+       <div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">⚙️ Gestione volontario</h3><div class="muted">Aggiorna lo stato di attività oppure elimina una scheda inserita per errore.</div></div><div class="actions"><button id="savePersonState" class="btn blue">Salva stato</button><button id="deletePerson" class="btn danger">Elimina volontario</button></div></div>
+       <div id="personManageMsg"></div>
       </div>
       <div class="section">
        <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🫀 Certificazione DAE</h3><div class="muted">Rinnovo, attestato e storico della certificazione.</div></div><span id="daePersonBadge" class="pill b">—</span></div>
@@ -339,12 +343,46 @@ function openPerson(badge){
  selectedBadge=badge;const p=people.find(x=>x.badge===badge);if(!p)return;
  $('personDetail').classList.remove('hidden');$('personTitle').textContent=p.nome_completo||'Scheda personale';$('personSub').textContent='Badge '+p.badge;
  $('pBadge').value=p.badge||'';$('pName').value=p.nome||'';$('pSurname').value=p.cognome||'';$('pState').value=p.stato_anagrafico||'ATTIVO';$('pPhone').value=p.telefono||'';$('pEmail').value=p.email||'';$('pEntry').value=p.data_ingresso||'';$('pBirth').value=p.data_nascita||'';
- $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');
+ $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');msg('personManageMsg','');
  const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';$('daeProvider').value='';$('daeCertificateNo').value='';$('daeNotes').value='';$('daeFile').value='';$('daePersonBadge').textContent='Badge '+badge;
  const ds=daeStatus(dr?.valida_al);$('daeState').value=ds.label.toUpperCase();
  renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
+
+$('savePersonState').onclick=async()=>{
+ if(!selectedBadge)return;
+ const stato=$('pState').value||'ATTIVO';
+ msg('personManageMsg','Salvataggio stato...');
+ const r=await sb.from('personale').update({stato_anagrafico:stato,attivo:stato==='ATTIVO'}).eq('badge',selectedBadge);
+ if(r.error)return msg('personManageMsg',r.error.message,'err');
+ msg('personManageMsg','Stato volontario aggiornato: '+stato+'.','ok');
+ await loadAll();
+};
+
+$('deletePerson').onclick=async()=>{
+ if(!selectedBadge)return;
+ const p=people.find(x=>x.badge===selectedBadge);if(!p)return;
+ const nome=p.nome_completo||((p.nome||'')+' '+(p.cognome||''))||selectedBadge;
+ const typed=prompt('Eliminazione definitiva di '+nome+'.\n\nPer confermare digita il badge '+selectedBadge+':');
+ if(typed===null)return;
+ if(String(typed).trim()!==String(selectedBadge))return msg('personManageMsg','Eliminazione annullata: badge di conferma non corretto.','warn');
+ try{
+  msg('personManageMsg','Eliminazione in corso...');
+  const checks=[
+   await sb.from('dae_corsi_partecipanti').delete().eq('badge_personale',selectedBadge),
+   await sb.from('dae_certificazioni_storico').delete().eq('badge_personale',selectedBadge),
+   await sb.from('personale_qualifiche').delete().eq('badge_personale',selectedBadge),
+   await sb.from('documenti_personale').delete().eq('badge_personale',selectedBadge)
+  ];
+  const depErr=checks.find(x=>x.error)?.error;if(depErr)throw depErr;
+  const r=await sb.from('personale').delete().eq('badge',selectedBadge);
+  if(r.error)throw r.error;
+  alert('Volontario eliminato definitivamente.');
+  selectedBadge=null;$('personDetail').classList.add('hidden');
+  await loadAll();
+ }catch(e){msg('personManageMsg','Impossibile eliminare il volontario: '+(e.message||String(e)),'err')}
+};
 
 async function saveQualDates(code){
  if(!selectedBadge)return;const from=document.querySelector('[data-qfrom="'+CSS.escape(code)+'"]').value||null,to=document.querySelector('[data-qto="'+CSS.escape(code)+'"]').value||null;
