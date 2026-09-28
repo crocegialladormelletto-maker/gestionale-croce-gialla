@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.89</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.90</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -963,8 +963,21 @@
 </div></section>
 
 <section id="services" class="surface hidden"><div class="hero"><h2>🔎 Archivio servizi</h2><p>Ricerca di tutti i servizi programmati e dello storico, di ogni tipologia.</p></div><div class="pad">
-<div class="section"><h3>🔎 Ricerca nell’archivio servizi</h3><p class="muted">Cerca per nome, cognome, codice fiscale, manifestazione, luogo, destinazione, tipo, mezzo o numero Foglio Viaggio. Lascia vuote le date per cercare anche nello storico e nei servizi futuri.</p><div class="grid3"><div class="field"><label>Ricerca</label><input id="fq" placeholder="Cerca un servizio…" autocomplete="off"></div><div class="field"><label>Dal</label><input id="fd" type="date"></div><div class="field"><label>Al</label><input id="fdTo" type="date"></div><div class="field"><label>Stato</label><select id="fs"><option value="">Tutti</option><option>DA ASSEGNARE</option><option>CONFERMATO</option><option>IN CORSO</option><option>TERMINATO</option><option>DA CONTABILIZZARE</option><option>CHIUSO</option><option>ANNULLATO</option></select></div><div class="field"><label>Mezzo</label><select id="fm"><option value="">Tutti</option></select></div><div class="field"><label>&nbsp;</label><div class="actions"><button id="refresh" class="btn yellow" type="button">🔎 Cerca</button><button id="searchToday" class="btn secondary" type="button">Oggi</button><button id="clearServiceSearch" class="btn secondary" type="button">Cancella filtri</button></div></div></div></div><div class="toolbar"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button></div><div id="smsg"></div>
-<div class="table"><table><thead><tr><th>Data/Ora</th><th>Mezzo</th><th>Servizio</th><th>Paziente</th><th>Percorso</th><th>Equipaggio</th><th>Stato</th><th id="servicePayHead">Pagamento</th><th>Azioni</th></tr></thead><tbody id="tbody"></tbody></table></div></div></section>
+<div class="section"><h3>🔎 Ricerca nell’archivio servizi</h3><p class="muted">Filtra lo storico per paziente, date, mezzo, tipo servizio, equipaggio, Foglio Viaggio, stato operativo e pagamento.</p>
+<div class="grid4">
+ <div class="field"><label>Ricerca generale</label><input id="fq" placeholder="Nome, luogo, destinazione…" autocomplete="off"></div>
+ <div class="field"><label>Paziente</label><input id="fPatient" placeholder="Nome o cognome" autocomplete="off"></div>
+ <div class="field"><label>Dal</label><input id="fd" type="date"></div>
+ <div class="field"><label>Al</label><input id="fdTo" type="date"></div>
+ <div class="field"><label>Stato servizio</label><select id="fs"><option value="">Tutti</option><option>DA ASSEGNARE</option><option>CONFERMATO</option><option>IN CORSO</option><option>TERMINATO</option><option>DA CONTABILIZZARE</option><option>CHIUSO</option><option>ANNULLATO</option></select></div>
+ <div class="field"><label>Mezzo</label><select id="fm"><option value="">Tutti</option></select></div>
+ <div class="field"><label>Tipo servizio</label><select id="fType"><option value="">Tutti</option><option value="EMERGENZA">Emergenza / Urgenza</option><option value="VISITA">Visita</option><option value="TRASFERIMENTO">Trasferimento</option><option value="TRASPORTO SEMPLICE">Trasporto semplice</option><option value="ASSISTENZA">Assistenza manifestazione</option><option value="SOCIALE">Servizi sociali</option></select></div>
+ <div class="field"><label>Equipaggio</label><input id="fCrew" placeholder="Nome, cognome o badge" autocomplete="off"></div>
+ <div class="field"><label>N° Foglio Viaggio</label><input id="fSheet" placeholder="Es. 2026-00125" autocomplete="off"></div>
+ <div class="field" data-admin-only="true"><label>Pagamento</label><select id="fPay"><option value="">Tutti</option><option>DA INCASSARE</option><option>PAGATO</option><option>PARZIALE</option><option>NON DOVUTO</option></select></div>
+ <div class="field"><label>&nbsp;</label><div class="actions"><button id="refresh" class="btn yellow" type="button">🔎 Cerca</button><button id="searchToday" class="btn secondary" type="button">Oggi</button><button id="clearServiceSearch" class="btn secondary" type="button">Cancella filtri</button></div></div>
+</div></div><div class="toolbar"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button></div><div id="smsg"></div>
+<div class="table"><table><thead><tr><th>Data/Ora</th><th>Mezzo</th><th>Servizio</th><th>Paziente</th><th>Percorso</th><th>Equipaggio</th><th>Foglio Viaggio</th><th>Stato</th><th id="servicePayHead">Pagamento</th><th>Azioni</th></tr></thead><tbody id="tbody"></tbody></table></div></div></section>
 
 
 
@@ -3661,26 +3674,83 @@ async function loadServices(){
  const r=await sb.rpc('cge_cerca_servizi',{p_search:search||null,p_dal:from||null,p_al:to||null,p_stato:$('fs').value||null,p_mezzo:$('fm').value||null});
  if(seq!==servicesSearchSequence)return;
  if(r.error)return msg('smsg','Errore ricerca servizi: '+r.error.message,'err');
- const rows=r.data||[];
+
+ let rows=r.data||[];
+ const ids=rows.map(x=>x.id);
+ const crewMap=new Map();
+ if(ids.length){
+  const cr=await sb.from('servizi_equipaggio').select('servizio_id,badge_personale,ruolo').in('servizio_id',ids);
+  if(seq!==servicesSearchSequence)return;
+  if(!cr.error)(cr.data||[]).forEach(x=>{
+   const person=people.find(p=>p.badge===x.badge_personale);
+   const item={badge:x.badge_personale,ruolo:x.ruolo,nome:person?.nome_completo||x.badge_personale};
+   if(!crewMap.has(x.servizio_id))crewMap.set(x.servizio_id,[]);
+   crewMap.get(x.servizio_id).push(item);
+  });
+ }
+
+ const patient=$('fPatient').value.trim().toLowerCase();
+ const crew=$('fCrew').value.trim().toLowerCase();
+ const sheet=$('fSheet').value.trim().toLowerCase();
+ const type=$('fType').value;
+ const pay=prof?.ruolo==='AMMINISTRATORE'?$('fPay').value:'';
+
+ rows=rows.filter(x=>{
+  if(patient){
+   const p=[x.paziente_cognome,x.paziente_nome,x.codice_fiscale].filter(Boolean).join(' ').toLowerCase();
+   if(!p.includes(patient))return false;
+  }
+  if(sheet&&!String(x.numero_foglio||'').toLowerCase().includes(sheet))return false;
+  if(type){
+   const t=String(x.tipo_servizio||'').toUpperCase()+' '+String(x.tipo_servizio_altro||'').toUpperCase();
+   if(type==='EMERGENZA'&&!(/EMERGENZA|URGENZA|118/.test(t)))return false;
+   if(type==='ASSISTENZA'&&!t.includes('ASSISTENZA'))return false;
+   if(type==='SOCIALE'&&!t.includes('SOCIAL'))return false;
+   if(!['EMERGENZA','ASSISTENZA','SOCIALE'].includes(type)&&!t.includes(type))return false;
+  }
+  if(pay&&String(x.stato_pagamento||'')!==pay)return false;
+  if(crew){
+   const text=(crewMap.get(x.id)||[]).map(m=>[m.nome,m.badge,m.ruolo].join(' ')).join(' ').toLowerCase();
+   if(!text.includes(crew))return false;
+  }
+  return true;
+ });
+
  servicesCache=rows;
- $('tbody').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(x.data_servizio)+'</b><br>'+esc((x.ora_partenza_prevista||'').slice(0,5))+(x.ora_carico_paziente_prevista?'<br><span class="muted">Carico '+esc(x.ora_carico_paziente_prevista.slice(0,5))+'</span>':'')+'</td><td>'+esc(x.mezzo)+'<br><span class="muted">'+esc(x.targa||'')+'</span></td><td>'+esc(x.tipo_servizio||'—')+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+esc(x.luogo_partenza||'—')+' → '+esc(x.destinazione||x.ospedale_destinazione||'—')+'</td><td>'+esc(x.componenti_equipaggio??0)+' componenti</td><td><span class="pill">'+esc(x.stato_gestionale)+'</span></td><td class="'+(prof?.ruolo==='CENTRALINO'?'hidden':'')+'"><span class="pill b">'+esc(x.stato_pagamento||'—')+'</span></td><td><div class="actions"><button class="btn secondary" data-open-service="'+esc(x.id)+'">Apri</button><button class="btn yellow" data-duplicate-service="'+esc(x.id)+'">📑 Duplica</button></div></td></tr>').join(''):'<tr><td colspan="9">Nessun servizio trovato con questi filtri.</td></tr>';
+ $('tbody').innerHTML=rows.length?rows.map(x=>{
+  const crewRows=crewMap.get(x.id)||[];
+  const crewText=crewRows.length?crewRows.map(m=>esc(m.nome)+' <span class="muted">('+esc(String(m.ruolo||'').replaceAll('_',' '))+')</span>').join('<br>'):'<span class="muted">Nessun equipaggio</span>';
+  const sheetText=x.numero_foglio?'<b>'+esc(x.numero_foglio)+'</b>':'<span class="muted">Non creato</span>';
+  return '<tr><td><b>'+esc(x.data_servizio)+'</b><br>'+esc((x.ora_partenza_prevista||'').slice(0,5))+(x.ora_carico_paziente_prevista?'<br><span class="muted">Carico '+esc(x.ora_carico_paziente_prevista.slice(0,5))+'</span>':'')+'</td>'+
+   '<td>'+esc(x.mezzo)+'<br><span class="muted">'+esc(x.targa||'')+'</span></td>'+
+   '<td>'+esc(x.tipo_servizio||'—')+(x.tipo_servizio_altro?'<br><span class="muted">'+esc(x.tipo_servizio_altro)+'</span>':'')+'</td>'+
+   '<td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td>'+
+   '<td>'+esc(x.luogo_partenza||'—')+' → '+esc(x.destinazione||x.ospedale_destinazione||'—')+'</td>'+
+   '<td>'+crewText+'</td><td>'+sheetText+'</td>'+
+   '<td><span class="pill">'+esc(x.stato_gestionale)+'</span></td>'+
+   '<td class="'+(prof?.ruolo==='CENTRALINO'?'hidden':'')+'"><span class="pill b">'+esc(x.stato_pagamento||'—')+'</span></td>'+
+   '<td><div class="actions"><button class="btn secondary" data-open-service="'+esc(x.id)+'">Apri</button><button class="btn yellow" data-duplicate-service="'+esc(x.id)+'">📑 Duplica</button></div></td></tr>';
+ }).join(''):'<tr><td colspan="10">Nessun servizio trovato con questi filtri.</td></tr>';
  $('tbody').querySelectorAll('[data-open-service]').forEach(button=>button.onclick=()=>openService(button.dataset.openService));
  $('tbody').querySelectorAll('[data-duplicate-service]').forEach(button=>button.onclick=()=>duplicateServiceRequest(button.dataset.duplicateService));
- msg('smsg',rows.length+' '+(rows.length===1?'servizio trovato':'servizi trovati')+(rows.length===500?' · Mostrati i primi 500: restringi date o ricerca per risultati più precisi.':''),'ok');
+ msg('smsg',rows.length+' '+(rows.length===1?'servizio trovato':'servizi trovati')+((r.data||[]).length===500?' · Ricerca iniziale limitata a 500 risultati: restringi le date per uno storico più preciso.':''),'ok');
 }
 $('refresh').onclick=loadServices;
-['fd','fdTo','fs','fm'].forEach(id=>$(id).onchange=loadServices);
-$('fq').oninput=()=>{clearTimeout(window.qq);window.qq=setTimeout(loadServices,350)};
-$('fq').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();clearTimeout(window.qq);loadServices()}};
+['fd','fdTo','fs','fm','fType','fPay'].forEach(id=>$(id)&&($(id).onchange=loadServices));
+['fq','fPatient','fCrew','fSheet'].forEach(id=>{
+ if(!$(id))return;
+ $(id).oninput=()=>{clearTimeout(window.qq);window.qq=setTimeout(loadServices,350)};
+ $(id).onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();clearTimeout(window.qq);loadServices()}};
+});
 $('clearServiceSearch').onclick=()=>{
  servicesSearchSequence++;
- ['fd','fdTo','fs','fm','fq'].forEach(id=>{$(id).value=''});
+ ['fd','fdTo','fs','fm','fq','fPatient','fCrew','fSheet','fType','fPay'].forEach(id=>{if($(id))$(id).value=''});
  loadServices();
 };
 $('searchToday').onclick=()=>{
  servicesSearchSequence++;
  $('fd').value=todaySafe();$('fdTo').value=todaySafe();
- $('fs').value='';$('fm').value='';$('fq').value='';
+ ['fs','fm','fq','fPatient','fCrew','fSheet','fType','fPay'].forEach(id=>{if($(id))$(id).value=''});
  loadServices();
 };
 async function dashFindService(all=false){
@@ -3688,7 +3758,7 @@ async function dashFindService(all=false){
  $('fq').value=all?'':$('dashServiceSearch').value.trim();
  $('fd').value=all?'':$('dashServiceDate').value;
  $('fdTo').value=all?'':$('dashServiceDate').value;
- $('fs').value='';$('fm').value='';
+ ['fs','fm','fPatient','fCrew','fSheet','fType','fPay'].forEach(id=>{if($(id))$(id).value=''});
  msg('dashServiceMsg','');
  await view('services');
 }
@@ -7483,7 +7553,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.89-20260928-transport-quotes';
+const CGE_APP_BUILD='13.90-20260928-service-archive';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
