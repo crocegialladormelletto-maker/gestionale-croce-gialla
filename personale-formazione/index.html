@@ -51,7 +51,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.5</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.6</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -65,7 +65,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.5</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.6</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -262,7 +262,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
       <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🧭 Selezione percorso formativo</h3><div class="muted">Sezione richiamata automaticamente dalla gestione rapida dei corsi.</div></div><button id="closeTrainingPlan" class="btn secondary">Chiudi</button></div>
       <div id="trainingPlan" class="grid3" style="margin-top:10px"></div>
      </div>
-     <div class="section">
+     <div id="newTrainingCourseSection" class="section hidden">
       <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">➕ Nuovo corso</h3><div class="muted">Crea un corso e seleziona i partecipanti dall'elenco alfabetico.</div></div><button id="newTrainingReset" class="btn secondary">Pulisci</button></div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Titolo *</label><input id="trTitle" placeholder="Es. Aggiornamento BLSD"></div>
@@ -287,7 +287,8 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
      </div>
 
      <div class="section">
-      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">📋 Corsi registrati</h3><div class="muted">Apri un corso per gestire partecipanti, esiti e attestati.</div></div><div class="actions"><div class="field" style="min-width:220px"><label>Stato corso</label><select id="trCourseStateFilter"><option value="">Tutti</option><option>DA PROGRAMMARE</option><option>PROGRAMMATO</option><option>IN SVOLGIMENTO</option><option>SVOLTO</option><option>ANNULLATO</option></select></div><div class="field" style="min-width:240px"><label>Cerca corso</label><input id="trSearch" placeholder="Titolo, tipo, docente..."></div></div></div>
+      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">📋 Corsi registrati</h3><div class="muted">Consulta i corsi esistenti oppure apri manualmente un nuovo corso generico.</div></div><button id="openGenericTrainingCourse" class="btn yellow">➕ Nuovo corso</button></div>
+      <div class="actions" style="justify-content:space-between"><div></div><div class="actions"><div class="muted">Apri un corso per gestire partecipanti, esiti e attestati.</div></div><div class="field" style="min-width:220px"><label>Stato corso</label><select id="trCourseStateFilter"><option value="">Tutti</option><option>DA PROGRAMMARE</option><option>PROGRAMMATO</option><option>IN SVOLGIMENTO</option><option>SVOLTO</option><option>ANNULLATO</option></select></div><div class="field" style="min-width:240px"><label>Cerca corso</label><input id="trSearch" placeholder="Titolo, tipo, docente..."></div></div></div>
       <div id="trainingCourses"></div>
      </div>
     </div>
@@ -320,7 +321,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const today=()=>new Date().toISOString().slice(0,10);
 const fmt=d=>d?new Date(d+'T00:00:00').toLocaleDateString('it-IT'):'—';
 function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c+'">'+esc(t)+'</div>':''}
-let people=[],defs=[],pquals=[],docs=[],daeHistoryRows=[],daeCourses=[],daeCoursePeople=[],stateHistoryRows=[],trainingCourses=[],trainingPeople=[],selectedBadge=null,lastDaeRenderedRows=[],trainingPlanOpen=false;
+let people=[],defs=[],pquals=[],docs=[],daeHistoryRows=[],daeCourses=[],daeCoursePeople=[],stateHistoryRows=[],trainingCourses=[],trainingPeople=[],selectedBadge=null,lastDaeRenderedRows=[],trainingPlanOpen=false,newTrainingCourseOpen=false;
 function daeDef(){return defs.find(q=>String(q.codice||'').toUpperCase()==='DAE')||null}
 function daeCode(){return 'DAE'}
 function daeRow(badge){const code=daeCode();return pquals.find(q=>q.badge_personale===badge&&q.codice_qualifica===code)||null}
@@ -332,15 +333,21 @@ function setTrainingPlanVisible(show){
  const el=$('trainingPlanSection');
  if(el)el.classList.toggle('hidden',!trainingPlanOpen);
 }
+function setNewTrainingCourseVisible(show){
+ newTrainingCourseOpen=!!show;
+ const el=$('newTrainingCourseSection');
+ if(el)el.classList.toggle('hidden',!newTrainingCourseOpen);
+}
 function view(id){
  const previous=[...document.querySelectorAll('main>section')].find(s=>!s.classList.contains('hidden'))?.id||'';
- if(previous==='training'&&id!=='training')setTrainingPlanVisible(false);
+ if(previous==='training'&&id!=='training'){setTrainingPlanVisible(false);setNewTrainingCourseVisible(false);}
  document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hidden',s.id!==id));
  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
  if(id==='deadlines')renderDeadlines();
  if(id==='dae')renderDaeView();
  if(id==='training'){
   setTrainingPlanVisible(false);
+  setNewTrainingCourseVisible(false);
   renderTraining();
  }
  if(id==='qualifications'){renderQualificationCards();renderQualificationMatrix()}
@@ -754,6 +761,7 @@ function openQuickTraining(kind){
  const code=qualCodeByRegex(rx);
  if(!code)return alert('Qualifica non trovata nel gestionale.');
  setTrainingPlanVisible(true);
+ setNewTrainingCourseVisible(true);
  renderTrainingPlan();
  prepareSuggestedCourse(kind,code);
 }
@@ -1005,13 +1013,14 @@ function renderPersonTrainingHistory(){
  document.querySelectorAll('[data-person-training-doc]').forEach(b=>b.onclick=()=>openDaeDocument(b.dataset.personTrainingDoc));
 }
 $('closeTrainingPlan')?.addEventListener('click',()=>setTrainingPlanVisible(false));
+$('openGenericTrainingCourse')?.addEventListener('click',()=>{setTrainingPlanVisible(false);setNewTrainingCourseVisible(true);resetTrainingForm();$('newTrainingCourseSection')?.scrollIntoView({behavior:'smooth',block:'start'})});
 $('quickSoccorritoreCourse')?.addEventListener('click',()=>openQuickTraining('SOCCORRITORE'));
 $('filterSoccorritoreCourses')?.addEventListener('click',()=>filterTrainingByKind('SOCCORRITORE'));
 $('quickAutistaCourse')?.addEventListener('click',()=>openQuickTraining('AUTISTA'));
 $('quickCapoCourse')?.addEventListener('click',()=>openQuickTraining('CAPO_SERVIZIO'));
 $('filterAutistaCourses')?.addEventListener('click',()=>filterTrainingByKind('AUTISTA'));
 $('filterCapoCourses')?.addEventListener('click',()=>filterTrainingByKind('CAPO_SERVIZIO'));
-$('newTrainingReset')?.addEventListener('click',resetTrainingForm);
+$('newTrainingReset')?.addEventListener('click',()=>{resetTrainingForm();setNewTrainingCourseVisible(false);setTrainingPlanVisible(false)});
 $('trSelectAll')?.addEventListener('click',()=>document.querySelectorAll('[data-tr-person]').forEach(x=>x.checked=true));
 $('trClearAll')?.addEventListener('click',()=>document.querySelectorAll('[data-tr-person]').forEach(x=>x.checked=false));
 $('trCreate')?.addEventListener('click',createTrainingCourse);
