@@ -49,6 +49,17 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .personRole{border:1px solid var(--l);border-radius:9px;padding:8px;text-align:center;background:#fbfdff;font-size:11px}
 .personRole b{display:block;margin-top:3px;color:var(--n)}
 .personCourseMini{padding:7px 0;border-bottom:1px solid #e7edf2}.personCourseMini:last-child{border-bottom:0}
+.personQuickActions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+.personQuickActions .btn{padding:10px 13px}
+.timeline{position:relative;margin:8px 0 0;padding-left:22px}
+.timeline:before{content:"";position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:#d9e2ea}
+.timelineItem{position:relative;padding:0 0 15px 12px}
+.timelineItem:last-child{padding-bottom:0}
+.timelineDot{position:absolute;left:-20px;top:3px;width:12px;height:12px;border-radius:50%;background:#1d4ed8;border:2px solid #fff;box-shadow:0 0 0 1px #9fb2c3}
+.timelineItem .date{font-size:10px;font-weight:900;color:var(--m);text-transform:uppercase}
+.timelineItem b{color:var(--n)}
+.timelineItem.state .timelineDot{background:#7c3aed}.timelineItem.dae .timelineDot{background:#dc2626}.timelineItem.course .timelineDot{background:#0f766e}.timelineItem.qual .timelineDot{background:#65a30d}.timelineItem.doc .timelineDot{background:#ea580c}
+.docUploadBox{border:1px dashed #b9c8d5;border-radius:12px;padding:12px;background:#fbfdff;margin-bottom:10px}
 @media(max-width:1050px){.personGlance{grid-template-columns:1fr}.personRoleGrid{grid-template-columns:repeat(2,1fr)}}
 .compliance{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900;white-space:nowrap}
 .compliance.g{background:#e7f6ef;color:#176a4b}.compliance.w{background:#fff4c9;color:#795a00}.compliance.r{background:#fdebed;color:#9d2730}
@@ -138,7 +149,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.5</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.6</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -152,7 +163,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.5</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.6</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -260,6 +271,14 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
      <div id="personDetail" class="section hidden" style="margin-top:14px">
       <div class="actions" style="justify-content:space-between"><div><h3 id="personTitle" style="margin:0">Scheda personale</h3><div id="personSub" class="muted"></div></div><div class="actions"><button id="printPersonSummary" class="btn blue">🖨 Stampa scheda riepilogativa</button><button id="closePerson" class="btn secondary">Chiudi</button></div></div>
       <div id="personAtGlance" class="personGlance"></div>
+      <div id="personQuickActions" class="personQuickActions">
+       <button class="btn yellow" data-person-quick="dae">🫀 Rinnovo DAE</button>
+       <button class="btn secondary" data-person-quick="qual">🎓 Aggiungi qualifica</button>
+       <button class="btn secondary" data-person-quick="course">📚 Aggiungi corso</button>
+       <button class="btn secondary" data-person-quick="doc">📁 Carica documento</button>
+       <button class="btn secondary" data-person-quick="state">⚙️ Cambia stato</button>
+       <button class="btn secondary" data-person-quick="timeline">🕘 Timeline</button>
+      </div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Badge</label><input id="pBadge" disabled></div><div class="field"><label>Nome</label><input id="pName" disabled></div><div class="field"><label>Cognome</label><input id="pSurname" disabled></div><div class="field"><label>Stato attività</label><select id="pState"><option value="ATTIVO">ATTIVO</option><option value="INATTIVO">INATTIVO</option><option value="ASPETTATIVA">ASPETTATIVA</option><option value="SOSPESO">SOSPESO</option><option value="CESSATO">CESSATO</option></select></div>
        <div class="field"><label>Telefono</label><input id="pPhone"></div><div class="field"><label>Email</label><input id="pEmail" type="email"></div><div class="field"><label>Data ingresso</label><input id="pEntry" type="date"></div><div class="field"><label>Data nascita</label><input id="pBirth" type="date"></div>
@@ -277,7 +296,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
        <h3>🚑 Situazione operativa</h3>
        <div id="personOperationalStatus" class="grid3"></div>
       </div>
-      <div class="section">
+      <div id="personStateSection" class="section">
        <div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">⚙️ Gestione volontario</h3><div class="muted">Aggiorna lo stato di attività oppure elimina una scheda inserita per errore.</div></div><div class="actions"><button id="savePersonState" class="btn blue">Salva stato</button><button id="deletePerson" class="btn danger">Elimina volontario</button></div></div>
        <div class="grid3" style="margin-top:10px">
         <div class="field"><label>Data inizio stato</label><input id="pStateFrom" type="date"></div>
@@ -288,7 +307,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
        <div id="personManageMsg"></div>
        <div class="section" style="margin-top:12px"><h3>🕘 Storico stato attività</h3><div id="personStateHistory"></div></div>
       </div>
-      <div class="section">
+      <div id="personDaeSection" class="section">
        <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🫀 Certificazione DAE</h3><div class="muted">Rinnovo, attestato e storico della certificazione.</div></div><span id="daePersonBadge" class="pill b">—</span></div>
        <div class="grid4" style="margin-top:10px">
         <div class="field"><label>Data conseguimento / rinnovo</label><input id="daeFrom" type="date"></div>
@@ -305,12 +324,30 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
        <div class="muted" style="margin-top:6px">Ogni rinnovo viene salvato nello storico. L’avviso scatta automaticamente 30 giorni prima della scadenza.</div>
        <div class="section" style="margin-top:12px"><h3>📚 Storico DAE</h3><div id="daeHistory"></div></div>
       </div>
-      <div class="section"><h3>🎓 Altre qualifiche della persona</h3><div id="personQualList"></div>
+      <div id="personQualSection" class="section"><h3>🎓 Altre qualifiche della persona</h3><div id="personQualList"></div>
        <div class="grid3" style="margin-top:10px"><div class="field"><label>Aggiungi qualifica</label><select id="newQual"></select></div><div id="newQualFromWrap" class="field hidden"><label>Valida dal</label><input id="newQualFrom" type="date"></div><div id="newQualToWrap" class="field hidden"><label>Valida al</label><input id="newQualTo" type="date"></div></div>
        <div class="actions" style="margin-top:8px"><button id="addQual" class="btn yellow">Aggiungi / aggiorna qualifica</button></div><div id="personQualMsg"></div>
       </div>
       <div class="section"><h3>📚 Storico corsi e formazione</h3><div id="personTrainingHistory"></div></div>
-      <div class="section"><h3>📁 Attestati e documenti</h3><div id="personDocs"></div></div>
+      <div id="personDocsSection" class="section">
+       <h3>📁 Attestati e documenti</h3>
+       <div class="docUploadBox">
+        <div class="grid4">
+         <div class="field"><label>Categoria</label><select id="personDocCategory"><option>DOCUMENTO</option><option>ATTESTATO</option><option>IDENTITÀ</option><option>CODICE FISCALE</option><option>ALTRO</option></select></div>
+         <div class="field"><label>Titolo</label><input id="personDocTitle" placeholder="Es. Carta identità, attestato..."></div>
+         <div class="field"><label>Scadenza</label><input id="personDocExpiry" type="date"></div>
+         <div class="field"><label>File *</label><input id="personDocFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"></div>
+        </div>
+        <div class="field" style="margin-top:8px"><label>Note</label><input id="personDocNotes" placeholder="Facoltativo"></div>
+        <div class="actions" style="margin-top:8px"><button id="savePersonDocument" class="btn yellow">📤 Carica documento</button></div>
+        <div id="personDocMsg"></div>
+       </div>
+       <div id="personDocs"></div>
+      </div>
+      <div id="personTimelineSection" class="section">
+       <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🕘 Timeline volontario</h3><div class="muted">Storia unificata di stato, DAE, qualifiche, corsi e documenti.</div></div><span id="personTimelineCount" class="pill b">0 eventi</span></div>
+       <div id="personTimeline" class="timeline"></div>
+      </div>
      </div>
     </div>
    </section>
@@ -792,6 +829,36 @@ function renderPersonQuals(){
  document.querySelectorAll('[data-qsave]').forEach(b=>b.onclick=()=>saveQualDates(b.dataset.qsave));
  document.querySelectorAll('[data-qremove]').forEach(b=>b.onclick=()=>removeQual(b.dataset.qremove));
 }
+
+async function uploadGenericPersonDocument(){
+ if(!selectedBadge)return;
+ const file=$('personDocFile')?.files?.[0];
+ if(!file)return msg('personDocMsg','Seleziona un file da caricare.','warn');
+ const allowed=['application/pdf','image/jpeg','image/png','image/webp'];
+ if(!allowed.includes(file.type))return msg('personDocMsg','Formato non consentito. Usa PDF, JPG, PNG o WEBP.','warn');
+ if(file.size>10485760)return msg('personDocMsg','Il file supera il limite di 10 MB.','warn');
+ const title=$('personDocTitle')?.value.trim()||file.name;
+ const category=$('personDocCategory')?.value||'DOCUMENTO';
+ const expiry=$('personDocExpiry')?.value||null;
+ const notes=$('personDocNotes')?.value.trim()||null;
+ try{
+  msg('personDocMsg','Caricamento documento...');
+  const ext={'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type]||'bin';
+  const storagePath=selectedBadge+'/documento-'+crypto.randomUUID()+'.'+ext;
+  const up=await sb.storage.from('documenti-volontari').upload(storagePath,file,{contentType:file.type,upsert:false});
+  if(up.error)throw up.error;
+  const u=await sb.auth.getUser();
+  const ins=await sb.from('documenti_personale').insert({
+   badge_personale:selectedBadge,categoria:category,titolo:title,nome_file_originale:file.name,
+   storage_path:storagePath,mime_type:file.type,dimensione_bytes:file.size,data_scadenza:expiry,
+   note:notes,uploaded_by:u.data.user?.id||null
+  });
+  if(ins.error){await sb.storage.from('documenti-volontari').remove([storagePath]);throw ins.error}
+  msg('personDocMsg','Documento caricato correttamente.','ok');
+  $('personDocTitle').value='';$('personDocExpiry').value='';$('personDocNotes').value='';$('personDocFile').value='';
+  await loadAll();openPerson(selectedBadge);
+ }catch(e){msg('personDocMsg',e.message||String(e),'err')}
+}
 function renderPersonDocs(){
  const rows=docs.filter(d=>d.badge_personale===selectedBadge);
  $('personDocs').innerHTML=rows.length?rows.map(d=>{const s=d.data_scadenza?stateFor(d.data_scadenza):null;return '<div class="box" style="margin:7px 0"><b>'+esc(d.titolo||d.nome_file_originale||d.categoria)+'</b>'+(s?' <span class="pill '+s.cls+'">'+esc(s.label)+'</span>':'')+'<br><span class="muted">'+esc(d.categoria||'Documento')+(d.data_scadenza?' · Scadenza '+esc(fmt(d.data_scadenza)):' · Nessuna scadenza')+'</span>'+(d.note?'<br>'+esc(d.note):'')+'</div>'}).join(''):'<div class="notice">Nessun documento o attestato registrato.</div>';
@@ -832,6 +899,25 @@ function renderPersonPrintSheet(){
   '<div class="personPrintSection"><h3>🕘 Storico stato attività</h3><table class="personPrintTable"><thead><tr><th>Dal</th><th>Stato</th><th>Rientro previsto</th><th>Motivo</th></tr></thead><tbody>'+stateRows+'</tbody></table></div>'+
   '<div class="muted" style="margin-top:12px">Scheda generata dal Gestionale Personale e Formazione · Croce Gialla Emergenza ODV</div>';
 }
+
+function renderPersonTimeline(){
+ const host=$('personTimeline'),count=$('personTimelineCount');if(!host||!selectedBadge)return;
+ const events=[];
+ const push=(date,type,title,sub)=>events.push({date:date||'',type,title,sub:sub||''});
+ stateHistoryRows.filter(x=>x.badge_personale===selectedBadge).forEach(x=>push(x.data_inizio||x.created_at,'state','Stato: '+(x.stato||'—'),(x.motivo||'')+(x.data_rientro_prevista?' · Rientro previsto '+fmt(x.data_rientro_prevista):'')));
+ daeHistoryRows.filter(x=>x.badge_personale===selectedBadge).forEach(x=>push(x.valida_dal||x.created_at,'dae','Rinnovo DAE','Validità fino al '+fmt(x.valida_al)+(x.ente_formatore?' · '+x.ente_formatore:'')));
+ trainingPeople.filter(x=>x.badge_personale===selectedBadge).forEach(x=>{const course=trainingCourses.find(c=>c.id===x.corso_id);if(course)push(course.data_corso||course.created_at,'course','Corso: '+(course.titolo||'Formazione'),(x.esito||'')+(course.tipo?' · '+course.tipo:''))});
+ pquals.filter(x=>x.badge_personale===selectedBadge&&x.codice_qualifica!==daeCode()).forEach(x=>push(x.valida_dal||x.created_at||'','qual','Qualifica: '+qName(x.codice_qualifica),x.valida_al?'Valida fino al '+fmt(x.valida_al):'Qualifica attiva'));
+ docs.filter(x=>x.badge_personale===selectedBadge).forEach(x=>push(x.created_at,'doc','Documento: '+(x.titolo||x.nome_file_originale||x.categoria||'Documento'),(x.categoria||'')+(x.data_scadenza?' · Scadenza '+fmt(x.data_scadenza):'')));
+ events.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+ if(count)count.textContent=events.length+' '+(events.length===1?'evento':'eventi');
+ const icon={state:'⚙️',dae:'🫀',course:'📚',qual:'🎓',doc:'📁'};
+ host.innerHTML=events.length?events.map(e=>{
+  let dateLabel='Data non disponibile';
+  if(e.date){const raw=String(e.date).slice(0,10);dateLabel=/^\d{4}-\d{2}-\d{2}$/.test(raw)?fmt(raw):new Date(e.date).toLocaleDateString('it-IT')}
+  return '<div class="timelineItem '+esc(e.type)+'"><span class="timelineDot"></span><div class="date">'+esc(dateLabel)+'</div><b>'+esc((icon[e.type]||'•')+' '+e.title)+'</b>'+(e.sub?'<div class="muted" style="margin-top:3px">'+esc(e.sub)+'</div>':'')+'</div>';
+ }).join(''):'<div class="notice">Nessun evento storico registrato per questo volontario.</div>';
+}
 function openPerson(badge){
  selectedBadge=badge;const p=people.find(x=>x.badge===badge);if(!p)return;
  $('personDetail').classList.remove('hidden');$('personTitle').textContent=p.nome_completo||'Scheda personale';$('personSub').textContent='Badge '+p.badge;
@@ -841,9 +927,25 @@ function openPerson(badge){
  $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');msg('personManageMsg','');
  const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';$('daeProvider').value='';$('daeCertificateNo').value='';$('daeNotes').value='';$('daeFile').value='';$('daePersonBadge').textContent='Badge '+badge;
  const ds=daeStatus(dr?.valida_al);$('daeState').value=ds.label.toUpperCase();
- renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPersonAtGlance();renderPersonOperationalStatus();renderPersonPrintSheet();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
+ renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPersonTimeline();renderPersonAtGlance();renderPersonOperationalStatus();renderPersonPrintSheet();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
+document.querySelectorAll('[data-person-quick]').forEach(b=>b.addEventListener('click',()=>{
+ if(!selectedBadge)return;
+ const action=b.dataset.personQuick;
+ if(action==='course'){
+  const badge=selectedBadge;
+  view('training');setNewTrainingCourseVisible(true);resetTrainingForm();
+  const cb=document.querySelector('[data-tr-person="'+CSS.escape(String(badge))+'"]');if(cb)cb.checked=true;
+  msg('trMsg','Nuovo corso: '+trainingPersonName(badge)+' è già selezionato come partecipante.','ok');
+  $('trTitle')?.scrollIntoView({behavior:'smooth',block:'center'});return;
+ }
+ const map={dae:['personDaeSection','daeFrom'],qual:['personQualSection','newQual'],doc:['personDocsSection','personDocTitle'],state:['personStateSection','pState'],timeline:['personTimelineSection',null]};
+ const cfg=map[action];if(!cfg)return;
+ $(cfg[0])?.scrollIntoView({behavior:'smooth',block:'start'});
+ setTimeout(()=>{if(cfg[1])$(cfg[1])?.focus()},350);
+}));
+$('savePersonDocument')?.addEventListener('click',uploadGenericPersonDocument);
 $('printPersonSummary')?.addEventListener('click',()=>{
  if(!selectedBadge)return;
  renderPersonPrintSheet();
