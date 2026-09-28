@@ -126,7 +126,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.34</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.35</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -146,7 +146,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.34</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.35</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -786,7 +786,10 @@ function renderDossiers(){
    ?'<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(minute.verbale_codice)+' · '+esc(minute.titolo||'Verbale')+'</b><br><span class="muted">'+esc(minuteTypeLabel(minute.tipo_riunione))+' · '+esc(minute.stato||'')+'</span></div><div>'+dossierPill(minute.stato==='APPROVATO','Approvato')+dossierPill(!!x.minuteSigned,'PDF firmato')+'</div></div><div class="toolbar"><button class="btn secondary" type="button" data-fminute="'+esc(minute.id)+'">Apri verbale</button>'+(x.minuteSigned?'<button class="btn blue" type="button" data-fminutepdf="'+esc(minute.id)+'">📄 PDF firmato</button>':'')+'</div></div>'
    :'<div class="notice warn">Verbale non ancora collegato a questa riunione.</div>';
   const note=assembly?'Per l’Assemblea il controllo considera entrambe le convocazioni e i relativi PDF firmati.':'';
-  return '<div class="section" style="margin:12px 0"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">'+esc(x.typeLabel)+' · '+esc(x.title)+'</h3><div class="muted">'+esc(x.date||'Data non definita')+(note?'<br>'+esc(note):'')+'</div></div><div class="actions"><span class="pill '+(x.complete?'g':'r')+'" style="font-size:11px">'+(x.complete?'✓ COMPLETO':'DA COMPLETARE')+'</span><button class="btn yellow" type="button" data-fexport="'+esc(x.key)+'">📦 Esporta fascicolo</button></div></div><div style="margin-top:8px"><b>Convocazioni</b>'+callRows+'<b>Verbale</b>'+minuteHtml+'</div></div>';
+  const waiting=!x.complete&&x.date&&String(x.date)>today();
+  const dossierStatus=x.complete?'✓ COMPLETO':waiting?'⏳ IN ATTESA DELLA RIUNIONE':'DA COMPLETARE';
+  const dossierClass=x.complete?'g':waiting?'b':'r';
+  return '<div class="section" style="margin:12px 0"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">'+esc(x.typeLabel)+' · '+esc(x.title)+'</h3><div class="muted">'+esc(x.date||'Data non definita')+(note?'<br>'+esc(note):'')+'</div></div><div class="actions"><span class="pill '+dossierClass+'" style="font-size:11px">'+dossierStatus+'</span><button class="btn yellow" type="button" data-fexport="'+esc(x.key)+'">📦 Esporta fascicolo</button></div></div><div style="margin-top:8px"><b>Convocazioni</b>'+callRows+'<b>Verbale</b>'+minuteHtml+'</div></div>';
  }).join(''):'<div class="notice">Nessun fascicolo trovato con i filtri selezionati.</div>';
 
  $('fList').querySelectorAll('[data-fcall]').forEach(b=>b.onclick=async()=>{view('calls');await openCall(b.dataset.fcall,false)});
