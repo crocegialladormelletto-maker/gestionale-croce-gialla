@@ -7553,8 +7553,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.90-20260928-service-archive-r2';
-let cgeSwReloading=false;
+const CGE_APP_BUILD='13.90-20260928-stable-refresh';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
@@ -7564,19 +7563,7 @@ async function cgeUpdateServiceWorker(){
  }catch(_){}
 }
 if('serviceWorker' in navigator){
- navigator.serviceWorker.addEventListener('controllerchange',()=>{
-  if(cgeSwReloading)return;
-  let already=false;
-  try{already=sessionStorage.getItem('cge_sw_refresh')===CGE_APP_BUILD}catch(_){}
-  if(already)return;
-  cgeSwReloading=true;
-  try{sessionStorage.setItem('cge_sw_refresh',CGE_APP_BUILD)}catch(_){}
-  const fresh=new URL(location.href);
-  fresh.searchParams.set('cge_refresh',CGE_APP_BUILD+'-'+Date.now());
-  location.replace(fresh.toString());
- });
  window.addEventListener('load',cgeUpdateServiceWorker);
- window.addEventListener('pageshow',cgeUpdateServiceWorker);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')cgeUpdateServiceWorker()});
 }
 applyVolunteerOnlyLogin();refreshPwaInstallUI();
