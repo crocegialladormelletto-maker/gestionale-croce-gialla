@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Gestionale Documentale · Croce Gialla Emergenza</title>
 <meta name="theme-color" content="#12375d">
 <link rel="icon" type="image/png" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192.png">
@@ -13,7 +16,16 @@
 .layout{display:grid;grid-template-columns:225px minmax(0,1fr);gap:14px;margin-top:14px}.side,.surface,.card{background:#fff;border:1px solid var(--line);border-radius:16px}.side{padding:10px;align-self:start;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);overflow-y:auto;overscroll-behavior:contain;position:sticky;top:10px}.nav{width:100%;border:1px solid transparent;text-align:left;padding:11px;border-radius:10px;font-weight:850;color:var(--n);margin:3px 0;cursor:pointer;transition:.15s}.nav:hover{filter:brightness(.97);transform:translateX(2px)}.nav.active{box-shadow:inset 4px 0 0 rgba(18,55,93,.45),0 1px 4px #12375d20}.nav[data-v="dash"]{background:#fff2ad;border-color:#e6c741}.nav[data-v="protocol"]{background:#e7f2f0;border-color:#8fbab3}.nav[data-v="archive"]{background:#e5f0fb;border-color:#93bce3}.nav[data-v="dossiers"]{background:#fff6d7;border-color:#e4c75f}.nav[data-v="accesses"]{background:#e9f5ff;border-color:#91bddf}.nav[data-v="activity"]{background:#f3ebff;border-color:#baa2df}.nav[data-v="minutes"]{background:#eee7fb;border-color:#b9a3df}.nav[data-v="calls"]{background:#e8f6ed;border-color:#9cc9ad}.nav[data-v="due"]{background:#fff0d8;border-color:#e7bd78}
 .hero{padding:20px;background:linear-gradient(120deg,#fff0a1,#fffbe6 58%,#fff);border-bottom:1px solid #eee2a4;border-radius:16px 16px 0 0}.hero h1,.hero h2{margin:0 0 5px;color:var(--n)}.hero p{margin:0}.pad{padding:18px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.stat,.box{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}.stat small{font-size:10px;font-weight:900;color:var(--muted)}.stat b{display:block;font-size:24px;color:var(--n)}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.field{display:flex;flex-direction:column;gap:4px}.field label{font-size:11px;font-weight:900;color:var(--n)}input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padding:9px 10px;background:#fff;color:var(--ink)}textarea{min-height:82px;resize:vertical}.section{border:1px solid var(--line);border-radius:13px;padding:13px;margin:11px 0}.section h3{margin:0 0 10px;color:var(--n)}
-.btn{border:1px solid transparent;border-radius:10px;padding:10px 13px;font-weight:900;cursor:pointer;box-shadow:0 2px 6px #12375d18;transition:transform .15s,box-shadow .15s,filter .15s}.btn:hover{transform:translateY(-1px);box-shadow:0 4px 10px #12375d28;filter:brightness(.98)}.btn:active{transform:translateY(0);box-shadow:0 1px 3px #12375d22}.yellow{background:#ffd814;color:#17324a;border-color:#e8bf00}.blue{background:#1769aa;color:#fff;border-color:#12588f}.secondary{background:#e8f1f8;color:#173b5c;border-color:#a9c3d8}.danger{background:#d94b51;color:#fff;border-color:#b7373d}.success{background:#198754;color:#fff;border-color:#146c43}.violet{background:#7153b6;color:#fff;border-color:#5d4397}.orange{background:#e98b24;color:#fff;border-color:#c97316}.teal{background:#168b8b;color:#fff;border-color:#0f6e6e}.actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.toolbar{margin:10px 0}.notice{padding:10px 12px;border-radius:9px;margin:9px 0;background:#edf6ff;border:1px solid #cfe4fa;white-space:pre-wrap}.ok{background:#eaf8f1;color:#176a4b}.err{background:#fff0f0;color:#a32b34}.warn{background:#fff7df;color:#875d12}.muted{color:var(--muted);font-size:12px}.pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#fff2bd;font-size:10px;font-weight:900}.pill.g{background:#dff4e9;color:#166846}.pill.r{background:#fde8e9;color:#9d2f37}.pill.b{background:#e5f0fb;color:#1c5d91}
+.btn{border:1px solid transparent;border-radius:10px;padding:10px 13px;font-weight:900;cursor:pointer;box-shadow:0 2px 6px #12375d18;transition:transform .15s,box-shadow .15s,filter .15s}.btn:hover{transform:translateY(-1px);box-shadow:0 4px 10px #12375d28;filter:brightness(.98)}.btn:active{transform:translateY(0);box-shadow:0 1px 3px #12375d22}.yellow{background:#ffd814;color:#17324a;border-color:#e8bf00}.blue{background:#1769aa;color:#fff;border-color:#12588f}.secondary{background:#e8f1f8;color:#173b5c;border-color:#a9c3d8}.danger{background:#d94b51;color:#fff;border-color:#b7373d}.success{background:#198754;color:#fff;border-color:#146c43}.violet{background:#7153b6;color:#fff;border-color:#5d4397}.orange{background:#e98b24;color:#fff;border-color:#c97316}.teal{background:#168b8b;color:#fff;border-color:#0f6e6e}.actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.toolbar{margin:10px 0}
+#vNewBoard{background:#1769aa!important;color:#fff!important;border-color:#12588f!important}
+#vNewAssembly{background:#7153b6!important;color:#fff!important;border-color:#5d4397!important}
+#vDuplicate,#cvDuplicate{background:#e98b24!important;color:#fff!important;border-color:#c97316!important}
+#vPrint,#cvPrint,#dRefresh,#fRefresh{background:#168b8b!important;color:#fff!important;border-color:#0f6e6e!important}
+#vNew,#cvNew,#vApprove,#cvFinalize{background:#198754!important;color:#fff!important;border-color:#146c43!important}
+#vExit,#cvExit{background:#d94b51!important;color:#fff!important;border-color:#b7373d!important}
+#aFind,#fFind{background:#1769aa!important;color:#fff!important;border-color:#12588f!important}
+#aClear,#fClear{background:#e98b24!important;color:#fff!important;border-color:#c97316!important}
+#vSave,#cvSave{background:#ffd814!important;color:#17324a!important;border-color:#e8bf00!important}.notice{padding:10px 12px;border-radius:9px;margin:9px 0;background:#edf6ff;border:1px solid #cfe4fa;white-space:pre-wrap}.ok{background:#eaf8f1;color:#176a4b}.err{background:#fff0f0;color:#a32b34}.warn{background:#fff7df;color:#875d12}.muted{color:var(--muted);font-size:12px}.pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#fff2bd;font-size:10px;font-weight:900}.pill.g{background:#dff4e9;color:#166846}.pill.r{background:#fde8e9;color:#9d2f37}.pill.b{background:#e5f0fb;color:#1c5d91}
 .table{overflow:auto;border:1px solid var(--line);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:9px;border-bottom:1px solid #e7edf2;text-align:left;vertical-align:top}th{background:#f5f7fa;color:var(--n);font-size:10px;position:sticky;top:0}
 .login{max-width:470px;margin:7vh auto;padding:14px}.loginhead{background:var(--n);color:#fff;text-align:center;padding:22px;border-radius:16px 16px 0 0}.loginhead img{width:88px;height:88px;border-radius:50%;object-fit:cover;background:#fff;border:4px solid #fff}.loginbody{padding:19px}.loginbody .field{margin:10px 0}.separator{margin:16px 0;border-top:1px solid var(--line)}.due-row{border-left:5px solid #e0a800}.due-row.over{border-left-color:#b52d36;background:#fff7f7}
 .agenda-points{display:flex;flex-direction:column;gap:8px;margin-top:6px}.agenda-item{display:flex;align-items:flex-start;gap:10px}.agenda-item b{width:25px;flex:0 0 25px;padding-top:10px;text-align:right;color:var(--n)}.agenda-item textarea{flex:1;min-height:58px}
@@ -105,7 +117,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.31</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.32</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +137,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.31</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.32</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
