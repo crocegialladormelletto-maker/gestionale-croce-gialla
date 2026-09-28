@@ -51,7 +51,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.1</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.1.1</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -65,7 +65,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.1</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.1.1</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -116,8 +116,17 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
       <div class="actions" style="justify-content:space-between"><div><h3 id="personTitle" style="margin:0">Scheda personale</h3><div id="personSub" class="muted"></div></div><button id="closePerson" class="btn secondary">Chiudi</button></div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Badge</label><input id="pBadge" disabled></div><div class="field"><label>Nome</label><input id="pName" disabled></div><div class="field"><label>Cognome</label><input id="pSurname" disabled></div><div class="field"><label>Stato attività</label><select id="pState"><option value="ATTIVO">ATTIVO</option><option value="INATTIVO">INATTIVO</option><option value="ASPETTATIVA">ASPETTATIVA</option><option value="SOSPESO">SOSPESO</option><option value="CESSATO">CESSATO</option></select></div>
-       <div class="field"><label>Telefono</label><input id="pPhone" disabled></div><div class="field"><label>Email</label><input id="pEmail" disabled></div><div class="field"><label>Data ingresso</label><input id="pEntry" disabled></div><div class="field"><label>Data nascita</label><input id="pBirth" disabled></div>
+       <div class="field"><label>Telefono</label><input id="pPhone"></div><div class="field"><label>Email</label><input id="pEmail" type="email"></div><div class="field"><label>Data ingresso</label><input id="pEntry" type="date"></div><div class="field"><label>Data nascita</label><input id="pBirth" type="date"></div>
       </div>
+      <div class="grid4" style="margin-top:10px">
+       <div class="field"><label>Codice fiscale</label><input id="pTaxCode"></div>
+       <div class="field"><label>Indirizzo</label><input id="pAddress"></div>
+       <div class="field"><label>Comune</label><input id="pCity"></div>
+       <div class="field"><label>CAP</label><input id="pZip"></div>
+       <div class="field"><label>Provincia</label><input id="pProvince"></div>
+       <div class="field"><label>Data uscita</label><input id="pExit" type="date"></div>
+      </div>
+      <div class="actions" style="margin-top:10px"><button id="savePersonProfile" class="btn blue">💾 Salva anagrafica</button></div><div id="personProfileMsg"></div>
       <div class="section">
        <h3>🚑 Situazione operativa</h3>
        <div id="personOperationalStatus" class="grid3"></div>
@@ -492,6 +501,7 @@ function openPerson(badge){
  selectedBadge=badge;const p=people.find(x=>x.badge===badge);if(!p)return;
  $('personDetail').classList.remove('hidden');$('personTitle').textContent=p.nome_completo||'Scheda personale';$('personSub').textContent='Badge '+p.badge;
  $('pBadge').value=p.badge||'';$('pName').value=p.nome||'';$('pSurname').value=p.cognome||'';$('pState').value=p.stato_anagrafico||'ATTIVO';$('pPhone').value=p.telefono||'';$('pEmail').value=p.email||'';$('pEntry').value=p.data_ingresso||'';$('pBirth').value=p.data_nascita||'';
+ $('pTaxCode').value=p.codice_fiscale||'';$('pAddress').value=p.indirizzo||'';$('pCity').value=p.comune||'';$('pZip').value=p.cap||'';$('pProvince').value=p.provincia||'';$('pExit').value=p.data_uscita||'';
  if($('pStateFrom'))$('pStateFrom').value=today();if($('pStateReturn'))$('pStateReturn').value='';if($('pStateReason'))$('pStateReason').value='';if($('pStateNotes'))$('pStateNotes').value='';
  $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');msg('personManageMsg','');
  const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';$('daeProvider').value='';$('daeCertificateNo').value='';$('daeNotes').value='';$('daeFile').value='';$('daePersonBadge').textContent='Badge '+badge;
@@ -504,6 +514,28 @@ function renderPersonStateHistory(){
  const rows=stateHistoryRows.filter(x=>x.badge_personale===selectedBadge);
  $('personStateHistory').innerHTML=rows.length?rows.map(x=>'<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><b>'+esc(x.stato)+'</b><span class="pill b">'+esc(fmt(x.data_inizio))+'</span></div><div class="muted">'+(x.data_rientro_prevista?'Rientro previsto '+esc(fmt(x.data_rientro_prevista)):'Nessun rientro previsto')+'</div>'+(x.motivo?'<div style="margin-top:5px"><b>Motivo:</b> '+esc(x.motivo)+'</div>':'')+(x.note?'<div style="margin-top:4px">'+esc(x.note)+'</div>':'')+'</div>').join(''):'<div class="notice">Nessun cambio stato registrato.</div>';
 }
+
+$('savePersonProfile').onclick=async()=>{
+ if(!selectedBadge)return;
+ const payload={
+  telefono:$('pPhone').value.trim()||null,
+  email:$('pEmail').value.trim()||null,
+  data_ingresso:$('pEntry').value||null,
+  data_nascita:$('pBirth').value||null,
+  codice_fiscale:$('pTaxCode').value.trim().toUpperCase()||null,
+  indirizzo:$('pAddress').value.trim()||null,
+  comune:$('pCity').value.trim()||null,
+  cap:$('pZip').value.trim()||null,
+  provincia:$('pProvince').value.trim().toUpperCase()||null,
+  data_uscita:$('pExit').value||null,
+  aggiornato_il:new Date().toISOString()
+ };
+ msg('personProfileMsg','Salvataggio anagrafica...');
+ const r=await sb.from('personale').update(payload).eq('badge',selectedBadge);
+ if(r.error)return msg('personProfileMsg',r.error.message,'err');
+ msg('personProfileMsg','Anagrafica aggiornata.','ok');
+ await loadAll();
+};
 
 $('savePersonState').onclick=async()=>{
  if(!selectedBadge)return;
