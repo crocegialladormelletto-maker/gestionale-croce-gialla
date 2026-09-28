@@ -50,7 +50,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .quickDash{border:0;border-radius:14px;padding:15px 12px;color:#fff;font-weight:900;font-size:14px;cursor:pointer;text-align:left;min-height:82px;transition:.15s ease;box-shadow:0 3px 10px #12375d18}
 .quickDash:hover{transform:translateY(-2px);filter:brightness(.96);box-shadow:0 8px 20px #12375d24}
 .quickDash span{display:block;font-size:23px;margin-bottom:4px}.quickDash small{display:block;color:#fff;opacity:.86;font-weight:700;margin-top:3px}
-.quickDash.people{background:#1d4ed8}.quickDash.deadlines{background:#ea580c}.quickDash.dae{background:#dc2626}.quickDash.training{background:#7c3aed}.quickDash.qualifications{background:#65a30d}
+.quickDash.people{background:#1d4ed8}.quickDash.deadlines{background:#ea580c}.quickDash.dae{background:#dc2626}.quickDash.training{background:#7c3aed}.quickDash.qualifications{background:#65a30d}.quickDash.reports{background:#0f766e}
 .dashGroups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
 .dashGroup{border:1px solid var(--l);border-radius:14px;padding:13px;background:#fbfdff}
 .dashGroup h3{margin:0 0 3px;color:var(--n)}.dashGroup .muted{margin-bottom:9px}
@@ -108,7 +108,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.1</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.2</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -122,7 +122,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.1</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.2</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -133,6 +133,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
    <button class="nav" data-view="dae">🫀 DAE</button>
    <button class="nav" data-view="training">📚 Corsi e Formazione</button>
    <button class="nav" data-view="qualifications">🎓 Qualifiche</button>
+   <button class="nav" data-view="reports">📄 Report Personale</button>
   </aside>
   <main>
    <section id="dashboard" class="surface">
@@ -155,6 +156,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
       <button class="quickDash dae" data-dashboard-view="dae"><span>🫀</span>DAE<small>Certificazioni e avvisi</small></button>
       <button class="quickDash training" data-dashboard-view="training"><span>📚</span>Corsi e Formazione<small>Soccorritore, Autista, Capo Servizio</small></button>
       <button class="quickDash qualifications" data-dashboard-view="qualifications"><span>🎓</span>Qualifiche<small>Abilitazioni operative</small></button>
+      <button class="quickDash reports" data-dashboard-view="reports"><span>📄</span>Report Personale<small>Riepilogo e stampa PDF</small></button>
      </div>
 
      <div class="dashGroups">
@@ -440,6 +442,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
      </div>
      <div id="personnelReport"></div>
     </div>
+   </section>
   </main>
  </div></div>
 </div>
