@@ -585,7 +585,7 @@
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.91</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.92</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.91</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.92</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -2339,6 +2339,26 @@ function isVolunteerOnlyMode(){try{return new URLSearchParams(location.search).g
 function isTabletOnlyMode(){try{return new URLSearchParams(location.search).get('area')==='tablet'}catch(_){return false}}
 function isCentralinoOnlyMode(){try{return new URLSearchParams(location.search).get('area')==='centralino'}catch(_){return false}}
 function tabletRequestedVehicle(){try{const m=new URLSearchParams(location.search).get('mezzo')||'';return /^0[6-9]$/.test(m)?m:''}catch(_){return ''}}
+function requestedServiceId(){
+ try{
+  const id=new URLSearchParams(location.search).get('openService')||'';
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)?id:'';
+ }catch(_){return ''}
+}
+function clearRequestedServiceId(){
+ try{
+  const u=new URL(location.href);
+  if(!u.searchParams.has('openService'))return;
+  u.searchParams.delete('openService');
+  history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash);
+ }catch(_){}
+}
+async function openRequestedServiceOrDashboard(){
+ const id=requestedServiceId();
+ if(!id){view('dash');return}
+ await openService(id);
+ clearRequestedServiceId();
+}
 function applyVolunteerOnlyLogin(){
  const volunteer=isVolunteerOnlyMode(),tablet=isTabletOnlyMode(),centralino=isCentralinoOnlyMode(),only=volunteer||tablet||centralino;
  ['staffLoginBlock','monitorLoginBlock'].forEach(id=>{if($(id))$(id).classList.toggle('hidden',only)});
@@ -2346,7 +2366,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.91':'Versione 13.91';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.92':'Versione 13.92';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -2375,12 +2395,12 @@ async function enter(){
  if(r.data.ruolo==='AMMINISTRATORE'){
   $('app').classList.remove('hidden');$('volApp').classList.add('hidden');$('monitorApp').classList.add('hidden');$('tabletApp').classList.add('hidden');$('who').textContent=(prof.nome||'Amministratore')+' · '+u.data.user.email;applyRoleUI();
   $('d').value=today();$('fd').value='';$('fdTo').value='';$('sd').value=today();$('exdate').value=today();
-  await refreshMaster();view('dash');return;
+  await refreshMaster();await openRequestedServiceOrDashboard();return;
  }
  if(r.data.ruolo==='CENTRALINO'){
   $('app').classList.remove('hidden');$('volApp').classList.add('hidden');$('monitorApp').classList.add('hidden');$('tabletApp').classList.add('hidden');$('who').textContent='Centralino Croce Gialla';applyRoleUI();
   $('d').value=today();$('fd').value='';$('fdTo').value='';$('sd').value=today();$('exdate').value=today();
-  await refreshMaster();view('dash');return;
+  await refreshMaster();await openRequestedServiceOrDashboard();return;
  }
  if(r.data.ruolo==='MONITOR_SEDE'){
   $('app').classList.add('hidden');$('volApp').classList.add('hidden');$('tabletApp').classList.add('hidden');$('monitorApp').classList.remove('hidden');
@@ -7617,7 +7637,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.91-20260928-volunteer-app-dashboard';
+const CGE_APP_BUILD='13.92-20260928-manifestation-deeplink';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
