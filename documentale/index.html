@@ -599,7 +599,7 @@ function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c
 function centralinoEmail(){return 'centralino@access.crocegiallaemergenza.it'}
 function view(v){
  if((v==='minutes'||v==='calls'||v==='dossiers'||v==='accesses'||v==='activity')&&prof?.ruolo!=='AMMINISTRATORE')v='dash';
- if(v!=='minutes'&&!$('minutes').classList.contains('hidden'))resetMinuteFilters();
+ if(v!=='minutes'&&!$('minutes').classList.contains('hidden')){resetMinuteForm();resetMinuteFilters();}
  if(v!=='calls'&&!$('calls').classList.contains('hidden'))resetCallFilters();
  document.querySelectorAll('main>section').forEach(x=>x.classList.toggle('hidden',x.id!==v));
  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
