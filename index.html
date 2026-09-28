@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.90</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.91</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1362,6 +1362,29 @@
  <div class="actions" style="justify-content:space-between;align-items:center"><b id="pdocPerson"></b><button type="button" class="btn secondary" id="pdocRefresh">Aggiorna documenti</button></div>
  <div id="pdocMsg"></div><div id="pdocList"><div class="notice">Seleziona un volontario dall’elenco qui sotto e premi «Documenti» per consultare i file caricati dalla sua app.</div></div>
 </div></div>
+
+<div class="section" style="margin-top:14px">
+ <div class="actions" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+  <div>
+   <h3 style="margin:0">📱 Situazione APP volontari</h3>
+   <div class="muted">Riepilogo riferito ai volontari attivi.</div>
+  </div>
+  <button id="pAppRefresh" type="button" class="btn secondary">↻ Aggiorna</button>
+ </div>
+ <div class="stats" style="margin-top:12px">
+  <div class="stat"><small>VOLONTARI ATTIVI</small><b id="pActiveCount">0</b></div>
+  <div class="stat"><small>✓ APP OK</small><b id="pAppOkCount">0</b></div>
+  <div class="stat"><small>APP NON ATTIVA</small><b id="pAppMissingCount">0</b></div>
+ </div>
+ <div class="actions" style="margin-top:12px;align-items:center;flex-wrap:wrap">
+  <b>Filtro rapido:</b>
+  <button id="pAppFilterAll" type="button" class="btn yellow">Tutti</button>
+  <button id="pAppFilterOk" type="button" class="btn secondary">✓ APP OK</button>
+  <button id="pAppFilterMissing" type="button" class="btn secondary">APP NON ATTIVA</button>
+  <span id="pAppFilterInfo" class="pill b">Tutti i volontari</span>
+ </div>
+</div>
+
 <div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Qualifiche</th><th>Ore mese</th><th>Ore trimestre</th><th>Telefono</th><th>Stato APP</th><th></th></tr></thead><tbody id="ptbody"></tbody></table></div></div></section>
 
 <section id="shifts" class="surface hidden"><div class="hero"><h2>Turni</h2></div><div class="pad">
@@ -4351,6 +4374,10 @@ window.removeCrew=async id=>{
 let editingPersonBadge=null;
 function resetPerson(){editingPersonBadge=null;adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';msg('pdocMsg','');$('pdocPerson').textContent='';$('pdocList').innerHTML='<div class="notice">Seleziona un volontario e premi «Documenti» per consultare il suo archivio.</div>';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pbirth').value='';$('pentry').value='';$('pexit').value='';$('pcf').value='';$('paddress').value='';$('pcity').value='';$('pprovince').value='';$('pcap').value='';$('pdep').value='false';$('pminm').value='28';$('pmint').value='84';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';$('pappcreds').value='false';$('pappcredsdate').value='';$('pappinstalled').value='false';$('pappinstalldate').value='';$('pappsummary').className='notice';$('pappsummary').textContent='Stato APP non ancora verificato.';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
 $('pnew').onclick=resetPerson;
+$('pAppFilterAll').onclick=()=>{peopleAppFilter='ALL';renderPeopleTable()};
+$('pAppFilterOk').onclick=()=>{peopleAppFilter='OK';renderPeopleTable()};
+$('pAppFilterMissing').onclick=()=>{peopleAppFilter='MISSING';renderPeopleTable()};
+$('pAppRefresh').onclick=loadPeopleView;
 function volunteerAppStatusMarkup(p){
  const creds=!!p.app_credenziali_consegnate,installed=!!p.app_installata;
  if(creds&&installed)return '<span class="pill g">✓ APP OK</span><br><span class="muted">Credenziali + installazione</span>';
@@ -4374,20 +4401,57 @@ function updateVolunteerAppSummary(){
  else if(installed){$('pappsummary').className='notice warn';$('pappsummary').textContent='APP installata · credenziali non ancora assegnate.'}
  else{$('pappsummary').className='notice';$('pappsummary').textContent='APP NON ATTIVA · credenziali non ancora assegnate.'}
 }
-async function loadPeopleView(){
- await refreshMaster();
- const h=await sb.from('v_personale_monte_ore').select('*');
- const hours=h.data||[];
- $('ptbody').innerHTML=[...people].sort((a,b)=>String(a.badge||'').localeCompare(String(b.badge||''),'it',{numeric:true,sensitivity:'base'})).map(p=>{
+let peopleAppFilter='ALL';
+let peopleHoursCache=[];
+
+function volunteerIsActive(p){
+ return String(p.stato_anagrafico||'ATTIVO').toUpperCase()==='ATTIVO' && p.attivo!==false;
+}
+function volunteerAppOk(p){
+ return !!p.app_credenziali_consegnate && !!p.app_installata;
+}
+function refreshPeopleAppStats(){
+ if(!$('pActiveCount'))return;
+ const active=people.filter(volunteerIsActive);
+ const ok=active.filter(volunteerAppOk);
+ const missing=active.filter(p=>!volunteerAppOk(p));
+ $('pActiveCount').textContent=active.length;
+ $('pAppOkCount').textContent=ok.length;
+ $('pAppMissingCount').textContent=missing.length;
+}
+function renderPeopleTable(){
+ if(!$('ptbody'))return;
+ let list=[...people].sort((a,b)=>String(a.badge||'').localeCompare(String(b.badge||''),'it',{numeric:true,sensitivity:'base'}));
+ if(peopleAppFilter==='OK')list=list.filter(p=>volunteerIsActive(p)&&volunteerAppOk(p));
+ if(peopleAppFilter==='MISSING')list=list.filter(p=>volunteerIsActive(p)&&!volunteerAppOk(p));
+
+ $('ptbody').innerHTML=list.length?list.map(p=>{
   const qs=pq.filter(x=>x.badge_personale===p.badge).map(x=>qualificationDisplayName(qualifications.find(q=>q.codice===x.codice_qualifica)||{codice:x.codice_qualifica})).join(', ');
-  const mh=hours.find(x=>x.badge===p.badge)||{};
+  const mh=peopleHoursCache.find(x=>x.badge===p.badge)||{};
   const mese=Number(mh.ore_mese||0), trim=Number(mh.ore_trimestre||0);
   const minM=Number(mh.ore_minime_mensili||p.ore_minime_mensili||28), minT=Number(mh.ore_minime_trimestrali||p.ore_minime_trimestrali||84);
   return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo)+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs||'—')+'</td><td><b>'+esc(mese.toFixed(2))+'</b> / '+esc(minM)+'</td><td><b>'+esc(trim.toFixed(2))+'</b> / '+esc(minT)+'</td><td>'+esc(p.telefono||'—')+'</td><td>'+volunteerAppStatusMarkup(p)+'</td><td><button class="btn secondary" data-edit-person="'+esc(p.badge)+'">Apri / modifica</button> <button class="btn blue" type="button" data-person-documents="'+esc(p.badge)+'">📁 Documenti</button></td></tr>';
- }).join('');
- document.querySelectorAll('[data-edit-person]').forEach(b=>b.onclick=()=>window.editPerson(b.dataset.editPerson));
- document.querySelectorAll('[data-person-documents]').forEach(b=>b.onclick=()=>{window.editPerson(b.dataset.personDocuments);$('pdocSection').scrollIntoView({behavior:'smooth',block:'start'});});
+ }).join(''):'<tr><td colspan="9">Nessun volontario corrisponde al filtro selezionato.</td></tr>';
+
+ $('ptbody').querySelectorAll('[data-edit-person]').forEach(b=>b.onclick=()=>window.editPerson(b.dataset.editPerson));
+ $('ptbody').querySelectorAll('[data-person-documents]').forEach(b=>b.onclick=()=>{window.editPerson(b.dataset.personDocuments);$('pdocSection').scrollIntoView({behavior:'smooth',block:'start'});});
+
+ if($('pAppFilterAll'))$('pAppFilterAll').className='btn '+(peopleAppFilter==='ALL'?'yellow':'secondary');
+ if($('pAppFilterOk'))$('pAppFilterOk').className='btn '+(peopleAppFilter==='OK'?'yellow':'secondary');
+ if($('pAppFilterMissing'))$('pAppFilterMissing').className='btn '+(peopleAppFilter==='MISSING'?'yellow':'secondary');
+ if($('pAppFilterInfo'))$('pAppFilterInfo').textContent=
+  peopleAppFilter==='OK'?'Solo volontari attivi con APP OK · '+list.length:
+  peopleAppFilter==='MISSING'?'Solo volontari attivi con APP NON ATTIVA · '+list.length:
+  'Tutti i volontari · '+list.length;
 }
+async function loadPeopleView(){
+ await refreshMaster();
+ const h=await sb.from('v_personale_monte_ore').select('*');
+ peopleHoursCache=h.data||[];
+ refreshPeopleAppStats();
+ renderPeopleTable();
+}
+
 async function loadAdminPersonDocuments(badge){
  const req=++adminPersonDocumentsRequest;
  adminPersonDocuments=[];adminPersonDocumentsBadge='';
@@ -7553,7 +7617,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.90-20260928-stable-refresh';
+const CGE_APP_BUILD='13.91-20260928-volunteer-app-dashboard';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
