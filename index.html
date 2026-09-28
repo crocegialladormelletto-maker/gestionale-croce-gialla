@@ -585,7 +585,7 @@
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.95</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.96</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.95</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.96</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1464,7 +1464,7 @@
  <div class="grid3" style="margin-top:12px">
   <div class="field"><label>Partenza</label><input id="rcStart" value="Via I° Maggio 1, 28040 Dormelletto NO, Italia"></div>
   <div class="field"><label>Carico paziente (facoltativo)</label><input id="rcLoad" placeholder="Es. Oleggio Castello NO"></div>
-  <div class="field"><label>Destinazione *</label><input id="rcDest" placeholder="Comune, ospedale o indirizzo in Italia o Europa"></div>
+  <div class="field"><label>Destinazione *</label><input id="rcDest" placeholder="Via, Comune, Ospedale, RSA, Clinica o struttura sanitaria"></div>
  </div>
  <div class="inline-checks" style="margin-top:10px">
   <label class="check"><input id="rcReturn" type="checkbox" checked> Rientro al punto di partenza</label>
@@ -2376,7 +2376,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.95':'Versione 13.95';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.96':'Versione 13.96';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5913,6 +5913,41 @@ async function routeCalcGeocode(q){
   .trim();
  addAttempt(normalized);
 
+ // Strutture sanitarie: permette di cercare direttamente ospedali, RSA, cliniche,
+ // case di riposo, poliambulatori e centri medici senza conoscere l'indirizzo.
+ const healthcareHint=/\b(OSPEDALE|HOSPITAL|RSA|R\.S\.A\.|CLINICA|CASA DI RIPOSO|RESIDENZA SANITARIA|POLIAMBULATORIO|CENTRO MEDICO|CENTRO SANITARIO|ISTITUTO CLINICO|CASA DI CURA)\b/i.test(normalized);
+ if(healthcareHint){
+  addAttempt(normalized+', Piemonte, Italia');
+  addAttempt(normalized+', Italia');
+
+  // Varianti linguistiche/naturali frequenti.
+  if(/^OSPEDALE\s+/i.test(normalized)){
+   const rest=normalized.replace(/^OSPEDALE\s+/i,'').trim();
+   addAttempt('Ospedale di '+rest+', Italia');
+   addAttempt('Presidio ospedaliero '+rest+', Italia');
+  }
+  if(/^RSA\s+/i.test(normalized)){
+   const rest=normalized.replace(/^RSA\s+/i,'').trim();
+   addAttempt('RSA '+rest+', Italia');
+   addAttempt('Residenza sanitaria assistenziale '+rest+', Italia');
+   addAttempt('Casa di riposo '+rest+', Italia');
+  }
+  if(/^CLINICA\s+/i.test(normalized)){
+   const rest=normalized.replace(/^CLINICA\s+/i,'').trim();
+   addAttempt('Clinica '+rest+', Italia');
+   addAttempt('Casa di cura '+rest+', Italia');
+  }
+
+  // Strutture / denominazioni usate spesso nel territorio.
+  const healthAliases=[
+   [/^OSPEDALE\s+BORGOMANERO$/i,'Ospedale Santissima Trinità, Borgomanero, NO, Italia'],
+   [/^OSPEDALE\s+NOVARA$/i,'Azienda Ospedaliero Universitaria Maggiore della Carità, Novara, Italia'],
+   [/^OSPEDALE\s+MAGGIORE\s+NOVARA$/i,'Azienda Ospedaliero Universitaria Maggiore della Carità, Novara, Italia'],
+   [/^RSA\s+PALLADIO$/i,'RSA Palladio, Dormelletto, NO, Italia']
+  ];
+  for(const [rx,val] of healthAliases)if(rx.test(normalized))addAttempt(val);
+ }
+
  // Alias europei frequenti.
  const aliases=[
   [/^MONACO( DI BAVIERA)?$/i,'München, Deutschland'],[/^MUNICH$/i,'München, Deutschland'],
@@ -5943,7 +5978,7 @@ async function routeCalcGeocode(q){
  );
 
  // Costruisce varianti robuste per indirizzi italiani con civico/CAP/comune/provincia.
- const italianHint=/\b(NO|VB|VC|BI|TO|MI|VA|PV|CO|BG|BS|GE|AL|AT|CN|AO|ITALIA|ITALY)\b/.test(upper)||
+ const italianHint=healthcareHint||/\b(NO|VB|VC|BI|TO|MI|VA|PV|CO|BG|BS|GE|AL|AT|CN|AO|ITALIA|ITALY)\b/.test(upper)||
   /DORMELLETTO|NOVARA|BORGOMANERO|ARONA|TORINO|MILANO|ROMA|GENOVA|VENEZIA|BOLOGNA|FIRENZE|NAPOLI/.test(upper);
 
  if(italianHint){
@@ -6006,14 +6041,20 @@ async function routeCalcGeocode(q){
  for(const candidate of attempts){
   try{
    const countryFilter=italianHint?'&countrycodes=it':'';
-   const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1'+countryFilter+
+   const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&addressdetails=1&namedetails=1&extratags=1'+countryFilter+
     '&accept-language=it,en,de,fr,es,sl,hr&q='+encodeURIComponent(candidate);
    const r=await fetch(url,{headers:{'Accept':'application/json','Accept-Language':'it,en;q=0.9,de;q=0.8,fr;q=0.8'}});
    if(r.ok){
     const data=await r.json();
     if(data?.length){
      const valid=data.filter(europeOk);
-     const best=(valid.length?valid:data)[0];
+     const pool=valid.length?valid:data;
+     const healthcareMatches=healthcareHint?pool.filter(x=>{
+      const cls=String(x.class||'').toLowerCase(),type=String(x.type||'').toLowerCase();
+      const name=String(x.display_name||'').toLowerCase();
+      return cls==='amenity'||cls==='healthcare'||/hospital|clinic|nursing_home|doctors|healthcare|ospedale|clinica|rsa|casa di riposo/.test(type+' '+name);
+     }):[];
+     const best=(healthcareMatches.length?healthcareMatches:pool)[0];
      return {lat:Number(best.lat),lon:Number(best.lon),label:best.display_name||candidate,provider:'OSM'};
     }
    }
@@ -6061,7 +6102,12 @@ async function routeCalcGeocode(q){
     return Number.isFinite(lat)&&Number.isFinite(lon)&&lat>=34&&lat<=72&&lon>=-12&&lon<=45;
    });
    if(features.length){
-    const f=features[0],p=f.properties||{},co=f.geometry.coordinates;
+    const healthcareFeatures=healthcareHint?features.filter(x=>{
+     const p=x.properties||{};
+     const t=[p.type,p.osm_value,p.name].filter(Boolean).join(' ').toLowerCase();
+     return /hospital|clinic|nursing|health|ospedale|clinica|rsa|cura|riposo/.test(t);
+    }):[];
+    const f=(healthcareFeatures.length?healthcareFeatures:features)[0],p=f.properties||{},co=f.geometry.coordinates;
     const label=[p.name,p.street,p.housenumber,p.city,p.state,p.country].filter(Boolean).join(', ')||candidate;
     return {lat:Number(co[1]),lon:Number(co[0]),label,provider:'Photon'};
    }
@@ -7762,7 +7808,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.95-20260928-natural-addresses';
+const CGE_APP_BUILD='13.96-20260928-healthcare-destinations';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
