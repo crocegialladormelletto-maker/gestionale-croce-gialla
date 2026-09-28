@@ -44,14 +44,31 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .matrix th{position:sticky;top:0;background:#f1f5f8;z-index:2;color:var(--n)}.matrix th:first-child,.matrix td:first-child{position:sticky;left:0;text-align:left;background:#fff;z-index:1;min-width:210px}
 .matrix th:first-child{z-index:3;background:#f1f5f8}.matrix td:last-child,.matrix th:last-child{border-right:0}
 .matrix-ok{font-size:18px;color:#15734f;font-weight:900}.matrix-warn{font-size:18px;color:#9b6515;font-weight:900}.matrix-bad{font-size:18px;color:#a93138;font-weight:900}.matrix-none{color:#9aa8b4}
+
+.dashboardQuick{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.quickDash{border:0;border-radius:14px;padding:15px 12px;color:#fff;font-weight:900;font-size:14px;cursor:pointer;text-align:left;min-height:82px;transition:.15s ease;box-shadow:0 3px 10px #12375d18}
+.quickDash:hover{transform:translateY(-2px);filter:brightness(.96);box-shadow:0 8px 20px #12375d24}
+.quickDash span{display:block;font-size:23px;margin-bottom:4px}.quickDash small{display:block;color:#fff;opacity:.86;font-weight:700;margin-top:3px}
+.quickDash.people{background:#1d4ed8}.quickDash.deadlines{background:#ea580c}.quickDash.dae{background:#dc2626}.quickDash.training{background:#7c3aed}.quickDash.qualifications{background:#65a30d}
+.dashGroups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
+.dashGroup{border:1px solid var(--l);border-radius:14px;padding:13px;background:#fbfdff}
+.dashGroup h3{margin:0 0 3px;color:var(--n)}.dashGroup .muted{margin-bottom:9px}
+.dashGroup .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.dashGroup.two .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dashGroup .stat{padding:10px}.dashGroup .stat b{font-size:23px}
+.dashboardFold{border:1px solid var(--l);border-radius:14px;margin:11px 0;background:#fff;overflow:hidden}
+.dashboardFoldHead{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px}
+.dashboardFoldBody{padding:0 13px 13px}
+.dashboardFold h3{margin:0;color:var(--n)}
+@media(max-width:1180px){.dashboardQuick{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:980px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;overflow:auto}.nav{min-width:180px}.stats{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.stats,.grid2,.grid3,.grid4{grid-template-columns:1fr}.qualRow{grid-template-columns:1fr}}
+@media(max-width:560px){.stats,.grid2,.grid3,.grid4,.dashboardQuick,.dashGroups{grid-template-columns:1fr}.dashGroup .stats,.dashGroup.two .stats{grid-template-columns:1fr}.qualRow{grid-template-columns:1fr}.dashboardFoldHead{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.7</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.8</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -65,7 +82,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.7</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.8</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -79,31 +96,71 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
   </aside>
   <main>
    <section id="dashboard" class="surface">
-    <div class="hero"><h1>📊 Dashboard avanzata</h1><p>Controllo immediato di personale, DAE, stati attività, corsi e qualifiche operative.</p></div>
+    <div class="hero"><h1>🏠 Dashboard principale</h1><p>Accesso rapido alle funzioni principali e riepilogo immediato della situazione del personale.</p></div>
     <div class="pad">
-     <div class="stats">
-      <div class="stat action" data-kpi-go="active"><small>PERSONALE ATTIVO</small><b id="kpiActive">0</b><div class="go">Apri personale →</div></div>
-      <div class="stat action" data-kpi-go="daeMissing"><small>DAE MANCANTI</small><b id="kpiDaeMissing">0</b><div class="go">Apri DAE →</div></div>
-      <div class="stat action" data-kpi-go="daeExpired"><small>DAE SCADUTI</small><b id="kpiDaeExpired">0</b><div class="go">Apri DAE →</div></div>
-      <div class="stat action" data-kpi-go="dae30"><small>DAE ENTRO 30 GG</small><b id="kpiDae30">0</b><div class="go">Apri DAE →</div></div>
+     <div class="dashboardQuick">
+      <button class="quickDash people" data-dashboard-view="people"><span>👥</span>Personale<small>Anagrafiche, stati e schede</small></button>
+      <button class="quickDash deadlines" data-dashboard-view="deadlines"><span>⏰</span>Scadenze<small>Controlli e rinnovi</small></button>
+      <button class="quickDash dae" data-dashboard-view="dae"><span>🫀</span>DAE<small>Certificazioni e avvisi</small></button>
+      <button class="quickDash training" data-dashboard-view="training"><span>📚</span>Corsi e Formazione<small>Soccorritore, Autista, Capo Servizio</small></button>
+      <button class="quickDash qualifications" data-dashboard-view="qualifications"><span>🎓</span>Qualifiche<small>Abilitazioni operative</small></button>
      </div>
-     <div class="stats" style="margin-top:9px">
-      <div class="stat action" data-kpi-go="leave"><small>IN ASPETTATIVA</small><b id="kpiLeave">0</b><div class="go">Filtra personale →</div></div>
-      <div class="stat action" data-kpi-go="suspended"><small>SOSPESI</small><b id="kpiSuspended">0</b><div class="go">Filtra personale →</div></div>
-      <div class="stat action" data-kpi-go="courses"><small>CORSI PROGRAMMATI</small><b id="kpiCourses">0</b><div class="go">Apri corsi →</div></div>
-      <div class="stat action" data-kpi-go="noOperational"><small>SENZA QUALIFICHE OPERATIVE</small><b id="kpiNoOperational">0</b><div class="go">Vedi elenco →</div></div>
+
+     <div class="dashGroups">
+      <div class="dashGroup">
+       <h3>👥 Situazione personale</h3><div class="muted">Stato attuale dei volontari.</div>
+       <div class="stats">
+        <div class="stat action" data-kpi-go="active"><small>ATTIVI</small><b id="kpiActive">0</b><div class="go">Apri personale →</div></div>
+        <div class="stat action" data-kpi-go="leave"><small>IN ASPETTATIVA</small><b id="kpiLeave">0</b><div class="go">Filtra →</div></div>
+        <div class="stat action" data-kpi-go="suspended"><small>SOSPESI</small><b id="kpiSuspended">0</b><div class="go">Filtra →</div></div>
+       </div>
+      </div>
+      <div class="dashGroup">
+       <h3>🫀 Certificazione DAE</h3><div class="muted">Situazione delle certificazioni obbligatorie.</div>
+       <div class="stats">
+        <div class="stat action" data-kpi-go="daeMissing"><small>MANCANTI</small><b id="kpiDaeMissing">0</b><div class="go">Apri DAE →</div></div>
+        <div class="stat action" data-kpi-go="daeExpired"><small>SCADUTI</small><b id="kpiDaeExpired">0</b><div class="go">Apri DAE →</div></div>
+        <div class="stat action" data-kpi-go="dae30"><small>ENTRO 30 GG</small><b id="kpiDae30">0</b><div class="go">Apri DAE →</div></div>
+       </div>
+      </div>
+      <div class="dashGroup two">
+       <h3>📚 Formazione</h3><div class="muted">Corsi e programmazione formativa.</div>
+       <div class="stats">
+        <div class="stat action" data-kpi-go="courses"><small>CORSI PROGRAMMATI</small><b id="kpiCourses">0</b><div class="go">Apri corsi →</div></div>
+        <div class="stat action" data-kpi-go="noOperational"><small>SENZA QUALIFICHE OPERATIVE</small><b id="kpiNoOperational">0</b><div class="go">Vedi elenco →</div></div>
+       </div>
+      </div>
+      <div class="dashGroup">
+       <h3>📊 Copertura qualifiche</h3><div class="muted">Quadro sintetico delle abilitazioni presenti.</div>
+       <div id="coverage"></div>
+      </div>
      </div>
-     <div class="section">
-      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🛠 Da sistemare</h3><div class="muted">Criticità amministrative e formative da risolvere.</div></div><span id="fixCount" class="pill r">0</span></div>
-      <div id="fixList"></div>
+
+     <div class="dashboardFold">
+      <div class="dashboardFoldHead">
+       <div><h3>🛠 Da sistemare</h3><div class="muted">Criticità amministrative e formative da risolvere.</div></div>
+       <div class="actions"><span id="fixCount" class="pill r">0</span><button class="btn secondary" data-dashboard-toggle="fixListWrap">Mostra elenco</button></div>
+      </div>
+      <div id="fixListWrap" class="dashboardFoldBody hidden"><div id="fixList"></div></div>
      </div>
-     <div class="section">
-      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🫀 Certificazione DAE</h3><div class="muted">Controllo obbligatorio per tutti i volontari. Avviso automatico da 30 giorni prima della scadenza.</div></div><span id="daeAlertCount" class="pill b">0 da verificare</span></div>
-      <div id="daeAlertList"></div>
+
+     <div class="dashboardFold">
+      <div class="dashboardFoldHead">
+       <div><h3>⚠️ Scadenze più urgenti</h3><div class="muted">Le scadenze che richiedono attenzione per prime.</div></div>
+       <button class="btn secondary jump" data-go="deadlines">Vedi tutte</button>
+      </div>
+      <div class="dashboardFoldBody"><div id="urgentList"></div></div>
      </div>
-     <div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">⚠️ Scadenze più urgenti</h3><div class="muted">Qualifiche e attestati da controllare.</div></div><button class="btn secondary jump" data-go="deadlines">Vedi tutte</button></div><div id="urgentList"></div></div>
+
+     <div class="dashboardFold">
+      <div class="dashboardFoldHead">
+       <div><h3>🫀 Dettaglio avvisi DAE</h3><div class="muted">Apri solo quando serve verificare i nominativi.</div></div>
+       <div class="actions"><span id="daeAlertCount" class="pill b">0 da verificare</span><button class="btn secondary" data-dashboard-toggle="daeAlertWrap">Mostra elenco</button></div>
+      </div>
+      <div id="daeAlertWrap" class="dashboardFoldBody hidden"><div id="daeAlertList"></div></div>
+     </div>
+
      <div id="noOperationalSection" class="section hidden"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🚫 Volontari senza qualifiche operative</h3><div class="muted">Personale attivo senza Autista, Capo Servizio o Soccorritore.</div></div><button id="closeNoOperational" class="btn secondary">Chiudi</button></div><div id="noOperationalList"></div></div>
-     <div class="section"><h3>📊 Copertura qualifiche</h3><div id="coverage"></div></div>
     </div>
    </section>
 
@@ -360,6 +417,13 @@ function view(id){
 }
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{setTrainingPlanVisible(false);view(b.dataset.view)});
 document.querySelectorAll('.jump').forEach(b=>b.onclick=()=>view(b.dataset.go));
+document.querySelectorAll('[data-dashboard-view]').forEach(b=>b.onclick=()=>view(b.dataset.dashboardView));
+document.querySelectorAll('[data-dashboard-toggle]').forEach(b=>b.onclick=()=>{
+ const el=$(b.dataset.dashboardToggle);if(!el)return;
+ const willOpen=el.classList.contains('hidden');
+ el.classList.toggle('hidden',!willOpen);
+ b.textContent=willOpen?'Nascondi elenco':'Mostra elenco';
+});
 
 function qName(code){const q=defs.find(x=>x.codice===code);return q?.nome||code}
 function isAccompagnatore(code){const q=defs.find(x=>x.codice===code);const n=String(q?.nome||'');return String(code||'').toUpperCase()==='ACCOMPAGNATORE'||/accompagnatore/i.test(n)}
