@@ -585,7 +585,7 @@
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.98</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.99</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.98</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.99</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -2376,7 +2376,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.98':'Versione 13.98';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.99':'Versione 13.99';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -6249,15 +6249,14 @@ function routeCalcForeignCosts(coords,route){
  const typedDest=String($('rcDest')?.value||'').toUpperCase();
  const swissCityHint=/ZURIGO|ZÜRICH|ZURICH|LUGANO|BELLINZONA|LOCARNO|BASILEA|BASEL|BERNA|BERN|GINEVRA|GENEVA|GENÈVE|LUCERNA|LUZERN|LOSANNA|LAUSANNE|SAN GALLO|ST\. ?GALLEN|COIRA|CHUR|MENDRISIO|CHIASSO/;
  const swissByText=/SVIZZERA|SUISSE|SCHWEIZ|SWITZERLAND/.test(labels+' '+typedDest)||swissCityHint.test(typedDest+' '+labels);
- const swissByCoords=(coords||[]).some(x=>{
-   const lat=Number(x?.lat),lon=Number(x?.lon);
-   return Number.isFinite(lat)&&Number.isFinite(lon)&&lat>=45.75&&lat<=47.85&&lon>=5.95&&lon<=10.55;
- });
- if(swissByText||swissByCoords){
+ // Non usare più un semplice rettangolo geografico: comprende anche Piemonte e Lombardia
+ // e generava falsi positivi (es. Arona / Via Vignetta).
+ if(swissByText){
    vignette+=42.42;
    vignetteParts.push('Svizzera 2026: CHF 40 ≈ € 42,42');
  }
- const inAustria=/AUSTRIA|ÖSTERREICH/.test(labels)||/INNSBRUCK|TIROL|AUSTRIA/.test(typedDest);
+ const routeClearlyItaly=/\bITALIA\b|\bITALY\b/.test(labels) && !/SVIZZERA|SUISSE|SCHWEIZ|SWITZERLAND|AUSTRIA|ÖSTERREICH|SLOVENIA|SLOVENIJA/.test(labels);
+ const inAustria=!routeClearlyItaly&&(/AUSTRIA|ÖSTERREICH/.test(labels)||/INNSBRUCK|TIROL|AUSTRIA/.test(typedDest));
  if(inAustria){
    const roadCompact=road.replace(/\s+/g,'');
    const usesA12=/A12/.test(roadCompact)||/INNTAL/.test(road);
@@ -6282,7 +6281,7 @@ function routeCalcForeignCosts(coords,route){
      vignetteParts.push('Austria: vignetta 1 giorno € 9,60');
    }
  }
- if(/SLOVENIA|SLOVENIJA/.test(labels)){
+ if(!routeClearlyItaly&&/SLOVENIA|SLOVENIJA/.test(labels)){
    const sl=simple?16:32;
    vignette+=sl; vignetteParts.push('Slovenia: vignetta 7 giorni '+(simple?'2A':'2B')+' '+euro(sl));
  }
@@ -7911,7 +7910,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.98-20260928-healthcare-archive';
+const CGE_APP_BUILD='13.99-20260928-vignette-country-fix';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
