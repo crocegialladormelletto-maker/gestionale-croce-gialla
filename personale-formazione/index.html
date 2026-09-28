@@ -87,7 +87,23 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .reportCompact{width:100%;border-collapse:collapse;min-width:0}.reportCompact th,.reportCompact td{font-size:11px;padding:7px;border-bottom:1px solid #e7edf2}
 .reportCompact th{background:#f1f5f8}
 @media(max-width:900px){.reportMiniGrid{grid-template-columns:repeat(2,1fr)}}
+.personPrintSheet{display:none}
+.personPrintHeader{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:3px solid var(--n);padding-bottom:12px;margin-bottom:14px}
+.personPrintHeader h1{margin:0;color:var(--n);font-size:24px}.personPrintHeader .muted{margin-top:4px}
+.personPrintGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.personPrintSection{border:1px solid var(--l);border-radius:12px;padding:12px;margin:10px 0;break-inside:avoid}
+.personPrintSection h3{margin:0 0 8px;color:var(--n)}
+.personPrintKV{display:grid;grid-template-columns:160px 1fr;gap:5px 10px;font-size:12px}
+.personPrintKV b{color:var(--n)}
+.personPrintTable{width:100%;border-collapse:collapse;min-width:0}.personPrintTable th,.personPrintTable td{font-size:11px;padding:6px;border-bottom:1px solid #dde5ec;text-align:left}.personPrintTable th{background:#f1f5f8}
+@media(max-width:700px){.personPrintGrid{grid-template-columns:1fr}.personPrintKV{grid-template-columns:1fr}}
 @media print{
+ body.printing-person{background:#fff}
+ body.printing-person .top,body.printing-person .side,body.printing-person main>section,body.printing-person .reportActions{display:none!important}
+ body.printing-person .wrap{max-width:none;padding:0}.layout{display:block}
+ body.printing-person #personPrintSheet{display:block!important;position:static!important;border:0!important;background:#fff!important;padding:0!important}
+ body.printing-person .personPrintGrid{grid-template-columns:repeat(2,1fr)}
+
  body.printing-report{background:#fff}
  body.printing-report .top,body.printing-report .side,body.printing-report .reportActions{display:none!important}
  body.printing-report .wrap{max-width:none;padding:0}.layout{display:block}
@@ -108,7 +124,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.2</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.3</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -122,7 +138,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.2</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.3</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -228,7 +244,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
      <div class="section"><div class="grid3"><div class="field"><label>Cerca</label><input id="peopleSearch" placeholder="Nome, cognome o badge"></div><div class="field"><label>Stato</label><select id="peopleState"><option value="">Tutti</option><option>ATTIVO</option><option>INATTIVO</option><option>ASPETTATIVA</option><option>SOSPESO</option><option>CESSATO</option></select></div><div class="field"><label>Qualifica</label><select id="peopleQual"><option value="">Tutte</option></select></div></div></div>
      <div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Semaforo</th><th>Qualifiche</th><th>Prossima scadenza</th><th></th></tr></thead><tbody id="peopleBody"></tbody></table></div>
      <div id="personDetail" class="section hidden" style="margin-top:14px">
-      <div class="actions" style="justify-content:space-between"><div><h3 id="personTitle" style="margin:0">Scheda personale</h3><div id="personSub" class="muted"></div></div><button id="closePerson" class="btn secondary">Chiudi</button></div>
+      <div class="actions" style="justify-content:space-between"><div><h3 id="personTitle" style="margin:0">Scheda personale</h3><div id="personSub" class="muted"></div></div><div class="actions"><button id="printPersonSummary" class="btn blue">🖨 Stampa scheda riepilogativa</button><button id="closePerson" class="btn secondary">Chiudi</button></div></div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Badge</label><input id="pBadge" disabled></div><div class="field"><label>Nome</label><input id="pName" disabled></div><div class="field"><label>Cognome</label><input id="pSurname" disabled></div><div class="field"><label>Stato attività</label><select id="pState"><option value="ATTIVO">ATTIVO</option><option value="INATTIVO">INATTIVO</option><option value="ASPETTATIVA">ASPETTATIVA</option><option value="SOSPESO">SOSPESO</option><option value="CESSATO">CESSATO</option></select></div>
        <div class="field"><label>Telefono</label><input id="pPhone"></div><div class="field"><label>Email</label><input id="pEmail" type="email"></div><div class="field"><label>Data ingresso</label><input id="pEntry" type="date"></div><div class="field"><label>Data nascita</label><input id="pBirth" type="date"></div>
@@ -429,6 +445,8 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
      <div id="qualificationCards" class="grid2"></div>
     </div>
    </section>
+
+   <section id="personPrintSheet" class="personPrintSheet"></section>
 
    <section id="reports" class="surface hidden">
     <div class="hero"><h2>📄 Report Personale</h2><p>Riepilogo stampabile di personale, qualifiche, DAE, scadenze, stati e formazione.</p></div>
@@ -736,6 +754,41 @@ function renderPersonDocs(){
  const rows=docs.filter(d=>d.badge_personale===selectedBadge);
  $('personDocs').innerHTML=rows.length?rows.map(d=>{const s=d.data_scadenza?stateFor(d.data_scadenza):null;return '<div class="box" style="margin:7px 0"><b>'+esc(d.titolo||d.nome_file_originale||d.categoria)+'</b>'+(s?' <span class="pill '+s.cls+'">'+esc(s.label)+'</span>':'')+'<br><span class="muted">'+esc(d.categoria||'Documento')+(d.data_scadenza?' · Scadenza '+esc(fmt(d.data_scadenza)):' · Nessuna scadenza')+'</span>'+(d.note?'<br>'+esc(d.note):'')+'</div>'}).join(''):'<div class="notice">Nessun documento o attestato registrato.</div>';
 }
+
+function renderPersonPrintSheet(){
+ const host=$('personPrintSheet');if(!host||!selectedBadge)return;
+ const p=people.find(x=>x.badge===selectedBadge);if(!p)return;
+ const dr=daeRow(selectedBadge);
+ const ds=daeStatus(dr?.valida_al);
+ const quals=pquals.filter(x=>x.badge_personale===selectedBadge).slice().sort((a,b)=>qName(a.codice_qualifica).localeCompare(qName(b.codice_qualifica),'it'));
+ const courses=trainingPeople.filter(x=>x.badge_personale===selectedBadge).map(x=>({part:x,course:trainingCourses.find(c=>c.id===x.corso_id)})).filter(x=>x.course).sort((a,b)=>String(b.course.data_corso||'').localeCompare(String(a.course.data_corso||'')));
+ const personDocs=docs.filter(x=>x.badge_personale===selectedBadge).slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
+ const states=stateHistoryRows.filter(x=>x.badge_personale===selectedBadge).slice().sort((a,b)=>String(b.data_inizio||'').localeCompare(String(a.data_inizio||'')));
+ const cs=complianceForPerson(p);
+ const fullName=p.nome_completo||(((p.cognome||'')+' '+(p.nome||'')).trim())||selectedBadge;
+ const qualRows=quals.length?quals.map(q=>{
+  const permanent=isPermanentOperationalQualification(q.codice_qualifica);
+  return '<tr><td>'+esc(qName(q.codice_qualifica))+'</td><td>'+esc(q.valida_dal?fmt(q.valida_dal):'—')+'</td><td>'+esc(permanent?'Senza scadenza':(q.valida_al?fmt(q.valida_al):'—'))+'</td></tr>';
+ }).join(''):'<tr><td colspan="3">Nessuna qualifica registrata.</td></tr>';
+ const courseRows=courses.length?courses.map(x=>'<tr><td>'+esc(x.course.data_corso?fmt(x.course.data_corso):'—')+'</td><td>'+esc(x.course.titolo||'—')+'</td><td>'+esc(x.course.tipo||'—')+'</td><td>'+esc(x.part.esito||'—')+'</td></tr>').join(''):'<tr><td colspan="4">Nessun corso registrato.</td></tr>';
+ const docRows=personDocs.length?personDocs.map(d=>'<tr><td>'+esc(d.titolo||d.nome_file_originale||d.categoria||'Documento')+'</td><td>'+esc(d.categoria||'—')+'</td><td>'+esc(d.data_scadenza?fmt(d.data_scadenza):'—')+'</td></tr>').join(''):'<tr><td colspan="3">Nessun documento registrato.</td></tr>';
+ const stateRows=states.length?states.map(s=>'<tr><td>'+esc(fmt(s.data_inizio))+'</td><td>'+esc(s.stato||'—')+'</td><td>'+esc(s.data_rientro_prevista?fmt(s.data_rientro_prevista):'—')+'</td><td>'+esc(s.motivo||'—')+'</td></tr>').join(''):'<tr><td colspan="4">Nessuno storico stato registrato.</td></tr>';
+ host.innerHTML=
+  '<div class="personPrintHeader"><div><h1>Croce Gialla Emergenza ODV</h1><div class="muted">Scheda riepilogativa volontario</div></div><div style="text-align:right"><b>'+esc(fullName)+'</b><br><span class="muted">Badge '+esc(selectedBadge)+' · '+esc(new Date().toLocaleDateString('it-IT'))+'</span></div></div>'+
+  '<div class="personPrintGrid">'+
+   '<div class="personPrintSection"><h3>👤 Dati anagrafici</h3><div class="personPrintKV">'+
+    '<b>Nome</b><span>'+esc(p.nome||'—')+'</span><b>Cognome</b><span>'+esc(p.cognome||'—')+'</span><b>Data di nascita</b><span>'+esc(p.data_nascita?fmt(p.data_nascita):'—')+'</span><b>Codice fiscale</b><span>'+esc(p.codice_fiscale||'—')+'</span><b>Telefono</b><span>'+esc(p.telefono||'—')+'</span><b>Email</b><span>'+esc(p.email||'—')+'</span><b>Indirizzo</b><span>'+esc([p.indirizzo,p.cap,p.comune,p.provincia].filter(Boolean).join(' ')||'—')+'</span><b>Data ingresso</b><span>'+esc(p.data_ingresso?fmt(p.data_ingresso):'—')+'</span>'+
+   '</div></div>'+
+   '<div class="personPrintSection"><h3>🚑 Situazione attuale</h3><div class="personPrintKV">'+
+    '<b>Stato</b><span>'+esc(p.stato_anagrafico||'ATTIVO')+'</span><b>Semaforo</b><span>'+esc((cs.icon||'')+' '+cs.label)+'</span><b>Motivazione</b><span>'+esc(cs.reason||'—')+'</span><b>DAE</b><span>'+esc(ds.label+(dr?.valida_al?' · '+fmt(dr.valida_al):''))+'</span><b>Data uscita</b><span>'+esc(p.data_uscita?fmt(p.data_uscita):'—')+'</span>'+
+   '</div></div>'+
+  '</div>'+
+  '<div class="personPrintSection"><h3>🎓 Qualifiche</h3><table class="personPrintTable"><thead><tr><th>Qualifica</th><th>Dal</th><th>Scadenza</th></tr></thead><tbody>'+qualRows+'</tbody></table></div>'+
+  '<div class="personPrintSection"><h3>📚 Corsi e formazione</h3><table class="personPrintTable"><thead><tr><th>Data</th><th>Corso</th><th>Tipo</th><th>Esito</th></tr></thead><tbody>'+courseRows+'</tbody></table></div>'+
+  '<div class="personPrintSection"><h3>📁 Documenti e attestati</h3><table class="personPrintTable"><thead><tr><th>Documento</th><th>Categoria</th><th>Scadenza</th></tr></thead><tbody>'+docRows+'</tbody></table></div>'+
+  '<div class="personPrintSection"><h3>🕘 Storico stato attività</h3><table class="personPrintTable"><thead><tr><th>Dal</th><th>Stato</th><th>Rientro previsto</th><th>Motivo</th></tr></thead><tbody>'+stateRows+'</tbody></table></div>'+
+  '<div class="muted" style="margin-top:12px">Scheda generata dal Gestionale Personale e Formazione · Croce Gialla Emergenza ODV</div>';
+}
 function openPerson(badge){
  selectedBadge=badge;const p=people.find(x=>x.badge===badge);if(!p)return;
  $('personDetail').classList.remove('hidden');$('personTitle').textContent=p.nome_completo||'Scheda personale';$('personSub').textContent='Badge '+p.badge;
@@ -745,9 +798,17 @@ function openPerson(badge){
  $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');msg('personManageMsg','');
  const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';$('daeProvider').value='';$('daeCertificateNo').value='';$('daeNotes').value='';$('daeFile').value='';$('daePersonBadge').textContent='Badge '+badge;
  const ds=daeStatus(dr?.valida_al);$('daeState').value=ds.label.toUpperCase();
- renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPersonOperationalStatus();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
+ renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPersonOperationalStatus();renderPersonPrintSheet();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
+$('printPersonSummary')?.addEventListener('click',()=>{
+ if(!selectedBadge)return;
+ renderPersonPrintSheet();
+ document.body.classList.add('printing-person');
+ window.print();
+ setTimeout(()=>document.body.classList.remove('printing-person'),300);
+});
+window.addEventListener('afterprint',()=>document.body.classList.remove('printing-person'));
 
 function renderPersonStateHistory(){
  const rows=stateHistoryRows.filter(x=>x.badge_personale===selectedBadge);
