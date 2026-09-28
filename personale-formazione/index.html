@@ -51,7 +51,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.3</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.4</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -65,7 +65,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.3</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.4</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -320,18 +320,32 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const today=()=>new Date().toISOString().slice(0,10);
 const fmt=d=>d?new Date(d+'T00:00:00').toLocaleDateString('it-IT'):'—';
 function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c+'">'+esc(t)+'</div>':''}
-let people=[],defs=[],pquals=[],docs=[],daeHistoryRows=[],daeCourses=[],daeCoursePeople=[],stateHistoryRows=[],trainingCourses=[],trainingPeople=[],selectedBadge=null,lastDaeRenderedRows=[];
+let people=[],defs=[],pquals=[],docs=[],daeHistoryRows=[],daeCourses=[],daeCoursePeople=[],stateHistoryRows=[],trainingCourses=[],trainingPeople=[],selectedBadge=null,lastDaeRenderedRows=[],trainingPlanOpen=false;
 function daeDef(){return defs.find(q=>String(q.codice||'').toUpperCase()==='DAE')||null}
 function daeCode(){return 'DAE'}
 function daeRow(badge){const code=daeCode();return pquals.find(q=>q.badge_personale===badge&&q.codice_qualifica===code)||null}
 function daeRequiredRows(){return people.filter(personActive).map(p=>({person:p,row:daeRow(p.badge)}))}
 
 
+function setTrainingPlanVisible(show){
+ trainingPlanOpen=!!show;
+ const el=$('trainingPlanSection');
+ if(el)el.classList.toggle('hidden',!trainingPlanOpen);
+}
 function view(id){
  const previous=[...document.querySelectorAll('main>section')].find(s=>!s.classList.contains('hidden'))?.id||'';
- if(previous==='training'&&id!=='training')$('trainingPlanSection')?.classList.add('hidden');
+ if(previous==='training'&&id!=='training')setTrainingPlanVisible(false);
  document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hidden',s.id!==id));
  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
+ if(id==='deadlines')renderDeadlines();
+ if(id==='dae')renderDaeView();
+ if(id==='training'){
+  setTrainingPlanVisible(false);
+  renderTraining();
+ }
+ if(id==='qualifications'){renderQualificationCards();renderQualificationMatrix()}
+}
+document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
  if(id==='deadlines')renderDeadlines();
  if(id==='dae')renderDaeView();
  if(id==='training'){
@@ -340,7 +354,7 @@ function view(id){
  }
  if(id==='qualifications'){renderQualificationCards();renderQualificationMatrix()}
 }
-document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>view(b.dataset.view));
+document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{setTrainingPlanVisible(false);view(b.dataset.view)});
 document.querySelectorAll('.jump').forEach(b=>b.onclick=()=>view(b.dataset.go));
 
 function qName(code){const q=defs.find(x=>x.codice===code);return q?.nome||code}
@@ -748,7 +762,7 @@ function openQuickTraining(kind){
  const rx=kind==='AUTISTA'?/AUTISTA/:kind==='CAPO_SERVIZIO'?/CAPO.*SERVIZIO/:/SOCCORRITORE/;
  const code=qualCodeByRegex(rx);
  if(!code)return alert('Qualifica non trovata nel gestionale.');
- $('trainingPlanSection')?.classList.remove('hidden');
+ setTrainingPlanVisible(true);
  renderTrainingPlan();
  prepareSuggestedCourse(kind,code);
 }
@@ -759,7 +773,6 @@ function filterTrainingByKind(kind){
  $('trainingCourses')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function prepareSuggestedCourse(kind,code){
- $('trainingPlanSection')?.classList.remove('hidden');
  const map={
   SOCCORRITORE:{title:'Corso Soccorritore Allegato A – 118 Piemonte',type:'118 / 112',rx:/SOCCORRITORE/},
   AUTISTA:{title:'Corso interno Autista',type:'AUTISTI',rx:/AUTISTA/},
@@ -962,7 +975,7 @@ async function saveTrainingCourseMeta(id){
 }
 function renderTraining(){
  renderTrainingParticipants();
- if(!$('trainingPlanSection')?.classList.contains('hidden'))renderTrainingPlan();
+ if(trainingPlanOpen)renderTrainingPlan();
  const search=($('trSearch')?.value||'').trim().toLowerCase(),stateFilter=$('trCourseStateFilter')?.value||'';
  const host=$('trainingCourses');if(!host)return;
  const rows=trainingCourses.filter(c=>(!stateFilter||c.stato===stateFilter)&&(c.titolo+' '+c.tipo+' '+(c.docente||'')+' '+(c.ente_formatore||'')).toLowerCase().includes(search));
@@ -1000,7 +1013,7 @@ function renderPersonTrainingHistory(){
  host.innerHTML=rows.length?rows.map(x=>'<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><b>'+esc(x.course.titolo)+'</b><span class="pill '+(x.part.esito==='IDONEO'?'g':x.part.esito==='NON IDONEO'||x.part.esito==='ASSENTE'?'r':'w')+'">'+esc(x.part.esito)+'</span></div><div class="muted">'+esc(x.course.data_corso?fmt(x.course.data_corso):'Data da definire')+' · '+esc(x.course.tipo)+(x.course.durata_ore?' · '+esc(x.course.durata_ore)+' ore':'')+'</div>'+(x.part.data_scadenza_generata?'<div style="margin-top:4px">Scadenza: '+esc(fmt(x.part.data_scadenza_generata))+'</div>':'')+(x.part.documento_id?'<div class="actions" style="margin-top:6px"><button class="btn secondary" data-person-training-doc="'+esc(x.part.documento_id)+'">Apri attestato</button></div>':'')+'</div>').join(''):'<div class="notice">Nessun corso registrato.</div>';
  document.querySelectorAll('[data-person-training-doc]').forEach(b=>b.onclick=()=>openDaeDocument(b.dataset.personTrainingDoc));
 }
-$('closeTrainingPlan')?.addEventListener('click',()=>$('trainingPlanSection')?.classList.add('hidden'));
+$('closeTrainingPlan')?.addEventListener('click',()=>setTrainingPlanVisible(false));
 $('quickSoccorritoreCourse')?.addEventListener('click',()=>openQuickTraining('SOCCORRITORE'));
 $('filterSoccorritoreCourses')?.addEventListener('click',()=>filterTrainingByKind('SOCCORRITORE'));
 $('quickAutistaCourse')?.addEventListener('click',()=>openQuickTraining('AUTISTA'));
