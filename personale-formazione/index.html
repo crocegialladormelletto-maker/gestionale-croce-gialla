@@ -51,7 +51,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.9</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.0</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -65,7 +65,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.9</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.0</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -161,9 +161,9 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
    </section>
 
    <section id="deadlines" class="surface hidden">
-    <div class="hero"><h2>⏰ Scadenze formazione</h2><p>Controllo qualifiche e attestati in scadenza.</p></div>
+    <div class="hero"><h2>⏰ Scadenziario generale personale</h2><p>DAE, certificazioni con scadenza, documenti e rientri da aspettativa.</p></div>
     <div class="pad">
-     <div class="section"><div class="grid3"><div class="field"><label>Finestra</label><select id="deadlineWindow"><option value="30">Entro 30 giorni</option><option value="60">Entro 60 giorni</option><option value="90" selected>Entro 90 giorni</option><option value="3650">Tutte</option></select></div><div class="field"><label>Tipo</label><select id="deadlineType"><option value="">Tutti</option><option value="QUALIFICA">Qualifiche</option><option value="DOCUMENTO">Attestati/documenti</option></select></div><div class="field"><label>Stato</label><select id="deadlineState"><option value="">Tutti</option><option value="SCADUTA">Scadute</option><option value="PROSSIMA">In scadenza</option><option value="FUTURA">Future</option></select></div></div></div>
+     <div class="section"><div class="actions" style="justify-content:space-between;align-items:end"><div class="grid3" style="flex:1"><div class="field"><label>Finestra</label><select id="deadlineWindow"><option value="30">Entro 30 giorni</option><option value="60">Entro 60 giorni</option><option value="90" selected>Entro 90 giorni</option><option value="3650">Tutte</option></select></div><div class="field"><label>Tipo</label><select id="deadlineType"><option value="">Tutti</option><option value="QUALIFICA">Certificazioni</option><option value="DOCUMENTO">Attestati/documenti</option><option value="RIENTRO">Rientri aspettativa</option></select></div><div class="field"><label>Stato</label><select id="deadlineState"><option value="">Tutti</option><option value="SCADUTA">Scadute</option><option value="PROSSIMA">In scadenza</option><option value="FUTURA">Future</option></select></div></div><div class="actions"><button id="deadlinePrint" class="btn secondary">🖨 Stampa</button><button id="deadlineExport" class="btn blue">⬇ Esporta CSV</button></div></div><div class="notice">Le qualifiche permanenti come <b>Soccorritore, Autista e Capo Servizio</b> non sono considerate scadenze e non vengono proposte come rinnovi.</div></div>
      <div class="table"><table><thead><tr><th>Persona</th><th>Tipo</th><th>Elemento</th><th>Scadenza</th><th>Mancano</th><th>Stato</th></tr></thead><tbody id="deadlineBody"></tbody></table></div>
     </div>
    </section>
@@ -220,6 +220,10 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
    <section id="training" class="surface hidden">
     <div class="hero"><h2>📚 Corsi e Formazione</h2><p>Programmazione corsi, partecipanti, esiti, attestati e aggiornamento automatico delle qualifiche.</p></div>
     <div class="pad">
+     <div class="section">
+      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🧭 Piano formazione automatico</h3><div class="muted">Suggerisce i corsi da organizzare senza confondere qualifiche permanenti e rinnovi.</div></div></div>
+      <div id="trainingPlan" class="grid3" style="margin-top:10px"></div>
+     </div>
      <div class="section">
       <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">➕ Nuovo corso</h3><div class="muted">Crea un corso e seleziona i partecipanti dall'elenco alfabetico.</div></div><button id="newTrainingReset" class="btn secondary">Pulisci</button></div>
       <div class="grid4" style="margin-top:10px">
@@ -330,10 +334,28 @@ async function loadAll(){
  renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderTraining();renderQualificationCards();renderQualificationMatrix();renderDaeCourses();
  if(selectedBadge&&people.some(p=>p.badge===selectedBadge))openPerson(selectedBadge);
 }
+function isPermanentOperationalQualification(code){
+ const name=((code||'')+' '+qName(code)).toUpperCase();
+ return /AUTISTA|CAPO.*SERVIZIO|SOCCORRITORE/.test(name);
+}
 function allDeadlines(){
  const a=[];
- pquals.forEach(q=>{if(q.valida_al)a.push({badge:q.badge_personale,type:'QUALIFICA',name:q.codice_qualifica===daeCode()?'Certificazione DAE':qName(q.codice_qualifica),date:q.valida_al,raw:q})});
+ pquals.forEach(q=>{
+  const def=defs.find(d=>d.codice===q.codice_qualifica);
+  if(q.valida_al&&def?.richiede_scadenza===true&&!isPermanentOperationalQualification(q.codice_qualifica)){
+   a.push({badge:q.badge_personale,type:'QUALIFICA',name:q.codice_qualifica===daeCode()?'Certificazione DAE':qName(q.codice_qualifica),date:q.valida_al,raw:q});
+  }
+ });
  docs.forEach(d=>{if(d.data_scadenza)a.push({badge:d.badge_personale,type:'DOCUMENTO',name:d.titolo||d.nome_file_originale||d.categoria,date:d.data_scadenza,raw:d})});
+ const latestLeave={};
+ stateHistoryRows.filter(x=>x.stato==='ASPETTATIVA'&&x.data_rientro_prevista).forEach(x=>{
+  const prev=latestLeave[x.badge_personale];
+  if(!prev||String(x.data_inizio)>String(prev.data_inizio))latestLeave[x.badge_personale]=x;
+ });
+ Object.values(latestLeave).forEach(x=>{
+  const p=people.find(p=>p.badge===x.badge_personale);
+  if(p&&(p.stato_anagrafico||'')==='ASPETTATIVA')a.push({badge:x.badge_personale,type:'RIENTRO',name:'Rientro da aspettativa',date:x.data_rientro_prevista,raw:x});
+ });
  return a.sort((x,y)=>String(x.date).localeCompare(String(y.date)));
 }
 function hasOperationalQualification(p){
@@ -453,7 +475,7 @@ function renderPeople(){
 function renderPersonQuals(){
  const rows=pquals.filter(q=>q.badge_personale===selectedBadge&&q.codice_qualifica!==daeCode()&&!isAccompagnatore(q.codice_qualifica)).sort((a,b)=>qName(a.codice_qualifica).localeCompare(qName(b.codice_qualifica)));
  $('personQualList').innerHTML=rows.length?rows.map(q=>{
-  const def=defs.find(d=>d.codice===q.codice_qualifica),hasExpiry=def?.richiede_scadenza===true;
+  const def=defs.find(d=>d.codice===q.codice_qualifica),hasExpiry=def?.richiede_scadenza===true&&!isPermanentOperationalQualification(q.codice_qualifica);
   if(hasExpiry){
    return '<div class="qualRow"><div><b>'+esc(qName(q.codice_qualifica))+'</b><div class="muted">'+esc(q.codice_qualifica)+'</div></div><div class="field"><label>Valida dal</label><input type="date" value="'+esc(q.valida_dal||'')+'" data-qfrom="'+esc(q.codice_qualifica)+'"></div><div class="field"><label>Valida al</label><input type="date" value="'+esc(q.valida_al||'')+'" data-qto="'+esc(q.codice_qualifica)+'"></div><div class="actions"><button class="btn secondary" data-qsave="'+esc(q.codice_qualifica)+'">Salva</button><button class="btn danger" data-qremove="'+esc(q.codice_qualifica)+'">Rimuovi</button></div></div>';
   }
@@ -585,7 +607,7 @@ async function openDaeDocument(id){
  window.open(r.data.signedUrl,'_blank','noopener');
 }
 function updateNewQualValidityFields(){
- const code=$('newQual')?.value||'',def=defs.find(d=>d.codice===code),show=def?.richiede_scadenza===true;
+ const code=$('newQual')?.value||'',def=defs.find(d=>d.codice===code),show=def?.richiede_scadenza===true&&!isPermanentOperationalQualification(code);
  $('newQualFromWrap')?.classList.toggle('hidden',!show);
  $('newQualToWrap')?.classList.toggle('hidden',!show);
  if(!show){if($('newQualFrom'))$('newQualFrom').value='';if($('newQualTo'))$('newQualTo').value='';}
@@ -594,7 +616,7 @@ $('newQual')?.addEventListener('change',updateNewQualValidityFields);
 
 $('addQual').onclick=async()=>{
  if(!selectedBadge||!$('newQual').value)return msg('personQualMsg','Seleziona una qualifica.','warn');
- const code=$('newQual').value,def=defs.find(d=>d.codice===code),hasExpiry=def?.richiede_scadenza===true,from=hasExpiry?($('newQualFrom').value||null):null,to=hasExpiry?($('newQualTo').value||null):null;
+ const code=$('newQual').value,def=defs.find(d=>d.codice===code),hasExpiry=def?.richiede_scadenza===true&&!isPermanentOperationalQualification(code),from=hasExpiry?($('newQualFrom').value||null):null,to=hasExpiry?($('newQualTo').value||null):null;
  const existing=pquals.find(q=>q.badge_personale===selectedBadge&&q.codice_qualifica===code);
  const r=existing?await sb.from('personale_qualifiche').update({attiva:true,valida_dal:from,valida_al:to}).eq('badge_personale',selectedBadge).eq('codice_qualifica',code):await sb.from('personale_qualifiche').insert({badge_personale:selectedBadge,codice_qualifica:code,attiva:true,valida_dal:from,valida_al:to});
  if(r.error)return msg('personQualMsg',r.error.message,'err');msg('personQualMsg','Qualifica salvata.','ok');await loadAll();
@@ -603,9 +625,60 @@ $('addQual').onclick=async()=>{
 function renderDeadlines(){
  const windowDays=Number($('deadlineWindow').value||90),type=$('deadlineType').value,state=$('deadlineState').value;
  const rows=allDeadlines().filter(x=>{const d=daysTo(x.date);if(d>windowDays)return false;if(type&&x.type!==type)return false;const s=stateFor(x.date);if(state&&s.key!==state)return false;return true});
- $('deadlineBody').innerHTML=rows.map(x=>{const d=daysTo(x.date),s=stateFor(x.date);return '<tr><td><b>'+esc(personName(x.badge))+'</b><br><span class="muted">Badge '+esc(x.badge)+'</span></td><td>'+esc(x.type==='QUALIFICA'?'Qualifica':'Documento')+'</td><td>'+esc(x.name)+'</td><td>'+esc(fmt(x.date))+'</td><td>'+esc(d<0?Math.abs(d)+' gg fa':d===0?'Oggi':d+' gg')+'</td><td><span class="pill '+s.cls+'">'+esc(s.label)+'</span></td></tr>'}).join('')||'<tr><td colspan="6">Nessuna scadenza nei filtri selezionati.</td></tr>';
+ $('deadlineBody').innerHTML=rows.map(x=>{const d=daysTo(x.date),s=stateFor(x.date);return '<tr><td><b>'+esc(personName(x.badge))+'</b><br><span class="muted">Badge '+esc(x.badge)+'</span></td><td>'+esc(x.type==='QUALIFICA'?'Certificazione':x.type==='DOCUMENTO'?'Documento':'Rientro aspettativa')+'</td><td>'+esc(x.name)+'</td><td>'+esc(fmt(x.date))+'</td><td>'+esc(d<0?Math.abs(d)+' gg fa':d===0?'Oggi':d+' gg')+'</td><td><span class="pill '+s.cls+'">'+esc(s.label)+'</span></td></tr>'}).join('')||'<tr><td colspan="6">Nessuna scadenza nei filtri selezionati.</td></tr>';
 }
 ['deadlineWindow','deadlineType','deadlineState'].forEach(id=>$(id).onchange=renderDeadlines);
+function currentDeadlineRows(){
+ const windowDays=Number($('deadlineWindow').value||90),type=$('deadlineType').value,state=$('deadlineState').value;
+ return allDeadlines().filter(x=>{const d=daysTo(x.date);if(d>windowDays)return false;if(type&&x.type!==type)return false;const s=stateFor(x.date);if(state&&s.key!==state)return false;return true});
+}
+$('deadlineExport')?.addEventListener('click',()=>{
+ const rows=currentDeadlineRows(),headers=['Badge','Persona','Tipo','Elemento','Scadenza','Giorni','Stato'];
+ const q=v=>'"'+String(v??'').replaceAll('"','""')+'"';
+ const csv='\ufeff'+headers.join(';')+'\n'+rows.map(x=>[x.badge,personName(x.badge),x.type,x.name,x.date,daysTo(x.date),stateFor(x.date).label].map(q).join(';')).join('\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Scadenziario_personale_'+today()+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
+});
+$('deadlinePrint')?.addEventListener('click',()=>{
+ const rows=currentDeadlineRows(),w=window.open('','_blank');if(!w)return;
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Scadenziario personale</title><style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #aaa;padding:7px;text-align:left}h1{margin:0 0 4px}small{color:#555}</style></head><body><h1>Croce Gialla Emergenza ODV</h1><h2>Scadenziario generale personale</h2><small>Aggiornato al '+new Date().toLocaleDateString('it-IT')+'</small><table><thead><tr><th>Persona</th><th>Tipo</th><th>Elemento</th><th>Scadenza</th><th>Stato</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(personName(x.badge))+'</td><td>'+esc(x.type)+'</td><td>'+esc(x.name)+'</td><td>'+esc(fmt(x.date))+'</td><td>'+esc(stateFor(x.date).label)+'</td></tr>').join('')+'</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>');w.document.close();
+});
+
+function qualCodeByRegex(rx){
+ const d=defs.find(x=>rx.test(((x.codice||'')+' '+(x.nome||'')).toUpperCase()));
+ return d?.codice||'';
+}
+function peopleMissingQualification(rx){
+ const code=qualCodeByRegex(rx);
+ if(!code)return [];
+ return people.filter(personActive).filter(p=>!pquals.some(q=>q.badge_personale===p.badge&&q.codice_qualifica===code));
+}
+function renderTrainingPlan(){
+ const host=$('trainingPlan');if(!host)return;
+ const socCode=qualCodeByRegex(/SOCCORRITORE/),autCode=qualCodeByRegex(/AUTISTA/),capoCode=qualCodeByRegex(/CAPO.*SERVIZIO/);
+ const soc=socCode?peopleMissingQualification(/SOCCORRITORE/):[];
+ const aut=autCode?peopleMissingQualification(/AUTISTA/):[];
+ const capo=capoCode?peopleMissingQualification(/CAPO.*SERVIZIO/):[];
+ const card=(icon,title,subtitle,rows,kind,code)=>'<div class="box"><h3 style="margin:0 0 5px">'+icon+' '+esc(title)+'</h3><div class="muted">'+esc(subtitle)+'</div><div style="margin:9px 0"><span class="pill '+(rows.length?'w':'g')+'">'+rows.length+' persone</span></div><div class="muted" style="max-height:130px;overflow:auto">'+(rows.length?rows.map(p=>esc(p.nome_completo||p.badge)).join('<br>'):'Nessuno da inserire')+'</div>'+(rows.length&&code?'<button class="btn yellow" style="margin-top:9px" data-plan-course="'+kind+'" data-plan-code="'+esc(code)+'">Prepara corso</button>':'')+'</div>';
+ host.innerHTML=
+  card('🚑','Soccorritore Allegato A – 118 Piemonte','Qualifica permanente: si consegue una volta e non si rinnova.',soc,'SOCCORRITORE',socCode)+
+  card('🚐','Corso interno Autista','Corso interno per il conseguimento della qualifica Autista. Nessuna scadenza.',aut,'AUTISTA',autCode)+
+  card('⭐','Corso interno Capo Servizio','Corso interno per il conseguimento della qualifica Capo Servizio. Nessuna scadenza.',capo,'CAPO_SERVIZIO',capoCode);
+ document.querySelectorAll('[data-plan-course]').forEach(b=>b.onclick=()=>prepareSuggestedCourse(b.dataset.planCourse,b.dataset.planCode));
+}
+function prepareSuggestedCourse(kind,code){
+ const map={
+  SOCCORRITORE:{title:'Corso Soccorritore Allegato A – 118 Piemonte',type:'118 / 112',rx:/SOCCORRITORE/},
+  AUTISTA:{title:'Corso interno Autista',type:'AUTISTI',rx:/AUTISTA/},
+  CAPO_SERVIZIO:{title:'Corso interno Capo Servizio',type:'FORMAZIONE INTERNA',rx:/CAPO.*SERVIZIO/}
+ };
+ const cfg=map[kind];if(!cfg)return;
+ $('trTitle').value=cfg.title;$('trType').value=cfg.type;$('trQualification').value=code;$('trValidityMonths').value='';$('trState').value='DA PROGRAMMARE';
+ renderTrainingParticipants();
+ const missing=peopleMissingQualification(cfg.rx),set=new Set(missing.map(p=>p.badge));
+ document.querySelectorAll('[data-tr-person]').forEach(x=>x.checked=set.has(x.dataset.trPerson));
+ msg('trMsg','Corso precompilato con '+missing.length+' volontari da formare.','ok');
+ $('trTitle').scrollIntoView({behavior:'smooth',block:'center'});
+}
 
 function daeBaseRows(){
  return people.filter(personActive).map(person=>{
@@ -737,7 +810,7 @@ async function saveTrainingParticipant(id){
   let docId=part.documento_id||null;if(file)docId=await uploadTrainingCertificate(part,course,file,expiry);
   const up=await sb.from('formazione_partecipanti').update({esito,data_scadenza_generata:expiry,documento_id:docId,note,updated_at:new Date().toISOString()}).eq('id',id);if(up.error)throw up.error;
   if(esito==='IDONEO'&&course.qualifica_codice){
-   const def=defs.find(d=>d.codice===course.qualifica_codice),hasExpiry=def?.richiede_scadenza===true;
+   const def=defs.find(d=>d.codice===course.qualifica_codice),hasExpiry=def?.richiede_scadenza===true&&!isPermanentOperationalQualification(course.qualifica_codice);
    const q=pquals.find(x=>x.badge_personale===part.badge_personale&&x.codice_qualifica===course.qualifica_codice);
    const data={attiva:true,valida_dal:course.data_corso||today(),valida_al:hasExpiry?expiry:null};
    const qr=q?await sb.from('personale_qualifiche').update(data).eq('badge_personale',part.badge_personale).eq('codice_qualifica',course.qualifica_codice):await sb.from('personale_qualifiche').insert({badge_personale:part.badge_personale,codice_qualifica:course.qualifica_codice,...data});
@@ -756,7 +829,7 @@ async function removeTrainingParticipant(id){
  const r=await sb.from('formazione_partecipanti').delete().eq('id',id);if(r.error)return alert(r.error.message);await loadAll();view('training');
 }
 function renderTraining(){
- renderTrainingParticipants();
+ renderTrainingParticipants();renderTrainingPlan();
  const search=($('trSearch')?.value||'').trim().toLowerCase();
  const host=$('trainingCourses');if(!host)return;
  const rows=trainingCourses.filter(c=>(c.titolo+' '+c.tipo+' '+(c.docente||'')+' '+(c.ente_formatore||'')).toLowerCase().includes(search));
