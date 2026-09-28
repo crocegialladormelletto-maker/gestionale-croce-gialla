@@ -48,7 +48,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.5</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.6</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -62,7 +62,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.5</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.6</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -105,7 +105,14 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
       </div>
       <div class="section">
        <div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">⚙️ Gestione volontario</h3><div class="muted">Aggiorna lo stato di attività oppure elimina una scheda inserita per errore.</div></div><div class="actions"><button id="savePersonState" class="btn blue">Salva stato</button><button id="deletePerson" class="btn danger">Elimina volontario</button></div></div>
+       <div class="grid3" style="margin-top:10px">
+        <div class="field"><label>Data inizio stato</label><input id="pStateFrom" type="date"></div>
+        <div class="field"><label>Rientro previsto</label><input id="pStateReturn" type="date"></div>
+        <div class="field"><label>Motivo</label><input id="pStateReason" placeholder="Es. aspettativa personale, sospensione..."></div>
+       </div>
+       <div class="field" style="margin-top:8px"><label>Note</label><textarea id="pStateNotes" placeholder="Annotazioni facoltative"></textarea></div>
        <div id="personManageMsg"></div>
+       <div class="section" style="margin-top:12px"><h3>🕘 Storico stato attività</h3><div id="personStateHistory"></div></div>
       </div>
       <div class="section">
        <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🫀 Certificazione DAE</h3><div class="muted">Rinnovo, attestato e storico della certificazione.</div></div><span id="daePersonBadge" class="pill b">—</span></div>
@@ -217,7 +224,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const today=()=>new Date().toISOString().slice(0,10);
 const fmt=d=>d?new Date(d+'T00:00:00').toLocaleDateString('it-IT'):'—';
 function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c+'">'+esc(t)+'</div>':''}
-let people=[],defs=[],pquals=[],docs=[],daeHistoryRows=[],daeCourses=[],daeCoursePeople=[],selectedBadge=null,lastDaeRenderedRows=[];
+let people=[],defs=[],pquals=[],docs=[],daeHistoryRows=[],daeCourses=[],daeCoursePeople=[],stateHistoryRows=[],selectedBadge=null,lastDaeRenderedRows=[];
 function daeDef(){return defs.find(q=>String(q.codice||'').toUpperCase()==='DAE')||null}
 function daeCode(){return 'DAE'}
 function daeRow(badge){const code=daeCode();return pquals.find(q=>q.badge_personale===badge&&q.codice_qualifica===code)||null}
@@ -251,17 +258,19 @@ async function ensureDaeDefinition(){
 }
 async function loadAll(){
  await ensureDaeDefinition();
- const [pr,qr,pqr,dr,hr,cr,cpr]=await Promise.all([
+ const [pr,qr,pqr,dr,hr,cr,cpr,sr]=await Promise.all([
   sb.from('personale').select('*').order('cognome'),
   sb.from('qualifiche').select('*').eq('attiva',true).order('ordine'),
   sb.from('personale_qualifiche').select('*').eq('attiva',true),
   sb.from('documenti_personale').select('id,badge_personale,categoria,titolo,nome_file_originale,storage_path,mime_type,dimensione_bytes,data_scadenza,note,created_at').order('created_at',{ascending:false}),
   sb.from('dae_certificazioni_storico').select('*').order('valida_al',{ascending:false}),
   sb.from('dae_corsi').select('*').order('created_at',{ascending:false}),
-  sb.from('dae_corsi_partecipanti').select('*')
+  sb.from('dae_corsi_partecipanti').select('*'),
+  sb.from('personale_stato_storico').select('*').order('data_inizio',{ascending:false}).order('created_at',{ascending:false})
  ]);
- const err=[pr.error,qr.error,pqr.error,dr.error,hr.error,cr.error,cpr.error].find(Boolean);if(err){alert(err.message);return}
- people=pr.data||[];defs=(qr.data||[]).filter(q=>!isAccompagnatore(q.codice));pquals=pqr.data||[];docs=dr.data||[];daeHistoryRows=hr.data||[];daeCourses=cr.data||[];daeCoursePeople=cpr.data||[];
+ const err=[pr.error,qr.error,pqr.error,dr.error,hr.error,cr.error,cpr.error,sr.error].find(Boolean);if(err){alert(err.message);return}
+ people=(pr.data||[]).sort((a,b)=>String(a.cognome||a.nome_completo||'').localeCompare(String(b.cognome||b.nome_completo||''),'it',{sensitivity:'base'})||String(a.nome||'').localeCompare(String(b.nome||''),'it',{sensitivity:'base'}));
+ defs=(qr.data||[]).filter(q=>!isAccompagnatore(q.codice));pquals=pqr.data||[];docs=dr.data||[];daeHistoryRows=hr.data||[];daeCourses=cr.data||[];daeCoursePeople=cpr.data||[];stateHistoryRows=sr.data||[];
  renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderQualificationCards();renderQualificationMatrix();renderDaeCourses();
  if(selectedBadge&&people.some(p=>p.badge===selectedBadge))openPerson(selectedBadge);
 }
@@ -314,7 +323,7 @@ function renderPeople(){
   const text=(p.badge+' '+(p.nome_completo||'')+' '+(p.nome||'')+' '+(p.cognome||'')).toLowerCase();
   if(search&&!text.includes(search))return false;if(state&&(p.stato_anagrafico||'ATTIVO')!==state)return false;
   if(qf&&!pquals.some(q=>q.badge_personale===p.badge&&q.codice_qualifica===qf))return false;return true;
- });
+ }).sort((a,b)=>String(a.cognome||a.nome_completo||'').localeCompare(String(b.cognome||b.nome_completo||''),'it',{sensitivity:'base'})||String(a.nome||'').localeCompare(String(b.nome||''),'it',{sensitivity:'base'}));
  $('peopleBody').innerHTML=rows.map(p=>{
   const qs=pquals.filter(q=>q.badge_personale===p.badge&&!isAccompagnatore(q.codice_qualifica)).map(q=>qName(q.codice_qualifica)).join(', ')||'—';
   const nx=nextPersonDeadline(p.badge),cs=complianceForPerson(p);return '<tr class="'+(selectedBadge===p.badge?'personSelected':'')+'"><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td><span class="compliance '+cs.cls+'" title="'+esc(cs.reason||'')+'">'+esc(cs.icon||'')+' '+esc(cs.label)+'</span><br><span class="muted">'+esc(cs.reason||'')+'</span></td><td>'+esc(qs)+'</td><td>'+(nx?esc(nx.name)+'<br><span class="muted">'+esc(fmt(nx.date))+'</span>':'—')+'</td><td><button class="btn secondary" data-open-person="'+esc(p.badge)+'">Apri</button></td></tr>'
@@ -343,20 +352,29 @@ function openPerson(badge){
  selectedBadge=badge;const p=people.find(x=>x.badge===badge);if(!p)return;
  $('personDetail').classList.remove('hidden');$('personTitle').textContent=p.nome_completo||'Scheda personale';$('personSub').textContent='Badge '+p.badge;
  $('pBadge').value=p.badge||'';$('pName').value=p.nome||'';$('pSurname').value=p.cognome||'';$('pState').value=p.stato_anagrafico||'ATTIVO';$('pPhone').value=p.telefono||'';$('pEmail').value=p.email||'';$('pEntry').value=p.data_ingresso||'';$('pBirth').value=p.data_nascita||'';
+ if($('pStateFrom'))$('pStateFrom').value=today();if($('pStateReturn'))$('pStateReturn').value='';if($('pStateReason'))$('pStateReason').value='';if($('pStateNotes'))$('pStateNotes').value='';
  $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');msg('personManageMsg','');
  const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';$('daeProvider').value='';$('daeCertificateNo').value='';$('daeNotes').value='';$('daeFile').value='';$('daePersonBadge').textContent='Badge '+badge;
  const ds=daeStatus(dr?.valida_al);$('daeState').value=ds.label.toUpperCase();
- renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
+ renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
 
+function renderPersonStateHistory(){
+ const rows=stateHistoryRows.filter(x=>x.badge_personale===selectedBadge);
+ $('personStateHistory').innerHTML=rows.length?rows.map(x=>'<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><b>'+esc(x.stato)+'</b><span class="pill b">'+esc(fmt(x.data_inizio))+'</span></div><div class="muted">'+(x.data_rientro_prevista?'Rientro previsto '+esc(fmt(x.data_rientro_prevista)):'Nessun rientro previsto')+'</div>'+(x.motivo?'<div style="margin-top:5px"><b>Motivo:</b> '+esc(x.motivo)+'</div>':'')+(x.note?'<div style="margin-top:4px">'+esc(x.note)+'</div>':'')+'</div>').join(''):'<div class="notice">Nessun cambio stato registrato.</div>';
+}
+
 $('savePersonState').onclick=async()=>{
  if(!selectedBadge)return;
- const stato=$('pState').value||'ATTIVO';
+ const stato=$('pState').value||'ATTIVO',dataInizio=$('pStateFrom')?.value||today(),rientro=$('pStateReturn')?.value||null,motivo=$('pStateReason')?.value.trim()||null,note=$('pStateNotes')?.value.trim()||null;
+ if(rientro&&rientro<dataInizio)return msg('personManageMsg','La data di rientro non può precedere la data di inizio.','warn');
  msg('personManageMsg','Salvataggio stato...');
  const r=await sb.from('personale').update({stato_anagrafico:stato,attivo:stato==='ATTIVO'}).eq('badge',selectedBadge);
  if(r.error)return msg('personManageMsg',r.error.message,'err');
- msg('personManageMsg','Stato volontario aggiornato: '+stato+'.','ok');
+ const h=await sb.from('personale_stato_storico').insert({badge_personale:selectedBadge,stato,data_inizio:dataInizio,data_rientro_prevista:rientro,motivo,note});
+ if(h.error)return msg('personManageMsg','Stato aggiornato, ma errore nello storico: '+h.error.message,'err');
+ msg('personManageMsg','Stato volontario aggiornato e registrato nello storico.','ok');
  await loadAll();
 };
 
