@@ -34,7 +34,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .sideLabel{flex:1}.menuBadge{min-width:26px;height:26px;padding:0 7px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;background:#fff;color:#102f5a;box-shadow:0 1px 5px rgba(0,0,0,.18)}
 .menuBadge.dangerBadge{background:#d92d20;color:#fff}.menuBadge.okBadge{background:#20a35a;color:#fff}.menuBadge.neutralBadge{background:#dbe7f4;color:#173b72}
 .sideBtn:hover{filter:brightness(1.08)}.sideBtn.active{background:var(--y);color:#102f5a;box-shadow:0 0 0 2px rgba(255,223,0,.25)}
-.sideBtn[data-page="timbrature"]{background:#2e5f9a}.sideBtn[data-page="anomalie"]{background:#9b3138}.sideBtn[data-page="riepiloghi"]{background:#24705a}.sideBtn[data-page="chiusura"]{background:#7e4a12}.sideBtn[data-page="dipendenti"]{background:#5a4b91}.sideBtn[data-page="audit"]{background:#46576d}.sideBtn[data-page="stampe"]{background:#166d82}
+.sideBtn[data-page="timbrature"]{background:#2e5f9a}.sideBtn[data-page="anomalie"]{background:#9b3138}.sideBtn[data-page="riepiloghi"]{background:#24705a}.sideBtn[data-page="chiusura"]{background:#7e4a12}.sideBtn[data-page="dipendenti"]{background:#5a4b91}.sideBtn[data-page="audit"]{background:#46576d}.sideBtn[data-page="stampe"]{background:#166d82}.sideBtn[data-page="causali"]{background:#8b5e12}
 .sideBtn.active[data-page]{background:var(--y);color:#102f5a}
 .adminMain{min-width:0}.adminPage{display:none}.adminPage.active{display:block}
 .pageHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.pageHead h2{margin:0}
@@ -79,6 +79,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button class="sideBtn" data-page="timbrature">🕒 <span class="sideLabel">Timbrature</span></button>
 <button class="sideBtn" data-page="anomalie">⚠️ <span class="sideLabel">Anomalie</span><span id="anomalyBadge" class="menuBadge okBadge">0</span></button>
 <button class="sideBtn" data-page="riepiloghi">📊 Riepiloghi mensili</button>
+<button class="sideBtn" data-page="causali">📅 Causali / Assenze</button>
 <button class="sideBtn" data-page="chiusura">🔒 Chiusura mese</button>
 <button class="sideBtn" data-page="dipendenti">👥 Dipendenti / PIN</button>
 <button class="sideBtn" data-page="audit">🧾 Audit</button>
@@ -106,6 +107,27 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="card noPrint">
 <h3>Riepilogo mensile dipendenti</h3>
 <div id="monthlySummary"></div>
+</div></section>
+
+<section id="page-causali" class="adminPage"><div class="pageHead"><div><h2>Causali / Assenze</h2><div class="muted">Riposi, permessi, malattia, ferie e altre causali giornaliere</div></div></div>
+<div class="card noPrint">
+<h3>Inserisci causale</h3>
+<div class="grid">
+<div><label>Dipendente</label><select id="absEmp"></select></div>
+<div><label>Causale</label><select id="absType"><option>RIPOSO</option><option>PERMESSO</option><option>MALATTIA</option><option>FERIE</option><option value="L104">L.104</option><option>INFORTUNIO</option><option>ALTRO</option></select></div>
+<div><label>Ore (facoltative)</label><input id="absHours" type="number" min="0.25" max="24" step="0.25" placeholder="Es. 4"></div>
+</div>
+<div class="grid">
+<div><label>Dal</label><input id="absFrom" type="date" min="2026-09-01"></div>
+<div><label>Al</label><input id="absTo" type="date" min="2026-09-01"></div>
+<div><label>Nota (facoltativa)</label><input id="absNote" placeholder="Es. permesso personale"></div>
+</div>
+<button id="addAbsence" class="green" style="margin-top:12px">AGGIUNGI CAUSALE</button>
+<div id="absMsg" class="notice">Le causali sono separate dalle timbrature Entrata/Uscita e non generano anomalie.</div>
+</div>
+<div class="card noPrint">
+<h3>Causali registrate nel mese</h3>
+<div id="absenceList"></div>
 </div></section>
 
 <section id="page-chiusura" class="adminPage"><div class="pageHead"><div><h2>Chiusura mese</h2><div class="muted">Backup e blocco amministrativo del periodo</div></div></div>
@@ -163,7 +185,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <script>
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co',KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4',ADMIN_API=SUPABASE_URL+'/functions/v1/timbrature-admin-api';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-let people=[],events=[],context=[],auditRows=[],months=[],monthClosed=false;const $=x=>document.getElementById(x);
+let people=[],events=[],context=[],auditRows=[],months=[],absences=[],monthClosed=false;const $=x=>document.getElementById(x);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
 function msg(id,t,k=''){const e=$(id);e.textContent=t;e.className='notice '+k}
@@ -177,8 +199,8 @@ async function api(body){const t=await token();if(!t)throw new Error('Sessione n
 async function login(){try{const email=$('email').value.trim().toLowerCase(),password=$('password').value;const {error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;const a=await sb.from('accessi_app').select('nome,ruolo,attivo').single();if(a.error||!a.data?.attivo||a.data.ruolo!=='AMMINISTRATORE'){await sb.auth.signOut();throw new Error('Questo account non è abilitato come Amministratore.')}showPanel(a.data.nome||email);await loadData()}catch(e){msg('loginMsg',e.message||'Accesso non riuscito','err')}}
 function showPanel(name){$('loginBox').classList.add('hidden');$('panel').classList.remove('hidden');$('password').value='';$('who').textContent=name+' · Database centrale'}
 async function logout(){await sb.auth.signOut();location.reload()}
-async function loadData(){try{const r=await api({action:'data',badge:$('filterEmp').value||null,month:$('month').value||null});people=r.people||[];events=r.events||[];context=r.context||[];auditRows=r.audit||[];months=r.months||[];fillPeople();renderAll()}catch(e){alert(e.message)}}
-function fillPeople(){for(const id of ['pinEmp','histEmp','filterEmp','printEmp']){const sel=$(id),cur=sel.value;sel.innerHTML=(id==='filterEmp'?'<option value="">Tutti</option>':'')+people.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+'</option>').join('');if([...sel.options].some(o=>o.value===cur))sel.value=cur}}
+async function loadData(){try{const r=await api({action:'data',badge:$('filterEmp').value||null,month:$('month').value||null});people=r.people||[];events=r.events||[];context=r.context||[];auditRows=r.audit||[];months=r.months||[];absences=r.absences||[];fillPeople();renderAll()}catch(e){alert(e.message)}}
+function fillPeople(){for(const id of ['pinEmp','histEmp','filterEmp','printEmp','absEmp']){const sel=$(id),cur=sel.value;sel.innerHTML=(id==='filterEmp'?'<option value="">Tutti</option>':'')+people.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+'</option>').join('');if([...sel.options].some(o=>o.value===cur))sel.value=cur}}
 function selectedMonthClosed(){const m=$('month').value;return !!months.find(x=>String(x.mese).slice(0,7)===m&&x.chiuso)}
 function analyzeBadge(badge,arr){
  const xs=arr.filter(e=>e.badge===badge&&!e.eliminato_at).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
@@ -221,6 +243,24 @@ function renderDashboard(){
 function renderSummary(){
  const rows=monthlyAnalyses();$('monthlySummary').innerHTML='<table><thead><tr><th>Dipendente</th><th>Ore registrate</th><th>Giornate</th><th>Riposi &lt; 11h</th><th>Anomalie</th><th>Stato attuale</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><b>'+esc(x.nome_completo)+'</b></td><td>'+fmtMin(x.total)+'</td><td>'+x.days+'</td><td>'+x.rest+'</td><td>'+x.an.length+'</td><td>'+(x.open?'🟢 In servizio':'Fuori servizio')+'</td></tr>').join('')+'</tbody></table>'
 }
+function absenceLabel(x){return x==='L104'?'L.104':x}
+function renderAbsences(){
+ const m=$('month').value;
+ const rows=absences.filter(x=>String(x.data_dal).slice(0,7)===m||String(x.data_al).slice(0,7)===m).sort((a,b)=>String(a.data_dal).localeCompare(String(b.data_dal)));
+ $('absenceList').innerHTML=rows.length?'<table><thead><tr><th>Dipendente</th><th>Causale</th><th>Periodo</th><th>Ore</th><th>Nota</th><th>Azioni</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><b>'+esc(person(x.badge))+'</b></td><td><span class="pill hist">'+esc(absenceLabel(x.causale))+'</span></td><td>'+new Date(x.data_dal+'T12:00').toLocaleDateString('it-IT')+(x.data_al!==x.data_dal?' → '+new Date(x.data_al+'T12:00').toLocaleDateString('it-IT'):'')+'</td><td>'+(x.ore==null?'—':esc(x.ore))+'</td><td>'+esc(x.nota||'')+'</td><td>'+(monthClosed?'🔒 Mese chiuso':'<button class="danger mini" onclick="deleteAbsence(\''+x.id+'\')">Elimina</button>')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna causale registrata nel mese selezionato.</div>';
+}
+async function addAbsence(){
+ try{
+  const dal=$('absFrom').value,al=$('absTo').value||dal;if(!dal)throw new Error('Inserisci la data.');
+  await api({action:'absence_add',badge:$('absEmp').value,causale:$('absType').value,data_dal:dal,data_al:al,ore:$('absHours').value||null,nota:$('absNote').value.trim()});
+  $('absHours').value='';$('absNote').value='';msg('absMsg','Causale inserita correttamente.','ok');await loadData();
+ }catch(e){msg('absMsg',e.message,'err')}
+}
+async function deleteAbsence(id){
+ if(monthClosed)return alert('Il mese è chiuso. Riaprilo prima di eliminare la causale.');
+ if(!confirm('Confermi l’eliminazione della causale?'))return;
+ try{await api({action:'absence_delete',id});await loadData()}catch(e){alert(e.message)}
+}
 function renderMonthState(){
  monthClosed=selectedMonthClosed();const mv=$('month').value;let monthLabel=mv;if(/^\d{4}-\d{2}$/.test(mv)){const [yy,mm]=mv.split('-');monthLabel=new Date(Number(yy),Number(mm)-1,1).toLocaleDateString('it-IT',{month:'long',year:'numeric'});monthLabel=monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1)}$('headerSelectedMonth').textContent='Mese: '+monthLabel;
  $('monthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('monthState').className='monthState '+(monthClosed?'closed':'open');$('headerMonthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('headerMonthState').className='monthState '+(monthClosed?'closed':'open');
@@ -236,13 +276,13 @@ async function deleteEvent(id){if(monthClosed)return alert('Il mese è chiuso. R
 function printRows(){const alive=events.filter(e=>!e.eliminato_at),by={};for(const e of alive){const d=new Date(e.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});by[d]??={i:[],o:[]};(e.tipo==='ENTRATA'?by[d].i:by[d].o).push(e)}let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th></tr></thead><tbody>';for(const d of Object.keys(by).sort()){const v=by[d],n=Math.max(v.i.length,v.o.length,1);for(let j=0;j<n;j++)h+='<tr><td>'+new Date(d+'T12:00').toLocaleDateString('it-IT')+'</td><td>'+(v.i[j]?time(v.i[j].evento_at):'')+'</td><td>'+(v.o[j]?time(v.o[j].evento_at):'')+'</td></tr>'}return h+'</tbody></table>'}
 function renderRegister(){let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':monthClosed?'🔒 Mese chiuso':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}h+='</tbody></table>';$('register').innerHTML=events.length?h:'<div class="muted">Nessuna timbratura.</div>';const fe=$('filterEmp').value;$('printHead').innerHTML='<h2 style="text-align:center;margin-bottom:4px">Croce Gialla Emergenza ODV</h2><h3 style="text-align:center;margin:0">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</h3><p style="text-align:center">'+esc($('month').value||'')+'</p>'}
 function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
-function renderAll(){renderMonthState();renderDashboard();renderSummary();renderRegister();renderAudit()}
+function renderAll(){renderMonthState();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
 function showPage(name){document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
 function printFromSection(){const pe=$('printEmp').value,pm=$('printMonth').value;if(!pe||!pm)return alert('Seleziona dipendente e mese.');$('filterEmp').value=pe;$('month').value=pm;loadData().then(()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows();window.print();$('register').innerHTML=old})}
 document.querySelectorAll('.sideBtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$('mobileMenuBtn').onclick=()=>$('sideMenu').classList.toggle('open');$('refreshAnomalies').onclick=loadData;$('printMonthlyBtn').onclick=printFromSection;
-$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=loadData;$('refreshTop').onclick=loadData;$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
+$('addAbsence').onclick=addAbsence;$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=loadData;$('refreshTop').onclick=loadData;$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
 $('printBtn').onclick=()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows();window.print();$('register').innerHTML=old};$('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
-const d=new Date();const currentMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');$('month').value=currentMonth;$('printMonth').value=currentMonth;
+const d=new Date();const currentMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');$('month').value=currentMonth;$('printMonth').value=currentMonth;$('absFrom').value=new Date().toLocaleDateString('sv-SE');$('absTo').value=$('absFrom').value;
 (async()=>{const {data}=await sb.auth.getSession();if(data.session){const a=await sb.from('accessi_app').select('nome,ruolo,attivo').single();if(!a.error&&a.data?.attivo&&a.data.ruolo==='AMMINISTRATORE'){showPanel(a.data.nome||'Amministratore');await loadData()}}})();
 </script>
 </body></html>
