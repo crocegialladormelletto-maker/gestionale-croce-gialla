@@ -34,6 +34,13 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .login{min-height:100vh;display:grid;place-items:center;padding:18px}.loginCard{width:min(520px,100%);background:#fff;border:1px solid var(--l);border-radius:18px;overflow:hidden;box-shadow:0 8px 28px #12375d1f}.loginHead{padding:22px;text-align:center;background:var(--n);color:#fff;border-bottom:7px solid var(--y)}.loginHead h2{margin:10px 0 4px}.loginHead .muted{color:#dbe6ef}.loginHead img{width:90px;background:#fff;border-radius:50%;border:4px solid #fff}.loginBody{padding:18px}
 .qualRow{display:grid;grid-template-columns:minmax(170px,1.2fr) 130px 130px auto;gap:8px;align-items:end;padding:9px;border:1px solid var(--l);border-radius:10px;margin:7px 0}
 .personSelected{background:#fffbea}
+.compliance{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900;white-space:nowrap}
+.compliance.g{background:#e7f6ef;color:#176a4b}.compliance.w{background:#fff4c9;color:#795a00}.compliance.r{background:#fdebed;color:#9d2730}
+.matrix-wrap{overflow:auto;border:1px solid var(--l);border-radius:12px;background:#fff}.matrix{border-collapse:separate;border-spacing:0;min-width:max-content;width:100%}
+.matrix th,.matrix td{padding:9px 10px;border-right:1px solid #e7edf2;border-bottom:1px solid #e7edf2;text-align:center;white-space:nowrap}
+.matrix th{position:sticky;top:0;background:#f1f5f8;z-index:2;color:var(--n)}.matrix th:first-child,.matrix td:first-child{position:sticky;left:0;text-align:left;background:#fff;z-index:1;min-width:210px}
+.matrix th:first-child{z-index:3;background:#f1f5f8}.matrix td:last-child,.matrix th:last-child{border-right:0}
+.matrix-ok{font-size:18px;color:#15734f;font-weight:900}.matrix-warn{font-size:18px;color:#9b6515;font-weight:900}.matrix-bad{font-size:18px;color:#a93138;font-weight:900}.matrix-none{color:#9aa8b4}
 @media(max-width:980px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;overflow:auto}.nav{min-width:180px}.stats{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.stats,.grid2,.grid3,.grid4{grid-template-columns:1fr}.qualRow{grid-template-columns:1fr}}
 </style>
@@ -41,7 +48,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.3</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.4</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -55,7 +62,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.3</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.4</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -89,7 +96,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
     <div class="hero"><h2>👥 Personale</h2><p>Anagrafica collegata al Gestionale Operativo.</p></div>
     <div class="pad">
      <div class="section"><div class="grid3"><div class="field"><label>Cerca</label><input id="peopleSearch" placeholder="Nome, cognome o badge"></div><div class="field"><label>Stato</label><select id="peopleState"><option value="">Tutti</option><option>ATTIVO</option><option>ASPETTATIVA</option><option>SOSPESO</option><option>CESSATO</option></select></div><div class="field"><label>Qualifica</label><select id="peopleQual"><option value="">Tutte</option></select></div></div></div>
-     <div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Qualifiche</th><th>Prossima scadenza</th><th></th></tr></thead><tbody id="peopleBody"></tbody></table></div>
+     <div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Semaforo</th><th>Qualifiche</th><th>Prossima scadenza</th><th></th></tr></thead><tbody id="peopleBody"></tbody></table></div>
      <div id="personDetail" class="section hidden" style="margin-top:14px">
       <div class="actions" style="justify-content:space-between"><div><h3 id="personTitle" style="margin:0">Scheda personale</h3><div id="personSub" class="muted"></div></div><button id="closePerson" class="btn secondary">Chiudi</button></div>
       <div class="grid4" style="margin-top:10px">
@@ -181,7 +188,17 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 
    <section id="qualifications" class="surface hidden">
     <div class="hero"><h2>🎓 Qualifiche</h2><p>Panoramica delle abilitazioni utilizzate dal gestionale operativo.</p></div>
-    <div class="pad"><div id="qualificationCards" class="grid2"></div></div>
+    <div class="pad">
+     <div class="section">
+      <div class="actions" style="justify-content:space-between;align-items:end">
+       <div><h3 style="margin:0">📋 Matrice qualifiche</h3><div class="muted">Vista immediata delle abilitazioni del personale attivo. Il DAE evidenzia anche scadenze e irregolarità.</div></div>
+       <div class="field" style="min-width:240px"><label>Cerca volontario</label><input id="matrixSearch" placeholder="Nome, cognome o badge"></div>
+      </div>
+      <div class="notice">Legenda: <span class="matrix-ok">●</span> valida · <span class="matrix-warn">●</span> in scadenza entro 30 giorni · <span class="matrix-bad">●</span> scaduta/mancante · <span class="matrix-none">—</span> non assegnata.</div>
+      <div id="qualificationMatrix" class="matrix-wrap"></div>
+     </div>
+     <div id="qualificationCards" class="grid2"></div>
+    </div>
    </section>
   </main>
  </div></div>
@@ -203,7 +220,7 @@ function daeRow(badge){const code=daeCode();return pquals.find(q=>q.badge_person
 function daeRequiredRows(){return people.filter(personActive).map(p=>({person:p,row:daeRow(p.badge)}))}
 
 
-function view(id){document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hidden',s.id!==id));document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='deadlines')renderDeadlines();if(id==='dae')renderDaeView();if(id==='qualifications')renderQualificationCards()}
+function view(id){document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hidden',s.id!==id));document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='deadlines')renderDeadlines();if(id==='dae')renderDaeView();if(id==='qualifications'){renderQualificationCards();renderQualificationMatrix()}}
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>view(b.dataset.view));
 document.querySelectorAll('.jump').forEach(b=>b.onclick=()=>view(b.dataset.go));
 
@@ -240,7 +257,7 @@ async function loadAll(){
  ]);
  const err=[pr.error,qr.error,pqr.error,dr.error,hr.error,cr.error,cpr.error].find(Boolean);if(err){alert(err.message);return}
  people=pr.data||[];defs=qr.data||[];pquals=pqr.data||[];docs=dr.data||[];daeHistoryRows=hr.data||[];daeCourses=cr.data||[];daeCoursePeople=cpr.data||[];
- renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderQualificationCards();renderDaeCourses();
+ renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderQualificationCards();renderQualificationMatrix();renderDaeCourses();
  if(selectedBadge&&people.some(p=>p.badge===selectedBadge))openPerson(selectedBadge);
 }
 function allDeadlines(){
@@ -271,6 +288,18 @@ function populateFilters(){
  $('newQual').innerHTML='<option value="">Seleziona</option>'+defs.map(q=>'<option value="'+esc(q.codice)+'">'+esc(qName(q.codice))+'</option>').join('');
 }
 function nextPersonDeadline(badge){return allDeadlines().filter(x=>x.badge===badge&&daysTo(x.date)>=0)[0]||null}
+function complianceForPerson(p){
+ if(!personActive(p))return {key:'INATTIVO',label:p.stato_anagrafico||'NON ATTIVO',cls:'w'};
+ const dr=daeRow(p.badge);
+ if(!dr?.valida_al||daysTo(dr.valida_al)<0)return {key:'NON_IN_REGOLA',label:'NON IN REGOLA',cls:'r'};
+ const expiredQual=pquals.some(q=>q.badge_personale===p.badge&&q.valida_al&&daysTo(q.valida_al)<0);
+ const expiredDocs=docs.some(d=>d.badge_personale===p.badge&&d.data_scadenza&&daysTo(d.data_scadenza)<0);
+ if(expiredQual||expiredDocs)return {key:'NON_IN_REGOLA',label:'NON IN REGOLA',cls:'r'};
+ const soonQual=pquals.some(q=>q.badge_personale===p.badge&&q.valida_al&&daysTo(q.valida_al)>=0&&daysTo(q.valida_al)<=30);
+ const soonDocs=docs.some(d=>d.badge_personale===p.badge&&d.data_scadenza&&daysTo(d.data_scadenza)>=0&&daysTo(d.data_scadenza)<=30);
+ if(soonQual||soonDocs)return {key:'ATTENZIONE',label:'ATTENZIONE',cls:'w'};
+ return {key:'IN_REGOLA',label:'IN REGOLA',cls:'g'};
+}
 function renderPeople(){
  const search=$('peopleSearch').value.trim().toLowerCase(),state=$('peopleState').value,qf=$('peopleQual').value;
  const rows=people.filter(p=>{
@@ -280,8 +309,8 @@ function renderPeople(){
  });
  $('peopleBody').innerHTML=rows.map(p=>{
   const qs=pquals.filter(q=>q.badge_personale===p.badge).map(q=>qName(q.codice_qualifica)).join(', ')||'—';
-  const nx=nextPersonDeadline(p.badge);return '<tr class="'+(selectedBadge===p.badge?'personSelected':'')+'"><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs)+'</td><td>'+(nx?esc(nx.name)+'<br><span class="muted">'+esc(fmt(nx.date))+'</span>':'—')+'</td><td><button class="btn secondary" data-open-person="'+esc(p.badge)+'">Apri</button></td></tr>'
- }).join('')||'<tr><td colspan="6">Nessuna persona trovata.</td></tr>';
+  const nx=nextPersonDeadline(p.badge),cs=complianceForPerson(p);return '<tr class="'+(selectedBadge===p.badge?'personSelected':'')+'"><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td><span class="compliance '+cs.cls+'">● '+esc(cs.label)+'</span></td><td>'+esc(qs)+'</td><td>'+(nx?esc(nx.name)+'<br><span class="muted">'+esc(fmt(nx.date))+'</span>':'—')+'</td><td><button class="btn secondary" data-open-person="'+esc(p.badge)+'">Apri</button></td></tr>'
+ }).join('')||'<tr><td colspan="7">Nessuna persona trovata.</td></tr>';
  document.querySelectorAll('[data-open-person]').forEach(b=>b.onclick=()=>openPerson(b.dataset.openPerson));
 }
 ['peopleSearch','peopleState','peopleQual'].forEach(id=>$(id).oninput=renderPeople);
@@ -462,12 +491,34 @@ async function saveDaeCourse(id){
  if(r.error)return msg('daeCourseMsg',r.error.message,'err');msg('daeCourseMsg','Corso aggiornato.','ok');await loadAll();
 }
 
+function matrixCell(badge,code){
+ const q=pquals.find(x=>x.badge_personale===badge&&x.codice_qualifica===code);
+ if(!q)return '<span class="matrix-none" title="Non assegnata">—</span>';
+ if(code===daeCode()&&!q.valida_al)return '<span class="matrix-bad" title="DAE: scadenza mancante">●</span>';
+ if(q.valida_al){
+  const d=daysTo(q.valida_al);
+  if(d<0)return '<span class="matrix-bad" title="Scaduta il '+esc(fmt(q.valida_al))+'">●</span>';
+  if(d<=30)return '<span class="matrix-warn" title="Scade il '+esc(fmt(q.valida_al))+'">●</span>';
+ }
+ return '<span class="matrix-ok" title="'+(q.valida_al?'Valida fino al '+esc(fmt(q.valida_al)):'Attiva')+'">●</span>';
+}
+function renderQualificationMatrix(){
+ const host=$('qualificationMatrix');if(!host)return;
+ const search=($('matrixSearch')?.value||'').trim().toLowerCase();
+ const persons=people.filter(personActive).filter(p=>!search||(p.badge+' '+(p.nome_completo||'')+' '+(p.nome||'')+' '+(p.cognome||'')).toLowerCase().includes(search));
+ const cols=defs.slice().sort((a,b)=>(a.ordine??999)-(b.ordine??999));
+ host.innerHTML='<table class="matrix"><thead><tr><th>Volontario</th><th>Semaforo</th>'+cols.map(q=>'<th title="'+esc(qName(q.codice))+'">'+esc(qName(q.codice))+'</th>').join('')+'</tr></thead><tbody>'+
+  (persons.length?persons.map(p=>{const cs=complianceForPerson(p);return '<tr><td><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b><br><span class="muted">Badge '+esc(p.badge)+'</span></td><td><span class="compliance '+cs.cls+'">● '+esc(cs.label)+'</span></td>'+cols.map(q=>'<td>'+matrixCell(p.badge,q.codice)+'</td>').join('')+'</tr>'}).join(''):'<tr><td colspan="'+(cols.length+2)+'">Nessun volontario trovato.</td></tr>')+
+  '</tbody></table>';
+}
 function renderQualificationCards(){
  $('qualificationCards').innerHTML=defs.map(q=>{
   const rows=pquals.filter(x=>x.codice_qualifica===q.codice),active=rows.filter(x=>!x.valida_al||daysTo(x.valida_al)>=0).length,expired=rows.filter(x=>x.valida_al&&daysTo(x.valida_al)<0).length,soon=rows.filter(x=>x.valida_al&&daysTo(x.valida_al)>=0&&daysTo(x.valida_al)<=30).length;
   return '<div class="box"><div class="actions" style="justify-content:space-between"><h3 style="margin:0">'+esc(q.codice===daeCode()?'Certificazione DAE':qName(q.codice))+'</h3><span class="pill b">'+rows.length+' totali</span></div><div class="stats" style="margin-top:10px;grid-template-columns:repeat(3,1fr)"><div class="stat"><small>VALIDE</small><b style="font-size:20px">'+active+'</b></div><div class="stat"><small>SCADUTE</small><b style="font-size:20px">'+expired+'</b></div><div class="stat"><small>30 GG</small><b style="font-size:20px">'+soon+'</b></div></div></div>'
  }).join('');
 }
+
+$('matrixSearch')?.addEventListener('input',renderQualificationMatrix);
 
 async function enter(){
  const u=await sb.auth.getUser();if(!u.data.user)return;
