@@ -23,6 +23,7 @@
 .hero h1,.hero h2{margin:0 0 5px;color:var(--n)}.hero p{margin:0}.pad{padding:16px}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.stat,.box{background:#fff;border:1px solid var(--l);border-radius:12px;padding:12px}
 .stat small{font-size:10px;font-weight:900;color:var(--m)}.stat b{display:block;font-size:26px;color:var(--n);margin-top:3px}
+.stat.action{cursor:pointer;transition:.15s ease}.stat.action:hover{transform:translateY(-2px);box-shadow:0 6px 18px #12375d18}.stat.action .go{font-size:11px;font-weight:800;color:var(--m);margin-top:5px}
 .section{border:1px solid var(--l);border-radius:13px;padding:13px;margin:11px 0}.section h3{margin:0 0 10px;color:var(--n)}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .field{display:flex;flex-direction:column;gap:4px}.field label{font-size:11px;font-weight:900;color:var(--n)}
@@ -49,7 +50,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.7</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.8</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -63,7 +64,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.7</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.8</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -80,16 +81,23 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
     <div class="hero"><h1>Dashboard formazione</h1><p>Situazione del personale, qualifiche e scadenze formative.</p></div>
     <div class="pad">
      <div class="stats">
-      <div class="stat"><small>PERSONALE ATTIVO</small><b id="kpiActive">0</b></div>
-      <div class="stat"><small>QUALIFICHE ATTIVE</small><b id="kpiQuals">0</b></div>
-      <div class="stat"><small>SCADUTE</small><b id="kpiExpired">0</b></div>
-      <div class="stat"><small>ENTRO 30 GIORNI</small><b id="kpi30">0</b></div>
+      <div class="stat action" data-kpi-go="active"><small>PERSONALE ATTIVO</small><b id="kpiActive">0</b><div class="go">Apri personale →</div></div>
+      <div class="stat action" data-kpi-go="daeMissing"><small>DAE MANCANTI</small><b id="kpiDaeMissing">0</b><div class="go">Apri DAE →</div></div>
+      <div class="stat action" data-kpi-go="daeExpired"><small>DAE SCADUTI</small><b id="kpiDaeExpired">0</b><div class="go">Apri DAE →</div></div>
+      <div class="stat action" data-kpi-go="dae30"><small>DAE ENTRO 30 GG</small><b id="kpiDae30">0</b><div class="go">Apri DAE →</div></div>
+     </div>
+     <div class="stats" style="margin-top:9px">
+      <div class="stat action" data-kpi-go="leave"><small>IN ASPETTATIVA</small><b id="kpiLeave">0</b><div class="go">Filtra personale →</div></div>
+      <div class="stat action" data-kpi-go="suspended"><small>SOSPESI</small><b id="kpiSuspended">0</b><div class="go">Filtra personale →</div></div>
+      <div class="stat action" data-kpi-go="courses"><small>CORSI PROGRAMMATI</small><b id="kpiCourses">0</b><div class="go">Apri corsi →</div></div>
+      <div class="stat action" data-kpi-go="noOperational"><small>SENZA QUALIFICHE OPERATIVE</small><b id="kpiNoOperational">0</b><div class="go">Vedi elenco →</div></div>
      </div>
      <div class="section">
       <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🫀 Certificazione DAE</h3><div class="muted">Controllo obbligatorio per tutti i volontari. Avviso automatico da 30 giorni prima della scadenza.</div></div><span id="daeAlertCount" class="pill b">0 da verificare</span></div>
       <div id="daeAlertList"></div>
      </div>
      <div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">⚠️ Scadenze più urgenti</h3><div class="muted">Qualifiche e attestati da controllare.</div></div><button class="btn secondary jump" data-go="deadlines">Vedi tutte</button></div><div id="urgentList"></div></div>
+     <div id="noOperationalSection" class="section hidden"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🚫 Volontari senza qualifiche operative</h3><div class="muted">Personale attivo senza Autista, Capo Servizio o Soccorritore.</div></div><button id="closeNoOperational" class="btn secondary">Chiudi</button></div><div id="noOperationalList"></div></div>
      <div class="section"><h3>📊 Copertura qualifiche</h3><div id="coverage"></div></div>
     </div>
    </section>
@@ -321,8 +329,19 @@ function allDeadlines(){
 }
 function renderDashboard(){
  const dl=allDeadlines(),exp=dl.filter(x=>daysTo(x.date)<0),soon=dl.filter(x=>daysTo(x.date)>=0&&daysTo(x.date)<=30);
- $('kpiActive').textContent=people.filter(personActive).length;
- $('kpiQuals').textContent=pquals.length;$('kpiExpired').textContent=exp.length;$('kpi30').textContent=soon.length;
+ const activePeople=people.filter(personActive);
+ $('kpiActive').textContent=activePeople.length;
+ const daeBase=daeBaseRows();
+ $('kpiDaeMissing').textContent=daeBase.filter(x=>x.key==='MANCANTE').length;
+ $('kpiDaeExpired').textContent=daeBase.filter(x=>x.key==='SCADUTA').length;
+ $('kpiDae30').textContent=daeBase.filter(x=>x.key==='PROSSIMA').length;
+ $('kpiLeave').textContent=people.filter(p=>(p.stato_anagrafico||'ATTIVO')==='ASPETTATIVA').length;
+ $('kpiSuspended').textContent=people.filter(p=>(p.stato_anagrafico||'ATTIVO')==='SOSPESO').length;
+ $('kpiCourses').textContent=trainingCourses.filter(c=>c.stato==='PROGRAMMATO').length;
+ const operationalCodes=defs.filter(d=>/AUTISTA|CAPO.*SERVIZIO|SOCCORRITORE/i.test((d.codice||'')+' '+(d.nome||''))).map(d=>d.codice);
+ const noOperational=activePeople.filter(p=>!pquals.some(q=>q.badge_personale===p.badge&&operationalCodes.includes(q.codice_qualifica)));
+ $('kpiNoOperational').textContent=noOperational.length;
+ $('noOperationalList').innerHTML=noOperational.length?noOperational.map(p=>'<div class="box" style="margin:7px 0"><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b><br><span class="muted">Badge '+esc(p.badge)+' · nessuna qualifica operativa registrata</span></div>').join(''):'<div class="notice ok">Tutti i volontari attivi hanno almeno una qualifica operativa.</div>';
  const daeRows=daeRequiredRows();
  const daeAlerts=daeRows.filter(x=>!x.row?.valida_al||daysTo(x.row.valida_al)<=30);
  $('daeAlertCount').textContent=daeAlerts.length+' da verificare';
@@ -742,6 +761,18 @@ function renderQualificationCards(){
 }
 
 $('matrixSearch')?.addEventListener('input',renderQualificationMatrix);
+document.querySelectorAll('[data-kpi-go]').forEach(card=>card.onclick=()=>{
+ const t=card.dataset.kpiGo;
+ if(t==='active'){view('people');$('peopleState').value='ATTIVO';renderPeople()}
+ else if(t==='daeMissing'){view('dae');$('daeFilterState').value='MANCANTE';renderDaeView()}
+ else if(t==='daeExpired'){view('dae');$('daeFilterState').value='SCADUTA';renderDaeView()}
+ else if(t==='dae30'){view('dae');$('daeFilterState').value='PROSSIMA';renderDaeView()}
+ else if(t==='leave'){view('people');$('peopleState').value='ASPETTATIVA';renderPeople()}
+ else if(t==='suspended'){view('people');$('peopleState').value='SOSPESO';renderPeople()}
+ else if(t==='courses'){view('training');if($('trSearch'))$('trSearch').value='';renderTraining()}
+ else if(t==='noOperational'){$('noOperationalSection').classList.remove('hidden');$('noOperationalSection').scrollIntoView({behavior:'smooth',block:'start'})}
+});
+$('closeNoOperational')?.addEventListener('click',()=>$('noOperationalSection').classList.add('hidden'));
 
 async function enter(){
  const u=await sb.auth.getUser();if(!u.data.user)return;
