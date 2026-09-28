@@ -65,15 +65,27 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .dashboardFoldHead{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px}
 .dashboardFoldBody{padding:0 13px 13px}
 .dashboardFold h3{margin:0;color:var(--n)}
-@media(max-width:1180px){.dashboardQuick{grid-template-columns:repeat(3,1fr)}}
+.dashboardOverview{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,2.2fr);gap:12px;margin-bottom:14px}
+.generalStatus{border-radius:16px;padding:16px;border:2px solid var(--l);background:#fff;display:flex;gap:13px;align-items:center;min-height:118px}
+.generalStatus .light{width:54px;height:54px;border-radius:50%;flex:0 0 54px;box-shadow:inset 0 0 0 5px #fff,0 0 0 1px #0001}
+.generalStatus.green{border-color:#86d4b4;background:#f2fbf7}.generalStatus.green .light{background:#16a36a}
+.generalStatus.yellow{border-color:#f0ce68;background:#fffaf0}.generalStatus.yellow .light{background:#e0a800}
+.generalStatus.red{border-color:#ed9aa0;background:#fff5f5}.generalStatus.red .light{background:#d73742}
+.generalStatus h3{margin:0 0 4px;color:var(--n);font-size:19px}.generalStatus strong{font-size:22px}.generalStatus .muted{margin-top:4px}
+.todayPanel{border:1px solid var(--l);border-radius:16px;padding:14px;background:#fff}
+.todayPanel h3{margin:0;color:var(--n)}.todayList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.todayItem{border:1px solid var(--l);border-radius:11px;padding:10px;background:#fbfdff}.todayItem.today{border-left:6px solid #1d4ed8}.todayItem.soon{border-left:6px solid #d97706}
+.todayItem .when{font-size:11px;font-weight:900;color:var(--m);text-transform:uppercase;letter-spacing:.02em}
+
+@media(max-width:1180px){.dashboardQuick{grid-template-columns:repeat(3,1fr)}.dashboardOverview{grid-template-columns:1fr}}
 @media(max-width:980px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;overflow:auto}.nav{min-width:180px}.stats{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.stats,.grid2,.grid3,.grid4,.dashboardQuick,.dashGroups,.dashTrainingQuick{grid-template-columns:1fr}.dashGroup .stats,.dashGroup.two .stats{grid-template-columns:1fr}.qualRow{grid-template-columns:1fr}.dashboardFoldHead{align-items:flex-start;flex-direction:column}}
+@media(max-width:560px){.stats,.grid2,.grid3,.grid4,.dashboardQuick,.dashGroups,.dashTrainingQuick,.todayList{grid-template-columns:1fr}.dashGroup .stats,.dashGroup.two .stats{grid-template-columns:1fr}.qualRow{grid-template-columns:1fr}.dashboardFoldHead{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.9</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.0</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -87,7 +99,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.9</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.0</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -103,6 +115,17 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
    <section id="dashboard" class="surface">
     <div class="hero"><h1>🏠 Dashboard principale</h1><p>Accesso rapido alle funzioni principali e riepilogo immediato della situazione del personale.</p></div>
     <div class="pad">
+     <div class="dashboardOverview">
+      <div id="generalStatus" class="generalStatus green">
+       <div class="light"></div>
+       <div><h3>Semaforo generale</h3><strong id="generalStatusLabel">Tutto regolare</strong><div id="generalStatusText" class="muted">Nessuna criticità rilevata.</div></div>
+      </div>
+      <div class="todayPanel">
+       <div class="actions" style="justify-content:space-between"><div><h3>📅 Attività di oggi e prossimi 7 giorni</h3><div class="muted">Corsi, scadenze e rientri che richiedono attenzione a breve.</div></div><span id="todayActivityCount" class="pill b">0</span></div>
+       <div id="todayActivity" class="todayList"></div>
+      </div>
+     </div>
+
      <div class="dashboardQuick">
       <button class="quickDash people" data-dashboard-view="people"><span>👥</span>Personale<small>Anagrafiche, stati e schede</small></button>
       <button class="quickDash deadlines" data-dashboard-view="deadlines"><span>⏰</span>Scadenze<small>Controlli e rinnovi</small></button>
@@ -553,6 +576,44 @@ function renderFixList(){
  $('fixList').innerHTML=items.length?items.slice(0,20).map(x=>'<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(x.name)+'</b><br><span class="muted">'+esc(x.reason)+'</span></div><button class="btn secondary" data-fix-person="'+esc(x.badge)+'">Apri scheda</button></div></div>').join(''):'<div class="notice ok">Nessuna criticità da sistemare.</div>';
  document.querySelectorAll('[data-fix-person]').forEach(b=>b.onclick=()=>{view('people');openPerson(b.dataset.fixPerson)});
 }
+
+function renderDashboardOverview(dl,daeBase,noOperational){
+ const expiredDeadlines=dl.filter(x=>daysTo(x.date)<0);
+ const daeCritical=daeBase.filter(x=>x.key==='MANCANTE'||x.key==='SCADUTA');
+ const nearDeadlines=dl.filter(x=>daysTo(x.date)>=0&&daysTo(x.date)<=30);
+ const daeNear=daeBase.filter(x=>x.key==='PROSSIMA');
+ const suspended=people.filter(p=>(p.stato_anagrafico||'ATTIVO')==='SOSPESO').length;
+ const redCount=expiredDeadlines.length+daeCritical.length+suspended;
+ const yellowCount=nearDeadlines.length+daeNear.length+noOperational.length;
+ const box=$('generalStatus'),label=$('generalStatusLabel'),desc=$('generalStatusText');
+ if(box&&label&&desc){
+  box.classList.remove('green','yellow','red');
+  if(redCount>0){
+   box.classList.add('red');label.textContent='Criticità presenti';
+   desc.textContent=redCount+' situazione'+(redCount===1?'':'i')+' da gestire con priorità'+(yellowCount?'; '+yellowCount+' attenzione'+(yellowCount===1?'':'i')+' aggiuntiva'+(yellowCount===1?'':'e'):'')+'.';
+  }else if(yellowCount>0){
+   box.classList.add('yellow');label.textContent='Attenzione';
+   desc.textContent=yellowCount+' situazione'+(yellowCount===1?'':'i')+' da controllare o programmare.';
+  }else{
+   box.classList.add('green');label.textContent='Tutto regolare';desc.textContent='Nessuna criticità o scadenza ravvicinata rilevata.';
+  }
+ }
+ const items=[];
+ trainingCourses.filter(x=>x.data_corso&&daysTo(x.data_corso)>=0&&daysTo(x.data_corso)<=7&&x.stato!=='ANNULLATO').forEach(x=>{
+  items.push({days:daysTo(x.data_corso),type:'CORSO',title:x.titolo||'Corso',sub:(x.stato||'')+(x.sede?' · '+x.sede:'')});
+ });
+ dl.filter(x=>daysTo(x.date)>=0&&daysTo(x.date)<=7).forEach(x=>{
+  items.push({days:daysTo(x.date),type:x.type,title:personName(x.badge)+' · '+x.name,sub:x.type==='RIENTRO'?'Rientro da aspettativa':'Scadenza '+fmt(x.date)});
+ });
+ items.sort((a,b)=>a.days-b.days||String(a.title).localeCompare(String(b.title),'it'));
+ const host=$('todayActivity'),count=$('todayActivityCount');
+ if(count)count.textContent=String(items.length);
+ if(host)host.innerHTML=items.length?items.slice(0,12).map(x=>{
+  const when=x.days===0?'Oggi':x.days===1?'Domani':'Tra '+x.days+' giorni';
+  const icon=x.type==='CORSO'?'📚':x.type==='RIENTRO'?'↩️':x.type==='DOCUMENTO'?'📄':'⏰';
+  return '<div class="todayItem '+(x.days===0?'today':'soon')+'"><div class="when">'+esc(when)+'</div><b>'+esc(icon+' '+x.title)+'</b><div class="muted" style="margin-top:4px">'+esc(x.sub||'')+'</div></div>';
+ }).join(''):'<div class="notice ok" style="grid-column:1/-1">Nessuna attività o scadenza prevista nei prossimi 7 giorni.</div>';
+}
 function renderDashboard(){
  const dl=allDeadlines(),exp=dl.filter(x=>daysTo(x.date)<0),soon=dl.filter(x=>daysTo(x.date)>=0&&daysTo(x.date)<=30);
  const activePeople=people.filter(personActive);
@@ -567,6 +628,7 @@ function renderDashboard(){
  const operationalCodes=defs.filter(d=>/AUTISTA|CAPO.*SERVIZIO|SOCCORRITORE/i.test((d.codice||'')+' '+(d.nome||''))).map(d=>d.codice);
  const noOperational=activePeople.filter(p=>!pquals.some(q=>q.badge_personale===p.badge&&operationalCodes.includes(q.codice_qualifica)));
  $('kpiNoOperational').textContent=noOperational.length;
+ renderDashboardOverview(dl,daeBase,noOperational);
  $('noOperationalList').innerHTML=noOperational.length?noOperational.map(p=>'<div class="box" style="margin:7px 0"><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b><br><span class="muted">Badge '+esc(p.badge)+' · nessuna qualifica operativa registrata</span></div>').join(''):'<div class="notice ok">Tutti i volontari attivi hanno almeno una qualifica operativa.</div>';
  const daeRows=daeRequiredRows();
  const daeAlerts=daeRows.filter(x=>!x.row?.valida_al||daysTo(x.row.valida_al)<=30);
