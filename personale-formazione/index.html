@@ -48,7 +48,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.4.2</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.4.3</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -62,7 +62,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.4.2</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.4.3</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -290,16 +290,19 @@ function populateFilters(){
 }
 function nextPersonDeadline(badge){return allDeadlines().filter(x=>x.badge===badge&&daysTo(x.date)>=0)[0]||null}
 function complianceForPerson(p){
- if(!personActive(p))return {key:'INATTIVO',label:p.stato_anagrafico||'NON ATTIVO',cls:'w'};
+ if(!personActive(p))return {key:'INATTIVO',label:p.stato_anagrafico||'NON ATTIVO',cls:'w',icon:'🟡',reason:'Stato personale non attivo'};
  const dr=daeRow(p.badge);
- if(!dr?.valida_al||daysTo(dr.valida_al)<0)return {key:'NON_IN_REGOLA',label:'NON IN REGOLA',cls:'r'};
- const expiredQual=pquals.some(q=>{const def=defs.find(d=>d.codice===q.codice_qualifica);return q.badge_personale===p.badge&&def?.richiede_scadenza===true&&q.valida_al&&daysTo(q.valida_al)<0});
- const expiredDocs=docs.some(d=>d.badge_personale===p.badge&&d.data_scadenza&&daysTo(d.data_scadenza)<0);
- if(expiredQual||expiredDocs)return {key:'NON_IN_REGOLA',label:'NON IN REGOLA',cls:'r'};
- const soonQual=pquals.some(q=>{const def=defs.find(d=>d.codice===q.codice_qualifica);return q.badge_personale===p.badge&&def?.richiede_scadenza===true&&q.valida_al&&daysTo(q.valida_al)>=0&&daysTo(q.valida_al)<=30});
- const soonDocs=docs.some(d=>d.badge_personale===p.badge&&d.data_scadenza&&daysTo(d.data_scadenza)>=0&&daysTo(d.data_scadenza)<=30);
- if(soonQual||soonDocs)return {key:'ATTENZIONE',label:'ATTENZIONE',cls:'w'};
- return {key:'IN_REGOLA',label:'IN REGOLA',cls:'g'};
+ if(!dr?.valida_al)return {key:'NON_IN_REGOLA',label:'NON IN REGOLA',cls:'r',icon:'🔴',reason:'Data scadenza DAE mancante'};
+ if(daysTo(dr.valida_al)<0)return {key:'NON_IN_REGOLA',label:'NON IN REGOLA',cls:'r',icon:'🔴',reason:'DAE scaduto il '+fmt(dr.valida_al)};
+ const expiredQual=pquals.find(q=>{const def=defs.find(d=>d.codice===q.codice_qualifica);return q.badge_personale===p.badge&&def?.richiede_scadenza===true&&q.valida_al&&daysTo(q.valida_al)<0});
+ if(expiredQual)return {key:'NON_IN_REGOLA',label:'NON IN REGOLA',cls:'r',icon:'🔴',reason:qName(expiredQual.codice_qualifica)+' scaduta il '+fmt(expiredQual.valida_al)};
+ const expiredDoc=docs.find(d=>d.badge_personale===p.badge&&d.data_scadenza&&daysTo(d.data_scadenza)<0);
+ if(expiredDoc)return {key:'NON_IN_REGOLA',label:'NON IN REGOLA',cls:'r',icon:'🔴',reason:(expiredDoc.titolo||expiredDoc.nome_file_originale||expiredDoc.categoria||'Documento')+' scaduto il '+fmt(expiredDoc.data_scadenza)};
+ const soonQual=pquals.find(q=>{const def=defs.find(d=>d.codice===q.codice_qualifica);return q.badge_personale===p.badge&&def?.richiede_scadenza===true&&q.valida_al&&daysTo(q.valida_al)>=0&&daysTo(q.valida_al)<=30});
+ if(soonQual)return {key:'ATTENZIONE',label:'ATTENZIONE',cls:'w',icon:'🟡',reason:qName(soonQual.codice_qualifica)+' scade il '+fmt(soonQual.valida_al)};
+ const soonDoc=docs.find(d=>d.badge_personale===p.badge&&d.data_scadenza&&daysTo(d.data_scadenza)>=0&&daysTo(d.data_scadenza)<=30);
+ if(soonDoc)return {key:'ATTENZIONE',label:'ATTENZIONE',cls:'w',icon:'🟡',reason:(soonDoc.titolo||soonDoc.nome_file_originale||soonDoc.categoria||'Documento')+' scade il '+fmt(soonDoc.data_scadenza)};
+ return {key:'IN_REGOLA',label:'IN REGOLA',cls:'g',icon:'🟢',reason:'Nessuna scadenza critica'};
 }
 function renderPeople(){
  const search=$('peopleSearch').value.trim().toLowerCase(),state=$('peopleState').value,qf=$('peopleQual').value;
@@ -310,7 +313,7 @@ function renderPeople(){
  });
  $('peopleBody').innerHTML=rows.map(p=>{
   const qs=pquals.filter(q=>q.badge_personale===p.badge&&!isAccompagnatore(q.codice_qualifica)).map(q=>qName(q.codice_qualifica)).join(', ')||'—';
-  const nx=nextPersonDeadline(p.badge),cs=complianceForPerson(p);return '<tr class="'+(selectedBadge===p.badge?'personSelected':'')+'"><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td><span class="compliance '+cs.cls+'">● '+esc(cs.label)+'</span></td><td>'+esc(qs)+'</td><td>'+(nx?esc(nx.name)+'<br><span class="muted">'+esc(fmt(nx.date))+'</span>':'—')+'</td><td><button class="btn secondary" data-open-person="'+esc(p.badge)+'">Apri</button></td></tr>'
+  const nx=nextPersonDeadline(p.badge),cs=complianceForPerson(p);return '<tr class="'+(selectedBadge===p.badge?'personSelected':'')+'"><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td><span class="compliance '+cs.cls+'" title="'+esc(cs.reason||'')+'">'+esc(cs.icon||'')+' '+esc(cs.label)+'</span><br><span class="muted">'+esc(cs.reason||'')+'</span></td><td>'+esc(qs)+'</td><td>'+(nx?esc(nx.name)+'<br><span class="muted">'+esc(fmt(nx.date))+'</span>':'—')+'</td><td><button class="btn secondary" data-open-person="'+esc(p.badge)+'">Apri</button></td></tr>'
  }).join('')||'<tr><td colspan="7">Nessuna persona trovata.</td></tr>';
  document.querySelectorAll('[data-open-person]').forEach(b=>b.onclick=()=>openPerson(b.dataset.openPerson));
 }
@@ -526,7 +529,7 @@ function renderQualificationMatrix(){
  const persons=people.filter(personActive).filter(p=>!search||(p.badge+' '+(p.nome_completo||'')+' '+(p.nome||'')+' '+(p.cognome||'')).toLowerCase().includes(search));
  const cols=defs.slice().sort((a,b)=>(a.ordine??999)-(b.ordine??999));
  host.innerHTML='<table class="matrix"><thead><tr><th>Volontario</th><th>Semaforo</th>'+cols.map(q=>'<th title="'+esc(qName(q.codice))+'">'+esc(qName(q.codice))+'</th>').join('')+'</tr></thead><tbody>'+
-  (persons.length?persons.map(p=>{const cs=complianceForPerson(p);return '<tr><td><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b><br><span class="muted">Badge '+esc(p.badge)+'</span></td><td><span class="compliance '+cs.cls+'">● '+esc(cs.label)+'</span></td>'+cols.map(q=>'<td>'+matrixCell(p.badge,q.codice)+'</td>').join('')+'</tr>'}).join(''):'<tr><td colspan="'+(cols.length+2)+'">Nessun volontario trovato.</td></tr>')+
+  (persons.length?persons.map(p=>{const cs=complianceForPerson(p);return '<tr><td><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b><br><span class="muted">Badge '+esc(p.badge)+'</span></td><td><span class="compliance '+cs.cls+'" title="'+esc(cs.reason||'')+'">'+esc(cs.icon||'')+' '+esc(cs.label)+'</span></td>'+cols.map(q=>'<td>'+matrixCell(p.badge,q.codice)+'</td>').join('')+'</tr>'}).join(''):'<tr><td colspan="'+(cols.length+2)+'">Nessun volontario trovato.</td></tr>')+
   '</tbody></table>';
 }
 function renderQualificationCards(){
