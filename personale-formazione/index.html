@@ -23,7 +23,8 @@
 .hero h1,.hero h2{margin:0 0 5px;color:var(--n)}.hero p{margin:0}.pad{padding:16px}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.stat,.box{background:#fff;border:1px solid var(--l);border-radius:12px;padding:12px}
 .stat small{font-size:10px;font-weight:900;color:var(--m)}.stat b{display:block;font-size:26px;color:var(--n);margin-top:3px}
-.stat.action{cursor:pointer;transition:.15s ease}.stat.action:hover{transform:translateY(-2px);box-shadow:0 6px 18px #12375d18}.stat.action .go{font-size:11px;font-weight:800;color:var(--m);margin-top:5px}
+.stat.action{cursor:pointer;transition:.15s ease;border-width:2px}.stat.action:hover{transform:translateY(-2px);box-shadow:0 6px 18px #12375d18}.stat.action .go{font-size:11px;font-weight:800;color:var(--m);margin-top:5px}
+.stat.action[data-kpi-go="active"]{border-color:#1d4ed8}.stat.action[data-kpi-go="daeMissing"],.stat.action[data-kpi-go="daeExpired"]{border-color:#dc2626}.stat.action[data-kpi-go="dae30"]{border-color:#d97706}.stat.action[data-kpi-go="leave"]{border-color:#7c3aed}.stat.action[data-kpi-go="suspended"]{border-color:#be123c}.stat.action[data-kpi-go="courses"]{border-color:#0f766e}.stat.action[data-kpi-go="noOperational"]{border-color:#ea580c}
 .section{border:1px solid var(--l);border-radius:13px;padding:13px;margin:11px 0}.section h3{margin:0 0 10px;color:var(--n)}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .field{display:flex;flex-direction:column;gap:4px}.field label{font-size:11px;font-weight:900;color:var(--n)}
@@ -50,7 +51,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.8</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.8.1</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -64,7 +65,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.8</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.8.1</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -78,7 +79,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
   </aside>
   <main>
    <section id="dashboard" class="surface">
-    <div class="hero"><h1>Dashboard formazione</h1><p>Situazione del personale, qualifiche e scadenze formative.</p></div>
+    <div class="hero"><h1>📊 Dashboard avanzata</h1><p>Controllo immediato di personale, DAE, stati attività, corsi e qualifiche operative.</p></div>
     <div class="pad">
      <div class="stats">
       <div class="stat action" data-kpi-go="active"><small>PERSONALE ATTIVO</small><b id="kpiActive">0</b><div class="go">Apri personale →</div></div>
