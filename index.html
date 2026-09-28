@@ -584,7 +584,7 @@
 #tariffTabs [data-tariff-code][aria-pressed="true"]{opacity:1;transform:translateY(-1px);border-color:#102f5a!important;box-shadow:0 0 0 3px rgba(16,47,90,.16),0 5px 12px rgba(16,47,90,.16)}
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 
-/* === V14.07 · STATISTICHE === */
+/* === V14.08 · STATISTICHE === */
 .stats-page-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .stats-kpi{background:#fff;border:1px solid #d8e3ec;border-radius:13px;padding:13px;min-height:92px;cursor:pointer;transition:.15s ease;box-shadow:0 2px 8px #12375d0b}
 .stats-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px #12375d18}
@@ -604,7 +604,7 @@
 @media(max-width:520px){.stats-page-grid{grid-template-columns:1fr 1fr}.stats-kpi b{font-size:22px}.stats-vehicle-row{grid-template-columns:60px 1fr 70px 70px}}
 
 
-/* === V14.07 · REPORT PERSONALIZZATI === */
+/* === V14.08 · REPORT PERSONALIZZATI === */
 .report-builder{margin-top:12px}
 .report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .report-result{margin-top:12px;border:1px solid #d9e3eb;border-radius:12px;overflow:auto;background:#fff}
@@ -615,9 +615,27 @@
 @media(max-width:900px){.report-grid{grid-template-columns:repeat(2,1fr)}.report-summary{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.report-grid,.report-summary{grid-template-columns:1fr}}
 
+
+/* === V14.08 · STATISTICHE AVANZATE === */
+.stats-click{cursor:pointer}.stats-click:hover{text-decoration:underline}
+.stats-detail{margin-top:12px;border:1px solid #cbd9e5;border-radius:14px;background:#fff;overflow:auto}
+.stats-detail-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 14px;background:#eef5fb;border-bottom:1px solid #d6e2eb}
+.stats-detail table{min-width:760px}
+.stats-compare-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:10px}
+.stats-compare-card{border:1px solid #d8e3ec;border-radius:12px;padding:11px;background:#fff}
+.stats-compare-card small{font-weight:900;color:#667987}.stats-compare-card b{display:block;font-size:22px;color:#12375d;margin:4px 0}.stats-delta{font-weight:900}.stats-delta.up{color:#15734f}.stats-delta.down{color:#a93138}.stats-delta.flat{color:#64798b}
+.stats-person-grid{display:grid;grid-template-columns:260px 1fr;gap:12px;align-items:start}
+.stats-person-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}
+.stats-mini-bars{display:grid;gap:8px}.stats-mini-row{display:grid;grid-template-columns:120px 1fr 80px;gap:8px;align-items:center;font-size:12px}
+.stats-mini-track{height:12px;border-radius:999px;background:#edf2f6;overflow:hidden}.stats-mini-fill{height:100%;background:#0891b2;border-radius:999px}
+.stats-vehicle-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+.stats-vehicle-card{border:1px solid #d8e3ec;border-radius:12px;padding:12px;background:#fff}.stats-vehicle-card b{font-size:20px;color:#12375d}.stats-vehicle-card small{display:block;color:#64798b;margin-top:4px}
+@media(max-width:900px){.stats-compare-grid,.stats-person-kpis,.stats-vehicle-grid{grid-template-columns:repeat(2,1fr)}.stats-person-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.stats-compare-grid,.stats-person-kpis,.stats-vehicle-grid{grid-template-columns:1fr}.stats-mini-row{grid-template-columns:90px 1fr 60px}}
+
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.07</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.08</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -671,7 +689,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.07</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.08</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -838,6 +856,30 @@
    <h3>Distribuzione turni per tipologia</h3><div class="muted">Presenze caricate in Turni generali, Emergenza, Dimissioni e Assistenze.</div>
    <div id="statsVehicles" style="margin-top:8px"></div>
   </div>
+
+
+  <div class="stats-card" style="margin-top:12px">
+   <div class="actions" style="justify-content:space-between;align-items:end">
+    <div><h3>↔ Confronto con il periodo precedente</h3><div class="muted" id="statsComparePeriod">Confronto automatico con un intervallo della stessa durata.</div></div>
+    <button id="statsCompareRefresh" class="btn secondary" type="button">Aggiorna confronto</button>
+   </div>
+   <div id="statsCompareGrid" class="stats-compare-grid"></div>
+  </div>
+
+  <div class="stats-card" style="margin-top:12px">
+   <div class="actions" style="justify-content:space-between;align-items:end">
+    <div><h3>👤 Statistica singolo volontario</h3><div class="muted">Turni e ore provengono esclusivamente dalle sezioni turni del gestionale.</div></div>
+    <div class="field" style="min-width:280px"><label>Volontario</label><select id="statsVolunteerSelect"><option value="">Seleziona volontario</option></select></div>
+   </div>
+   <div id="statsVolunteerBox" class="notice" style="margin-top:10px">Seleziona un volontario per vedere il dettaglio.</div>
+  </div>
+
+  <div class="stats-card" style="margin-top:12px">
+   <div><h3>🚑 Statistiche mezzi</h3><div class="muted">Utilizzo ricavato dai servizi programmati e dai turni con mezzo assegnato. Nessun dato viene preso dai Fogli Viaggio.</div></div>
+   <div id="statsVehicleCards" class="stats-vehicle-grid"></div>
+  </div>
+
+  <div id="statsDetail" class="stats-detail hidden"></div>
 
   <div class="stats-card report-builder">
    <div class="actions" style="justify-content:space-between">
@@ -2512,7 +2554,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.07':'Versione 14.07';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.08':'Versione 14.08';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -3942,7 +3984,7 @@ async function statsRpcRange(name,from,to){
 }
 async function loadShiftStatistics(from,to,people){
  const [tr,emgRows,dimRows,assRows]=await Promise.all([
-  sb.from('turni').select('id,data_turno,tipo_turno,ora_inizio,ora_fine,stato').gte('data_turno',from).lte('data_turno',to).limit(5000),
+  sb.from('turni').select('id,data_turno,tipo_turno,ora_inizio,ora_fine,stato,mezzo').gte('data_turno',from).lte('data_turno',to).limit(5000),
   statsRpcRange('cge_emergenza_turni_v2',from,to),
   statsRpcRange('cge_dimissioni_turni',from,to),
   statsRpcRange('cge_assistenza_fasce_turni',from,to)
@@ -3963,11 +4005,11 @@ async function loadShiftStatistics(from,to,people){
  assignments.forEach(x=>{
   const t=turnMap.get(x.turno_id);if(!t)return;
   if(x.risposta==='NON DISPONIBILE')return;
-  rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftClockHours(t.ora_inizio,t.ora_fine),slot:'GEN|'+t.id});
+  rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftClockHours(t.ora_inizio,t.ora_fine),slot:'GEN|'+t.id,vehicle:t.mezzo||''});
  });
- emgRows.forEach(x=>rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza / 118',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'EMG|'+x.giorno+'|'+x.fascia}));
- dimRows.forEach(x=>rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'DIM|'+x.giorno+'|'+x.fascia}));
- assRows.forEach(x=>rows.push({source:'Assistenze',date:x.giorno,type:'Assistenze',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'ASS|'+x.giorno+'|'+x.fascia}));
+ emgRows.forEach(x=>rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza / 118',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'EMG|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||''}));
+ dimRows.forEach(x=>rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'DIM|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||''}));
+ assRows.forEach(x=>rows.push({source:'Assistenze',date:x.giorno,type:'Assistenze',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'ASS|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||''}));
  const seen=new Set(),valid=rows.filter(x=>{
   if(!x.badge)return false;
   const key=[x.source,x.date,x.type,x.badge,x.role].join('|');
@@ -3985,6 +4027,98 @@ async function loadShiftStatistics(from,to,people){
  const slotSeen=new Set(),byTypeSlots={};
  valid.forEach(x=>{const k=x.slot||[x.source,x.date,x.type].join('|');if(slotSeen.has(k))return;slotSeen.add(k);byTypeSlots[x.type]=(byTypeSlots[x.type]||0)+1});
  return {rows:valid,byBadge,byBadgeHours,byRole,byRoleHours,byType,byTypeHours,byTypeSlots,top,topHours,totalHours:valid.reduce((s,x)=>s+Number(x.hours||0),0),general:assignments.filter(x=>turnMap.has(x.turno_id)&&x.risposta!=='NON DISPONIBILE').length,special:emgRows.length+dimRows.length+assRows.length};
+}
+
+
+function statsDaysBetween(a,b){return Math.floor((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000)+1}
+function statsShiftDateRangePrevious(from,to){
+ const days=statsDaysBetween(from,to),end=new Date(from+'T12:00:00');end.setDate(end.getDate()-1);
+ const start=new Date(end);start.setDate(start.getDate()-days+1);
+ return {from:statsISODate(start),to:statsISODate(end)};
+}
+function statsDelta(current,previous){
+ const c=Number(current||0),p=Number(previous||0),d=c-p;
+ if(p===0)return {text:c===0?'0':'+'+c,cls:c===0?'flat':'up'};
+ const pct=d/p*100;return {text:(d>0?'+':'')+pct.toLocaleString('it-IT',{maximumFractionDigits:1})+'%',cls:d>0?'up':d<0?'down':'flat'};
+}
+function statsRenderDetail(title,headers,rows){
+ const box=$('statsDetail');box.classList.remove('hidden');
+ box.innerHTML='<div class="stats-detail-head"><div><b>'+esc(title)+'</b><div class="muted">'+rows.length+' righe</div></div><button type="button" class="btn secondary" id="statsDetailClose">Chiudi</button></div>'+
+  '<table><thead><tr>'+headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+
+  (rows.length?rows.map(r=>'<tr>'+r.map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+headers.length+'">Nessun dato.</td></tr>')+
+  '</tbody></table>';
+ $('statsDetailClose').onclick=()=>box.classList.add('hidden');
+ box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function statsCategoryDetail(category){
+ const s=lastStatsSnapshot;if(!s)return;
+ const shiftRows=(s.shiftStats?.rows||[]).filter(x=>x.type===category);
+ const serviceRows=(s.serviceRows||[]).filter(x=>statsTypeLabel(x)===category);
+ if(['Emergenza / 118','Dimissioni','Assistenze'].includes(category)&&shiftRows.length){
+  const slots=new Map();
+  shiftRows.forEach(x=>{const k=x.slot||[x.date,x.type].join('|');if(!slots.has(k))slots.set(k,x)});
+  return statsRenderDetail(category,['Data','Tipologia','Fonte','Fascia/turno'],[...slots.values()].map(x=>[reportFormatDate(x.date),x.type,x.source,String(x.slot||'').split('|').slice(-1)[0]||'—']));
+ }
+ statsRenderDetail(category,['Data','Tipologia','Mezzo','Stato'],serviceRows.map(x=>[reportFormatDate(x.data_servizio),x.tipo_servizio_altro||x.tipo_servizio||category,x.mezzo||'—',x.stato_gestionale||'—']));
+}
+function statsVolunteerDetail(badge){
+ const s=lastStatsSnapshot;if(!s)return;
+ const rows=(s.shiftStats?.rows||[]).filter(x=>x.badge===badge).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ const person=(s.allPeople||[]).find(p=>p.badge===badge),name=statsPersonName(person);
+ statsRenderDetail(name,['Data','Tipo','Ruolo','Ore','Fonte'],rows.map(x=>[reportFormatDate(x.date),x.type,String(x.role||'').replaceAll('_',' '),Number(x.hours||0).toLocaleString('it-IT',{maximumFractionDigits:1}),x.source]));
+}
+async function statsLoadComparison(){
+ const s=lastStatsSnapshot;if(!s)return;
+ const prev=statsShiftDateRangePrevious(s.from,s.to);
+ $('statsComparePeriod').textContent='Periodo precedente: '+reportFormatDate(prev.from)+' – '+reportFormatDate(prev.to);
+ try{
+  const [sv,ss]=await Promise.all([
+   sb.from('servizi_giornalieri').select('id,data_servizio,categoria_servizio,tipo_servizio,tipo_servizio_altro,mezzo,stato_gestionale').gte('data_servizio',prev.from).lte('data_servizio',prev.to).neq('stato_gestionale','ANNULLATO').limit(5000),
+   loadShiftStatistics(prev.from,prev.to,s.allPeople||[])
+  ]);
+  if(sv.error)throw sv.error;
+  const prevServices=sv.data||[],prevEmergency=Number(ss.byTypeSlots?.['Emergenza / 118']||0),prevAss=Math.max(prevServices.filter(x=>statsTypeLabel(x)==='Assistenze').length,Number(ss.byTypeSlots?.['Assistenze']||0));
+  const data=[
+   ['Servizi',s.services,prevServices.length],
+   ['Emergenza / 118',s.emergency,prevEmergency],
+   ['Assistenze',s.assistance,prevAss],
+   ['Ore volontari',s.hours,ss.totalHours]
+  ];
+  $('statsCompareGrid').innerHTML=data.map(([label,cur,old])=>{const d=statsDelta(cur,old);return '<div class="stats-compare-card"><small>'+esc(label)+'</small><b>'+Number(cur).toLocaleString('it-IT',{maximumFractionDigits:1})+'</b><span class="stats-delta '+d.cls+'">'+esc(d.text)+'</span> <span class="muted">vs '+Number(old).toLocaleString('it-IT',{maximumFractionDigits:1})+'</span></div>'}).join('');
+ }catch(e){$('statsCompareGrid').innerHTML='<div class="notice err">Confronto non disponibile: '+esc(e.message||String(e))+'</div>'}
+}
+async function statsRenderVolunteer(badge){
+ const box=$('statsVolunteerBox'),s=lastStatsSnapshot;if(!badge||!s){box.className='notice';box.textContent='Seleziona un volontario per vedere il dettaglio.';return}
+ const person=(s.allPeople||[]).find(p=>p.badge===badge),name=statsPersonName(person);
+ const rows=(s.shiftStats?.rows||[]).filter(x=>x.badge===badge);
+ const totalHours=rows.reduce((a,x)=>a+Number(x.hours||0),0),byType={},byRole={},months={};
+ rows.forEach(x=>{byType[x.type]=(byType[x.type]||0)+1;byRole[x.role]=(byRole[x.role]||0)+1;const m=String(x.date||'').slice(0,7);if(m)months[m]=(months[m]||0)+Number(x.hours||0)});
+ const now=new Date(),monthFrom=statsISODate(new Date(now.getFullYear(),now.getMonth(),1)),quarterMonth=Math.floor(now.getMonth()/3)*3,quarterFrom=statsISODate(new Date(now.getFullYear(),quarterMonth,1)),todayD=statsISODate(now);
+ let monthHours=0,quarterHours=0;
+ try{
+  const ss=await loadShiftStatistics(quarterFrom,todayD,s.allPeople||[]);
+  monthHours=(ss.rows||[]).filter(x=>x.badge===badge&&x.date>=monthFrom).reduce((a,x)=>a+Number(x.hours||0),0);
+  quarterHours=(ss.rows||[]).filter(x=>x.badge===badge).reduce((a,x)=>a+Number(x.hours||0),0);
+ }catch(e){}
+ const maxMonth=Math.max(1,...Object.values(months));
+ box.className='';
+ box.innerHTML='<div class="stats-person-grid"><div><h3 style="margin-top:0">'+esc(name)+'</h3><div class="muted">Badge '+esc(badge)+'</div>'+
+  '<div class="actions" style="margin-top:10px"><button type="button" class="btn secondary" data-vol-detail="'+esc(badge)+'">Vedi tutti i turni</button></div></div>'+
+  '<div><div class="stats-person-kpis">'+
+  '<div class="stat"><small>TURNI / PRESENZE</small><b>'+rows.length+'</b></div>'+
+  '<div class="stat"><small>ORE NEL PERIODO</small><b>'+totalHours.toLocaleString('it-IT',{maximumFractionDigits:1})+'</b></div>'+
+  '<div class="stat"><small>MESE CORRENTE</small><b>'+monthHours.toLocaleString('it-IT',{maximumFractionDigits:1})+' / 28 h</b></div>'+
+  '<div class="stat"><small>TRIMESTRE CORRENTE</small><b>'+quarterHours.toLocaleString('it-IT',{maximumFractionDigits:1})+' / 84 h</b></div></div>'+
+  '<div class="grid2"><div><b>Per tipologia</b><div style="margin-top:6px">'+(Object.entries(byType).length?Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([k,v])=>'<div class="box">'+esc(k)+' <b style="float:right">'+v+'</b></div>').join(''):'<div class="muted">Nessun turno.</div>')+'</div></div>'+
+  '<div><b>Ore per mese</b><div class="stats-mini-bars" style="margin-top:8px">'+(Object.entries(months).length?Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0])).map(([m,h])=>'<div class="stats-mini-row"><span>'+esc(m)+'</span><div class="stats-mini-track"><div class="stats-mini-fill" style="width:'+Math.max(2,h/maxMonth*100)+'%"></div></div><b>'+h.toLocaleString('it-IT',{maximumFractionDigits:1})+' h</b></div>').join(''):'<div class="muted">Nessuna ora.</div>')+'</div></div></div></div></div>';
+ box.querySelector('[data-vol-detail]')?.addEventListener('click',()=>statsVolunteerDetail(badge));
+}
+function statsRenderVehicles(services,shiftStats){
+ const map={};['06','07','08','09'].forEach(v=>map[v]={services:0,emergency:0,assistance:0,days:new Set()});
+ services.forEach(x=>{const v=String(x.mezzo||'');if(!map[v])return;map[v].services++;map[v].days.add(x.data_servizio);if(statsTypeLabel(x)==='Assistenze')map[v].assistance++});
+ const slotSeen=new Set();
+ (shiftStats.rows||[]).forEach(x=>{const v=String(x.vehicle||'');if(!map[v]||!v)return;const key=(x.slot||[x.date,x.type].join('|'))+'|'+v;if(slotSeen.has(key))return;slotSeen.add(key);map[v].days.add(x.date);if(x.type==='Emergenza / 118')map[v].emergency++;if(x.type==='Assistenze')map[v].assistance++});
+ $('statsVehicleCards').innerHTML=Object.entries(map).map(([v,d])=>'<div class="stats-vehicle-card"><small>MEZZO</small><b>'+esc(v)+'</b><small>Servizi programmati: <strong>'+d.services+'</strong></small><small>Emergenza/118: <strong>'+d.emergency+'</strong></small><small>Assistenze: <strong>'+d.assistance+'</strong></small><small>Giornate di utilizzo: <strong>'+d.days.size+'</strong></small></div>').join('');
 }
 
 async function loadStatistics(){
@@ -4014,12 +4148,12 @@ async function loadStatistics(){
  $('statsGeneralShifts').textContent=shiftStats.general;
  $('statsSpecialShifts').textContent=shiftStats.special;
  const maxShift=Math.max(1,...shiftStats.top.map(x=>x.n));
- $('statsTopShiftVolunteers').innerHTML=shiftStats.top.length?shiftStats.top.map(x=>'<div class="stats-top-row"><b>'+esc(x.name)+'</b><div class="stats-top-track"><div class="stats-top-fill" style="width:'+Math.max(2,x.n/maxShift*100)+'%"></div></div><strong>'+x.n+'</strong></div>').join(''):'<div class="notice">Nessun turno assegnato nel periodo.</div>';
+ $('statsTopShiftVolunteers').innerHTML=shiftStats.top.length?shiftStats.top.map(x=>'<div class="stats-top-row stats-click" data-stats-volunteer="'+esc(x.badge)+'"><b>'+esc(x.name)+'</b><div class="stats-top-track"><div class="stats-top-fill" style="width:'+Math.max(2,x.n/maxShift*100)+'%"></div></div><strong>'+x.n+'</strong></div>').join(''):'<div class="notice">Nessun turno assegnato nel periodo.</div>';
  const colors=['#ff7176','#6885e8','#ff8a09','#9ad94f','#70dda0','#d8bd00','#0891b2','#7c3aed'];
  const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]);const total=Math.max(1,entries.reduce((s,x)=>s+Number(x[1]||0),0));let acc=0,parts=[];
  entries.forEach(([k,v],i)=>{const start=acc/total*360;acc+=v;const end=acc/total*360;parts.push(colors[i%colors.length]+' '+start+'deg '+end+'deg')});
  $('statsDonut').style.background=entries.length?'conic-gradient('+parts.join(',')+')':'#e8eef3';
- $('statsLegend').innerHTML=entries.length?entries.map(([k,v],i)=>'<div class="stats-legend-row"><span class="stats-dot" style="background:'+colors[i%colors.length]+'"></span><span>'+esc(k)+'</span><b>'+v+'</b></div>').join(''):'<div class="notice">Nessuna attività nel periodo.</div>';
+ $('statsLegend').innerHTML=entries.length?entries.map(([k,v],i)=>'<div class="stats-legend-row stats-click" data-stats-category="'+esc(k)+'"><span class="stats-dot" style="background:'+colors[i%colors.length]+'"></span><span>'+esc(k)+'</span><b>'+v+'</b></div>').join(''):'<div class="notice">Nessuna attività nel periodo.</div>';
  const top=shiftStats.topHours,maxH=Math.max(1,...top.map(x=>x.hours));
  $('statsTopVolunteers').innerHTML=top.length?top.map(x=>'<div class="stats-top-row"><b>'+esc(x.name)+'</b><div class="stats-top-track"><div class="stats-top-fill" style="width:'+Math.max(2,x.hours/maxH*100)+'%"></div></div><strong>'+x.hours.toLocaleString('it-IT',{maximumFractionDigits:1})+' h</strong></div>').join(''):'<div class="notice">Nessuna ora disponibile dai turni caricati nel periodo.</div>';
  const months={};services.forEach(x=>{const k=String(x.data_servizio||'').slice(0,7);if(k)months[k]=(months[k]||0)+1});
@@ -4027,13 +4161,23 @@ async function loadStatistics(){
  $('statsMonthly').innerHTML=monthEntries.length?monthEntries.map(([m,v])=>{const d=new Date(m+'-01T12:00:00'),lab=new Intl.DateTimeFormat('it-IT',{month:'short',year:'2-digit'}).format(d);return '<div class="stats-month"><strong>'+v+'</strong><div class="stats-month-bar" style="height:'+Math.max(3,v/maxM*175)+'px"></div><small>'+esc(lab)+'</small></div>'}).join(''):'<div class="notice">Nessun servizio nel periodo selezionato.</div>';
  const typeRows=Object.entries(shiftStats.byType).sort((a,b)=>b[1]-a[1]);
  $('statsVehicles').innerHTML=typeRows.length?'<div class="stats-vehicle-row"><b>Tipo</b><b>Presenze</b><b>Ore</b><b>Quota</b></div>'+typeRows.map(([k,v])=>'<div class="stats-vehicle-row"><b>'+esc(k)+'</b><span>'+v+'</span><strong>'+Number(shiftStats.byTypeHours[k]||0).toLocaleString('it-IT',{maximumFractionDigits:1})+' h</strong><strong>'+Math.round(v/Math.max(1,shiftStats.rows.length)*100)+'%</strong></div>').join(''):'<div class="notice">Nessun turno caricato nel periodo.</div>';
- lastStatsSnapshot={from,to,services:services.length,people:people.length,emergency,assistance,hours,cats,top:shiftStats.topHours,shiftStats};
+ lastStatsSnapshot={from,to,services:services.length,people:people.length,emergency,assistance,hours,cats,top:shiftStats.topHours,shiftStats,serviceRows:services,allPeople};
+ const volSel=$('statsVolunteerSelect'),keep=volSel.value;
+ volSel.innerHTML='<option value="">Seleziona volontario</option>'+allPeople.slice().sort((a,b)=>statsPersonName(a).localeCompare(statsPersonName(b),'it')).map(p=>'<option value="'+esc(p.badge)+'">'+esc(statsPersonName(p))+' · '+esc(p.badge)+'</option>').join('');
+ if([...volSel.options].some(o=>o.value===keep))volSel.value=keep;
+ statsRenderVehicles(services,shiftStats);
+ await statsLoadComparison();
+ if(volSel.value)await statsRenderVolunteer(volSel.value);
+ $('statsLegend').querySelectorAll('[data-stats-category]').forEach(x=>x.onclick=()=>statsCategoryDetail(x.dataset.statsCategory));
+ document.querySelectorAll('#statsTopVolunteers [data-stats-volunteer],#statsTopShiftVolunteers [data-stats-volunteer]').forEach(x=>x.onclick=()=>statsVolunteerDetail(x.dataset.statsVolunteer));
  msg('statsMsg','Dati aggiornati.','ok');
 }
 function openStatsDetail(kind){
  const from=$('statsFrom').value,to=$('statsTo').value;
  if(kind==='people'){view('people');return}
  if(kind==='shifts'){view('shifts');return}
+ if(kind==='emergency'){statsCategoryDetail('Emergenza / 118');return}
+ if(kind==='assistance'){statsCategoryDetail('Assistenze');return}
  if($('fd'))$('fd').value=from;if($('fdTo'))$('fdTo').value=to;
  if($('fq'))$('fq').value=kind==='emergency'?'Emergenza':kind==='assistance'?'Assistenza':'';
  view('services');
@@ -4149,6 +4293,8 @@ $('statsToday')?.addEventListener('click',()=>statsSetPeriod('today'));
 $('stats30')?.addEventListener('click',()=>statsSetPeriod('30'));
 $('stats12m')?.addEventListener('click',()=>statsSetPeriod('12m'));
 $('statsYear')?.addEventListener('click',()=>statsSetPeriod('year'));
+$('statsCompareRefresh')?.addEventListener('click',statsLoadComparison);
+$('statsVolunteerSelect')?.addEventListener('change',e=>statsRenderVolunteer(e.target.value));
 $('statsOpenShifts')?.addEventListener('click',()=>view('shifts'));
 $('statsRefresh')?.addEventListener('click',loadStatistics);
 $('statsExport')?.addEventListener('click',()=>{
