@@ -5,15 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Croce Gialla · Personale e Formazione</title>
 <style>
-:root{--n:#12375d;--y:#f4d447;--l:#dbe4eb;--m:#657989;--g:#2d9a69;--r:#b52d36;--w:#d6a100;--bg:#f4f7f9}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#253746}
-.hidden{display:none!important}.top{background:#fff;border-bottom:1px solid var(--l);position:sticky;top:0;z-index:10}
-.head{max-width:1500px;margin:auto;padding:10px 16px;display:flex;align-items:center;gap:12px}.head img{width:58px;height:58px;object-fit:contain}
-.brand{flex:1}.brand small{display:block;color:#d95522;font-weight:900}.brand strong{display:block;color:var(--n);font-size:18px}
+:root{--n:#12375d;--y:#ffdb17;--b:#f2f5f8;--i:#1c3347;--m:#64798b;--l:#d9e2ea;--g:#15734f;--r:#a93138;--o:#9b6515;--bg:var(--b)}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Arial;background:var(--bg);color:var(--i)}
+.hidden{display:none!important}.top{background:var(--n);color:#fff;border-bottom:0;position:sticky;top:0;z-index:10;box-shadow:0 3px 12px #0002}
+.head{max-width:1500px;margin:auto;padding:10px 16px;display:flex;align-items:center;gap:12px}.head img{width:58px;height:58px;object-fit:contain;background:#fff;border-radius:50%;border:3px solid #fff}
+.brand{flex:1}.brand small{display:block;color:var(--y);font-weight:900}.brand strong{display:block;color:#fff;font-size:18px}.brand .muted{color:#dbe6ef}
 .wrap{max-width:1500px;margin:auto;padding:16px}.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px}
-.side{background:#fff;border:1px solid var(--l);border-radius:14px;padding:10px;height:max-content;position:sticky;top:92px}
-.nav{display:block;width:100%;border:1px solid var(--l);border-radius:9px;padding:10px 11px;margin:5px 0;text-align:left;background:#eef3f7;color:var(--n);font-weight:800;cursor:pointer}.nav.active{background:#fff0a7;border-color:#dec64f}
-.surface{background:#fff;border:1px solid var(--l);border-radius:16px;overflow:hidden}.hero{padding:20px;background:linear-gradient(120deg,#fff0a1,#fffbe6 58%,#fff);border-bottom:1px solid #eee2a4}
+.side{background:#fff;border:1px solid var(--l);border-radius:16px;padding:10px;height:max-content;position:sticky;top:92px}
+.nav{display:block;width:100%;border:1px solid transparent;border-radius:10px;padding:10px 11px;margin:5px 0;text-align:left;color:#fff;font-weight:850;cursor:pointer;transition:.15s ease}.nav:hover{filter:brightness(.95);transform:translateY(-1px)}.nav.active{box-shadow:0 0 0 3px rgba(0,0,0,.14);filter:brightness(.92)}
+.nav[data-view="dashboard"]{background:#1d4ed8;border-color:#1e40af}
+.nav[data-view="people"]{background:#be123c;border-color:#9f1239}
+.nav[data-view="deadlines"]{background:#ea580c;border-color:#c2410c}
+.nav[data-view="dae"]{background:#dc2626;border-color:#b91c1c}
+.nav[data-view="qualifications"]{background:#65a30d;border-color:#4d7c0f}
+.surface{background:#fff;border:1px solid var(--l);border-radius:16px;overflow:hidden}.hero{padding:20px;background:linear-gradient(135deg,#eaf4ff 0%,#f5f9ff 55%,#ffffff 100%);border-bottom:1px solid #cfe0f5}
 .hero h1,.hero h2{margin:0 0 5px;color:var(--n)}.hero p{margin:0}.pad{padding:16px}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.stat,.box{background:#fff;border:1px solid var(--l);border-radius:12px;padding:12px}
 .stat small{font-size:10px;font-weight:900;color:var(--m)}.stat b{display:block;font-size:26px;color:var(--n);margin-top:3px}
@@ -26,7 +31,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:900;background:#e7edf3}.pill.g{background:#e7f6ef;color:#176a4b}.pill.r{background:#fdebed;color:#9d2730}.pill.o{background:#ffe8cc;color:#9a4c00}.pill.w{background:#fff4c9;color:#795a00}.pill.b{background:#e8f1fb;color:#1d5488}
 .dae-red{border-left:5px solid #b52d36}.dae-orange{border-left:5px solid #e67e22}.dae-yellow{border-left:5px solid #d6a100}.dae-green{border-left:5px solid #2d9a69}.dae-gray{border-left:5px solid #8b98a5}
 .table{overflow:auto;border:1px solid var(--l);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:9px;border-bottom:1px solid #e7edf2;text-align:left;vertical-align:top}th{background:#f1f5f8;color:var(--n);font-size:12px}
-.login{min-height:100vh;display:grid;place-items:center;padding:18px}.loginCard{width:min(520px,100%);background:#fff;border:1px solid var(--l);border-radius:18px;overflow:hidden}.loginHead{padding:22px;text-align:center;background:linear-gradient(120deg,#fff0a1,#fffbe6)}.loginHead img{width:90px}.loginBody{padding:18px}
+.login{min-height:100vh;display:grid;place-items:center;padding:18px}.loginCard{width:min(520px,100%);background:#fff;border:1px solid var(--l);border-radius:18px;overflow:hidden;box-shadow:0 8px 28px #12375d1f}.loginHead{padding:22px;text-align:center;background:var(--n);color:#fff;border-bottom:7px solid var(--y)}.loginHead h2{margin:10px 0 4px}.loginHead .muted{color:#dbe6ef}.loginHead img{width:90px;background:#fff;border-radius:50%;border:4px solid #fff}.loginBody{padding:18px}
 .qualRow{display:grid;grid-template-columns:minmax(170px,1.2fr) 130px 130px auto;gap:8px;align-items:end;padding:9px;border:1px solid var(--l);border-radius:10px;margin:7px 0}
 .personSelected{background:#fffbea}
 @media(max-width:980px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;overflow:auto}.nav{min-width:180px}.stats{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}
