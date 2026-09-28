@@ -34,6 +34,10 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.muted{color:var(--m);font-size:12px}.notice{padding:10px 12px;border-radius:9px;margin:9px 0;background:#edf6ff;border:1px solid #cfe4fa}.ok{background:#eaf8f1;color:#176a4b}.err{background:#fff0f0;color:#a32b34}.warn{background:#fff7df;color:#875d12}
 .pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:900;background:#e7edf3}.pill.g{background:#e7f6ef;color:#176a4b}.pill.r{background:#fdebed;color:#9d2730}.pill.o{background:#ffe8cc;color:#9a4c00}.pill.w{background:#fff4c9;color:#795a00}.pill.b{background:#e8f1fb;color:#1d5488}
 .dae-red{border-left:5px solid #b52d36}.dae-orange{border-left:5px solid #e67e22}.dae-yellow{border-left:5px solid #d6a100}.dae-green{border-left:5px solid #2d9a69}.dae-gray{border-left:5px solid #8b98a5}
+.deadlineRowExpired{background:#fff1f1;border-left:6px solid #b52d36}
+.deadlineRow30{background:#fff7ea;border-left:6px solid #e67e22}
+.deadlineRow60{background:#fffbea;border-left:6px solid #d6a100}
+.deadlineRowOk{background:#f2fbf6;border-left:6px solid #2d9a69}
 .table{overflow:auto;border:1px solid var(--l);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:9px;border-bottom:1px solid #e7edf2;text-align:left;vertical-align:top}th{background:#f1f5f8;color:var(--n);font-size:12px}
 .login{min-height:100vh;display:grid;place-items:center;padding:18px}.loginCard{width:min(520px,100%);background:#fff;border:1px solid var(--l);border-radius:18px;overflow:hidden;box-shadow:0 8px 28px #12375d1f}.loginHead{padding:22px;text-align:center;background:var(--n);color:#fff;border-bottom:7px solid var(--y)}.loginHead h2{margin:10px 0 4px}.loginHead .muted{color:#dbe6ef}.loginHead img{width:90px;background:#fff;border-radius:50%;border:4px solid #fff}.loginBody{padding:18px}
 .qualRow{display:grid;grid-template-columns:minmax(170px,1.2fr) 130px 130px auto;gap:8px;align-items:end;padding:9px;border:1px solid var(--l);border-radius:10px;margin:7px 0}
@@ -149,7 +153,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.6</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.7</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -163,7 +167,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.6</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.7</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -327,6 +331,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
       <div id="personQualSection" class="section"><h3>🎓 Altre qualifiche della persona</h3><div id="personQualList"></div>
        <div class="grid3" style="margin-top:10px"><div class="field"><label>Aggiungi qualifica</label><select id="newQual"></select></div><div id="newQualFromWrap" class="field hidden"><label>Valida dal</label><input id="newQualFrom" type="date"></div><div id="newQualToWrap" class="field hidden"><label>Valida al</label><input id="newQualTo" type="date"></div></div>
        <div class="actions" style="margin-top:8px"><button id="addQual" class="btn yellow">Aggiungi / aggiorna qualifica</button></div><div id="personQualMsg"></div>
+       <div class="section" style="margin-top:12px"><h3>🕘 Storico qualifiche</h3><div id="personQualHistory"></div></div>
       </div>
       <div class="section"><h3>📚 Storico corsi e formazione</h3><div id="personTrainingHistory"></div></div>
       <div id="personDocsSection" class="section">
@@ -355,7 +360,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
    <section id="deadlines" class="surface hidden">
     <div class="hero"><h2>⏰ Scadenziario generale personale</h2><p>DAE, certificazioni con scadenza, documenti e rientri da aspettativa.</p></div>
     <div class="pad">
-     <div class="section"><div class="actions" style="justify-content:space-between;align-items:end"><div class="grid3" style="flex:1"><div class="field"><label>Finestra</label><select id="deadlineWindow"><option value="30">Entro 30 giorni</option><option value="60">Entro 60 giorni</option><option value="90" selected>Entro 90 giorni</option><option value="3650">Tutte</option></select></div><div class="field"><label>Tipo</label><select id="deadlineType"><option value="">Tutti</option><option value="QUALIFICA">Certificazioni</option><option value="DOCUMENTO">Attestati/documenti</option><option value="RIENTRO">Rientri aspettativa</option></select></div><div class="field"><label>Stato</label><select id="deadlineState"><option value="">Tutti</option><option value="SCADUTA">Scadute</option><option value="PROSSIMA">In scadenza</option><option value="FUTURA">Future</option></select></div></div><div class="actions"><button id="deadlinePrint" class="btn secondary">🖨 Stampa</button><button id="deadlineExport" class="btn blue">⬇ Esporta CSV</button></div></div><div class="notice">Le qualifiche permanenti come <b>Soccorritore, Autista e Capo Servizio</b> non sono considerate scadenze e non vengono proposte come rinnovi.</div></div>
+     <div class="section"><div class="actions" style="justify-content:space-between;align-items:end"><div class="grid3" style="flex:1"><div class="field"><label>Finestra</label><select id="deadlineWindow"><option value="30">Entro 30 giorni</option><option value="60">Entro 60 giorni</option><option value="90" selected>Entro 90 giorni</option><option value="3650">Tutte</option></select></div><div class="field"><label>Tipo</label><select id="deadlineType"><option value="">Tutti</option><option value="QUALIFICA">Certificazioni</option><option value="DOCUMENTO">Attestati/documenti</option><option value="RIENTRO">Rientri aspettativa</option></select></div><div class="field"><label>Stato</label><select id="deadlineState"><option value="">Tutti</option><option value="SCADUTA">Scadute</option><option value="PROSSIMA">Entro 30 giorni</option><option value="ATTENZIONE">31–60 giorni</option><option value="FUTURA">Oltre 60 giorni</option></select></div></div><div class="actions"><button id="deadlinePrint" class="btn secondary">🖨 Stampa</button><button id="deadlineExport" class="btn blue">⬇ Esporta CSV</button></div></div><div class="notice">Le qualifiche permanenti come <b>Soccorritore, Autista e Capo Servizio</b> non sono considerate scadenze e non vengono proposte come rinnovi.</div></div>
      <div class="table"><table><thead><tr><th>Persona</th><th>Tipo</th><th>Elemento</th><th>Scadenza</th><th>Mancano</th><th>Stato</th></tr></thead><tbody id="deadlineBody"></tbody></table></div>
     </div>
    </section>
@@ -526,7 +531,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const today=()=>new Date().toISOString().slice(0,10);
 const fmt=d=>d?new Date(d+'T00:00:00').toLocaleDateString('it-IT'):'—';
 function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c+'">'+esc(t)+'</div>':''}
-let people=[],defs=[],pquals=[],docs=[],daeHistoryRows=[],daeCourses=[],daeCoursePeople=[],stateHistoryRows=[],trainingCourses=[],trainingPeople=[],selectedBadge=null,lastDaeRenderedRows=[],trainingPlanOpen=false,newTrainingCourseOpen=false;
+let people=[],defs=[],pquals=[],pqualsAll=[],docs=[],daeHistoryRows=[],daeCourses=[],daeCoursePeople=[],stateHistoryRows=[],trainingCourses=[],trainingPeople=[],selectedBadge=null,lastDaeRenderedRows=[],trainingPlanOpen=false,newTrainingCourseOpen=false;
 function daeDef(){return defs.find(q=>String(q.codice||'').toUpperCase()==='DAE')||null}
 function daeCode(){return 'DAE'}
 function daeRow(badge){const code=daeCode();return pquals.find(q=>q.badge_personale===badge&&q.codice_qualifica===code)||null}
@@ -598,7 +603,7 @@ async function loadAll(){
  const [pr,qr,pqr,dr,hr,cr,cpr,sr,tcr,tpr]=await Promise.all([
   sb.from('personale').select('*').order('cognome'),
   sb.from('qualifiche').select('*').eq('attiva',true).order('ordine'),
-  sb.from('personale_qualifiche').select('*').eq('attiva',true),
+  sb.from('personale_qualifiche').select('*'),
   sb.from('documenti_personale').select('id,badge_personale,categoria,titolo,nome_file_originale,storage_path,mime_type,dimensione_bytes,data_scadenza,note,created_at').order('created_at',{ascending:false}),
   sb.from('dae_certificazioni_storico').select('*').order('valida_al',{ascending:false}),
   sb.from('dae_corsi').select('*').order('created_at',{ascending:false}),
@@ -609,7 +614,7 @@ async function loadAll(){
  ]);
  const err=[pr.error,qr.error,pqr.error,dr.error,hr.error,cr.error,cpr.error,sr.error,tcr.error,tpr.error].find(Boolean);if(err){alert(err.message);return}
  people=(pr.data||[]).sort((a,b)=>String(a.cognome||a.nome_completo||'').localeCompare(String(b.cognome||b.nome_completo||''),'it',{sensitivity:'base'})||String(a.nome||'').localeCompare(String(b.nome||''),'it',{sensitivity:'base'}));
- defs=(qr.data||[]).filter(q=>!isAccompagnatore(q.codice));pquals=pqr.data||[];docs=dr.data||[];daeHistoryRows=hr.data||[];daeCourses=cr.data||[];daeCoursePeople=cpr.data||[];stateHistoryRows=sr.data||[];trainingCourses=tcr.data||[];trainingPeople=tpr.data||[];
+ defs=(qr.data||[]).filter(q=>!isAccompagnatore(q.codice));pqualsAll=pqr.data||[];pquals=pqualsAll.filter(q=>q.attiva!==false);docs=dr.data||[];daeHistoryRows=hr.data||[];daeCourses=cr.data||[];daeCoursePeople=cpr.data||[];stateHistoryRows=sr.data||[];trainingCourses=tcr.data||[];trainingPeople=tpr.data||[];
  renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderTraining();renderQualificationCards();renderQualificationMatrix();renderPersonnelReport();renderDaeCourses();
  if(selectedBadge&&people.some(p=>p.badge===selectedBadge))openPerson(selectedBadge);
 }
@@ -859,6 +864,19 @@ async function uploadGenericPersonDocument(){
   await loadAll();openPerson(selectedBadge);
  }catch(e){msg('personDocMsg',e.message||String(e),'err')}
 }
+
+function renderPersonQualHistory(){
+ const host=$('personQualHistory');if(!host||!selectedBadge)return;
+ const rows=pqualsAll.filter(q=>q.badge_personale===selectedBadge&&q.codice_qualifica!==daeCode()&&!isAccompagnatore(q.codice_qualifica))
+  .sort((a,b)=>String(b.updated_at||b.created_at||b.valida_dal||'').localeCompare(String(a.updated_at||a.created_at||a.valida_dal||'')));
+ host.innerHTML=rows.length?rows.map(q=>{
+  const active=q.attiva!==false,permanent=isPermanentOperationalQualification(q.codice_qualifica);
+  const when=q.updated_at||q.created_at||q.valida_dal||'';
+  const whenLabel=when?(String(when).length>10?new Date(when).toLocaleString('it-IT'):fmt(String(when).slice(0,10))):'Data non disponibile';
+  return '<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(qName(q.codice_qualifica))+'</b><div class="muted">'+esc(whenLabel)+'</div></div><span class="pill '+(active?'g':'r')+'">'+esc(active?'ATTIVA':'TERMINATA')+'</span></div>'+
+   '<div class="muted" style="margin-top:5px">'+esc(permanent?'Qualifica permanente':((q.valida_dal?'Dal '+fmt(q.valida_dal):'')+(q.valida_al?' · fino al '+fmt(q.valida_al):'')))+'</div></div>';
+ }).join(''):'<div class="notice">Nessuno storico qualifiche disponibile.</div>';
+}
 function renderPersonDocs(){
  const rows=docs.filter(d=>d.badge_personale===selectedBadge);
  $('personDocs').innerHTML=rows.length?rows.map(d=>{const s=d.data_scadenza?stateFor(d.data_scadenza):null;return '<div class="box" style="margin:7px 0"><b>'+esc(d.titolo||d.nome_file_originale||d.categoria)+'</b>'+(s?' <span class="pill '+s.cls+'">'+esc(s.label)+'</span>':'')+'<br><span class="muted">'+esc(d.categoria||'Documento')+(d.data_scadenza?' · Scadenza '+esc(fmt(d.data_scadenza)):' · Nessuna scadenza')+'</span>'+(d.note?'<br>'+esc(d.note):'')+'</div>'}).join(''):'<div class="notice">Nessun documento o attestato registrato.</div>';
@@ -907,7 +925,7 @@ function renderPersonTimeline(){
  stateHistoryRows.filter(x=>x.badge_personale===selectedBadge).forEach(x=>push(x.data_inizio||x.created_at,'state','Stato: '+(x.stato||'—'),(x.motivo||'')+(x.data_rientro_prevista?' · Rientro previsto '+fmt(x.data_rientro_prevista):'')));
  daeHistoryRows.filter(x=>x.badge_personale===selectedBadge).forEach(x=>push(x.valida_dal||x.created_at,'dae','Rinnovo DAE','Validità fino al '+fmt(x.valida_al)+(x.ente_formatore?' · '+x.ente_formatore:'')));
  trainingPeople.filter(x=>x.badge_personale===selectedBadge).forEach(x=>{const course=trainingCourses.find(c=>c.id===x.corso_id);if(course)push(course.data_corso||course.created_at,'course','Corso: '+(course.titolo||'Formazione'),(x.esito||'')+(course.tipo?' · '+course.tipo:''))});
- pquals.filter(x=>x.badge_personale===selectedBadge&&x.codice_qualifica!==daeCode()).forEach(x=>push(x.valida_dal||x.created_at||'','qual','Qualifica: '+qName(x.codice_qualifica),x.valida_al?'Valida fino al '+fmt(x.valida_al):'Qualifica attiva'));
+ pqualsAll.filter(x=>x.badge_personale===selectedBadge&&x.codice_qualifica!==daeCode()).forEach(x=>push(x.updated_at||x.valida_dal||x.created_at||'','qual','Qualifica: '+qName(x.codice_qualifica),(x.attiva===false?'Terminata':'Attiva')+(x.valida_al?' · fino al '+fmt(x.valida_al):'')));
  docs.filter(x=>x.badge_personale===selectedBadge).forEach(x=>push(x.created_at,'doc','Documento: '+(x.titolo||x.nome_file_originale||x.categoria||'Documento'),(x.categoria||'')+(x.data_scadenza?' · Scadenza '+fmt(x.data_scadenza):'')));
  events.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
  if(count)count.textContent=events.length+' '+(events.length===1?'evento':'eventi');
@@ -927,7 +945,7 @@ function openPerson(badge){
  $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');msg('personManageMsg','');
  const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';$('daeProvider').value='';$('daeCertificateNo').value='';$('daeNotes').value='';$('daeFile').value='';$('daePersonBadge').textContent='Badge '+badge;
  const ds=daeStatus(dr?.valida_al);$('daeState').value=ds.label.toUpperCase();
- renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPersonTimeline();renderPersonAtGlance();renderPersonOperationalStatus();renderPersonPrintSheet();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
+ renderDaeHistory();renderPersonQuals();renderPersonQualHistory();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPersonTimeline();renderPersonAtGlance();renderPersonOperationalStatus();renderPersonPrintSheet();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
 document.querySelectorAll('[data-person-quick]').forEach(b=>b.addEventListener('click',()=>{
@@ -1025,9 +1043,9 @@ async function saveQualDates(code){
  if(r.error)return msg('personQualMsg',r.error.message,'err');msg('personQualMsg','Validità aggiornata.','ok');await loadAll();
 }
 async function removeQual(code){
- if(!selectedBadge||!confirm('Rimuovere questa qualifica dalla persona selezionata?'))return;
- const r=await sb.from('personale_qualifiche').delete().eq('badge_personale',selectedBadge).eq('codice_qualifica',code);
- if(r.error)return msg('personQualMsg',r.error.message,'err');msg('personQualMsg','Qualifica rimossa.','ok');await loadAll();
+ if(!selectedBadge||!confirm('Rimuovere questa qualifica dalla persona selezionata? La qualifica resterà nello storico.'))return;
+ const r=await sb.from('personale_qualifiche').update({attiva:false,updated_at:new Date().toISOString()}).eq('badge_personale',selectedBadge).eq('codice_qualifica',code);
+ if(r.error)return msg('personQualMsg',r.error.message,'err');msg('personQualMsg','Qualifica rimossa e mantenuta nello storico.','ok');await loadAll();
 }
 async function uploadDaeAttestato(badge,file,expiry,title){
  if(!file)return null;
@@ -1094,20 +1112,27 @@ $('newQual')?.addEventListener('change',updateNewQualValidityFields);
 $('addQual').onclick=async()=>{
  if(!selectedBadge||!$('newQual').value)return msg('personQualMsg','Seleziona una qualifica.','warn');
  const code=$('newQual').value,def=defs.find(d=>d.codice===code),hasExpiry=def?.richiede_scadenza===true&&!isPermanentOperationalQualification(code),from=hasExpiry?($('newQualFrom').value||null):null,to=hasExpiry?($('newQualTo').value||null):null;
- const existing=pquals.find(q=>q.badge_personale===selectedBadge&&q.codice_qualifica===code);
- const r=existing?await sb.from('personale_qualifiche').update({attiva:true,valida_dal:from,valida_al:to}).eq('badge_personale',selectedBadge).eq('codice_qualifica',code):await sb.from('personale_qualifiche').insert({badge_personale:selectedBadge,codice_qualifica:code,attiva:true,valida_dal:from,valida_al:to});
+ const existing=pqualsAll.find(q=>q.badge_personale===selectedBadge&&q.codice_qualifica===code);
+ const r=existing?await sb.from('personale_qualifiche').update({attiva:true,valida_dal:from,valida_al:to,updated_at:new Date().toISOString()}).eq('badge_personale',selectedBadge).eq('codice_qualifica',code):await sb.from('personale_qualifiche').insert({badge_personale:selectedBadge,codice_qualifica:code,attiva:true,valida_dal:from,valida_al:to});
  if(r.error)return msg('personQualMsg',r.error.message,'err');msg('personQualMsg','Qualifica salvata.','ok');await loadAll();
 };
 
+function deadlineVisualState(date){
+ const d=daysTo(date);
+ if(d<0)return {key:'SCADUTA',label:'Scaduta',cls:'r',row:'deadlineRowExpired'};
+ if(d<=30)return {key:'PROSSIMA',label:'Entro 30 gg',cls:'o',row:'deadlineRow30'};
+ if(d<=60)return {key:'ATTENZIONE',label:'31–60 gg',cls:'w',row:'deadlineRow60'};
+ return {key:'FUTURA',label:'Regolare',cls:'g',row:'deadlineRowOk'};
+}
 function renderDeadlines(){
  const windowDays=Number($('deadlineWindow').value||90),type=$('deadlineType').value,state=$('deadlineState').value;
- const rows=allDeadlines().filter(x=>{const d=daysTo(x.date);if(d>windowDays)return false;if(type&&x.type!==type)return false;const s=stateFor(x.date);if(state&&s.key!==state)return false;return true});
- $('deadlineBody').innerHTML=rows.map(x=>{const d=daysTo(x.date),s=stateFor(x.date);return '<tr><td><b>'+esc(personName(x.badge))+'</b><br><span class="muted">Badge '+esc(x.badge)+'</span></td><td>'+esc(x.type==='QUALIFICA'?'Certificazione':x.type==='DOCUMENTO'?'Documento':'Rientro aspettativa')+'</td><td>'+esc(x.name)+'</td><td>'+esc(fmt(x.date))+'</td><td>'+esc(d<0?Math.abs(d)+' gg fa':d===0?'Oggi':d+' gg')+'</td><td><span class="pill '+s.cls+'">'+esc(s.label)+'</span></td></tr>'}).join('')||'<tr><td colspan="6">Nessuna scadenza nei filtri selezionati.</td></tr>';
+ const rows=allDeadlines().filter(x=>{const d=daysTo(x.date);if(d>windowDays)return false;if(type&&x.type!==type)return false;const s=deadlineVisualState(x.date);if(state&&s.key!==state)return false;return true});
+ $('deadlineBody').innerHTML=rows.map(x=>{const d=daysTo(x.date),s=deadlineVisualState(x.date);return '<tr class="'+s.row+'"><td><b>'+esc(personName(x.badge))+'</b><br><span class="muted">Badge '+esc(x.badge)+'</span></td><td>'+esc(x.type==='QUALIFICA'?'Certificazione':x.type==='DOCUMENTO'?'Documento':'Rientro aspettativa')+'</td><td>'+esc(x.name)+'</td><td>'+esc(fmt(x.date))+'</td><td>'+esc(d<0?Math.abs(d)+' gg fa':d===0?'Oggi':d+' gg')+'</td><td><span class="pill '+s.cls+'">'+esc(s.label)+'</span></td></tr>'}).join('')||'<tr><td colspan="6">Nessuna scadenza nei filtri selezionati.</td></tr>';
 }
 ['deadlineWindow','deadlineType','deadlineState'].forEach(id=>$(id).onchange=renderDeadlines);
 function currentDeadlineRows(){
  const windowDays=Number($('deadlineWindow').value||90),type=$('deadlineType').value,state=$('deadlineState').value;
- return allDeadlines().filter(x=>{const d=daysTo(x.date);if(d>windowDays)return false;if(type&&x.type!==type)return false;const s=stateFor(x.date);if(state&&s.key!==state)return false;return true});
+ return allDeadlines().filter(x=>{const d=daysTo(x.date);if(d>windowDays)return false;if(type&&x.type!==type)return false;const s=deadlineVisualState(x.date);if(state&&s.key!==state)return false;return true});
 }
 $('deadlineExport')?.addEventListener('click',()=>{
  const rows=currentDeadlineRows(),headers=['Badge','Persona','Tipo','Elemento','Scadenza','Giorni','Stato'];
@@ -1117,7 +1142,7 @@ $('deadlineExport')?.addEventListener('click',()=>{
 });
 $('deadlinePrint')?.addEventListener('click',()=>{
  const rows=currentDeadlineRows(),w=window.open('','_blank');if(!w)return;
- w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Scadenziario personale</title><style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #aaa;padding:7px;text-align:left}h1{margin:0 0 4px}small{color:#555}</style></head><body><h1>Croce Gialla Emergenza ODV</h1><h2>Scadenziario generale personale</h2><small>Aggiornato al '+new Date().toLocaleDateString('it-IT')+'</small><table><thead><tr><th>Persona</th><th>Tipo</th><th>Elemento</th><th>Scadenza</th><th>Stato</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(personName(x.badge))+'</td><td>'+esc(x.type)+'</td><td>'+esc(x.name)+'</td><td>'+esc(fmt(x.date))+'</td><td>'+esc(stateFor(x.date).label)+'</td></tr>').join('')+'</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>');w.document.close();
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Scadenziario personale</title><style>body{font-family:Arial;padding:24px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #12375d;padding-bottom:10px;margin-bottom:14px}.head img{width:72px;height:72px;object-fit:contain}table{width:100%;border-collapse:collapse}th,td{border:1px solid #aaa;padding:7px;text-align:left}h1{margin:0 0 4px}h2{margin:0}small{color:#555}</style></head><body><div class="head"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=120"><div><h1>Croce Gialla Emergenza ODV</h1><h2>Scadenziario generale personale</h2></div></div><small>Aggiornato al '+new Date().toLocaleDateString('it-IT')+'</small><table><thead><tr><th>Persona</th><th>Tipo</th><th>Elemento</th><th>Scadenza</th><th>Stato</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(personName(x.badge))+'</td><td>'+esc(x.type)+'</td><td>'+esc(x.name)+'</td><td>'+esc(fmt(x.date))+'</td><td>'+esc(stateFor(x.date).label)+'</td></tr>').join('')+'</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>');w.document.close();
 });
 
 function qualCodeByRegex(rx){
