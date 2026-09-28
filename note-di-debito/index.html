@@ -233,14 +233,14 @@ $('issue').onclick=async()=>{
  if(!await saveDraft(true))return;
  const r=await sb.rpc('cge_emetti_nota_debito',{p_id:active.id});
  if(r.error)return msg('detailMsg',r.error.message,'err');
- await openNote(active.id);await loadAll();msg('detailMsg','Nota di Debito emessa correttamente.','ok');
+ const id=active.id;await loadAll();await openNote(id);msg('detailMsg','Nota di Debito emessa correttamente.','ok');
 };
 $('savePayment').onclick=async()=>{
  if(active.stato!=='EMESSA')return;
  if(!$('dPayDate').value)return msg('detailMsg','Inserisci la data del pagamento.','err');
  const r=await sb.from('note_di_debito').update({modalita_pagamento:$('dPayment').value||null,data_pagamento:$('dPayDate').value,updated_at:new Date().toISOString()}).eq('id',active.id).select('*').single();
  if(r.error)return msg('detailMsg',r.error.message,'err');
- active=r.data;fill();await loadAll();msg('detailMsg','Pagamento registrato.','ok');
+ const id=active.id;await loadAll();await openNote(id);msg('detailMsg','Pagamento registrato.','ok');
 };
 $('mail').onclick=()=>{
  if(!active?.email)return msg('detailMsg','Email destinatario non presente.','err');
