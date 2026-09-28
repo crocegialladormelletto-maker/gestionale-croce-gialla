@@ -89,6 +89,8 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 @media(max-width:900px){.reportMiniGrid{grid-template-columns:repeat(2,1fr)}}
 .personPrintSheet{display:none}
 .personPrintHeader{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:3px solid var(--n);padding-bottom:12px;margin-bottom:14px}
+.personPrintBrand{display:flex;gap:12px;align-items:center}
+.personPrintLogo{width:78px;height:78px;object-fit:contain;display:block}
 .personPrintHeader h1{margin:0;color:var(--n);font-size:24px}.personPrintHeader .muted{margin-top:4px}
 .personPrintGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .personPrintSection{border:1px solid var(--l);border-radius:12px;padding:12px;margin:10px 0;break-inside:avoid}
@@ -98,7 +100,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .personPrintTable{width:100%;border-collapse:collapse;min-width:0}.personPrintTable th,.personPrintTable td{font-size:11px;padding:6px;border-bottom:1px solid #dde5ec;text-align:left}.personPrintTable th{background:#f1f5f8}
 @media(max-width:700px){.personPrintGrid{grid-template-columns:1fr}.personPrintKV{grid-template-columns:1fr}}
 @media print{
- body.printing-person{background:#fff}
+ body.printing-person{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
  body.printing-person .top,body.printing-person .side,body.printing-person main>section,body.printing-person .reportActions{display:none!important}
  body.printing-person .wrap{max-width:none;padding:0}.layout{display:block}
  body.printing-person #personPrintSheet{display:block!important;position:static!important;border:0!important;background:#fff!important;padding:0!important}
@@ -124,7 +126,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.3</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.4</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -138,7 +140,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.3</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.4</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -774,7 +776,7 @@ function renderPersonPrintSheet(){
  const docRows=personDocs.length?personDocs.map(d=>'<tr><td>'+esc(d.titolo||d.nome_file_originale||d.categoria||'Documento')+'</td><td>'+esc(d.categoria||'—')+'</td><td>'+esc(d.data_scadenza?fmt(d.data_scadenza):'—')+'</td></tr>').join(''):'<tr><td colspan="3">Nessun documento registrato.</td></tr>';
  const stateRows=states.length?states.map(s=>'<tr><td>'+esc(fmt(s.data_inizio))+'</td><td>'+esc(s.stato||'—')+'</td><td>'+esc(s.data_rientro_prevista?fmt(s.data_rientro_prevista):'—')+'</td><td>'+esc(s.motivo||'—')+'</td></tr>').join(''):'<tr><td colspan="4">Nessuno storico stato registrato.</td></tr>';
  host.innerHTML=
-  '<div class="personPrintHeader"><div><h1>Croce Gialla Emergenza ODV</h1><div class="muted">Scheda riepilogativa volontario</div></div><div style="text-align:right"><b>'+esc(fullName)+'</b><br><span class="muted">Badge '+esc(selectedBadge)+' · '+esc(new Date().toLocaleDateString('it-IT'))+'</span></div></div>'+
+  '<div class="personPrintHeader"><div class="personPrintBrand"><img class="personPrintLogo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=120" alt="Logo Croce Gialla Emergenza ODV"><div><h1>Croce Gialla Emergenza ODV</h1><div class="muted">Scheda riepilogativa volontario</div></div></div><div style="text-align:right"><b>'+esc(fullName)+'</b><br><span class="muted">Badge '+esc(selectedBadge)+' · '+esc(new Date().toLocaleDateString('it-IT'))+'</span></div></div>'+
   '<div class="personPrintGrid">'+
    '<div class="personPrintSection"><h3>👤 Dati anagrafici</h3><div class="personPrintKV">'+
     '<b>Nome</b><span>'+esc(p.nome||'—')+'</span><b>Cognome</b><span>'+esc(p.cognome||'—')+'</span><b>Data di nascita</b><span>'+esc(p.data_nascita?fmt(p.data_nascita):'—')+'</span><b>Codice fiscale</b><span>'+esc(p.codice_fiscale||'—')+'</span><b>Telefono</b><span>'+esc(p.telefono||'—')+'</span><b>Email</b><span>'+esc(p.email||'—')+'</span><b>Indirizzo</b><span>'+esc([p.indirizzo,p.cap,p.comune,p.provincia].filter(Boolean).join(' ')||'—')+'</span><b>Data ingresso</b><span>'+esc(p.data_ingresso?fmt(p.data_ingresso):'—')+'</span>'+
@@ -1326,7 +1328,7 @@ function renderPersonnelReport(){
   return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(reportPersonLabel(p))+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(ops.join(', ')||'—')+'</td><td>'+esc(dr?.valida_al?fmt(dr.valida_al):'Mancante')+'</td></tr>';
  }).join('');
  host.innerHTML=
-  '<div class="reportHeader"><div><div class="reportTitle">Croce Gialla Emergenza ODV · Report Personale</div><div class="reportMeta">Situazione aggiornata al '+esc(new Date().toLocaleDateString('it-IT'))+'</div></div></div>'+
+  '<div class="reportHeader"><div class="personPrintBrand"><img class="personPrintLogo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=120" alt="Logo Croce Gialla Emergenza ODV"><div><div class="reportTitle">Croce Gialla Emergenza ODV · Report Personale</div><div class="reportMeta">Situazione aggiornata al '+esc(new Date().toLocaleDateString('it-IT'))+'</div></div></div></div>'+
   '<div class="reportSection"><h3>📊 Riepilogo generale</h3><div class="reportMiniGrid">'+
    '<div class="reportMini"><small>PERSONALE TOTALE</small><b>'+people.length+'</b></div>'+
    '<div class="reportMini"><small>ATTIVI</small><b>'+active.length+'</b></div>'+
