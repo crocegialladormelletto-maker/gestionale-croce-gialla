@@ -584,7 +584,7 @@
 #tariffTabs [data-tariff-code][aria-pressed="true"]{opacity:1;transform:translateY(-1px);border-color:#102f5a!important;box-shadow:0 0 0 3px rgba(16,47,90,.16),0 5px 12px rgba(16,47,90,.16)}
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 
-/* === V14.06 · STATISTICHE === */
+/* === V14.07 · STATISTICHE === */
 .stats-page-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .stats-kpi{background:#fff;border:1px solid #d8e3ec;border-radius:13px;padding:13px;min-height:92px;cursor:pointer;transition:.15s ease;box-shadow:0 2px 8px #12375d0b}
 .stats-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px #12375d18}
@@ -604,7 +604,7 @@
 @media(max-width:520px){.stats-page-grid{grid-template-columns:1fr 1fr}.stats-kpi b{font-size:22px}.stats-vehicle-row{grid-template-columns:60px 1fr 70px 70px}}
 
 
-/* === V14.06 · REPORT PERSONALIZZATI === */
+/* === V14.07 · REPORT PERSONALIZZATI === */
 .report-builder{margin-top:12px}
 .report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .report-result{margin-top:12px;border:1px solid #d9e3eb;border-radius:12px;overflow:auto;background:#fff}
@@ -617,7 +617,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.06</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.07</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -671,7 +671,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.06</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.07</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -820,7 +820,7 @@
 
   <div class="stats-board">
    <div class="stats-card">
-    <h3>Servizi per tipologia</h3><div class="muted">Distribuzione nel periodo selezionato.</div>
+    <h3>Attività per tipologia</h3><div class="muted">Comprende servizi programmati e turni definitivi di Emergenza/118, Dimissioni e Assistenze.</div>
     <div class="stats-donut-wrap" style="margin-top:12px"><div id="statsDonut" class="stats-donut"></div><div id="statsLegend" class="stats-legend"></div></div>
    </div>
    <div class="stats-card">
@@ -2512,7 +2512,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.06':'Versione 14.06';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.07':'Versione 14.07';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -3948,7 +3948,10 @@ async function loadShiftStatistics(from,to,people){
   statsRpcRange('cge_assistenza_fasce_turni',from,to)
  ]);
  if(tr.error)throw tr.error;
- const turns=(tr.data||[]).filter(t=>!['ANNULLATO','CANCELLATO'].includes(String(t.stato||'').toUpperCase()));
+ const turns=(tr.data||[]).filter(t=>{
+  const stato=String(t.stato||'').toUpperCase(),tipo=String(t.tipo_turno||'').toUpperCase();
+  return !['ANNULLATO','CANCELLATO'].includes(stato) && !/EMERGENZA|DIMISSION|ASSISTEN/.test(tipo);
+ });
  let assignments=[];
  if(turns.length){
   const tp=await sb.from('turni_personale').select('turno_id,badge_personale,ruolo,confermato,risposta').in('turno_id',turns.map(t=>t.id));
@@ -3960,11 +3963,11 @@ async function loadShiftStatistics(from,to,people){
  assignments.forEach(x=>{
   const t=turnMap.get(x.turno_id);if(!t)return;
   if(x.risposta==='NON DISPONIBILE')return;
-  rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftClockHours(t.ora_inizio,t.ora_fine)});
+  rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftClockHours(t.ora_inizio,t.ora_fine),slot:'GEN|'+t.id});
  });
- emgRows.forEach(x=>rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza 118',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
- dimRows.forEach(x=>rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
- assRows.forEach(x=>rows.push({source:'Assistenze',date:x.giorno,type:'Assistenza',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
+ emgRows.forEach(x=>rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza / 118',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'EMG|'+x.giorno+'|'+x.fascia}));
+ dimRows.forEach(x=>rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'DIM|'+x.giorno+'|'+x.fascia}));
+ assRows.forEach(x=>rows.push({source:'Assistenze',date:x.giorno,type:'Assistenze',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'ASS|'+x.giorno+'|'+x.fascia}));
  const seen=new Set(),valid=rows.filter(x=>{
   if(!x.badge)return false;
   const key=[x.source,x.date,x.type,x.badge,x.role].join('|');
@@ -3979,7 +3982,9 @@ async function loadShiftStatistics(from,to,people){
  const pmap=new Map((people||[]).map(p=>[p.badge,p]));
  const top=Object.entries(byBadge).map(([badge,n])=>({badge,n,hours:byBadgeHours[badge]||0,name:shiftPersonNameFromMap(badge,pmap)})).sort((a,b)=>b.n-a.n).slice(0,10);
  const topHours=Object.entries(byBadgeHours).map(([badge,hours])=>({badge,hours,n:byBadge[badge]||0,name:shiftPersonNameFromMap(badge,pmap)})).sort((a,b)=>b.hours-a.hours).slice(0,10);
- return {rows:valid,byBadge,byBadgeHours,byRole,byRoleHours,byType,byTypeHours,top,topHours,totalHours:valid.reduce((s,x)=>s+Number(x.hours||0),0),general:assignments.filter(x=>turnMap.has(x.turno_id)&&x.risposta!=='NON DISPONIBILE').length,special:emgRows.length+dimRows.length+assRows.length};
+ const slotSeen=new Set(),byTypeSlots={};
+ valid.forEach(x=>{const k=x.slot||[x.source,x.date,x.type].join('|');if(slotSeen.has(k))return;slotSeen.add(k);byTypeSlots[x.type]=(byTypeSlots[x.type]||0)+1});
+ return {rows:valid,byBadge,byBadgeHours,byRole,byRoleHours,byType,byTypeHours,byTypeSlots,top,topHours,totalHours:valid.reduce((s,x)=>s+Number(x.hours||0),0),general:assignments.filter(x=>turnMap.has(x.turno_id)&&x.risposta!=='NON DISPONIBILE').length,special:emgRows.length+dimRows.length+assRows.length};
 }
 
 async function loadStatistics(){
@@ -3994,11 +3999,14 @@ async function loadStatistics(){
  ]);
  const err=sr.error||pr.error;if(err)return msg('statsMsg','Errore caricamento statistiche: '+err.message,'err');
  const services=sr.data||[],allPeople=pr.data||[],people=allPeople.filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
- const cats={};services.forEach(x=>{const k=statsTypeLabel(x);cats[k]=(cats[k]||0)+1});
- const emergency=cats['Emergenza / 118']||0,assistance=cats['Assistenze']||0;
+ const serviceCats={};services.forEach(x=>{const k=statsTypeLabel(x);serviceCats[k]=(serviceCats[k]||0)+1});
  let shiftStats;
  try{shiftStats=await loadShiftStatistics(from,to,allPeople)}
  catch(e){msg('statsMsg','Errore caricamento turni: '+(e.message||String(e)),'err');return}
+ const cats={...serviceCats};
+ ['Emergenza / 118','Dimissioni','Assistenze'].forEach(k=>{const v=Number(shiftStats.byTypeSlots?.[k]||0);if(v>0)cats[k]=v});
+ const emergency=Number(shiftStats.byTypeSlots?.['Emergenza / 118']||0);
+ const assistance=Math.max(Number(serviceCats['Assistenze']||0),Number(shiftStats.byTypeSlots?.['Assistenze']||0));
  const hours=shiftStats.totalHours;
  $('statsPeople').textContent=people.length;$('statsServices').textContent=services.length;$('statsEmergency').textContent=emergency;$('statsAssistance').textContent=assistance;$('statsKm').textContent=shiftStats.rows.length;$('statsHours').textContent=hours.toLocaleString('it-IT',{maximumFractionDigits:1});
  $('statsShiftAssignments').textContent=shiftStats.rows.length;
@@ -4008,10 +4016,10 @@ async function loadStatistics(){
  const maxShift=Math.max(1,...shiftStats.top.map(x=>x.n));
  $('statsTopShiftVolunteers').innerHTML=shiftStats.top.length?shiftStats.top.map(x=>'<div class="stats-top-row"><b>'+esc(x.name)+'</b><div class="stats-top-track"><div class="stats-top-fill" style="width:'+Math.max(2,x.n/maxShift*100)+'%"></div></div><strong>'+x.n+'</strong></div>').join(''):'<div class="notice">Nessun turno assegnato nel periodo.</div>';
  const colors=['#ff7176','#6885e8','#ff8a09','#9ad94f','#70dda0','#d8bd00','#0891b2','#7c3aed'];
- const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]),total=Math.max(1,services.length);let acc=0,parts=[];
+ const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]);const total=Math.max(1,entries.reduce((s,x)=>s+Number(x[1]||0),0));let acc=0,parts=[];
  entries.forEach(([k,v],i)=>{const start=acc/total*360;acc+=v;const end=acc/total*360;parts.push(colors[i%colors.length]+' '+start+'deg '+end+'deg')});
  $('statsDonut').style.background=entries.length?'conic-gradient('+parts.join(',')+')':'#e8eef3';
- $('statsLegend').innerHTML=entries.length?entries.map(([k,v],i)=>'<div class="stats-legend-row"><span class="stats-dot" style="background:'+colors[i%colors.length]+'"></span><span>'+esc(k)+'</span><b>'+v+'</b></div>').join(''):'<div class="notice">Nessun servizio nel periodo.</div>';
+ $('statsLegend').innerHTML=entries.length?entries.map(([k,v],i)=>'<div class="stats-legend-row"><span class="stats-dot" style="background:'+colors[i%colors.length]+'"></span><span>'+esc(k)+'</span><b>'+v+'</b></div>').join(''):'<div class="notice">Nessuna attività nel periodo.</div>';
  const top=shiftStats.topHours,maxH=Math.max(1,...top.map(x=>x.hours));
  $('statsTopVolunteers').innerHTML=top.length?top.map(x=>'<div class="stats-top-row"><b>'+esc(x.name)+'</b><div class="stats-top-track"><div class="stats-top-fill" style="width:'+Math.max(2,x.hours/maxH*100)+'%"></div></div><strong>'+x.hours.toLocaleString('it-IT',{maximumFractionDigits:1})+' h</strong></div>').join(''):'<div class="notice">Nessuna ora disponibile dai turni caricati nel periodo.</div>';
  const months={};services.forEach(x=>{const k=String(x.data_servizio||'').slice(0,7);if(k)months[k]=(months[k]||0)+1});
