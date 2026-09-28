@@ -5887,10 +5887,32 @@ async function routeCalcUpdateFuelPrice(force=false){
 function routeCalcPoints(){
  return [$('rcStart')?.value.trim(),$('rcLoad')?.value.trim(),$('rcDest')?.value.trim()].filter(Boolean);
 }
+function routeCalcKnownFacility(q){
+ const key=String(q||'').trim().toUpperCase()
+  .replace(/[.’']/g,'')
+  .replace(/\s+/g,' ');
+ const facilities=[
+  {rx:/^(RSA\s+)?PALLADIO$/,address:'Via Giovanni Pascoli 19, 28040 Dormelletto NO, Italia',label:'Residenza Anni Azzurri Palladio'},
+  {rx:/^(RESIDENZA\s+ANNI\s+AZZURRI\s+)?PALLADIO$/,address:'Via Giovanni Pascoli 19, 28040 Dormelletto NO, Italia',label:'Residenza Anni Azzurri Palladio'},
+  {rx:/^OSPEDALE\s+BORGOMANERO$/,address:'Viale Zoppis 10, 28021 Borgomanero NO, Italia',label:'Ospedale SS. Trinità Borgomanero'},
+  {rx:/^OSPEDALE\s+SS\s+TRINITA\s+BORGOMANERO$/,address:'Viale Zoppis 10, 28021 Borgomanero NO, Italia',label:'Ospedale SS. Trinità Borgomanero'},
+  {rx:/^OSPEDALE\s+NOVARA$/,address:'Corso Giuseppe Mazzini 18, 28100 Novara NO, Italia',label:'AOU Maggiore della Carità Novara'},
+  {rx:/^OSPEDALE\s+MAGGIORE\s+NOVARA$/,address:'Corso Giuseppe Mazzini 18, 28100 Novara NO, Italia',label:'AOU Maggiore della Carità Novara'}
+ ];
+ const hit=facilities.find(x=>x.rx.test(key));
+ return hit||null;
+}
+
 async function routeCalcGeocode(q){
  const raw=String(q||'').trim();
  if(!raw)throw new Error('Indirizzo vuoto');
- const upper=raw.toUpperCase();
+ const known=routeCalcKnownFacility(raw);
+ if(known){
+  q=known.address;
+ }
+ const originalRaw=raw;
+ const searchRaw=known?known.address:raw;
+ const upper=searchRaw.toUpperCase();
  const attempts=[];
 
  const addAttempt=v=>{
@@ -5899,10 +5921,10 @@ async function routeCalcGeocode(q){
  };
 
  // Testo originale.
- addAttempt(raw);
+ addAttempt(searchRaw);
 
  // Normalizzazione frequente per indirizzi italiani.
- const normalized=raw
+ const normalized=searchRaw
   .replace(/[’‘]/g,"'")
   .replace(/\((NO|VB|VC|BI|TO|MI|VA|PV|CO|BG|BS|GE|AL|AT|CN|AO)\)/ig,' $1')
   .replace(/\bI(?:°|º)\s+Maggio\b/ig,'Primo Maggio')
@@ -6055,7 +6077,7 @@ async function routeCalcGeocode(q){
       return cls==='amenity'||cls==='healthcare'||/hospital|clinic|nursing_home|doctors|healthcare|ospedale|clinica|rsa|casa di riposo/.test(type+' '+name);
      }):[];
      const best=(healthcareMatches.length?healthcareMatches:pool)[0];
-     return {lat:Number(best.lat),lon:Number(best.lon),label:best.display_name||candidate,provider:'OSM'};
+     return {lat:Number(best.lat),lon:Number(best.lon),label:known?.label||best.display_name||candidate,provider:'OSM'};
     }
    }
   }catch(_){}
@@ -6109,13 +6131,13 @@ async function routeCalcGeocode(q){
     }):[];
     const f=(healthcareFeatures.length?healthcareFeatures:features)[0],p=f.properties||{},co=f.geometry.coordinates;
     const label=[p.name,p.street,p.housenumber,p.city,p.state,p.country].filter(Boolean).join(', ')||candidate;
-    return {lat:Number(co[1]),lon:Number(co[0]),label,provider:'Photon'};
+    return {lat:Number(co[1]),lon:Number(co[0]),label:known?.label||label,provider:'Photon'};
    }
   }catch(_){}
   await routeCalcSleep(180);
  }
 
- throw new Error('Indirizzo non trovato: '+raw+'. Prova a scrivere “Via e numero civico, Comune”');
+ throw new Error('Indirizzo non trovato: '+originalRaw+'. Prova a scrivere “Via e numero civico, Comune”');
 }
 function routeCalcSleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 
@@ -7808,7 +7830,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.96-20260928-healthcare-destinations';
+const CGE_APP_BUILD='13.97-20260928-known-health-facilities';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
