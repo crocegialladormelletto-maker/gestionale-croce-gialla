@@ -585,7 +585,7 @@
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.97</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.98</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.97</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.98</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1456,7 +1456,7 @@
 <div class="section" id="routeCalcBox">
  <div class="actions" style="justify-content:space-between;align-items:center">
   <div><h3 style="margin:0">🧭 Calcolo fuori tariffario</h3>
-   <div class="muted">Per destinazioni non presenti in Italia o Europa: calcola percorso, km e costi. I valori restano modificabili.</div>
+   <div class="muted">Puoi inserire indirizzi oppure direttamente nomi di Ospedali, RSA, Cliniche e Case di riposo in Piemonte e Lombardia. I valori restano modificabili.</div>
   </div>
   <span class="pill b">STIMA</span>
  </div>
@@ -2376,7 +2376,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.97':'Versione 13.97';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.98':'Versione 13.98';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5887,6 +5887,53 @@ async function routeCalcUpdateFuelPrice(force=false){
 function routeCalcPoints(){
  return [$('rcStart')?.value.trim(),$('rcLoad')?.value.trim(),$('rcDest')?.value.trim()].filter(Boolean);
 }
+async function routeCalcLookupFacility(q){
+ const raw=String(q||'').trim();
+ if(!raw)return null;
+ const key=raw.toUpperCase()
+  .replace(/[.’']/g,'')
+  .replace(/\s+/g,' ')
+  .trim();
+
+ try{
+  const r=await sb.from('strutture_sanitarie_lookup')
+   .select('nome,tipo,indirizzo,comune,provincia,regione,aliases')
+   .eq('attiva',true)
+   .in('regione',['Piemonte','Lombardia'])
+   .limit(3000);
+  if(r.error)throw r.error;
+
+  const rows=r.data||[];
+  const scored=rows.map(x=>{
+   const name=String(x.nome||'').toUpperCase().replace(/[.’']/g,'').replace(/\s+/g,' ').trim();
+   const comune=String(x.comune||'').toUpperCase().trim();
+   const aliases=(x.aliases||[]).map(a=>String(a||'').toUpperCase().replace(/[.’']/g,'').replace(/\s+/g,' ').trim());
+   const hay=[name,comune,...aliases].filter(Boolean);
+
+   let score=0;
+   if(name===key)score=100;
+   else if(aliases.includes(key))score=95;
+   else if(hay.some(v=>v===key))score=90;
+   else if(name.includes(key)||key.includes(name))score=80;
+   else if(aliases.some(v=>v.includes(key)||key.includes(v)))score=75;
+   else{
+    const cleaned=key.replace(/^(RSA|R S A|CASA DI RIPOSO|RESIDENZA SANITARIA ASSISTENZIALE|OSPEDALE|CLINICA)\s+/,'').trim();
+    if(cleaned&&cleaned===comune)score=70;
+    else if(cleaned&&name.includes(cleaned))score=65;
+    else if(cleaned&&aliases.some(v=>v.includes(cleaned)))score=60;
+   }
+   return {row:x,score};
+  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
+
+  if(!scored.length)return null;
+  const x=scored[0].row;
+  const address=[x.indirizzo,x.comune,x.provincia,'Italia'].filter(Boolean).join(', ');
+  return {address,label:x.nome+' · '+[x.comune,x.provincia].filter(Boolean).join(' '),source:'archivio'};
+ }catch(_){
+  return null;
+ }
+}
+
 function routeCalcKnownFacility(q){
  const key=String(q||'').trim().toUpperCase()
   .replace(/[.’']/g,'')
@@ -5906,7 +5953,8 @@ function routeCalcKnownFacility(q){
 async function routeCalcGeocode(q){
  const raw=String(q||'').trim();
  if(!raw)throw new Error('Indirizzo vuoto');
- const known=routeCalcKnownFacility(raw);
+ const dbKnown=await routeCalcLookupFacility(raw);
+ const known=dbKnown||routeCalcKnownFacility(raw);
  if(known){
   q=known.address;
  }
@@ -6109,6 +6157,39 @@ async function routeCalcGeocode(q){
     }
    }
   }catch(_){}
+ }
+
+ // Fallback dedicato RSA/cliniche/ospedali: se l'utente scrive solo tipo + comune,
+ // prova una ricerca geografica della struttura nel comune.
+ if(healthcareHint){
+  const cleanedHealthcare=originalRaw
+   .replace(/\b(RSA|R\.S\.A\.|RESIDENZA SANITARIA ASSISTENZIALE|CASA DI RIPOSO|OSPEDALE|CLINICA|CASA DI CURA|POLIAMBULATORIO|CENTRO MEDICO)\b/ig,'')
+   .replace(/\s+/g,' ').trim();
+  const healthcareAttempts=[
+   originalRaw+', Piemonte, Italia',
+   originalRaw+', Lombardia, Italia',
+   cleanedHealthcare?'RSA, '+cleanedHealthcare+', Italia':'',
+   cleanedHealthcare?'Casa di riposo, '+cleanedHealthcare+', Italia':'',
+   cleanedHealthcare?'Ospedale, '+cleanedHealthcare+', Italia':'',
+   cleanedHealthcare?'Clinica, '+cleanedHealthcare+', Italia':''
+  ].filter(Boolean);
+
+  for(const candidate of healthcareAttempts){
+   try{
+    const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&addressdetails=1&namedetails=1&extratags=1&countrycodes=it&accept-language=it,en&q='+encodeURIComponent(candidate);
+    const r=await fetch(url,{headers:{'Accept':'application/json','Accept-Language':'it,en;q=0.9'}});
+    if(!r.ok)continue;
+    const data=await r.json();
+    const health=(data||[]).filter(x=>{
+     const t=[x.class,x.type,x.display_name].filter(Boolean).join(' ').toLowerCase();
+     return /hospital|clinic|nursing_home|healthcare|ospedale|clinica|rsa|casa di riposo|residenza/.test(t);
+    });
+    if(health.length){
+     const best=health[0];
+     return {lat:Number(best.lat),lon:Number(best.lon),label:best.display_name||candidate,provider:'OSM-health'};
+    }
+   }catch(_){}
+  }
  }
 
  // Secondo provider: Photon/Komoot. Utile soprattutto per vie/civici che Nominatim non risolve.
@@ -7830,7 +7911,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.97-20260928-known-health-facilities';
+const CGE_APP_BUILD='13.98-20260928-healthcare-archive';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
