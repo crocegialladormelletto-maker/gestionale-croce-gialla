@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.86</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.87</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1321,6 +1321,16 @@
 <div class="section"><h3>Scheda personale · dati modificabili</h3><p class="muted">Apri una persona dall’elenco, modifica i campi necessari e premi «Salva modifiche». È possibile modificare anche il numero badge: il gestionale aggiorna automaticamente i collegamenti della persona e, se presente, anche il login dell’app volontari.</p><div class="grid4"><div class="field"><label>Badge *</label><input id="pb"></div><div class="field"><label>Nome *</label><input id="pname"></div><div class="field"><label>Cognome *</label><input id="psurname"></div><div class="field"><label>Stato</label><select id="pstate"><option>ATTIVO</option><option>ASPETTATIVA</option><option>SOSPESO</option><option>CESSATO</option></select></div><div class="field"><label>Telefono</label><input id="pphone"></div><div class="field"><label>Email</label><input id="pemail" type="email"></div><div class="field"><label>Data di nascita</label><input id="pbirth" type="date"></div><div class="field"><label>Data ingresso</label><input id="pentry" type="date"></div><div class="field"><label>Data uscita</label><input id="pexit" type="date"></div><div class="field"><label>Codice fiscale</label><input id="pcf" maxlength="16" style="text-transform:uppercase"></div><div class="field"><label>Indirizzo di residenza</label><input id="paddress"></div><div class="field"><label>Comune</label><input id="pcity"></div><div class="field"><label>Provincia</label><input id="pprovince" maxlength="2" style="text-transform:uppercase"></div><div class="field"><label>CAP</label><input id="pcap" inputmode="numeric" maxlength="5"></div><div class="field"><label>Dipendente</label><select id="pdep"><option value="false">No</option><option value="true">Sì</option></select></div><div class="field"><label>Ore minime mensili</label><input id="pminm" type="number" min="0" step="1" value="28"></div><div class="field"><label>Ore minime trimestrali</label><input id="pmint" type="number" min="0" step="1" value="84"></div></div>
 <div class="field" style="margin-top:10px"><label>Qualifiche</label><div id="pquals" class="inline-checks"></div></div>
 <div class="toolbar"><button id="pnew" class="btn secondary">Nuova scheda</button><button id="psave" class="btn yellow">Salva modifiche</button></div><div id="pmsg"></div>
+<div class="section" style="margin-top:14px"><h3>📱 Stato nuova APP volontari</h3>
+<p class="muted">Indica separatamente se il volontario ha già ricevuto le credenziali e se ha installato la nuova APP sul telefono.</p>
+<div class="grid4">
+ <div class="field"><label>Credenziali consegnate</label><select id="pappcreds"><option value="false">No</option><option value="true">Sì</option></select></div>
+ <div class="field"><label>Data consegna credenziali</label><input id="pappcredsdate" type="date"></div>
+ <div class="field"><label>APP installata</label><select id="pappinstalled"><option value="false">No</option><option value="true">Sì</option></select></div>
+ <div class="field"><label>Data installazione</label><input id="pappinstalldate" type="date"></div>
+</div>
+<div class="notice" id="pappsummary">Stato APP non ancora verificato.</div>
+</div>
 <div class="section" style="margin-top:14px"><h3>Accesso app volontario</h3>
 <p class="muted">Seleziona o salva una scheda volontario. Puoi creare un PIN personale, generarne uno temporaneo lasciando il campo vuoto, resettarlo o disattivare l'accesso.</p>
 <div class="grid3">
@@ -1339,7 +1349,7 @@
  <div class="actions" style="justify-content:space-between;align-items:center"><b id="pdocPerson"></b><button type="button" class="btn secondary" id="pdocRefresh">Aggiorna documenti</button></div>
  <div id="pdocMsg"></div><div id="pdocList"><div class="notice">Seleziona un volontario dall’elenco qui sotto e premi «Documenti» per consultare i file caricati dalla sua app.</div></div>
 </div></div>
-<div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Qualifiche</th><th>Ore mese</th><th>Ore trimestre</th><th>Telefono</th><th></th></tr></thead><tbody id="ptbody"></tbody></table></div></div></section>
+<div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Qualifiche</th><th>Ore mese</th><th>Ore trimestre</th><th>Telefono</th><th>Stato APP</th><th></th></tr></thead><tbody id="ptbody"></tbody></table></div></div></section>
 
 <section id="shifts" class="surface hidden"><div class="hero"><h2>Turni</h2></div><div class="pad">
 <div class="section"><h3>Nuovo turno</h3><div class="grid4"><div class="field"><label>Data *</label><input id="sd" type="date"></div><div class="field"><label>Inizio *</label><input id="ssi" type="time"></div><div class="field"><label>Fine *</label><input id="sse" type="time"></div><div class="field"><label>Mezzo</label><select id="sm"></select></div><div class="field"><label>Tipo</label><select id="stype"><option>EMERGENZA</option><option>ORDINARIO</option><option>ASSISTENZA</option><option>SEDE</option></select></div><div class="field"><label>Note</label><input id="snote"></div></div><div class="toolbar"><button id="ssave" class="btn yellow">Crea turno</button></div><div id="shiftmsg"></div></div>
@@ -4268,8 +4278,26 @@ window.removeCrew=async id=>{
 };
 
 let editingPersonBadge=null;
-function resetPerson(){editingPersonBadge=null;adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';msg('pdocMsg','');$('pdocPerson').textContent='';$('pdocList').innerHTML='<div class="notice">Seleziona un volontario e premi «Documenti» per consultare il suo archivio.</div>';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pbirth').value='';$('pentry').value='';$('pexit').value='';$('pcf').value='';$('paddress').value='';$('pcity').value='';$('pprovince').value='';$('pcap').value='';$('pdep').value='false';$('pminm').value='28';$('pmint').value='84';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
+function resetPerson(){editingPersonBadge=null;adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';msg('pdocMsg','');$('pdocPerson').textContent='';$('pdocList').innerHTML='<div class="notice">Seleziona un volontario e premi «Documenti» per consultare il suo archivio.</div>';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pbirth').value='';$('pentry').value='';$('pexit').value='';$('pcf').value='';$('paddress').value='';$('pcity').value='';$('pprovince').value='';$('pcap').value='';$('pdep').value='false';$('pminm').value='28';$('pmint').value='84';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';$('pappcreds').value='false';$('pappcredsdate').value='';$('pappinstalled').value='false';$('pappinstalldate').value='';$('pappsummary').className='notice';$('pappsummary').textContent='Stato APP non ancora verificato.';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
 $('pnew').onclick=resetPerson;
+function volunteerAppStatusMarkup(p){
+ const creds=!!p.app_credenziali_consegnate,installed=!!p.app_installata;
+ if(creds&&installed)return '<span class="pill g">✓ APP OK</span><br><span class="muted">Credenziali + installazione</span>';
+ if(creds&&!installed)return '<span class="pill b">Credenziali date</span><br><span class="muted">APP da installare</span>';
+ if(!creds&&installed)return '<span class="pill warn">APP installata</span><br><span class="muted">Credenziali da verificare</span>';
+ return '<span class="pill r">DA CONTATTARE</span><br><span class="muted">Credenziali e APP mancanti</span>';
+}
+function updateVolunteerAppSummary(){
+ if(!$('pappsummary'))return;
+ const creds=$('pappcreds').value==='true',installed=$('pappinstalled').value==='true';
+ $('pappcredsdate').disabled=!creds;$('pappinstalldate').disabled=!installed;
+ if(!creds)$('pappcredsdate').value='';
+ if(!installed)$('pappinstalldate').value='';
+ if(creds&&installed){$('pappsummary').className='notice ok';$('pappsummary').textContent='✓ Volontario pronto: credenziali consegnate e APP installata.'}
+ else if(creds){$('pappsummary').className='notice';$('pappsummary').textContent='Credenziali consegnate · APP ancora da installare.'}
+ else if(installed){$('pappsummary').className='notice warn';$('pappsummary').textContent='APP indicata come installata · credenziali non ancora consegnate.'}
+ else{$('pappsummary').className='notice warn';$('pappsummary').textContent='Volontario da contattare: credenziali e installazione APP mancanti.'}
+}
 async function loadPeopleView(){
  await refreshMaster();
  const h=await sb.from('v_personale_monte_ore').select('*');
@@ -4279,7 +4307,7 @@ async function loadPeopleView(){
   const mh=hours.find(x=>x.badge===p.badge)||{};
   const mese=Number(mh.ore_mese||0), trim=Number(mh.ore_trimestre||0);
   const minM=Number(mh.ore_minime_mensili||p.ore_minime_mensili||28), minT=Number(mh.ore_minime_trimestrali||p.ore_minime_trimestrali||84);
-  return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo)+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs||'—')+'</td><td><b>'+esc(mese.toFixed(2))+'</b> / '+esc(minM)+'</td><td><b>'+esc(trim.toFixed(2))+'</b> / '+esc(minT)+'</td><td>'+esc(p.telefono||'—')+'</td><td><button class="btn secondary" data-edit-person="'+esc(p.badge)+'">Apri / modifica</button> <button class="btn blue" type="button" data-person-documents="'+esc(p.badge)+'">📁 Documenti</button></td></tr>';
+  return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo)+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs||'—')+'</td><td><b>'+esc(mese.toFixed(2))+'</b> / '+esc(minM)+'</td><td><b>'+esc(trim.toFixed(2))+'</b> / '+esc(minT)+'</td><td>'+esc(p.telefono||'—')+'</td><td>'+volunteerAppStatusMarkup(p)+'</td><td><button class="btn secondary" data-edit-person="'+esc(p.badge)+'">Apri / modifica</button> <button class="btn blue" type="button" data-person-documents="'+esc(p.badge)+'">📁 Documenti</button></td></tr>';
  }).join('');
  document.querySelectorAll('[data-edit-person]').forEach(b=>b.onclick=()=>window.editPerson(b.dataset.editPerson));
  document.querySelectorAll('[data-person-documents]').forEach(b=>b.onclick=()=>{window.editPerson(b.dataset.personDocuments);$('pdocSection').scrollIntoView({behavior:'smooth',block:'start'});});
@@ -4331,7 +4359,7 @@ $('pdocRefresh').onclick=()=>{
  const badge=$('pb').value.trim();
  if(badge)loadAdminPersonDocuments(badge);
 };
-window.editPerson=badge=>{const p=people.find(x=>x.badge===badge);if(!p)return;editingPersonBadge=p.badge;$('pb').value=p.badge;$('pb').disabled=false;$('pname').value=p.nome||'';$('psurname').value=p.cognome||'';$('pstate').value=p.stato_anagrafico||'ATTIVO';$('pphone').value=p.telefono||'';$('pemail').value=p.email||'';$('pbirth').value=p.data_nascita||'';$('pentry').value=p.data_ingresso||'';$('pexit').value=p.data_uscita||'';$('pcf').value=p.codice_fiscale||'';$('paddress').value=p.indirizzo||'';$('pcity').value=p.comune||'';$('pprovince').value=p.provincia||'';$('pcap').value=p.cap||'';$('pdep').value=String(!!p.dipendente);$('pminm').value=String(p.ore_minime_mensili??28);$('pmint').value=String(p.ore_minime_trimestrali??84);$('paccessbadge').value=p.badge;$('paccesspin').value='';renderQualChecks(pq.filter(x=>x.badge_personale===badge).map(x=>x.codice_qualifica));loadVolunteerAccessStatus(badge);loadAdminPersonDocuments(badge);window.scrollTo({top:0,behavior:'smooth'})};
+window.editPerson=badge=>{const p=people.find(x=>x.badge===badge);if(!p)return;editingPersonBadge=p.badge;$('pb').value=p.badge;$('pb').disabled=false;$('pname').value=p.nome||'';$('psurname').value=p.cognome||'';$('pstate').value=p.stato_anagrafico||'ATTIVO';$('pphone').value=p.telefono||'';$('pemail').value=p.email||'';$('pbirth').value=p.data_nascita||'';$('pentry').value=p.data_ingresso||'';$('pexit').value=p.data_uscita||'';$('pcf').value=p.codice_fiscale||'';$('paddress').value=p.indirizzo||'';$('pcity').value=p.comune||'';$('pprovince').value=p.provincia||'';$('pcap').value=p.cap||'';$('pdep').value=String(!!p.dipendente);$('pminm').value=String(p.ore_minime_mensili??28);$('pmint').value=String(p.ore_minime_trimestrali??84);$('paccessbadge').value=p.badge;$('paccesspin').value='';$('pappcreds').value=String(!!p.app_credenziali_consegnate);$('pappcredsdate').value=p.app_credenziali_data||'';$('pappinstalled').value=String(!!p.app_installata);$('pappinstalldate').value=p.app_installazione_data||'';updateVolunteerAppSummary();renderQualChecks(pq.filter(x=>x.badge_personale===badge).map(x=>x.codice_qualifica));loadVolunteerAccessStatus(badge);loadAdminPersonDocuments(badge);window.scrollTo({top:0,behavior:'smooth'})};
 $('psave').onclick=async()=>{
  let badge=$('pb').value.trim();if(!badge||!$('pname').value.trim()||!$('psurname').value.trim())return msg('pmsg','Badge, nome e cognome sono obbligatori.','warn');
  const oldBadge=editingPersonBadge;
@@ -4341,7 +4369,7 @@ $('psave').onclick=async()=>{
   try{await invokeRenameVolunteerBadge(oldBadge,badge);editingPersonBadge=badge}
   catch(e){return msg('pmsg',e.message||String(e),'err')}
  }
- const row={badge,nome:$('pname').value.trim(),cognome:$('psurname').value.trim(),nome_completo:$('pname').value.trim()+' '+$('psurname').value.trim(),telefono:$('pphone').value.trim()||null,email:$('pemail').value.trim()||null,data_nascita:$('pbirth').value||null,data_ingresso:$('pentry').value||null,data_uscita:$('pexit').value||null,codice_fiscale:$('pcf').value.trim().toUpperCase()||null,indirizzo:$('paddress').value.trim()||null,comune:$('pcity').value.trim()||null,provincia:$('pprovince').value.trim().toUpperCase()||null,cap:$('pcap').value.trim()||null,dipendente:$('pdep').value==='true',ore_minime_mensili:Number($('pminm').value||28),ore_minime_trimestrali:Number($('pmint').value||84),stato_anagrafico:$('pstate').value,attivo:$('pstate').value==='ATTIVO'};
+ const row={badge,nome:$('pname').value.trim(),cognome:$('psurname').value.trim(),nome_completo:$('pname').value.trim()+' '+$('psurname').value.trim(),telefono:$('pphone').value.trim()||null,email:$('pemail').value.trim()||null,data_nascita:$('pbirth').value||null,data_ingresso:$('pentry').value||null,data_uscita:$('pexit').value||null,codice_fiscale:$('pcf').value.trim().toUpperCase()||null,indirizzo:$('paddress').value.trim()||null,comune:$('pcity').value.trim()||null,provincia:$('pprovince').value.trim().toUpperCase()||null,cap:$('pcap').value.trim()||null,dipendente:$('pdep').value==='true',ore_minime_mensili:Number($('pminm').value||28),ore_minime_trimestrali:Number($('pmint').value||84),stato_anagrafico:$('pstate').value,attivo:$('pstate').value==='ATTIVO',app_credenziali_consegnate:$('pappcreds').value==='true',app_credenziali_data:$('pappcreds').value==='true'?($('pappcredsdate').value||null):null,app_installata:$('pappinstalled').value==='true',app_installazione_data:$('pappinstalled').value==='true'?($('pappinstalldate').value||null):null};
  const r=editingPersonBadge?await sb.from('personale').update(row).eq('badge',badge):await sb.from('personale').upsert(row,{onConflict:'badge'});if(r.error)return msg('pmsg',r.error.message,'err');
  const selected=[...document.querySelectorAll('[data-qual]:checked')].map(x=>x.dataset.qual);const dq=await sb.from('personale_qualifiche').delete().eq('badge_personale',badge);if(dq.error)return msg('pmsg','Anagrafica salvata, errore aggiornamento qualifiche: '+dq.error.message,'err');
  if(selected.length){const ins=await sb.from('personale_qualifiche').insert(selected.map(c=>({badge_personale:badge,codice_qualifica:c,attiva:true})));if(ins.error)return msg('pmsg','Anagrafica salvata, errore qualifiche: '+ins.error.message,'err')}
@@ -6971,8 +6999,9 @@ async function loadVolunteerAccessStatus(badge){
  try{const d=await invokeVolunteerAccess('STATUS',badge);$('paccessstate').value=d.esiste?(d.attivo?'ATTIVO':'DISATTIVATO'):'NON CREATO'}
  catch(e){$('paccessstate').value='Errore';msg('paccessmsg',e.message,'err')}
 }
+$('pappcreds').onchange=updateVolunteerAppSummary;$('pappinstalled').onchange=updateVolunteerAppSummary;
 $('paccessstatus').onclick=()=>{const b=$('pb').value.trim();if(!b)return msg('paccessmsg','Seleziona prima un volontario.','warn');loadVolunteerAccessStatus(b)};
-$('paccesscreate').onclick=async()=>{const b=$('pb').value.trim();if(!b)return msg('paccessmsg','Seleziona o salva prima un volontario.','warn');try{const d=await invokeVolunteerAccess('CREATE_OR_RESET',b,$('paccesspin').value.trim());$('paccessstate').value='ATTIVO';$('paccesspin').value='';msg('paccessmsg',d.pin_temporaneo?'Accesso attivato. PIN temporaneo: '+d.pin_temporaneo+' — comunicalo al volontario in modo riservato.':'Accesso attivato e PIN aggiornato.','ok')}catch(e){msg('paccessmsg',e.message,'err')}};
+$('paccesscreate').onclick=async()=>{const b=$('pb').value.trim();if(!b)return msg('paccessmsg','Seleziona o salva prima un volontario.','warn');try{const d=await invokeVolunteerAccess('CREATE_OR_RESET',b,$('paccesspin').value.trim());$('paccessstate').value='ATTIVO';$('paccesspin').value='';$('pappcreds').value='true';if(!$('pappcredsdate').value)$('pappcredsdate').value=todaySafe();updateVolunteerAppSummary();await sb.from('personale').update({app_credenziali_consegnate:true,app_credenziali_data:$('pappcredsdate').value}).eq('badge',b);msg('paccessmsg',d.pin_temporaneo?'Accesso attivato. PIN temporaneo: '+d.pin_temporaneo+' — comunicalo al volontario in modo riservato.':'Accesso attivato e PIN aggiornato.','ok')}catch(e){msg('paccessmsg',e.message,'err')}};
 $('paccessdisable').onclick=async()=>{const b=$('pb').value.trim();if(!b)return msg('paccessmsg','Seleziona prima un volontario.','warn');if(!confirm('Disattivare l\'accesso app del badge '+b+'?'))return;try{await invokeVolunteerAccess('DISABLE',b);$('paccessstate').value='DISATTIVATO';msg('paccessmsg','Accesso disattivato.','ok')}catch(e){msg('paccessmsg',e.message,'err')}};
 
 function formatBackupBytes(value){
