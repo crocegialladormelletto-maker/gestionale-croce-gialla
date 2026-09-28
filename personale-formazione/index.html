@@ -51,7 +51,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.8.1</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.8.2</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -65,7 +65,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.8.1</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.8.2</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -344,11 +344,11 @@ function renderDashboard(){
  $('kpiNoOperational').textContent=noOperational.length;
  $('noOperationalList').innerHTML=noOperational.length?noOperational.map(p=>'<div class="box" style="margin:7px 0"><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b><br><span class="muted">Badge '+esc(p.badge)+' · nessuna qualifica operativa registrata</span></div>').join(''):'<div class="notice ok">Tutti i volontari attivi hanno almeno una qualifica operativa.</div>';
  const daeRows=daeRequiredRows();
- const daeAlerts=daeRows.filter(x=>!x.row?.valida_al||daysTo(x.row.valida_al)<=30);
+ const daeAlerts=daeRows.filter(x=>!x.record?.valida_al||daysTo(x.row.valida_al)<=30);
  $('daeAlertCount').textContent=daeAlerts.length+' da verificare';
  $('daeAlertCount').className='pill '+(daeAlerts.length?'r':'g');
  $('daeAlertList').innerHTML=daeAlerts.length?daeAlerts.map(x=>{
-  if(!x.row?.valida_al)return '<div class="box" style="margin:7px 0;border-left:5px solid #b52d36"><b>'+esc(x.person.nome_completo||x.person.badge)+'</b> <span class="pill r">Scadenza DAE mancante</span><br><span class="muted">Badge '+esc(x.person.badge)+' · inserire la data di scadenza.</span></div>';
+  if(!x.record?.valida_al)return '<div class="box" style="margin:7px 0;border-left:5px solid #b52d36"><b>'+esc(x.person.nome_completo||x.person.badge)+'</b> <span class="pill r">Scadenza DAE mancante</span><br><span class="muted">Badge '+esc(x.person.badge)+' · inserire la data di scadenza.</span></div>';
   const d=daysTo(x.row.valida_al),s=stateFor(x.row.valida_al);
   return '<div class="box" style="margin:7px 0;border-left:5px solid '+(d<0?'#b52d36':'#d6a100')+'"><b>'+esc(x.person.nome_completo||x.person.badge)+'</b> <span class="pill '+s.cls+'">'+esc(d<0?'DAE scaduto':'DAE in scadenza')+'</span><br><span class="muted">Scadenza '+esc(fmt(x.row.valida_al))+' · '+esc(d<0?Math.abs(d)+' gg fa':d===0?'oggi':d+' gg')+'</span></div>';
  }).join(''):'<div class="notice ok">Tutte le certificazioni DAE risultano oltre i 30 giorni dalla scadenza.</div>';
@@ -550,7 +550,11 @@ function renderDeadlines(){
 ['deadlineWindow','deadlineType','deadlineState'].forEach(id=>$(id).onchange=renderDeadlines);
 
 function daeBaseRows(){
- return people.filter(personActive).map(person=>{const row=daeRow(person.badge),s=daeStatus(row?.valida_al);return {person,row,...s}});
+ return people.filter(personActive).map(person=>{
+  const record=daeRow(person.badge);
+  const s=daeStatus(record?.valida_al);
+  return {person,record,...s};
+ });
 }
 function renderDaeView(){
  const rows=daeBaseRows();
@@ -568,7 +572,7 @@ function renderDaeView(){
  else if(sort==='BADGE')filtered.sort((a,b)=>String(a.person.badge).localeCompare(String(b.person.badge),'it',{numeric:true}));
  else filtered.sort((a,b)=>{const rank={SCADUTA:0,MANCANTE:1,PROSSIMA:2,ATTENZIONE:3,VALIDA:4};const r=rank[a.key]-rank[b.key];return r||((a.days??99999)-(b.days??99999))});
  lastDaeRenderedRows=filtered;
- $('daeBody').innerHTML=filtered.map(x=>'<tr class="'+x.row+'"><td>'+esc(x.person.badge)+'</td><td><b>'+esc(x.person.nome_completo||((x.person.nome||'')+' '+(x.person.cognome||'')))+'</b></td><td>'+esc(x.row?.valida_dal?fmt(x.row.valida_dal):'—')+'</td><td>'+esc(x.row?.valida_al?fmt(x.row.valida_al):'—')+'</td><td>'+esc(x.days==null?'—':x.days<0?Math.abs(x.days)+' gg fa':x.days===0?'Oggi':x.days+' gg')+'</td><td><span class="pill '+x.cls+'">'+esc(x.label)+'</span></td><td><div class="actions"><button class="btn yellow" data-dae-renew="'+esc(x.person.badge)+'">🔄 Rinnova</button><button class="btn secondary" data-dae-open="'+esc(x.person.badge)+'">Scheda</button></div></td></tr>').join('')||'<tr><td colspan="7">Nessun volontario trovato.</td></tr>';
+ $('daeBody').innerHTML=filtered.map(x=>'<tr class="'+x.row+'"><td>'+esc(x.person.badge)+'</td><td><b>'+esc(x.person.nome_completo||((x.person.nome||'')+' '+(x.person.cognome||'')))+'</b></td><td>'+esc(x.record?.valida_dal?fmt(x.row.valida_dal):'—')+'</td><td>'+esc(x.record?.valida_al?fmt(x.row.valida_al):'—')+'</td><td>'+esc(x.days==null?'—':x.days<0?Math.abs(x.days)+' gg fa':x.days===0?'Oggi':x.days+' gg')+'</td><td><span class="pill '+x.cls+'">'+esc(x.label)+'</span></td><td><div class="actions"><button class="btn yellow" data-dae-renew="'+esc(x.person.badge)+'">🔄 Rinnova</button><button class="btn secondary" data-dae-open="'+esc(x.person.badge)+'">Scheda</button></div></td></tr>').join('')||'<tr><td colspan="7">Nessun volontario trovato.</td></tr>';
  document.querySelectorAll('[data-dae-open]').forEach(b=>b.onclick=()=>{view('people');openPerson(b.dataset.daeOpen)});
  document.querySelectorAll('[data-dae-renew]').forEach(b=>b.onclick=()=>openQuickDaeRenew(b.dataset.daeRenew));
 }
@@ -586,7 +590,7 @@ $('daeQuickSave').onclick=async()=>{
 $('daeOnlyNotCompliant').onclick=()=>{$('daeFilterState').value='NON_IN_REGOLA';renderDaeView()};
 ['daeFilterState','daeSearch','daeSort'].forEach(id=>{$(id).oninput=renderDaeView;$(id).onchange=renderDaeView});
 
-function daeExportRows(){return lastDaeRenderedRows.map(x=>({Badge:x.person.badge,Volontario:x.person.nome_completo||'',Rinnovo:x.row?.valida_dal||'',Scadenza:x.row?.valida_al||'',Stato:x.label,Giorni:x.days??''}))}
+function daeExportRows(){return lastDaeRenderedRows.map(x=>({Badge:x.person.badge,Volontario:x.person.nome_completo||'',Rinnovo:x.record?.valida_dal||'',Scadenza:x.record?.valida_al||'',Stato:x.label,Giorni:x.days??''}))}
 $('daeExport').onclick=()=>{
  const rows=daeExportRows(),headers=['Badge','Volontario','Rinnovo','Scadenza','Stato','Giorni'];
  const q=v=>'"'+String(v??'').replaceAll('"','""')+'"';
@@ -595,7 +599,7 @@ $('daeExport').onclick=()=>{
 };
 $('daePrint').onclick=()=>{
  const rows=lastDaeRenderedRows,w=window.open('','_blank');if(!w)return;
- w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Elenco DAE</title><style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #aaa;padding:7px;text-align:left}h1{margin:0 0 4px}small{color:#555}</style></head><body><h1>Croce Gialla Emergenza ODV</h1><h2>Elenco certificazioni DAE</h2><small>Aggiornato al '+new Date().toLocaleDateString('it-IT')+'</small><table><thead><tr><th>Badge</th><th>Volontario</th><th>Rinnovo</th><th>Scadenza</th><th>Stato</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(x.person.badge)+'</td><td>'+esc(x.person.nome_completo||'')+'</td><td>'+esc(x.row?.valida_dal?fmt(x.row.valida_dal):'—')+'</td><td>'+esc(x.row?.valida_al?fmt(x.row.valida_al):'—')+'</td><td>'+esc(x.label)+'</td></tr>').join('')+'</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>');w.document.close();
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Elenco DAE</title><style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #aaa;padding:7px;text-align:left}h1{margin:0 0 4px}small{color:#555}</style></head><body><h1>Croce Gialla Emergenza ODV</h1><h2>Elenco certificazioni DAE</h2><small>Aggiornato al '+new Date().toLocaleDateString('it-IT')+'</small><table><thead><tr><th>Badge</th><th>Volontario</th><th>Rinnovo</th><th>Scadenza</th><th>Stato</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(x.person.badge)+'</td><td>'+esc(x.person.nome_completo||'')+'</td><td>'+esc(x.record?.valida_dal?fmt(x.row.valida_dal):'—')+'</td><td>'+esc(x.record?.valida_al?fmt(x.row.valida_al):'—')+'</td><td>'+esc(x.label)+'</td></tr>').join('')+'</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>');w.document.close();
 };
 
 async function createDaeCourse(){
