@@ -585,7 +585,7 @@
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.94</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 13.95</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.94</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.95</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -2376,7 +2376,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.94':'Versione 13.94';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v13.95':'Versione 13.95';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -5947,6 +5947,26 @@ async function routeCalcGeocode(q){
   /DORMELLETTO|NOVARA|BORGOMANERO|ARONA|TORINO|MILANO|ROMA|GENOVA|VENEZIA|BOLOGNA|FIRENZE|NAPOLI/.test(upper);
 
  if(italianHint){
+  // Se l'utente scrive in forma naturale "via nome comune", separa automaticamente la località.
+  const knownCities=[
+   ['ARONA','NO'],['DORMELLETTO','NO'],['BORGOMANERO','NO'],['OLEGGIO CASTELLO','NO'],
+   ['CASTELLETTO SOPRA TICINO','NO'],['CASTELLETTO TICINO','NO'],['BORGOTICINO','NO'],['BORGO TICINO','NO'],
+   ['AGRATE CONTURBIA','NO'],['BOGOGNO','NO'],['NOVARA','NO'],['VERBANIA','VB'],['STRESA','VB'],
+   ['OMEGNA','VB'],['DOMODOSSOLA','VB'],['GALLARATE','VA'],['SESTO CALENDE','VA'],['VARESE','VA'],
+   ['BUSTO ARSIZIO','VA'],['MILANO','MI'],['TORINO','TO'],['GENOVA','GE']
+  ];
+  const normUpper=normalized.toUpperCase();
+  for(const [city,prov] of knownCities){
+   if(normUpper===city)continue;
+   if(normUpper.endsWith(' '+city)){
+    const street=normalized.slice(0,normalized.length-city.length).trim().replace(/[ ,]+$/,'');
+    if(street){
+     addAttempt(street+', '+city+', '+prov+', Italia');
+     addAttempt(street+', '+city+', Italia');
+    }
+   }
+  }
+
   if(!/ITALIA|ITALY/i.test(normalized))addAttempt(normalized+', Italia');
 
   // Toglie CAP (spesso ridondante o scritto male) e riprova.
@@ -5999,6 +6019,33 @@ async function routeCalcGeocode(q){
    }
   }catch(_){}
   await routeCalcSleep(250);
+ }
+
+ // Fallback strutturato Nominatim: separa strada e comune quando riconoscibili.
+ const structuredCities=[
+  ['ARONA','NO'],['DORMELLETTO','NO'],['BORGOMANERO','NO'],['OLEGGIO CASTELLO','NO'],
+  ['CASTELLETTO SOPRA TICINO','NO'],['CASTELLETTO TICINO','NO'],['BORGO TICINO','NO'],
+  ['AGRATE CONTURBIA','NO'],['BOGOGNO','NO'],['NOVARA','NO'],['VERBANIA','VB'],['STRESA','VB'],
+  ['OMEGNA','VB'],['DOMODOSSOLA','VB'],['GALLARATE','VA'],['SESTO CALENDE','VA'],['VARESE','VA'],
+  ['BUSTO ARSIZIO','VA'],['MILANO','MI'],['TORINO','TO'],['GENOVA','GE']
+ ];
+ const nUpper=normalized.toUpperCase();
+ for(const [city] of structuredCities){
+  if(!nUpper.endsWith(' '+city))continue;
+  const street=normalized.slice(0,normalized.length-city.length).trim().replace(/[ ,]+$/,'');
+  if(!street)continue;
+  try{
+   const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1&country=Italia&city='+encodeURIComponent(city)+'&street='+encodeURIComponent(street);
+   const r=await fetch(url,{headers:{'Accept':'application/json','Accept-Language':'it,en;q=0.9'}});
+   if(r.ok){
+    const data=await r.json();
+    if(data?.length){
+     const valid=data.filter(europeOk);
+     const best=(valid.length?valid:data)[0];
+     return {lat:Number(best.lat),lon:Number(best.lon),label:best.display_name||street+', '+city,provider:'OSM-structured'};
+    }
+   }
+  }catch(_){}
  }
 
  // Secondo provider: Photon/Komoot. Utile soprattutto per vie/civici che Nominatim non risolve.
@@ -7715,7 +7762,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.94-20260928-route-geocoder';
+const CGE_APP_BUILD='13.95-20260928-natural-addresses';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
