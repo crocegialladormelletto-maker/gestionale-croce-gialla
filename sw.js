@@ -1,5 +1,5 @@
 // Questa versione aggiorna la PWA esistente senza richiedere una nuova installazione.
-const CACHE_NAME = 'cge-volontari-static-v26';
+const CACHE_NAME = 'cge-volontari-static-v27';
 const APP_BASE = '/gestionale-croce-gialla/';
 const STATIC_ASSETS = new Set([
   APP_BASE + 'manifest.json',
@@ -17,13 +17,25 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys
-        .filter(key => key.startsWith('cge-volontari-static-') && key !== CACHE_NAME)
-        .map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys
+      .filter(key => key.startsWith('cge-volontari-static-') && key !== CACHE_NAME)
+      .map(key => caches.delete(key)));
+    await self.clients.claim();
+
+    // Forza tutte le pagine già aperte del gestionale a caricare l'ultima build.
+    const windows = await self.clients.matchAll({type:'window', includeUncontrolled:true});
+    for (const client of windows) {
+      try {
+        const u = new URL(client.url);
+        if (u.pathname.startsWith(APP_BASE)) {
+          u.searchParams.set('cge_refresh','13.90-'+Date.now());
+          await client.navigate(u.toString());
+        }
+      } catch (_) {}
+    }
+  })());
 });
 
 self.addEventListener('fetch', event => {
