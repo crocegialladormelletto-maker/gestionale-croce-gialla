@@ -584,7 +584,7 @@
 #tariffTabs [data-tariff-code][aria-pressed="true"]{opacity:1;transform:translateY(-1px);border-color:#102f5a!important;box-shadow:0 0 0 3px rgba(16,47,90,.16),0 5px 12px rgba(16,47,90,.16)}
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 
-/* === V14.09 · STATISTICHE === */
+/* === V14.10 · STATISTICHE === */
 .stats-page-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .stats-kpi{background:#fff;border:1px solid #d8e3ec;border-radius:13px;padding:13px;min-height:92px;cursor:pointer;transition:.15s ease;box-shadow:0 2px 8px #12375d0b}
 .stats-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px #12375d18}
@@ -604,7 +604,7 @@
 @media(max-width:520px){.stats-page-grid{grid-template-columns:1fr 1fr}.stats-kpi b{font-size:22px}.stats-vehicle-row{grid-template-columns:60px 1fr 70px 70px}}
 
 
-/* === V14.09 · REPORT PERSONALIZZATI === */
+/* === V14.10 · REPORT PERSONALIZZATI === */
 .report-builder{margin-top:12px}
 .report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .report-result{margin-top:12px;border:1px solid #d9e3eb;border-radius:12px;overflow:auto;background:#fff}
@@ -616,7 +616,7 @@
 @media(max-width:520px){.report-grid,.report-summary{grid-template-columns:1fr}}
 
 
-/* === V14.09 · STATISTICHE AVANZATE === */
+/* === V14.10 · STATISTICHE AVANZATE === */
 .stats-click{cursor:pointer}.stats-click:hover{text-decoration:underline}
 .stats-detail{margin-top:12px;border:1px solid #cbd9e5;border-radius:14px;background:#fff;overflow:auto}
 .stats-detail-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 14px;background:#eef5fb;border-bottom:1px solid #d6e2eb}
@@ -635,7 +635,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.09</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.10</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -689,7 +689,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.09</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.10</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -2554,7 +2554,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.09':'Versione 14.09';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.10':'Versione 14.10';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -3869,10 +3869,19 @@ function reportTypeNeedsPerson(type){return type==='HOURS_PERSON'||type==='SHIFT
 function reportTypeNeedsVehicle(type){return false}
 async function populateReportFilter(){
  const type=$('reportType').value,sel=$('reportFilter');if(!sel)return;
+ const current=sel.value;
  sel.innerHTML='<option value="">Tutti</option>';
  if(reportTypeNeedsPerson(type)){
-  const r=await sb.from('personale').select('badge,nome_completo,nome,cognome').order('nome_completo');
-  (r.data||[]).forEach(p=>sel.insertAdjacentHTML('beforeend','<option value="'+esc(p.badge)+'">'+esc(statsPersonName(p))+' · '+esc(p.badge)+'</option>'));
+  let rows=lastStatsSnapshot?.allPeople||[];
+  if(!rows.length){
+   const r=await sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico').limit(1000);
+   if(r.error){msg('reportMsg','Impossibile caricare l’elenco volontari: '+r.error.message,'err');return}
+   rows=r.data||[];
+  }
+  rows.slice().sort((a,b)=>statsPersonName(a).localeCompare(statsPersonName(b),'it')).forEach(p=>{
+   sel.insertAdjacentHTML('beforeend','<option value="'+esc(p.badge)+'">'+esc(statsPersonName(p))+' · '+esc(p.badge)+'</option>');
+  });
+  if(current&&[...sel.options].some(o=>o.value===current))sel.value=current;
  }else if(reportTypeNeedsVehicle(type)){
   ['06','07','08','09'].forEach(v=>sel.insertAdjacentHTML('beforeend','<option value="'+v+'">Mezzo '+v+'</option>'));
  }
@@ -4166,6 +4175,7 @@ async function loadStatistics(){
  const volSel=$('statsVolunteerSelect'),keep=volSel.value;
  volSel.innerHTML='<option value="">Seleziona volontario</option>'+allPeople.slice().sort((a,b)=>statsPersonName(a).localeCompare(statsPersonName(b),'it')).map(p=>'<option value="'+esc(p.badge)+'">'+esc(statsPersonName(p))+' · '+esc(p.badge)+'</option>').join('');
  if([...volSel.options].some(o=>o.value===keep))volSel.value=keep;
+ await populateReportFilter();
  statsRenderVehicles(services,shiftStats,from,to);
  await statsLoadComparison();
  if(volSel.value)await statsRenderVolunteer(volSel.value);
