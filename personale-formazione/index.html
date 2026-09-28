@@ -56,19 +56,24 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .dashGroup .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
 .dashGroup.two .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 .dashGroup .stat{padding:10px}.dashGroup .stat b{font-size:23px}
+.dashTrainingQuick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.dashTrainingBtn{border:0;border-radius:11px;padding:12px 10px;color:#fff;font-weight:900;cursor:pointer;text-align:left;line-height:1.2;transition:.15s ease}
+.dashTrainingBtn:hover{transform:translateY(-1px);filter:brightness(.96)}
+.dashTrainingBtn small{display:block;color:#fff;opacity:.85;margin-top:4px;font-weight:700}
+.dashTrainingBtn.soccorritore{background:#dc2626}.dashTrainingBtn.autista{background:#1d4ed8}.dashTrainingBtn.capo{background:#7c3aed}
 .dashboardFold{border:1px solid var(--l);border-radius:14px;margin:11px 0;background:#fff;overflow:hidden}
 .dashboardFoldHead{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px}
 .dashboardFoldBody{padding:0 13px 13px}
 .dashboardFold h3{margin:0;color:var(--n)}
 @media(max-width:1180px){.dashboardQuick{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:980px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;overflow:auto}.nav{min-width:180px}.stats{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.stats,.grid2,.grid3,.grid4,.dashboardQuick,.dashGroups{grid-template-columns:1fr}.dashGroup .stats,.dashGroup.two .stats{grid-template-columns:1fr}.qualRow{grid-template-columns:1fr}.dashboardFoldHead{align-items:flex-start;flex-direction:column}}
+@media(max-width:560px){.stats,.grid2,.grid3,.grid4,.dashboardQuick,.dashGroups,.dashTrainingQuick{grid-template-columns:1fr}.dashGroup .stats,.dashGroup.two .stats{grid-template-columns:1fr}.qualRow{grid-template-columns:1fr}.dashboardFoldHead{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.8</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.9</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -82,7 +87,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.8</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.9</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -128,6 +133,11 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
        <div class="stats">
         <div class="stat action" data-kpi-go="courses"><small>CORSI PROGRAMMATI</small><b id="kpiCourses">0</b><div class="go">Apri corsi →</div></div>
         <div class="stat action" data-kpi-go="noOperational"><small>SENZA QUALIFICHE OPERATIVE</small><b id="kpiNoOperational">0</b><div class="go">Vedi elenco →</div></div>
+       </div>
+       <div class="dashTrainingQuick">
+        <button class="dashTrainingBtn soccorritore" data-dashboard-training="SOCCORRITORE">🚑 Soccorritore<small>Allegato A · 118 Piemonte</small></button>
+        <button class="dashTrainingBtn autista" data-dashboard-training="AUTISTA">🚐 Autista<small>Gestione corso interno</small></button>
+        <button class="dashTrainingBtn capo" data-dashboard-training="CAPO_SERVIZIO">⭐ Capo Servizio<small>Gestione corso interno</small></button>
        </div>
       </div>
       <div class="dashGroup">
@@ -287,7 +297,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
     <div class="hero"><h2>📚 Corsi e Formazione</h2><p>Programmazione corsi, partecipanti, esiti, attestati e aggiornamento automatico delle qualifiche.</p></div>
     <div class="pad">
      <div class="section">
-      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🎯 Gestione rapida corsi interni</h3><div class="muted">Accesso diretto ai due percorsi formativi interni principali.</div></div></div>
+      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🎯 Gestione rapida corsi interni</h3><div class="muted">Accesso diretto ai tre percorsi formativi principali.</div></div></div>
       <div class="grid3" style="margin-top:12px">
        <div class="box" style="border-left:8px solid #dc2626;padding:18px">
         <div style="font-size:28px;font-weight:800">🚑 Soccorritore Allegato A – 118 Piemonte</div>
@@ -418,6 +428,10 @@ function view(id){
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{setTrainingPlanVisible(false);view(b.dataset.view)});
 document.querySelectorAll('.jump').forEach(b=>b.onclick=()=>view(b.dataset.go));
 document.querySelectorAll('[data-dashboard-view]').forEach(b=>b.onclick=()=>view(b.dataset.dashboardView));
+document.querySelectorAll('[data-dashboard-training]').forEach(b=>b.onclick=()=>{
+ view('training');
+ openQuickTraining(b.dataset.dashboardTraining);
+});
 document.querySelectorAll('[data-dashboard-toggle]').forEach(b=>b.onclick=()=>{
  const el=$(b.dataset.dashboardToggle);if(!el)return;
  const willOpen=el.classList.contains('hidden');
