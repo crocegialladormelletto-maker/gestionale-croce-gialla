@@ -129,6 +129,7 @@
    <button id="markSent" class="btn secondary">Segna inviato</button>
    <button id="confirm" class="btn green">✓ Accetta e crea servizio</button>
    <button id="openService" class="btn yellow hidden">Apri servizio nel gestionale</button>
+   <button id="syncService" class="btn secondary hidden">↻ Sincronizza servizio</button>
   </div>
  </div>
 </section>
@@ -228,14 +229,14 @@ $('save').onclick=async()=>{
  openDetail(r.data.id);
  if(syncWarning)msg('detailMsg','Pratica salvata. Il servizio collegato non è stato aggiornato automaticamente: '+syncWarning,'warn');
  else if(r.data?.servizio_id)msg('detailMsg','Pratica salvata e servizio operativo aggiornato automaticamente.','ok');
-}
+};
 function openDetail(id){active=rows.find(x=>x.id===id);if(!active)return;const r=active;$('dTitle').textContent=code(r)+' · '+r.evento;$('dSub').textContent=r.organizzatore+' · '+nice(r.data_evento)+' · '+r.stato;$('summary').innerHTML='<div class="section"><h3>Manifestazione</h3><div class="grid3"><div><b>Organizzatore</b><br>'+esc(r.organizzatore)+'</div><div><b>Referente</b><br>'+esc(r.referente||'—')+' '+esc(r.telefono||'')+'</div><div><b>Evento</b><br>'+esc(r.evento)+'</div><div><b>Luogo</b><br>'+esc(r.luogo)+(r.indirizzo?'<br>'+esc(r.indirizzo):'')+'</div><div><b>Data e orari</b><br>'+nice(r.data_evento)+' · '+esc((r.ora_inizio||'').slice(0,5))+'–'+esc((r.ora_fine||'').slice(0,5))+'</div><div><b>Mezzo / equipaggio</b><br>'+esc(r.mezzo||'Da assegnare')+' · '+esc(r.numero_operatori)+' operatori</div></div></div><div class="section"><h3>Collegamento operativo</h3><div class="notice"><b>Flusso:</b> pratica manifestazione → servizio operativo → foglio viaggio → nota di debito.<br>Le modifiche alla pratica vengono riportate automaticamente nel servizio finché il servizio non è avviato o chiuso.</div></div><div class="section"><h3>Preventivo</h3><b style="font-size:24px">'+money(r.importo_preventivo)+'</b><p>'+esc(r.descrizione||'Assistenza sanitaria alla manifestazione indicata.')+'</p>'+(r.dotazioni?'<p><b>Dotazioni:</b> '+esc(r.dotazioni)+'</p>':'')+'</div>';const created=r.stato==='SERVIZIO CREATO';$('confirm').classList.toggle('hidden',created);$('openService').classList.toggle('hidden',!created);if($('syncService'))$('syncService').classList.toggle('hidden',!created);view('detail')}
 $('edit').onclick=()=>openForm(active);
 async function setState(s){const r=await sb.from('assistenze_manifestazioni').update({stato:s,updated_at:new Date().toISOString()}).eq('id',active.id).select('*').single();if(r.error)return msg('detailMsg',r.error.message,'err');await load();openDetail(r.data.id)}
 $('markQuote').onclick=()=>setState('PREVENTIVO');$('markSent').onclick=()=>setState('INVIATO');
 $('confirm').onclick=async()=>{if(!active.mezzo)return msg('detailMsg','Assegna prima il mezzo alla pratica.','err');if(!confirm('Confermare la pratica e creare il servizio nel gestionale principale? Il servizio comparirà nel calendario operativo.'))return;const r=await sb.rpc('cge_conferma_assistenza_manifestazione',{p_id:active.id});if(r.error)return msg('detailMsg',r.error.message,'err');await load();openDetail(active.id);msg('detailMsg','Servizio creato: ora è visibile nel calendario del gestionale principale.','ok')}
 $('openService').onclick=()=>location.href='../?openService='+encodeURIComponent(active.servizio_id||'');
-$('syncService').onclick=async()=>{
+if($('syncService'))$('syncService').onclick=async()=>{
  if(!active?.id||!active?.servizio_id)return;
  msg('detailMsg','Sincronizzazione in corso...');
  const r=await sb.rpc('cge_sincronizza_assistenza_manifestazione',{p_id:active.id});
