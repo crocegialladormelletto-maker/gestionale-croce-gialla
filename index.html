@@ -639,7 +639,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.88</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V13.89</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
@@ -1529,12 +1529,13 @@ Causale: numero preventivo</textarea>
   </div>
   <div class="notice" style="margin-top:10px"><b>Il preventivo deve essere confermato via e-mail a trasporti@crocegiallaemergenza.it</b></div>
   <div class="toolbar">
-   <button id="rcSaveCustomerQuote" type="button" class="btn secondary" data-admin-only="true">💾 Salva preventivo cliente</button>
+   <button id="rcNewCustomerQuote" type="button" class="btn secondary">＋ Nuovo preventivo</button>
+   <button id="rcSaveCustomerQuote" type="button" class="btn secondary">💾 Salva preventivo cliente</button>
    <button id="rcPrintQuote" type="button" class="btn yellow">🖨 Stampa preventivo cliente</button>
   </div>
  </div>
 
- <div class="section" style="margin-top:10px" data-admin-only="true">
+ <div class="section" style="margin-top:10px">
   <div class="actions" style="justify-content:space-between;align-items:center">
    <div><h3 style="margin:0">📚 Archivio preventivi</h3><div class="muted">Preventivi cliente salvati, ristampabili e aggiornabili nello stato.</div></div>
    <button id="rcQuoteArchiveRefresh" type="button" class="btn secondary">↻ Aggiorna archivio</button>
@@ -6147,7 +6148,7 @@ function routeCalcCustomerQuoteData(){
  };
 }
 async function routeCalcSaveCustomerQuote(){
- if(prof?.ruolo!=='AMMINISTRATORE')return msg('rcQuoteArchiveMsg','Solo Amministrazione può salvare i preventivi cliente.','warn');
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return msg('rcQuoteArchiveMsg','Accesso non autorizzato al salvataggio preventivi.','warn');
  const row=routeCalcCustomerQuoteData();
  if(!row.cliente)return msg('rcQuoteArchiveMsg','Inserisci il cliente / destinatario.','warn');
  if(!row.destinazione||!row.km_totali||!row.importo_totale)return msg('rcQuoteArchiveMsg','Calcola prima percorso e importo del preventivo.','warn');
@@ -6205,14 +6206,14 @@ async function routeCalcLoadQuoteArchive(){
    '<td><select onchange="routeCalcUpdateCustomerQuoteStatus(\''+x.id+'\',this.value)">'+opts+'</select></td>'+
    '<td><div class="actions">'+
     '<button class="btn secondary" type="button" onclick="routeCalcPrintArchivedQuote(\''+x.id+'\')">🖨 Stampa</button>'+
-    '<button class="btn danger" type="button" onclick="routeCalcDeleteCustomerQuote(\''+x.id+'\','+Number(x.numero_progressivo||0)+')">Elimina</button>'+
+    (prof?.ruolo==='AMMINISTRATORE'?'<button class="btn danger" type="button" onclick="routeCalcDeleteCustomerQuote(\''+x.id+'\','+Number(x.numero_progressivo||0)+')">Elimina</button>':'')+
    '</div></td>'+
   '</tr>';
  }).join(''):'<tr><td colspan="9">Nessun preventivo cliente salvato.</td></tr>';
  msg('rcQuoteArchiveMsg','');
 }
 async function routeCalcUpdateCustomerQuoteStatus(id,stato){
- if(prof?.ruolo!=='AMMINISTRATORE')return;
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  const r=await sb.from('preventivi_clienti').update({stato,updated_at:new Date().toISOString()}).eq('id',id).select('id');
  if(r.error)return msg('rcQuoteArchiveMsg','Stato non aggiornato: '+r.error.message,'err');
  if(id===rcCurrentCustomerQuoteId&&$('rcQuoteState'))$('rcQuoteState').value=stato;
@@ -6270,11 +6271,8 @@ async function routeCalcPrintQuote(){
  const w=window.open('','_blank');
  if(!w)return msg('rcMsg','Il browser ha bloccato la finestra di stampa. Consenti i popup per questo sito.','warn');
  w.document.open();w.document.write('<!doctype html><html><body style="font-family:Arial;padding:30px">Preparazione preventivo…</body></html>');w.document.close();
- let saved=null;
- if(!rcCurrentCustomerQuoteId||!rcCurrentCustomerQuoteNumber){
-   saved=await routeCalcSaveCustomerQuote();
-   if(!saved){try{w.close()}catch(e){};return;}
- }
+ let saved=await routeCalcSaveCustomerQuote();
+ if(!saved){try{w.close()}catch(e){};return;}
  const quoteNumber=routeCalcFormatQuoteNumber(rcCurrentCustomerQuoteNumber,saved?.data_preventivo);
  const paymentText=routeCalcPaymentText(rcCurrentCustomerQuoteNumber,saved?.data_preventivo);
  const vehicle=$('rcVehicleType')?.value==='TRASPORTO SEMPLICE'?'Trasporto semplice':'Ambulanza';
@@ -6403,7 +6401,15 @@ if($('rcFuelRefresh'))$('rcFuelRefresh').onclick=()=>routeCalcUpdateFuelPrice(tr
 if($('rcSaveToll'))$('rcSaveToll').onclick=routeCalcSaveToll;
 if($('rcLoadSavedQuote'))$('rcLoadSavedQuote').onclick=()=>routeCalcLoadSavedQuote(true);
 if($('rcSaveQuote'))$('rcSaveQuote').onclick=routeCalcSaveQuote;
-if($('rcSaveCustomerQuote'))$('rcSaveCustomerQuote').onclick=routeCalcSaveCustomerQuote;
+if($('rcSaveCustomerQuote'))$('rcNewCustomerQuote').onclick=()=>{
+ rcCurrentCustomerQuoteId=null;rcCurrentCustomerQuoteNumber=null;
+ ['rcQuoteCustomer','rcQuoteCf','rcQuoteAddress','rcQuoteEmail','rcQuotePhone'].forEach(id=>{if($(id))$(id).value=''});
+ if($('rcQuoteNumber'))$('rcQuoteNumber').value='Da assegnare al salvataggio';
+ if($('rcQuoteState'))$('rcQuoteState').value='BOZZA';
+ routeCalcRefreshPaymentBox();
+ msg('rcQuoteArchiveMsg','Nuovo preventivo pronto per l’inserimento.','ok');
+};
+$('rcSaveCustomerQuote').onclick=routeCalcSaveCustomerQuote;
 if($('rcPrintQuote'))$('rcPrintQuote').onclick=routeCalcPrintQuote;
 if($('rcQuoteArchiveRefresh'))$('rcQuoteArchiveRefresh').onclick=routeCalcLoadQuoteArchive;
 if($('rcUseService'))$('rcUseService').onclick=routeCalcUseInService;
@@ -7477,7 +7483,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='13.88-20260928-app-status';
+const CGE_APP_BUILD='13.89-20260928-transport-quotes';
 let cgeSwReloading=false;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
