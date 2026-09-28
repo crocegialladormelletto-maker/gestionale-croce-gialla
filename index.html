@@ -584,7 +584,7 @@
 #tariffTabs [data-tariff-code][aria-pressed="true"]{opacity:1;transform:translateY(-1px);border-color:#102f5a!important;box-shadow:0 0 0 3px rgba(16,47,90,.16),0 5px 12px rgba(16,47,90,.16)}
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 
-/* === V14.03 · STATISTICHE === */
+/* === V14.04 · STATISTICHE === */
 .stats-page-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .stats-kpi{background:#fff;border:1px solid #d8e3ec;border-radius:13px;padding:13px;min-height:92px;cursor:pointer;transition:.15s ease;box-shadow:0 2px 8px #12375d0b}
 .stats-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px #12375d18}
@@ -604,7 +604,7 @@
 @media(max-width:520px){.stats-page-grid{grid-template-columns:1fr 1fr}.stats-kpi b{font-size:22px}.stats-vehicle-row{grid-template-columns:60px 1fr 70px 70px}}
 
 
-/* === V14.03 · REPORT PERSONALIZZATI === */
+/* === V14.04 · REPORT PERSONALIZZATI === */
 .report-builder{margin-top:12px}
 .report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .report-result{margin-top:12px;border:1px solid #d9e3eb;border-radius:12px;overflow:auto;background:#fff}
@@ -617,7 +617,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.03</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.04</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -671,7 +671,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.03</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.04</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -2511,7 +2511,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.03':'Versione 14.03';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.04':'Versione 14.04';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -3792,7 +3792,7 @@ async function loadOperationalDashboard(){
 }
 
 let lastStatsSnapshot=null;
-function statsISODate(d){return d.toISOString().slice(0,10)}
+function statsISODate(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day}
 function statsSetPeriod(kind){
  const now=new Date(),to=statsISODate(now),from=new Date(now);
  if(kind==='today'){}
@@ -3918,18 +3918,24 @@ function shiftBandHours(fascia){
  return ({MATTINO:7,POMERIGGIO:5,SERA:5,NOTTE:7})[String(fascia||'').toUpperCase()]||0;
 }
 async function loadShiftStatistics(from,to,people){
- const [tp,tr,emg,dim,ass]=await Promise.all([
-  sb.from('turni_personale').select('turno_id,badge_personale,ruolo,confermato,risposta').limit(5000),
+ const [tr,emg,dim,ass]=await Promise.all([
   sb.from('turni').select('id,data_turno,tipo_turno,ora_inizio,ora_fine,stato').gte('data_turno',from).lte('data_turno',to).limit(5000),
-  sb.from('turni_emergenza_fasce').select('id,giorno,fascia,badge_personale,ruolo').gte('giorno',from).lte('giorno',to).limit(5000),
-  sb.from('turni_dimissioni').select('id,giorno,fascia,badge_personale,ruolo').gte('giorno',from).lte('giorno',to).limit(5000),
-  sb.from('turni_assistenza_fasce').select('id,giorno,fascia,badge_personale,ruolo').gte('giorno',from).lte('giorno',to).limit(5000)
+  sb.rpc('cge_emergenza_turni_v2',{p_dal:from,p_al:to}),
+  sb.rpc('cge_dimissioni_turni',{p_dal:from,p_al:to}),
+  sb.rpc('cge_assistenza_fasce_turni',{p_dal:from,p_al:to})
  ]);
- const err=tp.error||tr.error||emg.error||dim.error||ass.error;
+ const err=tr.error||emg.error||dim.error||ass.error;
  if(err)throw err;
- const turnMap=new Map((tr.data||[]).map(x=>[x.id,x]));
+ const turns=(tr.data||[]).filter(t=>!['ANNULLATO','CANCELLATO'].includes(String(t.stato||'').toUpperCase()));
+ let assignments=[];
+ if(turns.length){
+  const tp=await sb.from('turni_personale').select('turno_id,badge_personale,ruolo,confermato,risposta').in('turno_id',turns.map(t=>t.id));
+  if(tp.error)throw tp.error;
+  assignments=tp.data||[];
+ }
+ const turnMap=new Map(turns.map(x=>[x.id,x]));
  const rows=[];
- (tp.data||[]).forEach(x=>{
+ assignments.forEach(x=>{
   const t=turnMap.get(x.turno_id);if(!t)return;
   if(x.risposta==='NON DISPONIBILE')return;
   rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftClockHours(t.ora_inizio,t.ora_fine)});
@@ -3937,7 +3943,11 @@ async function loadShiftStatistics(from,to,people){
  (emg.data||[]).forEach(x=>rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza 118',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
  (dim.data||[]).forEach(x=>rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
  (ass.data||[]).forEach(x=>rows.push({source:'Assistenze',date:x.giorno,type:'Assistenza',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
- const valid=rows.filter(x=>x.badge);
+ const seen=new Set(),valid=rows.filter(x=>{
+  if(!x.badge)return false;
+  const key=[x.source,x.date,x.type,x.badge,x.role].join('|');
+  if(seen.has(key))return false;seen.add(key);return true;
+ });
  const byBadge={},byBadgeHours={},byRole={},byRoleHours={},byType={},byTypeHours={};
  valid.forEach(x=>{
   byBadge[x.badge]=(byBadge[x.badge]||0)+1;byBadgeHours[x.badge]=(byBadgeHours[x.badge]||0)+Number(x.hours||0);
@@ -3947,7 +3957,7 @@ async function loadShiftStatistics(from,to,people){
  const pmap=new Map((people||[]).map(p=>[p.badge,p]));
  const top=Object.entries(byBadge).map(([badge,n])=>({badge,n,hours:byBadgeHours[badge]||0,name:shiftPersonNameFromMap(badge,pmap)})).sort((a,b)=>b.n-a.n).slice(0,10);
  const topHours=Object.entries(byBadgeHours).map(([badge,hours])=>({badge,hours,n:byBadge[badge]||0,name:shiftPersonNameFromMap(badge,pmap)})).sort((a,b)=>b.hours-a.hours).slice(0,10);
- return {rows:valid,byBadge,byBadgeHours,byRole,byRoleHours,byType,byTypeHours,top,topHours,totalHours:valid.reduce((s,x)=>s+Number(x.hours||0),0),general:(tp.data||[]).filter(x=>turnMap.has(x.turno_id)&&x.risposta!=='NON DISPONIBILE').length,special:(emg.data||[]).length+(dim.data||[]).length+(ass.data||[]).length};
+ return {rows:valid,byBadge,byBadgeHours,byRole,byRoleHours,byType,byTypeHours,top,topHours,totalHours:valid.reduce((s,x)=>s+Number(x.hours||0),0),general:assignments.filter(x=>turnMap.has(x.turno_id)&&x.risposta!=='NON DISPONIBILE').length,special:(emg.data||[]).length+(dim.data||[]).length+(ass.data||[]).length};
 }
 
 async function loadStatistics(){
@@ -3964,7 +3974,9 @@ async function loadStatistics(){
  const services=sr.data||[],allPeople=pr.data||[],people=allPeople.filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
  const cats={};services.forEach(x=>{const k=statsTypeLabel(x);cats[k]=(cats[k]||0)+1});
  const emergency=cats['Emergenza / 118']||0,assistance=cats['Assistenze']||0;
- const shiftStats=await loadShiftStatistics(from,to,allPeople);
+ let shiftStats;
+ try{shiftStats=await loadShiftStatistics(from,to,allPeople)}
+ catch(e){msg('statsMsg','Errore caricamento turni: '+(e.message||String(e)),'err');return}
  const hours=shiftStats.totalHours;
  $('statsPeople').textContent=people.length;$('statsServices').textContent=services.length;$('statsEmergency').textContent=emergency;$('statsAssistance').textContent=assistance;$('statsKm').textContent=shiftStats.rows.length;$('statsHours').textContent=hours.toLocaleString('it-IT',{maximumFractionDigits:1});
  $('statsShiftAssignments').textContent=shiftStats.rows.length;
