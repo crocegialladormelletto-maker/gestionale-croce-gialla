@@ -209,14 +209,14 @@ function monthlyAnalyses(){
 }
 function renderDashboard(){
  const analyses=monthlyAnalyses(),inNow=analyses.filter(x=>x.open),total=analyses.reduce((s,x)=>s+x.total,0),allAn=analyses.flatMap(x=>x.an);
- const modified=auditRows.filter(a=>['UPDATE','DELETE'].includes(a.azione)&&monthKey(a.avvenuto_il)===$('month').value);
- const anomalyCount=allAn.length+modified.length;
+ const modified=[];
+ const anomalyCount=allAn.length;
  $('anomalyBadge').textContent=anomalyCount;$('anomalyBadge').className='menuBadge '+(anomalyCount?'dangerBadge':'okBadge');
  $('dashboardBadge').textContent=anomalyCount?'⚠':'✓';$('dashboardBadge').className='menuBadge '+(anomalyCount?'dangerBadge':'okBadge');
  $('kpiNow').textContent=inNow.length;$('kpiNowNames').textContent=inNow.length?inNow.map(x=>x.nome_completo).join(', '):'Nessuno';
  $('kpiHours').textContent=fmtMin(total);$('kpiAnom').textContent=anomalyCount;$('kpiRest').textContent=allAn.filter(a=>a.rest).length;
  $('currentService').innerHTML=inNow.length?'<h4>Attualmente in servizio</h4>'+inNow.map(x=>'<div class="serviceNow"><b>'+esc(x.nome_completo)+'</b> · entrata '+dt(x.open.evento_at)+'</div>').join(''):'';
- const box=$('anomalyBox'),box2=$('anomalyPageBox');let html;if(!allAn.length&&!modified.length){html='<b>✅ Nessuna anomalia rilevata nel mese selezionato.</b>';box.className='alertBox okBox';box2.className='alertBox okBox'}else{html='<b>⚠ Anomalie da verificare</b>'+allAn.map(a=>'<div class="anom '+(a.type==='RIPOSO < 11 ORE'?'':'warnA')+'"><b>'+esc(person(a.badge))+' · '+esc(a.type)+'</b><br>'+esc(dt(a.at))+' · '+esc(a.msg)+'</div>').join('')+modified.map(a=>'<div class="anom warnA"><b>'+esc(a.badge?person(a.badge):'Amministrazione')+' · TIMBRATURA MODIFICATA</b><br>'+esc(dt(a.avvenuto_il))+' · '+esc(a.azione)+'</div>').join('');box.className='alertBox blink';box2.className='alertBox blink'}box.innerHTML=html;box2.innerHTML=html
+ const box=$('anomalyBox'),box2=$('anomalyPageBox');let html;if(!allAn.length){html='<b>✅ Nessuna anomalia rilevata nel mese selezionato.</b>';box.className='alertBox okBox';box2.className='alertBox okBox'}else{html='<b>⚠ Anomalie da verificare</b>'+allAn.map(a=>'<div class="anom '+(a.type==='RIPOSO < 11 ORE'?'':'warnA')+'"><b>'+esc(person(a.badge))+' · '+esc(a.type)+'</b><br>'+esc(dt(a.at))+' · '+esc(a.msg)+'</div>').join('');box.className='alertBox blink';box2.className='alertBox blink'}box.innerHTML=html;box2.innerHTML=html
 }
 function renderSummary(){
  const rows=monthlyAnalyses();$('monthlySummary').innerHTML='<table><thead><tr><th>Dipendente</th><th>Ore registrate</th><th>Giornate</th><th>Riposi &lt; 11h</th><th>Anomalie</th><th>Stato attuale</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><b>'+esc(x.nome_completo)+'</b></td><td>'+fmtMin(x.total)+'</td><td>'+x.days+'</td><td>'+x.rest+'</td><td>'+x.an.length+'</td><td>'+(x.open?'🟢 In servizio':'Fuori servizio')+'</td></tr>').join('')+'</tbody></table>'
