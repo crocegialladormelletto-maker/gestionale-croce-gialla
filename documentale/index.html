@@ -105,7 +105,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.30</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.31</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -125,7 +125,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.30</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.31</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -152,7 +152,7 @@
       <div class="stat"><small>USCITA</small><b id="dOut">0</b></div>
       <div class="stat"><small>SCADENZE 30 GG</small><b id="dDue">0</b></div>
      </div>
-     <div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">Documenti recenti</h3><div class="muted">Ultimi protocolli registrati.</div></div><button id="dRefresh" class="btn secondary">↻ Aggiorna</button></div><div id="dmsg"></div><div id="dRecent"></div></div>
+     <div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">Documenti recenti</h3><div class="muted">Ultimi protocolli registrati.</div></div><button id="dRefresh" class="btn teal">↻ Aggiorna</button></div><div id="dmsg"></div><div id="dRecent"></div></div>
      <div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">Scadenze imminenti</h3><div class="muted">Documenti con una scadenza prossima.</div></div><button class="btn yellow jump" data-v="due">Apri scadenze</button></div><div id="dDueList"></div></div>
     </div>
    </section>
@@ -193,7 +193,7 @@
        <div class="field"><label>Dal</label><input id="aFrom" type="date"></div>
        <div class="field"><label>Al</label><input id="aTo" type="date"></div>
       </div>
-      <div class="toolbar"><button id="aFind" class="btn yellow">🔎 Cerca</button><button id="aClear" class="btn secondary">Cancella filtri</button></div><div id="amsg"></div>
+      <div class="toolbar"><button id="aFind" class="btn blue">🔎 Cerca</button><button id="aClear" class="btn orange">Cancella filtri</button></div><div id="amsg"></div>
      </div>
      <div class="actions" style="justify-content:space-between;margin:10px 0"><b>Registro protocollo</b><span id="aCount" class="pill b">0</span></div>
      <div class="table"><table><thead><tr><th>Protocollo</th><th>Tipo</th><th>Oggetto</th><th>Mittente / Destinatario</th><th>Categoria</th><th>Scadenza</th><th>Allegati</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="aBody"></tbody></table></div>
@@ -214,14 +214,14 @@
      <div class="section">
       <div class="actions" style="justify-content:space-between">
        <div><h3 style="margin:0">Fascicoli</h3><div class="muted">Il fascicolo è completo quando contiene i documenti essenziali della riunione.</div></div>
-       <button id="fRefresh" class="btn secondary" type="button">↻ Aggiorna</button>
+       <button id="fRefresh" class="btn teal" type="button">↻ Aggiorna</button>
       </div>
       <div class="grid3" style="margin-top:10px">
        <div class="field"><label>Ricerca</label><input id="fSearch" placeholder="Numero convocazione, verbale, oggetto…"></div>
        <div class="field"><label>Tipo</label><select id="fType"><option value="">Tutti</option><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea Soci</option></select></div>
        <div class="field"><label>Stato fascicolo</label><select id="fStatus"><option value="">Tutti</option><option value="COMPLETO">Completo</option><option value="INCOMPLETO">Da completare</option></select></div>
       </div>
-      <div class="toolbar"><button id="fFind" class="btn yellow" type="button">🔎 Filtra</button><button id="fClear" class="btn secondary" type="button">Cancella filtri</button></div>
+      <div class="toolbar"><button id="fFind" class="btn blue" type="button">🔎 Filtra</button><button id="fClear" class="btn orange" type="button">Cancella filtri</button></div>
       <div id="fMsg"></div>
      </div>
      <div class="actions" style="justify-content:space-between;margin:10px 0"><b>Riunioni archiviate</b><span id="fCount" class="pill b">0</span></div>
@@ -233,7 +233,7 @@
     <div class="hero"><h2>📝 Verbali</h2><p>Crea, archivia e stampa i verbali direttamente dal Gestionale Documentale.</p></div>
     <div class="pad">
      <div class="section">
-      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn yellow" type="button">✚ Verbale Assemblea Soci</button><button id="vDuplicate" class="btn yellow" type="button" disabled>⧉ Duplica verbale</button><button id="vPrint" class="btn secondary" type="button">🖨️ Stampa / Salva PDF</button><button id="vNew" class="btn secondary" type="button">✚ Nuovo</button><button id="vExit" class="btn secondary" type="button">← Esci / Elenco</button></div></div>
+      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn violet" type="button">✚ Verbale Assemblea Soci</button><button id="vDuplicate" class="btn orange" type="button" disabled>⧉ Duplica verbale</button><button id="vPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="vNew" class="btn success" type="button">✚ Nuovo</button><button id="vExit" class="btn danger" type="button">← Esci / Elenco</button></div></div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Tipo riunione *</label><select id="vType"><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea Soci</option><option value="RIUNIONE_OPERATIVA">Riunione operativa</option><option value="ALTRO">Altro</option></select></div>
        <div class="field"><label>Data riunione *</label><input id="vDate" type="date"></div>
@@ -292,7 +292,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
        <div class="toolbar"><button id="vSignedUpload" class="btn blue" type="button">📤 Carica / sostituisci PDF firmato</button><button id="vSignedOpen" class="btn secondary hidden" type="button">📄 Apri PDF firmato</button><button id="vSignedDownload" class="btn secondary hidden" type="button">⬇ Scarica PDF firmato</button><button id="vSignedDelete" class="btn danger hidden" type="button">🗑️ Elimina PDF firmato</button></div>
        <div id="vSignedInfo"></div>
       </div>
-      <div class="toolbar"><button id="vSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="vApprove" class="btn blue" type="button">✅ Approva verbale</button></div><div id="vmsg"></div>
+      <div class="toolbar"><button id="vSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="vApprove" class="btn success" type="button">✅ Approva verbale</button></div><div id="vmsg"></div>
      </div>
 
      <div class="section">
@@ -316,7 +316,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
      <div class="section">
       <div class="actions" style="justify-content:space-between">
        <div><h3 id="cvTitle" style="margin:0">Nuova convocazione</h3><div id="cvCode" class="muted">Numerazione automatica per anno.</div></div>
-       <div class="actions"><button id="cvDuplicate" class="btn yellow" type="button" disabled>⧉ Duplica convocazione</button><button id="cvPrint" class="btn secondary" type="button">🖨️ Stampa / Salva PDF</button><button id="cvNew" class="btn secondary" type="button">✚ Nuova</button><button id="cvExit" class="btn secondary" type="button">← Esci / Elenco</button></div>
+       <div class="actions"><button id="cvDuplicate" class="btn orange" type="button" disabled>⧉ Duplica convocazione</button><button id="cvPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="cvNew" class="btn success" type="button">✚ Nuova</button><button id="cvExit" class="btn danger" type="button">← Esci / Elenco</button></div>
       </div>
 
       <div class="grid4" style="margin-top:10px">
@@ -356,7 +356,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
        <div id="cvSignedMsg"></div>
       </div>
 
-      <div class="toolbar"><button id="cvSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="cvFinalize" class="btn blue" type="button">✅ Rendi definitiva</button></div>
+      <div class="toolbar"><button id="cvSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="cvFinalize" class="btn success" type="button">✅ Rendi definitiva</button></div>
       <div id="cvmsg"></div>
      </div>
 
