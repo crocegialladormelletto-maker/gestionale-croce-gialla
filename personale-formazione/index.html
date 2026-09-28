@@ -51,7 +51,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.8.2</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.9</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -65,7 +65,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.8.2</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.9</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -94,6 +94,10 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
       <div class="stat action" data-kpi-go="noOperational"><small>SENZA QUALIFICHE OPERATIVE</small><b id="kpiNoOperational">0</b><div class="go">Vedi elenco →</div></div>
      </div>
      <div class="section">
+      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🛠 Da sistemare</h3><div class="muted">Criticità amministrative e formative da risolvere.</div></div><span id="fixCount" class="pill r">0</span></div>
+      <div id="fixList"></div>
+     </div>
+     <div class="section">
       <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🫀 Certificazione DAE</h3><div class="muted">Controllo obbligatorio per tutti i volontari. Avviso automatico da 30 giorni prima della scadenza.</div></div><span id="daeAlertCount" class="pill b">0 da verificare</span></div>
       <div id="daeAlertList"></div>
      </div>
@@ -113,6 +117,10 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Badge</label><input id="pBadge" disabled></div><div class="field"><label>Nome</label><input id="pName" disabled></div><div class="field"><label>Cognome</label><input id="pSurname" disabled></div><div class="field"><label>Stato attività</label><select id="pState"><option value="ATTIVO">ATTIVO</option><option value="INATTIVO">INATTIVO</option><option value="ASPETTATIVA">ASPETTATIVA</option><option value="SOSPESO">SOSPESO</option><option value="CESSATO">CESSATO</option></select></div>
        <div class="field"><label>Telefono</label><input id="pPhone" disabled></div><div class="field"><label>Email</label><input id="pEmail" disabled></div><div class="field"><label>Data ingresso</label><input id="pEntry" disabled></div><div class="field"><label>Data nascita</label><input id="pBirth" disabled></div>
+      </div>
+      <div class="section">
+       <h3>🚑 Situazione operativa</h3>
+       <div id="personOperationalStatus" class="grid3"></div>
       </div>
       <div class="section">
        <div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">⚙️ Gestione volontario</h3><div class="muted">Aggiorna lo stato di attività oppure elimina una scheda inserita per errore.</div></div><div class="actions"><button id="savePersonState" class="btn blue">Salva stato</button><button id="deletePerson" class="btn danger">Elimina volontario</button></div></div>
@@ -328,6 +336,55 @@ function allDeadlines(){
  docs.forEach(d=>{if(d.data_scadenza)a.push({badge:d.badge_personale,type:'DOCUMENTO',name:d.titolo||d.nome_file_originale||d.categoria,date:d.data_scadenza,raw:d})});
  return a.sort((x,y)=>String(x.date).localeCompare(String(y.date)));
 }
+function hasOperationalQualification(p){
+ const op=defs.filter(d=>/AUTISTA|CAPO.*SERVIZIO|SOCCORRITORE/i.test((d.codice||'')+' '+(d.nome||''))).map(d=>d.codice);
+ return pquals.some(q=>q.badge_personale===p.badge&&op.includes(q.codice_qualifica));
+}
+function personOperationalQualification(p,rx){
+ const q=pquals.find(x=>x.badge_personale===p.badge&&rx.test((x.codice_qualifica||'')+' '+qName(x.codice_qualifica)));
+ return !!q;
+}
+function operationalBox(icon,label,value,cls='g'){
+ return '<div class="box"><div class="actions" style="justify-content:space-between"><b>'+esc(icon+' '+label)+'</b><span class="pill '+cls+'">'+esc(value)+'</span></div></div>';
+}
+function renderPersonOperationalStatus(){
+ const host=$('personOperationalStatus');if(!host||!selectedBadge)return;
+ const p=people.find(x=>x.badge===selectedBadge);if(!p)return;
+ const cs=complianceForPerson(p),dr=daeRow(p.badge),nx=nextPersonDeadline(p.badge);
+ const courses=trainingPeople.filter(x=>x.badge_personale===p.badge&&x.esito==='IDONEO').map(x=>trainingCourses.find(c=>c.id===x.corso_id)).filter(Boolean).sort((a,b)=>String(b.data_corso||'').localeCompare(String(a.data_corso||'')));
+ const lastCourse=courses[0];
+ const autista=personOperationalQualification(p,/AUTISTA/i);
+ const capo=personOperationalQualification(p,/CAPO.*SERVIZIO/i);
+ const socc=personOperationalQualification(p,/SOCCORRITORE/i);
+ host.innerHTML=
+  operationalBox(personActive(p)?'🟢':'🟡','Stato',p.stato_anagrafico||'ATTIVO',personActive(p)?'g':'w')+
+  operationalBox(dr?.valida_al&&daysTo(dr.valida_al)>=0?'🟢':'🔴','DAE',dr?.valida_al?'fino al '+fmt(dr.valida_al):'mancante',dr?.valida_al&&daysTo(dr.valida_al)>=0?'g':'r')+
+  operationalBox(autista?'🟢':'⚪','Autista',autista?'Abilitato':'Non assegnato',autista?'g':'')+
+  operationalBox(capo?'🟢':'⚪','Capo Servizio',capo?'Abilitato':'Non assegnato',capo?'g':'')+
+  operationalBox(socc?'🟢':'⚪','Soccorritore',socc?'Abilitato':'Non assegnato',socc?'g':'')+
+  operationalBox(lastCourse?'📚':'⚪','Ultimo corso',lastCourse?(lastCourse.titolo+' · '+(lastCourse.data_corso?fmt(lastCourse.data_corso):'data n.d.')):'Nessuno','b')+
+  operationalBox(nx?'⏰':'🟢','Prossima scadenza',nx?(nx.name+' · '+fmt(nx.date)):'Nessuna','w')+
+  operationalBox(cs.icon||'🟢','Semaforo generale',cs.label,cs.cls);
+}
+function renderFixList(){
+ const items=[];
+ people.filter(personActive).forEach(p=>{
+  const dr=daeRow(p.badge);
+  if(!dr?.valida_al)items.push({badge:p.badge,name:p.nome_completo||p.badge,reason:'DAE: data scadenza mancante',type:'DAE'});
+  else if(daysTo(dr.valida_al)<0)items.push({badge:p.badge,name:p.nome_completo||p.badge,reason:'DAE scaduto il '+fmt(dr.valida_al),type:'DAE'});
+  const expDocs=docs.filter(d=>d.badge_personale===p.badge&&d.data_scadenza&&daysTo(d.data_scadenza)<0);
+  expDocs.forEach(d=>items.push({badge:p.badge,name:p.nome_completo||p.badge,reason:(d.titolo||d.categoria||'Documento')+' scaduto il '+fmt(d.data_scadenza),type:'DOC'}));
+  if(!hasOperationalQualification(p))items.push({badge:p.badge,name:p.nome_completo||p.badge,reason:'Nessuna qualifica operativa registrata',type:'QUAL'});
+ });
+ people.filter(p=>(p.stato_anagrafico||'')==='ASPETTATIVA').forEach(p=>{
+  const hist=stateHistoryRows.filter(x=>x.badge_personale===p.badge&&x.stato==='ASPETTATIVA'&&x.data_rientro_prevista).sort((a,b)=>String(b.data_inizio).localeCompare(String(a.data_inizio)))[0];
+  if(hist&&daysTo(hist.data_rientro_prevista)>=0&&daysTo(hist.data_rientro_prevista)<=30)items.push({badge:p.badge,name:p.nome_completo||p.badge,reason:'Rientro da aspettativa previsto il '+fmt(hist.data_rientro_prevista),type:'STATO'});
+ });
+ $('fixCount').textContent=items.length;
+ $('fixCount').className='pill '+(items.length?'r':'g');
+ $('fixList').innerHTML=items.length?items.slice(0,20).map(x=>'<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(x.name)+'</b><br><span class="muted">'+esc(x.reason)+'</span></div><button class="btn secondary" data-fix-person="'+esc(x.badge)+'">Apri scheda</button></div></div>').join(''):'<div class="notice ok">Nessuna criticità da sistemare.</div>';
+ document.querySelectorAll('[data-fix-person]').forEach(b=>b.onclick=()=>{view('people');openPerson(b.dataset.fixPerson)});
+}
 function renderDashboard(){
  const dl=allDeadlines(),exp=dl.filter(x=>daysTo(x.date)<0),soon=dl.filter(x=>daysTo(x.date)>=0&&daysTo(x.date)<=30);
  const activePeople=people.filter(personActive);
@@ -355,6 +412,7 @@ function renderDashboard(){
  const urgent=dl.filter(x=>daysTo(x.date)<=60).slice(0,10);
  $('urgentList').innerHTML=urgent.length?urgent.map(x=>{const s=stateFor(x.date);return '<div class="box" style="margin:7px 0"><b>'+esc(personName(x.badge))+'</b> · '+esc(x.name)+' <span class="pill '+s.cls+'">'+esc(s.label)+'</span><br><span class="muted">'+esc(x.type==='QUALIFICA'?'Qualifica':'Documento')+' · '+esc(fmt(x.date))+' · '+esc(daysTo(x.date)<0?Math.abs(daysTo(x.date))+' gg fa':daysTo(x.date)+' gg')+'</span></div>'}).join(''):'<div class="notice ok">Nessuna scadenza urgente registrata.</div>';
  $('coverage').innerHTML=defs.map(q=>{const n=new Set(pquals.filter(x=>x.codice_qualifica===q.codice).map(x=>x.badge_personale)).size;return '<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><b>'+esc(qName(q.codice))+'</b><span class="pill b">'+n+' persone</span></div></div>'}).join('');
+ renderFixList();
 }
 function populateFilters(){
  const prev=$('peopleQual').value;$('peopleQual').innerHTML='<option value="">Tutte</option>'+defs.map(q=>'<option value="'+esc(q.codice)+'">'+esc(qName(q.codice))+'</option>').join('');$('peopleQual').value=prev;
@@ -416,7 +474,7 @@ function openPerson(badge){
  $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');msg('personManageMsg','');
  const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';$('daeProvider').value='';$('daeCertificateNo').value='';$('daeNotes').value='';$('daeFile').value='';$('daePersonBadge').textContent='Badge '+badge;
  const ds=daeStatus(dr?.valida_al);$('daeState').value=ds.label.toUpperCase();
- renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
+ renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPersonOperationalStatus();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
 
