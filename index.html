@@ -584,7 +584,7 @@
 #tariffTabs [data-tariff-code][aria-pressed="true"]{opacity:1;transform:translateY(-1px);border-color:#102f5a!important;box-shadow:0 0 0 3px rgba(16,47,90,.16),0 5px 12px rgba(16,47,90,.16)}
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 
-/* === V14.00 · STATISTICHE === */
+/* === V14.01 · STATISTICHE === */
 .stats-page-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .stats-kpi{background:#fff;border:1px solid #d8e3ec;border-radius:13px;padding:13px;min-height:92px;cursor:pointer;transition:.15s ease;box-shadow:0 2px 8px #12375d0b}
 .stats-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px #12375d18}
@@ -603,9 +603,21 @@
 @media(max-width:900px){.stats-board{grid-template-columns:1fr}.stats-donut-wrap{grid-template-columns:1fr}.stats-page-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.stats-page-grid{grid-template-columns:1fr 1fr}.stats-kpi b{font-size:22px}.stats-vehicle-row{grid-template-columns:60px 1fr 70px 70px}}
 
+
+/* === V14.01 · REPORT PERSONALIZZATI === */
+.report-builder{margin-top:12px}
+.report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.report-result{margin-top:12px;border:1px solid #d9e3eb;border-radius:12px;overflow:auto;background:#fff}
+.report-result table{min-width:760px}
+.report-result h3{margin:0;padding:12px 14px;background:#f4f7fa;color:#12375d;border-bottom:1px solid #d9e3eb}
+.report-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.report-summary .stat{min-height:70px}
+@media(max-width:900px){.report-grid{grid-template-columns:repeat(2,1fr)}.report-summary{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.report-grid,.report-summary{grid-template-columns:1fr}}
+
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.00</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.01</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -659,7 +671,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.00</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.01</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -808,6 +820,39 @@
   <div class="stats-card" style="margin-top:12px">
    <h3>Utilizzo mezzi</h3><div class="muted">Servizi e chilometri rilevati dai fogli viaggio.</div>
    <div id="statsVehicles" style="margin-top:8px"></div>
+  </div>
+
+  <div class="stats-card report-builder">
+   <div class="actions" style="justify-content:space-between">
+    <div><h3>📄 Report personalizzati</h3><div class="muted">Crea un report mirato scegliendo tipo, periodo e filtro.</div></div>
+    <button id="reportReset" class="btn secondary" type="button">Pulisci</button>
+   </div>
+   <div class="report-grid" style="margin-top:10px">
+    <div class="field"><label>Tipo di report</label><select id="reportType">
+      <option value="HOURS_TOTAL">Ore totali volontari</option>
+      <option value="HOURS_ROLE">Ore volontari divise per ruolo</option>
+      <option value="HOURS_PERSON">Ore singolo volontario</option>
+      <option value="SERVICES_SUMMARY">Riepilogo servizi</option>
+      <option value="SERVICES_TYPE">Servizi per tipologia</option>
+      <option value="SERVICES_VEHICLE">Servizi per mezzo</option>
+      <option value="KM_VEHICLE">Km per mezzo</option>
+      <option value="VEHICLE_USAGE">Utilizzo mezzi</option>
+      <option value="QUALIFICATIONS">Qualifiche personale</option>
+      <option value="DAE_EXPIRY">Scadenze DAE</option>
+      <option value="DOCUMENT_EXPIRY">Scadenze documenti</option>
+    </select></div>
+    <div class="field"><label>Dal</label><input id="reportFrom" type="date"></div>
+    <div class="field"><label>Al</label><input id="reportTo" type="date"></div>
+    <div class="field"><label>Filtro facoltativo</label><select id="reportFilter"><option value="">Tutti</option></select></div>
+   </div>
+   <div class="actions" style="margin-top:10px">
+    <button id="reportCreate" class="btn yellow" type="button">Crea report</button>
+    <button id="reportPrint" class="btn secondary hidden" type="button">🖨 Stampa / PDF</button>
+    <button id="reportCsv" class="btn secondary hidden" type="button">⬇ CSV</button>
+   </div>
+   <div id="reportMsg"></div>
+   <div id="reportSummary" class="report-summary"></div>
+   <div id="reportResult" class="report-result hidden"></div>
   </div>
  </div>
 </section>
@@ -2450,7 +2495,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.00':'Versione 14.00';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.01':'Versione 14.01';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -3757,8 +3802,96 @@ function statsDurationHours(row){
 }
 function statsPersonName(p){return p?.nome_completo||[p?.nome,p?.cognome].filter(Boolean).join(' ')||p?.badge||'—'}
 function statsEscapeCsv(v){return '"'+String(v??'').replaceAll('"','""')+'"'}
+
+let lastCustomReport=null;
+function reportFormatDate(d){return d?new Date(d+'T12:00:00').toLocaleDateString('it-IT'):'—'}
+function reportTypeNeedsPerson(type){return type==='HOURS_PERSON'}
+function reportTypeNeedsVehicle(type){return ['SERVICES_VEHICLE','KM_VEHICLE','VEHICLE_USAGE'].includes(type)}
+async function populateReportFilter(){
+ const type=$('reportType').value,sel=$('reportFilter');if(!sel)return;
+ sel.innerHTML='<option value="">Tutti</option>';
+ if(reportTypeNeedsPerson(type)){
+  const r=await sb.from('personale').select('badge,nome_completo,nome,cognome').order('nome_completo');
+  (r.data||[]).forEach(p=>sel.insertAdjacentHTML('beforeend','<option value="'+esc(p.badge)+'">'+esc(statsPersonName(p))+' · '+esc(p.badge)+'</option>'));
+ }else if(reportTypeNeedsVehicle(type)){
+  ['06','07','08','09'].forEach(v=>sel.insertAdjacentHTML('beforeend','<option value="'+v+'">Mezzo '+v+'</option>'));
+ }
+}
+function reportResetUI(){
+ const n=new Date(),f=new Date(n.getFullYear(),0,1);
+ $('reportFrom').value=statsISODate(f);$('reportTo').value=statsISODate(n);$('reportType').value='HOURS_TOTAL';
+ $('reportSummary').innerHTML='';$('reportResult').innerHTML='';$('reportResult').classList.add('hidden');
+ $('reportPrint').classList.add('hidden');$('reportCsv').classList.add('hidden');msg('reportMsg','');lastCustomReport=null;populateReportFilter();
+}
+function reportRenderTable(title,headers,rows,summary=[]){
+ $('reportSummary').innerHTML=summary.map(x=>'<div class="stat"><small>'+esc(x.label)+'</small><b>'+esc(x.value)+'</b></div>').join('');
+ $('reportResult').classList.remove('hidden');
+ $('reportResult').innerHTML='<h3>'+esc(title)+'</h3><table><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr>'+r.map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+headers.length+'">Nessun dato disponibile.</td></tr>')+'</tbody></table>';
+ $('reportPrint').classList.remove('hidden');$('reportCsv').classList.remove('hidden');
+ lastCustomReport={title,headers,rows,summary};
+}
+async function createCustomReport(){
+ const type=$('reportType').value,from=$('reportFrom').value,to=$('reportTo').value,filter=$('reportFilter').value;
+ if(!from||!to||from>to)return msg('reportMsg','Controlla il periodo selezionato.','warn');
+ msg('reportMsg','Creazione report in corso...');
+ try{
+  if(['HOURS_TOTAL','HOURS_ROLE','HOURS_PERSON','KM_VEHICLE','VEHICLE_USAGE'].includes(type)){
+   let q=sb.from('fogli_viaggio').select('data_servizio,mezzo,km_percorsi,ora_partenza_servizio,ora_arrivo_sede,badge_autista,badge_capo_servizio,badge_soccorritore,badge_secondo,badge_affiancato,badge_accompagnatore').gte('data_servizio',from).lte('data_servizio',to).limit(5000);
+   if(reportTypeNeedsVehicle(type)&&filter)q=q.eq('mezzo',filter);
+   const [fr,pr]=await Promise.all([q,sb.from('personale').select('badge,nome_completo,nome,cognome').limit(1000)]);
+   if(fr.error||pr.error)throw(fr.error||pr.error);
+   const travel=fr.data||[],pmap=new Map((pr.data||[]).map(p=>[p.badge,p]));
+   if(type==='HOURS_TOTAL'||type==='HOURS_PERSON'){
+    const by={};travel.forEach(f=>{const h=statsDurationHours(f);const badges=[f.badge_autista,f.badge_capo_servizio,f.badge_soccorritore,f.badge_secondo,f.badge_affiancato,f.badge_accompagnatore].filter(Boolean);[...new Set(badges)].forEach(b=>{if(type==='HOURS_PERSON'&&filter&&b!==filter)return;by[b]=(by[b]||0)+h})});
+    const rows=Object.entries(by).map(([b,h])=>[b,statsPersonName(pmap.get(b)),h.toLocaleString('it-IT',{maximumFractionDigits:1})]).sort((a,b)=>Number(String(b[2]).replace(',','.'))-Number(String(a[2]).replace(',','.')));
+    const total=Object.values(by).reduce((s,h)=>s+h,0);
+    reportRenderTable(type==='HOURS_PERSON'?'Ore singolo volontario':'Ore totali volontari',['Badge','Volontario','Ore'],rows,[{label:'VOLONTARI',value:rows.length},{label:'ORE TOTALI',value:total.toLocaleString('it-IT',{maximumFractionDigits:1})}]);
+   }else if(type==='HOURS_ROLE'){
+    const roles=[['badge_autista','Autista'],['badge_capo_servizio','Capo Servizio'],['badge_soccorritore','Soccorritore'],['badge_secondo','Secondo Soccorritore'],['badge_affiancato','Affiancato'],['badge_accompagnatore','Accompagnatore']],by={};
+    travel.forEach(f=>{const h=statsDurationHours(f);roles.forEach(([field,label])=>{if(f[field])by[label]=(by[label]||0)+h})});
+    const rows=Object.entries(by).map(([r,h])=>[r,h.toLocaleString('it-IT',{maximumFractionDigits:1})]).sort((a,b)=>Number(String(b[1]).replace(',','.'))-Number(String(a[1]).replace(',','.')));
+    reportRenderTable('Ore volontari divise per ruolo',['Ruolo','Ore'],rows,[{label:'RUOLI',value:rows.length},{label:'ORE SOMMATE',value:Object.values(by).reduce((s,h)=>s+h,0).toLocaleString('it-IT',{maximumFractionDigits:1})}]);
+   }else{
+    const by={};travel.forEach(f=>{const k=f.mezzo||'—';if(!by[k])by[k]={n:0,km:0,h:0};by[k].n++;by[k].km+=Number(f.km_percorsi||0);by[k].h+=statsDurationHours(f)});
+    const rows=Object.entries(by).map(([m,v])=>[m,v.n,Math.round(v.km).toLocaleString('it-IT'),v.h.toLocaleString('it-IT',{maximumFractionDigits:1})]).sort((a,b)=>Number(String(b[2]).replaceAll('.',''))-Number(String(a[2]).replaceAll('.','')));
+    reportRenderTable(type==='KM_VEHICLE'?'Km per mezzo':'Utilizzo mezzi',['Mezzo','Servizi','Km','Ore'],rows,[{label:'MEZZI',value:rows.length},{label:'KM TOTALI',value:Math.round(Object.values(by).reduce((s,v)=>s+v.km,0)).toLocaleString('it-IT')}]);
+   }
+  }else if(['SERVICES_SUMMARY','SERVICES_TYPE','SERVICES_VEHICLE'].includes(type)){
+   let q=sb.from('servizi_giornalieri').select('data_servizio,mezzo,categoria_servizio,tipo_servizio,tipo_servizio_altro,stato_gestionale').gte('data_servizio',from).lte('data_servizio',to).neq('stato_gestionale','ANNULLATO').limit(5000);
+   if(type==='SERVICES_VEHICLE'&&filter)q=q.eq('mezzo',filter);
+   const r=await q;if(r.error)throw r.error;const rows0=r.data||[];
+   if(type==='SERVICES_SUMMARY'){
+    const by={};rows0.forEach(x=>{const k=statsTypeLabel(x);by[k]=(by[k]||0)+1});
+    const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]);
+    reportRenderTable('Riepilogo servizi',['Tipologia','Numero servizi'],rows,[{label:'SERVIZI TOTALI',value:rows0.length},{label:'TIPOLOGIE',value:rows.length}]);
+   }else if(type==='SERVICES_TYPE'){
+    const by={};rows0.forEach(x=>{const k=x.tipo_servizio_altro||x.tipo_servizio||x.categoria_servizio||'Altro';by[k]=(by[k]||0)+1});
+    const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]);
+    reportRenderTable('Servizi per tipologia',['Tipo servizio','Numero'],rows,[{label:'SERVIZI',value:rows0.length},{label:'TIPI',value:rows.length}]);
+   }else{
+    const by={};rows0.forEach(x=>{const k=x.mezzo||'—';by[k]=(by[k]||0)+1});
+    const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]);
+    reportRenderTable('Servizi per mezzo',['Mezzo','Numero servizi'],rows,[{label:'SERVIZI',value:rows0.length},{label:'MEZZI',value:rows.length}]);
+   }
+  }else if(type==='QUALIFICATIONS'||type==='DAE_EXPIRY'){
+   const [qr,pr]=await Promise.all([sb.from('personale_qualifiche').select('badge_personale,codice_qualifica,valida_dal,valida_al,attiva').eq('attiva',true).limit(5000),sb.from('personale').select('badge,nome_completo,nome,cognome').limit(1000)]);
+   if(qr.error||pr.error)throw(qr.error||pr.error);const pmap=new Map((pr.data||[]).map(p=>[p.badge,p]));
+   let data=qr.data||[];if(type==='DAE_EXPIRY')data=data.filter(x=>String(x.codice_qualifica||'').toUpperCase()==='DAE');
+   const rows=data.map(x=>[x.badge_personale,statsPersonName(pmap.get(x.badge_personale)),x.codice_qualifica,reportFormatDate(x.valida_dal),reportFormatDate(x.valida_al)]).sort((a,b)=>a[1].localeCompare(b[1],'it'));
+   reportRenderTable(type==='DAE_EXPIRY'?'Scadenze DAE':'Qualifiche personale',['Badge','Volontario','Qualifica','Valida dal','Valida al'],rows,[{label:'REGISTRAZIONI',value:rows.length}]);
+  }else if(type==='DOCUMENT_EXPIRY'){
+   const [dr,pr]=await Promise.all([sb.from('documenti_personale').select('badge_personale,categoria,titolo,data_scadenza').not('data_scadenza','is',null).gte('data_scadenza',from).lte('data_scadenza',to).order('data_scadenza').limit(5000),sb.from('personale').select('badge,nome_completo,nome,cognome').limit(1000)]);
+   if(dr.error||pr.error)throw(dr.error||pr.error);const pmap=new Map((pr.data||[]).map(p=>[p.badge,p]));
+   const rows=(dr.data||[]).map(x=>[x.badge_personale,statsPersonName(pmap.get(x.badge_personale)),x.titolo||x.categoria||'Documento',reportFormatDate(x.data_scadenza)]);
+   reportRenderTable('Scadenze documenti',['Badge','Volontario','Documento','Scadenza'],rows,[{label:'SCADENZE',value:rows.length}]);
+  }
+  msg('reportMsg','Report creato.','ok');
+ }catch(e){msg('reportMsg','Errore creazione report: '+(e.message||String(e)),'err')}
+}
+
 async function loadStatistics(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
+ if(!$('reportFrom').value)reportResetUI();
  if(!$('statsFrom').value){const n=new Date(),f=new Date(n.getFullYear(),0,1);$('statsFrom').value=statsISODate(f);$('statsTo').value=statsISODate(n)}
  const from=$('statsFrom').value,to=$('statsTo').value;if(!from||!to||from>to)return msg('statsMsg','Controlla il periodo selezionato.','warn');
  msg('statsMsg','Aggiornamento statistiche in corso...');
@@ -3892,6 +4025,19 @@ $('dashOpsRefresh').onclick=loadOperationalDashboard;
 if($('dashOpenDebitNotes'))$('dashOpenDebitNotes').onclick=()=>location.href='note-di-debito/';
 $('dashOpenCandidates').onclick=()=>openPendingAssistance();
 $('dashCriticalAssistanceOpen').onclick=()=>view('assistance');
+
+
+$('reportType')?.addEventListener('change',populateReportFilter);
+$('reportCreate')?.addEventListener('click',createCustomReport);
+$('reportReset')?.addEventListener('click',reportResetUI);
+$('reportCsv')?.addEventListener('click',()=>{
+ const r=lastCustomReport;if(!r)return;
+ const rows=[r.headers,...r.rows],csv='\ufeff'+rows.map(row=>row.map(statsEscapeCsv).join(';')).join('\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=r.title.replace(/[^a-z0-9]+/gi,'_')+'_'+$('reportFrom').value+'_'+$('reportTo').value+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
+});
+$('reportPrint')?.addEventListener('click',()=>{
+ const r=lastCustomReport;if(!r)return;const w=window.open('','_blank');if(!w)return;
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(r.title)+'</title><style>body{font-family:Arial;padding:24px;color:#1c3347}h1{color:#12375d}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccd6de;padding:7px;text-align:left}th{background:#eef3f7}.meta{margin-bottom:16px;color:#64798b}</style></head><body><h1>Croce Gialla Emergenza ODV</h1><h2>'+esc(r.title)+'</h2><div class="meta">Periodo: '+esc($('reportFrom').value)+' – '+esc($('reportTo').value)+'</div><table><thead><tr>'+r.headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+r.rows.map(row=>'<tr>'+row.map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>');w.document.close();
+});
 
 $('statsToday')?.addEventListener('click',()=>statsSetPeriod('today'));
 $('stats30')?.addEventListener('click',()=>statsSetPeriod('30'));
