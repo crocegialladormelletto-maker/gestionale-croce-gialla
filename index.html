@@ -584,7 +584,7 @@
 #tariffTabs [data-tariff-code][aria-pressed="true"]{opacity:1;transform:translateY(-1px);border-color:#102f5a!important;box-shadow:0 0 0 3px rgba(16,47,90,.16),0 5px 12px rgba(16,47,90,.16)}
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 
-/* === V14.04 · STATISTICHE === */
+/* === V14.05 · STATISTICHE === */
 .stats-page-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .stats-kpi{background:#fff;border:1px solid #d8e3ec;border-radius:13px;padding:13px;min-height:92px;cursor:pointer;transition:.15s ease;box-shadow:0 2px 8px #12375d0b}
 .stats-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px #12375d18}
@@ -604,7 +604,7 @@
 @media(max-width:520px){.stats-page-grid{grid-template-columns:1fr 1fr}.stats-kpi b{font-size:22px}.stats-vehicle-row{grid-template-columns:60px 1fr 70px 70px}}
 
 
-/* === V14.04 · REPORT PERSONALIZZATI === */
+/* === V14.05 · REPORT PERSONALIZZATI === */
 .report-builder{margin-top:12px}
 .report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .report-result{margin-top:12px;border:1px solid #d9e3eb;border-radius:12px;overflow:auto;background:#fff}
@@ -617,7 +617,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.04</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.05</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -671,7 +671,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.04</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.05</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -780,6 +780,7 @@
     <div class="actions">
      <button id="statsToday" class="btn secondary" type="button">Oggi</button>
      <button id="stats30" class="btn secondary" type="button">Ultimi 30 giorni</button>
+     <button id="stats12m" class="btn secondary" type="button">Ultimi 12 mesi</button>
      <button id="statsYear" class="btn yellow" type="button">Anno corrente</button>
     </div>
     <div class="actions">
@@ -2511,7 +2512,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.04':'Versione 14.04';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.05':'Versione 14.05';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -3797,6 +3798,7 @@ function statsSetPeriod(kind){
  const now=new Date(),to=statsISODate(now),from=new Date(now);
  if(kind==='today'){}
  else if(kind==='30')from.setDate(from.getDate()-29);
+ else if(kind==='12m'){from.setFullYear(from.getFullYear()-1);from.setDate(from.getDate()+1)}
  else {from.setMonth(0,1)}
  $('statsFrom').value=statsISODate(from);$('statsTo').value=to;loadStatistics();
 }
@@ -3917,15 +3919,35 @@ function shiftClockHours(start,end){
 function shiftBandHours(fascia){
  return ({MATTINO:7,POMERIGGIO:5,SERA:5,NOTTE:7})[String(fascia||'').toUpperCase()]||0;
 }
+
+function statsDateChunks(from,to,maxDays=60){
+ const out=[];let cur=new Date(from+'T12:00:00'),end=new Date(to+'T12:00:00');
+ while(cur<=end){
+  const chunkStart=new Date(cur),chunkEnd=new Date(cur);
+  chunkEnd.setDate(chunkEnd.getDate()+maxDays-1);
+  if(chunkEnd>end)chunkEnd=end;
+  out.push([statsISODate(chunkStart),statsISODate(chunkEnd)]);
+  cur=new Date(chunkEnd);cur.setDate(cur.getDate()+1);
+ }
+ return out;
+}
+async function statsRpcRange(name,from,to){
+ const chunks=statsDateChunks(from,to,60),rows=[];
+ for(const [a,b] of chunks){
+  const r=await sb.rpc(name,{p_dal:a,p_al:b});
+  if(r.error)throw r.error;
+  rows.push(...(r.data||[]));
+ }
+ return rows;
+}
 async function loadShiftStatistics(from,to,people){
- const [tr,emg,dim,ass]=await Promise.all([
+ const [tr,emgRows,dimRows,assRows]=await Promise.all([
   sb.from('turni').select('id,data_turno,tipo_turno,ora_inizio,ora_fine,stato').gte('data_turno',from).lte('data_turno',to).limit(5000),
-  sb.rpc('cge_emergenza_turni_v2',{p_dal:from,p_al:to}),
-  sb.rpc('cge_dimissioni_turni',{p_dal:from,p_al:to}),
-  sb.rpc('cge_assistenza_fasce_turni',{p_dal:from,p_al:to})
+  statsRpcRange('cge_emergenza_turni_v2',from,to),
+  statsRpcRange('cge_dimissioni_turni',from,to),
+  statsRpcRange('cge_assistenza_fasce_turni',from,to)
  ]);
- const err=tr.error||emg.error||dim.error||ass.error;
- if(err)throw err;
+ if(tr.error)throw tr.error;
  const turns=(tr.data||[]).filter(t=>!['ANNULLATO','CANCELLATO'].includes(String(t.stato||'').toUpperCase()));
  let assignments=[];
  if(turns.length){
@@ -3940,9 +3962,9 @@ async function loadShiftStatistics(from,to,people){
   if(x.risposta==='NON DISPONIBILE')return;
   rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftClockHours(t.ora_inizio,t.ora_fine)});
  });
- (emg.data||[]).forEach(x=>rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza 118',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
- (dim.data||[]).forEach(x=>rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
- (ass.data||[]).forEach(x=>rows.push({source:'Assistenze',date:x.giorno,type:'Assistenza',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
+ emgRows.forEach(x=>rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza 118',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
+ dimRows.forEach(x=>rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
+ assRows.forEach(x=>rows.push({source:'Assistenze',date:x.giorno,type:'Assistenza',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia)}));
  const seen=new Set(),valid=rows.filter(x=>{
   if(!x.badge)return false;
   const key=[x.source,x.date,x.type,x.badge,x.role].join('|');
@@ -3957,7 +3979,7 @@ async function loadShiftStatistics(from,to,people){
  const pmap=new Map((people||[]).map(p=>[p.badge,p]));
  const top=Object.entries(byBadge).map(([badge,n])=>({badge,n,hours:byBadgeHours[badge]||0,name:shiftPersonNameFromMap(badge,pmap)})).sort((a,b)=>b.n-a.n).slice(0,10);
  const topHours=Object.entries(byBadgeHours).map(([badge,hours])=>({badge,hours,n:byBadge[badge]||0,name:shiftPersonNameFromMap(badge,pmap)})).sort((a,b)=>b.hours-a.hours).slice(0,10);
- return {rows:valid,byBadge,byBadgeHours,byRole,byRoleHours,byType,byTypeHours,top,topHours,totalHours:valid.reduce((s,x)=>s+Number(x.hours||0),0),general:assignments.filter(x=>turnMap.has(x.turno_id)&&x.risposta!=='NON DISPONIBILE').length,special:(emg.data||[]).length+(dim.data||[]).length+(ass.data||[]).length};
+ return {rows:valid,byBadge,byBadgeHours,byRole,byRoleHours,byType,byTypeHours,top,topHours,totalHours:valid.reduce((s,x)=>s+Number(x.hours||0),0),general:assignments.filter(x=>turnMap.has(x.turno_id)&&x.risposta!=='NON DISPONIBILE').length,special:emgRows.length+dimRows.length+assRows.length};
 }
 
 async function loadStatistics(){
@@ -4117,6 +4139,7 @@ $('reportPrint')?.addEventListener('click',()=>{
 
 $('statsToday')?.addEventListener('click',()=>statsSetPeriod('today'));
 $('stats30')?.addEventListener('click',()=>statsSetPeriod('30'));
+$('stats12m')?.addEventListener('click',()=>statsSetPeriod('12m'));
 $('statsYear')?.addEventListener('click',()=>statsSetPeriod('year'));
 $('statsOpenShifts')?.addEventListener('click',()=>view('shifts'));
 $('statsRefresh')?.addEventListener('click',loadStatistics);
