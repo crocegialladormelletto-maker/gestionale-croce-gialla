@@ -38,6 +38,18 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 .login{min-height:100vh;display:grid;place-items:center;padding:18px}.loginCard{width:min(520px,100%);background:#fff;border:1px solid var(--l);border-radius:18px;overflow:hidden;box-shadow:0 8px 28px #12375d1f}.loginHead{padding:22px;text-align:center;background:var(--n);color:#fff;border-bottom:7px solid var(--y)}.loginHead h2{margin:10px 0 4px}.loginHead .muted{color:#dbe6ef}.loginHead img{width:90px;background:#fff;border-radius:50%;border:4px solid #fff}.loginBody{padding:18px}
 .qualRow{display:grid;grid-template-columns:minmax(170px,1.2fr) 130px 130px auto;gap:8px;align-items:end;padding:9px;border:1px solid var(--l);border-radius:10px;margin:7px 0}
 .personSelected{background:#fffbea}
+.personGlance{display:grid;grid-template-columns:1.2fr 2fr 1.4fr;gap:10px;margin:12px 0}
+.personStatusCard,.personGlanceCard{border:1px solid var(--l);border-radius:13px;padding:13px;background:#fff}
+.personStatusCard.operativo{border-left:6px solid #2d9a69;background:#f1fbf6}
+.personStatusCard.verifica{border-left:6px solid #d6a100;background:#fffbea}
+.personStatusCard.nonoperativo{border-left:6px solid #b52d36;background:#fff5f5}
+.personStatusCard small,.personGlanceCard small{font-size:10px;font-weight:900;color:var(--m)}
+.personStatusCard strong{display:block;font-size:21px;color:var(--n);margin-top:4px}
+.personRoleGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:9px}
+.personRole{border:1px solid var(--l);border-radius:9px;padding:8px;text-align:center;background:#fbfdff;font-size:11px}
+.personRole b{display:block;margin-top:3px;color:var(--n)}
+.personCourseMini{padding:7px 0;border-bottom:1px solid #e7edf2}.personCourseMini:last-child{border-bottom:0}
+@media(max-width:1050px){.personGlance{grid-template-columns:1fr}.personRoleGrid{grid-template-columns:repeat(2,1fr)}}
 .compliance{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900;white-space:nowrap}
 .compliance.g{background:#e7f6ef;color:#176a4b}.compliance.w{background:#fff4c9;color:#795a00}.compliance.r{background:#fdebed;color:#9d2730}
 .matrix-wrap{overflow:auto;border:1px solid var(--l);border-radius:12px;background:#fff}.matrix{border-collapse:separate;border-spacing:0;min-width:max-content;width:100%}
@@ -126,7 +138,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.4</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.3.5</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -140,7 +152,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.4</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.3.5</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -247,6 +259,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
      <div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Semaforo</th><th>Qualifiche</th><th>Prossima scadenza</th><th></th></tr></thead><tbody id="peopleBody"></tbody></table></div>
      <div id="personDetail" class="section hidden" style="margin-top:14px">
       <div class="actions" style="justify-content:space-between"><div><h3 id="personTitle" style="margin:0">Scheda personale</h3><div id="personSub" class="muted"></div></div><div class="actions"><button id="printPersonSummary" class="btn blue">🖨 Stampa scheda riepilogativa</button><button id="closePerson" class="btn secondary">Chiudi</button></div></div>
+      <div id="personAtGlance" class="personGlance"></div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Badge</label><input id="pBadge" disabled></div><div class="field"><label>Nome</label><input id="pName" disabled></div><div class="field"><label>Cognome</label><input id="pSurname" disabled></div><div class="field"><label>Stato attività</label><select id="pState"><option value="ATTIVO">ATTIVO</option><option value="INATTIVO">INATTIVO</option><option value="ASPETTATIVA">ASPETTATIVA</option><option value="SOSPESO">SOSPESO</option><option value="CESSATO">CESSATO</option></select></div>
        <div class="field"><label>Telefono</label><input id="pPhone"></div><div class="field"><label>Email</label><input id="pEmail" type="email"></div><div class="field"><label>Data ingresso</label><input id="pEntry" type="date"></div><div class="field"><label>Data nascita</label><input id="pBirth" type="date"></div>
@@ -598,10 +611,36 @@ function personOperationalQualification(p,rx){
 function operationalBox(icon,label,value,cls='g'){
  return '<div class="box"><div class="actions" style="justify-content:space-between"><b>'+esc(icon+' '+label)+'</b><span class="pill '+cls+'">'+esc(value)+'</span></div></div>';
 }
+
+function personOperationalSummary(p){
+ const dr=daeRow(p.badge),daeValid=!!(dr?.valida_al&&daysTo(dr.valida_al)>=0);
+ const autista=personOperationalQualification(p,/AUTISTA/i);
+ const capo=personOperationalQualification(p,/CAPO.*SERVIZIO/i);
+ const socc=personOperationalQualification(p,/SOCCORRITORE/i);
+ const anyRole=autista||capo||socc;
+ if(!personActive(p))return {key:'NON_OPERATIVO',label:'NON OPERATIVO',cls:'nonoperativo',reason:'Stato personale: '+(p.stato_anagrafico||'non attivo'),daeValid,autista,capo,socc};
+ if(!daeValid)return {key:'NON_OPERATIVO',label:'NON OPERATIVO',cls:'nonoperativo',reason:dr?.valida_al?'DAE scaduto il '+fmt(dr.valida_al):'DAE mancante',daeValid,autista,capo,socc};
+ if(!anyRole)return {key:'DA_VERIFICARE',label:'DA VERIFICARE',cls:'verifica',reason:'Nessuna qualifica operativa assegnata',daeValid,autista,capo,socc};
+ return {key:'OPERATIVO',label:'OPERATIVO',cls:'operativo',reason:'Stato attivo, DAE valido e qualifica operativa presente',daeValid,autista,capo,socc};
+}
+function renderPersonAtGlance(){
+ const host=$('personAtGlance');if(!host||!selectedBadge)return;
+ const p=people.find(x=>x.badge===selectedBadge);if(!p)return;
+ const os=personOperationalSummary(p),nx=nextPersonDeadline(p.badge);
+ const latest=trainingPeople.filter(x=>x.badge_personale===p.badge).map(x=>({part:x,course:trainingCourses.find(c=>c.id===x.corso_id)})).filter(x=>x.course).sort((a,b)=>String(b.course.data_corso||'').localeCompare(String(a.course.data_corso||''))).slice(0,3);
+ const role=(ok,label)=>'<div class="personRole">'+(ok?'🟢':'⚪')+'<b>'+esc(label)+'</b><span>'+esc(ok?'Abilitato':'Non assegnato')+'</span></div>';
+ host.innerHTML=
+  '<div class="personStatusCard '+os.cls+'"><small>IDONEITÀ OPERATIVA</small><strong>'+esc(os.label)+'</strong><div class="muted" style="margin-top:5px">'+esc(os.reason)+'</div></div>'+
+  '<div class="personGlanceCard"><small>ABILITAZIONI OPERATIVE</small><div class="personRoleGrid">'+
+   role(os.autista,'Autista')+role(os.capo,'Capo Servizio')+role(os.socc,'Soccorritore')+role(os.socc,'Secondo Soccorritore')+role(os.daeValid,'DAE valido')+
+  '</div></div>'+
+  '<div class="personGlanceCard"><small>PROSSIMA SCADENZA</small><div style="margin-top:5px"><b>'+esc(nx?nx.name:'Nessuna scadenza')+'</b></div><div class="muted">'+esc(nx?fmt(nx.date):'Nessuna scadenza futura registrata')+'</div>'+
+   '<div style="margin-top:10px"><small>ULTIME ATTIVITÀ FORMATIVE</small>'+(latest.length?latest.map(x=>'<div class="personCourseMini"><b>'+esc(x.course.titolo||'Corso')+'</b><div class="muted">'+esc(x.course.data_corso?fmt(x.course.data_corso):'Data da definire')+(x.part.esito?' · '+esc(x.part.esito):'')+'</div></div>').join(''):'<div class="muted" style="margin-top:5px">Nessun corso registrato.</div>')+'</div></div>';
+}
 function renderPersonOperationalStatus(){
  const host=$('personOperationalStatus');if(!host||!selectedBadge)return;
  const p=people.find(x=>x.badge===selectedBadge);if(!p)return;
- const cs=complianceForPerson(p),dr=daeRow(p.badge),nx=nextPersonDeadline(p.badge);
+ const os=personOperationalSummary(p),cs=complianceForPerson(p),dr=daeRow(p.badge),nx=nextPersonDeadline(p.badge);
  const courses=trainingPeople.filter(x=>x.badge_personale===p.badge&&x.esito==='IDONEO').map(x=>trainingCourses.find(c=>c.id===x.corso_id)).filter(Boolean).sort((a,b)=>String(b.data_corso||'').localeCompare(String(a.data_corso||'')));
  const lastCourse=courses[0];
  const autista=personOperationalQualification(p,/AUTISTA/i);
@@ -615,7 +654,8 @@ function renderPersonOperationalStatus(){
   operationalBox(socc?'🟢':'⚪','Soccorritore',socc?'Abilitato':'Non assegnato',socc?'g':'')+
   operationalBox(lastCourse?'📚':'⚪','Ultimo corso',lastCourse?(lastCourse.titolo+' · '+(lastCourse.data_corso?fmt(lastCourse.data_corso):'data n.d.')):'Nessuno','b')+
   operationalBox(nx?'⏰':'🟢','Prossima scadenza',nx?(nx.name+' · '+fmt(nx.date)):'Nessuna','w')+
-  operationalBox(cs.icon||'🟢','Semaforo generale',cs.label,cs.cls);
+  operationalBox(os.key==='OPERATIVO'?'🟢':os.key==='DA_VERIFICARE'?'🟡':'🔴','Idoneità operativa',os.label,os.key==='OPERATIVO'?'g':os.key==='DA_VERIFICARE'?'w':'r')+
+  operationalBox(cs.icon||'🟢','Semaforo scadenze',cs.label,cs.cls);
 }
 function renderFixList(){
  const items=[];
@@ -766,6 +806,7 @@ function renderPersonPrintSheet(){
  const courses=trainingPeople.filter(x=>x.badge_personale===selectedBadge).map(x=>({part:x,course:trainingCourses.find(c=>c.id===x.corso_id)})).filter(x=>x.course).sort((a,b)=>String(b.course.data_corso||'').localeCompare(String(a.course.data_corso||'')));
  const personDocs=docs.filter(x=>x.badge_personale===selectedBadge).slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
  const states=stateHistoryRows.filter(x=>x.badge_personale===selectedBadge).slice().sort((a,b)=>String(b.data_inizio||'').localeCompare(String(a.data_inizio||'')));
+ const os=personOperationalSummary(p);
  const cs=complianceForPerson(p);
  const fullName=p.nome_completo||(((p.cognome||'')+' '+(p.nome||'')).trim())||selectedBadge;
  const qualRows=quals.length?quals.map(q=>{
@@ -782,7 +823,7 @@ function renderPersonPrintSheet(){
     '<b>Nome</b><span>'+esc(p.nome||'—')+'</span><b>Cognome</b><span>'+esc(p.cognome||'—')+'</span><b>Data di nascita</b><span>'+esc(p.data_nascita?fmt(p.data_nascita):'—')+'</span><b>Codice fiscale</b><span>'+esc(p.codice_fiscale||'—')+'</span><b>Telefono</b><span>'+esc(p.telefono||'—')+'</span><b>Email</b><span>'+esc(p.email||'—')+'</span><b>Indirizzo</b><span>'+esc([p.indirizzo,p.cap,p.comune,p.provincia].filter(Boolean).join(' ')||'—')+'</span><b>Data ingresso</b><span>'+esc(p.data_ingresso?fmt(p.data_ingresso):'—')+'</span>'+
    '</div></div>'+
    '<div class="personPrintSection"><h3>🚑 Situazione attuale</h3><div class="personPrintKV">'+
-    '<b>Stato</b><span>'+esc(p.stato_anagrafico||'ATTIVO')+'</span><b>Semaforo</b><span>'+esc((cs.icon||'')+' '+cs.label)+'</span><b>Motivazione</b><span>'+esc(cs.reason||'—')+'</span><b>DAE</b><span>'+esc(ds.label+(dr?.valida_al?' · '+fmt(dr.valida_al):''))+'</span><b>Data uscita</b><span>'+esc(p.data_uscita?fmt(p.data_uscita):'—')+'</span>'+
+    '<b>Stato</b><span>'+esc(p.stato_anagrafico||'ATTIVO')+'</span><b>Idoneità operativa</b><span>'+esc(os.label)+'</span><b>Semaforo scadenze</b><span>'+esc((cs.icon||'')+' '+cs.label)+'</span><b>Motivazione</b><span>'+esc(cs.reason||'—')+'</span><b>DAE</b><span>'+esc(ds.label+(dr?.valida_al?' · '+fmt(dr.valida_al):''))+'</span><b>Data uscita</b><span>'+esc(p.data_uscita?fmt(p.data_uscita):'—')+'</span>'+
    '</div></div>'+
   '</div>'+
   '<div class="personPrintSection"><h3>🎓 Qualifiche</h3><table class="personPrintTable"><thead><tr><th>Qualifica</th><th>Dal</th><th>Scadenza</th></tr></thead><tbody>'+qualRows+'</tbody></table></div>'+
@@ -800,7 +841,7 @@ function openPerson(badge){
  $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');msg('personManageMsg','');
  const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';$('daeProvider').value='';$('daeCertificateNo').value='';$('daeNotes').value='';$('daeFile').value='';$('daePersonBadge').textContent='Badge '+badge;
  const ds=daeStatus(dr?.valida_al);$('daeState').value=ds.label.toUpperCase();
- renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPersonOperationalStatus();renderPersonPrintSheet();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
+ renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPersonAtGlance();renderPersonOperationalStatus();renderPersonPrintSheet();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
 $('printPersonSummary')?.addEventListener('click',()=>{
