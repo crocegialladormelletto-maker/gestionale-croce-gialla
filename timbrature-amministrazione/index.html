@@ -194,7 +194,7 @@ function analyzeBadge(badge,arr){
    lastExit=e;
   }
  }
- if(open)an.push({type:'ENTRATA SENZA USCITA',at:open.evento_at,badge,msg:'Turno ancora aperto.'});
+ if(open){const age=(Date.now()-new Date(open.evento_at).getTime())/60000;if(age>840)an.push({type:'ENTRATA SENZA USCITA',at:open.evento_at,badge,msg:'Turno ancora aperto da oltre 14 ore.'});}
  return {total,days:days.size,an,open,last:xs[xs.length-1]||null};
 }
 function monthlyAnalyses(){
