@@ -48,7 +48,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.4</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.4.1</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -62,7 +62,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.4</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.4.1</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -292,10 +292,10 @@ function complianceForPerson(p){
  if(!personActive(p))return {key:'INATTIVO',label:p.stato_anagrafico||'NON ATTIVO',cls:'w'};
  const dr=daeRow(p.badge);
  if(!dr?.valida_al||daysTo(dr.valida_al)<0)return {key:'NON_IN_REGOLA',label:'NON IN REGOLA',cls:'r'};
- const expiredQual=pquals.some(q=>q.badge_personale===p.badge&&q.valida_al&&daysTo(q.valida_al)<0);
+ const expiredQual=pquals.some(q=>{const def=defs.find(d=>d.codice===q.codice_qualifica);return q.badge_personale===p.badge&&def?.richiede_scadenza===true&&q.valida_al&&daysTo(q.valida_al)<0});
  const expiredDocs=docs.some(d=>d.badge_personale===p.badge&&d.data_scadenza&&daysTo(d.data_scadenza)<0);
  if(expiredQual||expiredDocs)return {key:'NON_IN_REGOLA',label:'NON IN REGOLA',cls:'r'};
- const soonQual=pquals.some(q=>q.badge_personale===p.badge&&q.valida_al&&daysTo(q.valida_al)>=0&&daysTo(q.valida_al)<=30);
+ const soonQual=pquals.some(q=>{const def=defs.find(d=>d.codice===q.codice_qualifica);return q.badge_personale===p.badge&&def?.richiede_scadenza===true&&q.valida_al&&daysTo(q.valida_al)>=0&&daysTo(q.valida_al)<=30});
  const soonDocs=docs.some(d=>d.badge_personale===p.badge&&d.data_scadenza&&daysTo(d.data_scadenza)>=0&&daysTo(d.data_scadenza)<=30);
  if(soonQual||soonDocs)return {key:'ATTENZIONE',label:'ATTENZIONE',cls:'w'};
  return {key:'IN_REGOLA',label:'IN REGOLA',cls:'g'};
@@ -494,13 +494,16 @@ async function saveDaeCourse(id){
 function matrixCell(badge,code){
  const q=pquals.find(x=>x.badge_personale===badge&&x.codice_qualifica===code);
  if(!q)return '<span class="matrix-none" title="Non assegnata">—</span>';
+ const def=defs.find(d=>d.codice===code);
+ const hasExpiry=def?.richiede_scadenza===true;
  if(code===daeCode()&&!q.valida_al)return '<span class="matrix-bad" title="DAE: scadenza mancante">●</span>';
- if(q.valida_al){
+ if(hasExpiry&&q.valida_al){
   const d=daysTo(q.valida_al);
   if(d<0)return '<span class="matrix-bad" title="Scaduta il '+esc(fmt(q.valida_al))+'">●</span>';
   if(d<=30)return '<span class="matrix-warn" title="Scade il '+esc(fmt(q.valida_al))+'">●</span>';
+  return '<span class="matrix-ok" title="Valida fino al '+esc(fmt(q.valida_al))+'">●</span>';
  }
- return '<span class="matrix-ok" title="'+(q.valida_al?'Valida fino al '+esc(fmt(q.valida_al)):'Attiva')+'">●</span>';
+ return '<span class="matrix-ok" title="Qualifica attiva senza scadenza">●</span>';
 }
 function renderQualificationMatrix(){
  const host=$('qualificationMatrix');if(!host)return;
