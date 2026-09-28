@@ -17,6 +17,7 @@
 .nav[data-view="people"]{background:#be123c;border-color:#9f1239}
 .nav[data-view="deadlines"]{background:#ea580c;border-color:#c2410c}
 .nav[data-view="dae"]{background:#dc2626;border-color:#b91c1c}
+.nav[data-view="training"]{background:#7c3aed;border-color:#6d28d9}
 .nav[data-view="qualifications"]{background:#65a30d;border-color:#4d7c0f}
 .surface{background:#fff;border:1px solid var(--l);border-radius:16px;overflow:hidden}.hero{padding:20px;background:linear-gradient(135deg,#eaf4ff 0%,#f5f9ff 55%,#ffffff 100%);border-bottom:1px solid #cfe0f5}
 .hero h1,.hero h2{margin:0 0 5px;color:var(--n)}.hero p{margin:0}.pad{padding:16px}
@@ -48,7 +49,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.6</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.7</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -62,7 +63,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.6</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.7</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -71,6 +72,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
    <button class="nav" data-view="people">👥 Personale</button>
    <button class="nav" data-view="deadlines">⏰ Scadenze</button>
    <button class="nav" data-view="dae">🫀 DAE</button>
+   <button class="nav" data-view="training">📚 Corsi e Formazione</button>
    <button class="nav" data-view="qualifications">🎓 Qualifiche</button>
   </aside>
   <main>
@@ -135,6 +137,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
        <div class="grid3" style="margin-top:10px"><div class="field"><label>Aggiungi qualifica</label><select id="newQual"></select></div><div id="newQualFromWrap" class="field hidden"><label>Valida dal</label><input id="newQualFrom" type="date"></div><div id="newQualToWrap" class="field hidden"><label>Valida al</label><input id="newQualTo" type="date"></div></div>
        <div class="actions" style="margin-top:8px"><button id="addQual" class="btn yellow">Aggiungi / aggiorna qualifica</button></div><div id="personQualMsg"></div>
       </div>
+      <div class="section"><h3>📚 Storico corsi e formazione</h3><div id="personTrainingHistory"></div></div>
       <div class="section"><h3>📁 Attestati e documenti</h3><div id="personDocs"></div></div>
      </div>
     </div>
@@ -197,6 +200,40 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
     </div>
    </section>
 
+   <section id="training" class="surface hidden">
+    <div class="hero"><h2>📚 Corsi e Formazione</h2><p>Programmazione corsi, partecipanti, esiti, attestati e aggiornamento automatico delle qualifiche.</p></div>
+    <div class="pad">
+     <div class="section">
+      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">➕ Nuovo corso</h3><div class="muted">Crea un corso e seleziona i partecipanti dall'elenco alfabetico.</div></div><button id="newTrainingReset" class="btn secondary">Pulisci</button></div>
+      <div class="grid4" style="margin-top:10px">
+       <div class="field"><label>Titolo *</label><input id="trTitle" placeholder="Es. Aggiornamento BLSD"></div>
+       <div class="field"><label>Tipo</label><select id="trType"><option>FORMAZIONE INTERNA</option><option>DAE / BLSD</option><option>118 / 112</option><option>SICUREZZA</option><option>MOVIMENTAZIONE PAZIENTE</option><option>BARIATRICO</option><option>AUTISTI</option><option>ALTRO</option></select></div>
+       <div class="field"><label>Data corso</label><input id="trDate" type="date"></div>
+       <div class="field"><label>Durata ore</label><input id="trHours" type="number" min="0.5" step="0.5"></div>
+       <div class="field"><label>Sede</label><input id="trPlace"></div>
+       <div class="field"><label>Docente</label><input id="trTeacher"></div>
+       <div class="field"><label>Ente formatore</label><input id="trProvider"></div>
+       <div class="field"><label>Stato</label><select id="trState"><option>DA PROGRAMMARE</option><option>PROGRAMMATO</option><option>SVOLTO</option><option>ANNULLATO</option></select></div>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+       <div class="field"><label>Qualifica/certificazione aggiornata dal corso</label><select id="trQualification"><option value="">Nessuna</option></select></div>
+       <div class="field"><label>Validità in mesi</label><input id="trValidityMonths" type="number" min="1" step="1" placeholder="Solo se la qualifica ha scadenza"></div>
+      </div>
+      <div class="field" style="margin-top:8px"><label>Note corso</label><textarea id="trNotes"></textarea></div>
+      <div class="section" style="margin-top:10px">
+       <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">👥 Partecipanti</h3><div class="muted">Sono mostrati solo i volontari attivi, in ordine alfabetico.</div></div><div class="actions"><button id="trSelectAll" class="btn secondary">Seleziona tutti</button><button id="trClearAll" class="btn secondary">Deseleziona</button></div></div>
+       <div id="trParticipants" class="grid3" style="margin-top:8px"></div>
+      </div>
+      <div class="actions"><button id="trCreate" class="btn yellow">Crea corso</button></div><div id="trMsg"></div>
+     </div>
+
+     <div class="section">
+      <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">📋 Corsi registrati</h3><div class="muted">Apri un corso per gestire partecipanti, esiti e attestati.</div></div><div class="field" style="min-width:240px"><label>Cerca corso</label><input id="trSearch" placeholder="Titolo, tipo, docente..."></div></div>
+      <div id="trainingCourses"></div>
+     </div>
+    </div>
+   </section>
+
    <section id="qualifications" class="surface hidden">
     <div class="hero"><h2>🎓 Qualifiche</h2><p>Panoramica delle abilitazioni utilizzate dal gestionale operativo.</p></div>
     <div class="pad">
@@ -224,14 +261,14 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const today=()=>new Date().toISOString().slice(0,10);
 const fmt=d=>d?new Date(d+'T00:00:00').toLocaleDateString('it-IT'):'—';
 function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c+'">'+esc(t)+'</div>':''}
-let people=[],defs=[],pquals=[],docs=[],daeHistoryRows=[],daeCourses=[],daeCoursePeople=[],stateHistoryRows=[],selectedBadge=null,lastDaeRenderedRows=[];
+let people=[],defs=[],pquals=[],docs=[],daeHistoryRows=[],daeCourses=[],daeCoursePeople=[],stateHistoryRows=[],trainingCourses=[],trainingPeople=[],selectedBadge=null,lastDaeRenderedRows=[];
 function daeDef(){return defs.find(q=>String(q.codice||'').toUpperCase()==='DAE')||null}
 function daeCode(){return 'DAE'}
 function daeRow(badge){const code=daeCode();return pquals.find(q=>q.badge_personale===badge&&q.codice_qualifica===code)||null}
 function daeRequiredRows(){return people.filter(personActive).map(p=>({person:p,row:daeRow(p.badge)}))}
 
 
-function view(id){document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hidden',s.id!==id));document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='deadlines')renderDeadlines();if(id==='dae')renderDaeView();if(id==='qualifications'){renderQualificationCards();renderQualificationMatrix()}}
+function view(id){document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hidden',s.id!==id));document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='deadlines')renderDeadlines();if(id==='dae')renderDaeView();if(id==='training')renderTraining();if(id==='qualifications'){renderQualificationCards();renderQualificationMatrix()}}
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>view(b.dataset.view));
 document.querySelectorAll('.jump').forEach(b=>b.onclick=()=>view(b.dataset.go));
 
@@ -258,7 +295,7 @@ async function ensureDaeDefinition(){
 }
 async function loadAll(){
  await ensureDaeDefinition();
- const [pr,qr,pqr,dr,hr,cr,cpr,sr]=await Promise.all([
+ const [pr,qr,pqr,dr,hr,cr,cpr,sr,tcr,tpr]=await Promise.all([
   sb.from('personale').select('*').order('cognome'),
   sb.from('qualifiche').select('*').eq('attiva',true).order('ordine'),
   sb.from('personale_qualifiche').select('*').eq('attiva',true),
@@ -266,12 +303,14 @@ async function loadAll(){
   sb.from('dae_certificazioni_storico').select('*').order('valida_al',{ascending:false}),
   sb.from('dae_corsi').select('*').order('created_at',{ascending:false}),
   sb.from('dae_corsi_partecipanti').select('*'),
-  sb.from('personale_stato_storico').select('*').order('data_inizio',{ascending:false}).order('created_at',{ascending:false})
+  sb.from('personale_stato_storico').select('*').order('data_inizio',{ascending:false}).order('created_at',{ascending:false}),
+  sb.from('formazione_corsi').select('*').order('data_corso',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}),
+  sb.from('formazione_partecipanti').select('*').order('created_at',{ascending:true})
  ]);
- const err=[pr.error,qr.error,pqr.error,dr.error,hr.error,cr.error,cpr.error,sr.error].find(Boolean);if(err){alert(err.message);return}
+ const err=[pr.error,qr.error,pqr.error,dr.error,hr.error,cr.error,cpr.error,sr.error,tcr.error,tpr.error].find(Boolean);if(err){alert(err.message);return}
  people=(pr.data||[]).sort((a,b)=>String(a.cognome||a.nome_completo||'').localeCompare(String(b.cognome||b.nome_completo||''),'it',{sensitivity:'base'})||String(a.nome||'').localeCompare(String(b.nome||''),'it',{sensitivity:'base'}));
- defs=(qr.data||[]).filter(q=>!isAccompagnatore(q.codice));pquals=pqr.data||[];docs=dr.data||[];daeHistoryRows=hr.data||[];daeCourses=cr.data||[];daeCoursePeople=cpr.data||[];stateHistoryRows=sr.data||[];
- renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderQualificationCards();renderQualificationMatrix();renderDaeCourses();
+ defs=(qr.data||[]).filter(q=>!isAccompagnatore(q.codice));pquals=pqr.data||[];docs=dr.data||[];daeHistoryRows=hr.data||[];daeCourses=cr.data||[];daeCoursePeople=cpr.data||[];stateHistoryRows=sr.data||[];trainingCourses=tcr.data||[];trainingPeople=tpr.data||[];
+ renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderTraining();renderQualificationCards();renderQualificationMatrix();renderDaeCourses();
  if(selectedBadge&&people.some(p=>p.badge===selectedBadge))openPerson(selectedBadge);
 }
 function allDeadlines(){
@@ -300,6 +339,7 @@ function renderDashboard(){
 function populateFilters(){
  const prev=$('peopleQual').value;$('peopleQual').innerHTML='<option value="">Tutte</option>'+defs.map(q=>'<option value="'+esc(q.codice)+'">'+esc(qName(q.codice))+'</option>').join('');$('peopleQual').value=prev;
  $('newQual').innerHTML='<option value="">Seleziona</option>'+defs.map(q=>'<option value="'+esc(q.codice)+'">'+esc(qName(q.codice))+'</option>').join('');updateNewQualValidityFields();
+ const tq=$('trQualification');if(tq){const prevT=tq.value;tq.innerHTML='<option value="">Nessuna</option>'+defs.map(q=>'<option value="'+esc(q.codice)+'">'+esc(qName(q.codice))+'</option>').join('');tq.value=prevT;}
 }
 function nextPersonDeadline(badge){return allDeadlines().filter(x=>x.badge===badge&&daysTo(x.date)>=0)[0]||null}
 function complianceForPerson(p){
@@ -356,7 +396,7 @@ function openPerson(badge){
  $('newQual').value='';$('newQualFrom').value='';$('newQualTo').value='';msg('personQualMsg','');msg('daeMsg','');msg('personManageMsg','');
  const dr=daeRow(badge);$('daeFrom').value=dr?.valida_dal||'';$('daeTo').value=dr?.valida_al||'';$('daeProvider').value='';$('daeCertificateNo').value='';$('daeNotes').value='';$('daeFile').value='';$('daePersonBadge').textContent='Badge '+badge;
  const ds=daeStatus(dr?.valida_al);$('daeState').value=ds.label.toUpperCase();
- renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
+ renderDaeHistory();renderPersonQuals();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
 
@@ -564,6 +604,112 @@ async function saveDaeCourse(id){
  const r=await sb.from('dae_corsi').update({data_corso:data,luogo,ente_formatore:ente,stato:data?'PROGRAMMATO':'DA ORGANIZZARE',updated_at:new Date().toISOString()}).eq('id',id);
  if(r.error)return msg('daeCourseMsg',r.error.message,'err');msg('daeCourseMsg','Corso aggiornato.','ok');await loadAll();
 }
+
+function addMonthsISO(dateStr,months){
+ if(!dateStr||!months)return null;
+ const d=new Date(dateStr+'T00:00:00');d.setMonth(d.getMonth()+Number(months));return d.toISOString().slice(0,10);
+}
+function trainingPersonName(badge){const p=people.find(x=>x.badge===badge);return p?.nome_completo||((p?.nome||'')+' '+(p?.cognome||'')).trim()||badge}
+function resetTrainingForm(){
+ ['trTitle','trDate','trHours','trPlace','trTeacher','trProvider','trValidityMonths','trNotes'].forEach(id=>{if($(id))$(id).value=''});
+ if($('trType'))$('trType').value='FORMAZIONE INTERNA';if($('trState'))$('trState').value='DA PROGRAMMARE';if($('trQualification'))$('trQualification').value='';
+ renderTrainingParticipants();msg('trMsg','');
+}
+function renderTrainingParticipants(){
+ const host=$('trParticipants');if(!host)return;
+ const rows=people.filter(personActive).slice().sort((a,b)=>String(a.cognome||a.nome_completo||'').localeCompare(String(b.cognome||b.nome_completo||''),'it',{sensitivity:'base'}));
+ host.innerHTML=rows.map(p=>'<label class="check"><input type="checkbox" data-tr-person="'+esc(p.badge)+'"> <span><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b><br><span class="muted">Badge '+esc(p.badge)+'</span></span></label>').join('')||'<div class="notice">Nessun volontario attivo.</div>';
+}
+async function createTrainingCourse(){
+ const title=$('trTitle').value.trim();if(!title)return msg('trMsg','Inserisci il titolo del corso.','warn');
+ const badges=[...document.querySelectorAll('[data-tr-person]:checked')].map(x=>x.dataset.trPerson);
+ if(!badges.length)return msg('trMsg','Seleziona almeno un partecipante.','warn');
+ const payload={titolo:title,tipo:$('trType').value,data_corso:$('trDate').value||null,sede:$('trPlace').value.trim()||null,docente:$('trTeacher').value.trim()||null,ente_formatore:$('trProvider').value.trim()||null,durata_ore:$('trHours').value?Number($('trHours').value):null,qualifica_codice:$('trQualification').value||null,validita_mesi:$('trValidityMonths').value?Number($('trValidityMonths').value):null,stato:$('trState').value,note:$('trNotes').value.trim()||null,updated_at:new Date().toISOString()};
+ msg('trMsg','Creazione corso...');
+ const cr=await sb.from('formazione_corsi').insert(payload).select('id').single();
+ if(cr.error)return msg('trMsg',cr.error.message,'err');
+ const pr=await sb.from('formazione_partecipanti').insert(badges.map(b=>({corso_id:cr.data.id,badge_personale:b})));
+ if(pr.error){await sb.from('formazione_corsi').delete().eq('id',cr.data.id);return msg('trMsg',pr.error.message,'err')}
+ msg('trMsg','Corso creato con '+badges.length+' partecipanti.','ok');resetTrainingForm();await loadAll();view('training');
+}
+async function uploadTrainingCertificate(part,course,file,expiry){
+ if(!file)return null;
+ const allowed=['application/pdf','image/jpeg','image/png','image/webp'];if(!allowed.includes(file.type))throw new Error('Formato attestato non consentito.');
+ if(file.size>10485760)throw new Error('L’attestato supera 10 MB.');
+ const ext={'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type]||'bin';
+ const path=part.badge_personale+'/formazione-'+crypto.randomUUID()+'.'+ext;
+ const up=await sb.storage.from('documenti-volontari').upload(path,file,{contentType:file.type,upsert:false});if(up.error)throw up.error;
+ const u=await sb.auth.getUser();
+ const meta=await sb.from('documenti_personale').insert({badge_personale:part.badge_personale,categoria:'ATTESTATO',titolo:'Attestato · '+course.titolo,nome_file_originale:file.name,storage_path:path,mime_type:file.type,dimensione_bytes:file.size,data_scadenza:expiry||null,note:'Attestato corso '+course.titolo,uploaded_by:u.data.user?.id||null}).select('id').single();
+ if(meta.error){await sb.storage.from('documenti-volontari').remove([path]);throw meta.error}
+ return meta.data.id;
+}
+async function saveTrainingParticipant(id){
+ const part=trainingPeople.find(x=>x.id===id);if(!part)return;
+ const course=trainingCourses.find(x=>x.id===part.corso_id);if(!course)return;
+ const box=document.querySelector('[data-tr-part-box="'+CSS.escape(id)+'"]');if(!box)return;
+ const esito=box.querySelector('[data-tr-result]').value,note=box.querySelector('[data-tr-note]').value.trim()||null,file=box.querySelector('[data-tr-file]').files?.[0];
+ let expiry=box.querySelector('[data-tr-expiry]').value||null;
+ if(!expiry&&esito==='IDONEO'&&course.data_corso&&course.validita_mesi)expiry=addMonthsISO(course.data_corso,course.validita_mesi);
+ try{
+  let docId=part.documento_id||null;if(file)docId=await uploadTrainingCertificate(part,course,file,expiry);
+  const up=await sb.from('formazione_partecipanti').update({esito,data_scadenza_generata:expiry,documento_id:docId,note,updated_at:new Date().toISOString()}).eq('id',id);if(up.error)throw up.error;
+  if(esito==='IDONEO'&&course.qualifica_codice){
+   const def=defs.find(d=>d.codice===course.qualifica_codice),hasExpiry=def?.richiede_scadenza===true;
+   const q=pquals.find(x=>x.badge_personale===part.badge_personale&&x.codice_qualifica===course.qualifica_codice);
+   const data={attiva:true,valida_dal:course.data_corso||today(),valida_al:hasExpiry?expiry:null};
+   const qr=q?await sb.from('personale_qualifiche').update(data).eq('badge_personale',part.badge_personale).eq('codice_qualifica',course.qualifica_codice):await sb.from('personale_qualifiche').insert({badge_personale:part.badge_personale,codice_qualifica:course.qualifica_codice,...data});
+   if(qr.error)throw qr.error;
+  }
+  await loadAll();view('training');
+ }catch(e){alert(e.message||String(e))}
+}
+async function addTrainingParticipant(courseId){
+ const sel=document.querySelector('[data-tr-add-person="'+CSS.escape(courseId)+'"]');const badge=sel?.value;if(!badge)return;
+ const r=await sb.from('formazione_partecipanti').insert({corso_id:courseId,badge_personale:badge});
+ if(r.error)return alert(r.error.message);await loadAll();view('training');
+}
+async function removeTrainingParticipant(id){
+ if(!confirm('Rimuovere questo partecipante dal corso?'))return;
+ const r=await sb.from('formazione_partecipanti').delete().eq('id',id);if(r.error)return alert(r.error.message);await loadAll();view('training');
+}
+function renderTraining(){
+ renderTrainingParticipants();
+ const search=($('trSearch')?.value||'').trim().toLowerCase();
+ const host=$('trainingCourses');if(!host)return;
+ const rows=trainingCourses.filter(c=>(c.titolo+' '+c.tipo+' '+(c.docente||'')+' '+(c.ente_formatore||'')).toLowerCase().includes(search));
+ host.innerHTML=rows.length?rows.map(course=>{
+  const parts=trainingPeople.filter(p=>p.corso_id===course.id);
+  const taken=new Set(parts.map(p=>p.badge_personale));
+  const available=people.filter(personActive).filter(p=>!taken.has(p.badge)).slice().sort((a,b)=>String(a.cognome||a.nome_completo||'').localeCompare(String(b.cognome||b.nome_completo||''),'it',{sensitivity:'base'}));
+  return '<div class="box" style="margin:9px 0"><div class="actions" style="justify-content:space-between"><div><b>'+esc(course.titolo)+'</b><br><span class="muted">'+esc(course.tipo)+' · '+esc(course.data_corso?fmt(course.data_corso):'Data da definire')+(course.durata_ore?' · '+esc(course.durata_ore)+' ore':'')+(course.docente?' · Docente '+esc(course.docente):'')+'</span></div><span class="pill b">'+parts.length+' partecipanti · '+esc(course.stato)+'</span></div>'+
+  '<div class="muted" style="margin-top:5px">'+(course.qualifica_codice?'Aggiorna: '+esc(qName(course.qualifica_codice))+(course.validita_mesi?' · validità '+esc(course.validita_mesi)+' mesi':''):'Nessun aggiornamento qualifica')+(course.sede?' · '+esc(course.sede):'')+'</div>'+
+  '<div class="actions" style="margin-top:8px"><button class="btn secondary" data-tr-toggle="'+esc(course.id)+'">Gestisci corso</button></div>'+
+  '<div id="tr-course-'+esc(course.id)+'" class="hidden" style="margin-top:9px">'+
+   '<div class="section"><div class="actions"><select data-tr-add-person="'+esc(course.id)+'" style="max-width:360px"><option value="">Aggiungi partecipante...</option>'+available.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+' · '+esc(p.badge)+'</option>').join('')+'</select><button class="btn yellow" data-tr-add="'+esc(course.id)+'">Aggiungi</button></div></div>'+
+   (parts.length?parts.map(part=>{
+    const autoExp=part.data_scadenza_generata||(course.data_corso&&course.validita_mesi?addMonthsISO(course.data_corso,course.validita_mesi):'');
+    return '<div class="section" data-tr-part-box="'+esc(part.id)+'"><div class="actions" style="justify-content:space-between"><div><b>'+esc(trainingPersonName(part.badge_personale))+'</b><div class="muted">Badge '+esc(part.badge_personale)+'</div></div><button class="btn danger" data-tr-remove="'+esc(part.id)+'">Rimuovi</button></div><div class="grid4" style="margin-top:8px"><div class="field"><label>Esito</label><select data-tr-result><option'+(part.esito==='DA VALUTARE'?' selected':'')+'>DA VALUTARE</option><option'+(part.esito==='IDONEO'?' selected':'')+'>IDONEO</option><option'+(part.esito==='NON IDONEO'?' selected':'')+'>NON IDONEO</option><option'+(part.esito==='ASSENTE'?' selected':'')+'>ASSENTE</option></select></div><div class="field"><label>Scadenza generata</label><input data-tr-expiry type="date" value="'+esc(autoExp||'')+'"></div><div class="field"><label>Attestato</label><input data-tr-file type="file" accept=".pdf,.jpg,.jpeg,.png,.webp"></div><div class="field"><label>Note</label><input data-tr-note value="'+esc(part.note||'')+'"></div></div><div class="actions" style="margin-top:7px"><button class="btn blue" data-tr-part-save="'+esc(part.id)+'">Salva partecipante</button>'+(part.documento_id?'<button class="btn secondary" data-tr-open-doc="'+esc(part.documento_id)+'">Apri attestato</button>':'')+'</div></div>';
+   }).join(''):'<div class="notice">Nessun partecipante.</div>')+
+  '</div></div>';
+ }).join(''):'<div class="notice">Nessun corso trovato.</div>';
+ document.querySelectorAll('[data-tr-toggle]').forEach(b=>b.onclick=()=>document.getElementById('tr-course-'+b.dataset.trToggle).classList.toggle('hidden'));
+ document.querySelectorAll('[data-tr-add]').forEach(b=>b.onclick=()=>addTrainingParticipant(b.dataset.trAdd));
+ document.querySelectorAll('[data-tr-remove]').forEach(b=>b.onclick=()=>removeTrainingParticipant(b.dataset.trRemove));
+ document.querySelectorAll('[data-tr-part-save]').forEach(b=>b.onclick=()=>saveTrainingParticipant(b.dataset.trPartSave));
+ document.querySelectorAll('[data-tr-open-doc]').forEach(b=>b.onclick=()=>openDaeDocument(b.dataset.trOpenDoc));
+}
+function renderPersonTrainingHistory(){
+ const host=$('personTrainingHistory');if(!host)return;
+ const rows=trainingPeople.filter(p=>p.badge_personale===selectedBadge).map(p=>({part:p,course:trainingCourses.find(c=>c.id===p.corso_id)})).filter(x=>x.course).sort((a,b)=>String(b.course.data_corso||'').localeCompare(String(a.course.data_corso||'')));
+ host.innerHTML=rows.length?rows.map(x=>'<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between"><b>'+esc(x.course.titolo)+'</b><span class="pill '+(x.part.esito==='IDONEO'?'g':x.part.esito==='NON IDONEO'||x.part.esito==='ASSENTE'?'r':'w')+'">'+esc(x.part.esito)+'</span></div><div class="muted">'+esc(x.course.data_corso?fmt(x.course.data_corso):'Data da definire')+' · '+esc(x.course.tipo)+(x.course.durata_ore?' · '+esc(x.course.durata_ore)+' ore':'')+'</div>'+(x.part.data_scadenza_generata?'<div style="margin-top:4px">Scadenza: '+esc(fmt(x.part.data_scadenza_generata))+'</div>':'')+(x.part.documento_id?'<div class="actions" style="margin-top:6px"><button class="btn secondary" data-person-training-doc="'+esc(x.part.documento_id)+'">Apri attestato</button></div>':'')+'</div>').join(''):'<div class="notice">Nessun corso registrato.</div>';
+ document.querySelectorAll('[data-person-training-doc]').forEach(b=>b.onclick=()=>openDaeDocument(b.dataset.personTrainingDoc));
+}
+$('newTrainingReset')?.addEventListener('click',resetTrainingForm);
+$('trSelectAll')?.addEventListener('click',()=>document.querySelectorAll('[data-tr-person]').forEach(x=>x.checked=true));
+$('trClearAll')?.addEventListener('click',()=>document.querySelectorAll('[data-tr-person]').forEach(x=>x.checked=false));
+$('trCreate')?.addEventListener('click',createTrainingCourse);
+$('trSearch')?.addEventListener('input',renderTraining);
 
 function matrixCell(badge,code){
  const q=pquals.find(x=>x.badge_personale===badge&&x.codice_qualifica===code);
