@@ -48,7 +48,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.4.1</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 1.4.2</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -62,7 +62,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.4.1</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 1.4.2</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -121,7 +121,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
        <div class="section" style="margin-top:12px"><h3>📚 Storico DAE</h3><div id="daeHistory"></div></div>
       </div>
       <div class="section"><h3>🎓 Altre qualifiche della persona</h3><div id="personQualList"></div>
-       <div class="grid3" style="margin-top:10px"><div class="field"><label>Aggiungi qualifica</label><select id="newQual"></select></div><div class="field"><label>Valida dal</label><input id="newQualFrom" type="date"></div><div class="field"><label>Valida al</label><input id="newQualTo" type="date"></div></div>
+       <div class="grid3" style="margin-top:10px"><div class="field"><label>Aggiungi qualifica</label><select id="newQual"></select></div><div id="newQualFromWrap" class="field hidden"><label>Valida dal</label><input id="newQualFrom" type="date"></div><div id="newQualToWrap" class="field hidden"><label>Valida al</label><input id="newQualTo" type="date"></div></div>
        <div class="actions" style="margin-top:8px"><button id="addQual" class="btn yellow">Aggiungi / aggiorna qualifica</button></div><div id="personQualMsg"></div>
       </div>
       <div class="section"><h3>📁 Attestati e documenti</h3><div id="personDocs"></div></div>
@@ -224,7 +224,8 @@ function view(id){document.querySelectorAll('main>section').forEach(s=>s.classLi
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>view(b.dataset.view));
 document.querySelectorAll('.jump').forEach(b=>b.onclick=()=>view(b.dataset.go));
 
-function qName(code){const q=defs.find(x=>x.codice===code);const n=q?.nome||code;return code==='ALLEGATO_A'||/operatore\s+allegato\s*a/i.test(n)?'Accompagnatore':n}
+function qName(code){const q=defs.find(x=>x.codice===code);return q?.nome||code}
+function isAccompagnatore(code){const q=defs.find(x=>x.codice===code);const n=String(q?.nome||'');return String(code||'').toUpperCase()==='ACCOMPAGNATORE'||/accompagnatore/i.test(n)}
 function daysTo(d){return Math.ceil((new Date(d+'T00:00:00')-new Date(today()+'T00:00:00'))/86400000)}
 function stateFor(d){const n=daysTo(d);return n<0?{key:'SCADUTA',label:'Scaduta',cls:'r'}:n<=30?{key:'PROSSIMA',label:'Entro 30 gg',cls:'w'}:{key:'FUTURA',label:'Regolare',cls:'g'}}
 function personName(b){return people.find(p=>p.badge===b)?.nome_completo||b}
@@ -256,7 +257,7 @@ async function loadAll(){
   sb.from('dae_corsi_partecipanti').select('*')
  ]);
  const err=[pr.error,qr.error,pqr.error,dr.error,hr.error,cr.error,cpr.error].find(Boolean);if(err){alert(err.message);return}
- people=pr.data||[];defs=qr.data||[];pquals=pqr.data||[];docs=dr.data||[];daeHistoryRows=hr.data||[];daeCourses=cr.data||[];daeCoursePeople=cpr.data||[];
+ people=pr.data||[];defs=(qr.data||[]).filter(q=>!isAccompagnatore(q.codice));pquals=pqr.data||[];docs=dr.data||[];daeHistoryRows=hr.data||[];daeCourses=cr.data||[];daeCoursePeople=cpr.data||[];
  renderDashboard();populateFilters();renderPeople();renderDeadlines();renderDaeView();renderQualificationCards();renderQualificationMatrix();renderDaeCourses();
  if(selectedBadge&&people.some(p=>p.badge===selectedBadge))openPerson(selectedBadge);
 }
@@ -285,7 +286,7 @@ function renderDashboard(){
 }
 function populateFilters(){
  const prev=$('peopleQual').value;$('peopleQual').innerHTML='<option value="">Tutte</option>'+defs.map(q=>'<option value="'+esc(q.codice)+'">'+esc(qName(q.codice))+'</option>').join('');$('peopleQual').value=prev;
- $('newQual').innerHTML='<option value="">Seleziona</option>'+defs.map(q=>'<option value="'+esc(q.codice)+'">'+esc(qName(q.codice))+'</option>').join('');
+ $('newQual').innerHTML='<option value="">Seleziona</option>'+defs.map(q=>'<option value="'+esc(q.codice)+'">'+esc(qName(q.codice))+'</option>').join('');updateNewQualValidityFields();
 }
 function nextPersonDeadline(badge){return allDeadlines().filter(x=>x.badge===badge&&daysTo(x.date)>=0)[0]||null}
 function complianceForPerson(p){
@@ -308,7 +309,7 @@ function renderPeople(){
   if(qf&&!pquals.some(q=>q.badge_personale===p.badge&&q.codice_qualifica===qf))return false;return true;
  });
  $('peopleBody').innerHTML=rows.map(p=>{
-  const qs=pquals.filter(q=>q.badge_personale===p.badge).map(q=>qName(q.codice_qualifica)).join(', ')||'—';
+  const qs=pquals.filter(q=>q.badge_personale===p.badge&&!isAccompagnatore(q.codice_qualifica)).map(q=>qName(q.codice_qualifica)).join(', ')||'—';
   const nx=nextPersonDeadline(p.badge),cs=complianceForPerson(p);return '<tr class="'+(selectedBadge===p.badge?'personSelected':'')+'"><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo||((p.nome||'')+' '+(p.cognome||'')))+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td><span class="compliance '+cs.cls+'">● '+esc(cs.label)+'</span></td><td>'+esc(qs)+'</td><td>'+(nx?esc(nx.name)+'<br><span class="muted">'+esc(fmt(nx.date))+'</span>':'—')+'</td><td><button class="btn secondary" data-open-person="'+esc(p.badge)+'">Apri</button></td></tr>'
  }).join('')||'<tr><td colspan="7">Nessuna persona trovata.</td></tr>';
  document.querySelectorAll('[data-open-person]').forEach(b=>b.onclick=()=>openPerson(b.dataset.openPerson));
@@ -316,8 +317,14 @@ function renderPeople(){
 ['peopleSearch','peopleState','peopleQual'].forEach(id=>$(id).oninput=renderPeople);
 
 function renderPersonQuals(){
- const rows=pquals.filter(q=>q.badge_personale===selectedBadge&&q.codice_qualifica!==daeCode()).sort((a,b)=>qName(a.codice_qualifica).localeCompare(qName(b.codice_qualifica)));
- $('personQualList').innerHTML=rows.length?rows.map(q=>'<div class="qualRow"><div><b>'+esc(qName(q.codice_qualifica))+'</b><div class="muted">'+esc(q.codice_qualifica)+'</div></div><div class="field"><label>Valida dal</label><input type="date" value="'+esc(q.valida_dal||'')+'" data-qfrom="'+esc(q.codice_qualifica)+'"></div><div class="field"><label>Valida al</label><input type="date" value="'+esc(q.valida_al||'')+'" data-qto="'+esc(q.codice_qualifica)+'"></div><div class="actions"><button class="btn secondary" data-qsave="'+esc(q.codice_qualifica)+'">Salva</button><button class="btn danger" data-qremove="'+esc(q.codice_qualifica)+'">Rimuovi</button></div></div>').join(''):'<div class="notice">Nessuna qualifica registrata.</div>';
+ const rows=pquals.filter(q=>q.badge_personale===selectedBadge&&q.codice_qualifica!==daeCode()&&!isAccompagnatore(q.codice_qualifica)).sort((a,b)=>qName(a.codice_qualifica).localeCompare(qName(b.codice_qualifica)));
+ $('personQualList').innerHTML=rows.length?rows.map(q=>{
+  const def=defs.find(d=>d.codice===q.codice_qualifica),hasExpiry=def?.richiede_scadenza===true;
+  if(hasExpiry){
+   return '<div class="qualRow"><div><b>'+esc(qName(q.codice_qualifica))+'</b><div class="muted">'+esc(q.codice_qualifica)+'</div></div><div class="field"><label>Valida dal</label><input type="date" value="'+esc(q.valida_dal||'')+'" data-qfrom="'+esc(q.codice_qualifica)+'"></div><div class="field"><label>Valida al</label><input type="date" value="'+esc(q.valida_al||'')+'" data-qto="'+esc(q.codice_qualifica)+'"></div><div class="actions"><button class="btn secondary" data-qsave="'+esc(q.codice_qualifica)+'">Salva</button><button class="btn danger" data-qremove="'+esc(q.codice_qualifica)+'">Rimuovi</button></div></div>';
+  }
+  return '<div class="qualRow" style="grid-template-columns:minmax(170px,1fr) auto"><div><b>'+esc(qName(q.codice_qualifica))+'</b><div class="muted">Qualifica senza scadenza</div></div><div class="actions"><button class="btn danger" data-qremove="'+esc(q.codice_qualifica)+'">Rimuovi</button></div></div>';
+ }).join(''):'<div class="notice">Nessuna qualifica registrata.</div>';
  document.querySelectorAll('[data-qsave]').forEach(b=>b.onclick=()=>saveQualDates(b.dataset.qsave));
  document.querySelectorAll('[data-qremove]').forEach(b=>b.onclick=()=>removeQual(b.dataset.qremove));
 }
@@ -400,9 +407,17 @@ async function openDaeDocument(id){
  if(r.error)return alert(r.error.message);
  window.open(r.data.signedUrl,'_blank','noopener');
 }
+function updateNewQualValidityFields(){
+ const code=$('newQual')?.value||'',def=defs.find(d=>d.codice===code),show=def?.richiede_scadenza===true;
+ $('newQualFromWrap')?.classList.toggle('hidden',!show);
+ $('newQualToWrap')?.classList.toggle('hidden',!show);
+ if(!show){if($('newQualFrom'))$('newQualFrom').value='';if($('newQualTo'))$('newQualTo').value='';}
+}
+$('newQual')?.addEventListener('change',updateNewQualValidityFields);
+
 $('addQual').onclick=async()=>{
  if(!selectedBadge||!$('newQual').value)return msg('personQualMsg','Seleziona una qualifica.','warn');
- const code=$('newQual').value,from=$('newQualFrom').value||null,to=$('newQualTo').value||null;
+ const code=$('newQual').value,def=defs.find(d=>d.codice===code),hasExpiry=def?.richiede_scadenza===true,from=hasExpiry?($('newQualFrom').value||null):null,to=hasExpiry?($('newQualTo').value||null):null;
  const existing=pquals.find(q=>q.badge_personale===selectedBadge&&q.codice_qualifica===code);
  const r=existing?await sb.from('personale_qualifiche').update({attiva:true,valida_dal:from,valida_al:to}).eq('badge_personale',selectedBadge).eq('codice_qualifica',code):await sb.from('personale_qualifiche').insert({badge_personale:selectedBadge,codice_qualifica:code,attiva:true,valida_dal:from,valida_al:to});
  if(r.error)return msg('personQualMsg',r.error.message,'err');msg('personQualMsg','Qualifica salvata.','ok');await loadAll();
