@@ -51,7 +51,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <body>
 <div id="login" class="login">
  <div class="loginCard">
-  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.1</div></div>
+  <div class="loginHead"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100"><h2>Personale e Formazione</h2><div class="muted">Croce Gialla Emergenza ODV · Versione stabile 2.2.2</div></div>
   <div class="loginBody">
    <div class="field"><label>Email Amministrazione</label><input id="email" type="email" autocomplete="username"></div>
    <div class="field" style="margin-top:9px"><label>Password</label><input id="pw" type="password" autocomplete="current-password"></div>
@@ -65,7 +65,7 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
 <div id="app" class="hidden">
  <div class="top"><div class="head">
   <img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.1</strong><div id="who" class="muted"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Personale e Formazione · Versione stabile 2.2.2</strong><div id="who" class="muted"></div></div>
   <button id="backMain" class="btn secondary">← Gestionale operativo</button><button id="logout" class="btn secondary">Esci</button>
  </div></div>
  <div class="wrap"><div class="layout">
@@ -231,7 +231,15 @@ input,select,textarea{width:100%;border:1px solid #c9d5df;border-radius:8px;padd
     <div class="pad">
      <div class="section">
       <div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">🎯 Gestione rapida corsi interni</h3><div class="muted">Accesso diretto ai due percorsi formativi interni principali.</div></div></div>
-      <div class="grid2" style="margin-top:12px">
+      <div class="grid3" style="margin-top:12px">
+       <div class="box" style="border-left:8px solid #dc2626;padding:18px">
+        <div style="font-size:28px;font-weight:800">🚑 Soccorritore Allegato A – 118 Piemonte</div>
+        <div class="muted" style="margin-top:6px">Percorso per il conseguimento della qualifica Soccorritore. Qualifica permanente, senza rinnovo.</div>
+        <div class="actions" style="margin-top:14px">
+         <button id="quickSoccorritoreCourse" class="btn danger" style="font-size:16px;padding:12px 18px">Apri gestione Soccorritore</button>
+         <button id="filterSoccorritoreCourses" class="btn secondary">Vedi corsi Soccorritore</button>
+        </div>
+       </div>
        <div class="box" style="border-left:8px solid #1d4ed8;padding:18px">
         <div style="font-size:28px;font-weight:800">🚐 Gestione Corso Autista</div>
         <div class="muted" style="margin-top:6px">Crea e gestisci il corso interno Autista. I partecipanti vengono selezionati manualmente.</div>
@@ -724,7 +732,7 @@ function renderTrainingPlan(){
  document.querySelectorAll('[data-plan-course]').forEach(b=>b.onclick=()=>prepareSuggestedCourse(b.dataset.planCourse,b.dataset.planCode));
 }
 function openQuickTraining(kind){
- const rx=kind==='AUTISTA'?/AUTISTA/:/CAPO.*SERVIZIO/;
+ const rx=kind==='AUTISTA'?/AUTISTA/:kind==='CAPO_SERVIZIO'?/CAPO.*SERVIZIO/:/SOCCORRITORE/;
  const code=qualCodeByRegex(rx);
  if(!code)return alert('Qualifica non trovata nel gestionale.');
  $('trainingPlanSection')?.classList.remove('hidden');
@@ -733,7 +741,7 @@ function openQuickTraining(kind){
 }
 function filterTrainingByKind(kind){
  if($('trCourseStateFilter'))$('trCourseStateFilter').value='';
- if($('trSearch'))$('trSearch').value=kind==='AUTISTA'?'Autista':'Capo Servizio';
+ if($('trSearch'))$('trSearch').value=kind==='AUTISTA'?'Autista':kind==='CAPO_SERVIZIO'?'Capo Servizio':'Soccorritore';
  renderTraining();
  $('trainingCourses')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -980,6 +988,8 @@ function renderPersonTrainingHistory(){
  document.querySelectorAll('[data-person-training-doc]').forEach(b=>b.onclick=()=>openDaeDocument(b.dataset.personTrainingDoc));
 }
 $('closeTrainingPlan')?.addEventListener('click',()=>$('trainingPlanSection')?.classList.add('hidden'));
+$('quickSoccorritoreCourse')?.addEventListener('click',()=>openQuickTraining('SOCCORRITORE'));
+$('filterSoccorritoreCourses')?.addEventListener('click',()=>filterTrainingByKind('SOCCORRITORE'));
 $('quickAutistaCourse')?.addEventListener('click',()=>openQuickTraining('AUTISTA'));
 $('quickCapoCourse')?.addEventListener('click',()=>openQuickTraining('CAPO_SERVIZIO'));
 $('filterAutistaCourses')?.addEventListener('click',()=>filterTrainingByKind('AUTISTA'));
