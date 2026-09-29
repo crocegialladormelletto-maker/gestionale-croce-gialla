@@ -593,7 +593,7 @@
 #tariffTabs [data-tariff-code][aria-pressed="true"]{opacity:1;transform:translateY(-1px);border-color:#102f5a!important;box-shadow:0 0 0 3px rgba(16,47,90,.16),0 5px 12px rgba(16,47,90,.16)}
 #tariffTabs [data-tariff-code]:hover{opacity:1;transform:translateY(-1px)}
 
-/* === V14.14 · STATISTICHE === */
+/* === V14.15 · STATISTICHE === */
 .stats-page-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .stats-kpi{background:#fff;border:1px solid #d8e3ec;border-radius:13px;padding:13px;min-height:92px;cursor:pointer;transition:.15s ease;box-shadow:0 2px 8px #12375d0b}
 .stats-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px #12375d18}
@@ -613,7 +613,7 @@
 @media(max-width:520px){.stats-page-grid{grid-template-columns:1fr 1fr}.stats-kpi b{font-size:22px}.stats-vehicle-row{grid-template-columns:60px 1fr 70px 70px}}
 
 
-/* === V14.14 · REPORT PERSONALIZZATI === */
+/* === V14.15 · REPORT PERSONALIZZATI === */
 .report-builder{margin-top:12px}
 .report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .report-result{margin-top:12px;border:1px solid #d9e3eb;border-radius:12px;overflow:auto;background:#fff}
@@ -625,7 +625,7 @@
 @media(max-width:520px){.report-grid,.report-summary{grid-template-columns:1fr}}
 
 
-/* === V14.14 · STATISTICHE AVANZATE === */
+/* === V14.15 · STATISTICHE AVANZATE === */
 .stats-click{cursor:pointer}.stats-click:hover{text-decoration:underline}
 .stats-detail{margin-top:12px;border:1px solid #cbd9e5;border-radius:14px;background:#fff;overflow:auto}
 .stats-detail-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 14px;background:#eef5fb;border-bottom:1px solid #d6e2eb}
@@ -644,7 +644,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.14</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.15</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -698,7 +698,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.14</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.15</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -1514,7 +1514,13 @@
   <div class="section">
    <div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">📋 Elenco pazienti</h3><div class="muted">Elenco alfabetico delle anagrafiche memorizzate.</div></div><div class="actions"><span id="patientDirectoryCount" class="pill b">0</span><button id="patientDirectoryRefresh" class="btn secondary" type="button">↻ Aggiorna</button></div></div>
    <div id="patientDirectoryMsg"></div>
+   <div class="notice ok" style="margin-top:8px"><b id="patientDirectoryTotalLabel">Totale pazienti memorizzati: 0</b></div>
    <div id="patientDirectoryList" style="margin-top:8px"></div>
+   <div class="actions" id="patientDirectoryPager" style="justify-content:space-between;margin-top:10px">
+    <button id="patientDirectoryPrev" class="btn secondary" type="button">← Precedente</button>
+    <span id="patientDirectoryPageInfo" class="pill b">Pagina 1 di 1</span>
+    <button id="patientDirectoryNext" class="btn secondary" type="button">Successiva →</button>
+   </div>
   </div>
   <div class="section"><h3 id="patientAdminTitle">Nuovo paziente</h3>
    <div class="grid3">
@@ -2266,6 +2272,9 @@ const LOGO_URL="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/l
 document.querySelectorAll('.js-logo').forEach(img=>{img.src=LOGO_URL});
 let tariffViewCode='DEA_BORGOMANERO',tariffManagementRows=[];
 let patientSearchRows=[],patientDirectoryRows=[],servicePatientId=null,adminPatientId=null,adminPatientRecord=null,patientLookupRows=[];
+let patientDirectoryPage=1;
+const PATIENT_DIRECTORY_PAGE_SIZE=10;
+let patientDirectoryTotal=0;
 let prof=null,people=[],qualifications=[],pq=[],vehicles=[],tariffs=[],tariffDestinations=[],servicesCache=[],currentServiceId=null,currentService=null,currentFoglioId=null,currentFoglio=null,volunteerBadge=null;
 let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsRequest=0;
 let volNotifications=[];
@@ -2574,7 +2583,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.14':'Versione 14.14';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.15':'Versione 14.15';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -4940,9 +4949,21 @@ function bindPatientDirectoryButtons(){
 }
 function renderPatientDirectory(total=null){
  const count=total===null?patientDirectoryRows.length:Number(total||0);
- $('patientDirectoryCount').textContent=count.toLocaleString('it-IT')+(count>patientDirectoryRows.length?' totali':'');
- $('patientDirectoryList').innerHTML=patientDirectoryRows.length?
-  patientDirectoryRows.map(p=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>'+esc([p.cognome,p.nome].filter(Boolean).join(' · '))+'</b>'+
+ patientDirectoryTotal=count;
+ const pages=Math.max(1,Math.ceil(patientDirectoryRows.length/PATIENT_DIRECTORY_PAGE_SIZE));
+ if(patientDirectoryPage>pages)patientDirectoryPage=pages;
+ if(patientDirectoryPage<1)patientDirectoryPage=1;
+ const start=(patientDirectoryPage-1)*PATIENT_DIRECTORY_PAGE_SIZE;
+ const pageRows=patientDirectoryRows.slice(start,start+PATIENT_DIRECTORY_PAGE_SIZE);
+
+ $('patientDirectoryCount').textContent=count.toLocaleString('it-IT');
+ if($('patientDirectoryTotalLabel'))$('patientDirectoryTotalLabel').textContent='Totale pazienti memorizzati: '+count.toLocaleString('it-IT');
+ if($('patientDirectoryPageInfo'))$('patientDirectoryPageInfo').textContent='Pagina '+patientDirectoryPage+' di '+pages+' · '+pageRows.length+' visualizzati';
+ if($('patientDirectoryPrev'))$('patientDirectoryPrev').disabled=patientDirectoryPage<=1;
+ if($('patientDirectoryNext'))$('patientDirectoryNext').disabled=patientDirectoryPage>=pages;
+
+ $('patientDirectoryList').innerHTML=pageRows.length?
+  pageRows.map((p,i)=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>'+(start+i+1)+'. '+esc([p.cognome,p.nome].filter(Boolean).join(' · '))+'</b>'+
    '<br><span class="muted">'+esc([p.data_nascita||'',p.codice_fiscale||'',p.telefono||''].filter(Boolean).join(' · '))+'</span></div>'+
    '<button type="button" class="btn secondary" data-patient-directory-open="'+esc(p.id)+'">Apri scheda</button></div></div>').join(''):
   '<div class="notice">Nessun paziente presente in anagrafica.</div>';
@@ -4952,7 +4973,12 @@ async function loadPatientDirectory(){
  if(!['CENTRALINO','AMMINISTRATORE'].includes(prof?.ruolo))return;
  msg('patientDirectoryMsg','Caricamento elenco pazienti...');
  const r=await sb.from('anagrafica_pazienti').select(PATIENT_FIELDS,{count:'exact'}).order('cognome').order('nome').range(0,499);
- if(r.error){patientDirectoryRows=[];$('patientDirectoryList').innerHTML='';$('patientDirectoryCount').textContent='—';return msg('patientDirectoryMsg',r.error.message,'err')}
+ if(r.error){
+  patientDirectoryRows=[];patientDirectoryTotal=0;
+  $('patientDirectoryList').innerHTML='';$('patientDirectoryCount').textContent='—';
+  if($('patientDirectoryTotalLabel'))$('patientDirectoryTotalLabel').textContent='Totale pazienti memorizzati: —';
+  return msg('patientDirectoryMsg',r.error.message,'err')
+ }
  patientDirectoryRows=r.data||[];
  renderPatientDirectory(r.count);
  msg('patientDirectoryMsg',r.count>500?'Mostrati i primi 500 pazienti in ordine alfabetico. Usa la ricerca per trovare gli altri.':'');
@@ -4970,6 +4996,7 @@ async function patientAdminFind(){
 }
 async function loadPatientsView(){
  if(!['CENTRALINO','AMMINISTRATORE'].includes(prof?.ruolo))return;
+ patientDirectoryPage=1;
  $('patientAdminSearch').value='';
  patientSearchRows=[];
  $('patientAdminResults').innerHTML='';
@@ -4981,6 +5008,8 @@ $('patientAdminFind').onclick=patientAdminFind;
 $('patientAdminSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();patientAdminFind()}};
 $('patientAdminNew').onclick=()=>patientAdminOpen(null,true);
 $('patientDirectoryRefresh').onclick=loadPatientDirectory;
+$('patientDirectoryPrev').onclick=()=>{if(patientDirectoryPage>1){patientDirectoryPage--;renderPatientDirectory(patientDirectoryTotal);$('patientDirectoryList').scrollIntoView({behavior:'smooth',block:'start'})}};
+$('patientDirectoryNext').onclick=()=>{const pages=Math.max(1,Math.ceil(patientDirectoryRows.length/PATIENT_DIRECTORY_PAGE_SIZE));if(patientDirectoryPage<pages){patientDirectoryPage++;renderPatientDirectory(patientDirectoryTotal);$('patientDirectoryList').scrollIntoView({behavior:'smooth',block:'start'})}};
 $('paSave').onclick=async()=>{
  if(!['CENTRALINO','AMMINISTRATORE'].includes(prof?.ruolo))return;
  const row=patientFormRow();
