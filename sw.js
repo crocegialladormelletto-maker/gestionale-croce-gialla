@@ -1,5 +1,5 @@
 // Service Worker stabile: navigazioni sempre dalla rete, nessun redirect forzato.
-const CACHE_NAME = 'cge-volontari-static-v31';
+const CACHE_NAME = 'cge-volontari-static-v32';
 const APP_BASE = '/gestionale-croce-gialla/';
 const STATIC_ASSETS = new Set([
   APP_BASE + 'manifest.json',
@@ -29,7 +29,7 @@ self.addEventListener('activate', event => {
           try{
             const u = new URL(client.url);
             if(!u.pathname.startsWith(APP_BASE)) return;
-            u.searchParams.set('cge_refresh','20260929-checklist07');
+            u.searchParams.set('cge_refresh','20260929-checklist07-visible');
             await client.navigate(u.toString());
           }catch(_){}
         }));
