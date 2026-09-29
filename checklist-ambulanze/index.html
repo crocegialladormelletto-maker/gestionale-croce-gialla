@@ -74,13 +74,17 @@ main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 
 <div><label>Filtra data<input id="filterDate" type="date" oninput="renderArchive()"></label></div>
 <div><label>Filtra compilatore<input id="filterName" oninput="renderArchive()" placeholder="Cerca nome"></label></div>
 <div><label>Esito<select id="filterEsito" onchange="renderArchive()"><option value="">Tutti</option><option>OPERATIVO</option><option>OPERATIVO CON RISERVA</option><option>NON OPERATIVO</option></select></label></div>
-<div style="display:flex;align-items:end;gap:8px"><button class="yellow" onclick="exportData()">Esporta archivio</button><label class="light" style="padding:10px;border-radius:10px;cursor:pointer;font-weight:700">Importa<input type="file" accept=".json" onchange="importData(event)" hidden></label></div>
+<div style="display:flex;align-items:end;gap:8px"><button class="yellow" onclick="exportData()">Esporta archivio</button><a class="light" style="padding:10px;border-radius:10px;font-weight:700;text-decoration:none" href="../">Torna al gestionale</a></div>
 </div>
 <div style="overflow:auto;padding:0 12px 16px"><table class="archive-table"><thead><tr><th>Data/Ora</th><th>Compilatore</th><th>KM</th><th>Carburante</th><th>Esito</th><th>KO</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
 </div>
 </section>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
+const SUPABASE_URL="https://ihottewckpwpwqzpxusl.supabase.co", SUPABASE_KEY="sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+let archiveCache=[];
 const sections = [
 {title:'Vano guida · Documenti mezzo',items:['Carta circolazione','Assicurazione','Revisione in regola','Fogli marcia','Schede 118']},
 {title:'Vano guida · Motore',items:['Corretto avviamento','Corretto livello olio']},
@@ -157,29 +161,63 @@ function validate(){
  if(koNoNote.length){alert('Inserisci una nota per tutte le voci segnate KO.');return false}
  return true;
 }
-function saveChecklist(){
- if(!validate())return;
- const rec={id:Date.now(),mezzo:'Ambulanza 07',data:data.value,ora:ora.value,compilatore:compilatore.value.trim(),km:km.value,carburante:carburante.value,passaggio:passaggio.value,noteFinali:noteFinali.value,scadenze:scadenze.value,esito:esito.value,firma:firma.value.trim(),responses:JSON.parse(JSON.stringify(responses)),savedAt:new Date().toISOString()};
- const all=getAll();all.unshift(rec);localStorage.setItem('cg_checklist_a07',JSON.stringify(all));alert('Checklist salvata nell’archivio di questo dispositivo.');renderArchive();
+async function currentAccess(){
+ const {data:{user}}=await sb.auth.getUser();
+ if(!user)return null;
+ const {data,error}=await sb.from('accessi_app').select('nome,ruolo,attivo,mezzo').single();
+ if(error||!data?.attivo)return null;
+ return data;
 }
-function getAll(){try{return JSON.parse(localStorage.getItem('cg_checklist_a07')||'[]')}catch(e){return[]}}
+async function saveChecklist(){
+ if(!validate())return;
+ const access=await currentAccess();
+ if(!access||access.ruolo!=='TABLET'||access.mezzo!=='07'){
+  alert('Questa checklist può essere salvata esclusivamente dal Tablet dell’Ambulanza 07.');
+  return;
+ }
+ const payload={mezzo:'07',data:data.value,ora:ora.value,compilatore:compilatore.value.trim(),km_iniziali:Number(km.value),carburante:carburante.value,passaggio_consegne:passaggio.value||null,note_finali:noteFinali.value||null,controllo_scadenze:scadenze.value||null,esito:esito.value,firma:firma.value.trim(),risposte:JSON.parse(JSON.stringify(responses))};
+ const btn=document.querySelector('.top-actions .primary'); if(btn){btn.disabled=true;btn.textContent='Salvataggio...'}
+ const {error}=await sb.from('checklist_ambulanze').insert(payload);
+ if(btn){btn.disabled=false;btn.textContent='Salva checklist'}
+ if(error){alert('Salvataggio non riuscito: '+error.message);return}
+ alert('Checklist salvata. È ora visibile anche nell’archivio del gestionale principale.');
+ await renderArchive();
+}
 function resetForm(){if(!confirm('Pulire tutta la checklist?'))return;document.querySelectorAll('input,textarea').forEach(x=>x.value='');document.querySelectorAll('select').forEach(x=>x.selectedIndex=0);document.querySelectorAll('.choice').forEach(x=>x.classList.remove('sel','ok','ko','na','warn'));responses={};setNow()}
-function showView(v){newView.classList.toggle('hidden',v!=='new');archiveView.classList.toggle('hidden',v!=='archive');tabNuova.classList.toggle('active',v==='new');tabArchivio.classList.toggle('active',v==='archive');if(v==='archive')renderArchive()}
-function renderArchive(){
+async function showView(v){newView.classList.toggle('hidden',v!=='new');archiveView.classList.toggle('hidden',v!=='archive');tabNuova.classList.toggle('active',v==='new');tabArchivio.classList.toggle('active',v==='archive');if(v==='archive')await renderArchive()}
+async function renderArchive(){
+ const access=await currentAccess();
+ if(!access){archiveBody.innerHTML='<tr><td colspan="7">Sessione non valida. Accedi dal gestionale principale o dal Tablet 07.</td></tr>';return}
+ const {data:rows,error}=await sb.from('checklist_ambulanze').select('*').eq('mezzo','07').order('created_at',{ascending:false});
+ if(error){archiveBody.innerHTML='<tr><td colspan="7">Impossibile caricare l’archivio.</td></tr>';return}
+ archiveCache=rows||[];
  const d=filterDate?.value||'',n=(filterName?.value||'').toLowerCase(),e=filterEsito?.value||'';
- const list=getAll().filter(r=>(!d||r.data===d)&&(!n||r.compilatore.toLowerCase().includes(n))&&(!e||r.esito===e));
- archiveBody.innerHTML=list.map(r=>{const ko=Object.values(r.responses||{}).filter(x=>x.value==='KO'||x.value==='SCADUTO'||x.value==='VUOTA').length;return '<tr><td>'+esc(r.data)+' '+esc(r.ora)+'</td><td>'+esc(r.compilatore)+'</td><td>'+esc(r.km)+'</td><td>'+esc(r.carburante)+'</td><td><span class="badge '+(r.esito==='OPERATIVO'?'b-ok':'b-ko')+'">'+esc(r.esito)+'</span></td><td>'+ko+'</td><td><button class="light" onclick="openRecord('+r.id+')">Apri</button> <button class="danger" onclick="deleteRecord('+r.id+')">Elimina</button></td></tr>'}).join('')||'<tr><td colspan="7">Nessuna checklist salvata.</td></tr>'
+ const list=archiveCache.filter(r=>(!d||r.data===d)&&(!n||String(r.compilatore||'').toLowerCase().includes(n))&&(!e||r.esito===e));
+ archiveBody.innerHTML=list.map(r=>{const ko=Object.values(r.risposte||{}).filter(x=>x.value==='KO'||x.value==='SCADUTO'||x.value==='VUOTA').length;return '<tr><td>'+esc(r.data)+' '+esc(String(r.ora||'').slice(0,5))+'</td><td>'+esc(r.compilatore)+'</td><td>'+esc(r.km_iniziali)+'</td><td>'+esc(r.carburante)+'</td><td><span class="badge '+(r.esito==='OPERATIVO'?'b-ok':'b-ko')+'">'+esc(r.esito)+'</span></td><td>'+ko+'</td><td><button class="light" onclick="openRecord(\''+r.id+'\')">Apri</button></td></tr>'}).join('')||'<tr><td colspan="7">Nessuna checklist salvata.</td></tr>'
 }
 function openRecord(id){
- const r=getAll().find(x=>x.id===id);if(!r)return;showView('new');data.value=r.data;ora.value=r.ora;compilatore.value=r.compilatore;km.value=r.km;carburante.value=r.carburante;passaggio.value=r.passaggio||'';noteFinali.value=r.noteFinali||'';scadenze.value=r.scadenze||'';esito.value=r.esito||'';firma.value=r.firma||'';responses=JSON.parse(JSON.stringify(r.responses||{}));
+ const r=archiveCache.find(x=>x.id===id);if(!r)return;showView('new');data.value=r.data;ora.value=String(r.ora||'').slice(0,5);compilatore.value=r.compilatore;km.value=r.km_iniziali;carburante.value=r.carburante;passaggio.value=r.passaggio_consegne||'';noteFinali.value=r.note_finali||'';scadenze.value=r.controllo_scadenze||'';esito.value=r.esito||'';firma.value=r.firma||'';responses=JSON.parse(JSON.stringify(r.risposte||{}));
  document.querySelectorAll('.choice').forEach(btn=>{btn.classList.remove('sel','ok','ko','na','warn');const x=responses[btn.dataset.key];if(x&&x.value===btn.dataset.val){btn.classList.add('sel',x.value==='OK'||['4/4','3/4','2/4','1/4','1/2'].includes(x.value)?'ok':x.value==='KO'||x.value==='SCADUTO'||x.value==='VUOTA'?'ko':x.value==='N.A.'?'na':'warn')}})
  document.querySelectorAll('[data-note]').forEach(inp=>inp.value=(responses[inp.dataset.note]||{}).note||'');document.querySelectorAll('[data-special]').forEach(inp=>inp.value=(responses[inp.dataset.special]||{}).value||'');window.scrollTo(0,0)
 }
-function deleteRecord(id){if(!confirm('Eliminare definitivamente questa checklist?'))return;localStorage.setItem('cg_checklist_a07',JSON.stringify(getAll().filter(x=>x.id!==id)));renderArchive()}
-function exportData(){const blob=new Blob([JSON.stringify(getAll(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='archivio-checklist-ambulanza-07.json';a.click();URL.revokeObjectURL(a.href)}
-function importData(ev){const f=ev.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const arr=JSON.parse(rd.result);if(!Array.isArray(arr))throw 0;localStorage.setItem('cg_checklist_a07',JSON.stringify(arr));renderArchive();alert('Archivio importato.')}catch(e){alert('File non valido.')}};rd.readAsText(f)}
+function exportData(){const blob=new Blob([JSON.stringify(archiveCache,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='archivio-checklist-ambulanza-07.json';a.click();URL.revokeObjectURL(a.href)}
 function setNow(){const d=new Date();data.value=d.toISOString().slice(0,10);ora.value=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
-renderChecklist();setNow();renderArchive();
+renderChecklist();setNow();
+(async()=>{
+ const access=await currentAccess();
+ if(!access){
+  alert('Per usare la checklist accedi prima al gestionale. Sul mezzo 07 usa il link dedicato Tablet 07.');
+  location.href='../?area=tablet&mezzo=07';
+  return;
+ }
+ if(access.ruolo==='TABLET'&&access.mezzo!=='07'){
+  alert('Questa checklist è riservata al Tablet dell’Ambulanza 07.');
+  location.href='../?area=tablet&mezzo='+encodeURIComponent(access.mezzo||'');
+  return;
+ }
+ if(access.ruolo==='AMMINISTRATORE'||access.ruolo==='CENTRALINO')showView('archive');
+ else await renderArchive();
+})();
 </script>
 </body>
 </html>
