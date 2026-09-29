@@ -2073,7 +2073,7 @@ Causale: numero preventivo</textarea>
    <div class="tablet-actions" id="tabletActionBar"></div>
    <div id="tabletSheetPanel" class="section hidden">
     <h3 class="tablet-section-title" id="tabletSheetTitle">Foglio Viaggio</h3>
-    <div class="notice">Compila e salva durante il servizio. Il Foglio Viaggio va chiuso dopo aver terminato il servizio. Dopo la chiusura non sarà più modificabile dal tablet.</div>
+    <div class="notice"><b>Sequenza operativa:</b> 1) Prendi in carico · 2) Svolgi il servizio compilando il Foglio Viaggio · 3) Chiudi servizio. Dopo la chiusura il servizio passa al gestionale principale per la Nota di Debito.</div>
     <div id="tabletSheetMsg"></div>
     <form id="tabletSheetForm">
     <h3 class="tablet-section-title">Orari effettivi e percorrenza</h3>
@@ -2108,8 +2108,8 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Data pagamento</label><input type="date" data-ts-field="data_pagamento"></div>
     </div>
     <div class="tablet-sheet-bar">
-     <div class="actions"><button id="tabletSaveSheet" class="btn yellow" type="submit">Salva Foglio Viaggio</button>
-     <button id="tabletCloseSheet" class="btn blue" type="button">Chiudi Foglio Viaggio</button>
+     <div class="actions"><button id="tabletSaveSheet" class="btn yellow" type="submit">Salva dati servizio</button>
+     <button id="tabletCloseSheet" class="btn blue" type="button">✓ Chiudi servizio</button>
      <button id="tabletPrintSheet" class="btn secondary" type="button">Stampa</button></div>
     </div></form>
    </div>
@@ -8058,12 +8058,12 @@ function renderTabletDetailHeader(){
  $('tabletServiceSubtitle').textContent=tabletDateLabel(s.data_servizio)+' · partenza '+tabletFmt(s.ora_partenza_prevista)+' · '+(s.stato_gestionale||s.stato);
  $('tabletActionBar').innerHTML='';
  if(!['ANNULLATO','CHIUSO'].includes(s.stato_gestionale)){
- const buttons=[];
- if(!['PRESO IN CARICO','IN CORSO','COMPLETATO'].includes(s.stato)&&!['DA CONTABILIZZARE','CHIUSO'].includes(s.stato_gestionale))buttons.push(['PRENDI_IN_CARICO','Prendi in carico','yellow']);
- if(!['IN CORSO','COMPLETATO'].includes(s.stato)&&s.stato_gestionale!=='DA CONTABILIZZARE')buttons.push(['AVVIA','Avvia servizio','blue']);
- if(['PRESO IN CARICO','IN CORSO'].includes(s.stato))buttons.push(['TERMINA','Termina servizio','secondary']);
- $('tabletActionBar').innerHTML=buttons.map(([az,label,cl])=>'<button type="button" class="btn '+cl+'" data-tablet-act="'+az+'">'+label+'</button>').join('');
- $('tabletActionBar').querySelectorAll('[data-tablet-act]').forEach(b=>b.onclick=()=>tabletAct(b.dataset.tabletAct));
+  const buttons=[];
+  if(!['PRESO IN CARICO','IN CORSO','COMPLETATO'].includes(s.stato)&&!['DA CONTABILIZZARE','CHIUSO'].includes(s.stato_gestionale)){
+   buttons.push(['PRENDI_IN_CARICO','Prendi in carico','yellow']);
+  }
+  $('tabletActionBar').innerHTML=buttons.map(([az,label,cl])=>'<button type="button" class="btn '+cl+'" data-tablet-act="'+az+'">'+label+'</button>').join('');
+  $('tabletActionBar').querySelectorAll('[data-tablet-act]').forEach(b=>b.onclick=()=>tabletAct(b.dataset.tabletAct));
  }
 }
 async function openTabletService(id){
@@ -8124,7 +8124,7 @@ async function loadTabletSheet(serviceId){
  else el.value=f[key]??'';
  });
  $('tabletSaveSheet').classList.toggle('hidden',closed);$('tabletCloseSheet').classList.toggle('hidden',closed);
- $('tabletCloseSheet').disabled=!['COMPLETATO'].includes(tabletCurrentService?.stato)&&!['DA CONTABILIZZARE','CHIUSO'].includes(tabletCurrentService?.stato_gestionale);
+ $('tabletCloseSheet').disabled=false;
  msg('tabletSheetMsg',closed?'Foglio Viaggio chiuso: è disponibile in sola lettura.':'',closed?'ok':'');
  tabletCalcSheet();
 }
@@ -8159,15 +8159,18 @@ async function saveTabletSheet(silent=false){
 }
 async function tabletCloseSheet(){
  if(!tabletCurrentSheet||tabletBusy)return;
- if(!['COMPLETATO'].includes(tabletCurrentService?.stato)&&!['DA CONTABILIZZARE','CHIUSO'].includes(tabletCurrentService?.stato_gestionale))return msg('tabletSheetMsg','Termina prima il servizio, poi chiudi il Foglio Viaggio.','warn');
  const saved=await saveTabletSheet(true);if(!saved)return;
- if(!confirm('Chiudere definitivamente il Foglio Viaggio? Non sarà più modificabile dal tablet.'))return;
- tabletBusy=true;msg('tabletSheetMsg','Chiusura in corso...');
+ if(!confirm('Chiudere il servizio? I dati del Foglio Viaggio verranno chiusi e il servizio passerà al gestionale per la Nota di Debito.'))return;
+ tabletBusy=true;msg('tabletSheetMsg','Chiusura servizio in corso...');
  try{
+  if(!['COMPLETATO'].includes(tabletCurrentService?.stato)&&!['DA CONTABILIZZARE','CHIUSO'].includes(tabletCurrentService?.stato_gestionale)){
+   const done=await sb.rpc('cge_tablet_azione_servizio',{p_servizio:tabletCurrentService.id,p_azione:'TERMINA'});
+   if(done.error)throw done.error;
+  }
   const r=await sb.rpc('cge_tablet_chiudi_foglio_viaggio',{p_foglio:tabletCurrentSheet.id});
   if(r.error)throw r.error;
   tabletBusy=false;await tabletRefreshListAfterAct(tabletCurrentService.id);
-  msg('tabletSheetMsg','Foglio Viaggio chiuso.','ok')
+  msg('tabletSheetMsg','Servizio chiuso. Ora è disponibile nel gestionale principale per la Nota di Debito.','ok')
  }catch(e){msg('tabletSheetMsg',e.message||String(e),'err')}
  finally{tabletBusy=false}
 }
