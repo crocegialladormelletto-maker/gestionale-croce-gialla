@@ -319,29 +319,22 @@ function printRows(){
  const alive=events.filter(e=>!e.eliminato_at),by={};
  for(const e of alive){
   const d=new Date(e.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
-  by[d]??={i:[],o:[],c:[]};
+  by[d]??={i:[],o:[]};
   (e.tipo==='ENTRATA'?by[d].i:by[d].o).push(e)
  }
- const fe=$('filterEmp').value,pm=$('month').value;
- const abs=absences.filter(x=>(!fe||x.badge===fe)&&(String(x.data_dal).slice(0,7)===pm||String(x.data_al).slice(0,7)===pm));
- for(const a of abs){
-  let d=new Date(a.data_dal+'T12:00:00');
-  const end=new Date(a.data_al+'T12:00:00');
-  while(d<=end){
-   const key=d.toLocaleDateString('sv-SE');
-   by[key]??={i:[],o:[],c:[]};
-   by[key].c.push(a);
-   d.setDate(d.getDate()+1);
-  }
- }
- let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th><th>Causale</th></tr></thead><tbody>';
+ let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th><th>Totale ore giornaliere</th></tr></thead><tbody>';
  for(const d of Object.keys(by).sort()){
-  const v=by[d],n=Math.max(v.i.length,v.o.length,v.c.length,1);
+  const v=by[d];
+  v.i.sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+  v.o.sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+  const n=Math.max(v.i.length,v.o.length,1);
+  let totalMin=0;
+  for(let j=0;j<Math.min(v.i.length,v.o.length);j++){
+   const mins=(new Date(v.o[j].evento_at)-new Date(v.i[j].evento_at))/60000;
+   if(mins>0)totalMin+=mins;
+  }
   for(let j=0;j<n;j++){
-   const a=v.c[j];
-   let caus='';
-   if(a){caus=absenceLabel(a.causale)+(a.ore!=null?' · '+a.ore+' h':'')+(a.nota?' · '+esc(a.nota):'')}
-   h+='<tr><td>'+new Date(d+'T12:00').toLocaleDateString('it-IT')+'</td><td>'+(v.i[j]?time(v.i[j].evento_at):'')+'</td><td>'+(v.o[j]?time(v.o[j].evento_at):'')+'</td><td>'+caus+'</td></tr>'
+   h+='<tr><td>'+new Date(d+'T12:00').toLocaleDateString('it-IT')+'</td><td>'+(v.i[j]?time(v.i[j].evento_at):'')+'</td><td>'+(v.o[j]?time(v.o[j].evento_at):'')+'</td><td>'+(j===0?fmtMin(totalMin):'')+'</td></tr>'
   }
  }
  return h+'</tbody></table>'
