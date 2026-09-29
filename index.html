@@ -668,7 +668,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.19</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.20</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -722,7 +722,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.19</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.20</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -1998,6 +1998,9 @@ Causale: numero preventivo</textarea>
   <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong id="tabletTitle">Tablet mezzo —</strong><div id="tabletWho" class="muted" style="color:#dce6f0">Servizi assegnati al mezzo</div></div>
   <button id="tabletLogout" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
+ <div id="tabletChecklist07Hero" class="hidden" style="padding:12px 14px 0">
+  <button type="button" class="btn" style="width:100%;background:#0077ff;color:#fff;border:2px solid #005fd1;font-size:18px;padding:14px;font-weight:900;border-radius:12px">✅ APRI CHECKLIST AMBULANZA 07</button>
+ </div>
  <div class="tablet-toolbar">
   <button id="tabletToday" class="btn secondary">Oggi</button>
   <button id="tabletWeek" class="btn yellow">Prossimi 7 giorni</button>
@@ -2634,7 +2637,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.18':'Versione 14.19';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.18':'Versione 14.20';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -2717,7 +2720,8 @@ $('vout').onclick=async()=>{
 };
 $('mout').onclick=async()=>{stopMonitorSede();await sb.auth.signOut();location.reload()};
 $('tabletLogout').onclick=async()=>{stopTabletArea();await sb.auth.signOut();location.reload()};
-if($('tabletChecklist07'))$('tabletChecklist07').onclick=()=>{if(tabletMezzo==='07')location.href='checklist-ambulanze/?v=20260929c'};
+if($('tabletChecklist07'))$('tabletChecklist07').onclick=()=>{if(tabletMezzo==='07')location.href='checklist-ambulanze/?v=20260929d'};
+if($('tabletChecklist07Hero'))$('tabletChecklist07Hero').querySelector('button').onclick=()=>{if(tabletMezzo==='07')location.href='checklist-ambulanze/?v=20260929d'};
 
 async function refreshMaster(){
  const personnelPromise=prof?.ruolo==='CENTRALINO'?sb.rpc('cge_centralino_personale'):sb.from('personale').select('*').order('cognome');
@@ -8029,6 +8033,7 @@ $('tabletImmediateForm').onsubmit=async e=>{e.preventDefault();await tabletCreat
 async function startTabletArea(){
  stopTabletArea();$('tabletTitle').textContent='Tablet mezzo '+tabletMezzo;$('tabletWho').textContent='Solo servizi assegnati al mezzo '+tabletMezzo;
  if($('tabletChecklist07'))$('tabletChecklist07').classList.toggle('hidden',tabletMezzo!=='07');
+ if($('tabletChecklist07Hero'))$('tabletChecklist07Hero').classList.toggle('hidden',tabletMezzo!=='07');
  $('tabletPriceVehicle').textContent=tabletMezzo;$('tabletImmediateVehicle').textContent=tabletMezzo;
  $('tabletAdLeaderBox').classList.toggle('hidden',tabletMezzo==='06');
  $('tabletAdLeader').required=false;
@@ -8748,7 +8753,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.19-20260929-checklist07-tablet';
+const CGE_APP_BUILD='14.20-20260929-checklist07-visible';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
