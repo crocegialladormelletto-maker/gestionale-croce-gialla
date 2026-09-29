@@ -25,7 +25,7 @@ button,input{font:inherit}.hidden{display:none!important}.btn{border:1px solid #
 .monitor-shell{min-height:100vh;padding:18px}.top{background:var(--n);color:#fff;border-radius:18px;overflow:hidden;box-shadow:0 4px 18px #0002}
 .head{display:flex;align-items:center;gap:16px;padding:16px 22px}.logo{width:74px;height:74px;border-radius:50%;object-fit:cover;background:#fff;border:4px solid #fff}
 .brand{flex:1}.brand small{display:block;color:var(--y);font-weight:1000;font-size:15px}.brand strong{display:block;font-size:29px}.brand span{color:#dbe6ef}
-.clock{text-align:right;min-width:230px}.clock b{display:block;font-size:34px;line-height:1}.clock span{font-size:15px;color:#dbe6ef}.stripe{height:7px;background:linear-gradient(90deg,var(--y) 0 74%,#e8463d 74% 87%,#3477c9 87%)}
+.clock{text-align:right;min-width:230px}.clock b{display:block;font-size:34px;line-height:1}.clock span{font-size:15px;color:#dbe6ef}.stripe{height:7px;background:linear-gradient(90deg,var(--y) 0 78%,#3477c9 78% 100%)}
 .controls{display:flex;gap:9px;flex-wrap:wrap;padding:12px 18px;background:#fff;border:1px solid var(--l);border-radius:14px;margin:14px 0}
 body.display-only .controls{display:none}
 body.display-only .monitor-shell{padding-top:10px}
@@ -121,7 +121,7 @@ body.display-only .display-fullscreen{display:block}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
-const BUILD='monitor-v1-20260929k';
+const BUILD='monitor-v1-20260929l';
 const SELF_UPDATE_INTERVAL=60000;
 let selfUpdateTimer=null;
 function currentBaseUrl(){return location.origin+location.pathname}
