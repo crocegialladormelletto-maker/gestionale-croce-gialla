@@ -12,6 +12,16 @@
 *{box-sizing:border-box}body{margin:0;background:var(--b);color:var(--i);font:14px/1.45 system-ui,-apple-system,Segoe UI,Arial}
 button,input{font:inherit}.hidden{display:none!important}.btn{border:1px solid #cbd8e3;border-radius:10px;padding:10px 13px;font-weight:850;cursor:pointer;background:#fff;color:var(--n)}
 .btn.yellow{background:var(--y);border-color:#d8ba00}.btn.blue{background:#2563eb;color:#fff;border-color:#1d4ed8}.btn.danger{background:#a93138;color:#fff;border-color:#8b2930}
+#todayBtn{background:#f4b400;color:#102f5a;border-color:#d99a00}
+#shiftsBtn{background:#16a34a;color:#fff;border-color:#15803d}
+#weekBtn{background:#7c3aed;color:#fff;border-color:#6d28d9}
+#refreshBtn{background:#0891b2;color:#fff;border-color:#0e7490}
+#rotateBtn{background:#475569;color:#fff;border-color:#334155}
+#fullBtn{background:#2563eb;color:#fff;border-color:#1d4ed8}
+#logoutBtn{background:#dc2626;color:#fff;border-color:#b91c1c}
+.controls .btn{box-shadow:0 2px 6px #0002;transition:.15s ease}
+.controls .btn:hover{filter:brightness(.96);transform:translateY(-1px)}
+.controls .btn.yellow{box-shadow:0 0 0 3px rgba(255,212,0,.28),0 3px 8px #0002}
 .monitor-shell{min-height:100vh;padding:18px}.top{background:var(--n);color:#fff;border-radius:18px;overflow:hidden;box-shadow:0 4px 18px #0002}
 .head{display:flex;align-items:center;gap:16px;padding:16px 22px}.logo{width:74px;height:74px;border-radius:50%;object-fit:cover;background:#fff;border:4px solid #fff}
 .brand{flex:1}.brand small{display:block;color:var(--y);font-weight:1000;font-size:15px}.brand strong{display:block;font-size:29px}.brand span{color:#dbe6ef}
@@ -103,7 +113,7 @@ button,input{font:inherit}.hidden{display:none!important}.btn{border:1px solid #
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
-const BUILD='monitor-v1-20260929f';
+const BUILD='monitor-v1-20260929g';
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co';
 const KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
