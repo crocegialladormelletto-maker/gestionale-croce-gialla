@@ -11,7 +11,17 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.21-android-pwa">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.21-android-pwa">
+<script>
+(function(){
+ try{
+  const p=new URLSearchParams(location.search);
+  if(p.get('area')==='tablet' && p.get('mezzo')==='07'){
+   document.getElementById('cgeManifest').href='/gestionale-croce-gialla/tablet-07-manifest.json?v=1';
+  }
+ }catch(_){}
+})();
+</script>
 <link rel="icon" type="image/png" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192-v6.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/gestionale-croce-gialla/icons/icon-512-v6.png">
 <link rel="apple-touch-icon" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192-v6.png">
@@ -668,7 +678,7 @@
 
 </style></head><body>
 
-<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.22</div></div><div class="loginbody">
+<div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.23</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -722,7 +732,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.22</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.23</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -989,7 +999,7 @@
 <div class="actions"><button class="btn yellow" data-tablet-action="CREATE_OR_RESET" data-vehicle="06">Crea / reset password</button><button class="btn secondary" data-tablet-action="STATUS" data-vehicle="06">Verifica</button><button class="btn danger" data-tablet-action="DISABLE" data-vehicle="06">Disattiva</button></div>
 <div id="tabletAdminMsg06"></div>
 </div><div class="tablet-credentials" data-tablet-admin="07">
-<div class="actions" style="justify-content:space-between"><b>Mezzo 07 · username tablet07</b><a target="_blank" rel="noopener" href="/gestionale-croce-gialla/?area=tablet&amp;mezzo=07&amp;v=14.22">Link dedicato al mezzo 07</a></div>
+<div class="actions" style="justify-content:space-between"><b>Mezzo 07 · username tablet07</b><a target="_blank" rel="noopener" href="/gestionale-croce-gialla/?area=tablet&amp;mezzo=07">Link dedicato al mezzo 07</a></div>
 <div class="actions" style="margin:8px 0"><div class="field"><label>Nuova password (facoltativa)</label><input id="tabletAdminPw07" type="password" autocomplete="new-password" placeholder="Vuoto = genera"></div><div class="field"><label>Stato</label><input id="tabletAdminState07" disabled value="Non verificato"></div></div>
 <div class="actions"><button class="btn yellow" data-tablet-action="CREATE_OR_RESET" data-vehicle="07">Crea / reset password</button><button class="btn secondary" data-tablet-action="STATUS" data-vehicle="07">Verifica</button><button class="btn danger" data-tablet-action="DISABLE" data-vehicle="07">Disattiva</button></div>
 <div id="tabletAdminMsg07"></div>
@@ -2634,7 +2644,7 @@ function applyVolunteerOnlyLogin(){
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').classList.toggle('hidden',tablet||centralino);
  if($('tabletLoginBlock'))$('tabletLoginBlock').classList.toggle('hidden',volunteer||centralino);
  if($('loginTitle'))$('loginTitle').textContent=centralino?'Croce Gialla · Centralino':tablet?'Croce Gialla · Tablet mezzo '+(tabletRequestedVehicle()||''):volunteer?'Croce Gialla Emergenza':'Gestionale Croce Gialla';
- if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.18':'Versione 14.22';
+ if($('loginSubtitle'))$('loginSubtitle').textContent=centralino?'Accesso riservato al Centralino':tablet?'Accesso dispositivo di bordo':volunteer?'Area personale volontario · Badge + PIN · v14.18':'Versione 14.23';
  if($('volunteerLoginBlock'))$('volunteerLoginBlock').querySelector('div').textContent=volunteer?'Accesso volontario':'Accesso volontari';
  if(tabletRequestedVehicle()&&$('tuser'))$('tuser').value='tablet'+tabletRequestedVehicle();
 }
@@ -2717,7 +2727,7 @@ $('vout').onclick=async()=>{
 };
 $('mout').onclick=async()=>{stopMonitorSede();await sb.auth.signOut();location.reload()};
 $('tabletLogout').onclick=async()=>{stopTabletArea();await sb.auth.signOut();location.reload()};
-if($('tabletChecklist07'))$('tabletChecklist07').onclick=()=>{if(String(tabletMezzo)==='07')location.href='checklist-ambulanze/?v=20260929f'};
+if($('tabletChecklist07'))$('tabletChecklist07').onclick=()=>{if(String(tabletMezzo)==='07')location.href='checklist-ambulanze/'};
 
 async function refreshMaster(){
  const personnelPromise=prof?.ruolo==='CENTRALINO'?sb.rpc('cge_centralino_personale'):sb.from('personale').select('*').order('cognome');
@@ -8748,7 +8758,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.22-integrated-checklist07';
+const CGE_APP_BUILD='14.23-stable-tablet07';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
