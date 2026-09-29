@@ -2003,7 +2003,7 @@ Causale: numero preventivo</textarea>
   <button id="tabletWeek" class="btn yellow">Prossimi 7 giorni</button>
   <button id="tabletOpen" class="btn secondary">Da completare</button>
   <button id="tabletRefresh" class="btn blue">↻ Aggiorna</button>
-  <button id="tabletChecklist07" class="btn yellow hidden" type="button">✅ Checklist Ambulanza 07</button>
+  <button id="tabletChecklist07" class="btn yellow" type="button" style="background:#0077ff;color:#fff;border-color:#005fd1;font-weight:900">✅ Checklist Ambulanza 07</button>
   <span class="muted" id="tabletUpdated">Aggiornamento automatico ogni 20 secondi</span>
   <button id="tabletTariffToggle" type="button" class="btn secondary">€ Consulta tariffari</button>
   <button id="tabletImmediateToggle" type="button" class="btn yellow">✚ Servizio non programmato</button>
@@ -2717,7 +2717,7 @@ $('vout').onclick=async()=>{
 };
 $('mout').onclick=async()=>{stopMonitorSede();await sb.auth.signOut();location.reload()};
 $('tabletLogout').onclick=async()=>{stopTabletArea();await sb.auth.signOut();location.reload()};
-if($('tabletChecklist07'))$('tabletChecklist07').onclick=()=>{if(tabletMezzo==='07')location.href='checklist-ambulanze/?v=20260929c'};
+if($('tabletChecklist07'))$('tabletChecklist07').onclick=()=>{if(String(tabletMezzo)==='07')location.href='checklist-ambulanze/?v=20260929e'};
 
 async function refreshMaster(){
  const personnelPromise=prof?.ruolo==='CENTRALINO'?sb.rpc('cge_centralino_personale'):sb.from('personale').select('*').order('cognome');
@@ -8028,7 +8028,7 @@ $('tabletImmediateForm').onsubmit=async e=>{e.preventDefault();await tabletCreat
 
 async function startTabletArea(){
  stopTabletArea();$('tabletTitle').textContent='Tablet mezzo '+tabletMezzo;$('tabletWho').textContent='Solo servizi assegnati al mezzo '+tabletMezzo;
- if($('tabletChecklist07'))$('tabletChecklist07').classList.toggle('hidden',tabletMezzo!=='07');
+ if($('tabletChecklist07'))$('tabletChecklist07').style.display=(String(tabletMezzo)==='07'?'inline-flex':'none');
  $('tabletPriceVehicle').textContent=tabletMezzo;$('tabletImmediateVehicle').textContent=tabletMezzo;
  $('tabletAdLeaderBox').classList.toggle('hidden',tabletMezzo==='06');
  $('tabletAdLeader').required=false;
@@ -8748,7 +8748,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.19-20260929-checklist07-tablet';
+const CGE_APP_BUILD='14.21-20260929-checklist07-button';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
