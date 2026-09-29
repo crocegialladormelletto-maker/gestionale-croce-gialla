@@ -58,18 +58,18 @@ button,input{font:inherit}.hidden{display:none!important}.btn{border:1px solid #
   <button id="fullBtn" class="btn blue">⛶ Schermo intero</button>
   <button id="logoutBtn" class="btn danger" style="margin-left:auto">Esci</button>
  </div>
+ <div id="banner" class="banner"><div class="banner-label">📣 COMUNICAZIONE</div><div class="banner-window"><div id="bannerTrack" class="banner-track" data-repeat=""></div></div></div>
  <div class="main">
   <div id="todaySlide"><div class="title"><h1>Servizi di oggi</h1><div class="muted" id="todaySummary"></div></div><div id="todayList" class="services"></div></div>
   <div id="shiftsSlide" class="hidden"><div class="title"><h1>Turni di oggi</h1><div class="muted" id="shiftsSummary"></div></div><div id="shiftsList" class="shifts"></div></div>
   <div id="weekSlide" class="hidden"><div class="title"><h1>Turni e servizi · prossimi 7 giorni</h1><div class="muted">Monitor operativo</div></div><div id="weekGrid" class="week"></div></div>
  </div>
- <div id="banner" class="banner"><div class="banner-label">📣 COMUNICAZIONE</div><div class="banner-window"><div id="bannerTrack" class="banner-track" data-repeat=""></div></div></div>
  <div class="footer"><span>Aggiornamento automatico ogni 20 secondi · rotazione ogni 25 secondi</span><span id="updated">Ultimo aggiornamento: —</span></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
-const BUILD='monitor-v1-20260929a';
+const BUILD='monitor-v1-20260929b';
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co';
 const KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
