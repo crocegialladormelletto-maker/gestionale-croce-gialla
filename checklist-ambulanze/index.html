@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Checklist Ambulanza 07 - Croce Gialla Emergenza ODV</title>
+<style>
+:root{--navy:#0b2d57;--yellow:#ffd21c;--orange:#ef4b16;--bg:#f4f7fb;--green:#198754;--red:#c62828;--gray:#6c757d}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#172033}
+header{background:linear-gradient(135deg,var(--navy),#174a84);color:white;padding:18px 16px;border-bottom:6px solid var(--yellow)}
+.wrap{max-width:1180px;margin:auto}.brand{display:flex;align-items:center;gap:12px}.mark{width:54px;height:54px;border-radius:50%;background:var(--yellow);color:var(--navy);display:grid;place-items:center;font-weight:900;font-size:24px}
+h1{margin:0;font-size:24px}.sub{opacity:.9;margin-top:4px;font-size:14px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tabs button,.top-actions button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}.tabs button{background:white;color:var(--navy);box-shadow:0 1px 4px #0002}.tabs button.active{background:var(--yellow)}
+main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 3px 14px #00000014;margin:14px 0;overflow:hidden}.section-title{background:var(--orange);color:white;padding:10px 14px;font-weight:800;text-transform:uppercase}
+.meta{padding:14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.meta label{font-weight:700;font-size:13px}.meta input,.meta select,.meta textarea{width:100%;margin-top:5px;padding:10px;border:1px solid #cfd6df;border-radius:8px;font-size:15px}
+.items{padding:8px 12px 14px}.row{display:grid;grid-template-columns:minmax(220px,1fr) 330px minmax(160px,1fr);gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid #e7ebef}.row:last-child{border-bottom:0}.item-name{font-weight:700}
+.choices{display:flex;gap:6px;flex-wrap:wrap}.choice{border:1px solid #c9d1da;background:#fff;border-radius:8px;padding:8px 10px;font-weight:700;cursor:pointer}.choice.sel.ok{background:#d9f3e3;border-color:#4aad70;color:#145c31}.choice.sel.ko{background:#fde0e0;border-color:#d9534f;color:#8c1f1f}.choice.sel.na{background:#eceff3;border-color:#9ba5af}.choice.sel.warn{background:#fff2cc;border-color:#d9a900;color:#6b5200}
+.note{width:100%;padding:8px;border:1px solid #d6dce3;border-radius:8px}.top-actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.primary{background:var(--navy);color:#fff}.yellow{background:var(--yellow);color:#172033}.danger{background:#b3261e;color:#fff}.light{background:#fff;color:var(--navy);border:1px solid #ccd4dd!important}
+.summary{padding:14px}.summary textarea{width:100%;min-height:90px;border:1px solid #ccd4dd;border-radius:8px;padding:10px}
+.archive-table{width:100%;border-collapse:collapse}.archive-table th,.archive-table td{padding:9px;border-bottom:1px solid #e7ebef;text-align:left;font-size:14px}.archive-table th{background:#eef3f8}
+.badge{padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800}.b-ok{background:#d9f3e3;color:#145c31}.b-ko{background:#fde0e0;color:#8c1f1f}
+.hidden{display:none}
+@media(max-width:900px){.meta{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr}.choices{order:2}.note{order:3}}
+@media(max-width:560px){.meta{grid-template-columns:1fr}.tabs button{flex:1}.row{padding:10px 0}}
+@media print{header,.tabs,.top-actions,.archive-only{display:none!important}body{background:#fff}.card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}.row{grid-template-columns:1fr 1fr}.note{display:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand"><div class="mark">CG</div><div><h1>Checklist Ambulanza 07</h1><div class="sub">Croce Gialla Emergenza ODV · Dormelletto</div></div></div></div></header>
+<main class="wrap">
+<div class="tabs">
+<button id="tabNuova" class="active" onclick="showView('new')">Nuova checklist</button>
+<button id="tabArchivio" onclick="showView('archive')">Archivio checklist</button>
+</div>
+
+<section id="newView">
+<div class="card">
+<div class="section-title">Dati controllo</div>
+<div class="meta">
+<div><label>Data<input id="data" type="date"></label></div>
+<div><label>Ora<input id="ora" type="time"></label></div>
+<div><label>Compilatore<input id="compilatore" placeholder="Nome e cognome"></label></div>
+<div><label>KM a inizio turno<input id="km" type="number" min="0" placeholder="KM iniziali"></label></div>
+<div><label>Carburante<select id="carburante"><option value="">Seleziona</option><option>4/4</option><option>3/4</option><option>2/4</option><option>1/4</option><option>RISERVA</option></select></label></div>
+<div style="grid-column:span 3"><label>Passaggio di consegne / note iniziali<textarea id="passaggio" rows="2"></textarea></label></div>
+</div>
+</div>
+
+<div id="checklist"></div>
+
+<div class="card">
+<div class="section-title">Esito finale e anomalie</div>
+<div class="summary">
+<label><strong>Note / anomalie rilevate</strong><textarea id="noteFinali"></textarea></label>
+<div class="meta" style="padding:14px 0 0">
+<div><label>Controllo scadenze<select id="scadenze"><option value="">Seleziona</option><option>OK</option><option>DA VERIFICARE</option><option>SCADUTO</option></select></label></div>
+<div><label>Esito mezzo<select id="esito"><option value="">Seleziona</option><option>OPERATIVO</option><option>OPERATIVO CON RISERVA</option><option>NON OPERATIVO</option></select></label></div>
+<div style="grid-column:span 2"><label>Firma / nominativo compilatore<input id="firma"></label></div>
+</div>
+</div>
+</div>
+
+<div class="top-actions">
+<button class="primary" onclick="saveChecklist()">Salva checklist</button>
+<button class="yellow" onclick="window.print()">Stampa / Salva PDF</button>
+<button class="light" onclick="resetForm()">Nuova / Pulisci</button>
+</div>
+</section>
+
+<section id="archiveView" class="hidden">
+<div class="card archive-only">
+<div class="section-title">Archivio checklist Ambulanza 07</div>
+<div class="meta">
+<div><label>Filtra data<input id="filterDate" type="date" oninput="renderArchive()"></label></div>
+<div><label>Filtra compilatore<input id="filterName" oninput="renderArchive()" placeholder="Cerca nome"></label></div>
+<div><label>Esito<select id="filterEsito" onchange="renderArchive()"><option value="">Tutti</option><option>OPERATIVO</option><option>OPERATIVO CON RISERVA</option><option>NON OPERATIVO</option></select></label></div>
+<div style="display:flex;align-items:end;gap:8px"><button class="yellow" onclick="exportData()">Esporta archivio</button><label class="light" style="padding:10px;border-radius:10px;cursor:pointer;font-weight:700">Importa<input type="file" accept=".json" onchange="importData(event)" hidden></label></div>
+</div>
+<div style="overflow:auto;padding:0 12px 16px"><table class="archive-table"><thead><tr><th>Data/Ora</th><th>Compilatore</th><th>KM</th><th>Carburante</th><th>Esito</th><th>KO</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
+</div>
+</section>
+</main>
+<script>
+const sections = [
+{title:'Vano guida · Documenti mezzo',items:['Carta circolazione','Assicurazione','Revisione in regola','Fogli marcia','Schede 118']},
+{title:'Vano guida · Motore',items:['Corretto avviamento','Corretto livello olio']},
+{title:'Vano guida · Luci',items:['Posizione','Anabbaglianti','Abbaglianti','Stop','Esterne laterali','Brandeggianti','Interne','Lampeggianti','Strobo mascherina']},
+{title:'Vano guida · Suono',items:['Sirene','Clacson']},
+{title:'Vano sanitario · Interno ambulanza',items:['Barella principale','DAE','Aspiratore secreti','Sondini aspirazione','Spinali complete','Caschi','Barella cucchiaio','LIFEPAK 12','Frigo','Sfigmomanometro fisso','Set steccobende','KED','Spinale pediatrica','Sacca collari','Estintori / scadenza']},
+{title:'Vano sanitario · Vano 1',items:['Kit parto','Kit ustioni','Lenzuola x paziente','Sacca medicazione di scorta','Sacchetto aspiratore fisso di scorta','Contenitore per aspiratore di scorta','Visiere','Tute','Camici','Calzari','Kit amputazione gamba','Kit amputazione dita','Kit amputazione mano','Kit amputazione braccio']},
+{title:'Vano sanitario · Vano O2',items:['Sacca gialla ossigeno adulti S/R','Mascherine adulti','Mascherine pediatriche','Occhialini','Scadenze','Sacca verde RIA neonatale scorta','Sacca rossa RIA adulto scorta','Sacca blu RIA pediatrica scorta','Tubi per aspiratori','Piastre DAE adulti per Progetti','Piastre DAE pediatrica per Progetti','Piastra LIFEPAK adulti','Piastra LIFEPAK pediatrica','Alibox','Sacca gialla ossigeno']},
+{title:'Vano sanitario · Vano 3',items:['Ragno adulto','Ragno pediatrico','Fermacapi','Cinghie atraumatiche']},
+{title:'Vano sanitario · Cappelliera',items:['Pappagallo','Padella','Lenzuola barella','Fixo Kid','Traversine','Collari scorta','Rotolo carta pulizia']},
+{title:'Ossigeno',special:[
+{name:'Bombola ossigeno grande 1',options:['4/4','3/4','2/4','1/4','1/2','VUOTA']},
+{name:'Bombola ossigeno grande 2',options:['4/4','3/4','2/4','1/4','1/2','VUOTA']},
+{name:'Bombolino scorta',type:'number',placeholder:'Pressione / valore (es. 200)'},
+{name:'Bombolino principale',type:'number',placeholder:'Pressione / valore (es. 200)'}]},
+{title:'Cassetto medicazione 1',items:['Forbici','Metalline','Rasoi','Garze sterili','Peha-Haft','Disinfettante','Cerotti','Teli sterili','Occhiali protezione','Arcella','Cerotto','Pinzetta']},
+{title:'Cassetto medicazione 2',items:['Peha-Haft grande','Ghiaccio','Guanti sterili']},
+{title:'Cassetto medicazione 3',items:['Garze non sterili','Fisiologiche','Sacchetti immondizia','Sacchetti vomito','Mascherine','Laccio emostatico']},
+{title:'Zaino principale · Tasche grandi anteriori',items:['Saturimetro','Sonda SpO2 adulti','Sonda SpO2 pediatrica','Sonda SpO2 neonatale','Misuratore pressione adulto manuale','Misuratore pressione manuale pediatrico','Misuratore pressione automatico','Termometro digitale','Termometro laser']},
+{title:'Zaino principale · Tasche laterali',items:['Ghiaccio','Metalline adulti','Metalline pediatriche','Kit infusione','Peha-Haft']},
+{title:'Zaino principale · Sacca verde kit infusione',items:['Deflussore','Fisiologica','Ago canula grigia','Ago canula bianca','Ago canula arancione','Ago canula azzurra','Ago canula rosa','Ago canula verde','Rubinetto','Raccordo','Tappini','Butterfly','Rotolo cerotto','Ago bianco/blu','Cerotti per ago canula','Salviette disinfettanti','Cinghia emostatica'],expiry:true},
+{title:'Zaino principale · Sacca verde grande O2',items:['Maschera adulti C/R','Maschera adulti S/R','Maschera pediatrica C/R','Maschera pediatrica S/R','Occhialini'],expiry:true},
+{title:'Zaino principale · Sacca verde fisiologiche',items:['Fisiologica 100','Fisiologica 250','Fisiologica 500'],expiry:true},
+{title:'Zaino principale · Sacca rossa medicazione',items:['Telo chirurgico','Guanti sterili mis 6','Guanti sterili mis 7','Guanti sterili mis 8','Guanti sterili mis 8,5','Garze sterili 10x10','Garze sterili 10x20','Cerotto medicato 5x5','Cerotto medicato 10x8','Cerotto a rocchetto','Cerotti misti','Disinfettante','Forbice','Forbice punta smussata','Rasoio','Pinzetta','Laccio emostatico','Cinghia emostatica'],expiry:true},
+{title:'Zaino principale · Sacca azzurra',items:['Garze non sterili']},
+{title:'Zaino principale · Sacca rossa RIA adulto',items:['AMBU','Canule Guedel','Raccordo ossigeno','Maschere AMBU','Reservoire','Filtro']},
+{title:'Zaino principale · Sacca grigia RIA neonatale',items:['AMBU','Canule Guedel','Raccordo ossigeno','Maschere AMBU','Reservoire','Filtro']},
+{title:'Zaino principale · Sacca gialla RIA pediatrica',items:['AMBU','Canule Guedel','Raccordo ossigeno','Maschere AMBU','Reservoire','Filtro']}
+];
+
+let responses={};
+function key(section,item){return section+'||'+item}
+function choiceButtons(sec,item,opts=['OK','KO','N.A.']){
+ const k=key(sec,item); return '<div class="choices">'+opts.map(o=>'<button type="button" class="choice" data-key="'+esc(k)+'" data-val="'+esc(o)+'" onclick="selectChoice(this)">'+o+'</button>').join('')+'</div>'
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function renderChecklist(){
+ const root=document.getElementById('checklist'); root.innerHTML='';
+ sections.forEach(s=>{
+  const card=document.createElement('div'); card.className='card';
+  card.innerHTML='<div class="section-title">'+esc(s.title)+'</div><div class="items"></div>';
+  const box=card.querySelector('.items');
+  (s.items||[]).forEach(item=>{
+   const k=key(s.title,item);
+   const row=document.createElement('div');row.className='row';
+   row.innerHTML='<div class="item-name">'+esc(item)+'</div>'+choiceButtons(s.title,item)+'<input class="note" data-note="'+esc(k)+'" placeholder="Nota (obbligatoria se KO)" oninput="setNote(this)">';
+   box.appendChild(row);
+  });
+  (s.special||[]).forEach(sp=>{
+   const k=key(s.title,sp.name);const row=document.createElement('div');row.className='row';
+   let mid=sp.options?choiceButtons(s.title,sp.name,sp.options):'<input class="note" type="'+(sp.type||'text')+'" data-special="'+esc(k)+'" placeholder="'+esc(sp.placeholder||'Valore')+'" oninput="setSpecial(this)">';
+   row.innerHTML='<div class="item-name">'+esc(sp.name)+'</div>'+mid+'<input class="note" data-note="'+esc(k)+'" placeholder="Note" oninput="setNote(this)">';
+   box.appendChild(row);
+  });
+  if(s.expiry){
+   const item='Controllo scadenze'; const k=key(s.title,item); const row=document.createElement('div');row.className='row';
+   row.innerHTML='<div class="item-name">'+item+'</div>'+choiceButtons(s.title,item,['OK','IN SCADENZA','SCADUTO'])+'<input class="note" data-note="'+esc(k)+'" placeholder="Note scadenze" oninput="setNote(this)">';
+   box.appendChild(row);
+  }
+  root.appendChild(card);
+ });
+}
+function selectChoice(btn){
+ const k=btn.dataset.key,v=btn.dataset.val; responses[k]=responses[k]||{};responses[k].value=v;
+ btn.parentElement.querySelectorAll('.choice').forEach(b=>b.classList.remove('sel','ok','ko','na','warn'));
+ btn.classList.add('sel',v==='OK'||['4/4','3/4','2/4','1/4','1/2'].includes(v)?'ok':v==='KO'||v==='SCADUTO'||v==='VUOTA'?'ko':v==='N.A.'?'na':'warn');
+}
+function setNote(inp){responses[inp.dataset.note]=responses[inp.dataset.note]||{};responses[inp.dataset.note].note=inp.value}
+function setSpecial(inp){responses[inp.dataset.special]=responses[inp.dataset.special]||{};responses[inp.dataset.special].value=inp.value}
+function validate(){
+ const required=[['data','Data'],['ora','Ora'],['compilatore','Compilatore'],['km','KM a inizio turno'],['carburante','Carburante'],['esito','Esito mezzo'],['firma','Firma / nominativo']];
+ for(const [id,label] of required){if(!document.getElementById(id).value){alert('Compila: '+label);document.getElementById(id).focus();return false}}
+ const koNoNote=Object.entries(responses).filter(([k,v])=>v.value==='KO'&&!String(v.note||'').trim());
+ if(koNoNote.length){alert('Inserisci una nota per tutte le voci segnate KO.');return false}
+ return true;
+}
+function saveChecklist(){
+ if(!validate())return;
+ const rec={id:Date.now(),mezzo:'Ambulanza 07',data:data.value,ora:ora.value,compilatore:compilatore.value.trim(),km:km.value,carburante:carburante.value,passaggio:passaggio.value,noteFinali:noteFinali.value,scadenze:scadenze.value,esito:esito.value,firma:firma.value.trim(),responses:JSON.parse(JSON.stringify(responses)),savedAt:new Date().toISOString()};
+ const all=getAll();all.unshift(rec);localStorage.setItem('cg_checklist_a07',JSON.stringify(all));alert('Checklist salvata nell’archivio di questo dispositivo.');renderArchive();
+}
+function getAll(){try{return JSON.parse(localStorage.getItem('cg_checklist_a07')||'[]')}catch(e){return[]}}
+function resetForm(){if(!confirm('Pulire tutta la checklist?'))return;document.querySelectorAll('input,textarea').forEach(x=>x.value='');document.querySelectorAll('select').forEach(x=>x.selectedIndex=0);document.querySelectorAll('.choice').forEach(x=>x.classList.remove('sel','ok','ko','na','warn'));responses={};setNow()}
+function showView(v){newView.classList.toggle('hidden',v!=='new');archiveView.classList.toggle('hidden',v!=='archive');tabNuova.classList.toggle('active',v==='new');tabArchivio.classList.toggle('active',v==='archive');if(v==='archive')renderArchive()}
+function renderArchive(){
+ const d=filterDate?.value||'',n=(filterName?.value||'').toLowerCase(),e=filterEsito?.value||'';
+ const list=getAll().filter(r=>(!d||r.data===d)&&(!n||r.compilatore.toLowerCase().includes(n))&&(!e||r.esito===e));
+ archiveBody.innerHTML=list.map(r=>{const ko=Object.values(r.responses||{}).filter(x=>x.value==='KO'||x.value==='SCADUTO'||x.value==='VUOTA').length;return '<tr><td>'+esc(r.data)+' '+esc(r.ora)+'</td><td>'+esc(r.compilatore)+'</td><td>'+esc(r.km)+'</td><td>'+esc(r.carburante)+'</td><td><span class="badge '+(r.esito==='OPERATIVO'?'b-ok':'b-ko')+'">'+esc(r.esito)+'</span></td><td>'+ko+'</td><td><button class="light" onclick="openRecord('+r.id+')">Apri</button> <button class="danger" onclick="deleteRecord('+r.id+')">Elimina</button></td></tr>'}).join('')||'<tr><td colspan="7">Nessuna checklist salvata.</td></tr>'
+}
+function openRecord(id){
+ const r=getAll().find(x=>x.id===id);if(!r)return;showView('new');data.value=r.data;ora.value=r.ora;compilatore.value=r.compilatore;km.value=r.km;carburante.value=r.carburante;passaggio.value=r.passaggio||'';noteFinali.value=r.noteFinali||'';scadenze.value=r.scadenze||'';esito.value=r.esito||'';firma.value=r.firma||'';responses=JSON.parse(JSON.stringify(r.responses||{}));
+ document.querySelectorAll('.choice').forEach(btn=>{btn.classList.remove('sel','ok','ko','na','warn');const x=responses[btn.dataset.key];if(x&&x.value===btn.dataset.val){btn.classList.add('sel',x.value==='OK'||['4/4','3/4','2/4','1/4','1/2'].includes(x.value)?'ok':x.value==='KO'||x.value==='SCADUTO'||x.value==='VUOTA'?'ko':x.value==='N.A.'?'na':'warn')}})
+ document.querySelectorAll('[data-note]').forEach(inp=>inp.value=(responses[inp.dataset.note]||{}).note||'');document.querySelectorAll('[data-special]').forEach(inp=>inp.value=(responses[inp.dataset.special]||{}).value||'');window.scrollTo(0,0)
+}
+function deleteRecord(id){if(!confirm('Eliminare definitivamente questa checklist?'))return;localStorage.setItem('cg_checklist_a07',JSON.stringify(getAll().filter(x=>x.id!==id)));renderArchive()}
+function exportData(){const blob=new Blob([JSON.stringify(getAll(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='archivio-checklist-ambulanza-07.json';a.click();URL.revokeObjectURL(a.href)}
+function importData(ev){const f=ev.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const arr=JSON.parse(rd.result);if(!Array.isArray(arr))throw 0;localStorage.setItem('cg_checklist_a07',JSON.stringify(arr));renderArchive();alert('Archivio importato.')}catch(e){alert('File non valido.')}};rd.readAsText(f)}
+function setNow(){const d=new Date();data.value=d.toISOString().slice(0,10);ora.value=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+renderChecklist();setNow();renderArchive();
+</script>
+</body>
+</html>
