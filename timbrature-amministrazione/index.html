@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="it">
-<!-- VERSIONE STABILE E DEFINITIVA 1.0 - 27/09/2026 -->
+<!-- VERSIONE STABILE E DEFINITIVA 1.1 - 29/09/2026 -->
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="app-version" content="1.0-definitiva-2026-09-27">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="app-version" content="1.1-definitiva-2026-09-29">
 <title>Amministrazione Timbrature - Croce Gialla Emergenza ODV</title>
 <style>
 :root{--y:#ffdf00;--b:#173b72;--bg:#f4f7fb;--bd:#d7deea;--g:#15803d;--r:#b42318;--o:#a85b00;--m:#667085}
@@ -26,6 +26,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .kpi{padding:16px;border:1px solid var(--bd);border-radius:14px;background:#f8fafc}.kpi span{display:block;color:var(--m);font-size:12px;font-weight:800;text-transform:uppercase}.kpi b{display:block;font-size:30px;margin-top:5px}.kpi small{display:block;margin-top:4px;color:var(--m)}
 .alertBox{border:2px solid #f1b0ad;background:#fff0f0;border-radius:14px;padding:14px}.alertBox.okBox{border-color:#9bd5ab;background:#eefaf2}.blink{animation:blink 1.2s infinite}@keyframes blink{50%{box-shadow:0 0 0 5px rgba(180,35,24,.15)}}
 .anom{padding:10px 12px;border-left:5px solid var(--r);background:#fff6f6;border-radius:8px;margin:7px 0}.anom.warnA{border-left-color:#c77a00;background:#fffaf0}.serviceNow{padding:10px 12px;border-left:5px solid var(--g);background:#f1fbf4;border-radius:8px;margin:7px 0}
+.todayBanner{margin-top:14px;border:2px solid #b7c9e2;background:linear-gradient(135deg,#f6f9fd,#eef5ff);border-radius:16px;padding:15px}
+.todayHead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.todayHead h3{margin:0;color:#102f5a}.todayStats{display:flex;gap:7px;flex-wrap:wrap}.todayStat{background:#fff;border:1px solid #cbd7e8;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900;color:#173b72}
+.todayRows{margin-top:10px;display:grid;gap:8px}.todayRow{display:grid;grid-template-columns:minmax(160px,1fr) minmax(260px,2.2fr) auto;gap:12px;align-items:center;background:#fff;border:1px solid #d7e2f0;border-radius:12px;padding:10px 12px}
+.todayName{font-weight:900;color:#142033}.todayTimes{font-size:13px;color:#344054;line-height:1.45}.todayStatus{white-space:nowrap;font-weight:900;font-size:12px;padding:5px 9px;border-radius:999px}.todayStatus.in{background:#eaf8ef;color:#135c2a}.todayStatus.out{background:#eef2f7;color:#344054}.todayStatus.abs{background:#fff3e8;color:#8a3f00}
+@media(max-width:700px){.todayRow{grid-template-columns:1fr}.todayStatus{justify-self:start}}
 .monthState{font-weight:900;padding:8px 12px;border-radius:999px;display:inline-block}
 .adminShell{display:grid;grid-template-columns:245px minmax(0,1fr);gap:18px;align-items:start}
 .sideMenu{position:sticky;top:16px;background:#102f5a;border-radius:18px;padding:14px;box-shadow:0 8px 25px rgba(20,32,51,.12)}
@@ -94,6 +100,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <section id="page-dashboard" class="adminPage active"><div class="pageHead"><div><h2>Dashboard</h2><div class="muted">Situazione generale delle timbrature</div></div></div><div class="card noPrint">
 <div class="toolbar"><div><h3 style="margin:0">Dashboard controllo</h3><div class="muted">Controlli automatici sulle timbrature registrate. Le segnalazioni servono come supporto operativo e vanno verificate dall'amministrazione.</div></div><button id="refreshTop" class="secondary">↻ AGGIORNA</button></div>
+<div id="todayBanner" class="todayBanner"></div>
 <div class="grid4" style="margin-top:14px">
 <div class="kpi"><span>In servizio ora</span><b id="kpiNow">0</b><small id="kpiNowNames">Nessuno</small></div>
 <div class="kpi"><span>Ore registrate mese</span><b id="kpiHours">0:00</b><small>Mese selezionato</small></div>
@@ -240,6 +247,26 @@ function monthlyAnalyses(){
   return {...p,total:mon.total,days:mon.days,an:relAn,rest:relAn.filter(a=>a.rest).length,open:all.open,last:all.last};
  });
 }
+function renderTodayBanner(){
+ const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
+ const todayEvents=context.filter(e=>!e.eliminato_at&&new Date(e.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'})===today).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+ const todayAbs=absences.filter(a=>String(a.data_dal)<=today&&String(a.data_al)>=today);
+ const badges=[...new Set([...todayEvents.map(e=>e.badge),...todayAbs.map(a=>a.badge)])];
+ const inNow=people.filter(p=>analyzeBadge(p.badge,context.filter(e=>!e.eliminato_at&&e.badge===p.badge&&new Date(e.evento_at)<=new Date())).open);
+ const completed=badges.filter(b=>{const xs=todayEvents.filter(e=>e.badge===b);return xs.some(e=>e.tipo==='ENTRATA')&&xs.some(e=>e.tipo==='USCITA')&&!inNow.some(p=>p.badge===b)}).length;
+ const rows=badges.map(b=>{
+  const xs=todayEvents.filter(e=>e.badge===b);
+  const a=todayAbs.find(x=>x.badge===b);
+  const parts=xs.map(e=>'<b>'+esc(e.tipo==='ENTRATA'?'Entrata':'Uscita')+'</b> '+esc(time(e.evento_at)));
+  if(a)parts.push('<b>Causale:</b> '+esc(absenceLabel(a.causale))+(a.ore!=null?' · '+esc(a.ore)+' h':''));
+  let status='USCITO',cls='out';
+  if(inNow.some(p=>p.badge===b)){status='IN SERVIZIO';cls='in'}
+  else if(a&&!xs.length){status=absenceLabel(a.causale);cls='abs'}
+  return '<div class="todayRow"><div class="todayName">'+esc(person(b))+'</div><div class="todayTimes">'+(parts.join(' · ')||'Nessuna timbratura')+'</div><div class="todayStatus '+cls+'">'+esc(status)+'</div></div>'
+ });
+ const label=new Date(today+'T12:00:00').toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+ $('todayBanner').innerHTML='<div class="todayHead"><div><h3>🕒 Timbrature di oggi</h3><div class="muted">'+esc(label.charAt(0).toUpperCase()+label.slice(1))+'</div></div><div class="todayStats"><span class="todayStat">Timbrature: '+todayEvents.length+'</span><span class="todayStat">In servizio: '+inNow.length+'</span><span class="todayStat">Turni conclusi: '+completed+'</span><span class="todayStat">Causali: '+todayAbs.length+'</span></div></div><div class="todayRows">'+(rows.length?rows.join(''):'<div class="muted">Nessuna timbratura o causale registrata oggi.</div>')+'</div>';
+}
 function renderDashboard(){
  const analyses=monthlyAnalyses(),inNow=analyses.filter(x=>x.open),total=analyses.reduce((s,x)=>s+x.total,0),allAn=analyses.flatMap(x=>x.an);
  const modified=[];
@@ -317,7 +344,7 @@ function printRows(){
 }
 function renderRegister(){let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':monthClosed?'🔒 Mese chiuso':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}h+='</tbody></table>';$('register').innerHTML=events.length?h:'<div class="muted">Nessuna timbratura.</div>';const fe=$('filterEmp').value;$('printHead').innerHTML='<h2 style="text-align:center;margin-bottom:4px">Croce Gialla Emergenza ODV</h2><h3 style="text-align:center;margin:0">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</h3><p style="text-align:center">'+esc($('month').value||'')+'</p>'}
 function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
-function renderAll(){renderMonthState();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
+function renderAll(){renderMonthState();renderTodayBanner();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
 function showPage(name){document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
 function printFromSection(){const pe=$('printEmp').value,pm=$('printMonth').value;if(!pe||!pm)return alert('Seleziona dipendente e mese.');$('filterEmp').value=pe;$('month').value=pm;loadData().then(()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows();document.body.classList.add('printingRegister');window.print();document.body.classList.remove('printingRegister');$('register').innerHTML=old})}
 document.querySelectorAll('.sideBtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$('mobileMenuBtn').onclick=()=>$('sideMenu').classList.toggle('open');$('refreshAnomalies').onclick=loadData;$('printMonthlyBtn').onclick=printFromSection;
