@@ -1,9 +1,16 @@
 {
+  "id": "/gestionale-croce-gialla/?area=volontari",
   "name": "Croce Gialla Emergenza",
   "short_name": "Croce Gialla",
-  "start_url": "/gestionale-croce-gialla/?area=volontari&appv=13.36",
+  "description": "App volontari Croce Gialla Emergenza ODV",
+  "start_url": "/gestionale-croce-gialla/?area=volontari&source=pwa",
   "scope": "/gestionale-croce-gialla/",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
   "theme_color": "#12375d",
   "background_color": "#f2f5f8",
   "icons": [
