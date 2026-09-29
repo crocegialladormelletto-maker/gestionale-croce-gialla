@@ -32,6 +32,8 @@ body.display-only .monitor-shell{padding-top:10px}
 body.display-only .main{min-height:74vh}
 body.display-only .footer{margin-top:6px}
 body.display-only #logoutBtn{display:none!important}
+.display-fullscreen{display:none;position:fixed;right:16px;bottom:16px;z-index:50;background:#2563eb;color:#fff;border:2px solid #fff;border-radius:999px;padding:10px 14px;font-weight:1000;box-shadow:0 6px 20px #0005;cursor:pointer}
+body.display-only .display-fullscreen{display:block}
 .main{background:#fff;border:1px solid var(--l);border-radius:18px;padding:18px;min-height:68vh}.title{display:flex;align-items:end;justify-content:space-between;gap:14px;border-bottom:4px solid var(--y);padding-bottom:10px;margin-bottom:14px}.title h1{margin:0;color:var(--n);font-size:32px}.muted{color:var(--m)}
 .services,.shifts{display:grid;gap:10px}.service{display:grid;grid-template-columns:125px 100px 1.15fr 1.45fr 1.5fr 150px;gap:10px;align-items:center;padding:13px 15px;border:1px solid var(--l);border-left:8px solid #3477c9;border-radius:13px;background:#fff;font-size:16px}.service.warn{border-left-color:#a93138;background:#fff7f7}.service.run{border-left-color:#12375d;background:#eef5ff}.service.done{border-left-color:#15734f;background:#f3fbf7}
 .label{font-size:11px;color:var(--m);font-weight:900;text-transform:uppercase}.time,.mezzo{font-size:27px;font-weight:1000;color:var(--n)}.mezzo{text-align:center;background:#fff4b3;border-radius:10px;padding:8px}.value{font-weight:850}.status{text-align:center;font-weight:1000;padding:8px;border-radius:999px;background:#eef2f6}
@@ -114,11 +116,12 @@ body.display-only #logoutBtn{display:none!important}
   <div id="weekSlide" class="hidden"><div class="title"><h1>Turni e servizi · prossimi 7 giorni</h1><div class="muted">Monitor operativo</div></div><div id="weekGrid" class="week"></div></div>
  </div>
  <div class="footer"><span>Aggiornamento automatico ogni 20 secondi · rotazione ogni 25 secondi</span><span id="updated">Ultimo aggiornamento: —</span></div>
+ <button id="displayFullBtn" class="display-fullscreen" type="button">⛶ Schermo intero</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
-const BUILD='monitor-v1-20260929h';
+const BUILD='monitor-v1-20260929i';
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co';
 const KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
@@ -176,7 +179,7 @@ $('loginBtn').onclick=async()=>{const user=$('user').value.trim().toLowerCase(),
 $('pass').onkeydown=e=>{if(e.key==='Enter')$('loginBtn').click()};
 $('todayBtn').onclick=()=>showSlide('today');$('shiftsBtn').onclick=()=>showSlide('shifts');$('weekBtn').onclick=()=>showSlide('week');$('refreshBtn').onclick=loadSnapshot;
 $('rotateBtn').onclick=()=>{rotate=!rotate;$('rotateBtn').textContent='Rotazione automatica: '+(rotate?'ON':'OFF');$('rotateBtn').className='btn '+(rotate?'':'yellow')};
-$('fullBtn').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(_){}};
+$('fullBtn').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(_){}};$('displayFullBtn').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(_){}};
 $('logoutBtn').onclick=async()=>{stop();await sb.auth.signOut();location.reload()};
 (async()=>{await clearOldAppCache();const ok=await enterExisting();if(ok&&isDisplayOnly()){rotate=true;setTimeout(async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen()}catch(_){}},700)}})();
 </script>
