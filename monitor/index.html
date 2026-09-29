@@ -78,7 +78,7 @@ body.display-only .display-fullscreen{display:block}
 <body>
 <div id="login" class="login">
  <div class="login-card">
-  <div class="login-head"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Croce Gialla"><h2>Monitor sede</h2><div>Accesso dedicato</div><div class="version">Monitor V1.0 · 29/09/2026</div></div>
+  <div class="login-head"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Croce Gialla"><h2>Monitor sede</h2><div>Accesso dedicato</div><div class="version">Monitor V1.0 · aggiornamento automatico attivo</div></div>
   <div class="login-body">
    <div class="field"><label>Username</label><input id="user" value="monitor" autocomplete="username"></div>
    <div class="field"><label>Password</label><input id="pass" type="password" autocomplete="current-password"></div>
@@ -115,13 +115,35 @@ body.display-only .display-fullscreen{display:block}
   <div id="shiftsSlide" class="hidden"><div class="title"><h1>Turni di oggi</h1><div class="muted" id="shiftsSummary"></div></div><div id="shiftsList" class="shifts"></div></div>
   <div id="weekSlide" class="hidden"><div class="title"><h1>Turni e servizi · prossimi 7 giorni</h1><div class="muted">Monitor operativo</div></div><div id="weekGrid" class="week"></div></div>
  </div>
- <div class="footer"><span>Aggiornamento automatico ogni 20 secondi · rotazione ogni 25 secondi</span><span id="updated">Ultimo aggiornamento: —</span></div>
+ <div class="footer"><span>Aggiornamento automatico ogni 20 secondi · rotazione ogni 25 secondi · <span id="buildLabel">Versione monitor</span></span><span id="updated">Ultimo aggiornamento: —</span></div>
  <button id="displayFullBtn" class="display-fullscreen" type="button">⛶ Schermo intero</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
-const BUILD='monitor-v1-20260929i';
+const BUILD='monitor-v1-20260929j';
+const SELF_UPDATE_INTERVAL=60000;
+let selfUpdateTimer=null;
+function currentBaseUrl(){return location.origin+location.pathname}
+async function checkForNewBuild(){
+ try{
+  const u=currentBaseUrl()+'?__buildcheck='+Date.now();
+  const r=await fetch(u,{cache:'no-store',headers:{'Cache-Control':'no-cache'}});
+  if(!r.ok)return;
+  const txt=await r.text();
+  const m=txt.match(/const BUILD='([^']+)'/);
+  if(m&&m[1]&&m[1]!==BUILD){
+   const fresh=new URL(location.href);
+   fresh.searchParams.set('__refresh',Date.now().toString());
+   location.replace(fresh.toString());
+  }
+ }catch(_){}
+}
+function startSelfUpdate(){
+ clearInterval(selfUpdateTimer);
+ selfUpdateTimer=setInterval(checkForNewBuild,SELF_UPDATE_INTERVAL);
+ if($('buildLabel'))$('buildLabel').textContent='Versione '+BUILD.replace('monitor-','');
+}
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co';
 const KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
@@ -171,9 +193,9 @@ function renderShifts(){const day=snap?.data||ymd(new Date()),rows=(snap?.turni_
 function renderWeek(){const start=new Date((snap?.data||ymd(new Date()))+'T12:00:00'),services=snap?.servizi_settimana||[],turns=snap?.turni_settimana||[];let h='';for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const y=ymd(d),ss=services.filter(x=>x.data===y),tt=turns.filter(x=>x.data===y);h+='<div class="day '+(i===0?'today':'')+'"><div class="day-head">'+esc(d.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}).replace(/^./,c=>c.toUpperCase()))+'</div>'+tt.map(t=>'<div class="event turn"><b>🕒 '+esc(t.ora_inizio)+'–'+esc(t.ora_fine)+' · '+esc(t.tipo||'Turno')+'</b>Mezzo '+esc(t.mezzo||'—')+(t.equipaggio?.length?'<br>'+t.equipaggio.map(x=>esc(x.nome)+' ('+esc(roleLabel(x.ruolo))+')').join(', '):'')+'</div>').join('')+ss.map(s=>'<div class="event"><b>🚑 '+esc(s.ora||'—')+' · '+esc(s.tipo||'Servizio')+'</b>Mezzo '+esc(s.mezzo||'—')+'<br>'+esc(s.partenza||'Sede')+' → '+esc(s.destinazione||'Destinazione')+'</div>').join('')+(!tt.length&&!ss.length?'<div class="muted" style="padding:12px;text-align:center">Nessun impegno</div>':'')+'</div>'}$('weekGrid').innerHTML=h}
 async function loadBanner(){const r=await sb.from('monitor_banner_config').select('testo,attivo').eq('id',1).maybeSingle();if(r.error)return;const row=r.data||{},text=String(row.testo||'').trim(),show=!!row.attivo&&!!text;$('banner').classList.toggle('active',show);if(show){$('bannerTrack').textContent=text;$('bannerTrack').dataset.repeat=text}}
 async function loadSnapshot(){const [r]=await Promise.all([sb.rpc('cge_monitor_sede_snapshot'),loadBanner()]);if(r.error){$('todayList').innerHTML='<div class="notice err">'+esc(r.error.message)+'</div>';return}snap=r.data||{};renderToday();renderShifts();renderWeek();renderStatusStrip();$('updated').textContent='Ultimo aggiornamento: '+new Date(snap.aggiornato_il||Date.now()).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
-function stop(){clearInterval(refreshTimer);clearInterval(rotateTimer);clearInterval(clockTimer)}
+function stop(){clearInterval(refreshTimer);clearInterval(rotateTimer);clearInterval(clockTimer);clearInterval(selfUpdateTimer)}
 function isDisplayOnly(){try{return new URLSearchParams(location.search).get('display')==='1'}catch(_){return false}}
-async function start(){stop();document.body.classList.toggle('display-only',isDisplayOnly());$('login').classList.add('hidden');$('monitor').classList.remove('hidden');showSlide('today');updateClock();await loadSnapshot();clockTimer=setInterval(updateClock,1000);refreshTimer=setInterval(loadSnapshot,20000);rotateTimer=setInterval(()=>{if(!rotate)return;const a=['today','shifts','week'],i=a.indexOf(slide);showSlide(a[(i+1)%a.length])},25000)}
+async function start(){stop();document.body.classList.toggle('display-only',isDisplayOnly());$('login').classList.add('hidden');$('monitor').classList.remove('hidden');showSlide('today');updateClock();await loadSnapshot();startSelfUpdate();checkForNewBuild();clockTimer=setInterval(updateClock,1000);refreshTimer=setInterval(loadSnapshot,20000);rotateTimer=setInterval(()=>{if(!rotate)return;const a=['today','shifts','week'],i=a.indexOf(slide);showSlide(a[(i+1)%a.length])},25000)}
 async function enterExisting(){const u=await sb.auth.getUser();if(!u.data.user)return false;const r=await sb.from('accessi_app').select('ruolo,attivo').single();if(!r.error&&r.data?.attivo&&r.data.ruolo==='MONITOR_SEDE'){await start();return true}return false}
 $('loginBtn').onclick=async()=>{const user=$('user').value.trim().toLowerCase(),password=$('pass').value;if(user!=='monitor'||!password)return message('Inserisci username monitor e password.',true);message('Accesso in corso...');const r=await sb.auth.signInWithPassword({email:'monitor@access.crocegiallaemergenza.it',password});if(r.error)return message('Credenziali monitor non valide.',true);if(!(await enterExisting())){await sb.auth.signOut();message('Account non abilitato al Monitor sede.',true)}};
 $('pass').onkeydown=e=>{if(e.key==='Enter')$('loginBtn').click()};
