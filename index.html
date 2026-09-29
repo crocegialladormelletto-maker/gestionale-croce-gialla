@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=13.88">
+<link rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.21-android-pwa">
 <link rel="icon" type="image/png" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192-v6.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/gestionale-croce-gialla/icons/icon-512-v6.png">
 <link rel="apple-touch-icon" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192-v6.png">
@@ -8748,7 +8748,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.21-20260929-checklist07-button';
+const CGE_APP_BUILD='14.21-20260929-android-pwa-fix';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
