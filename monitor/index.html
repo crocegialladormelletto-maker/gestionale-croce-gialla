@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Monitor sede · Croce Gialla Emergenza</title>
+<style>
+:root{--n:#12375d;--y:#ffdb17;--b:#eef3f7;--i:#1c3347;--m:#64798b;--l:#d9e2ea;--g:#15734f;--r:#a93138}
+*{box-sizing:border-box}body{margin:0;background:var(--b);color:var(--i);font:14px/1.45 system-ui,-apple-system,Segoe UI,Arial}
+button,input{font:inherit}.hidden{display:none!important}.btn{border:1px solid #cbd8e3;border-radius:10px;padding:10px 13px;font-weight:850;cursor:pointer;background:#fff;color:var(--n)}
+.btn.yellow{background:var(--y);border-color:#d8ba00}.btn.blue{background:#2563eb;color:#fff;border-color:#1d4ed8}.btn.danger{background:#a93138;color:#fff;border-color:#8b2930}
+.monitor-shell{min-height:100vh;padding:18px}.top{background:var(--n);color:#fff;border-radius:18px;overflow:hidden;box-shadow:0 4px 18px #0002}
+.head{display:flex;align-items:center;gap:16px;padding:16px 22px}.logo{width:74px;height:74px;border-radius:50%;object-fit:cover;background:#fff;border:4px solid #fff}
+.brand{flex:1}.brand small{display:block;color:var(--y);font-weight:1000;font-size:15px}.brand strong{display:block;font-size:29px}.brand span{color:#dbe6ef}
+.clock{text-align:right;min-width:230px}.clock b{display:block;font-size:34px;line-height:1}.clock span{font-size:15px;color:#dbe6ef}.stripe{height:7px;background:linear-gradient(90deg,var(--y) 0 74%,#e8463d 74% 87%,#3477c9 87%)}
+.controls{display:flex;gap:9px;flex-wrap:wrap;padding:12px 18px;background:#fff;border:1px solid var(--l);border-radius:14px;margin:14px 0}
+.main{background:#fff;border:1px solid var(--l);border-radius:18px;padding:18px;min-height:68vh}.title{display:flex;align-items:end;justify-content:space-between;gap:14px;border-bottom:4px solid var(--y);padding-bottom:10px;margin-bottom:14px}.title h1{margin:0;color:var(--n);font-size:32px}.muted{color:var(--m)}
+.services,.shifts{display:grid;gap:10px}.service{display:grid;grid-template-columns:125px 100px 1.15fr 1.45fr 1.5fr 150px;gap:10px;align-items:center;padding:13px 15px;border:1px solid var(--l);border-left:8px solid #3477c9;border-radius:13px;background:#fff;font-size:16px}.service.warn{border-left-color:#a93138;background:#fff7f7}.service.run{border-left-color:#12375d;background:#eef5ff}.service.done{border-left-color:#15734f;background:#f3fbf7}
+.label{font-size:11px;color:var(--m);font-weight:900;text-transform:uppercase}.time,.mezzo{font-size:27px;font-weight:1000;color:var(--n)}.mezzo{text-align:center;background:#fff4b3;border-radius:10px;padding:8px}.value{font-weight:850}.status{text-align:center;font-weight:1000;padding:8px;border-radius:999px;background:#eef2f6}
+.shift{display:grid;grid-template-columns:170px 120px 1fr 165px;gap:14px;align-items:center;padding:16px 18px;border:1px solid var(--l);border-left:9px solid #15734f;border-radius:14px;background:#f7fcf9;font-size:16px}.shift.minimum{border-left-color:#3477c9;background:#f4f9ff}.shift.gap{border-left-color:#a93138;background:#fff5f5}.shift-time{font-size:29px;font-weight:1000;color:var(--n)}.shift-type{font-size:19px;font-weight:950;color:var(--n)}.crew{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px}.person{padding:7px 9px;border-radius:9px;background:#fff;border:1px solid #dce6ee}.person b{display:block;color:var(--n);font-size:15px}.person span{font-size:11px;color:var(--m);font-weight:850;text-transform:uppercase}.coverage{text-align:center;font-weight:1000;padding:10px 12px;border-radius:999px;background:#e2f5e9;color:#11633f}.shift.minimum .coverage{background:#e8f1fd;color:#245b91}.shift.gap .coverage{background:#fde7e9;color:#8e2930}
+.week{display:grid;grid-template-columns:repeat(7,minmax(190px,1fr));gap:9px;overflow-x:auto;padding-bottom:6px}.day{border:1px solid var(--l);border-radius:12px;min-height:480px;background:#f9fbfc;overflow:hidden}.day-head{background:var(--n);color:#fff;padding:10px;text-align:center;font-weight:1000;font-size:16px}.day.today .day-head{background:#8b7100}.event{margin:8px;padding:8px;border-radius:8px;font-size:13px;border-left:5px solid #e6be00;background:#fff8ce}.event.turn{border-left-color:#3477c9;background:#edf5fd}.event b{display:block;color:var(--n);margin-bottom:2px}
+.empty{display:grid;place-items:center;min-height:50vh;text-align:center;color:var(--m)}.empty b{font-size:32px;color:var(--n)}
+.banner{display:none;align-items:center;margin-top:12px;border-radius:14px;overflow:hidden;background:#12375d;color:#fff;border:3px solid #ffdb17;box-shadow:0 4px 16px #0002}.banner.active{display:flex}.banner-label{background:#ffdb17;color:#12375d;font-weight:1000;font-size:17px;padding:12px 16px}.banner-window{overflow:hidden;white-space:nowrap;flex:1;min-width:0}.banner-track{display:inline-block;min-width:100%;padding:10px 0;font-size:24px;font-weight:900;animation:ticker 22s linear infinite}.banner-track::after{content:"     •     " attr(data-repeat)}@keyframes ticker{from{transform:translateX(100%)}to{transform:translateX(-110%)}}
+.footer{display:flex;justify-content:space-between;gap:10px;color:var(--m);font-size:12px;margin-top:10px}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px}.login-card{width:min(460px,100%);background:#fff;border:1px solid var(--l);border-radius:18px;overflow:hidden;box-shadow:0 8px 30px #0002}.login-head{background:var(--n);color:#fff;padding:22px;text-align:center}.login-head img{width:80px;height:80px;object-fit:contain}.login-body{padding:20px}.field{margin:10px 0}.field label{display:block;font-weight:850;color:var(--n);margin-bottom:5px}.field input{width:100%;padding:11px;border:1px solid #cbd8e3;border-radius:9px}.notice{padding:10px 12px;border-radius:10px;background:#eef5fb;margin-top:10px}.notice.err{background:#fde7e9;color:#8e2930}
+.version{font-size:12px;color:#b8cada;margin-top:4px}
+@media(max-width:1100px){.service{grid-template-columns:100px 85px 1fr 1.3fr 1.3fr 125px;font-size:14px}.time,.mezzo{font-size:22px}.shift{grid-template-columns:145px 105px 1fr 145px}.crew{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="login" class="login">
+ <div class="login-card">
+  <div class="login-head"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Croce Gialla"><h2>Monitor sede</h2><div>Accesso dedicato</div><div class="version">Monitor V1.0 · 29/09/2026</div></div>
+  <div class="login-body">
+   <div class="field"><label>Username</label><input id="user" value="monitor" autocomplete="username"></div>
+   <div class="field"><label>Password</label><input id="pass" type="password" autocomplete="current-password"></div>
+   <button id="loginBtn" class="btn yellow" style="width:100%">Apri Monitor sede</button>
+   <div id="loginMsg"></div>
+  </div>
+ </div>
+</div>
+
+<div id="monitor" class="monitor-shell hidden">
+ <div class="top"><div class="head">
+  <img class="logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Croce Gialla">
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Monitor operativo sede</strong><span>Dormelletto · Monitor dedicato V1.0</span></div>
+  <div class="clock"><b id="clock">--:--</b><span id="date">—</span></div>
+ </div><div class="stripe"></div></div>
+ <div class="controls">
+  <button id="todayBtn" class="btn yellow">🚑 Servizi di oggi</button>
+  <button id="shiftsBtn" class="btn">👥 Turni di oggi</button>
+  <button id="weekBtn" class="btn">📅 Prossimi 7 giorni</button>
+  <button id="refreshBtn" class="btn">↻ Aggiorna</button>
+  <button id="rotateBtn" class="btn">Rotazione automatica: ON</button>
+  <button id="fullBtn" class="btn blue">⛶ Schermo intero</button>
+  <button id="logoutBtn" class="btn danger" style="margin-left:auto">Esci</button>
+ </div>
+ <div class="main">
+  <div id="todaySlide"><div class="title"><h1>Servizi di oggi</h1><div class="muted" id="todaySummary"></div></div><div id="todayList" class="services"></div></div>
+  <div id="shiftsSlide" class="hidden"><div class="title"><h1>Turni di oggi</h1><div class="muted" id="shiftsSummary"></div></div><div id="shiftsList" class="shifts"></div></div>
+  <div id="weekSlide" class="hidden"><div class="title"><h1>Turni e servizi · prossimi 7 giorni</h1><div class="muted">Monitor operativo</div></div><div id="weekGrid" class="week"></div></div>
+ </div>
+ <div id="banner" class="banner"><div class="banner-label">📣 COMUNICAZIONE</div><div class="banner-window"><div id="bannerTrack" class="banner-track" data-repeat=""></div></div></div>
+ <div class="footer"><span>Aggiornamento automatico ogni 20 secondi · rotazione ogni 25 secondi</span><span id="updated">Ultimo aggiornamento: —</span></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+<script>
+const BUILD='monitor-v1-20260929a';
+const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co';
+const KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
+const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ymd=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+let snap=null,slide='today',rotate=true,refreshTimer,rotateTimer,clockTimer;
+
+async function clearOldAppCache(){
+ try{
+  if('serviceWorker' in navigator){
+   const regs=await navigator.serviceWorker.getRegistrations();
+   await Promise.all(regs.filter(r=>r.scope.includes('/gestionale-croce-gialla/')).map(r=>r.unregister()));
+  }
+  if('caches' in window){
+   const keys=await caches.keys();
+   await Promise.all(keys.filter(k=>k.startsWith('cge-volontari-static-')).map(k=>caches.delete(k)));
+  }
+ }catch(_){}
+}
+function message(t,err=false){$('loginMsg').innerHTML=t?'<div class="notice '+(err?'err':'')+'">'+esc(t)+'</div>':''}
+function roleLabel(r){const m={AUTISTA:'Autista',CAPO_SERVIZIO:'Capo Servizio',SOCCORRITORE:'Soccorritore',SECONDO_SOCCORRITORE:'Secondo Soccorritore',ACCOMPAGNATORE:'Accompagnatore'};return m[String(r||'').toUpperCase()]||String(r||'Ruolo').replaceAll('_',' ')}
+function coverageText(c){const x=String(c||'').toUpperCase();return x==='COMPLETO'?'EQUIPAGGIO COMPLETO':x==='MINIMO'?'EQUIPAGGIO MINIMO':x==='INCOMPLETO'?'EQUIPAGGIO INCOMPLETO':'TURNO SCOPERTO'}
+function stateClass(s){const x=String(s||'').toUpperCase();if(x==='DA ASSEGNARE')return 'warn';if(x==='IN CORSO')return 'run';if(['TERMINATO','DA CONTABILIZZARE','CHIUSO'].includes(x))return 'done';return ''}
+function updateClock(){const n=new Date();$('clock').textContent=n.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});$('date').textContent=n.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase())}
+function showSlide(name){slide=name;$('todaySlide').classList.toggle('hidden',name!=='today');$('shiftsSlide').classList.toggle('hidden',name!=='shifts');$('weekSlide').classList.toggle('hidden',name!=='week');$('todayBtn').className='btn '+(name==='today'?'yellow':'');$('shiftsBtn').className='btn '+(name==='shifts'?'yellow':'');$('weekBtn').className='btn '+(name==='week'?'yellow':'')}
+function renderToday(){const rows=snap?.servizi_oggi||[];$('todaySummary').textContent=rows.length+' '+(rows.length===1?'servizio programmato':'servizi programmati');if(!rows.length){$('todayList').innerHTML='<div class="empty"><div><b>Nessun servizio programmato per oggi</b><br>Il monitor si aggiorna automaticamente.</div></div>';return}
+ $('todayList').innerHTML=rows.map(s=>{const crew=(s.equipaggio||[]).map(x=>esc(x.nome)+' <span class="muted">('+esc(roleLabel(x.ruolo))+')</span>').join('<br>')||'<span style="color:#a93138;font-weight:900">Equipaggio non assegnato</span>';return '<div class="service '+stateClass(s.stato)+'"><div><div class="label">Partenza</div><div class="time">'+esc(s.ora_partenza||'—')+'</div><div class="muted">Carico '+esc(s.ora_carico||'—')+' · Rientro '+esc(s.ora_rientro||'—')+'</div></div><div class="mezzo">'+esc(s.mezzo||'—')+'</div><div><div class="label">Servizio</div><div class="value">'+esc(s.tipo||'Servizio')+'</div></div><div><div class="label">Percorso</div><div class="value">'+esc(s.partenza||'Sede')+' → '+esc(s.destinazione||'Destinazione')+'</div></div><div><div class="label">Equipaggio</div>'+crew+'</div><div class="status">'+esc(s.stato||'—')+'</div></div>'}).join('')}
+function renderShifts(){const day=snap?.data||ymd(new Date()),rows=(snap?.turni_settimana||[]).filter(x=>x.data===day);$('shiftsSummary').textContent=rows.length+' '+(rows.length===1?'turno caricato':'turni caricati')+' oggi';if(!rows.length){$('shiftsList').innerHTML='<div class="empty"><div><b>Nessun turno caricato per oggi</b><br>Il monitor si aggiorna automaticamente.</div></div>';return}
+ $('shiftsList').innerHTML=rows.map(t=>{const cov=String(t.copertura||'SCOPERTO').toUpperCase(),cls=['SCOPERTO','INCOMPLETO'].includes(cov)?'gap':cov==='MINIMO'?'minimum':'';const crew=(t.equipaggio||[]).slice().sort((a,b)=>({AUTISTA:1,CAPO_SERVIZIO:2,SOCCORRITORE:3,SECONDO_SOCCORRITORE:4}[a.ruolo]||9)-({AUTISTA:1,CAPO_SERVIZIO:2,SOCCORRITORE:3,SECONDO_SOCCORRITORE:4}[b.ruolo]||9));const ch=crew.length?crew.map(x=>'<div class="person"><span>'+esc(roleLabel(x.ruolo))+'</span><b>'+esc(x.nome||'—')+'</b></div>').join(''):'<div class="notice">Nessun componente assegnato</div>';return '<div class="shift '+cls+'"><div><div class="label">Orario</div><div class="shift-time">'+esc(t.ora_inizio||'—')+'–'+esc(t.ora_fine||'—')+'</div><div class="shift-type">'+esc(t.tipo||'Turno')+'</div></div><div><div class="label">Mezzo</div><div class="mezzo">'+esc(t.mezzo||'—')+'</div></div><div><div class="label">Equipaggio</div><div class="crew">'+ch+'</div></div><div><div class="coverage">'+esc(coverageText(cov))+'</div><div class="muted" style="text-align:center;margin-top:7px">'+esc(t.stato||'')+'</div></div></div>'}).join('')}
+function renderWeek(){const start=new Date((snap?.data||ymd(new Date()))+'T12:00:00'),services=snap?.servizi_settimana||[],turns=snap?.turni_settimana||[];let h='';for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const y=ymd(d),ss=services.filter(x=>x.data===y),tt=turns.filter(x=>x.data===y);h+='<div class="day '+(i===0?'today':'')+'"><div class="day-head">'+esc(d.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}).replace(/^./,c=>c.toUpperCase()))+'</div>'+tt.map(t=>'<div class="event turn"><b>🕒 '+esc(t.ora_inizio)+'–'+esc(t.ora_fine)+' · '+esc(t.tipo||'Turno')+'</b>Mezzo '+esc(t.mezzo||'—')+(t.equipaggio?.length?'<br>'+t.equipaggio.map(x=>esc(x.nome)+' ('+esc(roleLabel(x.ruolo))+')').join(', '):'')+'</div>').join('')+ss.map(s=>'<div class="event"><b>🚑 '+esc(s.ora||'—')+' · '+esc(s.tipo||'Servizio')+'</b>Mezzo '+esc(s.mezzo||'—')+'<br>'+esc(s.partenza||'Sede')+' → '+esc(s.destinazione||'Destinazione')+'</div>').join('')+(!tt.length&&!ss.length?'<div class="muted" style="padding:12px;text-align:center">Nessun impegno</div>':'')+'</div>'}$('weekGrid').innerHTML=h}
+async function loadBanner(){const r=await sb.from('monitor_banner_config').select('testo,attivo').eq('id',1).maybeSingle();if(r.error)return;const row=r.data||{},text=String(row.testo||'').trim(),show=!!row.attivo&&!!text;$('banner').classList.toggle('active',show);if(show){$('bannerTrack').textContent=text;$('bannerTrack').dataset.repeat=text}}
+async function loadSnapshot(){const [r]=await Promise.all([sb.rpc('cge_monitor_sede_snapshot'),loadBanner()]);if(r.error){$('todayList').innerHTML='<div class="notice err">'+esc(r.error.message)+'</div>';return}snap=r.data||{};renderToday();renderShifts();renderWeek();$('updated').textContent='Ultimo aggiornamento: '+new Date(snap.aggiornato_il||Date.now()).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+function stop(){clearInterval(refreshTimer);clearInterval(rotateTimer);clearInterval(clockTimer)}
+async function start(){stop();$('login').classList.add('hidden');$('monitor').classList.remove('hidden');showSlide('today');updateClock();await loadSnapshot();clockTimer=setInterval(updateClock,1000);refreshTimer=setInterval(loadSnapshot,20000);rotateTimer=setInterval(()=>{if(!rotate)return;const a=['today','shifts','week'],i=a.indexOf(slide);showSlide(a[(i+1)%a.length])},25000)}
+async function enterExisting(){const u=await sb.auth.getUser();if(!u.data.user)return false;const r=await sb.from('accessi_app').select('ruolo,attivo').single();if(!r.error&&r.data?.attivo&&r.data.ruolo==='MONITOR_SEDE'){await start();return true}return false}
+$('loginBtn').onclick=async()=>{const user=$('user').value.trim().toLowerCase(),password=$('pass').value;if(user!=='monitor'||!password)return message('Inserisci username monitor e password.',true);message('Accesso in corso...');const r=await sb.auth.signInWithPassword({email:'monitor@access.crocegiallaemergenza.it',password});if(r.error)return message('Credenziali monitor non valide.',true);if(!(await enterExisting())){await sb.auth.signOut();message('Account non abilitato al Monitor sede.',true)}};
+$('pass').onkeydown=e=>{if(e.key==='Enter')$('loginBtn').click()};
+$('todayBtn').onclick=()=>showSlide('today');$('shiftsBtn').onclick=()=>showSlide('shifts');$('weekBtn').onclick=()=>showSlide('week');$('refreshBtn').onclick=loadSnapshot;
+$('rotateBtn').onclick=()=>{rotate=!rotate;$('rotateBtn').textContent='Rotazione automatica: '+(rotate?'ON':'OFF');$('rotateBtn').className='btn '+(rotate?'':'yellow')};
+$('fullBtn').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(_){}};
+$('logoutBtn').onclick=async()=>{stop();await sb.auth.signOut();location.reload()};
+(async()=>{await clearOldAppCache();await enterExisting()})();
+</script>
+</body></html>
