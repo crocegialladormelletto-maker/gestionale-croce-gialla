@@ -7,6 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#12375d">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
@@ -31,18 +32,25 @@ a{display:inline-block;margin-top:8px;background:#12375d;color:#fff;text-decorat
 </div>
 <script>
 (async()=>{
+ const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
  const target='/gestionale-croce-gialla/?area=volontari&fresh='+Date.now();
  try{
   if('serviceWorker' in navigator){
-   await navigator.serviceWorker.register('/gestionale-croce-gialla/sw.js?v=32',{scope:'/gestionale-croce-gialla/'});
+   await navigator.serviceWorker.register('/gestionale-croce-gialla/sw.js?v=33',{scope:'/gestionale-croce-gialla/'});
    await navigator.serviceWorker.ready;
   }
  }catch(e){
   console.warn('Service worker non disponibile',e);
  }
  document.getElementById('manual').href=target;
- setTimeout(()=>location.replace(target),250);
- setTimeout(()=>{document.getElementById('manual').hidden=false;document.getElementById('status').textContent='Se l’app non si apre automaticamente, usa il pulsante qui sotto.'},1800);
+ if(standalone){
+   document.getElementById('status').textContent='Apertura App Volontari…';
+   setTimeout(()=>location.replace(target),250);
+ }else{
+   document.querySelector('.spin').style.display='none';
+   document.getElementById('status').innerHTML='App pronta per l’installazione.<br><b>Su Android:</b> usa il menu del browser e scegli “Installa app” o “Aggiungi a schermata Home”.';
+   document.getElementById('manual').hidden=false;
+ }
 })();
 </script>
 </body>
