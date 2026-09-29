@@ -316,25 +316,64 @@ async function addHist(){try{if(monthClosed)throw new Error('Il mese selezionato
 async function editEvent(id){if(monthClosed)return alert('Il mese è chiuso. Riaprilo prima di modificare.');const e=events.find(x=>x.id===id);if(!e)return;const tipo=prompt('Tipo (ENTRATA o USCITA):',e.tipo);if(!tipo)return;const orario=prompt('Data e ora (AAAA-MM-GGTHH:MM):',localInput(e.evento_at));if(!orario)return;const motivo=prompt('Motivo obbligatorio della modifica:','Correzione errore materiale');if(!motivo?.trim())return;const nota=prompt('Nota interna:',e.nota_interna||'');try{await api({action:'update',id,tipo,evento_at:new Date(orario).toISOString(),nota_interna:nota,motivo});await loadData()}catch(err){alert(err.message)}}
 async function deleteEvent(id){if(monthClosed)return alert('Il mese è chiuso. Riaprilo prima di eliminare.');const motivo=prompt('Motivo obbligatorio dell’eliminazione:','Inserimento errato');if(!motivo?.trim())return;if(!confirm('Confermi l’eliminazione? Rimarrà registrata nell’audit.'))return;try{await api({action:'delete',id,motivo});await loadData()}catch(e){alert(e.message)}}
 function printRows(){
- const alive=events.filter(e=>!e.eliminato_at),by={};
+ const alive=events.filter(e=>!e.eliminato_at).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+ const by={},openByBadge={};
+ const dayKey=s=>new Date(s).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
+ const ensure=d=>by[d]??={pairs:[],totalMin:0,abs:[]};
+
+ // Abbina ogni USCITA alla sua ENTRATA anche se il turno termina il giorno successivo.
+ // Il turno viene contabilizzato nel giorno in cui è iniziato.
  for(const e of alive){
-  const d=new Date(e.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
-  by[d]??={i:[],o:[]};
-  (e.tipo==='ENTRATA'?by[d].i:by[d].o).push(e)
+  const badge=e.badge||'__';
+  if(e.tipo==='ENTRATA'){
+   if(openByBadge[badge]){
+    const d=dayKey(openByBadge[badge].evento_at);
+    ensure(d).pairs.push({i:openByBadge[badge],o:null});
+   }
+   openByBadge[badge]=e;
+  }else{
+   const open=openByBadge[badge];
+   if(open){
+    const d=dayKey(open.evento_at),mins=(new Date(e.evento_at)-new Date(open.evento_at))/60000;
+    ensure(d).pairs.push({i:open,o:e});
+    if(mins>=0)ensure(d).totalMin+=mins;
+    delete openByBadge[badge];
+   }else{
+    const d=dayKey(e.evento_at);
+    ensure(d).pairs.push({i:null,o:e});
+   }
+  }
  }
+ Object.values(openByBadge).forEach(open=>{
+  const d=dayKey(open.evento_at);
+  ensure(d).pairs.push({i:open,o:null});
+ });
+
+ // Inserisce anche RIPOSO, PERMESSO, MALATTIA, FERIE, L.104, INFORTUNIO e ALTRO
+ // senza reintrodurre una colonna "Causale".
+ for(const a of absences){
+  if(!a.data_dal||!a.data_al)continue;
+  let cur=new Date(String(a.data_dal).slice(0,10)+'T12:00:00');
+  const end=new Date(String(a.data_al).slice(0,10)+'T12:00:00');
+  while(cur<=end){
+   const d=cur.toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
+   ensure(d).abs.push(absenceLabel(a.causale)+(a.ore!=null?' · '+a.ore+' h':''));
+   cur.setDate(cur.getDate()+1);
+  }
+ }
+
  let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th><th>Totale ore giornaliere</th></tr></thead><tbody>';
  for(const d of Object.keys(by).sort()){
-  const v=by[d];
-  v.i.sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
-  v.o.sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
-  const n=Math.max(v.i.length,v.o.length,1);
-  let totalMin=0;
-  for(let j=0;j<Math.min(v.i.length,v.o.length);j++){
-   const mins=(new Date(v.o[j].evento_at)-new Date(v.i[j].evento_at))/60000;
-   if(mins>0)totalMin+=mins;
+  const v=by[d],dateLabel=new Date(d+'T12:00:00').toLocaleDateString('it-IT');
+  if(v.pairs.length){
+   v.pairs.forEach((p,j)=>{
+    h+='<tr><td>'+(j===0?dateLabel:'')+'</td><td>'+(p.i?time(p.i.evento_at):'')+'</td><td>'+(p.o?time(p.o.evento_at):'')+'</td><td>'+(j===0?fmtMin(v.totalMin):'')+'</td></tr>';
+   });
   }
-  for(let j=0;j<n;j++){
-   h+='<tr><td>'+new Date(d+'T12:00').toLocaleDateString('it-IT')+'</td><td>'+(v.i[j]?time(v.i[j].evento_at):'')+'</td><td>'+(v.o[j]?time(v.o[j].evento_at):'')+'</td><td>'+(j===0?fmtMin(totalMin):'')+'</td></tr>'
+  if(v.abs.length){
+   v.abs.forEach((label,j)=>{
+    h+='<tr><td>'+(!v.pairs.length&&j===0?dateLabel:'')+'</td><td colspan="3"><b>'+esc(label)+'</b></td></tr>';
+   });
   }
  }
  return h+'</tbody></table>'
