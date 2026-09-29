@@ -31,6 +31,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .todayHead h3{margin:0;color:#102f5a}.todayStats{display:flex;gap:7px;flex-wrap:wrap}.todayStat{background:#fff;border:1px solid #cbd7e8;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900;color:#173b72}
 .todayRows{margin-top:10px;display:grid;gap:8px}.todayRow{display:grid;grid-template-columns:minmax(160px,1fr) minmax(260px,2.2fr) auto;gap:12px;align-items:center;background:#fff;border:1px solid #d7e2f0;border-radius:12px;padding:10px 12px}
 .todayName{font-weight:900;color:#142033}.todayTimes{font-size:13px;color:#344054;line-height:1.45}.todayStatus{white-space:nowrap;font-weight:900;font-size:12px;padding:5px 9px;border-radius:999px}.todayStatus.in{background:#eaf8ef;color:#135c2a}.todayStatus.out{background:#eef2f7;color:#344054}.todayStatus.abs{background:#fff3e8;color:#8a3f00}
+.exitReminder{margin-top:10px;padding:11px 13px;border-radius:12px;background:#fff3cd;border:2px solid #e6b800;color:#6b4b00;font-weight:900;display:flex;align-items:center;gap:8px}
+.exitReminder.blinkReminder{animation:reminderBlink 1.4s infinite}@keyframes reminderBlink{50%{box-shadow:0 0 0 5px rgba(230,184,0,.18)}}
 @media(max-width:700px){.todayRow{grid-template-columns:1fr}.todayStatus{justify-self:start}}
 .monthState{font-weight:900;padding:8px 12px;border-radius:999px;display:inline-block}
 .adminShell{display:grid;grid-template-columns:245px minmax(0,1fr);gap:18px;align-items:start}
@@ -265,7 +267,9 @@ function renderTodayBanner(){
   return '<div class="todayRow"><div class="todayName">'+esc(person(b))+'</div><div class="todayTimes">'+(parts.join(' · ')||'Nessuna timbratura')+'</div><div class="todayStatus '+cls+'">'+esc(status)+'</div></div>'
  });
  const label=new Date(today+'T12:00:00').toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
- $('todayBanner').innerHTML='<div class="todayHead"><div><h3>🕒 Timbrature di oggi</h3><div class="muted">'+esc(label.charAt(0).toUpperCase()+label.slice(1))+'</div></div><div class="todayStats"><span class="todayStat">Timbrature: '+todayEvents.length+'</span><span class="todayStat">In servizio: '+inNow.length+'</span><span class="todayStat">Turni conclusi: '+completed+'</span><span class="todayStat">Causali: '+todayAbs.length+'</span></div></div><div class="todayRows">'+(rows.length?rows.join(''):'<div class="muted">Nessuna timbratura o causale registrata oggi.</div>')+'</div>';
+ const remindNames=inNow.filter(p=>['MARTINOLI ANDREA','BRUGHERA FRANCESCA'].includes(String(p.nome_completo||'').toUpperCase())).map(p=>p.nome_completo);
+ const reminder=remindNames.length?'<div class="exitReminder blinkReminder">🔔 Promemoria: '+esc(remindNames.join(' e '))+' — ricordarsi di timbrare l\'uscita prima di lasciare il servizio.</div>':'';
+ $('todayBanner').innerHTML='<div class="todayHead"><div><h3>🕒 Timbrature di oggi</h3><div class="muted">'+esc(label.charAt(0).toUpperCase()+label.slice(1))+'</div></div><div class="todayStats"><span class="todayStat">Timbrature: '+todayEvents.length+'</span><span class="todayStat">In servizio: '+inNow.length+'</span><span class="todayStat">Turni conclusi: '+completed+'</span><span class="todayStat">Causali: '+todayAbs.length+'</span></div></div>'+reminder+'<div class="todayRows">'+(rows.length?rows.join(''):'<div class="muted">Nessuna timbratura o causale registrata oggi.</div>')+'</div>';
 }
 function renderDashboard(){
  const analyses=monthlyAnalyses(),inNow=analyses.filter(x=>x.open),total=analyses.reduce((s,x)=>s+x.total,0),allAn=analyses.flatMap(x=>x.an);
