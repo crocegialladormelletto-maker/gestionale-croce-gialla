@@ -27,6 +27,11 @@ button,input{font:inherit}.hidden{display:none!important}.btn{border:1px solid #
 .brand{flex:1}.brand small{display:block;color:var(--y);font-weight:1000;font-size:15px}.brand strong{display:block;font-size:29px}.brand span{color:#dbe6ef}
 .clock{text-align:right;min-width:230px}.clock b{display:block;font-size:34px;line-height:1}.clock span{font-size:15px;color:#dbe6ef}.stripe{height:7px;background:linear-gradient(90deg,var(--y) 0 74%,#e8463d 74% 87%,#3477c9 87%)}
 .controls{display:flex;gap:9px;flex-wrap:wrap;padding:12px 18px;background:#fff;border:1px solid var(--l);border-radius:14px;margin:14px 0}
+body.display-only .controls{display:none}
+body.display-only .monitor-shell{padding-top:10px}
+body.display-only .main{min-height:74vh}
+body.display-only .footer{margin-top:6px}
+body.display-only #logoutBtn{display:none!important}
 .main{background:#fff;border:1px solid var(--l);border-radius:18px;padding:18px;min-height:68vh}.title{display:flex;align-items:end;justify-content:space-between;gap:14px;border-bottom:4px solid var(--y);padding-bottom:10px;margin-bottom:14px}.title h1{margin:0;color:var(--n);font-size:32px}.muted{color:var(--m)}
 .services,.shifts{display:grid;gap:10px}.service{display:grid;grid-template-columns:125px 100px 1.15fr 1.45fr 1.5fr 150px;gap:10px;align-items:center;padding:13px 15px;border:1px solid var(--l);border-left:8px solid #3477c9;border-radius:13px;background:#fff;font-size:16px}.service.warn{border-left-color:#a93138;background:#fff7f7}.service.run{border-left-color:#12375d;background:#eef5ff}.service.done{border-left-color:#15734f;background:#f3fbf7}
 .label{font-size:11px;color:var(--m);font-weight:900;text-transform:uppercase}.time,.mezzo{font-size:27px;font-weight:1000;color:var(--n)}.mezzo{text-align:center;background:#fff4b3;border-radius:10px;padding:8px}.value{font-weight:850}.status{text-align:center;font-weight:1000;padding:8px;border-radius:999px;background:#eef2f6}
@@ -113,7 +118,7 @@ button,input{font:inherit}.hidden{display:none!important}.btn{border:1px solid #
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
-const BUILD='monitor-v1-20260929g';
+const BUILD='monitor-v1-20260929h';
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co';
 const KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
@@ -164,7 +169,8 @@ function renderWeek(){const start=new Date((snap?.data||ymd(new Date()))+'T12:00
 async function loadBanner(){const r=await sb.from('monitor_banner_config').select('testo,attivo').eq('id',1).maybeSingle();if(r.error)return;const row=r.data||{},text=String(row.testo||'').trim(),show=!!row.attivo&&!!text;$('banner').classList.toggle('active',show);if(show){$('bannerTrack').textContent=text;$('bannerTrack').dataset.repeat=text}}
 async function loadSnapshot(){const [r]=await Promise.all([sb.rpc('cge_monitor_sede_snapshot'),loadBanner()]);if(r.error){$('todayList').innerHTML='<div class="notice err">'+esc(r.error.message)+'</div>';return}snap=r.data||{};renderToday();renderShifts();renderWeek();renderStatusStrip();$('updated').textContent='Ultimo aggiornamento: '+new Date(snap.aggiornato_il||Date.now()).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
 function stop(){clearInterval(refreshTimer);clearInterval(rotateTimer);clearInterval(clockTimer)}
-async function start(){stop();$('login').classList.add('hidden');$('monitor').classList.remove('hidden');showSlide('today');updateClock();await loadSnapshot();clockTimer=setInterval(updateClock,1000);refreshTimer=setInterval(loadSnapshot,20000);rotateTimer=setInterval(()=>{if(!rotate)return;const a=['today','shifts','week'],i=a.indexOf(slide);showSlide(a[(i+1)%a.length])},25000)}
+function isDisplayOnly(){try{return new URLSearchParams(location.search).get('display')==='1'}catch(_){return false}}
+async function start(){stop();document.body.classList.toggle('display-only',isDisplayOnly());$('login').classList.add('hidden');$('monitor').classList.remove('hidden');showSlide('today');updateClock();await loadSnapshot();clockTimer=setInterval(updateClock,1000);refreshTimer=setInterval(loadSnapshot,20000);rotateTimer=setInterval(()=>{if(!rotate)return;const a=['today','shifts','week'],i=a.indexOf(slide);showSlide(a[(i+1)%a.length])},25000)}
 async function enterExisting(){const u=await sb.auth.getUser();if(!u.data.user)return false;const r=await sb.from('accessi_app').select('ruolo,attivo').single();if(!r.error&&r.data?.attivo&&r.data.ruolo==='MONITOR_SEDE'){await start();return true}return false}
 $('loginBtn').onclick=async()=>{const user=$('user').value.trim().toLowerCase(),password=$('pass').value;if(user!=='monitor'||!password)return message('Inserisci username monitor e password.',true);message('Accesso in corso...');const r=await sb.auth.signInWithPassword({email:'monitor@access.crocegiallaemergenza.it',password});if(r.error)return message('Credenziali monitor non valide.',true);if(!(await enterExisting())){await sb.auth.signOut();message('Account non abilitato al Monitor sede.',true)}};
 $('pass').onkeydown=e=>{if(e.key==='Enter')$('loginBtn').click()};
@@ -172,6 +178,6 @@ $('todayBtn').onclick=()=>showSlide('today');$('shiftsBtn').onclick=()=>showSlid
 $('rotateBtn').onclick=()=>{rotate=!rotate;$('rotateBtn').textContent='Rotazione automatica: '+(rotate?'ON':'OFF');$('rotateBtn').className='btn '+(rotate?'':'yellow')};
 $('fullBtn').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(_){}};
 $('logoutBtn').onclick=async()=>{stop();await sb.auth.signOut();location.reload()};
-(async()=>{await clearOldAppCache();await enterExisting()})();
+(async()=>{await clearOldAppCache();const ok=await enterExisting();if(ok&&isDisplayOnly()){rotate=true;setTimeout(async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen()}catch(_){}},700)}})();
 </script>
 </body></html>
