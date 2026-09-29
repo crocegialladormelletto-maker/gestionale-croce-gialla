@@ -351,8 +351,10 @@ function printRows(){
 
  // Inserisce anche RIPOSO, PERMESSO, MALATTIA, FERIE, L.104, INFORTUNIO e ALTRO
  // senza reintrodurre una colonna "Causale".
+ const selectedBadge=$('filterEmp').value||$('printEmp').value||'';
  for(const a of absences){
   if(!a.data_dal||!a.data_al)continue;
+  if(selectedBadge && a.badge!==selectedBadge)continue;
   let cur=new Date(String(a.data_dal).slice(0,10)+'T12:00:00');
   const end=new Date(String(a.data_al).slice(0,10)+'T12:00:00');
   while(cur<=end){
