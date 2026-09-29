@@ -121,7 +121,7 @@ body.display-only .display-fullscreen{display:block}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
-const BUILD='monitor-v1-20260929j';
+const BUILD='monitor-v1-20260929k';
 const SELF_UPDATE_INTERVAL=60000;
 let selfUpdateTimer=null;
 function currentBaseUrl(){return location.origin+location.pathname}
@@ -192,7 +192,24 @@ function renderShifts(){const day=snap?.data||ymd(new Date()),rows=(snap?.turni_
  $('shiftsList').innerHTML=rows.map(t=>{const cov=String(t.copertura||'SCOPERTO').toUpperCase(),cls=['SCOPERTO','INCOMPLETO'].includes(cov)?'gap':cov==='MINIMO'?'minimum':'';const crew=(t.equipaggio||[]).slice().sort((a,b)=>({AUTISTA:1,CAPO_SERVIZIO:2,SOCCORRITORE:3,SECONDO_SOCCORRITORE:4}[a.ruolo]||9)-({AUTISTA:1,CAPO_SERVIZIO:2,SOCCORRITORE:3,SECONDO_SOCCORRITORE:4}[b.ruolo]||9));const ch=crew.length?crew.map(x=>'<div class="person"><span>'+esc(roleLabel(x.ruolo))+'</span><b>'+esc(x.nome||'—')+'</b></div>').join(''):'<div class="notice">Nessun componente assegnato</div>';return '<div class="shift '+cls+(isNowWindow(t.ora_inizio,t.ora_fine)?' now':'')+'"><div><div class="label">Orario</div><div class="shift-time">'+esc(t.ora_inizio||'—')+'–'+esc(t.ora_fine||'—')+'</div><div class="shift-type">'+esc(t.tipo||'Turno')+'</div></div><div><div class="label">Mezzo</div><div class="mezzo">'+esc(t.mezzo||'—')+'</div></div><div><div class="label">Equipaggio</div><div class="crew">'+ch+'</div></div><div><div class="coverage">'+esc(coverageText(cov))+'</div><div class="muted" style="text-align:center;margin-top:7px">'+esc(t.stato||'')+'</div></div></div>'}).join('')}
 function renderWeek(){const start=new Date((snap?.data||ymd(new Date()))+'T12:00:00'),services=snap?.servizi_settimana||[],turns=snap?.turni_settimana||[];let h='';for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const y=ymd(d),ss=services.filter(x=>x.data===y),tt=turns.filter(x=>x.data===y);h+='<div class="day '+(i===0?'today':'')+'"><div class="day-head">'+esc(d.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}).replace(/^./,c=>c.toUpperCase()))+'</div>'+tt.map(t=>'<div class="event turn"><b>🕒 '+esc(t.ora_inizio)+'–'+esc(t.ora_fine)+' · '+esc(t.tipo||'Turno')+'</b>Mezzo '+esc(t.mezzo||'—')+(t.equipaggio?.length?'<br>'+t.equipaggio.map(x=>esc(x.nome)+' ('+esc(roleLabel(x.ruolo))+')').join(', '):'')+'</div>').join('')+ss.map(s=>'<div class="event"><b>🚑 '+esc(s.ora||'—')+' · '+esc(s.tipo||'Servizio')+'</b>Mezzo '+esc(s.mezzo||'—')+'<br>'+esc(s.partenza||'Sede')+' → '+esc(s.destinazione||'Destinazione')+'</div>').join('')+(!tt.length&&!ss.length?'<div class="muted" style="padding:12px;text-align:center">Nessun impegno</div>':'')+'</div>'}$('weekGrid').innerHTML=h}
 async function loadBanner(){const r=await sb.from('monitor_banner_config').select('testo,attivo').eq('id',1).maybeSingle();if(r.error)return;const row=r.data||{},text=String(row.testo||'').trim(),show=!!row.attivo&&!!text;$('banner').classList.toggle('active',show);if(show){$('bannerTrack').textContent=text;$('bannerTrack').dataset.repeat=text}}
-async function loadSnapshot(){const [r]=await Promise.all([sb.rpc('cge_monitor_sede_snapshot'),loadBanner()]);if(r.error){$('todayList').innerHTML='<div class="notice err">'+esc(r.error.message)+'</div>';return}snap=r.data||{};renderToday();renderShifts();renderWeek();renderStatusStrip();$('updated').textContent='Ultimo aggiornamento: '+new Date(snap.aggiornato_il||Date.now()).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+async function loadSnapshot(){
+ let r=await sb.rpc('cge_monitor_sede_snapshot');
+ if(r.error){
+  try{
+   await sb.auth.refreshSession();
+   r=await sb.rpc('cge_monitor_sede_snapshot');
+  }catch(_){}
+ }
+ await loadBanner();
+ if(r.error){
+  $('updated').textContent='Connessione dati in ripristino…';
+  if(!snap&&!isDisplayOnly())$('todayList').innerHTML='<div class="notice">Connessione momentaneamente non disponibile. Nuovo tentativo automatico in corso…</div>';
+  return;
+ }
+ snap=r.data||{};
+ renderToday();renderShifts();renderWeek();renderStatusStrip();
+ $('updated').textContent='Ultimo aggiornamento: '+new Date(snap.aggiornato_il||Date.now()).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
 function stop(){clearInterval(refreshTimer);clearInterval(rotateTimer);clearInterval(clockTimer);clearInterval(selfUpdateTimer)}
 function isDisplayOnly(){try{return new URLSearchParams(location.search).get('display')==='1'}catch(_){return false}}
 async function start(){stop();document.body.classList.toggle('display-only',isDisplayOnly());$('login').classList.add('hidden');$('monitor').classList.remove('hidden');showSlide('today');updateClock();await loadSnapshot();startSelfUpdate();checkForNewBuild();clockTimer=setInterval(updateClock,1000);refreshTimer=setInterval(loadSnapshot,20000);rotateTimer=setInterval(()=>{if(!rotate)return;const a=['today','shifts','week'],i=a.indexOf(slide);showSlide(a[(i+1)%a.length])},25000)}
