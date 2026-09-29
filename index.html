@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.22-patient-sync">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.23-patient-save-toggle">
 <script>
 (function(){
  try{
@@ -1506,7 +1506,7 @@
  <button type="button" id="patientClearButton" class="btn secondary">Paziente nuovo</button>
  <button type="button" class="btn secondary jump" data-v="patients">Apri anagrafica</button></div>
  <div id="patientLookupMsg"></div><div id="patientLookupResults"></div>
- <label class="check" style="margin-top:9px"><input type="checkbox" id="patientRemember" checked disabled> Il paziente viene memorizzato automaticamente nell’anagrafica condivisa</label>
+ <label class="check" style="margin-top:9px"><input type="checkbox" id="patientRemember"> Salva nuovo paziente in anagrafica</label>
  <p class="muted">L’anagrafica conserva nome, cognome, codice fiscale, data di nascita, telefono, indirizzo ed e-mail; non contiene diagnosi o dati clinici.</p>
 </div><div class="grid3"><div class="field"><label>Nome</label><input id="pn"></div><div class="field"><label>Cognome</label><input id="pc"></div><div class="field"><label>Codice fiscale</label><input id="cf" maxlength="16"></div><div class="field"><label>Data nascita</label><input id="dn" type="date"></div><div class="field"><label>Telefono</label><input id="tel"></div>
 <div class="field"><label>Indirizzo paziente</label><input id="patientAddress" maxlength="400" autocomplete="street-address"></div>
@@ -4876,7 +4876,7 @@ $('form').onsubmit=async e=>{
  if(amount!==null&&(!Number.isFinite(amount)||amount<0||amount>10000))return msg('fmsg','Importo non valido (da € 0 a € 10.000).','warn');
  const isEvent=isAssistanceManifestation($('t').value);
  let linkedPatient=isEvent?null:servicePatientId;
- if(!isEvent&&!linkedPatient&&$('pn').value.trim()&&$('pc').value.trim()){
+ if(!isEvent&&!linkedPatient&&$('patientRemember').checked){
   const row=patientServiceRow();
   if(!row.nome||!row.cognome)return msg('fmsg','Nome e cognome necessari per memorizzare il paziente.','warn');
   if(row.codice_fiscale&&row.codice_fiscale.length!==16)return msg('fmsg','Controlla il codice fiscale del paziente.','warn');
