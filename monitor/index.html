@@ -28,6 +28,33 @@ button,input{font:inherit}.hidden{display:none!important}.btn{border:1px solid #
 .login{min-height:100vh;display:grid;place-items:center;padding:20px}.login-card{width:min(460px,100%);background:#fff;border:1px solid var(--l);border-radius:18px;overflow:hidden;box-shadow:0 8px 30px #0002}.login-head{background:var(--n);color:#fff;padding:22px;text-align:center}.login-head img{width:80px;height:80px;object-fit:contain}.login-body{padding:20px}.field{margin:10px 0}.field label{display:block;font-weight:850;color:var(--n);margin-bottom:5px}.field input{width:100%;padding:11px;border:1px solid #cbd8e3;border-radius:9px}.notice{padding:10px 12px;border-radius:10px;background:#eef5fb;margin-top:10px}.notice.err{background:#fde7e9;color:#8e2930}
 .version{font-size:12px;color:#b8cada;margin-top:4px}
 @media(max-width:1100px){.service{grid-template-columns:100px 85px 1fr 1.3fr 1.3fr 125px;font-size:14px}.time,.mezzo{font-size:22px}.shift{grid-template-columns:145px 105px 1fr 145px}.crew{grid-template-columns:1fr}}
+@media(max-height:850px){
+ .monitor-shell{padding:8px 12px}
+ .head{padding:8px 14px;gap:10px}
+ .logo{width:52px;height:52px;border-width:3px}
+ .brand small{font-size:12px}.brand strong{font-size:22px}.brand span{font-size:12px}
+ .clock{min-width:170px}.clock b{font-size:27px}.clock span{font-size:12px}
+ .controls{padding:7px 10px;margin:8px 0;gap:6px}.controls .btn{padding:7px 9px;font-size:12px}
+ .banner{margin:7px 0 9px}.banner-label{font-size:14px;padding:8px 12px}.banner-label::before{font-size:18px}.banner-track{font-size:20px;padding:7px 0}
+ .main{padding:10px;min-height:auto}
+ .title{padding-bottom:6px;margin-bottom:8px}.title h1{font-size:25px}.title .muted{font-size:11px}
+ .shifts{gap:6px}
+ .shift{grid-template-columns:130px 90px 1fr 140px;gap:8px;padding:9px 10px;border-left-width:7px;font-size:13px}
+ .shift-time{font-size:22px}.shift-type{font-size:15px}.mezzo{font-size:20px;padding:6px}
+ .crew{gap:4px 7px}.person{padding:4px 6px}.person b{font-size:12px}.person span{font-size:9px}
+ .coverage{padding:6px 8px;font-size:11px}
+ .footer{font-size:10px;margin-top:5px}
+}
+@media(max-height:720px){
+ .brand span{display:none}.clock span{font-size:10px}
+ .controls .btn{padding:6px 8px;font-size:11px}
+ .banner-label{font-size:12px;padding:6px 9px}.banner-track{font-size:18px;padding:5px 0}
+ .title h1{font-size:21px}
+ .shift{grid-template-columns:118px 78px 1fr 125px;padding:7px 8px;gap:6px}
+ .shift-time{font-size:19px}.shift-type{font-size:13px}.mezzo{font-size:17px;padding:5px}
+ .person{padding:3px 5px}.person b{font-size:11px}.person span{font-size:8px}
+ .coverage{font-size:10px;padding:5px 7px}
+}
 </style>
 </head>
 <body>
@@ -69,7 +96,7 @@ button,input{font:inherit}.hidden{display:none!important}.btn{border:1px solid #
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
-const BUILD='monitor-v1-20260929c';
+const BUILD='monitor-v1-20260929d';
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co';
 const KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
