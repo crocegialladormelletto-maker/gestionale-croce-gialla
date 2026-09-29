@@ -1,5 +1,5 @@
 // Service Worker stabile: navigazioni sempre dalla rete, nessun redirect forzato.
-const CACHE_NAME = 'cge-volontari-static-v30';
+const CACHE_NAME = 'cge-volontari-static-v31';
 const APP_BASE = '/gestionale-croce-gialla/';
 const STATIC_ASSETS = new Set([
   APP_BASE + 'manifest.json',
