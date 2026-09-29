@@ -337,6 +337,10 @@ function printRows(){
     const d=dayKey(open.evento_at),mins=(new Date(e.evento_at)-new Date(open.evento_at))/60000;
     ensure(d).pairs.push({i:open,o:e});
     if(mins>=0)ensure(d).totalMin+=mins;
+    const exitDay=dayKey(e.evento_at);
+    if(exitDay!==d){
+      ensure(exitDay).abs.push('SMONTO NOTTE');
+    }
     delete openByBadge[badge];
    }else{
     const d=dayKey(e.evento_at);
