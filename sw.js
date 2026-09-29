@@ -1,16 +1,17 @@
-// Service Worker stabile: navigazioni sempre dalla rete, nessun redirect forzato.
-const CACHE_NAME = 'cge-volontari-static-v31';
+// Service Worker App Volontari - configurazione stabile
+const CACHE_NAME = 'cge-volontari-static-v32';
 const APP_BASE = '/gestionale-croce-gialla/';
-const STATIC_ASSETS = new Set([
-  APP_BASE + 'manifest.json',
+const STATIC_ASSETS = [
+  APP_BASE + 'app-volontari.html',
+  APP_BASE + 'manifest-volontari.webmanifest',
   APP_BASE + 'icons/icon-192-v6.png',
-  APP_BASE + 'icons/icon-512-v6.png',
-]);
+  APP_BASE + 'icons/icon-512-v6.png'
+];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll([...STATIC_ASSETS]))
+      .then(cache => cache.addAll(STATIC_ASSETS))
       .catch(() => {})
       .then(() => self.skipWaiting())
   );
@@ -32,16 +33,20 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate' && url.pathname.startsWith(APP_BASE)) {
-    event.respondWith(fetch(request, {cache:'no-store'}).catch(() => caches.match(request)));
+    event.respondWith(
+      fetch(request, {cache:'no-store'})
+        .catch(() => caches.match(APP_BASE + 'app-volontari.html'))
+    );
     return;
   }
 
-  if (!STATIC_ASSETS.has(url.pathname)) return;
+  if (!STATIC_ASSETS.includes(url.pathname)) return;
+
   event.respondWith(
     fetch(request, {cache:'no-store'}).then(response => {
-      if (response.ok) {
+      if (response && response.ok) {
         const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+        caches.open(CACHE_NAME).then(cache => cache.put(url.pathname, copy));
       }
       return response;
     }).catch(() => caches.match(request))
