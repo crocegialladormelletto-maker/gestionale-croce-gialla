@@ -3397,6 +3397,10 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvStart').value=fvTime(f.ora_partenza_servizio);
  $('fvLoad').value=fvTime(f.ora_carico_paziente);
  $('fvPatientLoadTime').classList.toggle('hidden',is118||isAssistanceManifestation(f.tipo_servizio));
+ const fvStopStartField=$('fvStopStart')?.closest('.field');
+ const fvStopEndField=$('fvStopEnd')?.closest('.field');
+ if(fvStopStartField)fvStopStartField.classList.toggle('hidden',is118);
+ if(fvStopEndField)fvStopEndField.classList.toggle('hidden',is118);
  $('fvArrDest').value=fvTime(f.ora_arrivo_destinazione);
  $('fvRestart').value=fvTime(f.ora_ripartenza);
  $('fvArrBase').value=fvTime(f.ora_arrivo_sede);
@@ -3464,6 +3468,11 @@ async function saveTravelSheet(silent=false){
   annotazioni:$('fvNotes').value.trim()||null,
   versione_app:'V13.41'
  };
+ if(String(currentFoglio?.tipo_servizio||'').trim()==='118'){
+  row.ora_carico_paziente=null;
+  row.inizio_fermo=null;
+  row.fine_fermo=null;
+ }
  if(prof?.ruolo!=='CENTRALINO'&&String(currentFoglio?.tipo_servizio||'').trim()!=='118')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
   sedia_montascale:$('fvChair').checked,
