@@ -3396,7 +3396,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
 
  $('fvStart').value=fvTime(f.ora_partenza_servizio);
  $('fvLoad').value=fvTime(f.ora_carico_paziente);
- $('fvPatientLoadTime').classList.toggle('hidden',isAssistanceManifestation(f.tipo_servizio));
+ $('fvPatientLoadTime').classList.toggle('hidden',is118||isAssistanceManifestation(f.tipo_servizio));
  $('fvArrDest').value=fvTime(f.ora_arrivo_destinazione);
  $('fvRestart').value=fvTime(f.ora_ripartenza);
  $('fvArrBase').value=fvTime(f.ora_arrivo_sede);
@@ -3452,7 +3452,7 @@ async function saveTravelSheet(silent=false){
  }
  const row={
   ora_partenza_servizio:$('fvStart').value||null,
-  ora_carico_paziente:isAssistanceManifestation(currentFoglio?.tipo_servizio)?null:($('fvLoad').value||null),
+  ora_carico_paziente:(String(currentFoglio?.tipo_servizio||'').trim()==='118'||isAssistanceManifestation(currentFoglio?.tipo_servizio))?null:($('fvLoad').value||null),
   ora_arrivo_destinazione:$('fvArrDest').value||null,
   ora_ripartenza:$('fvRestart').value||null,
   ora_arrivo_sede:$('fvArrBase').value||null,
