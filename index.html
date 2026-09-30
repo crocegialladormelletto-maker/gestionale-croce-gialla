@@ -3047,7 +3047,7 @@ function buildFoglioPrint(f){
  ].filter(x=>!isAssistanceManifestation(f.tipo_servizio)||x[0]!=='Carico previsto');
  const actual=[
   ['Partenza',fvTime(f.ora_partenza_servizio)],
-  ...(!isAssistanceManifestation(f.tipo_servizio)?[['Carico paziente',fvTime(f.ora_carico_paziente)]]:[]),
+  ...((String(f.tipo_servizio||'').trim()!=='118'&&!isAssistanceManifestation(f.tipo_servizio))?[['Carico paziente',fvTime(f.ora_carico_paziente)]]:[]),
   ['Arrivo destinazione',fvTime(f.ora_arrivo_destinazione)],
   ['Ripartenza',fvTime(f.ora_ripartenza)],
   ['Arrivo sede',fvTime(f.ora_arrivo_sede)],
