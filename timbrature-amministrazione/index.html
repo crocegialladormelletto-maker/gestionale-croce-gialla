@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="it">
-<!-- VERSIONE STABILE E DEFINITIVA 1.1 - 29/09/2026 -->
+<!-- VERSIONE STABILE E DEFINITIVA 1.2 - 30/09/2026 -->
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="app-version" content="1.1-definitiva-2026-09-29">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="app-version" content="1.2-definitiva-2026-09-30">
 <title>Amministrazione Timbrature - Croce Gialla Emergenza ODV</title>
 <style>
 :root{--y:#ffdf00;--b:#173b72;--bg:#f4f7fb;--bd:#d7deea;--g:#15803d;--r:#b42318;--o:#a85b00;--m:#667085}
@@ -10,7 +10,7 @@
 .topHeader{background:#102f5a;color:#fff;border-bottom:4px solid var(--y);padding:12px 18px;box-shadow:0 4px 14px rgba(0,0,0,.12)}
 .topHeaderInner{display:flex;justify-content:space-between;align-items:center;gap:16px;max-width:1400px;margin:0 auto}
 .topHeaderLeft{display:flex;align-items:center;gap:14px;min-width:0}
-.topHeaderLogo{width:46px;height:46px;border-radius:12px;background:var(--y);color:#102f5a;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
+.topHeaderLogo{width:46px;height:46px;border-radius:50%;background:#fff;display:block;object-fit:cover;flex:0 0 auto;box-shadow:0 0 0 2px rgba(255,255,255,.75)}
 .topHeaderText h1{margin:0;font-size:20px;line-height:1.1;font-weight:900}
 .topHeaderSub{margin-top:4px;font-size:13px;color:rgba(255,255,255,.82);font-weight:500}
 .topHeaderRight{display:flex;align-items:center;gap:10px;flex:0 0 auto;flex-wrap:wrap}.headerMonth{font-size:13px;font-weight:800;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:8px 12px;border-radius:999px}
@@ -50,14 +50,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:900px){.grid,.grid4{grid-template-columns:1fr 1fr}.adminShell{grid-template-columns:1fr}.sideMenu{position:static;display:none}.sideMenu.open{display:block}.mobileMenuBtn{display:inline-block}}
 @media(max-width:700px){.topHeaderInner{flex-direction:column;align-items:flex-start}.topHeaderRight{width:100%;justify-content:flex-start}.topHeaderText h1{font-size:18px}.topHeaderSub{font-size:12px}}
 @media(max-width:600px){.grid,.grid4{grid-template-columns:1fr}}
-@media print{header,.noPrint,#loginBox{display:none!important}.printOnly{display:block}.wrap{max-width:none;margin:0;padding:0}.card{box-shadow:none;border:0;padding:0}.printTable th,.printTable td{border:1px solid #333;padding:7px}.printTable th{background:#eee!important}body.printingRegister .adminPage{display:none!important}body.printingRegister #page-storico{display:block!important}body.printingRegister #page-storico .card{display:block!important}}
+@media print{header,.noPrint,#loginBox{display:none!important}.printOnly{display:block}.wrap{max-width:none;margin:0;padding:0}.card{box-shadow:none;border:0;padding:0}.printTable th,.printTable td{border:1px solid #333;padding:7px}.printTable th{background:#eee!important}body.printingRegister .adminPage{display:none!important}body.printingRegister #page-storico{display:block!important}body.printingRegister #page-storico .card{display:block!important}.printTable tfoot th,.printTable tfoot td{font-weight:900;background:#f3f6fa!important}.printTable tfoot tr:last-child td{text-align:center;font-size:12px}}
 </style>
 </head>
 <body>
 <header class="topHeader">
   <div class="topHeaderInner">
     <div class="topHeaderLeft">
-      <div class="topHeaderLogo">CG</div>
+      <img class="topHeaderLogo" src="../icons/icon-192.png" alt="Logo Croce Gialla Emergenza ODV">
       <div class="topHeaderText">
         <h1>Amministrazione Timbrature</h1>
         <div class="topHeaderSub">Croce Gialla Emergenza ODV · Area riservata</div>
@@ -168,7 +168,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="card noPrint">
 <h3>Filtro e stampa mensile</h3>
 <div class="grid"><div><label>Dipendente</label><select id="filterEmp"></select></div><div><label>Mese</label><input id="month" type="month" min="2026-09"></div><div style="display:flex;align-items:end;gap:8px"><button id="refreshBtn" class="secondary" style="flex:1">AGGIORNA</button><button id="printBtn" class="primary" style="flex:1">STAMPA</button></div></div>
-<div class="muted">La stampa mostra Data, Entrata, Uscita e le eventuali causali del mese.</div>
+<div class="muted">La stampa mostra Data, Entrata, Uscita, Totale ore giornaliere, Straordinari e le eventuali causali del mese.</div>
 </div>
 
 <div class="card">
@@ -189,7 +189,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <section id="page-stampe" class="adminPage"><div class="pageHead"><div><h2>Stampe</h2><div class="muted">Registro mensile per dipendente</div></div></div>
 <div class="card noPrint">
 <div class="grid"><div><label>Dipendente</label><select id="printEmp"></select></div><div><label>Mese</label><input id="printMonth" type="month" min="2026-09"></div><div style="display:flex;align-items:end"><button id="printMonthlyBtn" class="primary" style="width:100%">🖨️ STAMPA REGISTRO</button></div></div>
-<div class="notice">La stampa contiene Data, Entrata, Uscita e le eventuali causali del mese.</div>
+<div class="notice">La stampa contiene Data, Entrata, Uscita, Totale ore giornaliere, Straordinari e le eventuali causali del mese.</div>
 </div></section>
 </main></div>
 </div>
@@ -315,6 +315,12 @@ async function savePin(){try{await api({action:'set_pin',badge:$('pinEmp').value
 async function addHist(){try{if(monthClosed)throw new Error('Il mese selezionato è chiuso.');const v=$('histDt').value;if(!v)throw new Error('Inserisci data e ora.');await api({action:'historical',badge:$('histEmp').value,tipo:$('histType').value,evento_at:new Date(v).toISOString(),nota_interna:$('histNote').value.trim(),motivo:$('histNote').value.trim()||'Inserimento storico'});$('histNote').value='';msg('histMsg','Timbratura storica inserita.','ok');await loadData()}catch(e){msg('histMsg',e.message,'err')}}
 async function editEvent(id){if(monthClosed)return alert('Il mese è chiuso. Riaprilo prima di modificare.');const e=events.find(x=>x.id===id);if(!e)return;const tipo=prompt('Tipo (ENTRATA o USCITA):',e.tipo);if(!tipo)return;const orario=prompt('Data e ora (AAAA-MM-GGTHH:MM):',localInput(e.evento_at));if(!orario)return;const motivo=prompt('Motivo obbligatorio della modifica:','Correzione errore materiale');if(!motivo?.trim())return;const nota=prompt('Nota interna:',e.nota_interna||'');try{await api({action:'update',id,tipo,evento_at:new Date(orario).toISOString(),nota_interna:nota,motivo});await loadData()}catch(err){alert(err.message)}}
 async function deleteEvent(id){if(monthClosed)return alert('Il mese è chiuso. Riaprilo prima di eliminare.');const motivo=prompt('Motivo obbligatorio dell’eliminazione:','Inserimento errato');if(!motivo?.trim())return;if(!confirm('Confermi l’eliminazione? Rimarrà registrata nell’audit.'))return;try{await api({action:'delete',id,motivo});await loadData()}catch(e){alert(e.message)}}
+function dailyTargetMinutes(badge){
+ const n=String(person(badge)||'').trim().toUpperCase();
+ if(n==='MARTINOLI ANDREA')return 380; // 6 ore e 20 minuti
+ if(n==='BRUGHERA FRANCESCA')return 300; // 5 ore
+ return null;
+}
 function printRows(){
  const alive=events.filter(e=>!e.eliminato_at).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
  const by={},openByBadge={};
@@ -338,9 +344,7 @@ function printRows(){
     ensure(d).pairs.push({i:open,o:e});
     if(mins>=0)ensure(d).totalMin+=mins;
     const exitDay=dayKey(e.evento_at);
-    if(exitDay!==d){
-      ensure(exitDay).abs.push('SMONTO NOTTE');
-    }
+    if(exitDay!==d)ensure(exitDay).abs.push('SMONTO NOTTE');
     delete openByBadge[badge];
    }else{
     const d=dayKey(e.evento_at);
@@ -353,8 +357,7 @@ function printRows(){
   ensure(d).pairs.push({i:open,o:null});
  });
 
- // Inserisce anche RIPOSO, PERMESSO, MALATTIA, FERIE, L.104, INFORTUNIO e ALTRO
- // senza reintrodurre una colonna "Causale".
+ // Inserisce anche le causali senza trasformarle in ore lavorate/straordinarie.
  const selectedBadge=$('filterEmp').value||$('printEmp').value||'';
  for(const a of absences){
   if(!a.data_dal||!a.data_al)continue;
@@ -368,21 +371,34 @@ function printRows(){
   }
  }
 
- let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th><th>Totale ore giornaliere</th></tr></thead><tbody>';
+ const target=dailyTargetMinutes(selectedBadge);
+ let totalWorked=0,totalOvertime=0,totalOrdinary=0;
+ let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th><th>Totale ore giornaliere</th><th>Straordinari</th></tr></thead><tbody>';
  for(const d of Object.keys(by).sort()){
   const v=by[d],dateLabel=new Date(d+'T12:00:00').toLocaleDateString('it-IT');
+  const overtime=target==null?0:Math.max(0,v.totalMin-target);
+  const ordinary=target==null?v.totalMin:Math.min(v.totalMin,target);
+  totalWorked+=v.totalMin;
+  totalOvertime+=overtime;
+  totalOrdinary+=ordinary;
+
   if(v.pairs.length){
    v.pairs.forEach((p,j)=>{
-    h+='<tr><td>'+(j===0?dateLabel:'')+'</td><td>'+(p.i?time(p.i.evento_at):'')+'</td><td>'+(p.o?time(p.o.evento_at):'')+'</td><td>'+(j===0?fmtMin(v.totalMin):'')+'</td></tr>';
+    h+='<tr><td>'+(j===0?dateLabel:'')+'</td><td>'+(p.i?time(p.i.evento_at):'')+'</td><td>'+(p.o?time(p.o.evento_at):'')+'</td><td>'+(j===0?fmtMin(v.totalMin):'')+'</td><td>'+(j===0?(target==null?'—':fmtMin(overtime)):'')+'</td></tr>';
    });
   }
   if(v.abs.length){
    v.abs.forEach((label,j)=>{
-    h+='<tr><td>'+(!v.pairs.length&&j===0?dateLabel:'')+'</td><td colspan="3"><b>'+esc(label)+'</b></td></tr>';
+    h+='<tr><td>'+(!v.pairs.length&&j===0?dateLabel:'')+'</td><td colspan="3"><b>'+esc(label)+'</b></td><td>'+(target==null?'—':'0:00')+'</td></tr>';
    });
   }
  }
- return h+'</tbody></table>'
+ h+='</tbody>';
+ if(selectedBadge&&target!=null){
+  h+='<tfoot><tr><th colspan="3">TOTALI MESE</th><th>'+fmtMin(totalWorked)+'</th><th>'+fmtMin(totalOvertime)+'</th></tr>';
+  h+='<tr><td colspan="5"><b>Orario ordinario giornaliero:</b> '+fmtMin(target)+' · <b>Ore ordinarie lavorate:</b> '+fmtMin(totalOrdinary)+' · <b>Straordinari:</b> '+fmtMin(totalOvertime)+'</td></tr></tfoot>';
+ }
+ return h+'</table>'
 }
 function renderRegister(){let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':monthClosed?'🔒 Mese chiuso':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}h+='</tbody></table>';$('register').innerHTML=events.length?h:'<div class="muted">Nessuna timbratura.</div>';const fe=$('filterEmp').value;$('printHead').innerHTML='<h2 style="text-align:center;margin-bottom:4px">Croce Gialla Emergenza ODV</h2><h3 style="text-align:center;margin:0">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</h3><p style="text-align:center">'+esc($('month').value||'')+'</p>'}
 function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
