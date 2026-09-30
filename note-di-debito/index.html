@@ -137,7 +137,7 @@ $('backMain').onclick=()=>location.href='../';
 async function loadAll(){
  msg('listMsg','Aggiornamento dati...');
  const [fs,ns]=await Promise.all([
-  sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,codice_fiscale,intestatario_nota_debito,cf_piva_intestatario,indirizzo_fatturazione,cap_fatturazione,comune_fatturazione,provincia_fatturazione,email_fatturazione,destinazione,totale_servizio,stato,modalita_pagamento,data_pagamento').eq('stato','CHIUSO').order('data_servizio',{ascending:false}).limit(1000),
+  sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,codice_fiscale,intestatario_nota_debito,cf_piva_intestatario,indirizzo_fatturazione,cap_fatturazione,comune_fatturazione,provincia_fatturazione,email_fatturazione,destinazione,totale_servizio,stato,modalita_pagamento,data_pagamento').eq('stato','CHIUSO').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).limit(1000),
   sb.from('note_di_debito').select('*').order('created_at',{ascending:false}).limit(1000)
  ]);
  if(fs.error)return msg('listMsg','Errore Fogli Viaggio: '+fs.error.message,'err');
