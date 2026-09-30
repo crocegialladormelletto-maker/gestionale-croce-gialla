@@ -2112,6 +2112,7 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Tappe / percorso</label><textarea data-ts-field="percorso_tappe"></textarea></div>
      <div class="field"><label>Annotazioni</label><textarea data-ts-field="annotazioni"></textarea></div>
     </div>
+    <div id="tabletServicePaymentSection">
     <h3 class="tablet-section-title" style="margin-top:20px">Servizio e pagamento</h3>
     <div class="tablet-fields">
      <div class="field"><label>Importo base € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito"></div>
@@ -2122,6 +2123,7 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Totale calcolato €</label><input id="tabletSheetTotal" disabled value="—"></div>
      <div class="field"><label>Modalità pagamento</label><select data-ts-field="modalita_pagamento"><option value="">Non indicata</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="NON DOVUTO">Non dovuto</option><option value="ALTRO">Altro</option></select></div>
      <div class="field"><label>Data pagamento</label><input type="date" data-ts-field="data_pagamento"></div>
+    </div>
     </div>
     <div class="tablet-sheet-bar">
      <div class="actions"><button id="tabletSaveSheet" class="btn yellow" type="submit">Salva dati servizio</button>
@@ -8238,6 +8240,7 @@ function tabletConfigureTimeFields(is118){
  if($('tabletArrivoDeaTime'))$('tabletArrivoDeaTime').classList.toggle('hidden',!is118);
  if($('tabletStopStartField'))$('tabletStopStartField').classList.toggle('hidden',!!is118);
  if($('tabletStopEndField'))$('tabletStopEndField').classList.toggle('hidden',!!is118);
+ if($('tabletServicePaymentSection'))$('tabletServicePaymentSection').classList.toggle('hidden',!!is118);
  if($('tabletDepartureLabel'))$('tabletDepartureLabel').textContent=is118?'Ora partenza servizio':'Partenza effettiva';
  if($('tabletArrivalDestLabel'))$('tabletArrivalDestLabel').textContent=is118?'Ora arrivo destinazione':'Arrivo a destinazione';
  if($('tabletRestartLabel'))$('tabletRestartLabel').textContent=is118?'Ora ripartenza':'Ripartenza';
@@ -8262,8 +8265,18 @@ async function saveTabletSheet(silent=false){
   else row[name]=el.value.trim()||null;
  }
  if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio))row.ora_carico_paziente=null;
- if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
  const tabletSheetType=tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'';
+ if(tabletSheetType==='118'){
+  row.ora_carico_paziente=null;
+  row.inizio_fermo=null;
+  row.fine_fermo=null;
+  row.importo_inserito=null;
+  row.sedia_montascale=false;
+  row.barella_bariatrica=false;
+  row.modalita_pagamento=null;
+  row.data_pagamento=null;
+ }
+ if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
  if(tabletSheetType!=='118'&&row.importo_inserito===null)return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
