@@ -6,12 +6,12 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Registro Viaggi – Croce Gialla Emergenza</title>
+<title>Registro Servizi – Croce Gialla Emergenza</title>
 <style>
 :root{--bg:#f4f7fb;--panel:#fff;--text:#152033;--muted:#68758a;--line:#dde4ee;--yellow:#f7c928;--nav:#18253a;--blue:#2879e8;--green:#2c9a62;--orange:#e78a26;--red:#d84d4d;--purple:#7b61c9;--shadow:0 8px 26px rgba(21,32,51,.08)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
 .app{display:flex;min-height:100vh}.sidebar{width:255px;background:var(--nav);color:white;padding:20px 14px;position:fixed;left:0;top:0;bottom:0;overflow:auto}
-.brand{display:flex;gap:12px;align-items:center;padding:4px 8px 22px}.logo{width:46px;height:46px;border-radius:12px;background:var(--yellow);color:#111;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px}.brand b{font-size:16px}.brand small{display:block;color:#aeb9c9;margin-top:4px}
+.brand{display:flex;gap:12px;align-items:center;padding:4px 8px 22px}.logo{width:58px;height:58px;border-radius:50%;background:#fff;display:block;object-fit:contain;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.18)}.loginLogo{width:96px;height:96px;margin:0 auto 14px;display:block;object-fit:contain;border-radius:50%;background:#fff}.brand b{font-size:16px}.brand small{display:block;color:#aeb9c9;margin-top:4px}
 .navbtn{width:100%;border:0;color:white;padding:13px 14px;margin:5px 0;border-radius:11px;text-align:left;font-weight:700;cursor:pointer;font-size:14px}.navbtn.active{outline:3px solid rgba(255,255,255,.18)}
 .n1{background:#2879e8}.n2{background:#2c9a62}.n3{background:#7559c8}.n4{background:#e78a26}.n5{background:#2a8fa0}.n6{background:#d85656}.n7{background:#53657d}
 .main{margin-left:255px;width:calc(100% - 255px);padding:24px}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
@@ -34,8 +34,8 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 <body>
 <div id="loginOverlay" class="loginOverlay">
   <form id="loginForm" class="loginCard">
-    <div class="logo" style="margin-bottom:14px">CG</div>
-    <h2>Registro Viaggi</h2>
+    <img class="loginLogo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=140" alt="Logo Croce Gialla Emergenza ODV">
+    <h2>Registro Servizi</h2>
     <p style="color:#68758a;margin-top:5px">Croce Gialla Emergenza ODV · accesso riservato</p>
     <div class="field"><label>EMAIL</label><input id="loginEmail" type="email" autocomplete="username" required></div>
     <div class="field"><label>PASSWORD</label><input id="loginPassword" type="password" autocomplete="current-password" required></div>
@@ -46,7 +46,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 <div id="busyOverlay" class="busyOverlay"><div id="busyText">Caricamento...</div></div>
 <div class="app">
 <aside class="sidebar">
-  <div class="brand"><div class="logo">CG</div><div><b>Registro Viaggi</b><small>Croce Gialla Emergenza</small></div></div>
+  <div class="brand"><img class="logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=140" alt="Logo Croce Gialla Emergenza ODV"><div><b>Registro Servizi</b><small>Croce Gialla Emergenza</small></div></div>
   <button class="navbtn n1" data-view="dashboard">▦ Dashboard</button>
   <button class="navbtn n2 active" data-view="nuovo">＋ Nuovo viaggio</button>
   <button class="navbtn n3" data-view="archivio">▤ Archivio viaggi</button>
@@ -57,7 +57,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn" style="background:#53657d" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Viaggi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione Stabile 2.13</div></div></div>
+  <div class="topbar"><div><h1>Registro Servizi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione Stabile 2.13</div></div></div>
 
   <section id="dashboard" class="view">
     <div class="notice"><b>REGISTRO OPERATIVO:</b> i dati sono salvati nel database condiviso e protetti da accesso autenticato.</div>\n    <div id="restAlert" class="rest-alert" style="display:none"></div>
