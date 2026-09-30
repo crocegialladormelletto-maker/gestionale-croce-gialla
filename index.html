@@ -676,6 +676,12 @@
 @media(max-width:900px){.stats-compare-grid,.stats-person-kpis,.stats-vehicle-grid{grid-template-columns:repeat(2,1fr)}.stats-person-grid{grid-template-columns:1fr}}
 @media(max-width:520px){.stats-compare-grid,.stats-person-kpis,.stats-vehicle-grid{grid-template-columns:1fr}.stats-mini-row{grid-template-columns:90px 1fr 60px}}
 
+
+@keyframes tablet118Pulse{
+  0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(220,38,38,.55);filter:brightness(1)}
+  50%{transform:scale(1.06);box-shadow:0 0 0 9px rgba(220,38,38,0);filter:brightness(1.2)}
+}
+.tablet-118-blink{animation:tablet118Pulse 1.15s ease-in-out infinite}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.23</div></div><div class="loginbody">
@@ -2057,7 +2063,7 @@ Causale: numero preventivo</textarea>
   <button id="tabletWeek" class="btn yellow">Prossimi 7 giorni</button>
   <button id="tabletOpen" class="btn secondary">Da completare</button>
   <button id="tabletRefresh" class="btn blue">↻ Aggiorna</button>
-  <button id="tabletNew118" class="btn danger" type="button" style="font-weight:900">🚨 Nuovo Foglio 118</button>
+  <button id="tabletNew118" class="btn danger tablet-118-blink" type="button" style="font-weight:900">🚨 Nuovo Foglio 118</button>
   <button id="tabletChecklist07" class="btn yellow" type="button" style="background:#0077ff;color:#fff;border-color:#005fd1;font-weight:900">✅ Checklist Ambulanza</button>
   <span class="muted" id="tabletUpdated">Aggiornamento automatico ogni 20 secondi</span>
   <button id="tabletTariffToggle" type="button" class="btn secondary">€ Consulta tariffari</button>
