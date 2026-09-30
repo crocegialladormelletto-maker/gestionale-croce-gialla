@@ -8184,7 +8184,13 @@ async function openTabletDirect118(foglio){
  $('tabletServiceTitle').textContent='Emergenza 118 · mezzo 07';
  $('tabletServiceSubtitle').textContent='Foglio Viaggio diretto · nessun servizio da creare nel gestionale';
  $('tabletActionBar').innerHTML='';
- $('tabletServiceData').innerHTML='<h3>Foglio 118 creato direttamente dal Tablet 07</h3><div class="notice ok">Compila i dati durante o al termine dell’intervento. Il foglio può essere salvato e riaperto finché non viene chiuso.</div>';
+ const tablet118Vehicle=vehicles.find(v=>String(v.codice)==='07');
+ $('tabletServiceData').innerHTML='<h3>Foglio 118 creato direttamente dal Tablet 07</h3>'+
+  '<div class="notice ok">Compila i dati durante o al termine dell’intervento. Il foglio può essere salvato e riaperto finché non viene chiuso.</div>'+
+  '<div class="tablet-fields">'+
+   tabletReadOnlyField('Mezzo','07')+
+   tabletReadOnlyField('Targa',tablet118Vehicle?.targa||'HD918LC')+
+  '</div>';
  const f=foglio,closed=f.stato==='CHIUSO';
  tabletConfigureTimeFields(true);
  $('tabletSheetPanel').classList.remove('hidden');
