@@ -2085,14 +2085,15 @@ Causale: numero preventivo</textarea>
     <form id="tabletSheetForm">
     <h3 class="tablet-section-title">Orari effettivi e percorrenza</h3>
     <div class="tablet-fields">
-     <div class="field"><label>Partenza effettiva</label><input type="time" data-ts-field="ora_partenza_servizio"></div>
+     <div class="field"><label id="tabletDepartureLabel">Partenza effettiva</label><input type="time" data-ts-field="ora_partenza_servizio"></div>
      <div class="field" id="tabletPatientLoadTime"><label>Carico paziente</label><input type="time" data-ts-field="ora_carico_paziente"></div>
-     <div class="field"><label>Arrivo a destinazione</label><input type="time" data-ts-field="ora_arrivo_destinazione"></div>
-     <div class="field"><label>Ripartenza</label><input type="time" data-ts-field="ora_ripartenza"></div>
-     <div class="field"><label>Rientro in sede</label><input type="time" data-ts-field="ora_arrivo_sede"></div>
-     <div class="field"><label>Ritorno operativo</label><input type="time" data-ts-field="ora_operativita"></div>
-     <div class="field"><label>Inizio fermo</label><input type="time" data-ts-field="inizio_fermo"></div>
-     <div class="field"><label>Fine fermo</label><input type="time" data-ts-field="fine_fermo"></div>
+     <div class="field"><label id="tabletArrivalDestLabel">Arrivo a destinazione</label><input type="time" data-ts-field="ora_arrivo_destinazione"></div>
+     <div class="field"><label id="tabletRestartLabel">Ripartenza</label><input type="time" data-ts-field="ora_ripartenza"></div>
+     <div class="field hidden" id="tabletArrivoDeaTime"><label>Ora arrivo in DEA</label><input type="time" data-ts-field="ora_arrivo_dea"></div>
+     <div class="field"><label id="tabletOperationalLabel">Ritorno operativo</label><input type="time" data-ts-field="ora_operativita"></div>
+     <div class="field"><label id="tabletBaseArrivalLabel">Rientro in sede</label><input type="time" data-ts-field="ora_arrivo_sede"></div>
+     <div class="field" id="tabletStopStartField"><label>Inizio fermo</label><input type="time" data-ts-field="inizio_fermo"></div>
+     <div class="field" id="tabletStopEndField"><label>Fine fermo</label><input type="time" data-ts-field="fine_fermo"></div>
      <div class="field"><label>KM partenza</label><input type="number" min="0" step="1" data-ts-field="km_partenza"></div>
      <div class="field"><label>KM rientro</label><input type="number" min="0" step="1" data-ts-field="km_arrivo"></div>
      <div class="field"><label>KM percorsi</label><input id="tabletKmTotal" disabled value="—"></div>
@@ -8183,7 +8184,7 @@ async function openTabletDirect118(foglio){
  $('tabletActionBar').innerHTML='';
  $('tabletServiceData').innerHTML='<h3>Foglio 118 creato direttamente dal Tablet 07</h3><div class="notice ok">Compila i dati durante o al termine dell’intervento. Il foglio può essere salvato e riaperto finché non viene chiuso.</div>';
  const f=foglio,closed=f.stato==='CHIUSO';
- $('tabletPatientLoadTime').classList.remove('hidden');
+ tabletConfigureTimeFields(true);
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
  document.querySelectorAll('[data-ts-field]').forEach(el=>{
@@ -8208,7 +8209,9 @@ async function loadTabletSheet(serviceId){
   msg('tabletDetailMsg','Foglio Viaggio non ancora predisposto. Premi «Prendi in carico» per crearlo, dopo il completamento dell’equipaggio.','warn');return;
  }
  tabletCurrentSheet=r.data;const f=r.data,closed=f.stato==='CHIUSO';
- $('tabletPatientLoadTime').classList.toggle('hidden',isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio));
+ const tabletSheetIs118=(tabletCurrentService?.tipo_servizio||f.tipo_servizio)==='118';
+ tabletConfigureTimeFields(tabletSheetIs118);
+ if(!tabletSheetIs118&&isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio))$('tabletPatientLoadTime').classList.add('hidden');
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
  document.querySelectorAll('[data-ts-field]').forEach(el=>{
@@ -8229,6 +8232,17 @@ async function loadTabletSheet(serviceId){
  $('tabletCloseSheet').disabled=false;
  msg('tabletSheetMsg',closed?'Foglio Viaggio chiuso: è disponibile in sola lettura.':'',closed?'ok':'');
  tabletCalcSheet();
+}
+function tabletConfigureTimeFields(is118){
+ if($('tabletPatientLoadTime'))$('tabletPatientLoadTime').classList.toggle('hidden',!!is118);
+ if($('tabletArrivoDeaTime'))$('tabletArrivoDeaTime').classList.toggle('hidden',!is118);
+ if($('tabletStopStartField'))$('tabletStopStartField').classList.toggle('hidden',!!is118);
+ if($('tabletStopEndField'))$('tabletStopEndField').classList.toggle('hidden',!!is118);
+ if($('tabletDepartureLabel'))$('tabletDepartureLabel').textContent=is118?'Ora partenza servizio':'Partenza effettiva';
+ if($('tabletArrivalDestLabel'))$('tabletArrivalDestLabel').textContent=is118?'Ora arrivo destinazione':'Arrivo a destinazione';
+ if($('tabletRestartLabel'))$('tabletRestartLabel').textContent=is118?'Ora ripartenza':'Ripartenza';
+ if($('tabletOperationalLabel'))$('tabletOperationalLabel').textContent=is118?'Ora operatività':'Ritorno operativo';
+ if($('tabletBaseArrivalLabel'))$('tabletBaseArrivalLabel').textContent=is118?'Ora arrivo sede':'Rientro in sede';
 }
 function tabletCalcSheet(){
  const kmA=document.querySelector('[data-ts-field="km_partenza"]')?.value??'',kmB=document.querySelector('[data-ts-field="km_arrivo"]')?.value??'';
