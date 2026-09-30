@@ -1314,16 +1314,22 @@
    </div>
   </div>
 
-  <div class="section" id="fvPatientSection"><h3>Paziente e percorso</h3>
+  <div class="section" id="fvPatientSection"><h3 id="fvPatientSectionTitle">Paziente e percorso</h3>
    <div class="grid4" id="fvPatientFields">
     <div class="field"><label>Nome</label><input id="fvdPn" disabled></div>
     <div class="field"><label>Cognome</label><input id="fvdPc" disabled></div>
     <div class="field"><label>Codice fiscale</label><input id="fvdCf" disabled></div>
     <div class="field"><label>Telefono</label><input id="fvdTel" disabled></div>
    </div>
-      <div class="grid2" style="margin-top:10px">
+   <div class="grid2" id="fvStandardRouteFields" style="margin-top:10px">
     <div class="field"><label>Partenza</label><input id="fvdFrom" disabled></div>
     <div class="field"><label>Destinazione</label><input id="fvdTo" disabled></div>
+   </div>
+   <div class="grid4 hidden" id="fv118RouteFields" style="margin-top:10px">
+    <div class="field"><label>Partenza</label><input id="fvd118From" disabled></div>
+    <div class="field"><label>Luogo carico</label><input id="fvd118Load" disabled></div>
+    <div class="field"><label>Destinazione</label><input id="fvd118To" disabled></div>
+    <div class="field"><label>Luogo rientro</label><input id="fvd118Return" disabled></div>
    </div>
   </div>
 
@@ -2147,13 +2153,28 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>KM percorsi</label><input id="tabletKmTotal" disabled value="—"></div>
      <div class="field"><label>N. scheda 118 (se 118)</label><input data-ts-field="numero_scheda_118"></div>
     </div>
-    <h3 class="tablet-section-title" style="margin-top:20px">Dati operativi / equipaggio</h3>
+    <div id="tablet118RouteSection" class="hidden">
+    <h3 class="tablet-section-title" style="margin-top:20px">Percorso 118</h3>
     <div class="tablet-fields">
+     <div class="field"><label>Partenza</label><input id="tablet118From" placeholder="Luogo partenza"></div>
+     <div class="field"><label>Luogo carico</label><input id="tablet118Load" placeholder="Luogo carico"></div>
+     <div class="field"><label>Destinazione</label><input id="tablet118Dest" placeholder="Destinazione"></div>
+     <div class="field"><label>Luogo rientro</label><input id="tablet118Return" placeholder="Luogo rientro"></div>
+    </div>
+    </div>
+    <h3 class="tablet-section-title" style="margin-top:20px">Dati operativi / equipaggio</h3>
+    <div class="tablet-fields" id="tabletGenericOperationalFields">
      <div class="field"><label>Destinazione</label><input data-ts-field="destinazione" placeholder="Ospedale / destinazione"></div>
      <div class="field"><label>Autista</label><input data-ts-field="autista" placeholder="Nome e cognome"></div>
      <div class="field"><label>Capo servizio</label><input data-ts-field="capo_servizio" placeholder="Nome e cognome"></div>
      <div class="field"><label>Soccorritore</label><input data-ts-field="soccorritore" placeholder="Nome e cognome"></div>
      <div class="field"><label>Secondo soccorritore</label><input data-ts-field="secondo_soccorritore" placeholder="Nome e cognome"></div>
+    </div>
+    <div class="tablet-fields hidden" id="tablet118CrewFields">
+     <div class="field"><label>Autista</label><select id="tablet118Driver"></select></div>
+     <div class="field"><label>Capo servizio</label><select id="tablet118Leader"></select></div>
+     <div class="field"><label>Soccorritore</label><select id="tablet118Rescuer"></select></div>
+     <div class="field"><label>Secondo soccorritore</label><select id="tablet118Second"></select></div>
     </div>
     <h3 class="tablet-section-title" style="margin-top:20px">Annotazioni di servizio</h3>
     <div class="tablet-fields">
@@ -3357,14 +3378,21 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvdVehicle').value=f.mezzo||'';
  $('fvdType').value=f.tipo_servizio||'';
  $('fvdNumField').value=f.numero_foglio||'';
- $('fvPatientSection').classList.toggle('hidden',is118);
- $('fvPatientFields').classList.toggle('hidden',isAssistanceManifestation(f.tipo_servizio));
+ $('fvPatientSection').classList.remove('hidden');
+ $('fvPatientSectionTitle').textContent=is118?'Percorso':'Paziente e percorso';
+ $('fvPatientFields').classList.toggle('hidden',is118||isAssistanceManifestation(f.tipo_servizio));
+ $('fvStandardRouteFields').classList.toggle('hidden',is118);
+ $('fv118RouteFields').classList.toggle('hidden',!is118);
  $('fvdPn').value=f.paziente_nome||'';
  $('fvdPc').value=f.paziente_cognome||'';
  $('fvdCf').value=f.codice_fiscale||'';
  $('fvdTel').value=f.telefono||'';
  $('fvdFrom').value=[f.luogo_partenza,f.indirizzo_partenza].filter(Boolean).join(' · ');
  $('fvdTo').value=[f.destinazione,f.indirizzo_destinazione,f.ospedale_destinazione].filter(Boolean).join(' · ');
+ $('fvd118From').value=f.luogo_partenza||'—';
+ $('fvd118Load').value=f.luogo_carico||'—';
+ $('fvd118To').value=f.destinazione||f.ospedale_destinazione||'—';
+ $('fvd118Return').value=f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO';
 
  $('fvStart').value=fvTime(f.ora_partenza_servizio);
  $('fvLoad').value=fvTime(f.ora_carico_paziente);
@@ -8148,6 +8176,28 @@ function tabletPopulateCrewNames(){
   if(eligible.some(p=>p.badge===selected))el.value=selected;
  });
 }
+function tablet118CrewOptions(qual,current,label){
+ const eligible=tabletCrewPeople.filter(p=>p[qual]===true||p[qual]==='true'||p[qual]===1);
+ let html='<option value="">— '+esc(label)+' —</option>';
+ html+=eligible.map(p=>'<option value="'+esc(p.nome_completo)+'">'+esc(p.nome_completo)+'</option>').join('');
+ if(current&&!eligible.some(p=>String(p.nome_completo)===String(current))){
+  html+='<option value="'+esc(current)+'">'+esc(current)+'</option>';
+ }
+ return html;
+}
+function tabletPopulate118Crew(f){
+ const configs=[
+  ['tablet118Driver','autista',f?.autista,'Seleziona autista'],
+  ['tablet118Leader','capo_servizio',f?.capo_servizio,'Seleziona capo servizio'],
+  ['tablet118Rescuer','soccorritore',f?.soccorritore,'Seleziona soccorritore'],
+  ['tablet118Second','secondo_soccorritore',f?.secondo_soccorritore,'Seleziona secondo soccorritore']
+ ];
+ configs.forEach(([id,qual,current,label])=>{
+  const el=$(id);if(!el)return;
+  el.innerHTML=tablet118CrewOptions(qual,current,label);
+  el.value=current||'';
+ });
+}
 async function tabletLoadCrewPeople(){
  msg('tabletCrewNamesMsg','Caricamento nominativi equipaggio...');
  let r=await sb.rpc('cge_tablet_personale_equipaggio');
@@ -8361,6 +8411,12 @@ async function openTabletDirect118(foglio){
   '</div>';
  const f=foglio,closed=f.stato==='CHIUSO';
  tabletConfigureTimeFields(true);
+ tabletPopulate118Crew(f);
+ if($('tablet118From'))$('tablet118From').value=f.luogo_partenza||'SEDE CROCE GIALLA DORMELLETTO';
+ if($('tablet118Load'))$('tablet118Load').value=f.luogo_carico||'';
+ if($('tablet118Dest'))$('tablet118Dest').value=f.destinazione||f.ospedale_destinazione||'';
+ if($('tablet118Return'))$('tablet118Return').value=f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO';
+ ['tablet118From','tablet118Load','tablet118Dest','tablet118Return','tablet118Driver','tablet118Leader','tablet118Rescuer','tablet118Second'].forEach(id=>{if($(id))$(id).disabled=closed});
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
  document.querySelectorAll('[data-ts-field]').forEach(el=>{
@@ -8415,6 +8471,9 @@ function tabletConfigureTimeFields(is118){
  if($('tabletStopStartField'))$('tabletStopStartField').classList.toggle('hidden',!!is118);
  if($('tabletStopEndField'))$('tabletStopEndField').classList.toggle('hidden',!!is118);
  if($('tabletServicePaymentSection'))$('tabletServicePaymentSection').classList.toggle('hidden',!!is118);
+ if($('tablet118RouteSection'))$('tablet118RouteSection').classList.toggle('hidden',!is118);
+ if($('tablet118CrewFields'))$('tablet118CrewFields').classList.toggle('hidden',!is118);
+ if($('tabletGenericOperationalFields'))$('tabletGenericOperationalFields').classList.toggle('hidden',!!is118);
  if($('tabletDepartureLabel'))$('tabletDepartureLabel').textContent=is118?'Ora partenza servizio':'Partenza effettiva';
  if($('tabletArrivalDestLabel'))$('tabletArrivalDestLabel').textContent=is118?'Ora arrivo destinazione':'Arrivo a destinazione';
  if($('tabletRestartLabel'))$('tabletRestartLabel').textContent=is118?'Ora ripartenza':'Ripartenza';
@@ -8449,6 +8508,14 @@ async function saveTabletSheet(silent=false){
   row.barella_bariatrica=false;
   row.modalita_pagamento=null;
   row.data_pagamento=null;
+  row.luogo_partenza=$('tablet118From')?.value.trim()||'SEDE CROCE GIALLA DORMELLETTO';
+  row.luogo_carico=$('tablet118Load')?.value.trim()||null;
+  row.destinazione=$('tablet118Dest')?.value.trim()||null;
+  row.luogo_rientro=$('tablet118Return')?.value.trim()||'SEDE CROCE GIALLA DORMELLETTO';
+  row.autista=$('tablet118Driver')?.value||null;
+  row.capo_servizio=$('tablet118Leader')?.value||null;
+  row.soccorritore=$('tablet118Rescuer')?.value||null;
+  row.secondo_soccorritore=$('tablet118Second')?.value||null;
  }
  if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
  if(tabletSheetType!=='118'&&row.importo_inserito===null)return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
