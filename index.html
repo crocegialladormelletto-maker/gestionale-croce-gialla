@@ -2065,6 +2065,10 @@ Causale: numero preventivo</textarea>
  </div>
  <div class="surface"><div class="hero"><h2 id="tabletListTitle">Servizi assegnati</h2><p>Vengono mostrati solo i servizi del mezzo associato a questo tablet.</p></div>
  <div class="pad"><div id="tabletMsg"></div><div id="tabletList"></div></div></div>
+ <div id="tabletDirect118Panel" class="surface hidden" style="margin-top:12px">
+  <div class="hero"><h2>🚨 Fogli Viaggio 118 aperti · Ambulanza 07</h2><p>Fogli creati direttamente dal tablet, senza creare prima un servizio nel gestionale.</p></div>
+  <div class="pad"><div id="tabletDirect118List"></div></div>
+ </div>
  <div class="surface hidden" id="tabletDetail" style="margin-top:14px">
   <div class="hero"><div class="actions" style="justify-content:space-between">
    <div><h2 id="tabletServiceTitle">Dettaglio servizio</h2><p id="tabletServiceSubtitle"></p></div>
@@ -2365,7 +2369,7 @@ let rosterCrewBusy=false,rosterCrewEligible=new Map();
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupAutomaticRows=[],backupBusy=false;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
-let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='',tabletCrewPeople=[];
+let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletDirect118=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='',tabletCrewPeople=[];
 const $=x=>document.getElementById(x), today=()=>new Date().toISOString().slice(0,10);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const euro=n=>'€ '+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -7894,6 +7898,24 @@ function renderTabletList(){
  }).join(''):'<div class="tablet-empty">Nessun servizio in questa vista per il mezzo '+esc(tabletMezzo)+'.<br>Il tablet si aggiorna automaticamente.</div>';
  $('tabletList').querySelectorAll('[data-tablet-open]').forEach(b=>b.onclick=()=>openTabletService(b.dataset.tabletOpen));
 }
+function renderTabletDirect118(){
+ if(!$('tabletDirect118Panel')||!$('tabletDirect118List'))return;
+ const show=String(tabletMezzo)==='07';
+ $('tabletDirect118Panel').classList.toggle('hidden',!show);
+ if(!show)return;
+ $('tabletDirect118List').innerHTML=tabletDirect118.length?tabletDirect118.map(f=>
+  '<article class="tablet-service-card">'+
+   '<div class="tablet-service-head"><div><div class="muted">'+esc(tabletDateLabel(f.data_servizio))+'</div><span class="tablet-hour">'+esc(tabletFmt(f.ora_partenza_servizio))+'</span></div>'+
+   '<span class="tablet-vehicle">07</span><span class="tablet-pill">'+esc(f.stato||'APERTO')+'</span></div>'+
+   '<div class="tablet-flow"><b>'+esc(f.numero_foglio||'Foglio 118')+'</b><br>KM partenza: '+esc(f.km_partenza??'—')+' · Scheda 118: '+esc(f.numero_scheda_118||'da inserire')+'</div>'+
+   '<div class="tablet-actions"><button class="btn danger" type="button" data-open-direct118="'+esc(f.id)+'">Apri Foglio 118</button></div>'+
+  '</article>'
+ ).join(''):'<div class="tablet-empty">Nessun Foglio 118 aperto.</div>';
+ $('tabletDirect118List').querySelectorAll('[data-open-direct118]').forEach(b=>b.onclick=()=>{
+  const f=tabletDirect118.find(x=>x.id===b.dataset.openDirect118);
+  if(f)openTabletDirect118(f);
+ });
+}
 async function tabletRefreshList(){
  if(!tabletMezzo||tabletBusy)return;
  let session=(await sb.auth.getSession()).data.session;
@@ -7915,8 +7937,20 @@ async function tabletRefreshList(){
  const crews=ids.length?await sb.from('servizi_equipaggio').select('servizio_id,ruolo').in('servizio_id',ids):{data:[],error:null};
  if(crews.error)return msg('tabletMsg','Equipaggi non disponibili: '+crews.error.message,'err');
  tabletAssignments=crews.data||[];
+ if(String(tabletMezzo)==='07'){
+  const direct=await sb.from('fogli_viaggio')
+   .select('*')
+   .eq('mezzo','07')
+   .eq('tipo_servizio','118')
+   .is('servizio_giornaliero_id',null)
+   .eq('stato','APERTO')
+   .order('creato_il',{ascending:false})
+   .limit(20);
+  if(direct.error)return msg('tabletMsg','Fogli 118 diretti non disponibili: '+direct.error.message,'err');
+  tabletDirect118=direct.data||[];
+ }else tabletDirect118=[];
  $('tabletUpdated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · automaticamente ogni 20 secondi';
- msg('tabletMsg','');renderTabletList();
+ msg('tabletMsg','');renderTabletList();renderTabletDirect118();
  if(tabletCurrentService&&!document.getElementById('tabletDetail').classList.contains('hidden')){
   const newer=tabletServices.find(x=>x.id===tabletCurrentService.id);
   if(newer&&newer.stato_gestionale!==tabletCurrentService.stato_gestionale){
@@ -8263,6 +8297,8 @@ $('tabletNew118').onclick=async()=>{
   const r=await sb.rpc('cge_tablet07_nuovo_foglio_118');
   if(r.error)throw r.error;
   await openTabletDirect118(r.data);
+  tabletDirect118=[r.data,...tabletDirect118.filter(x=>x.id!==r.data?.id)];
+  renderTabletDirect118();
   msg('tabletMsg','Foglio 118 creato: '+(r.data?.numero_foglio||'nuovo foglio')+'.','ok');
  }catch(e){msg('tabletMsg',e.message||String(e),'err')}
  finally{tabletBusy=false}
