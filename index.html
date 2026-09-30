@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.23-patient-save-toggle">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.24-patient-pickup">
 <script>
 (function(){
  try{
@@ -1420,6 +1420,8 @@
   <div class="grid2">
    <div class="field"><label>Luogo partenza</label><input id="dlp"></div>
    <div class="field"><label>Indirizzo partenza</label><input id="dip"></div>
+   <div class="field"><label>Luogo carico paziente</label><input id="dLoadPlace"></div>
+   <div class="field"><label>Indirizzo carico paziente</label><input id="dLoadAddress"></div>
    <div class="field"><label id="detailDestinationLabel">Destinazione</label><input id="ddest"></div>
    <div class="field"><label>Indirizzo destinazione</label><input id="didest"></div>
   </div>
@@ -1512,7 +1514,7 @@
 <div class="field"><label>Indirizzo paziente</label><input id="patientAddress" maxlength="400" autocomplete="street-address"></div>
 <div class="field"><label>E-mail paziente</label><input id="patientEmail" type="email" maxlength="254" autocomplete="email"></div></div></div>
 <div class="section hidden" id="newEventContactSection"><h3>Referente manifestazione</h3><div class="grid2"><div class="field"><label>Nome referente</label><input id="eventRefName" maxlength="120" placeholder="Referente sul posto"></div><div class="field"><label>Telefono referente</label><input id="eventRefPhone" type="tel" maxlength="40" placeholder="Recapito del referente"></div></div></div>
-<div class="section"><h3>Percorso</h3><div class="grid2"><div class="field"><label>Luogo partenza</label><input id="lp"></div><div class="field"><label>Indirizzo partenza</label><input id="ip"></div><div class="field"><label id="newDestinationLabel">Destinazione</label><input id="dest"></div><div class="field"><label>Indirizzo destinazione</label><input id="idest"></div></div><div class="field" style="margin-top:9px"><label id="newStructureLabel">Ospedale / RSA / struttura</label><input id="strutt"></div></div>
+<div class="section"><h3>Percorso</h3><div class="grid2"><div class="field"><label>Luogo partenza</label><input id="lp"></div><div class="field"><label>Indirizzo partenza</label><input id="ip"></div><div class="field"><label>Luogo carico paziente</label><input id="loadPlace" placeholder="Es. domicilio, RSA, ospedale"></div><div class="field"><label>Indirizzo carico paziente</label><input id="loadAddress" placeholder="Via, numero civico, Comune"></div><div class="field"><label id="newDestinationLabel">Destinazione</label><input id="dest"></div><div class="field"><label>Indirizzo destinazione</label><input id="idest"></div></div><div class="field" style="margin-top:9px"><label id="newStructureLabel">Ospedale / RSA / struttura</label><input id="strutt"></div></div>
 <div class="section" id="newServiceSpecialEquipment"><h3>♿ Dotazioni necessarie per il servizio</h3>
 <p class="muted">Indica le dotazioni che il volontario deve conoscere prima di iscriversi.</p>
 <div class="inline-checks">
@@ -2463,6 +2465,8 @@ function duplicatePrepareNewForm(service,opts){
 
  $('lp').value=service.luogo_partenza||'';
  $('ip').value=service.indirizzo_partenza||'';
+ $('loadPlace').value=service.luogo_carico_paziente||'';
+ $('loadAddress').value=service.indirizzo_carico_paziente||'';
  $('dest').value=service.destinazione||'';
  $('idest').value=service.indirizzo_destinazione||'';
  $('strutt').value=service.ospedale_destinazione||'';
@@ -4650,6 +4654,8 @@ async function loadServiceDetail(id=currentServiceId){
  $('dtel').value=s.telefono||'';
  $('dlp').value=s.luogo_partenza||'';
  $('dip').value=s.indirizzo_partenza||'';
+ $('dLoadPlace').value=s.luogo_carico_paziente||'';
+ $('dLoadAddress').value=s.indirizzo_carico_paziente||'';
  $('ddest').value=s.destinazione||'';
  $('didest').value=s.indirizzo_destinazione||'';
  $('dstruct').value=s.ospedale_destinazione||'';
@@ -4760,6 +4766,8 @@ $('detailForm').onsubmit=async e=>{
   telefono:isEvent?null:($('dtel').value.trim()||null),
   luogo_partenza:$('dlp').value.trim()||null,
   indirizzo_partenza:$('dip').value.trim()||null,
+  luogo_carico_paziente:isEvent?null:($('dLoadPlace').value.trim()||null),
+  indirizzo_carico_paziente:isEvent?null:($('dLoadAddress').value.trim()||null),
   destinazione:$('ddest').value.trim()||null,
   indirizzo_destinazione:$('didest').value.trim()||null,
   ospedale_destinazione:$('dstruct').value.trim()||null,
@@ -4890,7 +4898,7 @@ $('form').onsubmit=async e=>{
    linkedPatient=pr.data.id;servicePatientId=linkedPatient;
   }
  }
- const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:isEvent?null:($('odest').value||null),ora_inizio_assistenza_prevista:isEvent?($('asStart').value||null):null,ora_fine_assistenza_prevista:isEvent?($('asEnd').value||null):null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?price.base:null,importo_finale:amount,sedia_motorizzata:$('newSediaMotorizzata').checked,barella_bariatrica:$('newBarellaBariatrica').checked,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
+ const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:isEvent?null:($('odest').value||null),ora_inizio_assistenza_prevista:isEvent?($('asStart').value||null):null,ora_fine_assistenza_prevista:isEvent?($('asEnd').value||null):null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,luogo_carico_paziente:isEvent?null:($('loadPlace').value.trim()||null),indirizzo_carico_paziente:isEvent?null:($('loadAddress').value.trim()||null),destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?price.base:null,importo_finale:amount,sedia_motorizzata:$('newSediaMotorizzata').checked,barella_bariatrica:$('newBarellaBariatrica').checked,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
  const r=await sb.from('servizi_giornalieri').insert(p).select('id').single();
  if(r.error)return msg('fmsg',r.error.message,'err');
  // Dopo il salvataggio, elimina ogni dato del servizio appena creato.
@@ -7868,7 +7876,7 @@ function renderTabletList(){
  return '<article class="tablet-service-card '+tabletStatusClass(st)+'"><div class="tablet-service-head">'+
  '<div><div class="muted">'+esc(tabletDateLabel(s.data_servizio))+'</div><span class="tablet-hour">'+esc(tabletFmt(s.ora_partenza_prevista))+'</span></div>'+
  '<span class="tablet-vehicle">'+esc(s.mezzo)+'</span><span class="tablet-pill">'+esc(st)+'</span></div>'+
- '<div class="tablet-flow">'+esc(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+'<br>'+esc(s.luogo_partenza||'Sede')+' → '+esc(s.ospedale_destinazione||s.destinazione||'—')+'</div>'+
+ '<div class="tablet-flow">'+esc(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+'<br>'+esc(s.luogo_partenza||'Sede')+' → '+(s.luogo_carico_paziente||s.indirizzo_carico_paziente?'<b>CARICO:</b> '+esc([s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · '))+' → ':'')+esc(s.ospedale_destinazione||s.destinazione||'—')+'</div>'+
  '<div class="notice" style="margin:8px 0">Importo previsto per il paziente: <b>'+esc(tabletServiceAmount(s))+'</b></div>'+
  '<div class="muted">'+(isAssistanceManifestation(s.tipo_servizio)?'Partenza dalla sede: '+esc(tabletFmt(s.ora_partenza_prevista))+' · Inizio assistenza: '+esc(tabletFmt(s.ora_inizio_assistenza_prevista))+' · Fine assistenza: '+esc(tabletFmt(s.ora_fine_assistenza_prevista))+' · Rientro previsto in sede: '+esc(tabletFmt(s.ora_rientro_previsto)):'Carico previsto: '+esc(tabletFmt(s.ora_carico_paziente_prevista))+' · Arrivo destinazione previsto: '+esc(tabletFmt(s.ora_arrivo_destinazione_prevista))+' · Rientro previsto: '+esc(tabletFmt(s.ora_rientro_previsto)))+'</div>'+
  '<div style="margin-top:6px"><span class="pill '+(ready?'g':'r')+'">'+crew.length+'/'+esc(s.equipaggio_minimo??(String(s.mezzo||'')==='06'?1:2))+' componenti assegnati</span>'+
@@ -7891,7 +7899,7 @@ async function tabletRefreshList(){
   $('login').classList.remove('hidden');
   return;
  }
- const r=await sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,ora_partenza_prevista,ora_carico_paziente_prevista,ora_arrivo_destinazione_prevista,ora_inizio_assistenza_prevista,ora_fine_assistenza_prevista,ora_rientro_previsto,ora_partenza_effettiva,ora_carico_paziente_effettiva,ora_rientro_effettivo,luogo_partenza,indirizzo_partenza,destinazione,indirizzo_destinazione,ospedale_destinazione,paziente_nome,paziente_cognome,data_nascita,codice_fiscale,telefono,note,stato,stato_gestionale,equipaggio_minimo,capo_servizio_obbligatorio,foglio_viaggio_id,numero_foglio,importo_previsto,importo_finale,modalita_tariffaria').eq('mezzo',tabletMezzo).gte('data_servizio',tabletShiftDays(-7)).lte('data_servizio',tabletShiftDays(14)).order('data_servizio',{ascending:true}).order('ora_partenza_prevista',{ascending:true});
+ const r=await sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,ora_partenza_prevista,ora_carico_paziente_prevista,ora_arrivo_destinazione_prevista,ora_inizio_assistenza_prevista,ora_fine_assistenza_prevista,ora_rientro_previsto,ora_partenza_effettiva,ora_carico_paziente_effettiva,ora_rientro_effettivo,luogo_partenza,indirizzo_partenza,luogo_carico_paziente,indirizzo_carico_paziente,destinazione,indirizzo_destinazione,ospedale_destinazione,paziente_nome,paziente_cognome,data_nascita,codice_fiscale,telefono,note,stato,stato_gestionale,equipaggio_minimo,capo_servizio_obbligatorio,foglio_viaggio_id,numero_foglio,importo_previsto,importo_finale,modalita_tariffaria').eq('mezzo',tabletMezzo).gte('data_servizio',tabletShiftDays(-7)).lte('data_servizio',tabletShiftDays(14)).order('data_servizio',{ascending:true}).order('ora_partenza_prevista',{ascending:true});
  if(r.error)return msg('tabletMsg','Aggiornamento non riuscito: '+r.error.message,'err');
  tabletServices=r.data||[];
  const ids=tabletServices.map(x=>x.id);
@@ -8093,6 +8101,8 @@ async function openTabletService(id){
  (isAssistanceManifestation(s.tipo_servizio)?tabletReadOnlyField('Referente manifestazione',extractEventContact(s.note).name)+tabletReadOnlyField('Telefono referente',extractEventContact(s.note).phone):tabletReadOnlyField('Paziente',[s.paziente_nome,s.paziente_cognome].filter(Boolean).join(' ')))+
  (isAssistanceManifestation(s.tipo_servizio)?'':tabletReadOnlyField('Telefono di servizio',s.telefono))+
  tabletReadOnlyField('Partenza',[s.luogo_partenza,s.indirizzo_partenza].filter(Boolean).join(' · '))+
+ (isAssistanceManifestation(s.tipo_servizio)?'':tabletReadOnlyField('Carico paziente',[s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · ')))+
+ (isAssistanceManifestation(s.tipo_servizio)?'':tabletReadOnlyField('Percorso operativo',[[s.luogo_partenza,s.indirizzo_partenza].filter(Boolean).join(' · '),[s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · '),[s.ospedale_destinazione||s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · ')].filter(Boolean).join(' → ')))+
  tabletReadOnlyField('Destinazione',[s.ospedale_destinazione||s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · '))+
  tabletReadOnlyField(isAssistanceManifestation(s.tipo_servizio)?'Importo previsto assistenza':'Importo previsto per il paziente',tabletServiceAmount(s))+
  tabletReadOnlyField('Equipaggio',crew.map(x=>x.nome_completo+' · '+x.ruolo).join(' | '))+
