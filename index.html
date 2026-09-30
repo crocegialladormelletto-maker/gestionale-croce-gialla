@@ -3050,10 +3050,10 @@ function buildFoglioPrint(f){
   ...((String(f.tipo_servizio||'').trim()!=='118'&&!isAssistanceManifestation(f.tipo_servizio))?[['Carico paziente',fvTime(f.ora_carico_paziente)]]:[]),
   ['Arrivo destinazione',fvTime(f.ora_arrivo_destinazione)],
   ['Ripartenza',fvTime(f.ora_ripartenza)],
-  ['Arrivo sede',fvTime(f.ora_arrivo_sede)],
+  ...(String(f.tipo_servizio||'').trim()==='118'&&f.ora_arrivo_dea?[['Arrivo in DEA',fvTime(f.ora_arrivo_dea)]]:[]),
   ['Operatività',fvTime(f.ora_operativita)],
-  ['Inizio fermo',fvTime(f.inizio_fermo)],
-  ['Fine fermo',fvTime(f.fine_fermo)]
+  ['Arrivo sede',fvTime(f.ora_arrivo_sede)],
+  ...((String(f.tipo_servizio||'').trim()!=='118')?[['Inizio fermo',fvTime(f.inizio_fermo)],['Fine fermo',fvTime(f.fine_fermo)]]:[])
  ];
  const crew=[
   ['Autista',f.autista,f.badge_autista],
@@ -3079,7 +3079,7 @@ function buildFoglioPrint(f){
    '<div class="print-box"><small>Stato documento</small>'+esc(f.stato||'—')+'</div>'+
   '</div>'+
 
-  (isAssistanceManifestation(f.tipo_servizio)?'':'<div class="print-section"><h3>Paziente / utente</h3><div class="print-grid3">'+
+  ((String(f.tipo_servizio||'').trim()==='118'||isAssistanceManifestation(f.tipo_servizio))?'':'<div class="print-section"><h3>Paziente / utente</h3><div class="print-grid3">'+
    '<div class="print-box"><small>Cognome e nome</small>'+esc([f.paziente_cognome,f.paziente_nome].filter(Boolean).join(' ')||'—')+'</div>'+
    '<div class="print-box"><small>Codice fiscale</small>'+esc(f.codice_fiscale||'—')+'</div>'+
    '<div class="print-box"><small>Telefono</small>'+esc(f.telefono||'—')+'</div>'+
