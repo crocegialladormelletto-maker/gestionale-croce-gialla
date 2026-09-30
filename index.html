@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.26-no-auto-sheet">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.27-service-first">
 <script>
 (function(){
  try{
@@ -1412,22 +1412,6 @@
 </div>
 
 
-<div id="dFoglioBox" class="section">
- <h3>Foglio Viaggio collegato</h3><p class="muted">Alla presa in carico viene predisposto automaticamente. Le modifiche al servizio e all’equipaggio vengono sincronizzate finché il foglio resta aperto.</p>
- <div class="grid4">
-  <div class="stat"><small>NUMERO FOGLIO</small><b id="dFoglioNumero" style="font-size:16px">Non predisposto</b></div>
-  <div class="stat"><small>STATO FOGLIO</small><b id="dFoglioStato" style="font-size:16px">—</b></div>
-  <div class="stat"><small>MEZZO</small><b id="dFoglioMezzo" style="font-size:16px">—</b></div>
-  <div class="stat"><small>VERSIONE</small><b id="dFoglioVersione" style="font-size:16px">—</b></div>
- </div>
- <div class="actions" style="margin-top:10px">
-  <button id="dFoglioCreate" class="btn yellow" type="button">Predisponi Foglio Viaggio</button>
-  <button id="dFoglioSync" class="btn secondary hidden" type="button">Sincronizza dati</button>
-  <button id="dFoglioOpen" class="btn blue hidden" type="button">Apri Foglio Viaggio</button>
- </div>
- <div id="dFoglioMsg"></div>
-</div>
-
 <div id="dActions" class="section">
  <h3>Azioni operative</h3>
  <div class="actions">
@@ -1516,6 +1500,23 @@
  </div>
  <div id="dCrewMsg"></div>
  <div id="dCrewList" style="margin-top:10px"></div>
+</div>
+
+<div id="dFoglioBox" class="section">
+ <h3>Foglio Viaggio · sezione separata</h3>
+ <p class="muted">La modifica del servizio è indipendente dal Foglio Viaggio. Apri questa sezione solo quando devi gestire il documento collegato.</p>
+ <div class="grid4">
+  <div class="stat"><small>NUMERO FOGLIO</small><b id="dFoglioNumero" style="font-size:16px">Non predisposto</b></div>
+  <div class="stat"><small>STATO FOGLIO</small><b id="dFoglioStato" style="font-size:16px">—</b></div>
+  <div class="stat"><small>MEZZO</small><b id="dFoglioMezzo" style="font-size:16px">—</b></div>
+  <div class="stat"><small>VERSIONE</small><b id="dFoglioVersione" style="font-size:16px">—</b></div>
+ </div>
+ <div class="actions" style="margin-top:10px">
+  <button id="dFoglioCreate" class="btn yellow" type="button">Predisponi Foglio Viaggio</button>
+  <button id="dFoglioSync" class="btn secondary hidden" type="button">Sincronizza dati</button>
+  <button id="dFoglioOpen" class="btn blue hidden" type="button">Apri Foglio Viaggio</button>
+ </div>
+ <div id="dFoglioMsg"></div>
 </div>
 
 <div class="section"><h3>Storico operativo</h3><div id="dHistory"></div></div>
