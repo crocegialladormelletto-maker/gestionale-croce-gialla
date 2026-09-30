@@ -2,7 +2,7 @@
 <html lang="it">
 <!-- VERSIONE STABILE E DEFINITIVA 1.2 - 30/09/2026 -->
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="app-version" content="1.2.10-definitiva-2026-09-30">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="app-version" content="1.2.11-definitiva-2026-09-30">
 <title>Amministrazione Timbrature - Croce Gialla Emergenza ODV</title>
 <style>
 :root{--y:#ffdf00;--b:#173b72;--bg:#f4f7fb;--bd:#d7deea;--g:#15803d;--r:#b42318;--o:#a85b00;--m:#667085}
@@ -207,6 +207,21 @@ function localInput(s){const d=new Date(s),z=new Date(d.getTime()-d.getTimezoneO
 function fmtMin(m){m=Math.max(0,Math.round(m||0));return Math.floor(m/60)+':'+pad(m%60)}
 function monthKey(s){const d=new Date(s);return d.toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'}).slice(0,7)}
 function formatMonthLabel(v){if(!v||!/^\d{4}-\d{2}$/.test(v))return v||'';const [yy,mm]=v.split('-');const d=new Date(Number(yy),Number(mm)-1,1);let label=d.toLocaleDateString('it-IT',{month:'long',year:'numeric'});return label.charAt(0).toUpperCase()+label.slice(1)}
+async function updateLoginMonthState(){
+ try{
+  const {data,error}=await sb.rpc('timbrature_stato_mese_corrente');
+  if(error)throw error;
+  const info=data||{};
+  const mese=info.mese||currentMonth;
+  $('headerSelectedMonth').textContent='Mese: '+formatMonthLabel(mese);
+  $('headerMonthState').textContent=info.chiuso?'🔒 MESE CHIUSO':'MESE APERTO';
+  $('headerMonthState').className='monthState '+(info.chiuso?'closed':'open');
+ }catch(e){
+  $('headerSelectedMonth').textContent='Mese: '+formatMonthLabel(currentMonth);
+  $('headerMonthState').textContent='MESE APERTO';
+  $('headerMonthState').className='monthState open';
+ }
+}
 function person(b){return people.find(p=>p.badge===b)?.nome_completo||b}
 async function token(){const {data}=await sb.auth.getSession();return data.session?.access_token||''}
 async function api(body){const t=await token();if(!t)throw new Error('Sessione non valida. Accedi di nuovo.');const r=await fetch(ADMIN_API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw new Error(j.error||'Errore');return j}
@@ -412,6 +427,7 @@ document.querySelectorAll('.sideBtn').forEach(b=>b.onclick=()=>showPage(b.datase
 $('addAbsence').onclick=addAbsence;$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=loadData;$('refreshTop').onclick=loadData;$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
 $('printBtn').onclick=()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows();window.print();$('register').innerHTML=old};$('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
 const d=new Date();const currentMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');$('month').value=currentMonth;$('printMonth').value=currentMonth;$('absFrom').value=new Date().toLocaleDateString('sv-SE');$('absTo').value=$('absFrom').value;
+updateLoginMonthState();
 (async()=>{const {data}=await sb.auth.getSession();if(data.session){const a=await sb.from('accessi_app').select('nome,ruolo,attivo').single();if(!a.error&&a.data?.attivo&&a.data.ruolo==='AMMINISTRATORE'){showPanel(a.data.nome||'Amministratore');await loadData()}}})();
 </script>
 </body></html>
