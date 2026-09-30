@@ -8326,7 +8326,6 @@ $('tabletOpen').onclick=()=>tabletSetListMode('open');
 $('tabletRefresh').onclick=tabletRefreshList;
 $('tabletNew118').onclick=async()=>{
  if(String(tabletMezzo)!=='07'||tabletBusy)return;
- if(!confirm('Creare un nuovo Foglio Viaggio 118 per la 07 con gli ultimi KM disponibili?'))return;
  tabletBusy=true;msg('tabletMsg','Creazione Foglio 118...');
  try{
   const r=await sb.rpc('cge_tablet07_nuovo_foglio_118');
