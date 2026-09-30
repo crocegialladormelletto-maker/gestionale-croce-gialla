@@ -2804,7 +2804,15 @@ async function refreshMaster(){
  ]);
  vehicles=v.data||[];tariffs=t.data||[];tariffDestinations=td.data||[];people=p.data||[];qualifications=q.data||[];pq=pqual.data||[];
  const vo=opts(vehicles,'codice',x=>x.codice+' · '+x.tipologia+' · '+x.targa);
- ['m','sm','avm','exm','fm','fvVehicle','fv118Vehicle'].forEach(id=>{if($(id))$(id).innerHTML=(id==='fm'||id==='fv118Vehicle')?'<option value="">Tutti</option>'+vehicles.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.codice+' · '+x.targa)+'</option>').join(''):vo});
+ ['m','sm','avm','exm','fm','fvVehicle','fv118Vehicle'].forEach(id=>{
+  if(!$(id))return;
+  if(id==='fv118Vehicle'){
+   const emergencyVehicles=vehicles.filter(x=>['07','09'].includes(String(x.codice)));
+   $(id).innerHTML='<option value="">Tutti</option>'+emergencyVehicles.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.codice+' · '+x.targa)+'</option>').join('');
+  }else{
+   $(id).innerHTML=id==='fm'?'<option value="">Tutti</option>'+vehicles.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.codice+' · '+x.targa)+'</option>').join(''):vo;
+  }
+ });
  populateServiceTariffOptions();
  $('ttar').innerHTML=opts(tariffs,'id',x=>x.nome);
  const selectedAdminTariff=tariffs.find(x=>x.codice===tariffViewCode);
