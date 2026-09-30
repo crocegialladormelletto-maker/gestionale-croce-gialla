@@ -3073,11 +3073,11 @@ function buildFoglioPrint(f){
    '<div class="print-doc"><h2>FOGLIO VIAGGIO</h2><b>'+esc(f.numero_foglio||'—')+'</b><div>'+fvItalianDate(f.data_servizio)+'</div></div>'+
   '</div>'+
 
-  '<div class="print-grid3">'+
+  (String(f.tipo_servizio||'').trim()==='118'?'':'<div class="print-grid3">'+
    '<div class="print-box"><small>Mezzo</small><b>'+esc(f.mezzo||'—')+'</b>'+(vehicle.targa?' · '+esc(vehicle.targa):'')+'</div>'+
    '<div class="print-box"><small>Tipo servizio</small>'+esc(f.tipo_servizio||'—')+'</div>'+
    '<div class="print-box"><small>Stato documento</small>'+esc(f.stato||'—')+'</div>'+
-  '</div>'+
+  '</div>')+
 
   (isAssistanceManifestation(f.tipo_servizio)?'':'<div class="print-section"><h3>Paziente / utente</h3><div class="print-grid3">'+
    '<div class="print-box"><small>Cognome e nome</small>'+esc([f.paziente_cognome,f.paziente_nome].filter(Boolean).join(' ')||'—')+'</div>'+
