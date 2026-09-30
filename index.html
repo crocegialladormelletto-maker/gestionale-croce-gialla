@@ -2120,7 +2120,7 @@ Causale: numero preventivo</textarea>
  <div class="surface"><div class="hero"><h2 id="tabletListTitle">Servizi assegnati</h2><p>Vengono mostrati solo i servizi del mezzo associato a questo tablet.</p></div>
  <div class="pad"><div id="tabletMsg"></div><div id="tabletList"></div></div></div>
  <div id="tabletDirect118Panel" class="surface hidden" style="margin-top:12px">
-  <div class="hero"><h2>🚨 Fogli Viaggio 118 aperti · Ambulanza 07</h2><p>Fogli creati direttamente dal tablet, senza creare prima un servizio nel gestionale.</p></div>
+  <div class="hero"><h2>🚨 Fogli Viaggio 118 aperti</h2><p>Fogli creati direttamente dal tablet, senza creare prima un servizio nel gestionale.</p></div>
   <div class="pad"><div id="tabletDirect118List"></div></div>
  </div>
  <div class="surface hidden" id="tabletDetail" style="margin-top:14px">
@@ -8110,13 +8110,16 @@ function renderTabletList(){
 }
 function renderTabletDirect118(){
  if(!$('tabletDirect118Panel')||!$('tabletDirect118List'))return;
- const show=String(tabletMezzo)==='07';
+ const show=['07','09'].includes(String(tabletMezzo));
  $('tabletDirect118Panel').classList.toggle('hidden',!show);
  if(!show)return;
+ const mezzo118=String(tabletMezzo);
+ const panelHero=$('tabletDirect118Panel')?.querySelector('.hero h2');
+ if(panelHero)panelHero.textContent='🚨 Fogli Viaggio 118 aperti · Ambulanza '+mezzo118;
  $('tabletDirect118List').innerHTML=tabletDirect118.length?tabletDirect118.map(f=>
   '<article class="tablet-service-card">'+
    '<div class="tablet-service-head"><div><div class="muted">'+esc(tabletDateLabel(f.data_servizio))+'</div><span class="tablet-hour">'+esc(tabletFmt(f.ora_partenza_servizio))+'</span></div>'+
-   '<span class="tablet-vehicle">07</span><span class="tablet-pill">'+esc(f.stato||'APERTO')+'</span></div>'+
+   '<span class="tablet-vehicle">'+esc(mezzo118)+'</span><span class="tablet-pill">'+esc(f.stato||'APERTO')+'</span></div>'+
    '<div class="tablet-flow"><b>'+esc(f.numero_foglio||'Foglio 118')+'</b><br>KM partenza: '+esc(f.km_partenza??'—')+' · Scheda 118: '+esc(f.numero_scheda_118||'da inserire')+'</div>'+
    '<div class="tablet-actions"><button class="btn danger" type="button" data-open-direct118="'+esc(f.id)+'">Apri Foglio 118</button></div>'+
   '</article>'
@@ -8147,10 +8150,10 @@ async function tabletRefreshList(){
  const crews=ids.length?await sb.from('servizi_equipaggio').select('servizio_id,ruolo').in('servizio_id',ids):{data:[],error:null};
  if(crews.error)return msg('tabletMsg','Equipaggi non disponibili: '+crews.error.message,'err');
  tabletAssignments=crews.data||[];
- if(String(tabletMezzo)==='07'){
+ if(['07','09'].includes(String(tabletMezzo))){
   const direct=await sb.from('fogli_viaggio')
    .select('*')
-   .eq('mezzo','07')
+   .eq('mezzo',String(tabletMezzo))
    .eq('tipo_servizio','118')
    .is('servizio_giornaliero_id',null)
    .eq('stato','APERTO')
@@ -8334,7 +8337,7 @@ $('tabletImmediateForm').onsubmit=async e=>{e.preventDefault();await tabletCreat
 async function startTabletArea(){
  stopTabletArea();$('tabletTitle').textContent='Tablet mezzo '+tabletMezzo;$('tabletWho').textContent='Solo servizi assegnati al mezzo '+tabletMezzo;
  if($('tabletChecklist07'))$('tabletChecklist07').style.display=(['07','08','09'].includes(String(tabletMezzo))?'inline-flex':'none');
- if($('tabletNew118'))$('tabletNew118').style.display=(String(tabletMezzo)==='07'?'inline-flex':'none');
+ if($('tabletNew118'))$('tabletNew118').style.display=(['07','09'].includes(String(tabletMezzo))?'inline-flex':'none');
  $('tabletPriceVehicle').textContent=tabletMezzo;$('tabletImmediateVehicle').textContent=tabletMezzo;
  $('tabletAdLeaderBox').classList.toggle('hidden',tabletMezzo==='06');
  $('tabletAdLeader').required=false;
@@ -8408,15 +8411,15 @@ async function openTabletDirect118(foglio){
  tabletCurrentService=null;
  tabletCurrentSheet=foglio;
  $('tabletDetail').classList.remove('hidden');
- $('tabletServiceTitle').textContent='Emergenza 118 · mezzo 07';
+ $('tabletServiceTitle').textContent='Emergenza 118 · mezzo '+tabletMezzo;
  $('tabletServiceSubtitle').textContent='Foglio Viaggio diretto · nessun servizio da creare nel gestionale';
  $('tabletActionBar').innerHTML='';
- const tablet118Vehicle=vehicles.find(v=>String(v.codice)==='07');
- $('tabletServiceData').innerHTML='<h3>Foglio 118 creato direttamente dal Tablet 07</h3>'+
+ const tablet118Vehicle=vehicles.find(v=>String(v.codice)===String(tabletMezzo));
+ $('tabletServiceData').innerHTML='<h3>Foglio 118 creato direttamente dal Tablet '+esc(tabletMezzo)+'</h3>'+
   '<div class="notice ok">Compila i dati durante o al termine dell’intervento. Il foglio può essere salvato e riaperto finché non viene chiuso.</div>'+
   '<div class="tablet-fields">'+
-   tabletReadOnlyField('Mezzo','07')+
-   tabletReadOnlyField('Targa',tablet118Vehicle?.targa||'HD918LC')+
+   tabletReadOnlyField('Mezzo',tabletMezzo)+
+   tabletReadOnlyField('Targa',tablet118Vehicle?.targa||'—')+
   '</div>';
  const f=foglio,closed=f.stato==='CHIUSO';
  tabletConfigureTimeFields(true);
@@ -8539,7 +8542,7 @@ async function saveTabletSheet(silent=false){
 }
 async function tabletCloseSheet(){
  if(!tabletCurrentSheet||tabletBusy)return;
- const standalone118=!tabletCurrentService&&tabletCurrentSheet.tipo_servizio==='118'&&tabletCurrentSheet.mezzo==='07';
+ const standalone118=!tabletCurrentService&&tabletCurrentSheet.tipo_servizio==='118'&&['07','09'].includes(String(tabletCurrentSheet.mezzo));
  const saved=await saveTabletSheet(true);if(!saved)return;
  const confirmText=standalone118
   ?'Chiudere definitivamente il Foglio Viaggio 118? Verifica numero scheda 118, destinazione, equipaggio e KM rientro.'
@@ -8556,7 +8559,7 @@ async function tabletCloseSheet(){
   if(standalone118){
    tabletCurrentSheet=r.data||tabletCurrentSheet;
    await openTabletDirect118(tabletCurrentSheet);
-   msg('tabletSheetMsg','Foglio Viaggio 118 chiuso correttamente. I KM rientro hanno aggiornato i KM attuali della 07.','ok');
+   msg('tabletSheetMsg','Foglio Viaggio 118 chiuso correttamente. I KM rientro hanno aggiornato i KM attuali della '+tabletCurrentSheet.mezzo+'.','ok');
   }else{
    tabletBusy=false;await tabletRefreshListAfterAct(tabletCurrentService.id);
    msg('tabletSheetMsg','Servizio chiuso. Ora è disponibile nel gestionale principale per la Nota di Debito.','ok');
@@ -8569,10 +8572,10 @@ $('tabletWeek').onclick=()=>tabletSetListMode('week');
 $('tabletOpen').onclick=()=>tabletSetListMode('open');
 $('tabletRefresh').onclick=tabletRefreshList;
 $('tabletNew118').onclick=async()=>{
- if(String(tabletMezzo)!=='07'||tabletBusy)return;
+ if(!['07','09'].includes(String(tabletMezzo))||tabletBusy)return;
  tabletBusy=true;msg('tabletMsg','Creazione Foglio 118...');
  try{
-  const r=await sb.rpc('cge_tablet07_nuovo_foglio_118');
+  const r=await sb.rpc('cge_tablet_nuovo_foglio_118');
   if(r.error)throw r.error;
   await openTabletDirect118(r.data);
   tabletDirect118=[r.data,...tabletDirect118.filter(x=>x.id!==r.data?.id)];
