@@ -1246,18 +1246,41 @@
 <section id="travelSheets118" class="surface hidden">
  <div class="hero"><h2>🚨 Fogli Viaggio 118</h2><p>Archivio separato dei Fogli Viaggio di Emergenza/Urgenza 118. Questi documenti non entrano nel flusso Note di Debito/fatturazione.</p></div>
  <div class="pad">
-  <div class="grid4">
-   <div class="field"><label>Data</label><input id="fv118Date" type="date"></div>
-   <div class="field"><label>Stato</label><select id="fv118State"><option value="">Tutti</option><option>APERTO</option><option>CHIUSO</option></select></div>
-   <div class="field"><label>Mezzo</label><select id="fv118Vehicle"><option value="">Tutti</option></select></div>
-   <div class="field"><label>Ricerca</label><input id="fv118Search" placeholder="Numero, destinazione, scheda 118..."></div>
+  <div class="section" data-admin-only="true">
+   <h3>📊 Riepilogo 118 mensile per fatturazione</h3>
+   <p class="muted">Seleziona il mese per ottenere il prospetto da usare a fine mese per la fatturazione su Aruba.</p>
+   <div class="grid4">
+    <div class="field"><label>Mese</label><input id="fv118Month" type="month"></div>
+    <div class="stat"><small>SERVIZI 118</small><b id="fv118MonthlyCount">0</b></div>
+    <div class="stat"><small>KM TOTALI</small><b id="fv118MonthlyKm">0</b></div>
+    <div class="stat"><small>FOGLI CHIUSI</small><b id="fv118MonthlyClosed">0</b></div>
+   </div>
+   <div class="toolbar">
+    <button id="fv118MonthRefresh" class="btn yellow" type="button">Aggiorna riepilogo mese</button>
+    <button id="fv118MonthPrint" class="btn blue" type="button">🖨 Stampa / Salva PDF</button>
+   </div>
+   <div id="fv118MonthMsg"></div>
+   <div class="table"><table>
+    <thead><tr><th>Data</th><th>Foglio</th><th>Scheda 118</th><th>Mezzo / Targa</th><th>Percorso</th><th>KM partenza</th><th>KM arrivo</th><th>KM effettuati</th><th>Stato</th></tr></thead>
+    <tbody id="fv118MonthBody"></tbody>
+   </table></div>
   </div>
-  <div class="toolbar"><button id="fv118Refresh" class="btn secondary">Aggiorna</button></div>
-  <div id="fv118Msg"></div>
-  <div class="table"><table>
-   <thead><tr><th>Numero</th><th>Data</th><th>Mezzo</th><th>N. scheda 118</th><th>Destinazione</th><th>Stato</th><th></th></tr></thead>
-   <tbody id="fv118Body"></tbody>
-  </table></div>
+
+  <div class="section">
+   <h3>Archivio Fogli Viaggio 118</h3>
+   <div class="grid4">
+    <div class="field"><label>Data</label><input id="fv118Date" type="date"></div>
+    <div class="field"><label>Stato</label><select id="fv118State"><option value="">Tutti</option><option>APERTO</option><option>CHIUSO</option></select></div>
+    <div class="field"><label>Mezzo</label><select id="fv118Vehicle"><option value="">Tutti</option></select></div>
+    <div class="field"><label>Ricerca</label><input id="fv118Search" placeholder="Numero, destinazione, scheda 118..."></div>
+   </div>
+   <div class="toolbar"><button id="fv118Refresh" class="btn secondary">Aggiorna</button></div>
+   <div id="fv118Msg"></div>
+   <div class="table"><table>
+    <thead><tr><th>Numero</th><th>Data</th><th>Mezzo</th><th>N. scheda 118</th><th>Destinazione</th><th>Stato</th><th></th></tr></thead>
+    <tbody id="fv118Body"></tbody>
+   </table></div>
+  </div>
  </div>
 </section>
 
@@ -2392,6 +2415,7 @@ let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupAutomaticRows=[],backupBusy=false;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
 let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletDirect118=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='',tabletCrewPeople=[];
+let fv118MonthlyRows=[];
 const $=x=>document.getElementById(x), today=()=>new Date().toISOString().slice(0,10);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const euro=n=>'€ '+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -3152,7 +3176,86 @@ async function loadTravelSheets(){
  document.querySelectorAll('[data-delete-fv]').forEach(b=>b.onclick=()=>deleteTravelSheet(b.dataset.deleteFv));
  msg('fvMsg','');
 }
+function fv118MonthBounds(value){
+ const v=value||new Date().toISOString().slice(0,7);
+ const [y,m]=v.split('-').map(Number);
+ const start=v+'-01';
+ const d=new Date(y,m,1);
+ const end=d.toISOString().slice(0,10);
+ return {start,end,label:new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric'}).format(new Date(y,m-1,1))};
+}
+function fv118RouteText(x){
+ return [x.luogo_partenza,x.percorso_tappe,x.destinazione].filter(Boolean).join(' → ')||'—';
+}
+async function load118MonthlySummary(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const month=$('fv118Month').value||new Date().toISOString().slice(0,7);
+ $('fv118Month').value=month;
+ const b=fv118MonthBounds(month);
+ msg('fv118MonthMsg','Caricamento riepilogo mensile...');
+ const r=await sb.from('fogli_viaggio')
+  .select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,numero_scheda_118,luogo_partenza,destinazione,ospedale_destinazione,percorso_tappe,km_partenza,km_arrivo,km_percorsi,stato')
+  .eq('tipo_servizio','118')
+  .gte('data_servizio',b.start)
+  .lt('data_servizio',b.end)
+  .order('data_servizio',{ascending:true})
+  .order('progressivo',{ascending:true});
+ if(r.error)return msg('fv118MonthMsg',r.error.message,'err');
+ fv118MonthlyRows=(r.data||[]).map(x=>{
+  const vehicle=vehicles.find(v=>String(v.codice)===String(x.mezzo));
+  return {...x,targa:vehicle?.targa||'',destinazione:x.ospedale_destinazione||x.destinazione||''};
+ });
+ const totalKm=fv118MonthlyRows.reduce((s,x)=>s+Number(x.km_percorsi||((x.km_arrivo!=null&&x.km_partenza!=null)?Math.max(0,x.km_arrivo-x.km_partenza):0)),0);
+ $('fv118MonthlyCount').textContent=String(fv118MonthlyRows.length);
+ $('fv118MonthlyKm').textContent=totalKm.toLocaleString('it-IT')+' km';
+ $('fv118MonthlyClosed').textContent=String(fv118MonthlyRows.filter(x=>x.stato==='CHIUSO').length);
+ $('fv118MonthBody').innerHTML=fv118MonthlyRows.length?fv118MonthlyRows.map(x=>{
+  const km=x.km_percorsi??((x.km_arrivo!=null&&x.km_partenza!=null)?Math.max(0,x.km_arrivo-x.km_partenza):null);
+  return '<tr>'+
+   '<td>'+esc(x.data_servizio||'—')+'</td>'+
+   '<td><b>'+esc(x.numero_foglio||'—')+'</b></td>'+
+   '<td>'+esc(x.numero_scheda_118||'—')+'</td>'+
+   '<td>'+esc((x.mezzo||'—')+(x.targa?' · '+x.targa:''))+'</td>'+
+   '<td>'+esc(fv118RouteText(x))+'</td>'+
+   '<td>'+esc(x.km_partenza??'—')+'</td>'+
+   '<td>'+esc(x.km_arrivo??'—')+'</td>'+
+   '<td><b>'+esc(km??'—')+'</b></td>'+
+   '<td><span class="pill '+(x.stato==='CHIUSO'?'g':'')+'">'+esc(x.stato||'—')+'</span></td>'+
+  '</tr>';
+ }).join(''):'<tr><td colspan="9">Nessun Foglio Viaggio 118 nel mese selezionato.</td></tr>';
+ msg('fv118MonthMsg','');
+}
+function print118MonthlySummary(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ if(!fv118MonthlyRows.length)return msg('fv118MonthMsg','Nessun dato da stampare per il mese selezionato.','warn');
+ const month=$('fv118Month').value||new Date().toISOString().slice(0,7),b=fv118MonthBounds(month);
+ const totalKm=fv118MonthlyRows.reduce((s,x)=>s+Number(x.km_percorsi||((x.km_arrivo!=null&&x.km_partenza!=null)?Math.max(0,x.km_arrivo-x.km_partenza):0)),0);
+ const rows=fv118MonthlyRows.map(x=>{
+  const km=x.km_percorsi??((x.km_arrivo!=null&&x.km_partenza!=null)?Math.max(0,x.km_arrivo-x.km_partenza):'—');
+  return '<tr><td>'+esc(x.data_servizio||'—')+'</td><td>'+esc(x.numero_foglio||'—')+'</td><td>'+esc(x.numero_scheda_118||'—')+'</td><td>'+esc((x.mezzo||'—')+(x.targa?' · '+x.targa:''))+'</td><td>'+esc(fv118RouteText(x))+'</td><td>'+esc(x.km_partenza??'—')+'</td><td>'+esc(x.km_arrivo??'—')+'</td><td>'+esc(km)+'</td></tr>';
+ }).join('');
+ const html='<div class="print-page">'+
+  '<div class="print-head"><img class="print-logo" src="'+LOGO_URL+'" alt="Logo"><div class="print-org"><h1>CROCE GIALLA EMERGENZA ODV</h1><div>Via I° Maggio 1 - 28040 Dormelletto (NO)</div><div>Riepilogo mensile Emergenza/Urgenza 118</div></div><div class="print-doc"><h2>RIEPILOGO 118</h2><b>'+esc(b.label)+'</b></div></div>'+
+  '<div class="print-grid3"><div class="print-box"><small>Servizi 118</small><b>'+fv118MonthlyRows.length+'</b></div><div class="print-box"><small>Fogli chiusi</small><b>'+fv118MonthlyRows.filter(x=>x.stato==='CHIUSO').length+'</b></div><div class="print-box"><small>KM totali</small><b>'+totalKm.toLocaleString('it-IT')+' km</b></div></div>'+
+  '<div class="print-section"><h3>Dettaglio servizi</h3><table class="print-table"><thead><tr><th>Data</th><th>Foglio</th><th>Scheda 118</th><th>Mezzo / Targa</th><th>Percorso</th><th>KM part.</th><th>KM arr.</th><th>KM</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+  '<div class="print-footer"><span>Croce Gialla Emergenza ODV</span><span>Prospetto per fatturazione mensile 118</span></div></div>';
+ $('printSheet').innerHTML=html;
+ $('printSheet').classList.remove('hidden');
+ const oldTitle=document.title;
+ document.title='Riepilogo 118 '+b.label;
+ const restore=()=>{document.title=oldTitle;$('printSheet').classList.add('hidden');window.removeEventListener('afterprint',restore)};
+ window.addEventListener('afterprint',restore);
+ requestAnimationFrame(()=>setTimeout(()=>window.print(),80));
+}
+$('fv118MonthRefresh').onclick=load118MonthlySummary;
+$('fv118MonthPrint').onclick=print118MonthlySummary;
+$('fv118Month').onchange=load118MonthlySummary;
+
 async function loadTravelSheets118(){
+ if(prof?.ruolo==='AMMINISTRATORE'){
+  if(!$('fv118Month').value)$('fv118Month').value=new Date().toISOString().slice(0,7);
+  await load118MonthlySummary();
+ }
  msg('fv118Msg','Caricamento...');
  let q=sb.from('fogli_viaggio').select('*').eq('tipo_servizio','118').order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
  if($('fv118Date').value)q=q.eq('data_servizio',$('fv118Date').value);
