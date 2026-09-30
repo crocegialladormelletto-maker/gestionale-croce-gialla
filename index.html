@@ -3073,11 +3073,11 @@ function buildFoglioPrint(f){
    '<div class="print-doc"><h2>FOGLIO VIAGGIO</h2><b>'+esc(f.numero_foglio||'—')+'</b><div>'+fvItalianDate(f.data_servizio)+'</div></div>'+
   '</div>'+
 
-  (String(f.tipo_servizio||'').trim()==='118'?'':'<div class="print-grid3">'+
+  '<div class="print-grid3">'+
    '<div class="print-box"><small>Mezzo</small><b>'+esc(f.mezzo||'—')+'</b>'+(vehicle.targa?' · '+esc(vehicle.targa):'')+'</div>'+
    '<div class="print-box"><small>Tipo servizio</small>'+esc(f.tipo_servizio||'—')+'</div>'+
    '<div class="print-box"><small>Stato documento</small>'+esc(f.stato||'—')+'</div>'+
-  '</div>')+
+  '</div>'+
 
   (isAssistanceManifestation(f.tipo_servizio)?'':'<div class="print-section"><h3>Paziente / utente</h3><div class="print-grid3">'+
    '<div class="print-box"><small>Cognome e nome</small>'+esc([f.paziente_cognome,f.paziente_nome].filter(Boolean).join(' ')||'—')+'</div>'+
@@ -3090,11 +3090,13 @@ function buildFoglioPrint(f){
    '<div class="print-box"><small>Destinazione</small>'+esc([f.destinazione,f.indirizzo_destinazione,f.ospedale_destinazione].filter(Boolean).join(' - ')||'—')+'</div>'+
   '</div></div>'+
 
-  '<div class="print-section"><h3>Orari</h3><table class="print-table"><thead><tr><th colspan="3">Programmati</th></tr></thead><tbody><tr>'+
-   planned.map(x=>'<td><b>'+esc(x[0])+'</b><br>'+esc(x[1]||'—')+'</td>').join('')+
-  '</tr></tbody></table><table class="print-table" style="margin-top:5px"><thead><tr>'+
-   actual.map(x=>'<th>'+esc(x[0])+'</th>').join('')+
-  '</tr></thead><tbody><tr>'+actual.map(x=>'<td>'+esc(x[1]||'—')+'</td>').join('')+'</tr></tbody></table></div>'+
+  '<div class="print-section"><h3>Orari</h3>'+
+   (String(f.tipo_servizio||'').trim()==='118'?'':'<table class="print-table"><thead><tr><th colspan="3">Programmati</th></tr></thead><tbody><tr>'+
+    planned.map(x=>'<td><b>'+esc(x[0])+'</b><br>'+esc(x[1]||'—')+'</td>').join('')+
+   '</tr></tbody></table>')+
+   '<table class="print-table"'+(String(f.tipo_servizio||'').trim()==='118'?'':' style="margin-top:5px"')+'><thead><tr>'+
+    actual.map(x=>'<th>'+esc(x[0])+'</th>').join('')+
+   '</tr></thead><tbody><tr>'+actual.map(x=>'<td>'+esc(x[1]||'—')+'</td>').join('')+'</tr></tbody></table></div>'+
 
   '<div class="print-section"><h3>Chilometri</h3><div class="print-grid3">'+
    '<div class="print-box"><small>Km partenza</small>'+esc(fvVal(f.km_partenza))+'</div>'+
