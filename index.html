@@ -2790,7 +2790,7 @@ $('vout').onclick=async()=>{
 };
 $('mout').onclick=async()=>{stopMonitorSede();await sb.auth.signOut();location.reload()};
 $('tabletLogout').onclick=async()=>{stopTabletArea();await sb.auth.signOut();location.reload()};
-if($('tabletChecklist07'))$('tabletChecklist07').onclick=()=>{if(['07','08','09'].includes(String(tabletMezzo)))location.href='checklist-ambulanze/'};
+if($('tabletChecklist07'))$('tabletChecklist07').onclick=()=>{if(['07','08','09'].includes(String(tabletMezzo)))location.href='checklist-ambulanze/?mezzo='+encodeURIComponent(tabletMezzo)+'&v=20260930-full2'};
 
 async function refreshMaster(){
  const personnelPromise=prof?.ruolo==='CENTRALINO'?sb.rpc('cge_centralino_personale'):sb.from('personale').select('*').order('cognome');
