@@ -3341,6 +3341,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  currentFoglio=fr.data;
  const f=currentFoglio;
  const isCentral=prof?.ruolo==='CENTRALINO';
+ const is118=String(f.tipo_servizio||'').trim()==='118';
  let acc=null;
  if(!isCentral&&f.servizio_giornaliero_id){
   const ar=await sb.from('v_contabilita_servizi').select('stato_contabile,residuo').eq('servizio_id',f.servizio_giornaliero_id).maybeSingle();
@@ -3351,7 +3352,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvdNumber').textContent=f.numero_foglio||'—';
  $('fvdState').textContent=f.stato||'—';
  $('fvdKm').textContent=f.km_percorsi??'—';
- $('fvTotalStat').classList.toggle('hidden',isCentral);$('fvdTotal').textContent=isCentral?'—':euro(f.totale_servizio);
+ $('fvTotalStat').classList.toggle('hidden',isCentral||is118);$('fvdTotal').textContent=(isCentral||is118)?'—':euro(f.totale_servizio);
  $('fvdDate').value=f.data_servizio||'';
  $('fvdVehicle').value=f.mezzo||'';
  $('fvdType').value=f.tipo_servizio||'';
@@ -3392,8 +3393,9 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvGrandTotal').value=Number(f.totale_servizio||0).toFixed(2);
  $('fvPayMode').value=f.modalita_pagamento||'';
  $('fvPayDate').value=f.data_pagamento||'';
- $('fvEconomicSection').classList.toggle('hidden',isCentral);$('fvPaymentSection').classList.toggle('hidden',isCentral);
- $('fvAccountingState').value=isCentral?'—':(acc?acc.stato_contabile+(Number(acc.residuo)>0?' · Residuo '+euro(acc.residuo):''):'—');
+ $('fvEconomicSection').classList.toggle('hidden',isCentral||is118);
+ $('fvPaymentSection').classList.toggle('hidden',isCentral||is118);
+ $('fvAccountingState').value=(isCentral||is118)?'—':(acc?acc.stato_contabile+(Number(acc.residuo)>0?' · Residuo '+euro(acc.residuo):''):'—');
  $('fvNotes').value=f.annotazioni||'';
 
  $('fvdService').classList.toggle('hidden',!f.servizio_giornaliero_id);
@@ -3433,7 +3435,7 @@ async function saveTravelSheet(silent=false){
   annotazioni:$('fvNotes').value.trim()||null,
   versione_app:'V13.41'
  };
- if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
+ if(prof?.ruolo!=='CENTRALINO'&&String(currentFoglio?.tipo_servizio||'').trim()!=='118')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
   sedia_montascale:$('fvChair').checked,
   barella_bariatrica:$('fvBari').checked,
