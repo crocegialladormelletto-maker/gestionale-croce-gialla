@@ -123,7 +123,13 @@ function key(section,item){return section+'||'+item}
 function choiceButtons(sec,item,opts=['OK','KO','N.A.']){
  const k=key(sec,item); return '<div class="choices">'+opts.map(o=>'<button type="button" class="choice" data-key="'+esc(k)+'" data-val="'+esc(o)+'" onclick="selectChoice(this)">'+o+'</button>').join('')+'</div>'
 }
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function esc(s){
+ return String(s)
+  .split('&').join('&amp;')
+  .split('"').join('&quot;')
+  .split('<').join('&lt;')
+  .split('>').join('&gt;');
+}
 function renderChecklist(){
  const root=document.getElementById('checklist'); root.innerHTML='';
  sections.forEach(s=>{
