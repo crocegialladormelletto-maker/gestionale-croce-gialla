@@ -8099,7 +8099,7 @@ function tabletServiceAmount(s){
 function tabletCrewFor(id){return tabletAssignments.filter(x=>x.servizio_id===id)}
 function tabletCrewReady(s){const c=tabletCrewFor(s.id),min=Number(s.equipaggio_minimo??(String(s.mezzo||'')==='06'?1:2));return c.length>=min&&c.some(x=>x.ruolo==='AUTISTA')&&(!s.capo_servizio_obbligatorio||c.some(x=>x.ruolo==='CAPO_SERVIZIO'))}
 function tabletListFiltered(){
- const t=todaySafe(),end=tabletShiftDays(7);
+ const t=todaySafe(),end=tabletShiftDays(14);
  return tabletServices.filter(x=>x.stato_gestionale!=='ANNULLATO'&&x.stato!=='ANNULLATO'&&(
  tabletListMode==='today'?x.data_servizio===t:tabletListMode==='week'?(x.data_servizio>=t&&x.data_servizio<=end):!['COMPLETATO','ANNULLATO'].includes(x.stato||'')&&x.stato_gestionale!=='CHIUSO'
  ));
@@ -8107,7 +8107,7 @@ function tabletListFiltered(){
 function tabletSetListMode(mode){
  tabletListMode=mode;
  [['tabletToday','today'],['tabletWeek','week'],['tabletOpen','open']].forEach(([id,m])=>$(id).className='btn '+(mode===m?'yellow':'secondary'));
- $('tabletListTitle').textContent=mode==='today'?'Servizi di oggi · mezzo '+tabletMezzo:mode==='open'?'Servizi ancora da completare · mezzo '+tabletMezzo:'Servizi dei prossimi 7 giorni · mezzo '+tabletMezzo;
+ $('tabletListTitle').textContent=mode==='today'?'Servizi di oggi · mezzo '+tabletMezzo:mode==='open'?'Servizi ancora da completare · mezzo '+tabletMezzo:'Servizi dei prossimi 14 giorni · mezzo '+tabletMezzo;
  renderTabletList();
 }
 function renderTabletList(){
