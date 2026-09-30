@@ -3106,7 +3106,7 @@ function buildFoglioPrint(f){
    (crew.length?crew.map(x=>'<tr><td>'+esc(x[0])+'</td><td>'+esc(x[1])+'</td><td>'+esc(x[2]||'—')+'</td></tr>').join(''):'<tr><td colspan="3">Nessun componente registrato</td></tr>')+
   '</tbody></table></div>'+
 
-  (prof?.ruolo==='CENTRALINO'?'':'<div class="print-section"><h3>Economico e pagamento</h3><table class="print-table"><thead><tr><th>Importo base</th><th>Sedia cingolata / motorizzata</th><th>Barella bariatrica</th><th>Totale</th><th>Pagamento</th></tr></thead><tbody><tr>'+
+  ((prof?.ruolo==='CENTRALINO'||String(f.tipo_servizio||'').trim()==='118')?'':'<div class="print-section"><h3>Economico e pagamento</h3><table class="print-table"><thead><tr><th>Importo base</th><th>Sedia cingolata / motorizzata</th><th>Barella bariatrica</th><th>Totale</th><th>Pagamento</th></tr></thead><tbody><tr>'+
    '<td>'+euro(f.importo_inserito)+'</td>'+
    '<td>'+(f.sedia_montascale?'Sì · '+euro(f.supplemento_sedia):'No')+'</td>'+
    '<td>'+(f.barella_bariatrica?'Sì · '+euro(f.supplemento_bariatrica):'No')+'</td>'+
