@@ -251,8 +251,9 @@ function exportData(){
  }).join('');
  w.document.write('<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Archivio Checklist Ambulanza</title><style>'+
  'body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:18mm}h1{color:#0b2d57;border-bottom:4px solid #ffd21c;padding-bottom:8px}h2{background:#0077ff;color:#fff;padding:8px 10px;border-radius:6px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 14px}.grid div{border:1px solid #ccd4dd;border-radius:6px;padding:8px}table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #ccd4dd;padding:5px;text-align:left;vertical-align:top}th{background:#eef3f8}.check{page-break-after:always}.check:last-child{page-break-after:auto}.head{font-size:12px;margin-bottom:14px;color:#555}@media print{body{margin:10mm}.check{break-after:page}.check:last-child{break-after:auto}}'+
- '</style></head><body><h1>Croce Gialla Emergenza ODV · Archivio Checklist Ambulanza</h1><div class="head">Esportazione del '+new Date().toLocaleString('it-IT')+' · Checklist incluse: '+list.length+'</div>'+detail+'<script>window.onload=()=>{setTimeout(()=>window.print(),250)}<\/script></body></html>');
+ '</style></head><body><h1>Croce Gialla Emergenza ODV · Archivio Checklist Ambulanza</h1><div class="head">Esportazione del '+new Date().toLocaleString('it-IT')+' · Checklist incluse: '+list.length+'</div>'+detail+'</body></html>');
  w.document.close();
+ setTimeout(()=>{try{w.focus();w.print()}catch(_){}},250);
 }
 function setNow(){const d=new Date();data.value=d.toISOString().slice(0,10);ora.value=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 renderChecklist();setNow();
