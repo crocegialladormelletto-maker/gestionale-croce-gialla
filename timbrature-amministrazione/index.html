@@ -2,7 +2,7 @@
 <html lang="it">
 <!-- VERSIONE STABILE E DEFINITIVA 1.2 - 30/09/2026 -->
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="app-version" content="1.2.3-definitiva-2026-09-30">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="app-version" content="1.2.4-definitiva-2026-09-30">
 <title>Amministrazione Timbrature - Croce Gialla Emergenza ODV</title>
 <style>
 :root{--y:#ffdf00;--b:#173b72;--bg:#f4f7fb;--bd:#d7deea;--g:#15803d;--r:#b42318;--o:#a85b00;--m:#667085}
@@ -316,9 +316,10 @@ async function addHist(){try{if(monthClosed)throw new Error('Il mese selezionato
 async function editEvent(id){if(monthClosed)return alert('Il mese è chiuso. Riaprilo prima di modificare.');const e=events.find(x=>x.id===id);if(!e)return;const tipo=prompt('Tipo (ENTRATA o USCITA):',e.tipo);if(!tipo)return;const orario=prompt('Data e ora (AAAA-MM-GGTHH:MM):',localInput(e.evento_at));if(!orario)return;const motivo=prompt('Motivo obbligatorio della modifica:','Correzione errore materiale');if(!motivo?.trim())return;const nota=prompt('Nota interna:',e.nota_interna||'');try{await api({action:'update',id,tipo,evento_at:new Date(orario).toISOString(),nota_interna:nota,motivo});await loadData()}catch(err){alert(err.message)}}
 async function deleteEvent(id){if(monthClosed)return alert('Il mese è chiuso. Riaprilo prima di eliminare.');const motivo=prompt('Motivo obbligatorio dell’eliminazione:','Inserimento errato');if(!motivo?.trim())return;if(!confirm('Confermi l’eliminazione? Rimarrà registrata nell’audit.'))return;try{await api({action:'delete',id,motivo});await loadData()}catch(e){alert(e.message)}}
 function dailyTargetMinutes(badge){
- const n=String(person(badge)||'').trim().toUpperCase();
- if(n==='MARTINOLI ANDREA')return 380; // 6 ore e 20 minuti
- if(n==='BRUGHERA FRANCESCA')return 300; // 5 ore
+ const n=String(person(badge)||'').trim().toUpperCase().replace(/\s+/g,' ');
+ // Riconoscimento robusto anche se l'anagrafica è salvata come "Andrea Martinoli" o "Francesca Brughera".
+ if(n.includes('MARTINOLI')&&n.includes('ANDREA'))return 380; // 6 ore e 20 minuti
+ if(n.includes('BRUGHERA')&&n.includes('FRANCESCA'))return 300; // 5 ore
  return null;
 }
 function printRows(){
