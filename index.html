@@ -1314,7 +1314,7 @@
    </div>
   </div>
 
-  <div class="section"><h3>Paziente e percorso</h3>
+  <div class="section" id="fvPatientSection"><h3>Paziente e percorso</h3>
    <div class="grid4" id="fvPatientFields">
     <div class="field"><label>Nome</label><input id="fvdPn" disabled></div>
     <div class="field"><label>Cognome</label><input id="fvdPc" disabled></div>
@@ -3357,6 +3357,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvdVehicle').value=f.mezzo||'';
  $('fvdType').value=f.tipo_servizio||'';
  $('fvdNumField').value=f.numero_foglio||'';
+ $('fvPatientSection').classList.toggle('hidden',is118);
  $('fvPatientFields').classList.toggle('hidden',isAssistanceManifestation(f.tipo_servizio));
  $('fvdPn').value=f.paziente_nome||'';
  $('fvdPc').value=f.paziente_cognome||'';
