@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.25-vehicle-change">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.26-no-auto-sheet">
 <script>
 (function(){
  try{
@@ -5017,9 +5017,15 @@ $('detailForm').onsubmit=async e=>{
  if(prof?.ruolo!=='CENTRALINO')row.note_amministrazione=$('dAdminNotes').value.trim()||null;
  const r=await sb.from('servizi_giornalieri').update(row).eq('id',currentServiceId);
  if(r.error)return msg('dSaveMsg',r.error.message,'err');
- const sync=await sb.rpc('cge_sincronizza_foglio_viaggio',{p_servizio:currentServiceId});
- if(sync.error && !/Foglio Viaggio è già chiuso/i.test(sync.error.message||''))return msg('dSaveMsg','Servizio salvato, ma sincronizzazione Foglio Viaggio non riuscita: '+sync.error.message,'warn');
- msg('dSaveMsg',sync.error?'Modifiche salvate. Il Foglio Viaggio è chiuso e non è stato modificato.':'Modifiche salvate e Foglio Viaggio sincronizzato, mezzo compreso.','ok');
+ const existingSheet=await sb.from('fogli_viaggio').select('id,stato').eq('servizio_giornaliero_id',currentServiceId).maybeSingle();
+ if(existingSheet.error)return msg('dSaveMsg','Servizio salvato, ma controllo Foglio Viaggio non riuscito: '+existingSheet.error.message,'warn');
+ if(existingSheet.data&&existingSheet.data.stato!=='CHIUSO'){
+  const sync=await sb.rpc('cge_sincronizza_foglio_viaggio',{p_servizio:currentServiceId});
+  if(sync.error)return msg('dSaveMsg','Servizio salvato, ma sincronizzazione Foglio Viaggio non riuscita: '+sync.error.message,'warn');
+  msg('dSaveMsg','Modifiche salvate e Foglio Viaggio esistente sincronizzato, mezzo compreso.','ok');
+ }else{
+  msg('dSaveMsg',existingSheet.data?'Modifiche salvate. Il Foglio Viaggio è chiuso e non è stato modificato.':'Modifiche salvate. Nessun Foglio Viaggio è stato creato automaticamente.','ok');
+ }
  await loadServiceDetail();
 };
 
