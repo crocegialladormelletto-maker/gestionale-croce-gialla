@@ -3085,10 +3085,19 @@ function buildFoglioPrint(f){
    '<div class="print-box"><small>Telefono</small>'+esc(f.telefono||'—')+'</div>'+
   '</div></div>')+
 
-  '<div class="print-section"><h3>Percorso</h3><div class="print-grid2">'+
-   '<div class="print-box"><small>Partenza</small>'+esc([f.luogo_partenza,f.indirizzo_partenza].filter(Boolean).join(' - ')||'—')+'</div>'+
-   '<div class="print-box"><small>Destinazione</small>'+esc([f.destinazione,f.indirizzo_destinazione,f.ospedale_destinazione].filter(Boolean).join(' - ')||'—')+'</div>'+
-  '</div></div>'+
+  (String(f.tipo_servizio||'').trim()==='118'
+   ?'<div class="print-section"><h3>Percorso</h3><div class="print-grid2">'+
+     '<div class="print-box"><small>Partenza</small>'+esc(f.luogo_partenza||'—')+'</div>'+
+     '<div class="print-box"><small>Luogo carico</small>'+esc(f.luogo_carico||'—')+'</div>'+
+     '<div class="print-box"><small>Destinazione</small>'+esc(f.destinazione||f.ospedale_destinazione||'—')+'</div>'+
+     '<div class="print-box"><small>Luogo rientro</small>'+esc(f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO')+'</div>'+
+    '</div>'+
+    (f.percorso_tappe?'<div class="print-box" style="margin-top:7px"><small>Tappe aggiuntive / percorso</small>'+esc(f.percorso_tappe).replace(/\n/g,'<br>')+'</div>':'')+
+   '</div>'
+   :'<div class="print-section"><h3>Percorso</h3><div class="print-grid2">'+
+     '<div class="print-box"><small>Partenza</small>'+esc([f.luogo_partenza,f.indirizzo_partenza].filter(Boolean).join(' - ')||'—')+'</div>'+
+     '<div class="print-box"><small>Destinazione</small>'+esc([f.destinazione,f.indirizzo_destinazione,f.ospedale_destinazione].filter(Boolean).join(' - ')||'—')+'</div>'+
+    '</div></div>')+
 
   '<div class="print-section"><h3>Orari</h3>'+
    (String(f.tipo_servizio||'').trim()==='118'?'':'<table class="print-table"><thead><tr><th colspan="3">Programmati</th></tr></thead><tbody><tr>'+
