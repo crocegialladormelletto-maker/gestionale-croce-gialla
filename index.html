@@ -2067,7 +2067,7 @@ Causale: numero preventivo</textarea>
  </div><div class="stripe"></div></div>
  <div class="tablet-toolbar">
   <button id="tabletToday" class="btn secondary">Oggi</button>
-  <button id="tabletWeek" class="btn yellow">Prossimi 7 giorni</button>
+  <button id="tabletWeek" class="btn yellow">Servizi futuri</button>
   <button id="tabletOpen" class="btn secondary">Da completare</button>
   <button id="tabletRefresh" class="btn blue">↻ Aggiorna</button>
   <button id="tabletNew118" class="btn danger tablet-118-blink" type="button" style="font-weight:900">🚨 Nuovo Foglio 118</button>
@@ -8099,7 +8099,7 @@ function tabletServiceAmount(s){
 function tabletCrewFor(id){return tabletAssignments.filter(x=>x.servizio_id===id)}
 function tabletCrewReady(s){const c=tabletCrewFor(s.id),min=Number(s.equipaggio_minimo??(String(s.mezzo||'')==='06'?1:2));return c.length>=min&&c.some(x=>x.ruolo==='AUTISTA')&&(!s.capo_servizio_obbligatorio||c.some(x=>x.ruolo==='CAPO_SERVIZIO'))}
 function tabletListFiltered(){
- const t=todaySafe(),end=tabletShiftDays(14);
+ const t=todaySafe(),end=tabletShiftDays(365);
  return tabletServices.filter(x=>x.stato_gestionale!=='ANNULLATO'&&x.stato!=='ANNULLATO'&&(
  tabletListMode==='today'?x.data_servizio===t:tabletListMode==='week'?(x.data_servizio>=t&&x.data_servizio<=end):!['COMPLETATO','ANNULLATO'].includes(x.stato||'')&&x.stato_gestionale!=='CHIUSO'
  ));
@@ -8107,7 +8107,7 @@ function tabletListFiltered(){
 function tabletSetListMode(mode){
  tabletListMode=mode;
  [['tabletToday','today'],['tabletWeek','week'],['tabletOpen','open']].forEach(([id,m])=>$(id).className='btn '+(mode===m?'yellow':'secondary'));
- $('tabletListTitle').textContent=mode==='today'?'Servizi di oggi · mezzo '+tabletMezzo:mode==='open'?'Servizi ancora da completare · mezzo '+tabletMezzo:'Servizi dei prossimi 14 giorni · mezzo '+tabletMezzo;
+ $('tabletListTitle').textContent=mode==='today'?'Servizi di oggi · mezzo '+tabletMezzo:mode==='open'?'Servizi ancora da completare · mezzo '+tabletMezzo:'Servizi futuri programmati · mezzo '+tabletMezzo;
  renderTabletList();
 }
 function renderTabletList(){
@@ -8161,7 +8161,7 @@ async function tabletRefreshList(){
   $('login').classList.remove('hidden');
   return;
  }
- const r=await sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,ora_partenza_prevista,ora_carico_paziente_prevista,ora_arrivo_destinazione_prevista,ora_inizio_assistenza_prevista,ora_fine_assistenza_prevista,ora_rientro_previsto,ora_partenza_effettiva,ora_carico_paziente_effettiva,ora_rientro_effettivo,luogo_partenza,indirizzo_partenza,luogo_carico_paziente,indirizzo_carico_paziente,destinazione,indirizzo_destinazione,ospedale_destinazione,paziente_nome,paziente_cognome,data_nascita,codice_fiscale,telefono,note,stato,stato_gestionale,equipaggio_minimo,capo_servizio_obbligatorio,foglio_viaggio_id,numero_foglio,importo_previsto,importo_finale,modalita_tariffaria').eq('mezzo',tabletMezzo).gte('data_servizio',tabletShiftDays(-7)).lte('data_servizio',tabletShiftDays(14)).order('data_servizio',{ascending:true}).order('ora_partenza_prevista',{ascending:true});
+ const r=await sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,ora_partenza_prevista,ora_carico_paziente_prevista,ora_arrivo_destinazione_prevista,ora_inizio_assistenza_prevista,ora_fine_assistenza_prevista,ora_rientro_previsto,ora_partenza_effettiva,ora_carico_paziente_effettiva,ora_rientro_effettivo,luogo_partenza,indirizzo_partenza,luogo_carico_paziente,indirizzo_carico_paziente,destinazione,indirizzo_destinazione,ospedale_destinazione,paziente_nome,paziente_cognome,data_nascita,codice_fiscale,telefono,note,stato,stato_gestionale,equipaggio_minimo,capo_servizio_obbligatorio,foglio_viaggio_id,numero_foglio,importo_previsto,importo_finale,modalita_tariffaria').eq('mezzo',tabletMezzo).gte('data_servizio',tabletShiftDays(-7)).lte('data_servizio',tabletShiftDays(365)).order('data_servizio',{ascending:true}).order('ora_partenza_prevista',{ascending:true});
  if(r.error)return msg('tabletMsg','Aggiornamento non riuscito: '+r.error.message,'err');
  tabletServices=r.data||[];
  const ids=tabletServices.map(x=>x.id);
