@@ -222,38 +222,36 @@ function openRecord(id){
  document.querySelectorAll('[data-note]').forEach(inp=>inp.value=(responses[inp.dataset.note]||{}).note||'');document.querySelectorAll('[data-special]').forEach(inp=>inp.value=(responses[inp.dataset.special]||{}).value||'');window.scrollTo(0,0)
 }
 function exportData(){
- const d=filterDate?.value||'',n=(filterName?.value||'').toLowerCase(),e=filterEsito?.value||'';
+ const d=filterDate?.value||'';
+ const n=(filterName?.value||'').toLowerCase();
+ const e=filterEsito?.value||'';
  const list=archiveCache.filter(r=>(!d||r.data===d)&&(!n||String(r.compilatore||'').toLowerCase().includes(n))&&(!e||r.esito===e));
  if(!list.length){alert('Nessuna checklist da esportare con i filtri selezionati.');return}
  const w=window.open('','_blank');
- if(!w){alert('Consenti l’apertura delle finestre per creare il PDF.');return}
+ if(!w){alert('Consenti apertura finestre per creare il PDF.');return}
+
  const detail=list.map((r,idx)=>{
-  const risposte=Object.entries(r.risposte||{}).map(([k,v])=>{
-   const parts=k.split('||'), sezione=parts[0]||'', voce=parts.slice(1).join('||')||'';
-   return '<tr><td>'+esc(sezione)+'</td><td>'+esc(voce)+'</td><td><b>'+esc(v?.value||'—')+'</b></td><td>'+esc(v?.note||'')+'</td></tr>';
+  const answers=Object.entries(r.risposte||{}).map(entry=>{
+   const k=entry[0],v=entry[1]||{};
+   const parts=String(k).split('||');
+   const section=parts.shift()||'';
+   const item=parts.join('||');
+   return '<tr><td>'+esc(section)+'</td><td>'+esc(item)+'</td><td>'+esc(v.value||'—')+'</td><td>'+esc(v.note||'')+'</td></tr>';
   }).join('');
-  return '<section class="check">'+
-   '<h2>Checklist '+(idx+1)+' · Ambulanza '+esc(r.mezzo||activeMezzo||'—')</h2>'+
-   '<div class="grid">'+
-    '<div><b>Data</b><br>'+esc(r.data||'')+'</div>'+
-    '<div><b>Ora</b><br>'+esc(String(r.ora||'').slice(0,5))+'</div>'+
-    '<div><b>Compilatore</b><br>'+esc(r.compilatore||'')+'</div>'+
-    '<div><b>KM iniziali</b><br>'+esc(r.km_iniziali||'')+'</div>'+
-    '<div><b>Carburante</b><br>'+esc(r.carburante||'')+'</div>'+
-    '<div><b>Esito mezzo</b><br>'+esc(r.esito||'')+'</div>'+
-    '<div><b>Controllo scadenze</b><br>'+esc(r.controllo_scadenze||'—')+'</div>'+
-    '<div><b>Firma</b><br>'+esc(r.firma||'')+'</div>'+
-   '</div>'+
-   (r.passaggio_consegne?'<p><b>Passaggio consegne:</b> '+esc(r.passaggio_consegne)+'</p>':'')+
-   (r.note_finali?'<p><b>Note / anomalie:</b> '+esc(r.note_finali)+'</p>':'')+
-   '<table><thead><tr><th>Sezione</th><th>Voce</th><th>Esito</th><th>Note</th></tr></thead><tbody>'+risposte+'</tbody></table>'+
-  '</section>';
+  return '<section class="check"><h2>Checklist '+(idx+1)+' · Ambulanza '+esc(r.mezzo||activeMezzo||'—')+'</h2>'+
+   '<p><b>Data:</b> '+esc(r.data||'—')+' · <b>Ora:</b> '+esc(String(r.ora||'').slice(0,5))+' · <b>Compilatore:</b> '+esc(r.compilatore||'—')+'</p>'+
+   '<p><b>KM:</b> '+esc(r.km_iniziali??'—')+' · <b>Carburante:</b> '+esc(r.carburante||'—')+' · <b>Esito:</b> '+esc(r.esito||'—')+'</p>'+
+   '<table><thead><tr><th>Sezione</th><th>Voce</th><th>Esito</th><th>Note</th></tr></thead><tbody>'+answers+'</tbody></table></section>';
  }).join('');
- w.document.write('<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Archivio Checklist Ambulanza</title><style>'+
- 'body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:18mm}h1{color:#0b2d57;border-bottom:4px solid #ffd21c;padding-bottom:8px}h2{background:#0077ff;color:#fff;padding:8px 10px;border-radius:6px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 14px}.grid div{border:1px solid #ccd4dd;border-radius:6px;padding:8px}table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #ccd4dd;padding:5px;text-align:left;vertical-align:top}th{background:#eef3f8}.check{page-break-after:always}.check:last-child{page-break-after:auto}.head{font-size:12px;margin-bottom:14px;color:#555}@media print{body{margin:10mm}.check{break-after:page}.check:last-child{break-after:auto}}'+
- '</style></head><body><h1>Croce Gialla Emergenza ODV · Archivio Checklist Ambulanza</h1><div class="head">Esportazione del '+new Date().toLocaleString('it-IT')+' · Checklist incluse: '+list.length+'</div>'+detail+'</body></html>');
+
+ const html='<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Archivio Checklist Ambulanza</title>'+
+  '<style>body{font-family:Arial,sans-serif;color:#172033;margin:12mm}h1{color:#0b2d57;border-bottom:4px solid #ffd21c;padding-bottom:8px}h2{background:#0077ff;color:#fff;padding:8px}table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #ccd4dd;padding:5px;text-align:left}.check{page-break-after:always}.check:last-child{page-break-after:auto}</style>'+
+  '</head><body><h1>Croce Gialla Emergenza ODV · Archivio Checklist Ambulanza</h1>'+
+  '<p>Esportazione del '+esc(new Date().toLocaleString('it-IT'))+' · Checklist incluse: '+list.length+'</p>'+detail+'</body></html>';
+ w.document.open();
+ w.document.write(html);
  w.document.close();
- setTimeout(()=>{try{w.focus();w.print()}catch(_){}},250);
+ setTimeout(()=>{try{w.focus();w.print()}catch(err){alert('Impossibile avviare la stampa PDF.')}},300);
 }
 function setNow(){const d=new Date();data.value=d.toISOString().slice(0,10);ora.value=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 renderChecklist();setNow();
