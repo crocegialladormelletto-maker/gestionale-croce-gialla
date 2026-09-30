@@ -8135,6 +8135,14 @@ async function loadTabletSheet(serviceId){
  else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
  else el.value=f[key]??'';
  });
+ if(!closed && (f.km_partenza===null || f.km_partenza===undefined || f.km_partenza==='')){
+  const kmField=document.querySelector('[data-ts-field="km_partenza"]');
+  const vr=await sb.from('mezzi').select('km_attuali').eq('codice',tabletMezzo).maybeSingle();
+  if(!vr.error && vr.data?.km_attuali!=null && kmField && kmField.value===''){
+   kmField.value=String(vr.data.km_attuali);
+   msg('tabletSheetMsg','KM partenza proposti automaticamente dal contachilometri attuale del mezzo: '+Number(vr.data.km_attuali).toLocaleString('it-IT')+' km.','ok');
+  }
+ }
  $('tabletSaveSheet').classList.toggle('hidden',closed);$('tabletCloseSheet').classList.toggle('hidden',closed);
  $('tabletCloseSheet').disabled=false;
  msg('tabletSheetMsg',closed?'Foglio Viaggio chiuso: è disponibile in sola lettura.':'',closed?'ok':'');
