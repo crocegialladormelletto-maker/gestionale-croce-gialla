@@ -2059,7 +2059,7 @@ Causale: numero preventivo</textarea>
   </div></div>
   <div class="pad">
    <div id="tabletDetailMsg"></div>
-   <div id="tabletServiceData" class="section"></div>
+   <div id="tabletServiceData" class="section"></div><div id="tabletAttachmentsPanel" class="section hidden"><h3>📎 Allegati richiesta servizio</h3><div id="tabletAttachmentsList"></div><div id="tabletAttachmentsMsg"></div></div>
    <div class="tablet-actions" id="tabletActionBar"></div>
    <div id="tabletSheetPanel" class="section hidden">
     <h3 class="tablet-section-title" id="tabletSheetTitle">Foglio Viaggio</h3>
@@ -8096,8 +8096,27 @@ async function openTabletService(id){
  tabletReadOnlyField(isAssistanceManifestation(s.tipo_servizio)?'Importo previsto assistenza':'Importo previsto per il paziente',tabletServiceAmount(s))+
  tabletReadOnlyField('Equipaggio',crew.map(x=>x.nome_completo+' · '+x.ruolo).join(' | '))+
  tabletReadOnlyField('Note operative',isAssistanceManifestation(s.tipo_servizio)?extractEventContact(s.note).notes:s.note)+'</div>';
- renderTabletDetailHeader();await loadTabletSheet(id);
+ renderTabletDetailHeader();await tabletLoadAttachments(id);await loadTabletSheet(id);
  msg('tabletDetailMsg','');$('tabletDetail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function tabletAttachmentBytes(n){n=Number(n||0);return n<1024?n+' B':n<1048576?(n/1024).toLocaleString('it-IT',{maximumFractionDigits:1})+' KB':(n/1048576).toLocaleString('it-IT',{maximumFractionDigits:1})+' MB'}
+async function tabletOpenAttachment(path){
+ const tab=window.open('about:blank','_blank');
+ if(!tab)return msg('tabletAttachmentsMsg','Consenti i popup per aprire il PDF.','warn');
+ const r=await sb.storage.from('servizi-allegati').createSignedUrl(path,120);
+ if(r.error){tab.close();return msg('tabletAttachmentsMsg',r.error.message,'err')}
+ tab.location.href=r.data.signedUrl;
+}
+async function tabletLoadAttachments(serviceId){
+ const panel=$('tabletAttachmentsPanel'),list=$('tabletAttachmentsList');
+ panel.classList.add('hidden');list.innerHTML='';
+ const r=await sb.from('servizi_allegati').select('id,nome_file_originale,storage_path,dimensione_bytes').eq('servizio_id',serviceId).order('created_at',{ascending:false});
+ if(r.error)return msg('tabletAttachmentsMsg','Allegati non disponibili.','warn');
+ const rows=r.data||[];if(!rows.length)return;
+ panel.classList.remove('hidden');
+ list.innerHTML=rows.map(x=>'<div class="box" style="margin:7px 0"><b>📄 '+esc(x.nome_file_originale)+'</b><br><span class="muted">'+esc(tabletAttachmentBytes(x.dimensione_bytes))+'</span><div class="actions" style="margin-top:7px"><button type="button" class="btn yellow" data-tatt="'+esc(x.id)+'">Apri PDF</button></div></div>').join('');
+ list.querySelectorAll('[data-tatt]').forEach(b=>b.onclick=()=>{const x=rows.find(r=>r.id===b.dataset.tatt);if(x)tabletOpenAttachment(x.storage_path)});
+ msg('tabletAttachmentsMsg','');
 }
 async function tabletAct(action){
  if(!tabletCurrentService||tabletBusy)return;
