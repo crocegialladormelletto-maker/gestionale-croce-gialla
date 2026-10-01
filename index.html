@@ -1760,6 +1760,7 @@
     <div class="field"><label>Dipendente / volontario</label><select id="pexPerson"></select></div>
     <div class="field"><label>Tipo scadenza</label><select id="pexType"><option>Visita medica del lavoro</option><option>Corso sicurezza</option><option>Patente di guida</option><option>Abilitazione sanitaria</option><option>Formazione / aggiornamento</option><option>Documento</option><option>Altro</option></select></div>
     <div class="field"><label>Data scadenza</label><input id="pexDate" type="date"></div>
+    <div class="field"><label>Ora appuntamento</label><input id="pexTime" type="time"></div>
     <div class="field"><label>Preavviso (giorni)</label><input id="pexDays" type="number" min="0" max="365" step="1" value="30"></div>
    </div>
    <div class="grid2" style="margin-top:10px">
@@ -1779,7 +1780,7 @@
     </div>
    </div>
    <div class="table" style="margin-top:10px"><table>
-    <thead><tr><th>Nominativo</th><th>Tipo</th><th>Scadenza</th><th>Mancano</th><th>Descrizione</th><th>Note</th><th>Stato</th><th>Azioni</th></tr></thead>
+    <thead><tr><th>Nominativo</th><th>Tipo</th><th>Scadenza</th><th>Ora</th><th>Mancano</th><th>Descrizione</th><th>Note</th><th>Stato</th><th>Azioni</th></tr></thead>
     <tbody id="pexBody"></tbody>
    </table></div>
   </div>
@@ -2704,7 +2705,7 @@ function personnelExpiryStatus(x){
  return 'REGOLARE';
 }
 function resetPersonnelExpiryForm(){
- $('pexId').value='';$('pexType').value='Visita medica del lavoro';$('pexDate').value='';$('pexDays').value='30';$('pexDesc').value='';$('pexNotes').value='';
+ $('pexId').value='';$('pexType').value='Visita medica del lavoro';$('pexDate').value='';$('pexTime').value='';$('pexDays').value='30';$('pexDesc').value='';$('pexNotes').value='';
  $('pexFormTitle').textContent='➕ Nuova scadenza';$('pexEditBadge').classList.add('hidden');$('pexCancel').classList.add('hidden');$('pexSave').textContent='💾 Salva scadenza';msg('pexMsg','');
 }
 function fillPersonnelExpiryPeople(){
@@ -2745,8 +2746,8 @@ async function loadPersonnelExpiries(){
  });
  $('pexBody').innerHTML=rows.length?rows.map(x=>{
   const status=personnelExpiryStatus(x),canDelete=prof?.ruolo==='AMMINISTRATORE';
-  return '<tr class="'+personnelExpiryClass(x)+'"><td><b>'+esc(x.nominativo)+'</b></td><td>'+esc(x.tipo_scadenza)+'</td><td><b>'+esc(fvItalianDate(x.data_scadenza))+'</b></td><td><span class="expiry-days">'+esc(personnelExpiryLabel(x))+'</span></td><td>'+esc(x.descrizione||'—')+'</td><td>'+esc(x.note||'—')+'</td><td><span class="pill '+(status==='REGOLARE'?'g':status==='IN SCADENZA'?'b':'r')+'">'+esc(status)+'</span></td><td><div class="actions"><button class="btn secondary" type="button" data-pex-edit="'+esc(x.id)+'">Modifica</button><button class="btn yellow" type="button" data-pex-renew="'+esc(x.id)+'">Rinnova</button>'+(canDelete?'<button class="btn danger" type="button" data-pex-delete="'+esc(x.id)+'">Elimina</button>':'')+'</div></td></tr>';
- }).join(''):'<tr><td colspan="8">Nessuna scadenza trovata.</td></tr>';
+  return '<tr class="'+personnelExpiryClass(x)+'"><td><b>'+esc(x.nominativo)+'</b></td><td>'+esc(x.tipo_scadenza)+'</td><td><b>'+esc(fvItalianDate(x.data_scadenza))+'</b></td><td><b>'+esc(fvTime(x.ora_appuntamento)||'—')+'</b></td><td><span class="expiry-days">'+esc(personnelExpiryLabel(x))+'</span></td><td>'+esc(x.descrizione||'—')+'</td><td>'+esc(x.note||'—')+'</td><td><span class="pill '+(status==='REGOLARE'?'g':status==='IN SCADENZA'?'b':'r')+'">'+esc(status)+'</span></td><td><div class="actions"><button class="btn secondary" type="button" data-pex-edit="'+esc(x.id)+'">Modifica</button><button class="btn yellow" type="button" data-pex-renew="'+esc(x.id)+'">Rinnova</button>'+(canDelete?'<button class="btn danger" type="button" data-pex-delete="'+esc(x.id)+'">Elimina</button>':'')+'</div></td></tr>';
+ }).join(''):'<tr><td colspan="9">Nessuna scadenza trovata.</td></tr>';
  $('pexBody').querySelectorAll('[data-pex-edit]').forEach(b=>b.onclick=()=>editPersonnelExpiry(b.dataset.pexEdit));
  $('pexBody').querySelectorAll('[data-pex-renew]').forEach(b=>b.onclick=()=>renewPersonnelExpiry(b.dataset.pexRenew));
  $('pexBody').querySelectorAll('[data-pex-delete]').forEach(b=>b.onclick=()=>deletePersonnelExpiry(b.dataset.pexDelete));
@@ -2755,13 +2756,13 @@ async function loadPersonnelExpiries(){
 }
 function editPersonnelExpiry(id){
  const x=personnelExpiryRows.find(r=>r.id===id);if(!x)return;
- $('pexId').value=x.id;$('pexPerson').value=x.badge_personale||'';$('pexType').value=x.tipo_scadenza||'Altro';$('pexDate').value=x.data_scadenza||'';$('pexDays').value=x.giorni_preavviso??30;$('pexDesc').value=x.descrizione||'';$('pexNotes').value=x.note||'';
+ $('pexId').value=x.id;$('pexPerson').value=x.badge_personale||'';$('pexType').value=x.tipo_scadenza||'Altro';$('pexDate').value=x.data_scadenza||'';$('pexTime').value=fvTime(x.ora_appuntamento);$('pexDays').value=x.giorni_preavviso??30;$('pexDesc').value=x.descrizione||'';$('pexNotes').value=x.note||'';
  $('pexFormTitle').textContent='✏ Modifica scadenza';$('pexEditBadge').classList.remove('hidden');$('pexCancel').classList.remove('hidden');$('pexSave').textContent='💾 Salva modifica';window.scrollTo({top:0,behavior:'smooth'});
 }
 async function savePersonnelExpiry(){
  const badge=$('pexPerson').value,person=people.find(x=>x.badge===badge),date=$('pexDate').value,type=$('pexType').value;
  if(!person||!date||!type)return msg('pexMsg','Seleziona il nominativo, il tipo di scadenza e la data.','warn');
- const payload={badge_personale:badge,nominativo:person.nome_completo,tipo_scadenza:type,descrizione:$('pexDesc').value.trim()||null,data_scadenza:date,giorni_preavviso:Number($('pexDays').value||30),note:$('pexNotes').value.trim()||null,stato:'ATTIVA',modificato_da:prof?.user_id||null,updated_at:new Date().toISOString()};
+ const payload={badge_personale:badge,nominativo:person.nome_completo,tipo_scadenza:type,descrizione:$('pexDesc').value.trim()||null,data_scadenza:date,ora_appuntamento:$('pexTime').value||null,giorni_preavviso:Number($('pexDays').value||30),note:$('pexNotes').value.trim()||null,stato:'ATTIVA',modificato_da:prof?.user_id||null,updated_at:new Date().toISOString()};
  const id=$('pexId').value;
  let q=id?sb.from('scadenze_personale').update(payload).eq('id',id):sb.from('scadenze_personale').insert(payload);
  const r=await q.select('id').single();
