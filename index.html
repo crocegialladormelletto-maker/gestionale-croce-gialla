@@ -3278,22 +3278,41 @@ function print118MonthlySummary(){
  if(!fv118MonthlyRows.length)return msg('fv118MonthMsg','Nessun dato da stampare per il mese selezionato.','warn');
  const month=$('fv118Month').value||new Date().toISOString().slice(0,7),b=fv118MonthBounds(month);
  const totalKm=fv118MonthlyRows.reduce((s,x)=>s+Number(x.km_percorsi||((x.km_arrivo!=null&&x.km_partenza!=null)?Math.max(0,x.km_arrivo-x.km_partenza):0)),0);
+ const closed=fv118MonthlyRows.filter(x=>x.stato==='CHIUSO').length;
+ const mezzi=[...new Set(fv118MonthlyRows.map(x=>x.mezzo).filter(Boolean))].sort().join(', ')||'—';
  const rows=fv118MonthlyRows.map(x=>{
   const km=x.km_percorsi??((x.km_arrivo!=null&&x.km_partenza!=null)?Math.max(0,x.km_arrivo-x.km_partenza):'—');
-  return '<tr><td>'+esc(x.data_servizio||'—')+'</td><td>'+esc(x.numero_foglio||'—')+'</td><td>'+esc(x.numero_scheda_118||'—')+'</td><td>'+esc((x.mezzo||'—')+(x.targa?' · '+x.targa:''))+'</td><td>'+esc(fv118RouteText(x))+'</td><td>'+esc(x.km_partenza??'—')+'</td><td>'+esc(x.km_arrivo??'—')+'</td><td>'+esc(km)+'</td></tr>';
+  const equip=[x.autista,x.capo_servizio,x.soccorritore,x.secondo_soccorritore].filter(Boolean).join(' · ')||'—';
+  const percorso=[x.luogo_partenza,x.luogo_carico,x.destinazione||x.ospedale_destinazione,x.luogo_rientro].filter(Boolean).join(' → ');
+  const orari=[fvTime(x.ora_partenza_servizio),fvTime(x.ora_arrivo_destinazione),fvTime(x.ora_arrivo_dea),fvTime(x.ora_arrivo_sede)].filter(Boolean).join(' / ')||'—';
+  return '<tr>'+
+   '<td>'+esc(fvItalianDate(x.data_servizio))+'</td>'+
+   '<td><b>'+esc((x.numero_foglio||'—').replace(/^FV-\\d{4}-\\d{2}-0*/,''))+'</b></td>'+
+   '<td><b>'+esc(x.numero_scheda_118||'—')+'</b></td>'+
+   '<td>'+esc((x.mezzo||'—')+(x.targa?' · '+x.targa:''))+'</td>'+
+   '<td>'+esc(percorso||fv118RouteText(x))+'</td>'+
+   '<td>'+esc(orari)+'</td>'+
+   '<td class="num">'+esc(x.km_partenza??'—')+'</td>'+
+   '<td class="num">'+esc(x.km_arrivo??'—')+'</td>'+
+   '<td class="num"><b>'+esc(km)+'</b></td>'+
+   '<td>'+esc(equip)+'</td>'+
+   '</tr>';
  }).join('');
- const html='<div class="print-page">'+
-  '<div class="print-head"><img class="print-logo" src="'+LOGO_URL+'" alt="Logo"><div class="print-org"><h1>CROCE GIALLA EMERGENZA ODV</h1><div>Via I° Maggio 1 - 28040 Dormelletto (NO)</div><div>Riepilogo mensile Emergenza/Urgenza 118</div></div><div class="print-doc"><h2>RIEPILOGO 118</h2><b>'+esc(b.label)+'</b></div></div>'+
-  '<div class="print-grid3"><div class="print-box"><small>Servizi 118</small><b>'+fv118MonthlyRows.length+'</b></div><div class="print-box"><small>Fogli chiusi</small><b>'+fv118MonthlyRows.filter(x=>x.stato==='CHIUSO').length+'</b></div><div class="print-box"><small>KM totali</small><b>'+totalKm.toLocaleString('it-IT')+' km</b></div></div>'+
-  '<div class="print-section"><h3>Dettaglio servizi</h3><table class="print-table"><thead><tr><th>Data</th><th>Foglio</th><th>Scheda 118</th><th>Mezzo / Targa</th><th>Percorso</th><th>KM part.</th><th>KM arr.</th><th>KM</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-  '<div class="print-footer"><span>Croce Gialla Emergenza ODV</span><span>Prospetto per fatturazione mensile 118</span></div></div>';
- $('printSheet').innerHTML=html;
- $('printSheet').classList.remove('hidden');
- const oldTitle=document.title;
- document.title='Riepilogo 118 '+b.label;
- const restore=()=>{document.title=oldTitle;$('printSheet').classList.add('hidden');window.removeEventListener('afterprint',restore)};
- window.addEventListener('afterprint',restore);
- requestAnimationFrame(()=>setTimeout(()=>window.print(),80));
+ const printTime=new Date().toLocaleString('it-IT');
+ const html='<!doctype html><html><head><meta charset="utf-8"><title>Registro servizi 118 '+esc(b.label)+'</title><style>'+
+  '@page{size:A4 landscape;margin:7mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;margin:0;color:#182c3a;font-size:9px}.page{width:100%}.head{display:flex;align-items:center;gap:12px;border-bottom:4px solid #12375d;padding-bottom:8px}.logo{width:64px;height:64px;object-fit:contain}.org{flex:1}.org h1{margin:0;color:#12375d;font-size:17px}.org p{margin:2px 0 0;font-size:9px}.doc{text-align:right}.doc h2{margin:0;color:#b91c1c;font-size:16px}.doc b{display:block;margin-top:4px;font-size:12px;color:#12375d}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:9px}.card{border:1px solid #b8c3cc;border-radius:5px;padding:6px 8px;background:#fff}.card small{display:block;color:#66747f;font-size:7px;font-weight:700;text-transform:uppercase}.card b{display:block;margin-top:2px;font-size:13px;color:#12375d}.section-title{margin-top:9px;padding:5px 7px;background:#eef3f7;border-left:5px solid #ffd400;color:#12375d;font-weight:800;font-size:10px}table{width:100%;border-collapse:collapse;margin-top:6px;table-layout:fixed}th,td{border:1px solid #aab4bc;padding:4px 4px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#12375d;color:#fff;font-size:7.3px;text-transform:uppercase}td{font-size:7.4px;line-height:1.22}tbody tr:nth-child(even){background:#f7f9fb}.num{text-align:right;white-space:nowrap}.footer{display:flex;justify-content:space-between;border-top:1px solid #c8d0d6;margin-top:7px;padding-top:4px;font-size:7px;color:#66747f}.status{margin-top:6px;font-size:8px;color:#56636d}.c-date{width:6%}.c-fog{width:5%}.c-sch{width:9%}.c-mezzo{width:8%}.c-perc{width:25%}.c-orari{width:11%}.c-km{width:5%}.c-eq{width:21%}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}thead{display:table-header-group}tr{break-inside:avoid}}'+
+  '</style></head><body><div class="page">'+
+  '<div class="head"><img class="logo" src="'+LOGO_URL+'" alt="Logo Croce Gialla"><div class="org"><h1>CROCE GIALLA EMERGENZA ODV</h1><p>Via I° Maggio 1 · Dormelletto (NO)</p><p>Registro mensile servizi di Emergenza / Urgenza 118</p></div><div class="doc"><h2>REGISTRO SERVIZI 118</h2><b>'+esc(b.label.toUpperCase())+'</b></div></div>'+
+  '<div class="summary"><div class="card"><small>Servizi 118</small><b>'+fv118MonthlyRows.length+'</b></div><div class="card"><small>Fogli chiusi</small><b>'+closed+'</b></div><div class="card"><small>Km complessivi</small><b>'+totalKm.toLocaleString('it-IT')+' km</b></div><div class="card"><small>Mezzi utilizzati</small><b>'+esc(mezzi)+'</b></div></div>'+
+  '<div class="status">Periodo: '+esc(b.label)+' · Documento generato il '+esc(printTime)+'</div>'+
+  '<div class="section-title">Dettaglio servizi effettuati</div>'+
+  '<table><colgroup><col class="c-date"><col class="c-fog"><col class="c-sch"><col class="c-mezzo"><col class="c-perc"><col class="c-orari"><col class="c-km"><col class="c-km"><col class="c-km"><col class="c-eq"></colgroup>'+
+  '<thead><tr><th>Data</th><th>Foglio</th><th>Scheda 118</th><th>Mezzo / targa</th><th>Percorso</th><th>Orari</th><th>Km part.</th><th>Km arr.</th><th>Km</th><th>Equipaggio</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+  '<div class="footer"><span>Croce Gialla Emergenza ODV · Registro servizi 118</span><span>'+fv118MonthlyRows.length+' servizi · '+totalKm.toLocaleString('it-IT')+' km</span></div>'+
+  '</div><script>window.onload=()=>window.print()<\\/script></body></html>';
+ const w=window.open('','_blank');
+ if(!w)return msg('fv118MonthMsg','Il browser ha bloccato la finestra di stampa.','warn');
+ w.document.open();w.document.write(html);w.document.close();
 }
 $('fv118MonthRefresh').onclick=load118MonthlySummary;
 $('fv118MonthPrint').onclick=print118MonthlySummary;
