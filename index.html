@@ -4402,10 +4402,18 @@ async function loadOperationalDashboard(){
  }
 
  if($('dashUrgentExpiries')){
-  $('dashUrgentExpiries').innerHTML=expRows.length?expRows.map(x=>
-   '<div class="ops-row '+(x.stato_scadenza==='SCADUTA'?'ops-row-alert':'ops-row-warn')+'"><div class="ops-crew-line"><strong>Mezzo '+esc(x.mezzo||'—')+' · '+esc(x.tipo_scadenza||'Scadenza')+'</strong>'+
-   '<span class="pill '+(x.stato_scadenza==='SCADUTA'?'r':'')+'">'+esc(x.stato_scadenza||'')+'</span></div><div class="muted">Scadenza: '+esc(x.data_scadenza||'—')+'</div></div>'
-  ).join(''):'<div class="ops-row ops-row-ok"><strong>✅ Nessuna scadenza mezzo urgente.</strong></div>';
+  const pexp=(personnelExpiryRows||[]).filter(x=>{
+   if(x.stato!=='ATTIVA')return false;
+   const d=personnelExpiryDays(x.data_scadenza),pre=Number(x.giorni_preavviso??30);
+   return d!==null&&d<=pre;
+  }).sort((a,b)=>String(a.data_scadenza).localeCompare(String(b.data_scadenza)));
+  $('dashUrgentExpiries').innerHTML=pexp.length?pexp.slice(0,8).map(x=>{
+   const d=personnelExpiryDays(x.data_scadenza),urgent=d<=7;
+   const when=d<0?'SCADUTA':d===0?'OGGI':d===1?'DOMANI':'tra '+d+' giorni';
+   const ora=fvTime(x.ora_appuntamento);
+   return '<div class="ops-row '+(urgent?'ops-row-alert':'ops-row-warn')+'"><div class="ops-crew-line"><strong>'+esc(x.nominativo||'—')+' · '+esc(x.tipo_scadenza||'Scadenza')+'</strong>'+
+    '<span class="pill '+(urgent?'r':'')+'">'+esc(when)+'</span></div><div class="muted">Scadenza: '+esc(fvItalianDate(x.data_scadenza))+(ora?' · ore '+esc(ora):'')+'</div></div>';
+  }).join(''):'<div class="ops-row ops-row-ok"><strong>✅ Nessuna scadenza personale urgente.</strong></div>';
  }
 
  const problems=[];
