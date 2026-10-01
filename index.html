@@ -1498,6 +1498,19 @@
  <div id="dSaveMsg"></div>
 </form>
 
+<div class="section" id="dAttachmentsSection">
+ <div class="actions" style="justify-content:space-between;align-items:center">
+  <div><h3 style="margin:0">📎 Allegati richiesta servizio</h3><div class="muted">PDF ricevuti dal richiedente o dalla struttura.</div></div>
+  <span id="dAttachmentsCount" class="pill b">0</span>
+ </div>
+ <div class="actions" style="margin-top:10px;align-items:end">
+  <div class="field" style="flex:1;min-width:260px"><label>Aggiungi PDF</label><input id="dAttachmentFile" type="file" accept="application/pdf,.pdf" multiple></div>
+  <button id="dAttachmentUpload" class="btn yellow" type="button">📎 Carica allegato</button>
+ </div>
+ <div id="dAttachmentMsg"></div>
+ <div id="dAttachmentsList" style="margin-top:10px"></div>
+</div>
+
 <div class="section">
  <h3>Equipaggio</h3>
  <div class="grid3">
@@ -1599,6 +1612,11 @@
 </div><div class="muted" style="margin-top:7px">L’importo aggiornato viene riportato in «Importo previsto €» e vale solo per il servizio corrente.</div>
 </div>
 <div id="tarQuote"></div><div class="field" style="margin-top:9px"><label>Note operative</label><textarea id="note"></textarea></div></div>
+<div class="section"><h3>📎 Allegati richiesta servizio</h3>
+<p class="muted">Puoi allegare uno o più PDF ricevuti da RSA, strutture o altri richiedenti. Dimensione massima 10 MB per file.</p>
+<div class="field"><label>File PDF</label><input id="newServiceAttachments" type="file" accept="application/pdf,.pdf" multiple></div>
+<div id="newServiceAttachmentsInfo" class="muted" style="margin-top:6px">Nessun file selezionato.</div>
+</div>
 <button class="btn yellow" type="submit">Salva servizio</button><div id="fmsg"></div></form></div></section>
 
 <section id="patients" class="surface hidden">
@@ -2510,6 +2528,95 @@ function selectView(v){
  document.querySelectorAll('main>section').forEach(x=>x.classList.toggle('hidden',x.id!==v));
  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
 }
+function serviceAttachmentSafeName(name){
+ return String(name||'allegato.pdf').normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,120)||'allegato.pdf';
+}
+function serviceAttachmentValidate(file){
+ if(!file)return 'File non valido.';
+ const pdf=(file.type==='application/pdf')||/\.pdf$/i.test(file.name||'');
+ if(!pdf)return 'Sono consentiti solo file PDF.';
+ if(file.size>10*1024*1024)return 'Il file '+file.name+' supera 10 MB.';
+ return '';
+}
+async function uploadServiceAttachments(serviceId,files){
+ const list=Array.from(files||[]);
+ if(!list.length)return {ok:0,errors:[]};
+ let ok=0,errors=[];
+ for(const file of list){
+  const err=serviceAttachmentValidate(file);
+  if(err){errors.push(err);continue}
+  const path=serviceId+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+'_'+serviceAttachmentSafeName(file.name);
+  const up=await sb.storage.from('servizi-allegati').upload(path,file,{contentType:'application/pdf',upsert:false});
+  if(up.error){errors.push(file.name+': '+up.error.message);continue}
+  const meta=await sb.from('servizi_allegati').insert({
+   servizio_id:serviceId,
+   nome_file_originale:file.name,
+   storage_path:path,
+   mime_type:'application/pdf',
+   dimensione_bytes:file.size
+  });
+  if(meta.error){
+   await sb.storage.from('servizi-allegati').remove([path]);
+   errors.push(file.name+': '+meta.error.message);continue
+  }
+  ok++;
+ }
+ return {ok,errors};
+}
+function formatAttachmentBytes(n){
+ n=Number(n||0);
+ if(n<1024)return n+' B';
+ if(n<1048576)return (n/1024).toLocaleString('it-IT',{maximumFractionDigits:1})+' KB';
+ return (n/1048576).toLocaleString('it-IT',{maximumFractionDigits:1})+' MB';
+}
+async function loadServiceAttachments(serviceId=currentServiceId){
+ if(!serviceId||!$('dAttachmentsList'))return;
+ const r=await sb.from('servizi_allegati').select('*').eq('servizio_id',serviceId).order('created_at',{ascending:false});
+ if(r.error){$('dAttachmentsList').innerHTML='';return msg('dAttachmentMsg','Impossibile caricare gli allegati: '+r.error.message,'err')}
+ const rows=r.data||[];
+ $('dAttachmentsCount').textContent=String(rows.length);
+ $('dAttachmentsList').innerHTML=rows.length?rows.map(x=>
+  '<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>📄 '+esc(x.nome_file_originale)+'</b><br><span class="muted">'+esc(formatAttachmentBytes(x.dimensione_bytes))+' · caricato '+esc(dt(x.created_at))+'</span></div><div class="actions"><button type="button" class="btn secondary" data-attachment-open="'+esc(x.id)+'">Apri</button><button type="button" class="btn danger" data-attachment-delete="'+esc(x.id)+'">Elimina</button></div></div></div>'
+ ).join(''):'<div class="notice">Nessun PDF allegato a questo servizio.</div>';
+ $('dAttachmentsList').querySelectorAll('[data-attachment-open]').forEach(b=>b.onclick=()=>openServiceAttachment(b.dataset.attachmentOpen,rows));
+ $('dAttachmentsList').querySelectorAll('[data-attachment-delete]').forEach(b=>b.onclick=()=>deleteServiceAttachment(b.dataset.attachmentDelete,rows));
+ msg('dAttachmentMsg','');
+}
+async function openServiceAttachment(id,rows){
+ const x=(rows||[]).find(r=>r.id===id);if(!x)return;
+ const tab=window.open('about:blank','_blank');
+ if(!tab)return msg('dAttachmentMsg','Il browser ha bloccato la nuova scheda.','warn');
+ tab.opener=null;
+ const r=await sb.storage.from('servizi-allegati').createSignedUrl(x.storage_path,120);
+ if(r.error){tab.close();return msg('dAttachmentMsg','Impossibile aprire il PDF: '+r.error.message,'err')}
+ tab.location.href=r.data.signedUrl;
+}
+async function deleteServiceAttachment(id,rows){
+ const x=(rows||[]).find(r=>r.id===id);if(!x)return;
+ if(!confirm('Eliminare l’allegato «'+x.nome_file_originale+'»?'))return;
+ const st=await sb.storage.from('servizi-allegati').remove([x.storage_path]);
+ if(st.error)return msg('dAttachmentMsg','Impossibile eliminare il file: '+st.error.message,'err');
+ const r=await sb.from('servizi_allegati').delete().eq('id',id);
+ if(r.error)return msg('dAttachmentMsg','File eliminato ma archivio non aggiornato: '+r.error.message,'err');
+ await loadServiceAttachments();
+}
+async function uploadDetailServiceAttachments(){
+ if(!currentServiceId)return;
+ const input=$('dAttachmentFile'),files=Array.from(input.files||[]);
+ if(!files.length)return msg('dAttachmentMsg','Seleziona almeno un PDF.','warn');
+ msg('dAttachmentMsg','Caricamento allegato...');
+ const result=await uploadServiceAttachments(currentServiceId,files);
+ input.value='';
+ await loadServiceAttachments();
+ if(result.errors.length)return msg('dAttachmentMsg','Caricati '+result.ok+' file. Errori: '+result.errors.join(' · '),'warn');
+ msg('dAttachmentMsg','Allegato'+(result.ok===1?'':'i')+' caricato'+(result.ok===1?'':'i')+' correttamente.','ok');
+}
+if($('newServiceAttachments'))$('newServiceAttachments').onchange=()=>{
+ const files=Array.from($('newServiceAttachments').files||[]);
+ $('newServiceAttachmentsInfo').textContent=files.length?files.length+' PDF selezionato'+(files.length===1?'':'i')+' · '+files.map(f=>f.name).join(' · '):'Nessun file selezionato.';
+};
+if($('dAttachmentUpload'))$('dAttachmentUpload').onclick=uploadDetailServiceAttachments;
+
 function resetNewServiceForm(){
  const form=$('form');form.reset();
  form.querySelectorAll('input:not([type="checkbox"]):not([type="radio"]),textarea').forEach(el=>{el.value=''});
@@ -2522,6 +2629,7 @@ function resetNewServiceForm(){
  $('patientLookupText').value='';
  msg('patientLookupMsg','');msg('fmsg','');
  $('tarQuote').innerHTML='';
+ if($('newServiceAttachmentsInfo'))$('newServiceAttachmentsInfo').textContent='Nessun file selezionato.';
  if($('duplicatePreparedNotice')){$('duplicatePreparedNotice').classList.add('hidden');$('duplicatePreparedNotice').textContent=''}
  populateServiceTariffOptions();
  updateManifestationTimes();
@@ -5183,6 +5291,7 @@ async function loadServiceDetail(id=currentServiceId){
   $('dDelete').title=deleteBlocked?'Servizio già avviato, concluso o passato: usa Annulla / storico.':'Elimina definitivamente il servizio inserito per errore';
  }
  $('dAccounting').classList.toggle('hidden',isCentral||!(s.stato_gestionale==='DA CONTABILIZZARE'||!['PAGATO','NON DOVUTO'].includes(s.stato_pagamento)));
+ await loadServiceAttachments(id);
  msg('dActionMsg','');
  msg('dSaveMsg','');
  if(!cr.error)msg('dCrewMsg','');
@@ -5371,11 +5480,19 @@ $('form').onsubmit=async e=>{
   }
  }
  const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:isEvent?null:($('odest').value||null),ora_inizio_assistenza_prevista:isEvent?($('asStart').value||null):null,ora_fine_assistenza_prevista:isEvent?($('asEnd').value||null):null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,luogo_carico_paziente:isEvent?null:($('loadPlace').value.trim()||null),indirizzo_carico_paziente:isEvent?null:($('loadAddress').value.trim()||null),destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?price.base:null,importo_finale:amount,sedia_motorizzata:$('newSediaMotorizzata').checked,barella_bariatrica:$('newBarellaBariatrica').checked,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
+ const pendingAttachments=Array.from($('newServiceAttachments')?.files||[]);
+ for(const file of pendingAttachments){
+  const attachmentError=serviceAttachmentValidate(file);
+  if(attachmentError)return msg('fmsg',attachmentError,'warn');
+ }
  const r=await sb.from('servizi_giornalieri').insert(p).select('id').single();
  if(r.error)return msg('fmsg',r.error.message,'err');
+ let attachmentResult={ok:0,errors:[]};
+ if(pendingAttachments.length)attachmentResult=await uploadServiceAttachments(r.data.id,pendingAttachments);
  // Dopo il salvataggio, elimina ogni dato del servizio appena creato.
  resetNewServiceForm();
- msg('fmsg','Servizio salvato. Ora puoi assegnare l’equipaggio.','ok');
+ const attachmentText=pendingAttachments.length?(attachmentResult.errors.length?' · Allegati: '+attachmentResult.ok+' caricati, '+attachmentResult.errors.length+' non caricati.':' · '+attachmentResult.ok+' PDF allegato'+(attachmentResult.ok===1?'':'i')+' caricato'+(attachmentResult.ok===1?'':'i')+'.'):'';
+ msg('fmsg','Servizio salvato'+attachmentText+' Ora puoi assegnare l’equipaggio.',attachmentResult.errors.length?'warn':'ok');
  nextCrewServiceId=r.data.id;
  await view('crew');
 };
