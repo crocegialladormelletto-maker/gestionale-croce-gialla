@@ -8288,7 +8288,7 @@ async function loadTabletSheet(serviceId){
    if(!upd.error&&upd.data){tabletCurrentSheet=upd.data;f=upd.data;}
   }
  }
- $('tabletPatientLoadTime').classList.toggle('hidden',isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio));
+ $('tabletPatientLoadTime').classList.toggle('hidden',isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio)||String(tabletCurrentService?.tipo_servizio||f.tipo_servizio||'')==='Servizio interno');
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
  const patientEditable=!!tabletCurrentService && tabletSheetIs118===false && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno';
@@ -8342,9 +8342,11 @@ async function saveTabletSheet(silent=false){
   else if(el.type==='number'){row[name]=(name==='km_partenza'||name==='km_arrivo')?tabletKmNumber(el.value):(el.value===''?null:Number(el.value));if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
  }
- if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio))row.ora_carico_paziente=null;
+ const isInternalService=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'')==='Servizio interno';
+ if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio)||isInternalService)row.ora_carico_paziente=null;
+ if(isInternalService){row.importo_inserito=0;row.modalita_pagamento=null;row.data_pagamento=null;}
  if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
- if(tabletCurrentService?.tipo_servizio!=='118'&&row.importo_inserito===null)return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
+ if(!isInternalService&&tabletCurrentService?.tipo_servizio!=='118'&&row.importo_inserito===null)return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id').maybeSingle();
