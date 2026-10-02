@@ -2187,7 +2187,7 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Note operative</label><textarea id="tabletAdNotes" maxlength="2000"></textarea></div>
    </div>
    <div id="tabletAdQuote" class="notice">Seleziona un tariffario oppure lascia il prezzo da concordare con il Centralino.</div>
-   <button id="tabletAdSubmit" type="submit" class="btn yellow">Crea servizio e Foglio Viaggio</button>
+   <div class="actions"><button id="tabletAdDraftSave" type="button" class="btn secondary">💾 Salva dati</button><button id="tabletAdSubmit" type="submit" class="btn yellow">Crea servizio e Foglio Viaggio</button></div><div class="muted" style="margin-top:6px">Salva dati conserva la compilazione sul tablet senza creare ancora il servizio. Potrai riaprirla e completarla successivamente.</div>
    <div id="tabletAdMsg"></div>
    </form>
   </div>
@@ -8657,6 +8657,28 @@ function tabletUpdateImmediateQuote(){
  $('tabletAdQuote').textContent=x?'Importo previsto per il paziente: '+euro(night?x.importo_notturno:x.importo_diurno):
  manual!==''?'Importo concordato: '+euro(Number(manual)):'Nessuna tariffa impostata: da concordare con il Centralino.';
 }
+function tabletImmediateDraftKey(){return 'cge_tablet_immediate_draft_'+String(tabletMezzo||'');}
+function tabletSaveImmediateDraft(){
+ const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdNotes'];
+ const data={};
+ ids.forEach(id=>{if($(id))data[id]=$(id).value;});
+ data.saved_at=new Date().toISOString();
+ try{localStorage.setItem(tabletImmediateDraftKey(),JSON.stringify(data));msg('tabletAdMsg','Dati salvati. La bozza resta disponibile su questo tablet.','ok')}
+ catch(e){msg('tabletAdMsg','Impossibile salvare la bozza su questo tablet.','err')}
+}
+function tabletRestoreImmediateDraft(){
+ let data=null;try{data=JSON.parse(localStorage.getItem(tabletImmediateDraftKey())||'null')}catch(_){}
+ if(!data)return false;
+ const simple=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdNight','tabletAdAmount','tabletAdNotes'];
+ simple.forEach(id=>{if($(id)&&data[id]!=null)$(id).value=data[id];});
+ if(data.tabletAdTariffGroup!=null&&$('tabletAdTariffGroup')){$('tabletAdTariffGroup').value=data.tabletAdTariffGroup;tabletUpdateImmediateTariff();}
+ if(data.tabletAdTariffDest!=null&&$('tabletAdTariffDest'))$('tabletAdTariffDest').value=data.tabletAdTariffDest;
+ ['tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond'].forEach(id=>{if($(id)&&data[id]!=null)$(id).value=data[id];});
+ tabletApplyImmediateTypeRules();tabletUpdateImmediateQuote();
+ msg('tabletAdMsg','Bozza precedente ripristinata. Puoi completarla e creare il servizio quando vuoi.','ok');
+ return true;
+}
+function tabletClearImmediateDraft(){try{localStorage.removeItem(tabletImmediateDraftKey())}catch(_){}}
 async function tabletCreateImmediate(){
  if(tabletBusy)return;
  const code=$('tabletAdTariffGroup').value;
@@ -8691,6 +8713,7 @@ async function tabletCreateImmediate(){
   if(!r.data?.servizio_id||!r.data?.foglio_id)throw new Error('Risposta incompleta: aggiorna e verifica il servizio.');
   created=r.data;
   msg('tabletAdMsg','Servizio creato. Foglio Viaggio '+created.numero_foglio+' collegato.','ok');
+  tabletClearImmediateDraft();
   $('tabletImmediateForm').reset();
   tabletApplyImmediateTypeRules();
  }catch(e){msg('tabletAdMsg','Impossibile creare il servizio: '+(e.message||String(e)),'err')}
@@ -8709,7 +8732,7 @@ $('tabletTariffToggle').onclick=()=>{
 $('tabletImmediateToggle').onclick=async()=>{
  const panel=$('tabletImmediatePanel');
  panel.classList.toggle('hidden');
- if(!panel.classList.contains('hidden')){await tabletLoadCrewPeople();tabletApplyImmediateTypeRules();}
+ if(!panel.classList.contains('hidden')){await tabletLoadCrewPeople();if(!tabletRestoreImmediateDraft())tabletApplyImmediateTypeRules();}
 };
 $('tabletPriceGroup').onchange=tabletRenderTariffPrices;
 $('tabletPriceSearch').oninput=tabletRenderTariffPrices;
@@ -8718,6 +8741,7 @@ $('tabletAdTariffGroup').onchange=tabletUpdateImmediateTariff;
 $('tabletAdTariffDest').onchange=tabletUpdateImmediateQuote;
 $('tabletAdNight').onchange=tabletUpdateImmediateQuote;
 $('tabletAdAmount').oninput=tabletUpdateImmediateQuote;
+$('tabletAdDraftSave').onclick=tabletSaveImmediateDraft;
 $('tabletImmediateForm').onsubmit=async e=>{e.preventDefault();await tabletCreateImmediate()};
 
 async function startTabletArea(){
