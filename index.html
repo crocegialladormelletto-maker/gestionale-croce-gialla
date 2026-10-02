@@ -7313,9 +7313,12 @@ function routeCalcKnownFacility(q){
   {rx:/^OSPEDALE\s+SS\s+TRINITA\s+BORGOMANERO$/,address:'Viale Zoppis 10, 28021 Borgomanero NO, Italia',label:'Ospedale SS. Trinità Borgomanero'},
   {rx:/^OSPEDALE\s+NOVARA$/,address:'Corso Giuseppe Mazzini 18, 28100 Novara NO, Italia',label:'AOU Maggiore della Carità Novara'},
   {rx:/^OSPEDALE\s+MAGGIORE\s+NOVARA$/,address:'Corso Giuseppe Mazzini 18, 28100 Novara NO, Italia',label:'AOU Maggiore della Carità Novara'},
-  {rx:/^(CLINICA\s+)?MAUGERI\s+VERUNO$/,address:'Via per Revislate 13, 28013 Gattico-Veruno NO, Italia',label:'IRCCS Maugeri Veruno',lat:45.69485,lon:8.53538},
-  {rx:/^IRCCS\s+MAUGERI\s+VERUNO$/,address:'Via per Revislate 13, 28013 Gattico-Veruno NO, Italia',label:'IRCCS Maugeri Veruno',lat:45.69485,lon:8.53538},
-  {rx:/^(ISTITUTO|ISTITUTI\s+CLINICI\s+SCIENTIFICI)\s+MAUGERI\s+VERUNO$/,address:'Via per Revislate 13, 28013 Gattico-Veruno NO, Italia',label:'IRCCS Maugeri Veruno',lat:45.69485,lon:8.53538}
+  {rx:/^(CLINICA\s+)?MAUGERI\s+VERUNO$/,address:'Via Revislate 13, Veruno, 28013 Gattico-Veruno NO, Italia',label:'IRCCS Maugeri Veruno',lat:45.69485,lon:8.53538},
+  {rx:/^IRCCS\s+MAUGERI\s+VERUNO$/,address:'Via Revislate 13, Veruno, 28013 Gattico-Veruno NO, Italia',label:'IRCCS Maugeri Veruno',lat:45.69485,lon:8.53538},
+  {rx:/^(ISTITUTO|ISTITUTI\s+CLINICI\s+SCIENTIFICI)\s+MAUGERI\s+VERUNO$/,address:'Via Revislate 13, Veruno, 28013 Gattico-Veruno NO, Italia',label:'IRCCS Maugeri Veruno',lat:45.69485,lon:8.53538},
+  {rx:/^(OSPEDALE\s+)?MAGGIORE(\s+DELLA\s+CARITA)?\s+NOVARA$/,address:'Corso Giuseppe Mazzini 18, 28100 Novara NO, Italia',label:'AOU Maggiore della Carità Novara'},
+  {rx:/^AOU\s+MAGGIORE\s+DELLA\s+CARITA\s+NOVARA$/,address:'Corso Giuseppe Mazzini 18, 28100 Novara NO, Italia',label:'AOU Maggiore della Carità Novara'},
+  {rx:/^DEA\s+NOVARA$/,address:'Baluardo Massimo d\'Azeglio, 28100 Novara NO, Italia',label:'DEA Ospedale Maggiore Novara'}
  ];
  const hit=facilities.find(x=>x.rx.test(key));
  return hit||null;
@@ -7387,10 +7390,12 @@ async function routeCalcGeocode(q){
   const healthAliases=[
    [/^OSPEDALE\s+BORGOMANERO$/i,'Ospedale Santissima Trinità, Borgomanero, NO, Italia'],
    [/^OSPEDALE\s+NOVARA$/i,'Azienda Ospedaliero Universitaria Maggiore della Carità, Novara, Italia'],
-   [/^OSPEDALE\s+MAGGIORE\s+NOVARA$/i,'Azienda Ospedaliero Universitaria Maggiore della Carità, Novara, Italia'],
+   [/^OSPEDALE\s+MAGGIORE\s+NOVARA$/i,'Azienda Ospedaliero Universitaria Maggiore della Carità, Corso Giuseppe Mazzini 18, 28100 Novara NO, Italia'],
+   [/^MAGGIORE\s+NOVARA$/i,'Azienda Ospedaliero Universitaria Maggiore della Carità, Corso Giuseppe Mazzini 18, 28100 Novara NO, Italia'],
+   [/^OSPEDALE\s+MAGGIORE\s+DELLA\s+CARITA\s+NOVARA$/i,'Azienda Ospedaliero Universitaria Maggiore della Carità, Corso Giuseppe Mazzini 18, 28100 Novara NO, Italia'],
    [/^RSA\s+PALLADIO$/i,'RSA Palladio, Dormelletto, NO, Italia'],
-   [/^(CLINICA\s+)?MAUGERI\s+VERUNO$/i,'IRCCS Maugeri Veruno, Via per Revislate 13, 28013 Gattico-Veruno NO, Italia'],
-   [/^IRCCS\s+MAUGERI\s+VERUNO$/i,'IRCCS Maugeri Veruno, Via per Revislate 13, 28013 Gattico-Veruno NO, Italia']
+   [/^(CLINICA\s+)?MAUGERI\s+VERUNO$/i,'IRCCS Maugeri Veruno, Via Revislate 13, Veruno, 28013 Gattico-Veruno NO, Italia'],
+   [/^IRCCS\s+MAUGERI\s+VERUNO$/i,'IRCCS Maugeri Veruno, Via Revislate 13, Veruno, 28013 Gattico-Veruno NO, Italia']
   ];
   for(const [rx,val] of healthAliases)if(rx.test(normalized))addAttempt(val);
  }
@@ -7440,6 +7445,10 @@ async function routeCalcGeocode(q){
   const normUpper=normalized.toUpperCase();
   for(const [city,prov] of knownCities){
    if(normUpper===city)continue;
+   if(city==='VERUNO'&&normUpper.endsWith(' VERUNO')){
+    const street=normalized.slice(0,normalized.length-city.length).trim().replace(/[ ,]+$/,'');
+    if(street){addAttempt(street+', Veruno, Gattico-Veruno, NO, Italia');addAttempt(street+', località Veruno, Gattico-Veruno, NO, Italia');}
+   }
    if(normUpper.endsWith(' '+city)){
     const street=normalized.slice(0,normalized.length-city.length).trim().replace(/[ ,]+$/,'');
     if(street){
