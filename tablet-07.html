@@ -8033,7 +8033,12 @@ async function tabletPrefillImmediateKm(){
   .order('progressivo',{ascending:false})
   .limit(1)
   .maybeSingle();
- if(!r.error&&r.data?.km_arrivo!=null)$('tabletAdKmStart').value=String(r.data.km_arrivo);
+ if(!r.error&&r.data?.km_arrivo!=null){
+  $('tabletAdKmStart').value=String(r.data.km_arrivo);
+ }else{
+  const initialKm={ '06':137267,'07':13487,'08':8971,'09':16284 };
+  if(initialKm[String(tabletMezzo)]!=null)$('tabletAdKmStart').value=String(initialKm[String(tabletMezzo)]);
+ }
 }
 function tabletImmediateDraftKey(){return 'cge_tablet_immediate_draft_'+String(tabletMezzo||'');}
 function tabletSaveImmediateDraft(){
