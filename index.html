@@ -8641,10 +8641,6 @@ function tabletUpdateImmediateTariff(){
 }
 function tabletApplyImmediateTypeRules(){
  const internal=$('tabletAdType').value==='Servizio interno';
- const immediateKmStart=$('tabletAdKmStart')?.value??'';
- const immediateKmClose=$('tabletAdKmClose')?.value??'';
- if(immediateKmStart!==''&&immediateKmClose!==''&&Number(immediateKmClose)<Number(immediateKmStart))
-  return msg('tabletAdMsg','I KM chiusura non possono essere inferiori ai KM partenza.','warn');
  if($('tabletAdPatientSection'))$('tabletAdPatientSection').classList.toggle('hidden',internal);
  ['tabletAdFirst','tabletAdLast'].forEach(id=>{if($(id))$(id).required=!internal;});
  if(internal){
@@ -8725,6 +8721,10 @@ async function tabletCreateImmediate(){
  const code=$('tabletAdTariffGroup').value;
  const tariff=tabletTariffRows.find(r=>r.tariffa_destinazione_id===$('tabletAdTariffDest').value&&r.tariffario_codice===code);
  const night=$('tabletAdNight').value==='true',manual=$('tabletAdAmount').value;
+ const immediateKmStart=$('tabletAdKmStart')?.value??'';
+ const immediateKmClose=$('tabletAdKmClose')?.value??'';
+ if(immediateKmStart!==''&&immediateKmClose!==''&&Number(immediateKmClose)<Number(immediateKmStart))
+  return msg('tabletAdMsg','I KM chiusura non possono essere inferiori ai KM partenza.','warn');
  if(code&&!tariff)return msg('tabletAdMsg','Seleziona la destinazione del tariffario, oppure imposta Nessuno / importo concordato.','warn');
  if(code&&manual!=='')return msg('tabletAdMsg','Non inserire un importo manuale insieme al tariffario.','warn');
  if(code&&night&&code.startsWith('TS_'))return msg('tabletAdMsg','Tariffa notturna non prevista per trasporto semplice: chiedi al Centralino e usa la tariffa concordata.','warn');
