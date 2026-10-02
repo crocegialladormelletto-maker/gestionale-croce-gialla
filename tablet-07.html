@@ -7907,7 +7907,7 @@ function renderTabletList(){
 }
 async function tabletRefreshList(){
  if(!tabletMezzo||tabletBusy)return;
- const r=await sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,ora_partenza_prevista,ora_carico_paziente_prevista,ora_arrivo_destinazione_prevista,ora_inizio_assistenza_prevista,ora_fine_assistenza_prevista,ora_rientro_previsto,ora_partenza_effettiva,ora_carico_paziente_effettiva,ora_rientro_effettivo,luogo_partenza,indirizzo_partenza,destinazione,indirizzo_destinazione,ospedale_destinazione,paziente_nome,paziente_cognome,data_nascita,codice_fiscale,telefono,note,stato,stato_gestionale,equipaggio_minimo,capo_servizio_obbligatorio,foglio_viaggio_id,numero_foglio,importo_previsto,importo_finale,modalita_tariffaria').eq('mezzo',tabletMezzo).gte('data_servizio',tabletShiftDays(-7)).lte('data_servizio',tabletShiftDays(14)).order('data_servizio',{ascending:true}).order('ora_partenza_prevista',{ascending:true});
+ const r=await sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,ora_partenza_prevista,ora_carico_paziente_prevista,ora_arrivo_destinazione_prevista,ora_inizio_assistenza_prevista,ora_fine_assistenza_prevista,ora_rientro_previsto,ora_partenza_effettiva,ora_carico_paziente_effettiva,ora_rientro_effettivo,luogo_partenza,indirizzo_partenza,destinazione,indirizzo_destinazione,ospedale_destinazione,paziente_nome,paziente_cognome,data_nascita,codice_fiscale,paziente_indirizzo,paziente_email,telefono,note,stato,stato_gestionale,equipaggio_minimo,capo_servizio_obbligatorio,foglio_viaggio_id,numero_foglio,importo_previsto,importo_finale,modalita_tariffaria').eq('mezzo',tabletMezzo).gte('data_servizio',tabletShiftDays(-7)).lte('data_servizio',tabletShiftDays(14)).order('data_servizio',{ascending:true}).order('ora_partenza_prevista',{ascending:true});
  if(r.error)return msg('tabletMsg','Aggiornamento non riuscito: '+r.error.message,'err');
  tabletServices=r.data||[];
  const ids=tabletServices.map(x=>x.id);
@@ -8291,6 +8291,18 @@ async function loadTabletSheet(serviceId){
  $('tabletPatientLoadTime').classList.toggle('hidden',isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio));
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
+ const patientEditable=!!tabletCurrentService && tabletSheetIs118===false && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno';
+ if($('tabletPatientEditSection'))$('tabletPatientEditSection').classList.toggle('hidden',!patientEditable);
+ if(patientEditable){
+  $('tabletPatientFirst').value=tabletCurrentService.paziente_nome||f.paziente_nome||'';
+  $('tabletPatientLast').value=tabletCurrentService.paziente_cognome||f.paziente_cognome||'';
+  $('tabletPatientCf').value=tabletCurrentService.codice_fiscale||f.codice_fiscale||'';
+  $('tabletPatientDob').value=tabletCurrentService.data_nascita||f.data_nascita||'';
+  $('tabletPatientPhone').value=tabletCurrentService.telefono||f.telefono||'';
+  $('tabletPatientAddress').value=tabletCurrentService.paziente_indirizzo||'';
+  $('tabletPatientEmail').value=tabletCurrentService.paziente_email||f.email||'';
+  ['tabletPatientFirst','tabletPatientLast','tabletPatientCf','tabletPatientDob','tabletPatientPhone','tabletPatientAddress','tabletPatientEmail'].forEach(id=>{if($(id))$(id).disabled=closed;});
+ }
  document.querySelectorAll('[data-ts-field]').forEach(el=>{
  const key=el.dataset.tsField;el.disabled=closed;
  if(el.type==='checkbox')el.checked=!!f[key];
