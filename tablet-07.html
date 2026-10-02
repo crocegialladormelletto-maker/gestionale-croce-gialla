@@ -2088,7 +2088,7 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Inizio fermo</label><input type="time" data-ts-field="inizio_fermo"></div>
      <div class="field"><label>Fine fermo</label><input type="time" data-ts-field="fine_fermo"></div>
      <div class="field"><label>KM partenza</label><input type="number" min="0" step="1" data-ts-field="km_partenza"></div>
-     <div class="field"><label>KM rientro</label><input type="number" min="0" step="1" data-ts-field="km_arrivo"></div>
+     <div class="field"><label>KM chiusura / rientro *</label><input type="number" min="0" step="1" data-ts-field="km_arrivo"></div>
      <div class="field"><label>KM percorsi</label><input id="tabletKmTotal" disabled value="—"></div>
      <div class="field"><label>N. scheda 118 (se 118)</label><input data-ts-field="numero_scheda_118"></div>
     </div>
@@ -8262,6 +8262,11 @@ async function saveTabletSheet(silent=false){
 async function tabletCloseSheet(){
  if(!tabletCurrentSheet||tabletBusy)return;
  if(!['COMPLETATO'].includes(tabletCurrentService?.stato)&&!['DA CONTABILIZZARE','CHIUSO'].includes(tabletCurrentService?.stato_gestionale))return msg('tabletSheetMsg','Termina prima il servizio, poi chiudi il Foglio Viaggio.','warn');
+ const kmStart=document.querySelector('[data-ts-field="km_partenza"]')?.value??'';
+ const kmClose=document.querySelector('[data-ts-field="km_arrivo"]')?.value??'';
+ if(kmStart==='')return msg('tabletSheetMsg','Inserisci i KM di partenza prima di chiudere il Foglio Viaggio.','warn');
+ if(kmClose==='')return msg('tabletSheetMsg','Inserisci i KM di chiusura / rientro prima di chiudere il Foglio Viaggio.','warn');
+ if(Number(kmClose)<Number(kmStart))return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
  const saved=await saveTabletSheet(true);if(!saved)return;
  if(!confirm('Chiudere definitivamente il Foglio Viaggio? Non sarà più modificabile dal tablet.'))return;
  tabletBusy=true;msg('tabletSheetMsg','Chiusura in corso...');
