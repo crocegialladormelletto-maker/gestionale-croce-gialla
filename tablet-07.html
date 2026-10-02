@@ -2025,8 +2025,19 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Tipo servizio *</label><select id="tabletAdType" required><option>Dimissione</option><option>Trasporto semplice</option><option>Trasferimento</option><option>Visita</option><option>RSA</option><option>Servizio interno</option></select></div>
     <div class="field"><label>Luogo partenza *</label><input id="tabletAdOrigin" required maxlength="250" placeholder="Es. DEA Borgomanero"></div>
     <div class="field"><label>Destinazione *</label><input id="tabletAdDestination" required maxlength="250" placeholder="Es. Dormelletto – domicilio"></div>
-    <div class="field"><label>Nome paziente</label><input id="tabletAdFirst" maxlength="120"></div>
-    <div class="field"><label>Cognome paziente</label><input id="tabletAdLast" maxlength="120"></div>
+   </div>
+   <div id="tabletAdPatientSection">
+    <h3>Dati anagrafici paziente</h3>
+    <div class="grid3">
+     <div class="field"><label>Nome *</label><input id="tabletAdFirst" maxlength="120"></div>
+     <div class="field"><label>Cognome *</label><input id="tabletAdLast" maxlength="120"></div>
+     <div class="field"><label>Codice fiscale</label><input id="tabletAdCf" maxlength="16" autocapitalize="characters"></div>
+     <div class="field"><label>Data di nascita</label><input id="tabletAdDob" type="date"></div>
+     <div class="field"><label>Telefono</label><input id="tabletAdPhone" maxlength="60" type="tel"></div>
+     <div class="field"><label>Indirizzo</label><input id="tabletAdAddress" maxlength="400" autocomplete="street-address"></div>
+     <div class="field"><label>E-mail</label><input id="tabletAdEmail" maxlength="254" type="email" autocomplete="email"></div>
+    </div>
+    <div class="muted" style="margin:6px 0 12px">I dati vengono registrati o aggiornati automaticamente nell’Anagrafica Pazienti quando crei il servizio.</div>
    </div>
    <h3>Equipaggio a bordo</h3>
    <div class="grid2">
@@ -7975,6 +7986,11 @@ function tabletUpdateImmediateTariff(){
 }
 function tabletApplyImmediateTypeRules(){
  const internal=$('tabletAdType').value==='Servizio interno';
+ $('tabletAdPatientSection').classList.toggle('hidden',internal);
+ ['tabletAdFirst','tabletAdLast'].forEach(id=>{$(id).required=!internal;});
+ if(internal){
+  ['tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail'].forEach(id=>{if($(id))$(id).value='';});
+ }
  $('tabletAdTariffGroup').disabled=internal;
  $('tabletAdTariffDest').disabled=internal;
  $('tabletAdNight').disabled=internal;
@@ -8006,7 +8022,7 @@ function tabletUpdateImmediateQuote(){
 }
 function tabletImmediateDraftKey(){return 'cge_tablet_immediate_draft_'+String(tabletMezzo||'');}
 function tabletSaveImmediateDraft(){
- const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdNotes'];
+ const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdNotes'];
  const data={};
  ids.forEach(id=>{if($(id))data[id]=$(id).value;});
  data.saved_at=new Date().toISOString();
@@ -8016,7 +8032,7 @@ function tabletSaveImmediateDraft(){
 function tabletRestoreImmediateDraft(){
  let data=null;try{data=JSON.parse(localStorage.getItem(tabletImmediateDraftKey())||'null')}catch(_){}
  if(!data)return false;
- const simple=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdNight','tabletAdAmount','tabletAdNotes'];
+ const simple=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdNight','tabletAdAmount','tabletAdNotes'];
  simple.forEach(id=>{if($(id)&&data[id]!=null)$(id).value=data[id];});
  if(data.tabletAdTariffGroup!=null&&$('tabletAdTariffGroup')){$('tabletAdTariffGroup').value=data.tabletAdTariffGroup;tabletUpdateImmediateTariff();}
  if(data.tabletAdTariffDest!=null&&$('tabletAdTariffDest'))$('tabletAdTariffDest').value=data.tabletAdTariffDest;
@@ -8031,6 +8047,13 @@ async function tabletCreateImmediate(){
  const code=$('tabletAdTariffGroup').value;
  const tariff=tabletTariffRows.find(r=>r.tariffa_destinazione_id===$('tabletAdTariffDest').value&&r.tariffario_codice===code);
  const night=$('tabletAdNight').value==='true',manual=$('tabletAdAmount').value;
+ const internal=$('tabletAdType').value==='Servizio interno';
+ if(!internal){
+  if(!$('tabletAdFirst').value.trim()||!$('tabletAdLast').value.trim())return msg('tabletAdMsg','Inserisci nome e cognome del paziente.','warn');
+  const cf=$('tabletAdCf').value.trim();
+  if(cf&&cf.length!==16)return msg('tabletAdMsg','Controlla il codice fiscale del paziente.','warn');
+  if(!$('tabletAdEmail').checkValidity())return msg('tabletAdMsg','Controlla l’indirizzo e-mail del paziente.','warn');
+ }
  if(code&&!tariff)return msg('tabletAdMsg','Seleziona la destinazione del tariffario, oppure imposta Nessuno / importo concordato.','warn');
  if(code&&manual!=='')return msg('tabletAdMsg','Non inserire un importo manuale insieme al tariffario.','warn');
  if(code&&night&&code.startsWith('TS_'))return msg('tabletAdMsg','Tariffa notturna non prevista per trasporto semplice: chiedi al Centralino e usa la tariffa concordata.','warn');
@@ -8053,7 +8076,12 @@ async function tabletCreateImmediate(){
    p_destinazione:$('tabletAdDestination').value.trim(),p_paziente_nome:$('tabletAdFirst').value.trim(),
    p_paziente_cognome:$('tabletAdLast').value.trim(),p_equipaggio:crew,
    p_tariffa_destinazione:tariff?.tariffa_destinazione_id||null,p_notturno:night,
-   p_importo_concordato:manual===''?null:Number(manual),p_note:$('tabletAdNotes').value.trim()
+   p_importo_concordato:manual===''?null:Number(manual),p_note:$('tabletAdNotes').value.trim(),
+   p_codice_fiscale:$('tabletAdCf').value.trim().toUpperCase()||null,
+   p_data_nascita:$('tabletAdDob').value||null,
+   p_telefono:$('tabletAdPhone').value.trim()||null,
+   p_indirizzo:$('tabletAdAddress').value.trim()||null,
+   p_email:$('tabletAdEmail').value.trim().toLowerCase()||null
   };
   const r=await sb.rpc('cge_tablet_crea_servizio_immediato',args);
   if(r.error)throw r.error;
