@@ -8025,9 +8025,10 @@ function tabletUpdateImmediateQuote(){
 async function tabletPrefillImmediateKm(){
  if(!$('tabletAdKmStart')||$('tabletAdKmStart').value!=='')return;
  const r=await sb.from('fogli_viaggio')
-  .select('km_arrivo')
+  .select('km_arrivo,data_servizio,progressivo,modificato_il')
   .eq('mezzo',tabletMezzo)
   .not('km_arrivo','is',null)
+  .order('modificato_il',{ascending:false,nullsFirst:false})
   .order('data_servizio',{ascending:false})
   .order('progressivo',{ascending:false})
   .limit(1)
@@ -8242,7 +8243,23 @@ async function loadTabletSheet(serviceId){
  if(!r.data){
   msg('tabletDetailMsg','Foglio Viaggio non ancora predisposto. Premi «Prendi in carico» per crearlo, dopo il completamento dell’equipaggio.','warn');return;
  }
- tabletCurrentSheet=r.data;const f=r.data,closed=f.stato==='CHIUSO';
+ tabletCurrentSheet=r.data;let f=r.data,closed=f.stato==='CHIUSO';
+ if(!closed&&f.km_partenza==null){
+  const lastKm=await sb.from('fogli_viaggio')
+   .select('km_arrivo,data_servizio,progressivo,modificato_il')
+   .eq('mezzo',tabletMezzo)
+   .neq('id',f.id)
+   .not('km_arrivo','is',null)
+   .order('modificato_il',{ascending:false,nullsFirst:false})
+   .order('data_servizio',{ascending:false})
+   .order('progressivo',{ascending:false})
+   .limit(1)
+   .maybeSingle();
+  if(!lastKm.error&&lastKm.data?.km_arrivo!=null){
+   const upd=await sb.from('fogli_viaggio').update({km_partenza:Number(lastKm.data.km_arrivo)}).eq('id',f.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('*').maybeSingle();
+   if(!upd.error&&upd.data){tabletCurrentSheet=upd.data;f=upd.data;}
+  }
+ }
  $('tabletPatientLoadTime').classList.toggle('hidden',isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio));
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
