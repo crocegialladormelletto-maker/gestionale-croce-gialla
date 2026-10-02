@@ -738,7 +738,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.30</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.31</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -8476,7 +8476,7 @@ function renderTabletList(){
  const rows=tabletListFiltered();
  $('tabletList').innerHTML=rows.length?rows.map(s=>{
  const crew=tabletCrewFor(s.id),ready=tabletCrewReady(s),st=s.stato_gestionale||s.stato||'DA ESEGUIRE';
- return '<article class="tablet-service-card '+tabletStatusClass(st)+'"><div class="tablet-service-head">'+
+ return '<article class="tablet-service-card '+tabletStatusClass(st)+'" data-tablet-card="'+esc(s.id)+'"><div class="tablet-service-head">'+
  '<div><div class="muted">'+esc(tabletDateLabel(s.data_servizio))+'</div><span class="tablet-hour">'+esc(tabletFmt(s.ora_partenza_prevista))+'</span></div>'+
  '<span class="tablet-vehicle">'+esc(s.mezzo)+'</span><span class="tablet-pill">'+esc(st)+'</span></div>'+
  '<div class="tablet-flow">'+esc(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+'<br>'+esc(s.luogo_partenza||'Sede')+' → '+(s.luogo_carico_paziente||s.indirizzo_carico_paziente?'<b>CARICO:</b> '+esc([s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · '))+' → ':'')+esc(s.ospedale_destinazione||s.destinazione||'—')+'</div>'+
@@ -8488,8 +8488,9 @@ function renderTabletList(){
  (s.foglio_viaggio_id?'<button class="btn yellow" type="button" data-tablet-open-sheet="'+esc(s.id)+'">Apri direttamente Foglio Viaggio</button>':'')+
  '</div></article>'
  }).join(''):'<div class="tablet-empty">Nessun servizio in questa vista per il mezzo '+esc(tabletMezzo)+'.<br>Il tablet si aggiorna automaticamente.</div>';
- $('tabletList').querySelectorAll('[data-tablet-open]').forEach(b=>b.onclick=()=>openTabletService(b.dataset.tabletOpen));
- $('tabletList').querySelectorAll('[data-tablet-open-sheet]').forEach(b=>b.onclick=()=>openTabletLinkedSheet(b.dataset.tabletOpenSheet));
+ $('tabletList').querySelectorAll('[data-tablet-open]').forEach(b=>b.onclick=e=>{e.stopPropagation();openTabletService(b.dataset.tabletOpen)});
+ $('tabletList').querySelectorAll('[data-tablet-open-sheet]').forEach(b=>b.onclick=e=>{e.stopPropagation();openTabletLinkedSheet(b.dataset.tabletOpenSheet)});
+ $('tabletList').querySelectorAll('[data-tablet-card]').forEach(card=>card.onclick=()=>openTabletLinkedSheet(card.dataset.tabletCard));
 }
 function renderTabletDirect118(){
  if(!$('tabletDirect118Panel')||!$('tabletDirect118List'))return;
