@@ -738,7 +738,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.23</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.24</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -2167,8 +2167,19 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Tipo servizio *</label><select id="tabletAdType" required><option>Dimissione</option><option>Trasporto semplice</option><option>Trasferimento</option><option>Visita</option><option>RSA</option><option>Servizio interno</option></select></div>
     <div class="field"><label>Luogo partenza *</label><input id="tabletAdOrigin" required maxlength="250" placeholder="Es. DEA Borgomanero"></div>
     <div class="field"><label>Destinazione *</label><input id="tabletAdDestination" required maxlength="250" placeholder="Es. Dormelletto – domicilio"></div>
-    <div class="field"><label>Nome paziente</label><input id="tabletAdFirst" maxlength="120"></div>
-    <div class="field"><label>Cognome paziente</label><input id="tabletAdLast" maxlength="120"></div>
+   </div>
+   <div id="tabletAdPatientSection">
+    <h3>Dati anagrafici paziente</h3>
+    <div class="grid3">
+     <div class="field"><label>Nome *</label><input id="tabletAdFirst" maxlength="120"></div>
+     <div class="field"><label>Cognome *</label><input id="tabletAdLast" maxlength="120"></div>
+     <div class="field"><label>Codice fiscale</label><input id="tabletAdCf" maxlength="16" autocapitalize="characters"></div>
+     <div class="field"><label>Data di nascita</label><input id="tabletAdDob" type="date"></div>
+     <div class="field"><label>Telefono</label><input id="tabletAdPhone" maxlength="60" type="tel"></div>
+     <div class="field"><label>Indirizzo</label><input id="tabletAdAddress" maxlength="400" autocomplete="street-address"></div>
+     <div class="field"><label>E-mail</label><input id="tabletAdEmail" maxlength="254" type="email" autocomplete="email"></div>
+    </div>
+    <div class="muted" style="margin:6px 0 12px">I dati vengono registrati o aggiornati automaticamente nell’Anagrafica Pazienti quando crei il servizio.</div>
    </div>
    <h3>Equipaggio a bordo</h3>
    <div class="grid2">
@@ -2224,7 +2235,7 @@ Causale: numero preventivo</textarea>
      <div class="field" id="tabletStopStartField"><label>Inizio fermo</label><input type="time" data-ts-field="inizio_fermo"></div>
      <div class="field" id="tabletStopEndField"><label>Fine fermo</label><input type="time" data-ts-field="fine_fermo"></div>
      <div class="field"><label>KM partenza</label><input type="number" min="0" step="1" data-ts-field="km_partenza"></div>
-     <div class="field"><label>KM rientro</label><input type="number" min="0" step="1" data-ts-field="km_arrivo"></div>
+     <div class="field"><label>KM chiusura / rientro *</label><input type="number" min="0" step="1" data-ts-field="km_arrivo"></div>
      <div class="field"><label>KM percorsi</label><input id="tabletKmTotal" disabled value="—"></div>
      <div class="field"><label>N. scheda 118 (se 118)</label><input data-ts-field="numero_scheda_118"></div>
     </div>
@@ -8628,6 +8639,11 @@ function tabletUpdateImmediateTariff(){
 }
 function tabletApplyImmediateTypeRules(){
  const internal=$('tabletAdType').value==='Servizio interno';
+ if($('tabletAdPatientSection'))$('tabletAdPatientSection').classList.toggle('hidden',internal);
+ ['tabletAdFirst','tabletAdLast'].forEach(id=>{if($(id))$(id).required=!internal;});
+ if(internal){
+  ['tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail'].forEach(id=>{if($(id))$(id).value='';});
+ }
  $('tabletAdTariffGroup').disabled=internal;
  $('tabletAdTariffDest').disabled=internal;
  $('tabletAdNight').disabled=internal;
@@ -8647,6 +8663,13 @@ function tabletUpdateImmediateQuote(){
  const code=$('tabletAdTariffGroup').value;
  const x=tabletTariffRows.find(r=>r.tariffa_destinazione_id===$('tabletAdTariffDest').value&&r.tariffario_codice===code);
  const night=$('tabletAdNight').value==='true',manual=$('tabletAdAmount').value;
+ const internal=$('tabletAdType').value==='Servizio interno';
+ if(!internal){
+  if(!$('tabletAdFirst').value.trim()||!$('tabletAdLast').value.trim())return msg('tabletAdMsg','Inserisci nome e cognome del paziente.','warn');
+  const cf=$('tabletAdCf')?.value.trim()||'';
+  if(cf&&cf.length!==16)return msg('tabletAdMsg','Controlla il codice fiscale del paziente.','warn');
+  if($('tabletAdEmail')&&!$('tabletAdEmail').checkValidity())return msg('tabletAdMsg','Controlla l’indirizzo e-mail del paziente.','warn');
+ }
  if(code&&night&&code.startsWith('TS_')){
   $('tabletAdQuote').className='notice warn';$('tabletAdQuote').textContent='Per il trasporto semplice non è prevista una tariffa notturna distinta. Chiedi al Centralino e seleziona Nessuno / importo concordato.';return;
  }
@@ -8659,7 +8682,7 @@ function tabletUpdateImmediateQuote(){
 }
 function tabletImmediateDraftKey(){return 'cge_tablet_immediate_draft_'+String(tabletMezzo||'');}
 function tabletSaveImmediateDraft(){
- const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdNotes'];
+ const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdNotes'];
  const data={};
  ids.forEach(id=>{if($(id))data[id]=$(id).value;});
  data.saved_at=new Date().toISOString();
@@ -8669,7 +8692,7 @@ function tabletSaveImmediateDraft(){
 function tabletRestoreImmediateDraft(){
  let data=null;try{data=JSON.parse(localStorage.getItem(tabletImmediateDraftKey())||'null')}catch(_){}
  if(!data)return false;
- const simple=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdNight','tabletAdAmount','tabletAdNotes'];
+ const simple=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdNight','tabletAdAmount','tabletAdNotes'];
  simple.forEach(id=>{if($(id)&&data[id]!=null)$(id).value=data[id];});
  if(data.tabletAdTariffGroup!=null&&$('tabletAdTariffGroup')){$('tabletAdTariffGroup').value=data.tabletAdTariffGroup;tabletUpdateImmediateTariff();}
  if(data.tabletAdTariffDest!=null&&$('tabletAdTariffDest'))$('tabletAdTariffDest').value=data.tabletAdTariffDest;
@@ -8706,7 +8729,12 @@ async function tabletCreateImmediate(){
    p_destinazione:$('tabletAdDestination').value.trim(),p_paziente_nome:$('tabletAdFirst').value.trim(),
    p_paziente_cognome:$('tabletAdLast').value.trim(),p_equipaggio:crew,
    p_tariffa_destinazione:tariff?.tariffa_destinazione_id||null,p_notturno:night,
-   p_importo_concordato:manual===''?null:Number(manual),p_note:$('tabletAdNotes').value.trim()
+   p_importo_concordato:manual===''?null:Number(manual),p_note:$('tabletAdNotes').value.trim(),
+   p_codice_fiscale:$('tabletAdCf')?($('tabletAdCf').value.trim().toUpperCase()||null):null,
+   p_data_nascita:$('tabletAdDob')?($('tabletAdDob').value||null):null,
+   p_telefono:$('tabletAdPhone')?($('tabletAdPhone').value.trim()||null):null,
+   p_indirizzo:$('tabletAdAddress')?($('tabletAdAddress').value.trim()||null):null,
+   p_email:$('tabletAdEmail')?($('tabletAdEmail').value.trim().toLowerCase()||null):null
   };
   const r=await sb.rpc('cge_tablet_crea_servizio_immediato',args);
   if(r.error)throw r.error;
@@ -8953,6 +8981,11 @@ async function saveTabletSheet(silent=false){
 async function tabletCloseSheet(){
  if(!tabletCurrentSheet||tabletBusy)return;
  const standalone118=!tabletCurrentService&&tabletCurrentSheet.tipo_servizio==='118'&&['07','09'].includes(String(tabletCurrentSheet.mezzo));
+ const kmStart=document.querySelector('[data-ts-field="km_partenza"]')?.value??'';
+ const kmClose=document.querySelector('[data-ts-field="km_arrivo"]')?.value??'';
+ if(kmStart==='')return msg('tabletSheetMsg','Inserisci i KM di partenza prima di chiudere il Foglio Viaggio.','warn');
+ if(kmClose==='')return msg('tabletSheetMsg','Inserisci i KM di chiusura / rientro prima di chiudere il Foglio Viaggio.','warn');
+ if(Number(kmClose)<Number(kmStart))return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
  const saved=await saveTabletSheet(true);if(!saved)return;
  const confirmText=standalone118
   ?'Chiudere definitivamente il Foglio Viaggio 118? Verifica numero scheda 118, destinazione, equipaggio e KM rientro.'
