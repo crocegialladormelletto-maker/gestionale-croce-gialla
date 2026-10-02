@@ -738,7 +738,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.24</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.25</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -2167,6 +2167,8 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Tipo servizio *</label><select id="tabletAdType" required><option>Dimissione</option><option>Trasporto semplice</option><option>Trasferimento</option><option>Visita</option><option>RSA</option><option>Servizio interno</option></select></div>
     <div class="field"><label>Luogo partenza *</label><input id="tabletAdOrigin" required maxlength="250" placeholder="Es. DEA Borgomanero"></div>
     <div class="field"><label>Destinazione *</label><input id="tabletAdDestination" required maxlength="250" placeholder="Es. Dormelletto – domicilio"></div>
+    <div class="field"><label>KM partenza</label><input id="tabletAdKmStart" type="number" min="0" step="1" inputmode="numeric"></div>
+    <div class="field"><label>KM chiusura / rientro</label><input id="tabletAdKmClose" type="number" min="0" step="1" inputmode="numeric"></div>
    </div>
    <div id="tabletAdPatientSection">
     <h3>Dati anagrafici paziente</h3>
@@ -8639,6 +8641,10 @@ function tabletUpdateImmediateTariff(){
 }
 function tabletApplyImmediateTypeRules(){
  const internal=$('tabletAdType').value==='Servizio interno';
+ const immediateKmStart=$('tabletAdKmStart')?.value??'';
+ const immediateKmClose=$('tabletAdKmClose')?.value??'';
+ if(immediateKmStart!==''&&immediateKmClose!==''&&Number(immediateKmClose)<Number(immediateKmStart))
+  return msg('tabletAdMsg','I KM chiusura non possono essere inferiori ai KM partenza.','warn');
  if($('tabletAdPatientSection'))$('tabletAdPatientSection').classList.toggle('hidden',internal);
  ['tabletAdFirst','tabletAdLast'].forEach(id=>{if($(id))$(id).required=!internal;});
  if(internal){
@@ -8680,9 +8686,21 @@ function tabletUpdateImmediateQuote(){
  $('tabletAdQuote').textContent=x?'Importo previsto per il paziente: '+euro(night?x.importo_notturno:x.importo_diurno):
  manual!==''?'Importo concordato: '+euro(Number(manual)):'Nessuna tariffa impostata: da concordare con il Centralino.';
 }
+async function tabletPrefillImmediateKm(){
+ if(!$('tabletAdKmStart')||$('tabletAdKmStart').value!=='')return;
+ const r=await sb.from('fogli_viaggio')
+  .select('km_arrivo')
+  .eq('mezzo',tabletMezzo)
+  .not('km_arrivo','is',null)
+  .order('data_servizio',{ascending:false})
+  .order('progressivo',{ascending:false})
+  .limit(1)
+  .maybeSingle();
+ if(!r.error&&r.data?.km_arrivo!=null)$('tabletAdKmStart').value=String(r.data.km_arrivo);
+}
 function tabletImmediateDraftKey(){return 'cge_tablet_immediate_draft_'+String(tabletMezzo||'');}
 function tabletSaveImmediateDraft(){
- const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdNotes'];
+ const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdNotes'];
  const data={};
  ids.forEach(id=>{if($(id))data[id]=$(id).value;});
  data.saved_at=new Date().toISOString();
@@ -8692,7 +8710,7 @@ function tabletSaveImmediateDraft(){
 function tabletRestoreImmediateDraft(){
  let data=null;try{data=JSON.parse(localStorage.getItem(tabletImmediateDraftKey())||'null')}catch(_){}
  if(!data)return false;
- const simple=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdNight','tabletAdAmount','tabletAdNotes'];
+ const simple=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdNight','tabletAdAmount','tabletAdNotes'];
  simple.forEach(id=>{if($(id)&&data[id]!=null)$(id).value=data[id];});
  if(data.tabletAdTariffGroup!=null&&$('tabletAdTariffGroup')){$('tabletAdTariffGroup').value=data.tabletAdTariffGroup;tabletUpdateImmediateTariff();}
  if(data.tabletAdTariffDest!=null&&$('tabletAdTariffDest'))$('tabletAdTariffDest').value=data.tabletAdTariffDest;
@@ -8740,6 +8758,15 @@ async function tabletCreateImmediate(){
   if(r.error)throw r.error;
   if(!r.data?.servizio_id||!r.data?.foglio_id)throw new Error('Risposta incompleta: aggiorna e verifica il servizio.');
   created=r.data;
+  const kmStart=$('tabletAdKmStart')?.value===''?null:Number($('tabletAdKmStart').value);
+  const kmClose=$('tabletAdKmClose')?.value===''?null:Number($('tabletAdKmClose').value);
+  const kmUpdate={};
+  if(Number.isFinite(kmStart))kmUpdate.km_partenza=kmStart;
+  if(Number.isFinite(kmClose))kmUpdate.km_arrivo=kmClose;
+  if(Object.keys(kmUpdate).length){
+   const ku=await sb.from('fogli_viaggio').update(kmUpdate).eq('id',created.foglio_id).eq('mezzo',tabletMezzo).eq('stato','APERTO');
+   if(ku.error)throw ku.error;
+  }
   msg('tabletAdMsg','Servizio creato. Foglio Viaggio '+created.numero_foglio+' collegato.','ok');
   tabletClearImmediateDraft();
   $('tabletImmediateForm').reset();
@@ -8760,7 +8787,7 @@ $('tabletTariffToggle').onclick=()=>{
 $('tabletImmediateToggle').onclick=async()=>{
  const panel=$('tabletImmediatePanel');
  panel.classList.toggle('hidden');
- if(!panel.classList.contains('hidden')){await tabletLoadCrewPeople();if(!tabletRestoreImmediateDraft())tabletApplyImmediateTypeRules();}
+ if(!panel.classList.contains('hidden')){await tabletLoadCrewPeople();const restored=tabletRestoreImmediateDraft();if(!restored)tabletApplyImmediateTypeRules();await tabletPrefillImmediateKm();}
 };
 $('tabletPriceGroup').onchange=tabletRenderTariffPrices;
 $('tabletPriceSearch').oninput=tabletRenderTariffPrices;
