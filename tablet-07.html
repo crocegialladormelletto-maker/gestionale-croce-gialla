@@ -2022,7 +2022,7 @@ Causale: numero preventivo</textarea>
   <div class="pad"><div class="notice warn">Seleziona i nominativi degli operatori presenti sul mezzo. I nominativi sono filtrati automaticamente in base alla qualifica del ruolo. Prima di creare il servizio verifica che partenza, destinazione e importo siano corretti.</div>
    <form id="tabletImmediateForm">
    <div class="grid2">
-    <div class="field"><label>Tipo servizio *</label><select id="tabletAdType" required><option>Dimissione</option><option>Trasporto semplice</option><option>Trasferimento</option><option>Visita</option><option>RSA</option></select></div>
+    <div class="field"><label>Tipo servizio *</label><select id="tabletAdType" required><option>Dimissione</option><option>Trasporto semplice</option><option>Trasferimento</option><option>Visita</option><option>RSA</option><option>Servizio interno</option></select></div>
     <div class="field"><label>Luogo partenza *</label><input id="tabletAdOrigin" required maxlength="250" placeholder="Es. DEA Borgomanero"></div>
     <div class="field"><label>Destinazione *</label><input id="tabletAdDestination" required maxlength="250" placeholder="Es. Dormelletto – domicilio"></div>
     <div class="field"><label>Nome paziente</label><input id="tabletAdFirst" maxlength="120"></div>
@@ -7972,6 +7972,23 @@ function tabletUpdateImmediateTariff(){
  if(rows.some(x=>x.tariffa_destinazione_id===selected))$('tabletAdTariffDest').value=selected;
  tabletUpdateImmediateQuote();
 }
+function tabletApplyImmediateTypeRules(){
+ const internal=$('tabletAdType').value==='Servizio interno';
+ $('tabletAdTariffGroup').disabled=internal;
+ $('tabletAdTariffDest').disabled=internal;
+ $('tabletAdNight').disabled=internal;
+ $('tabletAdAmount').disabled=internal;
+ if(internal){
+  $('tabletAdTariffGroup').value='';
+  tabletUpdateImmediateTariff();
+  $('tabletAdAmount').value='0';
+  $('tabletAdQuote').className='notice';
+  $('tabletAdQuote').textContent='Servizio interno: non fatturabile · importo € 0,00.';
+ }else{
+  if($('tabletAdAmount').value==='0')$('tabletAdAmount').value='';
+  tabletUpdateImmediateQuote();
+ }
+}
 function tabletUpdateImmediateQuote(){
  const code=$('tabletAdTariffGroup').value;
  const x=tabletTariffRows.find(r=>r.tariffa_destinazione_id===$('tabletAdTariffDest').value&&r.tariffario_codice===code);
@@ -8021,6 +8038,7 @@ async function tabletCreateImmediate(){
   created=r.data;
   msg('tabletAdMsg','Servizio creato. Foglio Viaggio '+created.numero_foglio+' collegato.','ok');
   $('tabletImmediateForm').reset();
+  tabletApplyImmediateTypeRules();
  }catch(e){msg('tabletAdMsg','Impossibile creare il servizio: '+(e.message||String(e)),'err')}
  finally{tabletBusy=false}
  if(created){
@@ -8037,10 +8055,11 @@ $('tabletTariffToggle').onclick=()=>{
 $('tabletImmediateToggle').onclick=async()=>{
  const panel=$('tabletImmediatePanel');
  panel.classList.toggle('hidden');
- if(!panel.classList.contains('hidden'))await tabletLoadCrewPeople();
+ if(!panel.classList.contains('hidden')){await tabletLoadCrewPeople();tabletApplyImmediateTypeRules();}
 };
 $('tabletPriceGroup').onchange=tabletRenderTariffPrices;
 $('tabletPriceSearch').oninput=tabletRenderTariffPrices;
+$('tabletAdType').onchange=tabletApplyImmediateTypeRules;
 $('tabletAdTariffGroup').onchange=tabletUpdateImmediateTariff;
 $('tabletAdTariffDest').onchange=tabletUpdateImmediateQuote;
 $('tabletAdNight').onchange=tabletUpdateImmediateQuote;
