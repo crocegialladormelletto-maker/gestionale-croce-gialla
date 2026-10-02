@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <title>Croce Gialla - Amministrazione e Contabilità</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
 <style>
 :root{--n:#12375d;--n2:#092945;--y:#ffdb17;--bg:#eef3f7;--line:#dbe5ed;--text:#183247;--muted:#6d8292;--g:#12805a;--r:#b83b43;--blue:#2563eb;--purple:#7c3aed;--teal:#0f766e;--orange:#d97706}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#edf3f8,#fafcff 360px);font:14px/1.5 system-ui,-apple-system,Segoe UI,Arial;color:var(--text)}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
@@ -19,7 +18,7 @@
 <body>
 <div id="loginScreen" class="loginWrap">
  <div class="loginCard">
-  <div class="loginHead"><img src="/gestionale-croce-gialla/icons/icon-512-v6.png" alt="Logo"><h1>Amministrazione e Contabilità</h1><p>Croce Gialla Emergenza ODV</p></div>
+  <div class="loginHead"><img src="https://crocegialladormelletto-maker.github.io/gestionale-croce-gialla/icons/icon-512-v6.png" alt="Logo"><h1>Amministrazione e Contabilità</h1><p>Croce Gialla Emergenza ODV</p></div>
   <div class="loginBody">
    <div class="hint">Accesso riservato agli utenti autorizzati alla contabilità.</div>
    <form id="loginForm">
@@ -34,7 +33,7 @@
 
 <div id="app" class="hidden">
 <div class="shell">
-<header class="top"><div class="head"><img src="/gestionale-croce-gialla/icons/icon-512-v6.png" alt="Logo"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Amministrativo e Contabile</strong></div><div class="topBtns"><span id="userBadge" class="pill">-</span><span class="pill">V0.3.3</span><button class="btn soft" onclick="logout()">Esci</button></div></div><div class="stripe"></div></header>
+<header class="top"><div class="head"><img src="https://crocegialladormelletto-maker.github.io/gestionale-croce-gialla/icons/icon-512-v6.png" alt="Logo"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Amministrativo e Contabile</strong></div><div class="topBtns"><span id="userBadge" class="pill">-</span><span class="pill">V0.3.4</span><button class="btn soft" onclick="logout()">Esci</button></div></div><div class="stripe"></div></header>
 <div class="layout">
 <aside class="side"><button class="nav active" data-v="dashboard">📊 Dashboard</button><button class="nav" data-v="prima">📒 Prima Nota</button><button class="nav" data-v="conti">🏦 Cassa e Banca</button><button class="nav" data-v="chiusure">🔒 Chiusura mese</button><button class="nav" data-v="categorie">🗂️ Categorie</button></aside>
 <main class="surface">
@@ -46,27 +45,171 @@
 </main></div></div></div>
 
 <script>
-const URL='https://ihottewckpwpwqzpxusl.supabase.co', KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
-const client=supabase.createClient(URL,KEY);
-let access=null,cats=[],conti=[],mov=[],closures=[],editing=null;
-const $=id=>document.getElementById(id), eur=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(n)||0);
-function msg(t=''){loginError.textContent=t;loginError.classList.toggle('hidden',!t)}
-function showLogin(t=''){loginScreen.classList.remove('hidden');app.classList.add('hidden');msg(t)}
-async function boot(){const {data:{session}}=await client.auth.getSession();if(session)await enter(session.user)}
-loginForm.addEventListener('submit',async e=>{e.preventDefault();msg('');loginBtn.disabled=true;loginBtn.textContent='Accesso...';try{const {data,error}=await client.auth.signInWithPassword({email:loginEmail.value.trim(),password:loginPassword.value});if(error){msg(error.message);return}await enter(data.user)}catch(e){msg('Errore di collegamento: '+e.message)}finally{loginBtn.disabled=false;loginBtn.textContent='Accedi'}});
-async function enter(user){const {data,error}=await client.from('contabilita_utenti').select('nome,ruolo,attivo').eq('user_id',user.id).maybeSingle();if(error||!data?.attivo){await client.auth.signOut();showLogin('Account non autorizzato alla contabilità.');return}access=data;userBadge.textContent=data.nome+' · '+data.ruolo;loginScreen.classList.add('hidden');app.classList.remove('hidden');await load()}
-async function logout(){await client.auth.signOut();showLogin();loginPassword.value=''}
-async function load(){const [a,b,c,d]=await Promise.all([client.from('contabilita_categorie').select('*').eq('attiva',true).order('ordine'),client.from('contabilita_conti').select('*').eq('attivo',true).order('codice'),client.from('contabilita_movimenti').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}),client.from('contabilita_chiusure').select('*').order('anno',{ascending:false}).order('mese',{ascending:false})]);const er=[a,b,c,d].find(x=>x.error)?.error;if(er){alert(er.message);return}cats=a.data||[];conti=b.data||[];mov=c.data||[];closures=d.data||[];mCat.innerHTML=cats.map(x=>'<option value="'+x.codice+'">'+x.nome+'</option>').join('');mConto.innerHTML=conti.map(x=>'<option value="'+x.codice+'">'+x.nome+'</option>').join('');catGrid.innerHTML=cats.map(x=>'<div class="cat"><b>'+x.nome+'</b><div>'+x.natura+'</div></div>').join('');render()}
-function cname(c){return cats.find(x=>x.codice===c)?.nome||c} function oname(c){return conti.find(x=>x.codice===c)?.nome||c}
-function render(){const ym=new Date().toISOString().slice(0,7), mm=mov.filter(x=>x.data.startsWith(ym));const en=mm.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo),0),us=mm.filter(x=>x.tipo==='USCITA').reduce((s,x)=>s+Number(x.importo),0);sEntrate.textContent=eur(en);sUscite.textContent=eur(us);sSaldo.textContent=eur(en-us);sMov.textContent=mov.length;recenti.innerHTML=mov.slice(0,8).map(row).join('')||'<tr><td colspan="6">Nessun movimento</td></tr>';movimenti.innerHTML=mov.map(m=>'<tr><td>'+m.data+'</td><td><span class="badge '+(m.tipo==='ENTRATA'?'in':'out')+'">'+m.tipo+'</span></td><td>'+cname(m.categoria_codice)+'</td><td>'+m.causale+'</td><td>'+(m.soggetto||'-')+'</td><td>'+oname(m.conto_codice)+'</td><td class="num"><b>'+eur(m.importo)+'</b></td><td><button class="btn red" onclick="delMov(\''+m.id+'\')">Elimina</button></td></tr>').join('');let ca=0,ba=0;for(const c of conti){let v=Number(c.saldo_iniziale||0)+mov.filter(x=>x.conto_codice===c.codice).reduce((s,x)=>s+(x.tipo==='ENTRATA'?Number(x.importo):-Number(x.importo)),0);if(c.codice==='CASSA')ca=v;if(c.codice==='BANCA')ba=v}saldoCassa.textContent=eur(ca);saldoBanca.textContent=eur(ba);saldoTotale.textContent=eur(ca+ba);renderClose()}
-function row(m){return '<tr><td>'+m.data+'</td><td><span class="badge '+(m.tipo==='ENTRATA'?'in':'out')+'">'+m.tipo+'</span></td><td>'+cname(m.categoria_codice)+'</td><td>'+m.causale+'</td><td>'+oname(m.conto_codice)+'</td><td class="num"><b>'+eur(m.importo)+'</b></td></tr>'}
-async function saveMov(){const imp=Number(mImporto.value);if(!mData.value||!mCausale.value.trim()||!(imp>0)){alert('Compila data, causale e importo.');return}const obj={data:mData.value,tipo:mTipo.value,categoria_codice:mCat.value,causale:mCausale.value.trim(),importo:imp,metodo_pagamento:mMetodo.value,conto_codice:mConto.value,soggetto:mSoggetto.value.trim()||null,numero_documento:mDoc.value.trim()||null,note:mNote.value.trim()||null};const {error}=await client.from('contabilita_movimenti').insert(obj);if(error){alert(error.message);return}resetForm();await load()}
-async function delMov(id){if(!confirm('Eliminare questo movimento?'))return;const {error}=await client.from('contabilita_movimenti').delete().eq('id',id);if(error){alert(error.message);return}await load()}
-function resetForm(){mData.value=new Date().toISOString().slice(0,10);mTipo.value='ENTRATA';mCausale.value='';mImporto.value='';mSoggetto.value='';mDoc.value='';mNote.value=''}
-function renderClose(){const v=closeMonth.value||new Date().toISOString().slice(0,7);closeMonth.value=v;const [y,m]=v.split('-').map(Number),c=closures.some(x=>x.anno===y&&x.mese===m&&x.chiuso);closeState.innerHTML='<span class="badge '+(c?'out':'in')+'">'+(c?'CHIUSO':'APERTO')+'</span>'}
-async function closeMonth(){const [anno,mese]=closeMonth.value.split('-').map(Number);const {data:{user}}=await client.auth.getUser();const {error}=await client.from('contabilita_chiusure').upsert({anno,mese,chiuso:true,chiuso_il:new Date().toISOString(),chiuso_da:user.id},{onConflict:'anno,mese'});if(error)alert(error.message);else await load()}
-async function reopenMonth(){const [anno,mese]=closeMonth.value.split('-').map(Number);const {error}=await client.from('contabilita_chiusure').update({chiuso:false}).eq('anno',anno).eq('mese',mese);if(error)alert(error.message);else await load()}
-document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n===b));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===b.dataset.v))});
-mData.value=new Date().toISOString().slice(0,10);closeMonth.value=new Date().toISOString().slice(0,7);boot();
+(function(){
+'use strict';
+const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co';
+const API_KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
+const E=id=>document.getElementById(id);
+let token=sessionStorage.getItem('cge_contabilita_token')||'';
+let currentUser=null,access=null,cats=[],conti=[],mov=[],closures=[];
+const eur=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(n)||0);
+
+function showError(t=''){
+  const x=E('loginError'); x.textContent=t; x.classList.toggle('hidden',!t);
+}
+function showLogin(t=''){
+  E('loginScreen').classList.remove('hidden');
+  E('app').classList.add('hidden');
+  showError(t);
+}
+function headers(auth=true,extra={}){
+  const h={apikey:API_KEY,'Content-Type':'application/json',...extra};
+  if(auth&&token) h.Authorization='Bearer '+token;
+  return h;
+}
+async function req(path,opts={}){
+  const r=await fetch(SUPABASE_URL+path,{...opts,headers:headers(opts.auth!==false,opts.headers||{})});
+  const txt=await r.text();
+  let data=null;
+  if(txt){ try{data=JSON.parse(txt)}catch{data=txt} }
+  if(!r.ok){
+    const m=(data&&data.message)||(data&&data.error_description)||(data&&data.error)||('Errore HTTP '+r.status);
+    throw new Error(m);
+  }
+  return data;
+}
+async function login(email,password){
+  const r=await req('/auth/v1/token?grant_type=password',{
+    method:'POST',auth:false,body:JSON.stringify({email,password})
+  });
+  token=r.access_token; currentUser=r.user;
+  sessionStorage.setItem('cge_contabilita_token',token);
+}
+async function getUser(){
+  if(!token) return null;
+  try{
+    currentUser=await req('/auth/v1/user');
+    return currentUser;
+  }catch(e){
+    sessionStorage.removeItem('cge_contabilita_token');
+    token=''; return null;
+  }
+}
+async function checkAccess(){
+  const rows=await req('/rest/v1/contabilita_utenti?select=nome,ruolo,attivo&user_id=eq.'+encodeURIComponent(currentUser.id));
+  const a=Array.isArray(rows)?rows[0]:null;
+  if(!a||!a.attivo) throw new Error('Account non autorizzato alla contabilità.');
+  access=a;
+}
+async function enter(){
+  await checkAccess();
+  E('userBadge').textContent=access.nome+' · '+access.ruolo;
+  E('loginScreen').classList.add('hidden');
+  E('app').classList.remove('hidden');
+  await load();
+}
+async function boot(){
+  const u=await getUser();
+  if(u){ try{await enter()}catch(e){showLogin(e.message)} }
+}
+async function load(){
+  const [a,b,c,d]=await Promise.all([
+    req('/rest/v1/contabilita_categorie?select=*&attiva=eq.true&order=ordine.asc'),
+    req('/rest/v1/contabilita_conti?select=*&attivo=eq.true&order=codice.asc'),
+    req('/rest/v1/contabilita_movimenti?select=*&order=data.desc,created_at.desc'),
+    req('/rest/v1/contabilita_chiusure?select=*&order=anno.desc,mese.desc')
+  ]);
+  cats=a||[]; conti=b||[]; mov=c||[]; closures=d||[];
+  E('mCat').innerHTML=cats.map(x=>'<option value="'+x.codice+'">'+x.nome+'</option>').join('');
+  E('mConto').innerHTML=conti.map(x=>'<option value="'+x.codice+'">'+x.nome+'</option>').join('');
+  E('catGrid').innerHTML=cats.map(x=>'<div class="cat"><b>'+x.nome+'</b><div>'+x.natura+'</div></div>').join('');
+  render();
+}
+function cname(c){return (cats.find(x=>x.codice===c)||{nome:c}).nome}
+function oname(c){return (conti.find(x=>x.codice===c)||{nome:c}).nome}
+function row(m){
+  return '<tr><td>'+m.data+'</td><td><span class="badge '+(m.tipo==='ENTRATA'?'in':'out')+'">'+m.tipo+'</span></td><td>'+cname(m.categoria_codice)+'</td><td>'+m.causale+'</td><td>'+oname(m.conto_codice)+'</td><td class="num"><b>'+eur(m.importo)+'</b></td></tr>';
+}
+function render(){
+  const ym=new Date().toISOString().slice(0,7), mm=mov.filter(x=>x.data.startsWith(ym));
+  const en=mm.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo),0);
+  const us=mm.filter(x=>x.tipo==='USCITA').reduce((s,x)=>s+Number(x.importo),0);
+  E('sEntrate').textContent=eur(en); E('sUscite').textContent=eur(us);
+  E('sSaldo').textContent=eur(en-us); E('sMov').textContent=mov.length;
+  E('recenti').innerHTML=mov.slice(0,8).map(row).join('')||'<tr><td colspan="6">Nessun movimento</td></tr>';
+  E('movimenti').innerHTML=mov.map(m=>'<tr><td>'+m.data+'</td><td><span class="badge '+(m.tipo==='ENTRATA'?'in':'out')+'">'+m.tipo+'</span></td><td>'+cname(m.categoria_codice)+'</td><td>'+m.causale+'</td><td>'+(m.soggetto||'-')+'</td><td>'+oname(m.conto_codice)+'</td><td class="num"><b>'+eur(m.importo)+'</b></td><td><button class="btn red" onclick="delMov(\''+m.id+'\')">Elimina</button></td></tr>').join('');
+  let ca=0,ba=0;
+  for(const c of conti){
+    let v=Number(c.saldo_iniziale||0)+mov.filter(x=>x.conto_codice===c.codice).reduce((s,x)=>s+(x.tipo==='ENTRATA'?Number(x.importo):-Number(x.importo)),0);
+    if(c.codice==='CASSA')ca=v; if(c.codice==='BANCA')ba=v;
+  }
+  E('saldoCassa').textContent=eur(ca); E('saldoBanca').textContent=eur(ba); E('saldoTotale').textContent=eur(ca+ba);
+  renderClose();
+}
+async function saveMov(){
+  const imp=Number(E('mImporto').value);
+  if(!E('mData').value||!E('mCausale').value.trim()||!(imp>0)){alert('Compila data, causale e importo.');return}
+  const obj={
+    data:E('mData').value,tipo:E('mTipo').value,categoria_codice:E('mCat').value,
+    causale:E('mCausale').value.trim(),importo:imp,metodo_pagamento:E('mMetodo').value,
+    conto_codice:E('mConto').value,soggetto:E('mSoggetto').value.trim()||null,
+    numero_documento:E('mDoc').value.trim()||null,note:E('mNote').value.trim()||null
+  };
+  await req('/rest/v1/contabilita_movimenti',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(obj)});
+  resetForm(); await load();
+}
+async function delMov(id){
+  if(!confirm('Eliminare questo movimento?'))return;
+  await req('/rest/v1/contabilita_movimenti?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{Prefer:'return=minimal'}});
+  await load();
+}
+function resetForm(){
+  E('mData').value=new Date().toISOString().slice(0,10);
+  E('mTipo').value='ENTRATA'; E('mCausale').value=''; E('mImporto').value='';
+  E('mSoggetto').value=''; E('mDoc').value=''; E('mNote').value='';
+}
+function renderClose(){
+  const v=E('closeMonth').value||new Date().toISOString().slice(0,7); E('closeMonth').value=v;
+  const [y,m]=v.split('-').map(Number);
+  const c=closures.some(x=>x.anno===y&&x.mese===m&&x.chiuso);
+  E('closeState').innerHTML='<span class="badge '+(c?'out':'in')+'">'+(c?'CHIUSO':'APERTO')+'</span>';
+}
+async function closeMonth(){
+  const [anno,mese]=E('closeMonth').value.split('-').map(Number);
+  await req('/rest/v1/contabilita_chiusure?on_conflict=anno%2Cmese',{
+    method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
+    body:JSON.stringify({anno,mese,chiuso:true,chiuso_il:new Date().toISOString(),chiuso_da:currentUser.id})
+  });
+  await load();
+}
+async function reopenMonth(){
+  const [anno,mese]=E('closeMonth').value.split('-').map(Number);
+  await req('/rest/v1/contabilita_chiusure?anno=eq.'+anno+'&mese=eq.'+mese,{
+    method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({chiuso:false})
+  });
+  await load();
+}
+window.logout=async function(){sessionStorage.removeItem('cge_contabilita_token');token='';currentUser=null;showLogin();E('loginPassword').value=''}
+window.saveMov=()=>saveMov().catch(e=>alert(e.message));
+window.delMov=id=>delMov(id).catch(e=>alert(e.message));
+window.resetForm=resetForm;
+window.closeMonth=()=>closeMonth().catch(e=>alert(e.message));
+window.reopenMonth=()=>reopenMonth().catch(e=>alert(e.message));
+
+E('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault(); showError('');
+  const b=E('loginBtn'); b.disabled=true; b.textContent='Accesso...';
+  try{ await login(E('loginEmail').value.trim(),E('loginPassword').value); await enter(); }
+  catch(err){ showError(err.message); }
+  finally{ b.disabled=false; b.textContent='Accedi'; }
+});
+document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n===b));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===b.dataset.v));
+}));
+E('closeMonth').addEventListener('change',renderClose);
+resetForm(); E('closeMonth').value=new Date().toISOString().slice(0,7);
+boot().catch(e=>showLogin(e.message));
+})();
 </script>
 </body></html>
