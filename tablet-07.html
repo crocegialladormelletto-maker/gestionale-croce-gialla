@@ -8075,7 +8075,8 @@ async function tabletCreateImmediate(){
  const night=$('tabletAdNight').value==='true',manual=$('tabletAdAmount').value;
  const immediateKmStart=$('tabletAdKmStart')?.value??'';
  const immediateKmClose=$('tabletAdKmClose')?.value??'';
- if(immediateKmStart!==''&&immediateKmClose!==''&&Number(immediateKmClose)<Number(immediateKmStart))
+ const immediateKmStartNum=tabletKmNumber(immediateKmStart),immediateKmCloseNum=tabletKmNumber(immediateKmClose);
+ if(immediateKmStartNum!==null&&immediateKmCloseNum!==null&&immediateKmCloseNum<immediateKmStartNum)
   return msg('tabletAdMsg','I KM chiusura non possono essere inferiori ai KM partenza.','warn');
  const internal=$('tabletAdType').value==='Servizio interno';
  if(!internal){
@@ -8117,8 +8118,8 @@ async function tabletCreateImmediate(){
   if(r.error)throw r.error;
   if(!r.data?.servizio_id||!r.data?.foglio_id)throw new Error('Risposta incompleta: aggiorna e verifica il servizio.');
   created=r.data;
-  const kmStart=$('tabletAdKmStart')?.value===''?null:Number($('tabletAdKmStart').value);
-  const kmClose=$('tabletAdKmClose')?.value===''?null:Number($('tabletAdKmClose').value);
+  const kmStart=tabletKmNumber($('tabletAdKmStart')?.value??'');
+  const kmClose=tabletKmNumber($('tabletAdKmClose')?.value??'');
   const kmUpdate={};
   if(Number.isFinite(kmStart))kmUpdate.km_partenza=kmStart;
   if(Number.isFinite(kmClose))kmUpdate.km_arrivo=kmClose;
@@ -8301,9 +8302,20 @@ async function loadTabletSheet(serviceId){
  msg('tabletSheetMsg',closed?'Foglio Viaggio chiuso: è disponibile in sola lettura.':'',closed?'ok':'');
  tabletCalcSheet();
 }
+function tabletKmNumber(value){
+ const raw=String(value??'').trim();
+ if(raw==='')return null;
+ let s=raw.replace(/\s+/g,'');
+ if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replaceAll('.','');
+ else if(/^\d{1,3}(,\d{3})+$/.test(s))s=s.replaceAll(',','');
+ else s=s.replace(',','.');
+ const n=Number(s);
+ return Number.isFinite(n)?Math.trunc(n):null;
+}
 function tabletCalcSheet(){
- const kmA=document.querySelector('[data-ts-field="km_partenza"]')?.value??'',kmB=document.querySelector('[data-ts-field="km_arrivo"]')?.value??'';
- $('tabletKmTotal').value=kmA!==''&&kmB!==''&&Number(kmB)>=Number(kmA)?String(Number(kmB)-Number(kmA)):'—';
+ const kmARaw=document.querySelector('[data-ts-field="km_partenza"]')?.value??'',kmBRaw=document.querySelector('[data-ts-field="km_arrivo"]')?.value??'';
+ const kmA=tabletKmNumber(kmARaw),kmB=tabletKmNumber(kmBRaw);
+ $('tabletKmTotal').value=kmA!==null&&kmB!==null&&kmB>=kmA?String(kmB-kmA):'—';
  const get=k=>document.querySelector('[data-ts-field="'+k+'"]');
  const n=k=>Number(get(k)?.value||0);
  const sum=n('importo_inserito')+(get('sedia_montascale').checked?n('supplemento_sedia'):0)+(get('barella_bariatrica').checked?n('supplemento_bariatrica'):0);
@@ -8315,7 +8327,7 @@ async function saveTabletSheet(silent=false){
  for(const el of document.querySelectorAll('[data-ts-field]')){
   const name=el.dataset.tsField;
   if(el.type==='checkbox')row[name]=el.checked;
-  else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
+  else if(el.type==='number'){row[name]=(name==='km_partenza'||name==='km_arrivo')?tabletKmNumber(el.value):(el.value===''?null:Number(el.value));if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
  }
  if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio))row.ora_carico_paziente=null;
@@ -8333,11 +8345,12 @@ async function saveTabletSheet(silent=false){
 async function tabletCloseSheet(){
  if(!tabletCurrentSheet||tabletBusy)return;
  if(!['COMPLETATO'].includes(tabletCurrentService?.stato)&&!['DA CONTABILIZZARE','CHIUSO'].includes(tabletCurrentService?.stato_gestionale))return msg('tabletSheetMsg','Termina prima il servizio, poi chiudi il Foglio Viaggio.','warn');
- const kmStart=document.querySelector('[data-ts-field="km_partenza"]')?.value??'';
- const kmClose=document.querySelector('[data-ts-field="km_arrivo"]')?.value??'';
- if(kmStart==='')return msg('tabletSheetMsg','Inserisci i KM di partenza prima di chiudere il Foglio Viaggio.','warn');
- if(kmClose==='')return msg('tabletSheetMsg','Inserisci i KM di chiusura / rientro prima di chiudere il Foglio Viaggio.','warn');
- if(Number(kmClose)<Number(kmStart))return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
+ const kmStartRaw=document.querySelector('[data-ts-field="km_partenza"]')?.value??'';
+ const kmCloseRaw=document.querySelector('[data-ts-field="km_arrivo"]')?.value??'';
+ const kmStart=tabletKmNumber(kmStartRaw),kmClose=tabletKmNumber(kmCloseRaw);
+ if(kmStart===null)return msg('tabletSheetMsg','Inserisci i KM di partenza prima di chiudere il Foglio Viaggio.','warn');
+ if(kmClose===null)return msg('tabletSheetMsg','Inserisci i KM di chiusura / rientro prima di chiudere il Foglio Viaggio.','warn');
+ if(kmClose<kmStart)return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
  const saved=await saveTabletSheet(true);if(!saved)return;
  if(!confirm('Chiudere definitivamente il Foglio Viaggio? Non sarà più modificabile dal tablet.'))return;
  tabletBusy=true;msg('tabletSheetMsg','Chiusura in corso...');
