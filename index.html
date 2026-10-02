@@ -738,7 +738,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.31</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.32</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -8488,10 +8488,23 @@ function renderTabletList(){
  (s.foglio_viaggio_id?'<button class="btn yellow" type="button" data-tablet-open-sheet="'+esc(s.id)+'">Apri direttamente Foglio Viaggio</button>':'')+
  '</div></article>'
  }).join(''):'<div class="tablet-empty">Nessun servizio in questa vista per il mezzo '+esc(tabletMezzo)+'.<br>Il tablet si aggiorna automaticamente.</div>';
- $('tabletList').querySelectorAll('[data-tablet-open]').forEach(b=>b.onclick=e=>{e.stopPropagation();openTabletService(b.dataset.tabletOpen)});
- $('tabletList').querySelectorAll('[data-tablet-open-sheet]').forEach(b=>b.onclick=e=>{e.stopPropagation();openTabletLinkedSheet(b.dataset.tabletOpenSheet)});
- $('tabletList').querySelectorAll('[data-tablet-card]').forEach(card=>card.onclick=()=>openTabletLinkedSheet(card.dataset.tabletCard));
+ // apertura gestita con delega click stabile sul contenitore tabletList
 }
+let tabletListDelegatedOpen=false;
+function bindTabletListDelegatedOpen(){
+ if(tabletListDelegatedOpen||!$('tabletList'))return;
+ tabletListDelegatedOpen=true;
+ $('tabletList').addEventListener('click',async e=>{
+  const sheetBtn=e.target.closest('[data-tablet-open-sheet]');
+  if(sheetBtn){e.preventDefault();e.stopPropagation();await openTabletLinkedSheet(sheetBtn.dataset.tabletOpenSheet);return;}
+  const openBtn=e.target.closest('[data-tablet-open]');
+  if(openBtn){e.preventDefault();e.stopPropagation();await openTabletService(openBtn.dataset.tabletOpen);return;}
+  const card=e.target.closest('[data-tablet-card]');
+  if(card){e.preventDefault();await openTabletLinkedSheet(card.dataset.tabletCard);}
+ });
+}
+bindTabletListDelegatedOpen();
+
 function renderTabletDirect118(){
  if(!$('tabletDirect118Panel')||!$('tabletDirect118List'))return;
  const show=['07','09'].includes(String(tabletMezzo));
