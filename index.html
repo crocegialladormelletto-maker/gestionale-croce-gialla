@@ -738,7 +738,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.33</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.34</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -9053,11 +9053,16 @@ async function saveTabletSheet(silent=false){
   row.secondo_soccorritore=$('tablet118Second')?.value||null;
  }
  if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
- if(tabletSheetType!=='118'&&row.importo_inserito===null)return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
+ if(tabletSheetType!=='118'&&row.importo_inserito===null){
+  const savedBase=tabletCurrentSheet?.importo_inserito;
+  if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
+  else return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
+ }
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
+  tabletCurrentSheet={...tabletCurrentSheet,...row};
   if(!silent)msg('tabletSheetMsg','Dati salvati. Il Foglio Viaggio resta aperto e può essere completato successivamente.','ok');
   return true;
  }catch(e){msg('tabletSheetMsg',e.message||String(e),'err');return false}
