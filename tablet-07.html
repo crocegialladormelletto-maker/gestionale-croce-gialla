@@ -8092,7 +8092,7 @@ async function tabletCreateImmediate(){
  ].filter(x=>x.badge);
  const crewBadges=crew.map(x=>x.badge);
  if(new Set(crewBadges).size!==crewBadges.length)return msg('tabletAdMsg','Lo stesso nominativo non può essere inserito in più ruoli.','warn');
- const minCrew=tabletMezzo==='06'?1:2;
+ const minCrew=$('tabletAdType').value==='Servizio interno'?1:(tabletMezzo==='06'?1:2);
  if(crew.length<minCrew)return msg('tabletAdMsg',minCrew===1?'Inserisci almeno un operatore in equipaggio.':'Inserisci almeno due operatori in equipaggio.','warn');
  if(!confirm('Creare ORA un servizio non programmato per il mezzo '+tabletMezzo+' e il relativo Foglio Viaggio?'))return;
  tabletBusy=true;msg('tabletAdMsg','Creazione servizio e Foglio Viaggio...');
