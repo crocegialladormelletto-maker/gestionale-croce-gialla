@@ -738,7 +738,7 @@
 </div>
 </div></div></div></div>
 
-<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.32</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+<div id="app" class="shell hidden"><div class="top"><div class="head"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Operativo V14.33</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div><button type="button" class="btn yellow jump" data-v="accessi" data-admin-only="true">🔐 Accessi</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="statistics" data-admin-only="true">📊 Statistiche</button>
@@ -8938,7 +8938,7 @@ async function openTabletDirect118(foglio){
  ['tablet118From','tablet118Load','tablet118Dest','tablet118Return','tablet118Driver','tablet118Leader','tablet118Rescuer','tablet118Second'].forEach(id=>{if($(id))$(id).disabled=closed});
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
- document.querySelectorAll('[data-ts-field]').forEach(el=>{
+ document.querySelectorAll('#tabletSheetForm [data-ts-field]').forEach(el=>{
   const key=el.dataset.tsField;el.disabled=closed;
   if(el.type==='checkbox')el.checked=!!f[key];
   else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
@@ -8988,7 +8988,7 @@ async function loadTabletSheet(serviceId){
  else el.value=f[key]??'';
  });
  if(!closed && (f.km_partenza===null || f.km_partenza===undefined || f.km_partenza==='')){
-  const kmField=document.querySelector('[data-ts-field="km_partenza"]');
+  const kmField=document.querySelector('#tabletSheetForm [data-ts-field="km_partenza"]');
   const vr=await sb.from('mezzi').select('km_attuali').eq('codice',tabletMezzo).maybeSingle();
   if(!vr.error && vr.data?.km_attuali!=null && kmField && kmField.value===''){
    kmField.value=String(vr.data.km_attuali);
@@ -9016,9 +9016,9 @@ function tabletConfigureTimeFields(is118){
  if($('tabletBaseArrivalLabel'))$('tabletBaseArrivalLabel').textContent=is118?'Ora arrivo sede':'Rientro in sede';
 }
 function tabletCalcSheet(){
- const kmA=document.querySelector('[data-ts-field="km_partenza"]')?.value??'',kmB=document.querySelector('[data-ts-field="km_arrivo"]')?.value??'';
+ const kmA=document.querySelector('#tabletSheetForm [data-ts-field="km_partenza"]')?.value??'',kmB=document.querySelector('#tabletSheetForm [data-ts-field="km_arrivo"]')?.value??'';
  $('tabletKmTotal').value=kmA!==''&&kmB!==''&&Number(kmB)>=Number(kmA)?String(Number(kmB)-Number(kmA)):'—';
- const get=k=>document.querySelector('[data-ts-field="'+k+'"]');
+ const get=k=>document.querySelector('#tabletSheetForm [data-ts-field="'+k+'"]');
  const n=k=>Number(get(k)?.value||0);
  const sum=n('importo_inserito')+(get('sedia_montascale').checked?n('supplemento_sedia'):0)+(get('barella_bariatrica').checked?n('supplemento_bariatrica'):0);
  $('tabletSheetTotal').value=sum.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -9026,7 +9026,7 @@ function tabletCalcSheet(){
 async function saveTabletSheet(silent=false){
  if(!tabletCurrentSheet||tabletCurrentSheet.stato==='CHIUSO'||tabletBusy)return false;
  const row={};
- for(const el of document.querySelectorAll('[data-ts-field]')){
+ for(const el of document.querySelectorAll('#tabletSheetForm [data-ts-field]')){
   const name=el.dataset.tsField;
   if(el.type==='checkbox')row[name]=el.checked;
   else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
@@ -9066,8 +9066,8 @@ async function saveTabletSheet(silent=false){
 async function tabletCloseSheet(){
  if(!tabletCurrentSheet||tabletBusy)return;
  const standalone118=!tabletCurrentService&&tabletCurrentSheet.tipo_servizio==='118'&&['07','09'].includes(String(tabletCurrentSheet.mezzo));
- const kmStart=document.querySelector('[data-ts-field="km_partenza"]')?.value??'';
- const kmClose=document.querySelector('[data-ts-field="km_arrivo"]')?.value??'';
+ const kmStart=document.querySelector('#tabletSheetForm [data-ts-field="km_partenza"]')?.value??'';
+ const kmClose=document.querySelector('#tabletSheetForm [data-ts-field="km_arrivo"]')?.value??'';
  if(kmStart==='')return msg('tabletSheetMsg','Inserisci i KM di partenza prima di chiudere il Foglio Viaggio.','warn');
  if(kmClose==='')return msg('tabletSheetMsg','Inserisci i KM di chiusura / rientro prima di chiudere il Foglio Viaggio.','warn');
  if(Number(kmClose)<Number(kmStart))return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
