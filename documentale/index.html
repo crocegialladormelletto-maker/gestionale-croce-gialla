@@ -34,7 +34,7 @@
 #vExit,#cvExit{background:#d94b51!important;color:#fff!important;border-color:#b7373d!important}
 #aFind,#fFind{background:#1769aa!important;color:#fff!important;border-color:#12588f!important}
 #aClear,#fClear{background:#e98b24!important;color:#fff!important;border-color:#c97316!important}
-#vSave,#cvSave{background:#ffd814!important;color:#17324a!important;border-color:#e8bf00!important}.notice{padding:10px 12px;border-radius:9px;margin:9px 0;background:#edf6ff;border:1px solid #cfe4fa;white-space:pre-wrap}.ok{background:#eaf8f1;color:#176a4b}.err{background:#fff0f0;color:#a32b34}.warn{background:#fff7df;color:#875d12}.muted{color:var(--muted);font-size:12px}.pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#fff2bd;font-size:10px;font-weight:900}.pill.g{background:#dff4e9;color:#166846}.pill.r{background:#fde8e9;color:#9d2f37}.pill.b{background:#e5f0fb;color:#1c5d91}
+#vSave,#cvSave{background:#ffd814!important;color:#17324a!important;border-color:#e8bf00!important}#vDeleteDraft{background:#d94b51!important;color:#fff!important;border-color:#b7373d!important}.notice{padding:10px 12px;border-radius:9px;margin:9px 0;background:#edf6ff;border:1px solid #cfe4fa;white-space:pre-wrap}.ok{background:#eaf8f1;color:#176a4b}.err{background:#fff0f0;color:#a32b34}.warn{background:#fff7df;color:#875d12}.muted{color:var(--muted);font-size:12px}.pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#fff2bd;font-size:10px;font-weight:900}.pill.g{background:#dff4e9;color:#166846}.pill.r{background:#fde8e9;color:#9d2f37}.pill.b{background:#e5f0fb;color:#1c5d91}
 .table{overflow:auto;border:1px solid var(--line);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:9px;border-bottom:1px solid #e7edf2;text-align:left;vertical-align:top}th{background:#f5f7fa;color:var(--n);font-size:10px;position:sticky;top:0}
 .login{max-width:470px;margin:7vh auto;padding:14px}.loginhead{background:var(--n);color:#fff;text-align:center;padding:22px;border-radius:16px 16px 0 0}.loginhead img{width:88px;height:88px;border-radius:50%;object-fit:cover;background:#fff;border:4px solid #fff}.loginbody{padding:19px}.loginbody .field{margin:10px 0}.separator{margin:16px 0;border-top:1px solid var(--line)}.due-row{border-left:5px solid #e0a800}.due-row.over{border-left-color:#b52d36;background:#fff7f7}
 .agenda-points{display:flex;flex-direction:column;gap:8px;margin-top:6px}.agenda-item{display:flex;align-items:flex-start;gap:10px}.agenda-item b{width:25px;flex:0 0 25px;padding-top:10px;text-align:right;color:var(--n)}.agenda-item textarea{flex:1;min-height:58px}
@@ -126,7 +126,7 @@
  <div class="card">
   <div class="loginhead">
    <img class="js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=90" alt="Logo">
-   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.35</div>
+   <h2 style="margin-bottom:4px">Gestionale Documentale</h2><div>Versione 1.36</div>
   </div>
   <div class="loginbody">
    <div><b>Accesso Amministrazione</b></div>
@@ -146,7 +146,7 @@
 <div id="app" class="shell hidden">
  <div class="top"><div class="head">
   <img class="logo js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo">
-  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.35</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
+  <div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Documentale V1.36</strong><div id="who" class="muted" style="color:#dbe6ef"></div></div>
   <a class="btn yellow" href="/gestionale-croce-gialla/" style="text-decoration:none">🚑 Gestionale operativo</a>
   <button id="out" class="btn secondary">Esci</button>
  </div><div class="stripe"></div></div>
@@ -313,7 +313,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
        <div class="toolbar"><button id="vSignedUpload" class="btn blue" type="button">📤 Carica / sostituisci PDF firmato</button><button id="vSignedOpen" class="btn secondary hidden" type="button">📄 Apri PDF firmato</button><button id="vSignedDownload" class="btn secondary hidden" type="button">⬇ Scarica PDF firmato</button><button id="vSignedDelete" class="btn danger hidden" type="button">🗑️ Elimina PDF firmato</button></div>
        <div id="vSignedInfo"></div>
       </div>
-      <div class="toolbar"><button id="vSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="vApprove" class="btn success" type="button">✅ Approva verbale</button></div><div id="vmsg"></div>
+      <div class="toolbar"><button id="vSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="vApprove" class="btn success" type="button">✅ Approva verbale</button><button id="vDeleteDraft" class="btn danger hidden" type="button">🗑️ Elimina bozza</button></div><div id="vmsg"></div>
      </div>
 
      <div class="section">
@@ -1177,9 +1177,12 @@ function newMinuteOfType(type){
 }
 function updateMinuteStateUI(){
  const approved=$('vStatus').value==='APPROVATO';
+ const canDeleteDraft=!!currentMinuteId&&$('vStatus').value==='BOZZA';
  $('vSave').textContent=approved?'💾 Salva modifiche':'💾 Salva bozza';
  $('vApprove').disabled=approved||minutesBusy;
  $('vApprove').textContent=approved?'✅ Verbale approvato':'✅ Approva verbale';
+ $('vDeleteDraft').classList.toggle('hidden',!canDeleteDraft);
+ $('vDeleteDraft').disabled=minutesBusy;
 }
 function resetMinuteForm(){
  currentMinuteId=null;currentMinute=null;duplicateMinuteSource=null;$('vDuplicate').disabled=true;$('vTitle').textContent='Nuovo verbale';
@@ -1315,13 +1318,45 @@ function renderMinutes(){
  $('vCount').textContent=minutesRows.length;
  $('vBody').innerHTML=minutesRows.length?minutesRows.map(v=>{
   const signed=signedMinuteFiles[String(v.id)];
-  return '<tr><td><b>'+esc(v.verbale_codice)+'</b>'+(signed?'<br><span class="pill g">✍️ PDF FIRMATO</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_inizio?'<br><span class="muted">'+esc(String(v.ora_inizio).slice(0,5))+(v.ora_fine?' – '+esc(String(v.ora_fine).slice(0,5)):'')+'</span>':'')+'</td><td>'+esc(minuteTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.titolo)+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='APPROVATO'?'g':v.stato==='ANNULLATO'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc([v.presidente,v.segretario].filter(Boolean).join(' / ')||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-vopen="'+esc(v.id)+'">Apri</button><button class="btn secondary" type="button" data-vdup="'+esc(v.id)+'">⧉ Duplica</button><button class="btn yellow" type="button" data-vprint="'+esc(v.id)+'">🖨️ Stampa PDF</button>'+(signed?'<button class="btn blue" type="button" data-vsigned="'+esc(v.id)+'">✍️ Apri firmato</button>':'')+'</div></td></tr>';
+  return '<tr><td><b>'+esc(v.verbale_codice)+'</b>'+(signed?'<br><span class="pill g">✍️ PDF FIRMATO</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_inizio?'<br><span class="muted">'+esc(String(v.ora_inizio).slice(0,5))+(v.ora_fine?' – '+esc(String(v.ora_fine).slice(0,5)):'')+'</span>':'')+'</td><td>'+esc(minuteTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.titolo)+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='APPROVATO'?'g':v.stato==='ANNULLATO'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc([v.presidente,v.segretario].filter(Boolean).join(' / ')||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-vopen="'+esc(v.id)+'">Apri</button><button class="btn secondary" type="button" data-vdup="'+esc(v.id)+'">⧉ Duplica</button><button class="btn yellow" type="button" data-vprint="'+esc(v.id)+'">🖨️ Stampa PDF</button>'+(signed?'<button class="btn blue" type="button" data-vsigned="'+esc(v.id)+'">✍️ Apri firmato</button>':'')+(v.stato==='BOZZA'?'<button class="btn danger" type="button" data-vdelete="'+esc(v.id)+'">🗑️ Elimina bozza</button>':'')+'</div></td></tr>';
  }).join(''):'<tr><td colspan="7">Nessun verbale trovato.</td></tr>';
  $('vBody').querySelectorAll('[data-vopen]').forEach(b=>b.onclick=()=>openMinute(b.dataset.vopen,false));
  $('vBody').querySelectorAll('[data-vdup]').forEach(b=>b.onclick=()=>duplicateMinute(b.dataset.vdup));
  $('vBody').querySelectorAll('[data-vprint]').forEach(b=>b.onclick=()=>openMinute(b.dataset.vprint,true));
  $('vBody').querySelectorAll('[data-vsigned]').forEach(b=>b.onclick=()=>openSignedMinute(b.dataset.vsigned,false));
+ $('vBody').querySelectorAll('[data-vdelete]').forEach(b=>b.onclick=()=>deleteDraftMinute(b.dataset.vdelete));
 }
+async function deleteDraftMinute(id=currentMinuteId){
+ if(prof?.ruolo!=='AMMINISTRATORE'||!id||minutesBusy)return;
+ let v=minutesRows.find(x=>String(x.id)===String(id));
+ if(!v&&currentMinute&&String(currentMinute.id)===String(id))v=currentMinute;
+ if(!v)return msg('vListMsg','Verbale non trovato.','err');
+ if(v.stato!=='BOZZA')return msg('vListMsg','Puoi eliminare solamente un verbale in BOZZA.','warn');
+ const code=v.verbale_codice||'questa bozza';
+ if(!confirm('Sei sicuro di voler eliminare definitivamente il verbale '+code+'?\n\nL’operazione non può essere annullata.'))return;
+
+ minutesBusy=true;updateMinuteStateUI();
+ msg(currentMinuteId&&String(currentMinuteId)===String(id)?'vmsg':'vListMsg','Eliminazione della bozza...');
+ try{
+  const r=await sb.rpc('cge_verbale_elimina_bozza',{p_id:id});
+  if(r.error)throw r.error;
+  const deleted=Array.isArray(r.data)?r.data[0]:r.data;
+  if(deleted?.storage_path){
+   const rm=await sb.storage.from('verbali-firmati').remove([deleted.storage_path]);
+   if(rm.error)console.warn('PDF firmato orfano non eliminato:',rm.error.message);
+  }
+  delete signedMinuteFiles[String(id)];
+  if(currentMinuteId&&String(currentMinuteId)===String(id))resetMinuteForm();
+  await loadMinutesList();
+  if(!$('archive').classList.contains('hidden'))await loadArchive();
+  msg('vListMsg','Bozza '+code+' eliminata definitivamente.','ok');
+ }catch(e){
+  msg(currentMinuteId&&String(currentMinuteId)===String(id)?'vmsg':'vListMsg',e.message||String(e),'err');
+ }finally{
+  minutesBusy=false;updateMinuteStateUI();
+ }
+}
+
 async function loadMinutesList(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
  msg('vListMsg','Caricamento verbali...');
@@ -1444,7 +1479,7 @@ $('vAssemblyCall').onchange=applyAssemblyCallToMinute;
 $('vBoardCall').onchange=applyBoardCallToMinute;
 $('vAiGenerate').onclick=()=>useMinuteAI('genera');$('vAiImprove').onclick=()=>useMinuteAI('migliora');
 $('vDate').addEventListener('change',updateNextMinuteCode);
-$('vSave').onclick=()=>saveMinute(false);$('vApprove').onclick=()=>saveMinute(true);$('vDuplicate').onclick=()=>currentMinuteId&&duplicateMinute(currentMinuteId);$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
+$('vSave').onclick=()=>saveMinute(false);$('vApprove').onclick=()=>saveMinute(true);$('vDeleteDraft').onclick=()=>currentMinuteId&&deleteDraftMinute(currentMinuteId);$('vDuplicate').onclick=()=>currentMinuteId&&duplicateMinute(currentMinuteId);$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
 $('vSignedUpload').onclick=uploadSignedMinute;$('vSignedOpen').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,false);$('vSignedDownload').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,true);$('vSignedDelete').onclick=()=>currentMinuteId&&deleteSignedMinute(currentMinuteId);
 $('vSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadMinutesList()}};
 $('vClear').onclick=()=>{resetMinuteFilters();loadMinutesList()};
