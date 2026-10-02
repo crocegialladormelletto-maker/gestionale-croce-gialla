@@ -2270,9 +2270,10 @@ Causale: numero preventivo</textarea>
     </div>
     </div>
     <div class="tablet-sheet-bar">
-     <div class="actions"><button id="tabletSaveSheet" class="btn yellow" type="submit">Salva dati servizio</button>
-     <button id="tabletCloseSheet" class="btn blue" type="button">✓ Chiudi servizio</button>
+     <div class="actions"><button id="tabletSaveSheet" class="btn yellow" type="submit">💾 Salva dati</button>
+     <button id="tabletCloseSheet" class="btn blue" type="button">✓ Chiudi Foglio Viaggio</button>
      <button id="tabletPrintSheet" class="btn secondary" type="button">Stampa</button></div>
+     <div class="muted" style="margin-top:8px"><b>Salva dati</b> memorizza quanto compilato e lascia il Foglio Viaggio aperto, così può essere completato successivamente.</div>
     </div></form>
    </div>
   </div>
@@ -8920,7 +8921,7 @@ async function saveTabletSheet(silent=false){
  try{
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
-  if(!silent)msg('tabletSheetMsg','Foglio Viaggio salvato.','ok');
+  if(!silent)msg('tabletSheetMsg','Dati salvati. Il Foglio Viaggio resta aperto e può essere completato successivamente.','ok');
   return true;
  }catch(e){msg('tabletSheetMsg',e.message||String(e),'err');return false}
  finally{tabletBusy=false}
