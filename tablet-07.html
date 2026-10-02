@@ -2079,16 +2079,16 @@ Causale: numero preventivo</textarea>
     <div class="notice">Compila e salva durante il servizio. Il Foglio Viaggio va chiuso dopo aver terminato il servizio. Dopo la chiusura non sarà più modificabile dal tablet.</div>
     <div id="tabletSheetMsg"></div>
     <form id="tabletSheetForm">
-    <h3 class="tablet-section-title">Orari effettivi e percorrenza</h3>
+    <h3 class="tablet-section-title" id="tabletTimesTitle">Orari effettivi e percorrenza</h3>
     <div class="tablet-fields">
-     <div class="field"><label>Partenza effettiva</label><input type="time" data-ts-field="ora_partenza_servizio"></div>
-     <div class="field" id="tabletPatientLoadTime"><label>Carico paziente</label><input type="time" data-ts-field="ora_carico_paziente"></div>
-     <div class="field"><label>Arrivo a destinazione</label><input type="time" data-ts-field="ora_arrivo_destinazione"></div>
-     <div class="field"><label>Ripartenza</label><input type="time" data-ts-field="ora_ripartenza"></div>
-     <div class="field"><label>Rientro in sede</label><input type="time" data-ts-field="ora_arrivo_sede"></div>
-     <div class="field"><label>Ritorno operativo</label><input type="time" data-ts-field="ora_operativita"></div>
-     <div class="field"><label>Inizio fermo</label><input type="time" data-ts-field="inizio_fermo"></div>
-     <div class="field"><label>Fine fermo</label><input type="time" data-ts-field="fine_fermo"></div>
+     <div class="field" id="tabletTime_ora_partenza_servizio"><label>Partenza effettiva</label><input type="time" data-ts-field="ora_partenza_servizio"></div>
+     <div class="field" id="tabletTime_ora_carico_paziente" id="tabletPatientLoadTime"><label>Carico paziente</label><input type="time" data-ts-field="ora_carico_paziente"></div>
+     <div class="field" id="tabletTime_ora_arrivo_destinazione"><label>Arrivo a destinazione</label><input type="time" data-ts-field="ora_arrivo_destinazione"></div>
+     <div class="field" id="tabletTime_ora_ripartenza"><label>Ripartenza</label><input type="time" data-ts-field="ora_ripartenza"></div>
+     <div class="field" id="tabletTime_ora_arrivo_sede"><label>Rientro in sede</label><input type="time" data-ts-field="ora_arrivo_sede"></div>
+     <div class="field" id="tabletTime_ora_operativita"><label>Ritorno operativo</label><input type="time" data-ts-field="ora_operativita"></div>
+     <div class="field" id="tabletTime_inizio_fermo"><label>Inizio fermo</label><input type="time" data-ts-field="inizio_fermo"></div>
+     <div class="field" id="tabletTime_fine_fermo"><label>Fine fermo</label><input type="time" data-ts-field="fine_fermo"></div>
      <div class="field"><label>KM partenza</label><input type="number" min="0" step="1" data-ts-field="km_partenza"></div>
      <div class="field"><label>KM chiusura / rientro *</label><input type="number" min="0" step="1" data-ts-field="km_arrivo"></div>
      <div class="field"><label>KM percorsi</label><input id="tabletKmTotal" disabled value="—"></div>
@@ -8291,7 +8291,10 @@ async function loadTabletSheet(serviceId){
  $('tabletPatientLoadTime').classList.toggle('hidden',isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio)||String(tabletCurrentService?.tipo_servizio||f.tipo_servizio||'')==='Servizio interno');
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
- const patientEditable=!!tabletCurrentService && tabletSheetIs118===false && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno';
+ const isInternalSheet=String(tabletCurrentService?.tipo_servizio||f.tipo_servizio||'')==='Servizio interno';
+ ['ora_partenza_servizio','ora_carico_paziente','ora_arrivo_destinazione','ora_ripartenza','ora_arrivo_sede','ora_operativita','inizio_fermo','fine_fermo'].forEach(k=>{$('tabletTime_'+k)?.classList.toggle('hidden',isInternalSheet)});
+ if($('tabletTimesTitle'))$('tabletTimesTitle').textContent=isInternalSheet?'Percorrenza':'Orari effettivi e percorrenza';
+ const patientEditable=!!tabletCurrentService && tabletSheetIs118===false && !isInternalSheet;
  if($('tabletPatientEditSection'))$('tabletPatientEditSection').classList.toggle('hidden',!patientEditable);
  if(patientEditable){
   $('tabletPatientFirst').value=tabletCurrentService.paziente_nome||f.paziente_nome||'';
