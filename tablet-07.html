@@ -2020,7 +2020,7 @@ Causale: numero preventivo</textarea>
  <div id="tabletImmediatePanel" class="surface hidden" style="margin:12px 0">
   <div class="hero"><h2>Nuovo servizio non programmato · mezzo <span id="tabletImmediateVehicle"></span></h2><p>Per una dimissione o un trasporto deciso al momento. Il servizio e il Foglio Viaggio saranno creati e collegati automaticamente.</p></div>
   <div class="pad"><div class="notice warn">Seleziona i nominativi degli operatori presenti sul mezzo. I nominativi sono filtrati automaticamente in base alla qualifica del ruolo. Prima di creare il servizio verifica che partenza, destinazione e importo siano corretti.</div>
-   <form id="tabletImmediateForm">
+   <form id="tabletImmediateForm" novalidate>
    <div class="grid2">
     <div class="field"><label>Tipo servizio *</label><select id="tabletAdType" required><option>Dimissione</option><option>Trasporto semplice</option><option>Trasferimento</option><option>Visita</option><option>RSA</option><option>Servizio interno</option></select></div>
     <div class="field"><label>Luogo partenza *</label><input id="tabletAdOrigin" required maxlength="250" placeholder="Es. DEA Borgomanero"></div>
@@ -8064,6 +8064,9 @@ function tabletRestoreImmediateDraft(){
 function tabletClearImmediateDraft(){try{localStorage.removeItem(tabletImmediateDraftKey())}catch(_){}}
 async function tabletCreateImmediate(){
  if(tabletBusy)return;
+ if(!$('tabletAdType').value)return msg('tabletAdMsg','Seleziona il tipo di servizio.','warn');
+ if(!$('tabletAdOrigin').value.trim())return msg('tabletAdMsg','Inserisci il luogo di partenza.','warn');
+ if(!$('tabletAdDestination').value.trim())return msg('tabletAdMsg','Inserisci la destinazione.','warn');
  const code=$('tabletAdTariffGroup').value;
  const tariff=tabletTariffRows.find(r=>r.tariffa_destinazione_id===$('tabletAdTariffDest').value&&r.tariffario_codice===code);
  const night=$('tabletAdNight').value==='true',manual=$('tabletAdAmount').value;
