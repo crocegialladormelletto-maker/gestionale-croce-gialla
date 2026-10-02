@@ -7988,10 +7988,6 @@ function tabletUpdateImmediateTariff(){
 }
 function tabletApplyImmediateTypeRules(){
  const internal=$('tabletAdType').value==='Servizio interno';
- const immediateKmStart=$('tabletAdKmStart')?.value??'';
- const immediateKmClose=$('tabletAdKmClose')?.value??'';
- if(immediateKmStart!==''&&immediateKmClose!==''&&Number(immediateKmClose)<Number(immediateKmStart))
-  return msg('tabletAdMsg','I KM chiusura non possono essere inferiori ai KM partenza.','warn');
  $('tabletAdPatientSection').classList.toggle('hidden',internal);
  ['tabletAdFirst','tabletAdLast'].forEach(id=>{$(id).required=!internal;});
  if(internal){
@@ -8065,6 +8061,10 @@ async function tabletCreateImmediate(){
  const code=$('tabletAdTariffGroup').value;
  const tariff=tabletTariffRows.find(r=>r.tariffa_destinazione_id===$('tabletAdTariffDest').value&&r.tariffario_codice===code);
  const night=$('tabletAdNight').value==='true',manual=$('tabletAdAmount').value;
+ const immediateKmStart=$('tabletAdKmStart')?.value??'';
+ const immediateKmClose=$('tabletAdKmClose')?.value??'';
+ if(immediateKmStart!==''&&immediateKmClose!==''&&Number(immediateKmClose)<Number(immediateKmStart))
+  return msg('tabletAdMsg','I KM chiusura non possono essere inferiori ai KM partenza.','warn');
  const internal=$('tabletAdType').value==='Servizio interno';
  if(!internal){
   if(!$('tabletAdFirst').value.trim()||!$('tabletAdLast').value.trim())return msg('tabletAdMsg','Inserisci nome e cognome del paziente.','warn');
