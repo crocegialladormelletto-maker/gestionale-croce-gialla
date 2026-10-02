@@ -142,10 +142,39 @@ function employeeRestAnomalies(source=activeTrips()){
   source.forEach(x=>crewBadges(x).filter(b=>employees.has(b)).forEach(b=>{(by[b]??=[]).push(x)}));
   const out=[];
   Object.entries(by).forEach(([badge,arr])=>{
-    const rows=arr.map(x=>({x,start:tripDateTime(x,'start'),end:tripDateTime(x,'end')})).filter(z=>z.start&&z.end).sort((a,b)=>a.start-b.start);
-    for(let i=1;i<rows.length;i++){
-      const prev=rows[i-1],cur=rows[i],hours=(cur.start-prev.end)/3600000;
-      if(hours<11)out.push({badge,nome:personName(badge),precedente:prev.x,successivo:cur.x,ore:hours})
+    const rows=arr.map(x=>({x,start:tripDateTime(x,'start'),end:tripDateTime(x,'end')}))
+      .filter(z=>z.start&&z.end)
+      .sort((a,b)=>a.start-b.start);
+
+    const days=new Map();
+    rows.forEach(z=>{
+      const day=z.x.data;
+      if(!days.has(day))days.set(day,{day,first:z,last:z});
+      else{
+        const d=days.get(day);
+        if(z.start<d.first.start)d.first=z;
+        if(z.end>d.last.end)d.last=z;
+      }
+    });
+
+    const workDays=[...days.values()].sort((a,b)=>a.day.localeCompare(b.day));
+    for(let i=1;i<workDays.length;i++){
+      const prev=workDays[i-1],cur=workDays[i];
+      const prevDate=new Date(prev.day+'T12:00:00');
+      const curDate=new Date(cur.day+'T12:00:00');
+      const calendarDays=Math.round((curDate-prevDate)/86400000);
+      if(calendarDays<1)continue;
+      const hours=(cur.first.start-prev.last.end)/3600000;
+      if(hours>=0&&hours<11){
+        out.push({
+          badge,nome:personName(badge),
+          precedente:prev.last.x,
+          successivo:cur.first.x,
+          ore:hours,
+          giorno_precedente:prev.day,
+          giorno_successivo:cur.day
+        });
+      }
     }
   });
   return out
