@@ -5889,6 +5889,7 @@ async function loadPeopleView(){
  peopleHoursCache=h.data||[];
  refreshPeopleAppStats();
  renderPeopleTable();
+ if(!editingPersonBadge&&!$('pb').value)assignNextVolunteerBadge();
 }
 
 async function loadAdminPersonDocuments(badge){
