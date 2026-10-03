@@ -1220,10 +1220,10 @@
 </section>
 
 
-<section id="servicesOrd" class="surface hidden"><div class="hero"><h2>🚐 Servizi ordinari</h2><p>Visita · Trasferimento · Trasporto semplice</p></div><div class="pad">
+<section id="servicesOrd" class="surface hidden"><div class="hero"><h2>🚐 Servizi ordinari</h2><p>Visita · Trasferimento · Trasporto semplice · Dimissione</p></div><div class="pad">
 <div class="section ordinary-calendar-panel">
 <h3>📅 Calendario SERVIZI ORDINARI</h3>
-<p class="muted">VISITA · TRASFERIMENTO · TRASPORTO SEMPLICE. Seleziona un giorno e un servizio specifico per consultare o completare il suo equipaggio.</p>
+<p class="muted">VISITA · TRASFERIMENTO · TRASPORTO SEMPLICE · DIMISSIONE. Seleziona un giorno e un servizio specifico per consultare o completare il suo equipaggio.</p>
 <div class="actions" style="justify-content:space-between;align-items:center"><b id="ordTitle"></b><div class="actions">
 <button type="button" id="ordPrev" class="btn secondary">←</button>
 <button type="button" id="ordToday" class="btn yellow">Oggi</button>
@@ -1232,7 +1232,7 @@
 </div></div>
 <div class="field" style="max-width:320px;margin:8px 0"><label for="ordTypeFilter">Tipo servizio</label>
 <select id="ordTypeFilter"><option value="">Tutti i servizi ordinari</option><option value="VISITA">Visita</option>
-<option value="TRASFERIMENTO">Trasferimento</option><option value="TRASPORTO SEMPLICE">Trasporto semplice</option></select></div>
+<option value="TRASFERIMENTO">Trasferimento</option><option value="TRASPORTO SEMPLICE">Trasporto semplice</option><option value="DIMISSIONE">Dimissione</option></select></div>
 <div id="ordMsg"></div><div class="dim-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
 <div id="ordGrid" class="dim-month-grid ordinary-month-grid"></div>
 <h3 id="ordDayTitle" style="margin-top:14px"></h3><div id="ordDayList"></div>
@@ -9856,7 +9856,7 @@ if('serviceWorker' in navigator){
 applyVolunteerOnlyLogin();refreshPwaInstallUI();
 try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&$('vbadge')){$('vbadge').value=remembered;$('vremember').checked=true}}catch(_){}
 (async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
-</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20260926b"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
+</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20261003c"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
 <style>.nav[data-v="training"]{background:#65a30d;border-color:#4d7c0f;color:#fff}
 /* Dashboard: colori forzati pulsanti rapidi */
 #dash .hero{
