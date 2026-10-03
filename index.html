@@ -2963,7 +2963,10 @@ if($('pexFilter'))$('pexFilter').onchange=loadPersonnelExpiries;
 if($('dashPersonnelExpiryOpen'))$('dashPersonnelExpiryOpen').onclick=()=>view('personnelExpiries');
 
 async function view(v,options={}){
+ const current=[...document.querySelectorAll('main>section')].find(x=>!x.classList.contains('hidden'))?.id||'';
+ if(current==='people'&&v!=='people')resetPerson();
  if(prof?.ruolo==='CENTRALINO'&&['people','statistics','accounting','accessi','activityLog','backup'].includes(v))v='dash';
+ if(v==='people'&&current!=='people')resetPerson();
  if(v==='new'){
   resetNewServiceForm();
   if(options.date)$('d').value=options.date;
@@ -2975,7 +2978,7 @@ async function view(v,options={}){
  selectView(v);
  return result;
 }
-document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>{if(b.dataset.href){location.href=b.dataset.href;return}view(b.dataset.v)});
+document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>{if(b.dataset.href){if(editingPersonBadge)resetPerson();location.href=b.dataset.href;return}view(b.dataset.v)});
 function volunteerGoTo(target){
  const el=$(target);if(!el)return;
  $('volApp').querySelector('.vol-layout')?.classList.remove('vol-menu-open');
@@ -3147,7 +3150,7 @@ $('tpw').onkeydown=e=>{if(e.key==='Enter')$('tgo').click()};
 $('vpinToggle').onclick=()=>{const show=$('vpin').type==='password';$('vpin').type=show?'text':'password';$('vpinToggle').textContent=show?'Nascondi':'Mostra'};
 $('vgo').onclick=async()=>{const badge=$('vbadge').value.trim(),pin=$('vpin').value;if(!badge||!pin)return msg('vlmsg','Inserisci badge e PIN.','warn');msg('vlmsg','Accesso in corso...');const r=await sb.auth.signInWithPassword({email:volunteerLoginEmail(badge),password:pin});if(r.error)return msg('vlmsg','Badge o PIN non validi.','err');try{if($('vremember').checked)localStorage.setItem('cge_volunteer_badge',badge);else localStorage.removeItem('cge_volunteer_badge')}catch(_){};enter()};
 $('vpin').onkeydown=e=>{if(e.key==='Enter')$('vgo').click()};
-$('out').onclick=async()=>{await sb.auth.signOut();location.reload()};
+$('out').onclick=async()=>{resetPerson();await sb.auth.signOut();location.reload()};
 $('vout').onclick=async()=>{
  await sb.auth.signOut();
  // L'icona installata resta valida; ricarica l'HTML aggiornato, non una copia in cache.
