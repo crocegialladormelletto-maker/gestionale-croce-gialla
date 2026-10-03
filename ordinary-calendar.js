@@ -1,9 +1,10 @@
-// Calendario Visita / Trasferimento / Trasporto semplice — amministrazione e centralino
+// Calendario Visita / Trasferimento / Trasporto semplice / Dimissione — amministrazione e centralino
 let ordCursor=new Date(),ordDay=todaySafe(),ordItems=[],ordCrew=[],ordEligible=new Map(),ordSeq=0,ordBusy=false;
 const ordRoles=[['AUTISTA','Autista'],['CAPO_SERVIZIO','Capo servizio'],['SOCCORRITORE','Soccorritore'],['SECONDO_SOCCORRITORE','Secondo soccorritore'],['ACCOMPAGNATORE','Accompagnatore'],['AFFIANCATO','Affiancato']];
 function ordType(value){
  const t=String(value||'').trim().toLocaleUpperCase('it-IT');
  return t==='VISITA'?'VISITA':t==='TRASFERIMENTO'?'TRASFERIMENTO':
+ t==='DIMISSIONE'?'DIMISSIONE':
  (t==='TRASPORTO SEMPLICE'||t.startsWith('TRASPORTO SEMPLICE '))?'TRASPORTO SEMPLICE':'';
 }
 function ordVisible(){
