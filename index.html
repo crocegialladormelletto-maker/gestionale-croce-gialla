@@ -1430,6 +1430,16 @@
   <button id="dCancel" class="btn danger">Annulla servizio</button>
   <button id="dDelete" class="btn danger" type="button">🗑 Elimina servizio</button>
  </div>
+ <div id="dCancelBox" class="notice warn hidden" style="margin-top:12px">
+  <div class="field">
+   <label>Motivazione dell'annullamento *</label>
+   <textarea id="dCancelReason" placeholder="Scrivi il motivo dell'annullamento del servizio..." style="min-height:90px"></textarea>
+  </div>
+  <div class="actions" style="margin-top:9px">
+   <button id="dCancelConfirm" class="btn danger" type="button">Conferma annullamento</button>
+   <button id="dCancelAbort" class="btn secondary" type="button">Torna indietro</button>
+  </div>
+ </div>
  <div id="dActionMsg"></div>
 </div>
 
@@ -5197,6 +5207,8 @@ window.openService=openService;
 
 async function loadServiceDetail(id=currentServiceId){
  if(!id)return;
+ if($('dCancelBox'))$('dCancelBox').classList.add('hidden');
+ if($('dCancelReason'))$('dCancelReason').value='';
  msg('dActionMsg','Caricamento...');
  const isCentral=prof?.ruolo==='CENTRALINO';
  const accountingPromise=isCentral?Promise.resolve({data:null,error:null}):sb.from('v_contabilita_servizi').select('*').eq('servizio_id',id).maybeSingle();
@@ -5400,25 +5412,35 @@ $('detailForm').onsubmit=async e=>{
  await loadServiceDetail();
 };
 
-async function detailAction(action){
+async function detailAction(action,motivo=null){
  if(!currentServiceId)return;
- let motivo=null;
- if(action==='ANNULLA'){
-  motivo=prompt('Indica il motivo dell’annullamento:');
-  if(motivo===null)return;
-  if(!motivo.trim())return msg('dActionMsg','Il motivo dell’annullamento è obbligatorio.','warn');
- }
+ if(action==='ANNULLA'&&!String(motivo||'').trim())
+  return msg('dActionMsg','Inserisci la motivazione dell’annullamento.','warn');
  msg('dActionMsg','Aggiornamento in corso...');
  const r=await sb.rpc('cge_azione_servizio',{p_servizio:currentServiceId,p_azione:action,p_motivo:motivo});
  if(r.error)return msg('dActionMsg',r.error.message,'err');
- msg('dActionMsg','Stato aggiornato correttamente.','ok');
+ msg('dActionMsg',action==='ANNULLA'?'Servizio annullato. Motivazione registrata.':'Stato aggiornato correttamente.','ok');
  await loadServiceDetail();
 }
 $('dTake').onclick=()=>detailAction('PRENDI_IN_CARICO');
 $('dStart').onclick=()=>detailAction('AVVIA');
 $('dFinish').onclick=()=>detailAction('TERMINA');
 $('dClose').onclick=()=>detailAction('CHIUDI');
-$('dCancel').onclick=()=>detailAction('ANNULLA');
+$('dCancel').onclick=()=>{
+ $('dCancelBox').classList.remove('hidden');
+ $('dCancelReason').focus();
+ msg('dActionMsg','');
+};
+$('dCancelAbort').onclick=()=>{
+ $('dCancelReason').value='';
+ $('dCancelBox').classList.add('hidden');
+ msg('dActionMsg','');
+};
+$('dCancelConfirm').onclick=()=>{
+ const motivo=$('dCancelReason').value.trim();
+ if(!motivo)return msg('dActionMsg','Inserisci la motivazione dell’annullamento.','warn');
+ detailAction('ANNULLA',motivo);
+};
 $('dDelete').onclick=async()=>{
  if(!currentServiceId||!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  const s=currentService||{};
