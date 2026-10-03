@@ -4932,10 +4932,15 @@ async function loadStatistics(){
  const [sr,pr,cr]=await Promise.all([
   sb.from('servizi_giornalieri').select('id,data_servizio,categoria_servizio,tipo_servizio,tipo_servizio_altro,mezzo,stato_gestionale').gte('data_servizio',from).lte('data_servizio',to).neq('stato_gestionale','ANNULLATO').limit(5000),
   sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico').limit(1000),
-  sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,categoria_servizio,paziente_nome,paziente_cognome,destinazione,ospedale_destinazione,motivo_annullamento,annullato_il,stato_gestionale').gte('data_servizio',from).lte('data_servizio',to).eq('stato_gestionale','ANNULLATO').order('data_servizio',{ascending:false}).limit(5000)
+  sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,categoria_servizio,paziente_nome,paziente_cognome,destinazione,ospedale_destinazione,motivo_annullamento,annullato_il,stato_gestionale').eq('stato_gestionale','ANNULLATO').order('annullato_il',{ascending:false,nullsFirst:false}).limit(5000)
  ]);
  const err=sr.error||pr.error||cr.error;if(err)return msg('statsMsg','Errore caricamento statistiche: '+err.message,'err');
- const services=sr.data||[],cancelled=cr.data||[],allPeople=pr.data||[],people=allPeople.filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
+ const services=sr.data||[];
+ const cancelled=(cr.data||[]).filter(x=>{
+  const refDate=x.annullato_il?statsISODate(new Date(x.annullato_il)):String(x.data_servizio||'');
+  return refDate>=from&&refDate<=to;
+ });
+ const allPeople=pr.data||[],people=allPeople.filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
  const serviceCats={};services.forEach(x=>{const k=statsTypeLabel(x);serviceCats[k]=(serviceCats[k]||0)+1});
  let shiftStats;
  try{shiftStats=await loadShiftStatistics(from,to,allPeople)}
