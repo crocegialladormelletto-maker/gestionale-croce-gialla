@@ -5883,7 +5883,21 @@ function renderPeopleTable(){
   peopleAppFilter==='MISSING'?'Solo volontari attivi con APP NON ATTIVA · '+list.length:
   'Tutti i volontari · '+list.length;
 }
+function normalizePeopleBirthField(){
+ const peopleSection=$('people');
+ if(!peopleSection)return;
+ const fields=[...peopleSection.querySelectorAll('.field')].filter(field=>{
+  const label=field.querySelector('label');
+  return label&&label.textContent.trim().toLowerCase()==='data di nascita';
+ });
+ let kept=false;
+ fields.forEach(field=>{
+  if(!kept&&field.querySelector('#pbirth')){kept=true;return}
+  field.remove();
+ });
+}
 async function loadPeopleView(){
+ normalizePeopleBirthField();
  await refreshMaster();
  const h=await sb.from('v_personale_monte_ore').select('*');
  peopleHoursCache=h.data||[];
