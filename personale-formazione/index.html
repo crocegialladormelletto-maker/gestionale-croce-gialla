@@ -551,6 +551,7 @@ function setNewTrainingCourseVisible(show){
 function view(id){
  const previous=[...document.querySelectorAll('main>section')].find(s=>!s.classList.contains('hidden'))?.id||'';
  if(previous==='training'&&id!=='training'){setTrainingPlanVisible(false);setNewTrainingCourseVisible(false);}
+ if(previous==='people'&&id!=='people')clearPersonDetail();
  document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hidden',s.id!==id));
  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
  if(id==='deadlines')renderDeadlines();
@@ -947,7 +948,20 @@ function openPerson(badge){
  const ds=daeStatus(dr?.valida_al);$('daeState').value=ds.label.toUpperCase();
  renderDaeHistory();renderPersonQuals();renderPersonQualHistory();renderPersonDocs();renderPersonStateHistory();renderPersonTrainingHistory();renderPersonTimeline();renderPersonAtGlance();renderPersonOperationalStatus();renderPersonPrintSheet();renderPeople();$('personDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
-$('closePerson').onclick=()=>{$('personDetail').classList.add('hidden');selectedBadge=null;renderPeople()};
+function clearPersonDetail(){
+ const detail=$('personDetail');
+ if(!detail)return;
+ detail.querySelectorAll('input,select,textarea').forEach(el=>{
+  if(el.type==='checkbox'||el.type==='radio')el.checked=false;
+  else el.value='';
+ });
+ ['personSub','personAtGlance','personOperationalStatus','personQualMsg','daeMsg','personManageMsg','personProfileMsg','personQualHistory','personDocs','personStateHistory','personTrainingHistory','personTimeline','personPrintSheet'].forEach(id=>{const el=$(id);if(el)el.innerHTML='';});
+ if($('personTitle'))$('personTitle').textContent='Scheda personale';
+ if($('daePersonBadge'))$('daePersonBadge').textContent='';
+ selectedBadge=null;
+ detail.classList.add('hidden');
+}
+$('closePerson').onclick=()=>{clearPersonDetail();renderPeople()};
 document.querySelectorAll('[data-person-quick]').forEach(b=>b.addEventListener('click',()=>{
  if(!selectedBadge)return;
  const action=b.dataset.personQuick;
