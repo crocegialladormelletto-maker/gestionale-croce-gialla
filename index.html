@@ -5804,7 +5804,15 @@ window.removeCrew=async id=>{
 
 let editingPersonBadge=null;
 function resetPerson(){editingPersonBadge=null;adminPersonDocumentsRequest++;adminPersonDocuments=[];adminPersonDocumentsBadge='';msg('pdocMsg','');$('pdocPerson').textContent='';$('pdocList').innerHTML='<div class="notice">Seleziona un volontario e premi «Documenti» per consultare il suo archivio.</div>';$('pb').value='';$('pb').disabled=false;$('pname').value='';$('psurname').value='';$('pstate').value='ATTIVO';$('pphone').value='';$('pemail').value='';$('pbirth').value='';$('pentry').value='';$('pexit').value='';$('pcf').value='';$('paddress').value='';$('pcity').value='';$('pprovince').value='';$('pcap').value='';$('pdep').value='false';$('pminm').value='28';$('pmint').value='84';$('paccessbadge').value='';$('paccesspin').value='';$('paccessstate').value='Non verificato';$('pappcreds').value='false';$('pappcredsdate').value='';$('pappinstalled').value='false';$('pappinstalldate').value='';$('pappsummary').className='notice';$('pappsummary').textContent='Stato APP non ancora verificato.';renderQualChecks([]);msg('pmsg','');msg('paccessmsg','')}
-$('pnew').onclick=resetPerson;
+function assignNextVolunteerBadge(){
+ const numericBadges=(people||[]).map(p=>String(p.badge||'').trim()).filter(b=>/^\d+$/.test(b));
+ const maxBadge=numericBadges.reduce((m,b)=>Math.max(m,Number(b)),0);
+ const width=Math.max(2,...numericBadges.map(b=>b.length));
+ const next=String(maxBadge+1).padStart(width,'0');
+ $('pb').value=next;
+ $('pb').disabled=false;
+}
+$('pnew').onclick=()=>{resetPerson();assignNextVolunteerBadge();};
 $('pAppFilterAll').onclick=()=>{peopleAppFilter='ALL';renderPeopleTable()};
 $('pAppFilterOk').onclick=()=>{peopleAppFilter='OK';renderPeopleTable()};
 $('pAppFilterMissing').onclick=()=>{peopleAppFilter='MISSING';renderPeopleTable()};
