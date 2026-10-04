@@ -68,14 +68,25 @@
   if(!closed)return;
   el('ndFromSheetButton').disabled=true;
   el('ndFromSheetButton').textContent='Verifica Nota di Debito...';
-  const r=await sb.from('note_di_debito').select('id,numero,stato').eq('foglio_viaggio_id',f.id).maybeSingle();
+  const [r,docR]=await Promise.all([
+   sb.from('note_di_debito').select('id,numero,stato').eq('foglio_viaggio_id',f.id).maybeSingle(),
+   sb.from('servizi_giornalieri').select('id,documento_da_emettere,fattura_aruba_emessa').eq('foglio_viaggio_id',f.id).maybeSingle()
+  ]);
   if(id!==seq)return;
-  if(r.error){el('ndFromSheetButton').textContent='Errore: aggiorna la scheda';info(r.error.message,'err');return}
+  if(r.error||docR.error){el('ndFromSheetButton').textContent='Errore: aggiorna la scheda';info((r.error||docR.error).message,'err');return}
   if(r.data){
    el('ndFromSheetButton').textContent='Apri Nota di Debito '+r.data.numero+' · '+r.data.stato;
    el('ndFromSheetButton').disabled=false;
    el('ndFromSheetButton').onclick=()=>read(r.data.id);
    el('ndFromSheetInfo').textContent='Una sola Nota di Debito per Foglio Viaggio.';
+  }else if(docR.data?.documento_da_emettere==='FATTURA_ARUBA'){
+   el('ndFromSheetButton').textContent=docR.data.fattura_aruba_emessa?'✓ Fattura Aruba emessa':'🧮 Fattura Aruba da emettere';
+   el('ndFromSheetButton').disabled=true;
+   el('ndFromSheetInfo').textContent='Questo servizio è gestito con fattura elettronica Aruba: la Nota di Debito non deve essere emessa.';
+  }else if(docR.data?.documento_da_emettere==='NESSUN_DOCUMENTO'){
+   el('ndFromSheetButton').textContent='Nessun documento da emettere';
+   el('ndFromSheetButton').disabled=true;
+   el('ndFromSheetInfo').textContent='Il servizio è escluso dal flusso Note di Debito / fatturazione.';
   }else{
    el('ndFromSheetButton').textContent='✚ Crea Nota di Debito';
    el('ndFromSheetButton').disabled=false;
