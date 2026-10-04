@@ -150,33 +150,58 @@
  el('ndSave').onclick=save;
  el('ndIssue').onclick=issue;
  function printHtml(n){
-  const line=(k,v)=>'<div class="nd-line"><b>'+safe(k)+':</b> '+safe(v||'—')+'</div>';
-  return '<div class="print-page nd-print-page" style="font-family:Arial,sans-serif;color:#182c3a">'+
-    '<div class="print-head nd-print-head"><img class="print-logo" src="'+LOGO_URL+'" alt="">'+
-    '<div class="print-org"><h1>CROCE GIALLA EMERGENZA ODV</h1>'+
-    '<div>Via I° Maggio 1 · 28040 Dormelletto (NO)</div>'+
-    '<div>C.F. 91023880031 · P. IVA 02809130038</div>'+
-    '<div>Tel. 0322 282730 · tesoreria@crocegiallaemergenza.it</div></div>'+
-    '<div class="print-doc"><h2>NOTA DI DEBITO</h2><b>'+safe(n.numero)+'</b><div>'+niceDate(n.data_documento)+'</div></div></div>'+
-    '<div class="print-box nd-print-box nd-recipient-box"><b>DESTINATARIO / INTESTATARIO</b>'+
-    line('Nome e cognome / intestatario',n.intestatario)+line('C.F. / P. IVA',n.cf_piva)+
-    line('Indirizzo',n.indirizzo)+line('CAP · Comune · Provincia',[n.cap,n.comune,n.provincia].filter(Boolean).join(' · '))+'</div>'+
-    '<div class="print-box nd-print-box nd-service-box"><b>DETTAGLIO DEL SERVIZIO</b>'+
-    line('Data servizio',niceDate(n.data_servizio))+line('Foglio Viaggio',n.numero_foglio)+
-    '<div class="nd-description">'+safe(n.descrizione)+'</div></div>'+
-    '<table class="nd-amount-table" border="1">'+
-    '<thead><tr><th style="text-align:left">Descrizione</th><th>Prezzo</th><th>Sconto</th><th>Importo</th></tr></thead>'+
-    '<tbody><tr><td>'+safe(n.descrizione)+'</td><td>'+money(n.importo)+'</td><td>'+money(n.sconto)+'</td><td>'+money(n.totale)+'</td></tr></tbody></table>'+
-    '<div class="nd-total">TOTALE DA CORRISPONDERE: '+money(n.totale)+'</div>'+
-    '<div class="print-box nd-print-box nd-payment-box"><b>MODALITÀ DI PAGAMENTO</b>'+
-    line('Metodo',n.modalita_pagamento||'Da concordare')+
-    line('Già pagato',n.data_pagamento?'Sì · '+niceDate(n.data_pagamento):'No')+
-    line('Banca','UniCredit - filiale di Borgomanero')+
-    '<div class="nd-iban">IBAN: IT84M0200845222000107312436</div>'+
-    line('Causale',n.numero)+'</div>'+
-    '<div class="nd-tax">Operazione senza applicazione dell’Iva ai sensi dell’art. 1, commi 54–89, L. 190/2014, come modificata dalle L. 208/2015 e L. 145/2018.<br>'+
-    'Imposta di bollo: esente ai sensi dell’art. 82, comma 5, D.Lgs. 117/2017.</div>'+
-    '<div class="nd-five"><img class="nd-five-img" src="'+FIVE_X1000_IMAGE+'" alt="Dona il tuo 5x1000"><div class="nd-five-cf">Sostieni Croce Gialla Emergenza ODV · C.F. <b>91023880031</b></div></div></div>';
+  const euro=x=>money(x).replace('€','').trim();
+  const total=Number(n.totale ?? (Number(n.importo||0)-Number(n.sconto||0)));
+  const paid=!!n.data_pagamento;
+  const rows=[
+   {cod:'SERV',desc:n.descrizione||'Servizio sanitario',qty:'1',price:euro(n.importo),discount:Number(n.sconto||0)>0?euro(n.sconto):'0,00',amount:euro(total)},
+   {cod:'',desc:'',qty:'',price:'',discount:'',amount:''},
+   {cod:'',desc:'',qty:'',price:'',discount:'',amount:''}
+  ];
+  const cell=(v,align='left')=>'<td style="border:1px solid #d7c774;padding:5px 6px;text-align:'+align+';height:24px">'+safe(v||'')+'</td>';
+  return '<div class="print-page nd-print-page" style="font-family:Arial,sans-serif;color:#17324a;background:#fff;padding:0 2mm!important">'+
+   '<div style="display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:center;margin-bottom:6px">'+
+    '<div style="text-align:center"><img src="'+LOGO_URL+'" alt="" style="width:84px;height:84px;object-fit:contain"></div>'+
+    '<div><div style="font-size:22px;font-weight:800;color:#173a5e;letter-spacing:.2px">CROCE GIALLA EMERGENZA ODV</div>'+
+     '<div style="font-size:11px;line-height:1.5;color:#607487">Via I° Maggio 1, 28040 Dormelletto (NO)<br>C.F. 91023880031 &nbsp; | &nbsp; P. IVA 02809130038<br>Tel. 0322 282730 &nbsp; | &nbsp; Cell. 351 3255595<br><b style="color:#285880">Tesoreria: tesoreria@crocegiallaemergenza.it</b></div></div>'+
+   '</div>'+
+   '<div style="height:4px;background:#f0c438;margin:4px 0 7px"></div>'+
+   '<div style="background:#173a5e;color:#fff;font-size:21px;font-weight:800;text-align:center;padding:8px 10px;letter-spacing:1px">NOTA DI DEBITO</div>'+
+   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;margin:10px 0 8px">'+
+    '<div style="display:grid;grid-template-columns:105px 1fr"><div style="background:#eef3f7;padding:9px;font-size:11px;font-weight:800">NOTA N.</div><div style="background:#fffcef;border:1px solid #d7c774;padding:9px;font-weight:700">'+safe(n.numero||'—')+'</div></div>'+
+    '<div style="display:grid;grid-template-columns:85px 1fr"><div style="background:#eef3f7;padding:9px;font-size:11px;font-weight:800">DATA</div><div style="background:#fffcef;border:1px solid #d7c774;padding:9px">'+safe(niceDate(n.data_documento))+'</div></div>'+
+   '</div>'+
+   '<div style="background:#173a5e;color:#fff;font-weight:800;padding:7px 11px;font-size:12px">DATI DEL DESTINATARIO / PAZIENTE</div>'+
+   '<table style="width:100%;border-collapse:collapse;margin:0 0 8px;font-size:11px"><tbody>'+
+    '<tr><td style="width:31%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Nome e cognome / intestatario</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+safe(n.intestatario||'')+'</td></tr>'+
+    '<tr><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Codice fiscale / P. IVA</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+safe(n.cf_piva||'')+'</td></tr>'+
+    '<tr><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Indirizzo</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+safe(n.indirizzo||'')+'</td></tr>'+
+    '<tr><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">CAP - Comune - Provincia</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+safe([n.cap,n.comune,n.provincia].filter(Boolean).join(' - '))+'</td></tr>'+
+   '</tbody></table>'+
+   '<div style="background:#173a5e;color:#fff;font-weight:800;padding:7px 11px;font-size:12px">DETTAGLIO DEL SERVIZIO</div>'+
+   '<table style="width:100%;border-collapse:collapse;font-size:11px"><tbody>'+
+    '<tr><td style="width:19%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Data servizio</td><td style="width:31%;background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+safe(niceDate(n.data_servizio))+'</td><td style="width:14%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Tipologia</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+safe(n.tipo_servizio||'Servizio sanitario')+'</td></tr>'+
+    '<tr><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Partenza</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+safe(n.partenza||n.luogo_partenza||n.indirizzo_partenza||'')+'</td><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Destinazione</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+safe(n.destinazione||n.ospedale_destinazione||n.indirizzo_destinazione||'')+'</td></tr>'+
+   '</tbody></table>'+
+   '<table style="width:100%;border-collapse:collapse;font-size:10.5px;margin-top:0"><thead><tr style="background:#2f628d;color:#fff"><th style="padding:6px;width:7%">Cod.</th><th style="padding:6px;text-align:left">Descrizione del servizio</th><th style="padding:6px;width:7%">Q.tà</th><th style="padding:6px;width:13%">Prezzo</th><th style="padding:6px;width:11%">Sconto</th><th style="padding:6px;width:14%">Importo</th></tr></thead><tbody>'+
+    rows.map(r=>'<tr>'+cell(r.cod,'center')+cell(r.desc)+cell(r.qty,'center')+cell(r.price,'right')+cell(r.discount,'right')+cell(r.amount,'right')+'</tr>').join('')+
+   '</tbody></table>'+
+   '<div style="display:grid;grid-template-columns:43% 57%;gap:14px;margin-top:10px">'+
+    '<div><div style="background:#eef3f7;padding:7px 10px;font-size:11px;font-weight:800">IMPOSTA DI BOLLO</div><div style="background:#fffcef;border:1px solid #d7c774;padding:9px;min-height:38px;font-size:10px">Imposta di bollo: esente ai sensi dell\'art. 82, comma 5, D.Lgs. 117/2017</div></div>'+
+    '<div><div style="display:grid;grid-template-columns:58% 42%"><div style="background:#eef3f7;padding:7px 10px;font-size:11px;font-weight:800">IMPONIBILE</div><div style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px;text-align:right">'+euro(total)+'</div><div style="background:#eef3f7;padding:7px 10px;font-size:11px;font-weight:700">Bollo (esente)</div><div style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px;text-align:right">0,00</div><div style="background:#173a5e;color:#fff;padding:9px 10px;font-size:12px;font-weight:800">TOTALE DA CORRISPONDERE</div><div style="background:#fffcef;border:2px solid #173a5e;padding:8px 10px;text-align:right;font-size:15px;font-weight:800">'+euro(total)+'</div></div></div>'+
+   '</div>'+
+   '<div style="background:#173a5e;color:#fff;font-weight:800;padding:7px 11px;font-size:12px;margin-top:9px">MODALITÀ DI PAGAMENTO</div>'+
+   '<table style="width:100%;border-collapse:collapse;font-size:11px"><tbody>'+
+    '<tr><td style="width:15%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Metodo</td><td style="width:33%;background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+safe(n.modalita_pagamento||'BONIFICO')+'</td><td style="width:20%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">☐ GIÀ PAGATO</td><td style="width:9%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Data</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+(paid?safe(niceDate(n.data_pagamento)):'')+'</td></tr>'+
+    '<tr><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Banca</td><td colspan="4" style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">UniCredit - filiale di Borgomanero</td></tr>'+
+    '<tr><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">IBAN</td><td colspan="4" style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px;font-weight:700">IT84M0200845222000107312436</td></tr>'+
+    '<tr><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Causale</td><td colspan="4" style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+safe(n.numero||'')+'</td></tr>'+
+   '</tbody></table>'+
+   '<div style="background:#eef3f7;padding:5px 10px;font-size:10px;font-weight:800;margin-top:4px">DICITURA IVA</div>'+
+   '<div style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px;font-size:9.4px;line-height:1.25">Operazione senza applicazione dell\'Iva ai sensi dell\' art.1 co. 54-89, della legge n. 190/2014 così come modificato dalla legge n. 208/2015 e dalla legge n. 145/2018</div>'+
+   '<div style="margin-top:7px;background:#f0c438;color:#173a5e;text-align:center;font-weight:800;padding:6px;font-size:12px">Sostieni la Croce Gialla con il tuo 5x1000</div>'+
+   '<div style="background:#eef3f7;color:#173a5e;text-align:center;font-weight:700;padding:5px;font-size:10px">Nella dichiarazione dei redditi indica il nostro C.F. 91023880031</div>'+
+  '</div>';
  }
  async function ndWaitForPrintImages(root){
   const imgs=[...root.querySelectorAll('img')];
