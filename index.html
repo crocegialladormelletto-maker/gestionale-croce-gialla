@@ -2010,6 +2010,7 @@ Causale: numero preventivo</textarea>
  <div class="pad">
   <div id="pnMsg"></div>
   <div id="pnStartNotice" class="notice warn"><b>Prima Nota operativa dal 1° gennaio 2027.</b> Fino a tale data la consultazione è disponibile, ma la registrazione dei movimenti è disattivata.</div>
+  <div class="notice"><b>Incassi servizi collegati automaticamente.</b> Dal 01/01/2027, quando registri un pagamento su un servizio, la relativa entrata viene creata automaticamente in Prima Nota. I movimenti automatici si correggono dal pagamento del servizio originario; l'inserimento manuale resta sempre disponibile.</div>
 
   <div class="stats">
    <div class="stat"><small>ENTRATE MESE</small><b id="pnEntrate" style="color:#12805a">€ 0,00</b></div>
@@ -2117,7 +2118,7 @@ Causale: numero preventivo</textarea>
    <div class="actions" style="justify-content:space-between;align-items:end">
     <div><h3 style="margin:0">Movimenti registrati</h3><div class="muted"><span id="pnShownCount">0</span> movimenti visualizzati.</div></div>
    </div>
-   <div class="table" style="margin-top:10px"><table><thead><tr><th>N° Prima Nota</th><th>Data</th><th>Tipo</th><th>Categoria</th><th>Causale</th><th>Soggetto</th><th>Conto</th><th class="num">Importo</th><th>Riconciliazione</th><th>Azioni</th></tr></thead><tbody id="pnBody"></tbody></table></div>
+   <div class="table" style="margin-top:10px"><table><thead><tr><th>N° Prima Nota</th><th>Data</th><th>Tipo</th><th>Categoria</th><th>Causale</th><th>Soggetto</th><th>Conto</th><th>Origine</th><th class="num">Importo</th><th>Riconciliazione</th><th>Azioni</th></tr></thead><tbody id="pnBody"></tbody></table></div>
   </div>
  </div>
 </section>
@@ -8586,7 +8587,7 @@ function pnFilteredRows(){
   if(recon==='PENDING'&&(!pnIsBankMovement(x)||x.riconciliato===true))return false;
   if(recon==='DONE'&&(!pnIsBankMovement(x)||x.riconciliato!==true))return false;
   if(q){
-   const hay=[x.numero_movimento,x.causale,x.soggetto,x.numero_documento,x.note,pnCatName(x.categoria_codice),pnContoName(x.conto_codice)].join(' ').toLowerCase();
+   const hay=[x.numero_movimento,x.causale,x.soggetto,x.numero_documento,x.note,x.fonte,pnCatName(x.categoria_codice),pnContoName(x.conto_codice)].join(' ').toLowerCase();
    if(!hay.includes(q))return false;
   }
   return true;
@@ -8676,10 +8677,13 @@ function pnRender(){
  $('pnBody').innerHTML=rows.length?rows.map(x=>{
   const closed=pnMovementClosed(x);
   const bank=pnIsBankMovement(x);
+  const automatic=x.fonte==='SERVIZIO';
+  const origin=automatic?'<span class="pill g">SERVIZIO</span>':'<span class="pill b">MANUALE</span>';
   const recon=bank?(x.riconciliato===true?'<span class="pill g">RICONCILIATO</span>':'<span class="pill b">DA RICONCILIARE</span>'):'—';
   const reconBtn=bank?'<button type="button" class="btn secondary" data-pn-recon="'+esc(x.id)+'" data-pn-recon-value="'+(x.riconciliato===true?'0':'1')+'" '+(closed?'disabled':'')+'>'+(x.riconciliato===true?'Annulla riconc.':'✓ Riconcilia')+'</button>':'';
-  return '<tr><td><b>'+esc(x.numero_movimento||'—')+'</b>'+(closed?'<br><span class="pill r">CHIUSO</span>':'')+'</td><td>'+esc(x.data||'')+'</td><td><span class="pill '+(x.tipo==='ENTRATA'?'g':'r')+'">'+esc(x.tipo||'')+'</span></td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.causale||'')+'</td><td>'+esc(x.soggetto||'—')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num"><b>'+euro(x.importo)+'</b></td><td>'+recon+'</td><td><div class="actions">'+reconBtn+'<button type="button" class="btn secondary" data-pn-attach="'+esc(x.id)+'">📎 Allegati</button><button type="button" class="btn secondary" data-pn-edit="'+esc(x.id)+'" '+(closed?'disabled':'')+'>Modifica</button><button type="button" class="btn danger" data-pn-delete="'+esc(x.id)+'" '+(closed?'disabled':'')+'>Elimina</button></div></td></tr>';
- }).join(''):'<tr><td colspan="10">Nessun movimento corrisponde ai filtri selezionati.</td></tr>';
+  const autoTitle=automatic?' title="Movimento generato automaticamente: correggi il pagamento dal servizio originario."':'';
+  return '<tr><td><b>'+esc(x.numero_movimento||'—')+'</b>'+(closed?'<br><span class="pill r">CHIUSO</span>':'')+'</td><td>'+esc(x.data||'')+'</td><td><span class="pill '+(x.tipo==='ENTRATA'?'g':'r')+'">'+esc(x.tipo||'')+'</span></td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.causale||'')+'</td><td>'+esc(x.soggetto||'—')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td>'+origin+'</td><td class="num"><b>'+euro(x.importo)+'</b></td><td>'+recon+'</td><td><div class="actions">'+reconBtn+'<button type="button" class="btn secondary" data-pn-attach="'+esc(x.id)+'">📎 Allegati</button><button type="button" class="btn secondary" data-pn-edit="'+esc(x.id)+'" '+((closed||automatic)?'disabled':'')+autoTitle+'>Modifica</button><button type="button" class="btn danger" data-pn-delete="'+esc(x.id)+'" '+((closed||automatic)?'disabled':'')+autoTitle+'>Elimina</button></div></td></tr>';
+ }).join(''):'<tr><td colspan="11">Nessun movimento corrisponde ai filtri selezionati.</td></tr>';
  $('pnBody').querySelectorAll('[data-pn-attach]').forEach(b=>b.onclick=()=>pnOpenAttachments(b.dataset.pnAttach));
  $('pnBody').querySelectorAll('[data-pn-edit]').forEach(b=>b.onclick=()=>pnEdit(b.dataset.pnEdit));
  $('pnBody').querySelectorAll('[data-pn-delete]').forEach(b=>b.onclick=()=>pnDelete(b.dataset.pnDelete));
@@ -8711,6 +8715,7 @@ async function loadPrimaNota(){
 function pnEdit(id){
  if(today()<PN_START_DATE)return msg('pnMsg','Le modifiche saranno abilitate dal 1° gennaio 2027.','warn');
  const x=pnMov.find(r=>String(r.id)===String(id));if(!x)return;
+ if(x.fonte==='SERVIZIO')return msg('pnMsg','Questo movimento deriva da un pagamento servizio. Correggi il pagamento dal servizio originario.','warn');
  if(pnMovementClosed(x))return msg('pnMsg','Il mese di questo movimento è chiuso. Riaprilo prima di modificarlo.','warn');
  pnEditingId=x.id;
  $('pnData').value=x.data||PN_START_DATE;$('pnTipo').value=x.tipo||'ENTRATA';pnFillCategorySelect();$('pnCategoria').value=x.categoria_codice||'';
@@ -8728,7 +8733,7 @@ async function pnSave(){
  if(pnIsMonthClosed(pnMonthKeyFromDate($('pnData').value)))return msg('pnMsg','Il mese selezionato è chiuso. Riaprilo prima di registrare o modificare movimenti.','warn');
  const amount=Number($('pnImporto').value);
  if(!$('pnData').value||!$('pnCausale').value.trim()||!(amount>0))return msg('pnMsg','Compila data, causale e importo.','warn');
- const row={data:$('pnData').value,tipo:$('pnTipo').value,categoria_codice:$('pnCategoria').value,causale:$('pnCausale').value.trim(),importo:amount,metodo_pagamento:$('pnMetodo').value,conto_codice:$('pnConto').value,soggetto:$('pnSoggetto').value.trim()||null,numero_documento:$('pnDocumento').value.trim()||null,note:$('pnNote').value.trim()||null,updated_at:new Date().toISOString()};
+ const row={data:$('pnData').value,tipo:$('pnTipo').value,categoria_codice:$('pnCategoria').value,causale:$('pnCausale').value.trim(),importo:amount,metodo_pagamento:$('pnMetodo').value,conto_codice:$('pnConto').value,soggetto:$('pnSoggetto').value.trim()||null,numero_documento:$('pnDocumento').value.trim()||null,note:$('pnNote').value.trim()||null,fonte:'MANUALE',updated_at:new Date().toISOString()};
  $('pnSave').disabled=true;
  let r;
  if(pnEditingId){
@@ -8745,6 +8750,7 @@ async function pnDelete(id){
  if(prof?.ruolo!=='AMMINISTRATORE'||!id)return;
  const row=pnMov.find(x=>String(x.id)===String(id));
  if(!row)return;
+ if(row.fonte==='SERVIZIO')return msg('pnMsg','Questo movimento deriva da un pagamento servizio. Annulla o correggi il pagamento dal servizio originario.','warn');
  if(pnMovementClosed(row))return msg('pnMsg','Il mese è chiuso: il movimento non può essere eliminato.','warn');
  if(!confirm('Eliminare '+(row.numero_movimento||'questo movimento')+' dalla Prima Nota? Il numero non verrà riutilizzato.'))return;
  const r=await sb.from('contabilita_movimenti').delete().eq('id',id);
