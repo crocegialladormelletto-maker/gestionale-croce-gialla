@@ -118,16 +118,10 @@ $('tripForm').addEventListener('submit',async e=>{e.preventDefault();if(!canEdit
 function activeTrips(){return trips.filter(x=>!x.eliminato_at)}
 function logicalRegistryNumberMap(){
  const map=new Map();
- activeTrips().slice().sort((a,b)=>{
-  const ad=String(a.data||''),bd=String(b.data||'');
-  if(ad!==bd)return ad.localeCompare(bd);
-  const at=String(a.ora_partenza||''),bt=String(b.ora_partenza||'');
-  if(at!==bt)return at.localeCompare(bt);
-  return Number(a.numero||0)-Number(b.numero||0);
- }).forEach((x,i)=>map.set(x.id,i+1));
+ activeTrips().forEach(x=>map.set(x.id,Number(x.numero||0)));
  return map;
 }
-function logicalRegistryNumber(x){return logicalRegistryNumberMap().get(x?.id)||''}
+function logicalRegistryNumber(x){return Number(x?.numero||0)||''}
 function filteredArchive(){let a=activeTrips();const ym=$('meseArchivio').value,q=$('fSearch').value.toLowerCase().trim(),dal=$('fDal').value,al=$('fAl').value,m=$('fMezzo').value,st=$('fStato')?.value||'';return a.filter(x=>(!ym||x.data.startsWith(ym))&&(!dal||x.data>=dal)&&(!al||x.data<=al)&&(!m||x.mezzo===m)&&(!st||x.stato===st)&&(!q||[x.numero,x.numero_foglio_marcia,x.tipo_servizio,x.richiedente_servizio,x.scheda_118,x.nome_paziente,x.cognome_paziente,x.luogo_partenza,x.luogo_carico,x.luogo_fine,personName(x.autista_badge),personName(x.capo_badge),personName(x.soccorritore_1_badge),personName(x.soccorritore_2_badge)].join(' ').toLowerCase().includes(q))).sort((a,b)=>String(a.data||'').localeCompare(String(b.data||''))||String(a.ora_partenza||'').localeCompare(String(b.ora_partenza||''))||Number(a.numero||0)-Number(b.numero||0))}
 function monthRecord(ym){return months.find(m=>(m.mese||'').slice(0,7)===ym)}
 function isMonthClosed(ym){const m=monthRecord(ym);if(m)return !!m.chiuso;return !!ym&&ym<ymNow()}
@@ -275,7 +269,7 @@ function printMonth(){
   const w=window.open('','_blank');
   const rows=a.map((x,rowIndex)=>{
     const crew=[personName(x.autista_badge),personName(x.capo_badge),personName(x.soccorritore_1_badge),personName(x.soccorritore_2_badge)].filter(Boolean).join(' · ');
-    return '<tr><td><b>'+(rowIndex+1)+'</b><br><small>Foglio '+esc(x.numero_foglio_marcia||'—')+'</small></td><td>'+esc((x.data||'').split('-').reverse().join('/'))+'</td><td>'+esc(x.tipo_servizio||'')+(x.scheda_118?'<br><small>118: '+esc(x.scheda_118)+'</small>':'')+'</td><td>'+esc(vehicleName(x.mezzo))+'</td><td>'+esc(x.luogo_partenza||'')+'</td><td>'+esc(x.luogo_carico||'')+'</td><td>'+esc(x.luogo_fine||'')+'</td><td class="num">'+esc(x.km_percorsi)+'</td><td>'+esc(crew||'—')+'</td><td class="num">'+(x.tipo_servizio==='Emergenza / Urgenza'?'—':money(x.importo))+'</td></tr>';
+    return '<tr><td><b>'+esc(logicalRegistryNumber(x))+'</b><br><small>Foglio '+esc(x.numero_foglio_marcia||'—')+'</small></td><td>'+esc((x.data||'').split('-').reverse().join('/'))+'</td><td>'+esc(x.tipo_servizio||'')+(x.scheda_118?'<br><small>118: '+esc(x.scheda_118)+'</small>':'')+'</td><td>'+esc(vehicleName(x.mezzo))+'</td><td>'+esc(x.luogo_partenza||'')+'</td><td>'+esc(x.luogo_carico||'')+'</td><td>'+esc(x.luogo_fine||'')+'</td><td class="num">'+esc(x.km_percorsi)+'</td><td>'+esc(crew||'—')+'</td><td class="num">'+(x.tipo_servizio==='Emergenza / Urgenza'?'—':money(x.importo))+'</td></tr>';
   }).join('');
   const html='<!doctype html><html><head><meta charset="utf-8"><title>Registro servizi '+esc(ym)+'</title><style>'+
   '@page{size:A4 landscape;margin:7mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;margin:0;color:#182c3a;font-size:9px}.head{display:flex;align-items:center;gap:12px;border-bottom:4px solid #12375d;padding-bottom:7px}.logo{width:62px;height:62px;object-fit:contain}.org{flex:1}.org h1{margin:0;color:#12375d;font-size:17px}.org p{margin:2px 0 0;font-size:9px}.doc{text-align:right}.doc h2{margin:0;color:#12375d;font-size:15px}.doc b{display:block;margin-top:4px;font-size:11px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}.card{border:1px solid #b7c1c9;border-radius:5px;padding:6px 7px}.card small{display:block;color:#66747f;font-size:7px;font-weight:700;text-transform:uppercase}.card b{display:block;margin-top:2px;font-size:13px;color:#12375d}.status{margin-top:7px;padding:5px 7px;background:#eef3f7;border-left:5px solid #ffd400;font-weight:700}table{width:100%;border-collapse:collapse;margin-top:8px;table-layout:fixed}th,td{border:1px solid #aab4bc;padding:4px 4px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#12375d;color:white;font-size:7.5px;text-transform:uppercase}td{font-size:7.7px;line-height:1.25}.num{text-align:right;white-space:nowrap}tbody tr:nth-child(even){background:#f7f9fb}small{font-size:6.8px}.footer{display:flex;justify-content:space-between;border-top:1px solid #c8d0d6;margin-top:7px;padding-top:4px;font-size:7px;color:#66747f}.c1{width:6%}.c2{width:7%}.c3{width:12%}.c4{width:8%}.c5,.c6,.c7{width:11%}.c8{width:5%}.c9{width:22%}.c10{width:7%}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}thead{display:table-header-group}tr{break-inside:avoid}}'+
