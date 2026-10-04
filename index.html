@@ -1547,6 +1547,22 @@
  </div>
 
  <div class="section hidden" id="detailEventContactSection"><h3>Referente manifestazione</h3><div class="grid2"><div class="field"><label>Nome referente</label><input id="dEventRefName" maxlength="120"></div><div class="field"><label>Telefono referente</label><input id="dEventRefPhone" type="tel" maxlength="40"></div></div></div>
+ <div class="section hidden" id="detailBillingSection" data-admin-only="true">
+  <h3>🧾 Dati per fatturazione / Nota di Debito</h3>
+  <div class="notice">Per le assistenze manifestazione questi dati possono essere completati anche successivamente, quando vengono comunicati dall'organizzatore.</div>
+  <div class="grid4">
+   <div class="field"><label>Intestatario / Ragione sociale</label><input id="dBillName" maxlength="200"></div>
+   <div class="field"><label>Codice fiscale / P.IVA</label><input id="dBillCfPiva" maxlength="40"></div>
+   <div class="field"><label>Indirizzo</label><input id="dBillAddress" maxlength="300"></div>
+   <div class="field"><label>CAP</label><input id="dBillCap" maxlength="10"></div>
+   <div class="field"><label>Comune</label><input id="dBillCity" maxlength="120"></div>
+   <div class="field"><label>Provincia</label><input id="dBillProvince" maxlength="10"></div>
+   <div class="field"><label>E-mail</label><input id="dBillEmail" type="email" maxlength="254"></div>
+   <div class="field"><label>PEC / Codice SDI</label><input id="dBillPecSdi" maxlength="254"></div>
+  </div>
+  <div class="actions" style="margin-top:10px"><button id="dBillingSave" class="btn yellow" type="button">💾 Salva dati fatturazione</button></div>
+  <div id="dBillingMsg"></div>
+ </div>
  <div class="section"><h3>Percorso</h3>
   <div class="grid2">
    <div class="field"><label>Luogo partenza</label><input id="dlp"></div>
@@ -2625,6 +2641,20 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Telefono</label><input id="tabletPatientPhone" type="tel" maxlength="60"></div>
      <div class="field"><label>Indirizzo</label><input id="tabletPatientAddress" maxlength="400"></div>
      <div class="field"><label>E-mail</label><input id="tabletPatientEmail" type="email" maxlength="254"></div>
+    </div>
+    </div>
+    <div id="tabletBillingSection" class="hidden">
+    <h3 class="tablet-section-title" style="margin-top:20px">🧾 Dati per fatturazione</h3>
+    <div class="notice">Se l'organizzatore comunica i dati fiscali durante l'assistenza, puoi inserirli qui. Restano collegati al Foglio Viaggio e disponibili all'Amministrazione.</div>
+    <div class="tablet-fields">
+     <div class="field"><label>Intestatario / Ragione sociale</label><input data-ts-field="intestatario_nota_debito" maxlength="200"></div>
+     <div class="field"><label>Codice fiscale / P.IVA</label><input data-ts-field="cf_piva_intestatario" maxlength="40"></div>
+     <div class="field"><label>Indirizzo</label><input data-ts-field="indirizzo_fatturazione" maxlength="300"></div>
+     <div class="field"><label>CAP</label><input data-ts-field="cap_fatturazione" maxlength="10"></div>
+     <div class="field"><label>Comune</label><input data-ts-field="comune_fatturazione" maxlength="120"></div>
+     <div class="field"><label>Provincia</label><input data-ts-field="provincia_fatturazione" maxlength="10"></div>
+     <div class="field"><label>E-mail</label><input type="email" data-ts-field="email_fatturazione" maxlength="254"></div>
+     <div class="field"><label>PEC / Codice SDI</label><input data-ts-field="pec_sdi" maxlength="254"></div>
     </div>
     </div>
     <h3 class="tablet-section-title" style="margin-top:20px">Dati operativi / equipaggio</h3>
@@ -5901,6 +5931,16 @@ async function loadServiceDetail(id=currentServiceId){
  $('dEventRefName').value=contact.name;
  $('dEventRefPhone').value=contact.phone;
  $('dNotes').value=isAssistanceManifestation(s.tipo_servizio)?contact.notes:(s.note||'');
+ const billingEvent=isAssistanceManifestation(s.tipo_servizio);
+ $('detailBillingSection').classList.toggle('hidden',!billingEvent||isCentral);
+ $('dBillName').value=s.intestatario_fatturazione||foglio?.intestatario_nota_debito||'';
+ $('dBillCfPiva').value=s.cf_piva_fatturazione||foglio?.cf_piva_intestatario||'';
+ $('dBillAddress').value=s.indirizzo_fatturazione||foglio?.indirizzo_fatturazione||'';
+ $('dBillCap').value=s.cap_fatturazione||foglio?.cap_fatturazione||'';
+ $('dBillCity').value=s.comune_fatturazione||foglio?.comune_fatturazione||'';
+ $('dBillProvince').value=s.provincia_fatturazione||foglio?.provincia_fatturazione||'';
+ $('dBillEmail').value=s.email_fatturazione||foglio?.email_fatturazione||'';
+ $('dBillPecSdi').value=s.pec_sdi_fatturazione||foglio?.pec_sdi||'';
  $('dAdminNotesField').classList.toggle('hidden',isCentral);$('dAdminNotes').value=isCentral?'':(s.note_amministrazione||'');
 
  const locked=['CHIUSO','ANNULLATO'].includes(s.stato_gestionale);
@@ -5908,6 +5948,9 @@ async function loadServiceDetail(id=currentServiceId){
  $('dvehicle').disabled=locked;
  $('ddate').disabled=locked||!!foglio;
  $('dSave').disabled=locked;
+ if(billingEvent&&!isCentral){
+  ['dBillName','dBillCfPiva','dBillAddress','dBillCap','dBillCity','dBillProvince','dBillEmail','dBillPecSdi','dBillingSave'].forEach(id=>{if($(id))$(id).disabled=false});
+ }
 
  const crew=cr.data||[];
  if(cr.error){
@@ -5966,6 +6009,38 @@ function updateDetailEquipmentAmount(){
   $('dFinal').value=Math.max(0,Math.round((Number(currentService.importo_finale)+diff)*100)/100).toFixed(2);
 }
 ['dSediaMotorizzata','dBarellaBariatrica'].forEach(id=>$(id).onchange=updateDetailEquipmentAmount);
+$('dBillingSave').onclick=async()=>{
+ if(!currentServiceId||prof?.ruolo!=='AMMINISTRATORE'||!isAssistanceManifestation(currentService?.tipo_servizio))return;
+ const email=$('dBillEmail').value.trim().toLowerCase();
+ if(email&&!$('dBillEmail').checkValidity())return msg('dBillingMsg','Controlla l’indirizzo e-mail di fatturazione.','warn');
+ const serviceBilling={
+  intestatario_fatturazione:$('dBillName').value.trim()||null,
+  cf_piva_fatturazione:$('dBillCfPiva').value.trim().toUpperCase()||null,
+  indirizzo_fatturazione:$('dBillAddress').value.trim()||null,
+  cap_fatturazione:$('dBillCap').value.trim()||null,
+  comune_fatturazione:$('dBillCity').value.trim()||null,
+  provincia_fatturazione:$('dBillProvince').value.trim().toUpperCase()||null,
+  email_fatturazione:email||null,
+  pec_sdi_fatturazione:$('dBillPecSdi').value.trim()||null
+ };
+ msg('dBillingMsg','Salvataggio dati fatturazione...');
+ const sr=await sb.from('servizi_giornalieri').update(serviceBilling).eq('id',currentServiceId);
+ if(sr.error)return msg('dBillingMsg',sr.error.message,'err');
+ const fr=await sb.from('fogli_viaggio').update({
+  intestatario_nota_debito:serviceBilling.intestatario_fatturazione,
+  cf_piva_intestatario:serviceBilling.cf_piva_fatturazione,
+  indirizzo_fatturazione:serviceBilling.indirizzo_fatturazione,
+  cap_fatturazione:serviceBilling.cap_fatturazione,
+  comune_fatturazione:serviceBilling.comune_fatturazione,
+  provincia_fatturazione:serviceBilling.provincia_fatturazione,
+  email_fatturazione:serviceBilling.email_fatturazione,
+  pec_sdi:serviceBilling.pec_sdi_fatturazione,
+  intestatario_uguale_paziente:false
+ }).eq('servizio_giornaliero_id',currentServiceId);
+ if(fr.error)return msg('dBillingMsg','Servizio aggiornato, ma Foglio Viaggio non aggiornato: '+fr.error.message,'warn');
+ msg('dBillingMsg','Dati fatturazione salvati e collegati al servizio/Foglio Viaggio.','ok');
+ await loadServiceDetail();
+};
 $('detailForm').onsubmit=async e=>{
  e.preventDefault();
  if(!currentServiceId)return;
@@ -10435,6 +10510,8 @@ async function loadTabletSheet(serviceId){
  }
  const tabletSheetIs118=(tabletCurrentService?.tipo_servizio||f.tipo_servizio)==='118';
  tabletConfigureTimeFields(tabletSheetIs118);
+ const tabletBillingEvent=!tabletSheetIs118&&isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio);
+ if($('tabletBillingSection'))$('tabletBillingSection').classList.toggle('hidden',!tabletBillingEvent);
  if(!tabletSheetIs118&&isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio))$('tabletPatientLoadTime').classList.add('hidden');
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
