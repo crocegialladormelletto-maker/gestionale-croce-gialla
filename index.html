@@ -2027,6 +2027,61 @@ Causale: numero preventivo</textarea>
 
   <div class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
+    <div><h3 style="margin:0">📊 Dashboard e Report annuale 2027</h3><div class="muted">Riepilogo economico dell'anno con andamento mensile, categorie, Cassa/Banca e controlli amministrativi.</div></div>
+    <div class="actions">
+     <select id="pnReportYear" style="min-width:110px"><option value="2027">2027</option></select>
+     <button id="pnPrintYear" type="button" class="btn yellow">🖨️ Stampa / Salva PDF anno</button>
+    </div>
+   </div>
+
+   <div class="stats" style="margin-top:10px">
+    <div class="stat"><small>ENTRATE ANNO</small><b id="pnYearIncome" style="color:#12805a">€ 0,00</b></div>
+    <div class="stat"><small>USCITE ANNO</small><b id="pnYearExpense" style="color:#b83b43">€ 0,00</b></div>
+    <div class="stat"><small>SALDO ANNO</small><b id="pnYearBalance">€ 0,00</b></div>
+    <div class="stat"><small>MOVIMENTI ANNO</small><b id="pnYearCount">0</b></div>
+   </div>
+
+   <div class="grid2" style="margin-top:12px">
+    <div class="box">
+     <h3 style="margin-top:0">Andamento mensile</h3>
+     <div class="table"><table><thead><tr><th>Mese</th><th class="num">Entrate</th><th class="num">Uscite</th><th class="num">Saldo</th><th>Stato</th></tr></thead><tbody id="pnYearMonthBody"></tbody></table></div>
+    </div>
+    <div class="box">
+     <h3 style="margin-top:0">Controlli amministrativi</h3>
+     <div class="stats">
+      <div class="stat"><small>BANCA DA RICONCILIARE</small><b id="pnYearBankPending">0</b></div>
+      <div class="stat"><small>IMPORTO DA RICONCILIARE</small><b id="pnYearBankPendingAmount">€ 0,00</b></div>
+      <div class="stat"><small>SPESE RICORRENTI CONFIGURATE</small><b id="pnYearRecurringConfigured">0</b></div>
+      <div class="stat"><small>PERIODI RICORRENTI REGISTRATI</small><b id="pnYearRecurringRecorded">0</b></div>
+     </div>
+    </div>
+   </div>
+
+   <div class="grid2" style="margin-top:12px">
+    <div class="box">
+     <h3 style="margin-top:0">Entrate per categoria</h3>
+     <div class="table"><table><thead><tr><th>Categoria</th><th class="num">Totale</th><th class="num">%</th></tr></thead><tbody id="pnYearIncomeCats"></tbody></table></div>
+    </div>
+    <div class="box">
+     <h3 style="margin-top:0">Uscite per categoria</h3>
+     <div class="table"><table><thead><tr><th>Categoria</th><th class="num">Totale</th><th class="num">%</th></tr></thead><tbody id="pnYearExpenseCats"></tbody></table></div>
+    </div>
+   </div>
+
+   <div class="grid2" style="margin-top:12px">
+    <div class="box">
+     <h3 style="margin-top:0">Andamento Cassa</h3>
+     <div class="table"><table><thead><tr><th>Mese</th><th class="num">Saldo fine mese</th></tr></thead><tbody id="pnYearCashBody"></tbody></table></div>
+    </div>
+    <div class="box">
+     <h3 style="margin-top:0">Andamento Banca</h3>
+     <div class="table"><table><thead><tr><th>Mese</th><th class="num">Saldo fine mese</th></tr></thead><tbody id="pnYearBankBody"></tbody></table></div>
+    </div>
+   </div>
+  </div>
+
+  <div class="section">
+   <div class="actions" style="justify-content:space-between;align-items:center">
     <div><h3 style="margin:0">🏦 Cassa e Banca</h3><div class="muted">Imposta i saldi reali di apertura al 01/01/2027 e controlla i movimenti bancari da riconciliare.</div></div>
     <span class="pill b">Saldo iniziale 01/01/2027</span>
    </div>
@@ -8734,6 +8789,91 @@ async function pnCreateRecurringMovement(id){
  await loadPrimaNota();msg('pnRecurringMsg','Spesa registrata in Prima Nota per il periodo '+period+'.','ok');
 }
 
+function pnYearRows(year){
+ return pnMov.filter(x=>String(x.data||'').startsWith(String(year)+'-'));
+}
+function pnMonthLabel(ym){
+ try{return new Intl.DateTimeFormat('it-IT',{month:'long'}).format(new Date(ym+'-01T12:00:00')).replace(/^./,x=>x.toUpperCase())}catch(_){return ym}
+}
+function pnCategoryTotals(rows,type){
+ const map={};
+ rows.filter(x=>x.tipo===type).forEach(x=>{map[x.categoria_codice]=(map[x.categoria_codice]||0)+Number(x.importo||0)});
+ return Object.entries(map).map(([code,total])=>({code,total})).sort((a,b)=>b.total-a.total);
+}
+function pnRecurringExpectedPeriods(x,year){
+ if(x.frequenza==='ANNUALE')return 1;
+ if(x.frequenza==='SEMESTRALE')return 2;
+ if(x.frequenza==='TRIMESTRALE')return 4;
+ return 12;
+}
+function pnRenderAnnualReport(){
+ if(!$('pnReportYear'))return;
+ const year=Number($('pnReportYear').value||2027);
+ const rows=pnYearRows(year);
+ const income=rows.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo||0),0);
+ const expense=rows.filter(x=>x.tipo==='USCITA').reduce((s,x)=>s+Number(x.importo||0),0);
+ $('pnYearIncome').textContent=euro(income);
+ $('pnYearExpense').textContent=euro(expense);
+ $('pnYearBalance').textContent=euro(income-expense);
+ $('pnYearCount').textContent=String(rows.length);
+
+ const monthRows=[];
+ for(let m=1;m<=12;m++){
+  const ym=year+'-'+String(m).padStart(2,'0');
+  const mr=rows.filter(x=>String(x.data||'').startsWith(ym));
+  const en=mr.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo||0),0);
+  const us=mr.filter(x=>x.tipo==='USCITA').reduce((s,x)=>s+Number(x.importo||0),0);
+  monthRows.push({ym,en,us,saldo:en-us,closed:pnIsMonthClosed(ym)});
+ }
+ $('pnYearMonthBody').innerHTML=monthRows.map(x=>'<tr><td>'+esc(pnMonthLabel(x.ym))+'</td><td class="num">'+euro(x.en)+'</td><td class="num">'+euro(x.us)+'</td><td class="num"><b>'+euro(x.saldo)+'</b></td><td><span class="pill '+(x.closed?'r':'g')+'">'+(x.closed?'CHIUSO':'APERTO')+'</span></td></tr>').join('');
+
+ const incomeCats=pnCategoryTotals(rows,'ENTRATA');
+ const expenseCats=pnCategoryTotals(rows,'USCITA');
+ $('pnYearIncomeCats').innerHTML=incomeCats.length?incomeCats.map(x=>'<tr><td>'+esc(pnCatName(x.code))+'</td><td class="num">'+euro(x.total)+'</td><td class="num">'+(income?((x.total/income)*100).toFixed(1):'0.0')+'%</td></tr>').join(''):'<tr><td colspan="3">Nessuna entrata registrata.</td></tr>';
+ $('pnYearExpenseCats').innerHTML=expenseCats.length?expenseCats.map(x=>'<tr><td>'+esc(pnCatName(x.code))+'</td><td class="num">'+euro(x.total)+'</td><td class="num">'+(expense?((x.total/expense)*100).toFixed(1):'0.0')+'%</td></tr>').join(''):'<tr><td colspan="3">Nessuna uscita registrata.</td></tr>';
+
+ const cash=pnContoByType('CASSA'),bank=pnContoByType('BANCA');
+ let cashBal=Number(cash?.saldo_iniziale||0),bankBal=Number(bank?.saldo_iniziale||0);
+ const cashBody=[],bankBody=[];
+ for(let m=1;m<=12;m++){
+  const ym=year+'-'+String(m).padStart(2,'0');
+  rows.filter(x=>String(x.data||'').startsWith(ym)&&x.conto_codice===cash?.codice).forEach(x=>cashBal+=x.tipo==='ENTRATA'?Number(x.importo||0):-Number(x.importo||0));
+  rows.filter(x=>String(x.data||'').startsWith(ym)&&x.conto_codice===bank?.codice).forEach(x=>bankBal+=x.tipo==='ENTRATA'?Number(x.importo||0):-Number(x.importo||0));
+  cashBody.push('<tr><td>'+esc(pnMonthLabel(ym))+'</td><td class="num"><b>'+euro(cashBal)+'</b></td></tr>');
+  bankBody.push('<tr><td>'+esc(pnMonthLabel(ym))+'</td><td class="num"><b>'+euro(bankBal)+'</b></td></tr>');
+ }
+ $('pnYearCashBody').innerHTML=cashBody.join('');
+ $('pnYearBankBody').innerHTML=bankBody.join('');
+
+ const pending=rows.filter(x=>pnIsBankMovement(x)&&x.riconciliato!==true);
+ $('pnYearBankPending').textContent=String(pending.length);
+ $('pnYearBankPendingAmount').textContent=euro(pending.reduce((s,x)=>s+Number(x.importo||0),0));
+ $('pnYearRecurringConfigured').textContent=String(pnRecurring.length);
+ const recurringRecorded=new Set(rows.filter(x=>x.spesa_ricorrente_id&&x.periodo_ricorrenza).map(x=>x.spesa_ricorrente_id+'|'+x.periodo_ricorrenza));
+ $('pnYearRecurringRecorded').textContent=String(recurringRecorded.size);
+}
+function pnPrintYear(){
+ const year=Number($('pnReportYear').value||2027);
+ const rows=pnYearRows(year).slice().sort((a,b)=>String(a.data).localeCompare(String(b.data))||Number(a.numero_progressivo||0)-Number(b.numero_progressivo||0));
+ const income=rows.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo||0),0);
+ const expense=rows.filter(x=>x.tipo==='USCITA').reduce((s,x)=>s+Number(x.importo||0),0);
+ const monthRows=[];
+ for(let m=1;m<=12;m++){
+  const ym=year+'-'+String(m).padStart(2,'0');
+  const mr=rows.filter(x=>String(x.data||'').startsWith(ym));
+  const en=mr.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo||0),0);
+  const us=mr.filter(x=>x.tipo==='USCITA').reduce((s,x)=>s+Number(x.importo||0),0);
+  monthRows.push('<tr><td>'+esc(pnMonthLabel(ym))+'</td><td class="num">'+euro(en)+'</td><td class="num">'+euro(us)+'</td><td class="num">'+euro(en-us)+'</td><td>'+(pnIsMonthClosed(ym)?'CHIUSO':'APERTO')+'</td></tr>');
+ }
+ const incCats=pnCategoryTotals(rows,'ENTRATA').map(x=>'<tr><td>'+esc(pnCatName(x.code))+'</td><td class="num">'+euro(x.total)+'</td></tr>').join('');
+ const expCats=pnCategoryTotals(rows,'USCITA').map(x=>'<tr><td>'+esc(pnCatName(x.code))+'</td><td class="num">'+euro(x.total)+'</td></tr>').join('');
+ const pending=rows.filter(x=>pnIsBankMovement(x)&&x.riconciliato!==true);
+ const w=window.open('','_blank');
+ if(!w)return msg('pnMsg','Il browser ha bloccato la finestra di stampa annuale.','warn');
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Report Prima Nota '+year+'</title><style>@page{size:A4 portrait;margin:12mm}body{font-family:Arial,sans-serif;color:#183247;font-size:10px}header{display:flex;align-items:center;gap:12px;border-bottom:3px solid #ffdb17;padding-bottom:8px;margin-bottom:12px}header img{width:70px;height:70px;object-fit:contain}h1{font-size:20px;margin:0;color:#12375d}h2{font-size:14px;margin:12px 0 6px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.box{border:1px solid #dbe5ed;border-radius:7px;padding:7px}.box b{font-size:14px}table{width:100%;border-collapse:collapse;margin-bottom:10px}th,td{border:1px solid #dbe5ed;padding:4px}th{background:#eef3f7;text-align:left;font-size:9px}.num{text-align:right}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.green{color:#12805a}.red{color:#b83b43}footer{margin-top:10px;font-size:8px;color:#6d8292;text-align:right}</style></head><body><header><img src="'+PN_PRINT_LOGO+'"><div><h1>Croce Gialla Emergenza ODV</h1><div>Report annuale Prima Nota '+year+'</div></div></header><div class="summary"><div class="box">Entrate anno<br><b class="green">'+euro(income)+'</b></div><div class="box">Uscite anno<br><b class="red">'+euro(expense)+'</b></div><div class="box">Saldo anno<br><b>'+euro(income-expense)+'</b></div><div class="box">Movimenti<br><b>'+rows.length+'</b></div></div><h2>Riepilogo mensile</h2><table><thead><tr><th>Mese</th><th>Entrate</th><th>Uscite</th><th>Saldo</th><th>Stato</th></tr></thead><tbody>'+monthRows.join('')+'</tbody></table><div class="grid"><div><h2>Entrate per categoria</h2><table><thead><tr><th>Categoria</th><th>Totale</th></tr></thead><tbody>'+(incCats||'<tr><td colspan="2">Nessuna entrata</td></tr>')+'</tbody></table></div><div><h2>Uscite per categoria</h2><table><thead><tr><th>Categoria</th><th>Totale</th></tr></thead><tbody>'+(expCats||'<tr><td colspan="2">Nessuna uscita</td></tr>')+'</tbody></table></div></div><h2>Controlli</h2><table><tbody><tr><td>Movimenti bancari da riconciliare</td><td class="num"><b>'+pending.length+'</b></td></tr><tr><td>Importo da riconciliare</td><td class="num"><b>'+euro(pending.reduce((s,x)=>s+Number(x.importo||0),0))+'</b></td></tr><tr><td>Spese ricorrenti configurate</td><td class="num"><b>'+pnRecurring.length+'</b></td></tr></tbody></table><footer>Generato dal Gestionale Croce Gialla Emergenza ODV · '+new Date().toLocaleString('it-IT')+'</footer><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>');
+ w.document.close();
+}
+
 function pnRenderAccounts(){
  const cash=pnContoByType('CASSA'),bank=pnContoByType('BANCA');
  if($('pnInitialCash'))$('pnInitialCash').value=Number(cash?.saldo_iniziale||0).toFixed(2);
@@ -8802,6 +8942,7 @@ function pnRender(){
  $('pnBody').querySelectorAll('[data-pn-edit]').forEach(b=>b.onclick=()=>pnEdit(b.dataset.pnEdit));
  $('pnBody').querySelectorAll('[data-pn-delete]').forEach(b=>b.onclick=()=>pnDelete(b.dataset.pnDelete));
  $('pnBody').querySelectorAll('[data-pn-recon]').forEach(b=>b.onclick=()=>pnSetReconciled(b.dataset.pnRecon,b.dataset.pnReconValue==='1'));
+ pnRenderAnnualReport();
  pnRenderClosure();
 }
 async function loadPrimaNota(){
@@ -9014,6 +9155,8 @@ if($('pnAttachmentUpload'))$('pnAttachmentUpload').onclick=pnUploadAttachment;
 if($('pnSaveInitialBalances'))$('pnSaveInitialBalances').onclick=pnSaveInitialBalances;
 if($('pnSupplierSave'))$('pnSupplierSave').onclick=pnSaveSupplier;
 if($('pnRecurringSave'))$('pnRecurringSave').onclick=pnSaveRecurring;
+if($('pnReportYear'))$('pnReportYear').onchange=pnRenderAnnualReport;
+if($('pnPrintYear'))$('pnPrintYear').onclick=pnPrintYear;
 
 async function loadAccounting(){
  const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(500);
