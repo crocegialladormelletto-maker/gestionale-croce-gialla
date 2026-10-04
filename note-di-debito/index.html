@@ -151,15 +151,20 @@ $('backMain').onclick=()=>location.href='../';
 
 async function loadAll(){
  msg('listMsg','Aggiornamento dati...');
- const [fs,ns]=await Promise.all([
-  sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,codice_fiscale,intestatario_nota_debito,cf_piva_intestatario,indirizzo_fatturazione,cap_fatturazione,comune_fatturazione,provincia_fatturazione,email_fatturazione,destinazione,totale_servizio,stato,modalita_pagamento,data_pagamento').eq('stato','CHIUSO').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).limit(1000),
-  sb.from('note_di_debito').select('*').order('created_at',{ascending:false}).limit(1000)
+ const [fs,ns,ds]=await Promise.all([
+  sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,codice_fiscale,intestatario_nota_debito,cf_piva_intestatario,indirizzo_fatturazione,cap_fatturazione,comune_fatturazione,provincia_fatturazione,email_fatturazione,destinazione,totale_servizio,stato,modalita_pagamento,data_pagamento,servizio_giornaliero_id').eq('stato','CHIUSO').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).limit(1000),
+  sb.from('note_di_debito').select('*').order('created_at',{ascending:false}).limit(1000),
+  sb.from('servizi_giornalieri').select('id,documento_da_emettere,fattura_aruba_emessa').limit(3000)
  ]);
  if(fs.error)return msg('listMsg','Errore Fogli Viaggio: '+fs.error.message,'err');
  if(ns.error)return msg('listMsg','Errore Note di Debito: '+ns.error.message,'err');
+ if(ds.error)return msg('listMsg','Errore classificazione documenti: '+ds.error.message,'err');
+ const docByService=new Map((ds.data||[]).map(x=>[x.id,x]));
  sheets=(fs.data||[]).filter(f=>{
   const t=String(f.tipo_servizio||'').trim().toUpperCase();
-  return t!=='SERVIZIO INTERNO'&&t!=='INTERNO'&&!t.includes('SERVIZIO INTERNO');
+  if(t==='SERVIZIO INTERNO'||t==='INTERNO'||t.includes('SERVIZIO INTERNO'))return false;
+  const d=f.servizio_giornaliero_id?docByService.get(f.servizio_giornaliero_id):null;
+  return (d?.documento_da_emettere||'NOTA_DEBITO')==='NOTA_DEBITO';
  });notes=ns.data||[];updateCounts();render();msg('listMsg','');
 }
 function groups(){
