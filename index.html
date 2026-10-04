@@ -779,6 +779,14 @@
  <div class="actions"><button id="dashPersonnelExpiryOpen" type="button" class="btn danger">Apri Scadenze personale</button></div>
 </div>
 
+<div id="dashEmployeeCommitments" class="section hidden" style="border:2px solid #f59e0b;background:#fffbeb">
+ <div class="actions" style="justify-content:space-between;align-items:flex-start">
+  <div><h3 style="margin:0">📌 Impegni dipendenti di oggi <span id="dashEmployeeCommitmentsCount" class="pill b">0</span></h3><div class="muted">Impegni e indisponibilità programmati inseriti dal gestionale timbrature.</div></div>
+  <button id="dashEmployeeCommitmentsManage" type="button" class="btn secondary" data-admin-only="true">Gestisci impegni</button>
+ </div>
+ <div id="dashEmployeeCommitmentsItems" style="display:grid;gap:8px;margin-top:10px"></div>
+</div>
+
 <div class="stats"><div class="stat"><small>SERVIZI OGGI</small><b id="s1">0</b></div><div class="stat"><small>DA ASSEGNARE</small><b id="s2">0</b></div><div class="stat"><small>IN CORSO</small><b id="s3">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="s4">0</b></div></div>
 <div class="stats" style="margin-top:9px"><div class="stat"><small>PERSONALE ATTIVO</small><b id="s5">0</b></div><div class="stat"><small>TURNI PROSSIMI</small><b id="s6">0</b></div><div class="stat"><small>SCADENZE MEZZI</small><b id="s7">0</b></div><div class="stat"><small>DA INCASSARE</small><b id="s8">€ 0</b></div></div>
 <div class="ops-board-wrap">
@@ -3371,6 +3379,42 @@ async function refreshDashboardPersonnelExpiryAlert(){
  renderDashboardPersonnelExpiryAlert();
 }
 
+function dashboardCommitmentTime(x){
+ const a=String(x.ora_inizio||'').slice(0,5),b=String(x.ora_fine||'').slice(0,5);
+ if(a&&b)return a+' – '+b;
+ if(a)return 'dalle '+a;
+ if(b)return 'fino alle '+b;
+ return 'Orario non indicato';
+}
+async function refreshDashboardEmployeeCommitments(){
+ const box=$('dashEmployeeCommitments'),items=$('dashEmployeeCommitmentsItems'),count=$('dashEmployeeCommitmentsCount');
+ if(!box||!items||!count)return;
+ if(!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo)){box.classList.add('hidden');return}
+ const day=todaySafe();
+ const r=await sb.from('impegni_dipendenti').select('id,badge,data,ora_inizio,ora_fine,motivo,note').eq('data',day).order('ora_inizio',{ascending:true});
+ if(r.error){
+  box.classList.remove('hidden');count.textContent='!';
+  items.innerHTML='<div class="notice warn">Impossibile caricare gli impegni dipendenti: '+esc(r.error.message)+'</div>';
+  return;
+ }
+ const rows=r.data||[];
+ count.textContent=String(rows.length);
+ box.classList.toggle('hidden',rows.length===0);
+ const now=new Date();
+ const nowMinutes=now.getHours()*60+now.getMinutes();
+ items.innerHTML=rows.map(x=>{
+  const p=(people||[]).find(v=>String(v.badge)===String(x.badge));
+  const nome=p?.nome_completo||('Badge '+x.badge);
+  const a=String(x.ora_inizio||'').slice(0,5),b=String(x.ora_fine||'').slice(0,5);
+  const toMin=v=>{if(!/^\d{2}:\d{2}$/.test(v))return null;const [h,m]=v.split(':').map(Number);return h*60+m};
+  const ai=toMin(a),bi=toMin(b),inCorso=ai!==null&&bi!==null&&nowMinutes>=ai&&nowMinutes<=bi;
+  return '<div class="box" style="border-left:5px solid '+(inCorso?'#dc2626':'#f59e0b')+';background:#fff">'+
+   '<div class="actions" style="justify-content:space-between;align-items:flex-start"><div><b>'+esc(nome)+'</b><br><span class="muted">'+esc(dashboardCommitmentTime(x))+'</span></div>'+
+   '<span class="pill '+(inCorso?'r':'b')+'">'+(inCorso?'NON DISPONIBILE ORA':'PROGRAMMATO')+'</span></div>'+
+   '<div style="margin-top:6px"><b>'+esc(x.motivo||'IMPEGNO')+'</b>'+(x.note?' · '+esc(x.note):'')+'</div></div>';
+ }).join('');
+}
+
 async function loadPersonnelExpiries(){
  await refreshMaster();
  fillPersonnelExpiryPeople();
@@ -3447,6 +3491,7 @@ if($('pexCancel'))$('pexCancel').onclick=resetPersonnelExpiryForm;
 if($('pexRefresh'))$('pexRefresh').onclick=loadPersonnelExpiries;
 if($('pexFilter'))$('pexFilter').onchange=loadPersonnelExpiries;
 if($('dashPersonnelExpiryOpen'))$('dashPersonnelExpiryOpen').onclick=()=>view('personnelExpiries');
+if($('dashEmployeeCommitmentsManage'))$('dashEmployeeCommitmentsManage').onclick=()=>{location.href='timbrature-amministrazione/'};
 
 async function view(v,options={}){
  const current=[...document.querySelectorAll('main>section')].find(x=>!x.classList.contains('hidden'))?.id||'';
@@ -3462,7 +3507,7 @@ async function view(v,options={}){
   if(options.patient)usePatientForService(options.patient);
  }
  selectView(v);
- const loader=({dash:async()=>{await refreshDashboardPersonnelExpiryAlert();return dashboard();},statistics:loadStatistics,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,paymentReceipts:loadPaymentReceiptsView,travelSheets118:loadTravelSheets118,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,personnelExpiries:loadPersonnelExpiries,tariffs:loadTariffsView,accounting:loadAccounting,primaNota:loadPrimaNota,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
+ const loader=({dash:async()=>{await Promise.all([refreshDashboardPersonnelExpiryAlert(),refreshDashboardEmployeeCommitments()]);return dashboard();},statistics:loadStatistics,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,paymentReceipts:loadPaymentReceiptsView,travelSheets118:loadTravelSheets118,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,personnelExpiries:loadPersonnelExpiries,tariffs:loadTariffsView,accounting:loadAccounting,primaNota:loadPrimaNota,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
  const result=await loader();
  selectView(v);
  return result;
