@@ -124,7 +124,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <h3>Inserisci causale</h3>
 <div class="grid">
 <div><label>Dipendente</label><select id="absEmp"></select></div>
-<div><label>Causale</label><select id="absType"><option>RIPOSO</option><option>PERMESSO</option><option>MALATTIA</option><option>FERIE</option><option value="L104">L.104</option><option>INFORTUNIO</option><option>ALTRO</option></select></div>
+<div><label>Causale</label><select id="absType"><option>RIPOSO</option><option>PERMESSO</option><option value="VISITA_MEDICA_PERSONALE">VISITA MEDICA PERSONALE</option><option>MALATTIA</option><option>FERIE</option><option value="L104">L.104</option><option>INFORTUNIO</option><option>ALTRO</option></select></div>
 <div><label>Ore (facoltative)</label><input id="absHours" type="number" min="0.25" max="24" step="0.25" placeholder="Es. 4"></div>
 </div>
 <div class="grid">
@@ -276,7 +276,7 @@ function renderTodayBanner(){
   const xs=todayEvents.filter(e=>e.badge===b);
   const a=todayAbs.find(x=>x.badge===b);
   const parts=xs.map(e=>'<b>'+esc(e.tipo==='ENTRATA'?'Entrata':'Uscita')+'</b> '+esc(time(e.evento_at)));
-  if(a)parts.push('<b>Causale:</b> '+esc(absenceLabel(a.causale))+(a.ore!=null?' · '+esc(a.ore)+' h':''));
+  if(a)parts.push('<b>Causale:</b> '+esc(absenceLabel(a.causale))+(a.ore!=null?' · '+esc(a.ore)+' h':'')+(a.nota?' · '+esc(a.nota):''));
   let status='USCITO',cls='out';
   if(inNow.some(p=>p.badge===b)){status='IN SERVIZIO';cls='in'}
   else if(a&&!xs.length){status=absenceLabel(a.causale);cls='abs'}
@@ -301,7 +301,7 @@ function renderDashboard(){
 function renderSummary(){
  const rows=monthlyAnalyses();$('monthlySummary').innerHTML='<table><thead><tr><th>Dipendente</th><th>Ore registrate</th><th>Giornate</th><th>Riposi &lt; 11h</th><th>Anomalie</th><th>Stato attuale</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><b>'+esc(x.nome_completo)+'</b></td><td>'+fmtMin(x.total)+'</td><td>'+x.days+'</td><td>'+x.rest+'</td><td>'+x.an.length+'</td><td>'+(x.open?'🟢 In servizio':'Fuori servizio')+'</td></tr>').join('')+'</tbody></table>'
 }
-function absenceLabel(x){return x==='L104'?'L.104':x}
+function absenceLabel(x){return x==='L104'?'L.104':x==='VISITA_MEDICA_PERSONALE'?'Visita medica personale':x}
 function renderAbsences(){
  const m=$('month').value;
  const rows=absences.filter(x=>String(x.data_dal).slice(0,7)===m||String(x.data_al).slice(0,7)===m).sort((a,b)=>String(a.data_dal).localeCompare(String(b.data_dal)));
@@ -309,6 +309,7 @@ function renderAbsences(){
 }
 async function addAbsence(){
  try{
+  if(monthClosed)throw new Error('Il mese selezionato è chiuso.');
   const dal=$('absFrom').value,al=$('absTo').value||dal;if(!dal)throw new Error('Inserisci la data.');
   await api({action:'absence_add',badge:$('absEmp').value,causale:$('absType').value,data_dal:dal,data_al:al,ore:$('absHours').value||null,nota:$('absNote').value.trim()});
   $('absHours').value='';$('absNote').value='';msg('absMsg','Causale inserita correttamente.','ok');await loadData();
@@ -322,7 +323,7 @@ async function deleteAbsence(id){
 function renderMonthState(){
  monthClosed=selectedMonthClosed();const mv=$('month').value;let monthLabel=mv;if(/^\d{4}-\d{2}$/.test(mv)){const [yy,mm]=mv.split('-');monthLabel=new Date(Number(yy),Number(mm)-1,1).toLocaleDateString('it-IT',{month:'long',year:'numeric'});monthLabel=monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1)}$('headerSelectedMonth').textContent='Mese: '+monthLabel;
  $('monthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('monthState').className='monthState '+(monthClosed?'closed':'open');$('headerMonthState').textContent=monthClosed?'🔒 MESE CHIUSO':'MESE APERTO';$('headerMonthState').className='monthState '+(monthClosed?'closed':'open');
- $('closeMonthBtn').classList.toggle('hidden',monthClosed);$('reopenMonthBtn').classList.toggle('hidden',!monthClosed);$('addHist').disabled=monthClosed;
+ $('closeMonthBtn').classList.toggle('hidden',monthClosed);$('reopenMonthBtn').classList.toggle('hidden',!monthClosed);$('addHist').disabled=monthClosed;$('addAbsence').disabled=monthClosed;
  msg('monthMsg',monthClosed?'Il mese è chiuso: inserimenti, modifiche ed eliminazioni sono bloccati.':'Mese aperto. Prima della chiusura verifica eventuali anomalie.',monthClosed?'warn':'ok')
 }
 async function closeMonth(){const an=monthlyAnalyses().flatMap(x=>x.an);if(an.length&&!confirm('Sono presenti '+an.length+' anomalie. Vuoi chiudere comunque il mese?'))return;if(!confirm('Confermi la chiusura del mese '+$('month').value+'?'))return;const note=prompt('Nota di chiusura (facoltativa):','Verificato da amministrazione')||'';try{await api({action:'close_month',month:$('month').value,note});await loadData()}catch(e){alert(e.message)}}
