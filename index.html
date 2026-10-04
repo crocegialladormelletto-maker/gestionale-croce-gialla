@@ -4863,7 +4863,8 @@ async function loadOperationalDashboard(){
  const noteIds=new Set((noteRows.data||[]).map(x=>x.foglio_viaggio_id).filter(Boolean));
  const debitQueue=(noteSheets.data||[]).filter(x=>!noteIds.has(x.id));
 
- const crewGroups=dashOpsGroup(emgRows).length+dashOpsGroup(dimRows).length;
+ const assGroups=dashOpsGroup(assRows);
+ const crewGroups=dashOpsGroup(emgRows).length+dashOpsGroup(dimRows).length+assGroups.length;
  $('dashOpsCrewCount').textContent=String(crewGroups);
  $('dashOpsServiceCount').textContent=String(services.length);
  $('dashOpsTravelOpen').textContent=String(fogli.filter(x=>x.stato==='APERTO').length);
@@ -4887,9 +4888,11 @@ async function loadOperationalDashboard(){
   !dimGroups.length?'NESSUN TURNO':dimIncomplete.length?'DA COMPLETARE':'COPERTE',
   dimGroups.length?dimGroups.length+' fascia/e · '+dimRows.length+' presenze':'Nessuna fascia caricata oggi');
 
- const assGroups=dashOpsGroup(assRows);
- dashSetSmartCard('dashSmartAssistance',assGroups.length?'ok':'ok',assGroups.length?assGroups.length+' FASCIA/E':'NESSUNA',
-  assGroups.length?assRows.length+' presenze assegnate oggi':'Nessuna assistenza a turni oggi');
+ const assistanceServices=services.filter(x=>isAssistanceManifestation(x.tipo_servizio)||isAssistanceManifestation(x.tipo_servizio_altro));
+ dashSetSmartCard('dashSmartAssistance',assistanceServices.length?'ok':'ok',assistanceServices.length?String(assistanceServices.length):'NESSUNA',
+  assistanceServices.length
+   ?assistanceServices.map(x=>((x.ora_partenza_prevista||'').slice(0,5)||'—')+' · Mezzo '+(x.mezzo||'—')+' · '+(x.destinazione||x.ospedale_destinazione||'Assistenza')).join(' | ')
+   :'Nessuna assistenza programmata oggi');
 
  const availableVehicles=mezzi.filter(m=>m.attivo&&['DISPONIBILE','OPERATIVO'].includes(String(m.stato_operativo||'DISPONIBILE').toUpperCase())&&!emergencyVehicles.has(String(m.codice))).length;
  const activeVehicles=mezzi.filter(m=>m.attivo).length;
