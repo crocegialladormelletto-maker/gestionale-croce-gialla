@@ -88,6 +88,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button class="sideBtn" data-page="storico">📚 <span class="sideLabel">Registro storico</span></button>
 <button class="sideBtn" data-page="anomalie">⚠️ <span class="sideLabel">Anomalie</span><span id="anomalyBadge" class="menuBadge okBadge">0</span></button>
 <button class="sideBtn" data-page="riepiloghi">📊 Riepiloghi mensili</button>
+<button class="sideBtn" data-page="impegni">📌 <span class="sideLabel">Impegni / Assenze programmati</span></button>
 <button class="sideBtn" data-page="causali">📅 Causali / Assenze</button>
 <button class="sideBtn" data-page="chiusura">🔒 Chiusura mese</button>
 <button class="sideBtn" data-page="dipendenti">👥 Dipendenti / PIN</button>
@@ -103,6 +104,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <section id="page-dashboard" class="adminPage active"><div class="pageHead"><div><h2>Dashboard</h2><div class="muted">Situazione generale delle timbrature</div></div></div><div class="card noPrint">
 <div class="toolbar"><div><h3 style="margin:0">Dashboard controllo</h3><div class="muted">Controlli automatici sulle timbrature registrate. Le segnalazioni servono come supporto operativo e vanno verificate dall'amministrazione.</div></div><button id="refreshTop" class="secondary">↻ AGGIORNA</button></div>
 <div id="todayBanner" class="todayBanner"></div>
+<div id="employeeCommitmentsDashboard" class="card" style="margin-top:14px;padding:14px">
+ <div class="toolbar">
+  <div><h3 style="margin:0">📌 Impegni / Assenze programmati</h3><div class="muted">Impegni personali dei dipendenti previsti per oggi.</div></div>
+  <button id="openCommitmentsPage" class="secondary" type="button">GESTISCI</button>
+ </div>
+ <div id="employeeCommitmentsToday" style="margin-top:10px"></div>
+</div>
 <div class="grid4" style="margin-top:14px">
 <div class="kpi"><span>In servizio ora</span><b id="kpiNow">0</b><small id="kpiNowNames">Nessuno</small></div>
 <div class="kpi"><span>Ore registrate mese</span><b id="kpiHours">0:00</b><small>Mese selezionato</small></div>
@@ -119,12 +127,34 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div id="monthlySummary"></div>
 </div></section>
 
+<section id="page-impegni" class="adminPage"><div class="pageHead"><div><h2>Impegni / Assenze programmati</h2><div class="muted">Indisponibilità personali programmate dei dipendenti, visibili in Dashboard.</div></div></div>
+<div class="card noPrint">
+ <h3>Inserisci impegno / assenza programmata</h3>
+ <div class="grid">
+  <div><label>Dipendente</label><select id="commitEmp"></select></div>
+  <div><label>Data</label><input id="commitDate" type="date" min="2026-09-01"></div>
+  <div><label>Motivo</label><select id="commitReason"><option>VISITA MEDICA PERSONALE</option><option>IMPEGNO PERSONALE</option><option>PERMESSO PERSONALE</option><option>ALTRO</option></select></div>
+ </div>
+ <div class="grid">
+  <div><label>Ora inizio</label><input id="commitStart" type="time"></div>
+  <div><label>Ora fine</label><input id="commitEnd" type="time"></div>
+  <div><label>Note</label><input id="commitNotes" placeholder="Facoltative"></div>
+ </div>
+ <button id="commitAdd" class="green" style="margin-top:12px">AGGIUNGI IMPEGNO</button>
+ <div id="commitMsg" class="notice">L’impegno sarà mostrato nella Dashboard nel giorno indicato.</div>
+</div>
+<div class="card noPrint">
+ <h3>Impegni programmati</h3>
+ <div id="commitList"></div>
+</div>
+</section>
+
 <section id="page-causali" class="adminPage"><div class="pageHead"><div><h2>Causali / Assenze</h2><div class="muted">Riposi, permessi, malattia, ferie e altre causali giornaliere</div></div></div>
 <div class="card noPrint">
 <h3>Inserisci causale</h3>
 <div class="grid">
 <div><label>Dipendente</label><select id="absEmp"></select></div>
-<div><label>Causale</label><select id="absType"><option>RIPOSO</option><option>PERMESSO</option><option value="VISITA_MEDICA_PERSONALE">VISITA MEDICA PERSONALE</option><option>MALATTIA</option><option>FERIE</option><option value="L104">L.104</option><option>INFORTUNIO</option><option>ALTRO</option></select></div>
+<div><label>Causale</label><select id="absType"><option>RIPOSO</option><option>PERMESSO</option><option>MALATTIA</option><option>FERIE</option><option value="L104">L.104</option><option>INFORTUNIO</option><option>ALTRO</option></select></div>
 <div><label>Ore (facoltative)</label><input id="absHours" type="number" min="0.25" max="24" step="0.25" placeholder="Es. 4"></div>
 </div>
 <div class="grid">
@@ -198,7 +228,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <script>
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co',KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4',ADMIN_API=SUPABASE_URL+'/functions/v1/timbrature-admin-api';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-let people=[],events=[],context=[],auditRows=[],months=[],absences=[],monthClosed=false;const $=x=>document.getElementById(x);
+let people=[],events=[],context=[],auditRows=[],months=[],absences=[],commitments=[],monthClosed=false;const $=x=>document.getElementById(x);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
 function msg(id,t,k=''){const e=$(id);e.textContent=t;e.className='notice '+k}
@@ -228,8 +258,14 @@ async function api(body){const t=await token();if(!t)throw new Error('Sessione n
 async function login(){try{const email=$('email').value.trim().toLowerCase(),password=$('password').value;const {error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;const a=await sb.from('accessi_app').select('nome,ruolo,attivo').single();if(a.error||!a.data?.attivo||a.data.ruolo!=='AMMINISTRATORE'){await sb.auth.signOut();throw new Error('Questo account non è abilitato come Amministratore.')}showPanel(a.data.nome||email);await loadData()}catch(e){msg('loginMsg',e.message||'Accesso non riuscito','err')}}
 function showPanel(name){$('loginBox').classList.add('hidden');$('panel').classList.remove('hidden');$('password').value='';$('who').textContent=name+' · Database centrale'}
 async function logout(){await sb.auth.signOut();location.reload()}
-async function loadData(){try{const r=await api({action:'data',badge:$('filterEmp').value||null,month:$('month').value||null});people=r.people||[];events=r.events||[];context=r.context||[];auditRows=r.audit||[];months=r.months||[];absences=r.absences||[];fillPeople();renderAll()}catch(e){alert(e.message)}}
-function fillPeople(){for(const id of ['pinEmp','histEmp','filterEmp','printEmp','absEmp']){const sel=$(id),cur=sel.value;sel.innerHTML=(id==='filterEmp'?'<option value="">Tutti</option>':'')+people.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+'</option>').join('');if([...sel.options].some(o=>o.value===cur))sel.value=cur}}
+async function loadData(){try{
+ const r=await api({action:'data',badge:$('filterEmp').value||null,month:$('month').value||null});
+ people=r.people||[];events=r.events||[];context=r.context||[];auditRows=r.audit||[];months=r.months||[];absences=r.absences||[];
+ const cr=await sb.from('impegni_dipendenti').select('*').order('data',{ascending:true}).order('ora_inizio',{ascending:true});
+ if(cr.error)throw cr.error;commitments=cr.data||[];
+ fillPeople();renderAll()
+}catch(e){alert(e.message)}}
+function fillPeople(){for(const id of ['pinEmp','histEmp','filterEmp','printEmp','absEmp','commitEmp']){const sel=$(id),cur=sel.value;sel.innerHTML=(id==='filterEmp'?'<option value="">Tutti</option>':'')+people.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+'</option>').join('');if([...sel.options].some(o=>o.value===cur))sel.value=cur}}
 function selectedMonthClosed(){const m=$('month').value;return !!months.find(x=>String(x.mese).slice(0,7)===m&&x.chiuso)}
 function analyzeBadge(badge,arr){
  const xs=arr.filter(e=>e.badge===badge&&!e.eliminato_at).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
@@ -265,6 +301,43 @@ function monthlyAnalyses(){
   return {...p,total:mon.total,days:mon.days,an:relAn,rest:relAn.filter(a=>a.rest).length,open:all.open,last:all.last};
  });
 }
+function commitmentTime(x){
+ const a=String(x.ora_inizio||'').slice(0,5),b=String(x.ora_fine||'').slice(0,5);
+ if(a&&b)return a+' – '+b;
+ if(a)return 'dalle '+a;
+ if(b)return 'fino alle '+b;
+ return 'Orario non indicato';
+}
+function renderCommitments(){
+ const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
+ const todayRows=commitments.filter(x=>String(x.data)===today);
+ $('employeeCommitmentsToday').innerHTML=todayRows.length?todayRows.map(x=>
+  '<div class="todayRow"><div class="todayName">'+esc(person(x.badge))+'</div><div class="todayTimes"><b>'+esc(x.motivo)+'</b> · '+esc(commitmentTime(x))+(x.note?' · '+esc(x.note):'')+'</div><div class="todayStatus abs">NON DISPONIBILE</div></div>'
+ ).join(''):'<div class="muted">Nessun impegno o assenza programmata per oggi.</div>';
+ const rows=commitments.slice().sort((a,b)=>String(a.data).localeCompare(String(b.data))||String(a.ora_inizio||'').localeCompare(String(b.ora_inizio||'')));
+ $('commitList').innerHTML=rows.length?'<table><thead><tr><th>Data</th><th>Dipendente</th><th>Orario</th><th>Motivo</th><th>Note</th><th>Azioni</th></tr></thead><tbody>'+
+ rows.map(x=>'<tr><td>'+new Date(x.data+'T12:00').toLocaleDateString('it-IT')+'</td><td><b>'+esc(person(x.badge))+'</b></td><td>'+esc(commitmentTime(x))+'</td><td><span class="pill hist">'+esc(x.motivo)+'</span></td><td>'+esc(x.note||'')+'</td><td><button class="danger mini" onclick="deleteCommitment(\''+x.id+'\')">Elimina</button></td></tr>').join('')+
+ '</tbody></table>':'<div class="muted">Nessun impegno programmato.</div>';
+}
+async function addCommitment(){
+ try{
+  const badge=$('commitEmp').value,date=$('commitDate').value,motivo=$('commitReason').value,start=$('commitStart').value||null,end=$('commitEnd').value||null;
+  if(!badge||!date||!motivo)throw new Error('Compila dipendente, data e motivo.');
+  if(start&&end&&end<=start)throw new Error('L’ora fine deve essere successiva all’ora inizio.');
+  const r=await sb.from('impegni_dipendenti').insert({badge,data:date,ora_inizio:start,ora_fine:end,motivo,note:$('commitNotes').value.trim()||null});
+  if(r.error)throw r.error;
+  $('commitStart').value='';$('commitEnd').value='';$('commitNotes').value='';
+  msg('commitMsg','Impegno inserito e visibile in Dashboard.','ok');
+  await loadData();
+ }catch(e){msg('commitMsg',e.message||String(e),'err')}
+}
+async function deleteCommitment(id){
+ if(!confirm('Eliminare questo impegno programmato?'))return;
+ const r=await sb.from('impegni_dipendenti').delete().eq('id',id);
+ if(r.error)return alert(r.error.message);
+ await loadData();
+}
+window.deleteCommitment=deleteCommitment;
 function renderTodayBanner(){
  const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
  const todayEvents=context.filter(e=>!e.eliminato_at&&new Date(e.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'})===today).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
@@ -301,7 +374,7 @@ function renderDashboard(){
 function renderSummary(){
  const rows=monthlyAnalyses();$('monthlySummary').innerHTML='<table><thead><tr><th>Dipendente</th><th>Ore registrate</th><th>Giornate</th><th>Riposi &lt; 11h</th><th>Anomalie</th><th>Stato attuale</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><b>'+esc(x.nome_completo)+'</b></td><td>'+fmtMin(x.total)+'</td><td>'+x.days+'</td><td>'+x.rest+'</td><td>'+x.an.length+'</td><td>'+(x.open?'🟢 In servizio':'Fuori servizio')+'</td></tr>').join('')+'</tbody></table>'
 }
-function absenceLabel(x){return x==='L104'?'L.104':x==='VISITA_MEDICA_PERSONALE'?'Visita medica personale':x}
+function absenceLabel(x){return x==='L104'?'L.104':x}
 function renderAbsences(){
  const m=$('month').value;
  const rows=absences.filter(x=>String(x.data_dal).slice(0,7)===m||String(x.data_al).slice(0,7)===m).sort((a,b)=>String(a.data_dal).localeCompare(String(b.data_dal)));
@@ -421,13 +494,13 @@ function printRows(){
 }
 function renderRegister(){let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':monthClosed?'🔒 Mese chiuso':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}h+='</tbody></table>';$('register').innerHTML=events.length?h:'<div class="muted">Nessuna timbratura.</div>';const fe=$('filterEmp').value;const meseLabel=formatMonthLabel($('month').value||'');$('printHead').innerHTML='<div class="printBrand"><div class="printBrandRow"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100" alt="Logo Croce Gialla Emergenza ODV"><div class="printBrandText"><div class="line1">CROCE GIALLA EMERGENZA ODV</div><div class="line2">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</div></div></div><div class="printBrandMonth">'+esc(meseLabel)+'</div>'+(monthClosed?'<div class="printClosedStamp">🔒 MESE CHIUSO – REGISTRO DEFINITIVO</div>':'')+'</div>'}
 function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
-function renderAll(){renderMonthState();renderTodayBanner();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
+function renderAll(){renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
 function showPage(name){document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
 function printFromSection(){const pe=$('printEmp').value,pm=$('printMonth').value;if(!pe||!pm)return alert('Seleziona dipendente e mese.');$('filterEmp').value=pe;$('month').value=pm;loadData().then(()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows();document.body.classList.add('printingRegister');window.print();document.body.classList.remove('printingRegister');$('register').innerHTML=old})}
 document.querySelectorAll('.sideBtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$('mobileMenuBtn').onclick=()=>$('sideMenu').classList.toggle('open');$('refreshAnomalies').onclick=loadData;$('printMonthlyBtn').onclick=printFromSection;
-$('addAbsence').onclick=addAbsence;$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=loadData;$('refreshTop').onclick=loadData;$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
+$('addAbsence').onclick=addAbsence;$('commitAdd').onclick=addCommitment;$('openCommitmentsPage').onclick=()=>showPage('impegni');$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=loadData;$('refreshTop').onclick=loadData;$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
 $('printBtn').onclick=()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows();window.print();$('register').innerHTML=old};$('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
-const d=new Date();const currentMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');$('month').value=currentMonth;$('printMonth').value=currentMonth;$('absFrom').value=new Date().toLocaleDateString('sv-SE');$('absTo').value=$('absFrom').value;
+const d=new Date();const currentMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');$('month').value=currentMonth;$('printMonth').value=currentMonth;$('absFrom').value=new Date().toLocaleDateString('sv-SE');$('absTo').value=$('absFrom').value;$('commitDate').value=new Date().toLocaleDateString('sv-SE');
 updateLoginMonthState();
 (async()=>{const {data}=await sb.auth.getSession();if(data.session){const a=await sb.from('accessi_app').select('nome,ruolo,attivo').single();if(!a.error&&a.data?.attivo&&a.data.ruolo==='AMMINISTRATORE'){showPanel(a.data.nome||'Amministratore');await loadData()}}})();
 </script>
