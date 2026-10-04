@@ -830,7 +830,7 @@
   <div class="ops-smart-card" id="dashSmartHours" data-admin-only="true"><small>👥 SOTTO 28 ORE</small><b id="dashSmartHoursValue">—</b><span id="dashSmartHoursInfo">Mese corrente</span></div>
  </div>
  <section class="section" data-admin-only="true" id="dashHoursSection">
-  <div class="ops-title"><div><h3>⏱ Volontari sotto le 28 ore mensili</h3><span class="muted">Calcolo effettuato esclusivamente dai turni caricati nel gestionale.</span></div><button type="button" class="btn secondary jump" data-v="statistics">Apri Statistiche</button></div>
+  <div class="ops-title"><div><h3>⏱ Volontari sotto le 28 ore mensili</h3><span class="muted">Calcolo su turni e servizi effettivamente svolti, evitando i doppi conteggi.</span></div><button type="button" class="btn secondary jump" data-v="statistics">Apri Statistiche</button></div>
   <div id="dashHoursBelow"><div class="ops-empty">Calcolo in corso…</div></div>
  </section>
  <div class="ops-vehicles">
@@ -5467,6 +5467,35 @@ function shiftClockHours(start,end){
 function shiftBandHours(fascia){
  return ({MATTINO:7,POMERIGGIO:5,SERA:5,NOTTE:7})[String(fascia||'').toUpperCase()]||0;
 }
+function statsTimeMinutes(v){
+ if(!v)return null;
+ const p=String(v).slice(0,5).split(':').map(Number);
+ if(p.length<2||!Number.isFinite(p[0])||!Number.isFinite(p[1]))return null;
+ return p[0]*60+p[1];
+}
+function statsInterval(start,end){
+ let a=statsTimeMinutes(start),b=statsTimeMinutes(end);
+ if(a===null||b===null)return null;
+ if(b<=a)b+=1440;
+ return [a,b];
+}
+function statsBandInterval(fascia){
+ const x=String(fascia||'').toUpperCase();
+ return ({MATTINO:[420,840],POMERIGGIO:[780,1140],SERA:[1140,1440],NOTTE:[0,420]})[x]||null;
+}
+function statsUncoveredHours(interval,covers){
+ if(!interval)return 0;
+ const [a,b]=interval;
+ const clipped=(covers||[]).map(i=>[Math.max(a,i[0]),Math.min(b,i[1])]).filter(i=>i[1]>i[0]).sort((x,y)=>x[0]-y[0]);
+ let covered=0,last=null;
+ clipped.forEach(([s,e])=>{
+  if(last===null){last=[s,e];return}
+  if(s<=last[1])last[1]=Math.max(last[1],e);
+  else{covered+=last[1]-last[0];last=[s,e]}
+ });
+ if(last)covered+=last[1]-last[0];
+ return Math.max(0,(b-a-covered)/60);
+}
 
 function statsDateChunks(from,to,maxDays=60){
  const out=[];let cur=new Date(from+'T12:00:00'),end=new Date(to+'T12:00:00');
@@ -5489,13 +5518,18 @@ async function statsRpcRange(name,from,to){
  return rows;
 }
 async function loadShiftStatistics(from,to,people){
- const [tr,emgRows,dimRows,assRows]=await Promise.all([
+ const [tr,emgRows,dimRows,assRows,fg]=await Promise.all([
   sb.from('turni').select('id,data_turno,tipo_turno,ora_inizio,ora_fine,stato,mezzo').gte('data_turno',from).lte('data_turno',to).limit(5000),
   statsRpcRange('cge_emergenza_turni_v2',from,to),
   statsRpcRange('cge_dimissioni_turni',from,to),
-  statsRpcRange('cge_assistenza_fasce_turni',from,to)
+  statsRpcRange('cge_assistenza_fasce_turni',from,to),
+  sb.from('fogli_viaggio')
+   .select('id,data_servizio,numero_foglio,mezzo,tipo_servizio,stato,ora_partenza_servizio,ora_partenza_prevista,ora_arrivo_sede,ora_operativita,ora_arrivo_destinazione,badge_autista,badge_capo_servizio,badge_soccorritore,badge_secondo,badge_accompagnatore,badge_affiancato')
+   .eq('stato','CHIUSO').gte('data_servizio',from).lte('data_servizio',to).limit(5000)
  ]);
  if(tr.error)throw tr.error;
+ if(fg.error)throw fg.error;
+
  const turns=(tr.data||[]).filter(t=>{
   const stato=String(t.stato||'').toUpperCase(),tipo=String(t.tipo_turno||'').toUpperCase();
   return !['ANNULLATO','CANCELLATO'].includes(stato) && !/EMERGENZA|DIMISSION|ASSISTEN/.test(tipo);
@@ -5508,19 +5542,75 @@ async function loadShiftStatistics(from,to,people){
  }
  const turnMap=new Map(turns.map(x=>[x.id,x]));
  const rows=[];
+
  assignments.forEach(x=>{
-  const t=turnMap.get(x.turno_id);if(!t)return;
-  if(x.risposta==='NON DISPONIBILE')return;
-  rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftClockHours(t.ora_inizio,t.ora_fine),slot:'GEN|'+t.id,vehicle:t.mezzo||''});
+  const t=turnMap.get(x.turno_id);if(!t||x.risposta==='NON DISPONIBILE')return;
+  const int=statsInterval(t.ora_inizio,t.ora_fine);
+  rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftClockHours(t.ora_inizio,t.ora_fine),slot:'GEN|'+t.id,vehicle:t.mezzo||'',interval:int});
  });
- emgRows.forEach(x=>rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza / 118',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'EMG|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||''}));
- dimRows.forEach(x=>rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'DIM|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||''}));
- assRows.forEach(x=>rows.push({source:'Assistenze',date:x.giorno,type:'Assistenze',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'ASS|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||''}));
- const seen=new Set(),valid=rows.filter(x=>{
+ emgRows.forEach(x=>rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza / 118',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'EMG|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:statsBandInterval(x.fascia)}));
+ dimRows.forEach(x=>rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'DIM|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:statsBandInterval(x.fascia)}));
+ assRows.forEach(x=>rows.push({source:'Assistenze',date:x.giorno,type:'Assistenze',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'ASS|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:statsBandInterval(x.fascia)}));
+
+ // Deduplica solo la stessa presenza nello stesso turno/fascia.
+ // Due fasce diverse nello stesso giorno devono essere conteggiate entrambe.
+ const seenShift=new Set();
+ const shiftRows=rows.filter(x=>{
   if(!x.badge)return false;
-  const key=[x.source,x.date,x.type,x.badge,x.role].join('|');
-  if(seen.has(key))return false;seen.add(key);return true;
+  const key=[x.slot,x.badge].join('|');
+  if(seenShift.has(key))return false;
+  seenShift.add(key);
+  return true;
  });
+
+ // Intervalli già coperti da turni: servono per non sommare due volte
+ // le ore di un servizio svolto durante un turno già conteggiato.
+ const coverage=new Map();
+ shiftRows.forEach(x=>{
+  if(!x.interval)return;
+  const key=x.date+'|'+x.badge;
+  if(!coverage.has(key))coverage.set(key,[]);
+  coverage.get(key).push(x.interval);
+ });
+
+ const serviceRows=[];
+ (fg.data||[]).forEach(f=>{
+  const startTime=f.ora_partenza_servizio||f.ora_partenza_prevista;
+  const endTime=f.ora_arrivo_sede||f.ora_operativita||f.ora_arrivo_destinazione;
+  const int=statsInterval(startTime,endTime);
+  if(!int)return;
+
+  const crew=[
+   [f.badge_autista,'AUTISTA'],
+   [f.badge_capo_servizio,'CAPO_SERVIZIO'],
+   [f.badge_soccorritore,'SOCCORRITORE'],
+   [f.badge_secondo,'SECONDO_SOCCORRITORE'],
+   [f.badge_accompagnatore,'ACCOMPAGNATORE'],
+   [f.badge_affiancato,'AFFIANCATO']
+  ];
+  const seenCrew=new Set();
+  crew.forEach(([badge,role])=>{
+   if(!badge||seenCrew.has(badge))return;
+   seenCrew.add(badge);
+   const key=f.data_servizio+'|'+badge;
+   const extra=statsUncoveredHours(int,coverage.get(key)||[]);
+   if(extra<=0.01)return;
+   serviceRows.push({
+    source:'Servizi effettuati',
+    date:f.data_servizio,
+    type:f.tipo_servizio||'Servizio',
+    badge,
+    role,
+    hours:extra,
+    slot:'SRV|'+f.id,
+    vehicle:f.mezzo||'',
+    interval:int,
+    numeroFoglio:f.numero_foglio||''
+   });
+  });
+ });
+
+ const valid=[...shiftRows,...serviceRows];
  const byBadge={},byBadgeHours={},byRole={},byRoleHours={},byType={},byTypeHours={};
  valid.forEach(x=>{
   byBadge[x.badge]=(byBadge[x.badge]||0)+1;byBadgeHours[x.badge]=(byBadgeHours[x.badge]||0)+Number(x.hours||0);
@@ -5531,10 +5621,17 @@ async function loadShiftStatistics(from,to,people){
  const top=Object.entries(byBadge).map(([badge,n])=>({badge,n,hours:byBadgeHours[badge]||0,name:shiftPersonNameFromMap(badge,pmap)})).sort((a,b)=>b.n-a.n).slice(0,10);
  const topHours=Object.entries(byBadgeHours).map(([badge,hours])=>({badge,hours,n:byBadge[badge]||0,name:shiftPersonNameFromMap(badge,pmap)})).sort((a,b)=>b.hours-a.hours).slice(0,10);
  const slotSeen=new Set(),byTypeSlots={};
- valid.forEach(x=>{const k=x.slot||[x.source,x.date,x.type].join('|');if(slotSeen.has(k))return;slotSeen.add(k);byTypeSlots[x.type]=(byTypeSlots[x.type]||0)+1});
- return {rows:valid,byBadge,byBadgeHours,byRole,byRoleHours,byType,byTypeHours,byTypeSlots,top,topHours,totalHours:valid.reduce((s,x)=>s+Number(x.hours||0),0),general:assignments.filter(x=>turnMap.has(x.turno_id)&&x.risposta!=='NON DISPONIBILE').length,special:emgRows.length+dimRows.length+assRows.length};
+ shiftRows.forEach(x=>{const k=x.slot||[x.source,x.date,x.type].join('|');if(slotSeen.has(k))return;slotSeen.add(k);byTypeSlots[x.type]=(byTypeSlots[x.type]||0)+1});
+ return {
+  rows:valid,
+  byBadge,byBadgeHours,byRole,byRoleHours,byType,byTypeHours,byTypeSlots,top,topHours,
+  totalHours:valid.reduce((s,x)=>s+Number(x.hours||0),0),
+  general:shiftRows.filter(x=>x.source==='Turni generali').length,
+  special:shiftRows.filter(x=>x.source!=='Turni generali').length,
+  serviceHours:serviceRows.reduce((s,x)=>s+Number(x.hours||0),0),
+  serviceRows
+ };
 }
-
 
 function statsDaysBetween(a,b){return Math.floor((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000)+1}
 function statsShiftDateRangePrevious(from,to){
