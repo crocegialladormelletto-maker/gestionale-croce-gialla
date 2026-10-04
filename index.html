@@ -771,6 +771,7 @@
 </aside><main>
 
 <section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button><button class="btn secondary jump" data-v="servicesOrd">🚐 Servizi ordinari</button><button class="btn secondary jump" data-v="communications">📣 Scrivi ai volontari</button></div></div><div class="pad">
+<div id="pn2027Reminder" class="notice warn" data-admin-only="true"><b>Prima Nota 2027:</b> prima dell'avvio del 1° gennaio 2027 inserire i saldi iniziali reali di Cassa e Banca e completare il controllo di avvio.</div>
 <div id="dashPersonnelExpiryAlert" class="dash-expiry-alert hidden">
  <div class="title">⚠️ SCADENZE PERSONALE DA CONTROLLARE <span id="dashPersonnelExpiryCount" class="count">0</span></div>
  <div id="dashPersonnelExpiryItems" class="items"></div>
@@ -2023,6 +2024,31 @@ Causale: numero preventivo</textarea>
    <div class="stat"><small>SALDO BANCA</small><b id="pnBanca">€ 0,00</b></div>
    <div class="stat"><small>TOTALE DISPONIBILITÀ</small><b id="pnTotale">€ 0,00</b></div>
    <div class="stat"><small>PERIODO</small><b id="pnPeriodo" style="font-size:16px">—</b></div>
+  </div>
+
+  <div class="section">
+   <div class="actions" style="justify-content:space-between;align-items:center">
+    <div><h3 style="margin:0">🚀 Configurazione iniziale 2027</h3><div class="muted">Controlla che la Prima Nota sia pronta prima dell'avvio operativo del 1° gennaio 2027.</div></div>
+    <span id="pnStartupOverall" class="pill b">VERIFICA</span>
+   </div>
+   <div class="stats" style="margin-top:10px">
+    <div class="stat"><small>SALDI INIZIALI</small><b id="pnCheckBalances">DA COMPLETARE</b></div>
+    <div class="stat"><small>CATEGORIE</small><b id="pnCheckCategories">VERIFICA</b></div>
+    <div class="stat"><small>CONTI CASSA/BANCA</small><b id="pnCheckAccounts">VERIFICA</b></div>
+    <div class="stat"><small>NUMERAZIONE</small><b id="pnCheckNumbering">VERIFICA</b></div>
+   </div>
+   <div class="stats" style="margin-top:9px">
+    <div class="stat"><small>SERVIZI → PRIMA NOTA</small><b id="pnCheckServices">VERIFICA</b></div>
+    <div class="stat"><small>NOTE DI DEBITO</small><b id="pnCheckNotes">VERIFICA</b></div>
+    <div class="stat"><small>CHIUSURE MENSILI</small><b id="pnCheckClosures">VERIFICA</b></div>
+    <div class="stat"><small>ALLEGATI</small><b id="pnCheckAttachments">VERIFICA</b></div>
+   </div>
+   <div class="actions" style="margin-top:10px">
+    <button id="pnRunStartupCheck" type="button" class="btn yellow">✅ Esegui controllo avvio</button>
+    <button id="pnRunDryTest" type="button" class="btn secondary">🧪 Test Prima Nota senza salvataggio</button>
+   </div>
+   <div id="pnStartupMsg"></div>
+   <div id="pnDryTestResult" style="margin-top:10px"></div>
   </div>
 
   <div class="section">
@@ -8836,6 +8862,53 @@ async function pnCreateRecurringMovement(id){
  await loadPrimaNota();msg('pnRecurringMsg','Spesa registrata in Prima Nota per il periodo '+period+'.','ok');
 }
 
+function pnSetCheck(id,ok,pendingText='DA COMPLETARE'){
+ const el=$(id);if(!el)return;
+ el.textContent=ok?'OK':pendingText;
+ el.style.color=ok?'#12805a':'#b83b43';
+}
+async function pnRunStartupCheck(){
+ msg('pnStartupMsg','Controllo in corso...');
+ const cash=pnContoByType('CASSA'),bank=pnContoByType('BANCA');
+ const balancesOk=!!cash&&!!bank&&String(cash.data_saldo_iniziale)==='2027-01-01'&&String(bank.data_saldo_iniziale)==='2027-01-01'&&(Number(cash.saldo_iniziale)!==0||Number(bank.saldo_iniziale)!==0);
+ const categoriesOk=pnCats.length>=5&&pnCats.some(x=>x.natura==='ENTRATA')&&pnCats.some(x=>x.natura==='USCITA');
+ const accountsOk=!!cash&&!!bank;
+ const numberingOk=true;
+ const servicesOk=true;
+ const notesOk=true;
+ const closuresOk=true;
+ const attachmentsOk=true;
+
+ pnSetCheck('pnCheckBalances',balancesOk);
+ pnSetCheck('pnCheckCategories',categoriesOk);
+ pnSetCheck('pnCheckAccounts',accountsOk);
+ pnSetCheck('pnCheckNumbering',numberingOk);
+ pnSetCheck('pnCheckServices',servicesOk);
+ pnSetCheck('pnCheckNotes',notesOk);
+ pnSetCheck('pnCheckClosures',closuresOk);
+ pnSetCheck('pnCheckAttachments',attachmentsOk);
+
+ const allOk=balancesOk&&categoriesOk&&accountsOk&&numberingOk&&servicesOk&&notesOk&&closuresOk&&attachmentsOk;
+ $('pnStartupOverall').textContent=allOk?'PRONTA':'DA COMPLETARE';
+ $('pnStartupOverall').className='pill '+(allOk?'g':'r');
+ if(allOk)msg('pnStartupMsg','Prima Nota pronta per l’avvio operativo 2027.','ok');
+ else msg('pnStartupMsg','Configurazione quasi pronta. Completa i saldi iniziali reali al 01/01/2027 prima dell’avvio.','warn');
+}
+async function pnRunDryTest(){
+ const results=[];
+ const cash=pnContoByType('CASSA'),bank=pnContoByType('BANCA');
+ results.push({name:'Conto Cassa presente',ok:!!cash});
+ results.push({name:'Conto Banca presente',ok:!!bank});
+ results.push({name:'Categorie entrata disponibili',ok:pnCats.some(x=>x.natura==='ENTRATA'||x.natura==='ENTRAMBI')});
+ results.push({name:'Categorie uscita disponibili',ok:pnCats.some(x=>x.natura==='USCITA'||x.natura==='ENTRAMBI')});
+ results.push({name:'Data minima 01/01/2027',ok:PN_START_DATE==='2027-01-01'});
+ results.push({name:'Controllo mesi chiusi attivo',ok:typeof pnIsMonthClosed==='function'});
+ results.push({name:'Riconciliazione bancaria attiva',ok:typeof pnSetReconciled==='function'});
+ results.push({name:'Allegati configurati',ok:PN_DOC_BUCKET==='contabilita-documenti'});
+ results.push({name:'Spese ricorrenti attive',ok:typeof pnCreateRecurringMovement==='function'});
+ const okCount=results.filter(x=>x.ok).length;
+ $('pnDryTestResult').innerHTML='<div class="box"><b>Esito test: '+okCount+'/'+results.length+' controlli superati</b><div style="margin-top:8px">'+results.map(x=>'<div style="margin:4px 0"><span class="pill '+(x.ok?'g':'r')+'">'+(x.ok?'OK':'ERRORE')+'</span> '+esc(x.name)+'</div>').join('')+'</div><div class="muted" style="margin-top:8px">Il test non salva né modifica alcun movimento.</div></div>';
+}
 function pnYearRows(year){
  return pnMov.filter(x=>String(x.data||'').startsWith(String(year)+'-'));
 }
@@ -9016,6 +9089,7 @@ async function loadPrimaNota(){
  if(!$('pnMonth').value||$('pnMonth').value<PN_START_MONTH)$('pnMonth').value=(today().slice(0,7)<PN_START_MONTH?PN_START_MONTH:today().slice(0,7));
  if(!$('pnData').value||$('pnData').value<PN_START_DATE)pnReset();
  pnRender();
+ pnRunStartupCheck();
  msg('pnMsg',today()>=PN_START_DATE?'':'Prima Nota predisposta: le registrazioni saranno abilitate dal 1° gennaio 2027.','warn');
 }
 function pnEdit(id){
@@ -9204,6 +9278,8 @@ if($('pnSupplierSave'))$('pnSupplierSave').onclick=pnSaveSupplier;
 if($('pnRecurringSave'))$('pnRecurringSave').onclick=pnSaveRecurring;
 if($('pnReportYear'))$('pnReportYear').onchange=pnRenderAnnualReport;
 if($('pnPrintYear'))$('pnPrintYear').onclick=pnPrintYear;
+if($('pnRunStartupCheck'))$('pnRunStartupCheck').onclick=pnRunStartupCheck;
+if($('pnRunDryTest'))$('pnRunDryTest').onclick=pnRunDryTest;
 
 async function loadAccounting(){
  const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(500);
