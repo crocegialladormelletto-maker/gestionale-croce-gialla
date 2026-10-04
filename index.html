@@ -3211,6 +3211,7 @@ if($('dashPersonnelExpiryOpen'))$('dashPersonnelExpiryOpen').onclick=()=>view('p
 
 async function view(v,options={}){
  const current=[...document.querySelectorAll('main>section')].find(x=>!x.classList.contains('hidden'))?.id||'';
+ if(current==='serviceDetail'&&v!=='serviceDetail')resetServiceDetailForm();
  if(current==='people'&&v!=='people')resetPerson();
  if(prof?.ruolo==='CENTRALINO'&&['people','statistics','accounting','primaNota','accessi','activityLog','backup'].includes(v))v='dash';
  if(v==='people'&&current!=='people')resetPerson();
@@ -5452,6 +5453,29 @@ $('dashServiceSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();dash
 $('dashServiceDate').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();dashFindService(false)}};
 
 const t5=x=>(x||'').slice(0,5);
+function resetServiceDetailForm(){
+ const form=$('detailForm');
+ if(form){
+  form.querySelectorAll('input,textarea').forEach(el=>{
+   if(el.type==='checkbox'||el.type==='radio')el.checked=false;
+   else el.value='';
+   el.disabled=false;
+  });
+  form.querySelectorAll('select').forEach(el=>{el.value='';el.disabled=false});
+ }
+ currentServiceId=null;currentService=null;
+ if($('dtitle'))$('dtitle').textContent='Dettaglio servizio';
+ if($('dsubtitle'))$('dsubtitle').textContent='Gestione operativa completa del servizio.';
+ ['dStatOp','dStatGest','dStatPay','dStatDue','dFoglioNumero','dFoglioStato','dFoglioMezzo','dFoglioVersione'].forEach(id=>{if($(id))$(id).textContent=id==='dStatDue'?'€ 0,00':id==='dFoglioNumero'?'Non predisposto':'—'});
+ if($('dCrewList'))$('dCrewList').innerHTML='';
+ if($('dHistory'))$('dHistory').innerHTML='';
+ if($('dAttachmentsList'))$('dAttachmentsList').innerHTML='';
+ if($('dAttachmentsCount'))$('dAttachmentsCount').textContent='0';
+ if($('dAttachmentFile'))$('dAttachmentFile').value='';
+ if($('dCancelBox'))$('dCancelBox').classList.add('hidden');
+ if($('dCancelReason'))$('dCancelReason').value='';
+ ['dActionMsg','dSaveMsg','dCrewMsg','dFoglioMsg','dAttachmentMsg'].forEach(id=>msg(id,''));
+}
 function detailCrewCandidates(){
  if(!$('dCrewPerson'))return;
  $('dCrewPerson').innerHTML=opts(qualifiedPeople($('dCrewRole').value),'badge',x=>x.nome_completo+' · '+x.badge);
@@ -7032,10 +7056,12 @@ function asMonthRenderSelected(){
    '<div class="muted">'+esc(s.destinazione||s.indirizzo_destinazione||'Luogo da indicare')+
    ' · Mezzo '+esc(s.mezzo||'—')+'</div>'+
    '<div class="muted">'+esc(times)+'</div>'+crewHtml+
-   '<button type="button" class="btn yellow" data-as-month-open="'+esc(s.id)+'">✚ Apri / completa equipaggio</button></div>';
+   '<div class="actions" style="margin-top:7px"><button type="button" class="btn yellow" data-as-change-vehicle="'+esc(s.id)+'">🚑 Cambia mezzo</button><button type="button" class="btn secondary" data-as-month-open="'+esc(s.id)+'">✚ Apri / completa equipaggio</button></div></div>';
  }).join(''):'<div class="notice">Nessuna manifestazione programmata in questa data. Per inserirne una, utilizza «Nuovo servizio».</div>';
  $('asMonthDay').querySelectorAll('[data-as-month-open]').forEach(button=>
   button.onclick=()=>asMonthOpenService(button.dataset.asMonthOpen));
+ $('asMonthDay').querySelectorAll('[data-as-change-vehicle]').forEach(button=>
+  button.onclick=()=>asChangeServiceVehicle(button.dataset.asChangeVehicle));
  $('asMonthDay').querySelectorAll('[data-as-service-remove]').forEach(button=>
   button.onclick=()=>asRemoveServiceCrew(button.dataset.asServiceRemove));
 }
@@ -7148,7 +7174,7 @@ function asServiceRow(s){
  '<b>'+esc(asServiceName(s))+'</b><span class="as-service-location">'+esc(s.destinazione||s.indirizzo_destinazione||'Luogo da indicare')+'</span>'+
  '<span class="as-service-hours">Mezzo '+esc(s.mezzo||'—')+' · '+esc(times)+'</span>'+
  (crew.length?'':'<span class="pill r">Equipaggio da assegnare</span>')+
- '<button type="button" class="btn secondary as-open-service" data-as-open-service="'+esc(s.id)+'">Apri servizio / Equipaggio</button>'+rosterCrewMarkup('SERVIZIO_ASSISTENZA',s)+'</th>';
+ '<div class="actions" style="margin-top:7px"><button type="button" class="btn yellow" data-as-change-vehicle="'+esc(s.id)+'">🚑 Cambia mezzo</button><button type="button" class="btn secondary as-open-service" data-as-open-service="'+esc(s.id)+'">Apri servizio / Equipaggio</button></div>'+rosterCrewMarkup('SERVIZIO_ASSISTENZA',s)+'</th>';
  return '<tr class="as-service-row" data-as-service-id="'+esc(s.id)+'">'+first+EM_ROLES.map(([role])=>{
   const entries=crew.filter(a=>a.ruolo===role).map(a=>asServiceCrewEntry(s,a));
   return '<td>'+(entries.join('')||'<div class="em-empty">—</div>')+'</td>';
@@ -7193,12 +7219,33 @@ function asRender(){
  $('asCount').textContent=shownServices.length+' '+(shownServices.length===1?'servizio':'servizi')+' · '+shown.length+' '+(shown.length===1?'turno':'turni')+' di assistenza';
  $('asDays').innerHTML=days.map(asRenderDay).join('');
  $('asDays').querySelectorAll('[data-as-open-service]').forEach(b=>b.onclick=()=>openService(b.dataset.asOpenService));
+ $('asDays').querySelectorAll('[data-as-change-vehicle]').forEach(b=>b.onclick=()=>asChangeServiceVehicle(b.dataset.asChangeVehicle));
  $('asDays').querySelectorAll('[data-as-service-remove]').forEach(b=>b.onclick=()=>asRemoveServiceCrew(b.dataset.asServiceRemove));
  $('asDays').querySelectorAll('[data-as-turn-remove]').forEach(b=>b.onclick=()=>asRemoveTurnCrew(b.dataset.asTurnRemove));
  rosterCrewBind('asDays');
  renderAssistanceCandidates();
 }
 
+async function asChangeServiceVehicle(id){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const service=asServices.find(x=>x.id===id)||asMonthServices.find(x=>x.id===id);
+ if(!service)return msg('asMsg','Assistenza non trovata. Aggiorna la schermata.','warn');
+ const valid=vehicles.map(v=>String(v.codice)).filter(Boolean);
+ const nuovo=String(prompt('Inserisci il nuovo mezzo per «'+asServiceName(service)+'».\nMezzi disponibili: '+valid.join(', '),service.mezzo||'')||'').trim();
+ if(!nuovo||nuovo===String(service.mezzo||''))return;
+ if(!valid.includes(nuovo))return alert('Mezzo non valido. Seleziona uno dei mezzi disponibili: '+valid.join(', '));
+ if(!confirm('Confermi il cambio mezzo da '+(service.mezzo||'—')+' a '+nuovo+'?'))return;
+ const r=await sb.from('servizi_giornalieri').update({mezzo:nuovo,equipaggio_minimo:nuovo==='06'?1:2}).eq('id',id);
+ if(r.error)return msg('asMsg','Cambio mezzo non riuscito: '+r.error.message,'err');
+ const foglio=await sb.from('fogli_viaggio').select('id,stato').eq('servizio_giornaliero_id',id).maybeSingle();
+ if(foglio.error)return msg('asMsg','Mezzo cambiato, ma controllo Foglio Viaggio non riuscito: '+foglio.error.message,'warn');
+ if(foglio.data&&foglio.data.stato!=='CHIUSO'){
+  const sync=await sb.rpc('cge_sincronizza_foglio_viaggio',{p_servizio:id});
+  if(sync.error)return msg('asMsg','Mezzo cambiato, ma sincronizzazione del Foglio Viaggio non riuscita: '+sync.error.message,'warn');
+ }
+ await loadAssistanceRoster();
+ msg('asMsg','Mezzo dell’assistenza aggiornato a '+nuovo+'.','ok');
+}
 async function asRemoveServiceCrew(id){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  const row=asServiceAssignments.find(x=>x.id===id)||asMonthCrew.find(x=>x.id===id);
