@@ -8754,11 +8754,11 @@ async function pnSaveSupplier(){
  await loadPrimaNota();msg('pnSupplierMsg','Fornitore salvato.','ok');
 }
 async function pnDeleteSupplier(id){
- if(pnRecurring.some(x=>String(x.fornitore_id)===String(id)))return msg('pnSupplierMsg','Fornitore collegato a una spesa ricorrente: elimina prima la spesa ricorrente.','warn');
- if(!confirm('Eliminare questo fornitore?'))return;
- const r=await sb.from('contabilita_fornitori').delete().eq('id',id);
- if(r.error)return msg('pnSupplierMsg','Eliminazione non riuscita: '+r.error.message,'err');
- await loadPrimaNota();msg('pnSupplierMsg','Fornitore eliminato.','ok');
+ if(pnRecurring.some(x=>String(x.fornitore_id)===String(id)))return msg('pnSupplierMsg','Fornitore collegato a una spesa ricorrente attiva: disattiva prima la spesa ricorrente.','warn');
+ if(!confirm('Disattivare questo fornitore? I movimenti già registrati resteranno invariati.'))return;
+ const r=await sb.from('contabilita_fornitori').update({attivo:false,updated_at:new Date().toISOString()}).eq('id',id);
+ if(r.error)return msg('pnSupplierMsg','Disattivazione non riuscita: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnSupplierMsg','Fornitore disattivato.','ok');
 }
 async function pnSaveRecurring(){
  const desc=$('pnRecurringDesc').value.trim(),amount=Number($('pnRecurringAmount').value);
@@ -8770,10 +8770,10 @@ async function pnSaveRecurring(){
  await loadPrimaNota();msg('pnRecurringMsg','Spesa ricorrente salvata.','ok');
 }
 async function pnDeleteRecurring(id){
- if(!confirm('Eliminare questa spesa ricorrente? I movimenti già registrati restano in Prima Nota.'))return;
- const r=await sb.from('contabilita_spese_ricorrenti').delete().eq('id',id);
- if(r.error)return msg('pnRecurringMsg','Eliminazione non riuscita: '+r.error.message,'err');
- await loadPrimaNota();msg('pnRecurringMsg','Spesa ricorrente eliminata.','ok');
+ if(!confirm('Disattivare questa spesa ricorrente? I movimenti già registrati resteranno in Prima Nota.'))return;
+ const r=await sb.from('contabilita_spese_ricorrenti').update({attiva:false,updated_at:new Date().toISOString()}).eq('id',id);
+ if(r.error)return msg('pnRecurringMsg','Disattivazione non riuscita: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnRecurringMsg','Spesa ricorrente disattivata.','ok');
 }
 async function pnCreateRecurringMovement(id){
  if(today()<PN_START_DATE)return msg('pnRecurringMsg','Le spese ricorrenti saranno registrabili dal 1° gennaio 2027.','warn');
