@@ -3266,6 +3266,8 @@ if($('dashPersonnelExpiryOpen'))$('dashPersonnelExpiryOpen').onclick=()=>view('p
 async function view(v,options={}){
  const current=[...document.querySelectorAll('main>section')].find(x=>!x.classList.contains('hidden'))?.id||'';
  if(current==='serviceDetail'&&v!=='serviceDetail')resetServiceDetailForm();
+ if(current==='assistance'&&v!=='assistance')closeAssistanceCrewPanels();
+ if(v==='assistance')closeAssistanceCrewPanels();
  if(current==='people'&&v!=='people')resetPerson();
  if(prof?.ruolo==='CENTRALINO'&&['people','statistics','accounting','primaNota','accessi','activityLog','backup'].includes(v))v='dash';
  if(v==='people'&&current!=='people')resetPerson();
@@ -6452,6 +6454,14 @@ function rosterCrewBind(parentId){
  $(parentId).querySelectorAll('[data-roster-crew-open]').forEach(button=>
   button.onclick=()=>rosterCrewOpen(button.dataset.rosterCrewOpen,button.dataset.rosterCrewId));
 }
+function closeAssistanceCrewPanels(){
+ const area=$('assistance');
+ if(!area)return;
+ area.querySelectorAll('.roster-crew-panel').forEach(panel=>{
+  rosterCrewEligible.delete(panel.id);
+  panel.innerHTML='';
+ });
+}
 function emHour(v){if(!v)return 0;const p=String(v).split(':');return Number(p[0])+Number(p[1]||0)/60}
 function emSlotIds(t){
  const start=emHour(t.ora_inizio),end=emHour(t.ora_fine);
@@ -7260,6 +7270,7 @@ function asRenderDay(day){
  return '<div class="em-day">'+head+'<div class="em-table-wrap"><table class="em-roster as-roster">'+col+'<tbody>'+content+'</tbody></table></div></div>';
 }
 function asRender(){
+ closeAssistanceCrewPanels();
  const range=asPeriodRange(),days=[];
  for(let d=new Date(range.start);d<=range.end;d.setDate(d.getDate()+1))days.push(new Date(d));
  $('asPeriod').textContent=asView==='day'
