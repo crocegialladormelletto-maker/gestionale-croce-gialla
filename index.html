@@ -2572,6 +2572,8 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Destinazione tariffaria</label><select id="tabletAdTariffDest"><option value="">—</option></select></div>
     <div class="field"><label>Fascia</label><select id="tabletAdNight"><option value="false">Diurno</option><option value="true">Notturno</option></select></div>
     <div class="field"><label>Importo concordato € (solo senza tariffario)</label><input id="tabletAdAmount" type="number" step="0.01" min="0" max="10000" placeholder="Vuoto = da concordare"></div>
+    <div class="field" id="tabletAdPaymentBox"><label>Modalità pagamento</label><select id="tabletAdPayment"><option value="">Da indicare</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="ALTRO">Altro</option></select></div>
+    <div class="field" id="tabletAdPaymentDateBox"><label>Data pagamento</label><input id="tabletAdPaymentDate" type="date"></div>
     <div class="field"><label>Note operative</label><textarea id="tabletAdNotes" maxlength="2000"></textarea></div>
    </div>
    <div id="tabletAdQuote" class="notice">Seleziona un tariffario oppure lascia il prezzo da concordare con il Centralino.</div>
@@ -10164,7 +10166,13 @@ function tabletApplyImmediateTypeRules(){
  $('tabletAdTariffDest').disabled=internal;
  $('tabletAdNight').disabled=internal;
  $('tabletAdAmount').disabled=internal;
+ if($('tabletAdPaymentBox'))$('tabletAdPaymentBox').classList.toggle('hidden',internal);
+ if($('tabletAdPaymentDateBox'))$('tabletAdPaymentDateBox').classList.toggle('hidden',internal);
+ if($('tabletAdPayment'))$('tabletAdPayment').disabled=internal;
+ if($('tabletAdPaymentDate'))$('tabletAdPaymentDate').disabled=internal;
  if(internal){
+  if($('tabletAdPayment'))$('tabletAdPayment').value='';
+  if($('tabletAdPaymentDate'))$('tabletAdPaymentDate').value='';
   $('tabletAdTariffGroup').value='';
   tabletUpdateImmediateTariff();
   $('tabletAdAmount').value='0';
@@ -10216,7 +10224,7 @@ async function tabletPrefillImmediateKm(){
 }
 function tabletImmediateDraftKey(){return 'cge_tablet_immediate_draft_'+String(tabletMezzo||'');}
 function tabletSaveImmediateDraft(){
- const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdNotes'];
+ const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdPayment','tabletAdPaymentDate','tabletAdNotes'];
  const data={};
  ids.forEach(id=>{if($(id))data[id]=$(id).value;});
  data.saved_at=new Date().toISOString();
@@ -10226,7 +10234,7 @@ function tabletSaveImmediateDraft(){
 function tabletRestoreImmediateDraft(){
  let data=null;try{data=JSON.parse(localStorage.getItem(tabletImmediateDraftKey())||'null')}catch(_){}
  if(!data)return false;
- const simple=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdNight','tabletAdAmount','tabletAdNotes'];
+ const simple=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdNight','tabletAdAmount','tabletAdPayment','tabletAdPaymentDate','tabletAdNotes'];
  simple.forEach(id=>{if($(id)&&data[id]!=null)$(id).value=data[id];});
  if(data.tabletAdTariffGroup!=null&&$('tabletAdTariffGroup')){$('tabletAdTariffGroup').value=data.tabletAdTariffGroup;tabletUpdateImmediateTariff();}
  if(data.tabletAdTariffDest!=null&&$('tabletAdTariffDest'))$('tabletAdTariffDest').value=data.tabletAdTariffDest;
@@ -10286,10 +10294,17 @@ async function tabletCreateImmediate(){
   const kmUpdate={};
   if(Number.isFinite(kmStart))kmUpdate.km_partenza=kmStart;
   if(Number.isFinite(kmClose))kmUpdate.km_arrivo=kmClose;
-  if(Object.keys(kmUpdate).length){
-   const ku=await sb.from('fogli_viaggio').update(kmUpdate).eq('id',created.foglio_id).eq('mezzo',tabletMezzo).eq('stato','APERTO');
-   if(ku.error)throw ku.error;
-  }
+  const immediateInternal=$('tabletAdType').value==='Servizio interno';
+  const payMode=immediateInternal?null:($('tabletAdPayment')?.value||null);
+  const payDate=immediateInternal?null:($('tabletAdPaymentDate')?.value||null);
+  kmUpdate.modalita_pagamento=payMode;
+  kmUpdate.data_pagamento=payDate;
+  const ku=await sb.from('fogli_viaggio').update(kmUpdate).eq('id',created.foglio_id).eq('mezzo',tabletMezzo).eq('stato','APERTO');
+  if(ku.error)throw ku.error;
+  const su=await sb.from('servizi_giornalieri').update({
+   modalita_pagamento_prevista:payMode
+  }).eq('id',created.servizio_id);
+  if(su.error)throw su.error;
   msg('tabletAdMsg','Servizio creato. Foglio Viaggio '+created.numero_foglio+' collegato.','ok');
   tabletClearImmediateDraft();
   $('tabletImmediateForm').reset();
@@ -10328,6 +10343,11 @@ $('tabletAdTariffGroup').onchange=tabletUpdateImmediateTariff;
 $('tabletAdTariffDest').onchange=tabletUpdateImmediateQuote;
 $('tabletAdNight').onchange=tabletUpdateImmediateQuote;
 $('tabletAdAmount').oninput=tabletUpdateImmediateQuote;
+if($('tabletAdPayment'))$('tabletAdPayment').onchange=()=>{
+ const mode=$('tabletAdPayment').value;
+ if(mode&&!$('tabletAdPaymentDate').value&&['CONTANTI','POS'].includes(mode))$('tabletAdPaymentDate').value=todaySafe();
+ if(!mode)$('tabletAdPaymentDate').value='';
+};
 $('tabletAdDraftSave').onclick=tabletSaveImmediateDraft;
 $('tabletImmediateForm').onsubmit=async e=>{e.preventDefault();await tabletCreateImmediate()};
 
