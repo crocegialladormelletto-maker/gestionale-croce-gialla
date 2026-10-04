@@ -11,7 +11,7 @@
 :root{--navy:#0b2d57;--yellow:#ffd21c;--orange:#0077ff;--bg:#f4f7fb;--green:#198754;--red:#c62828;--gray:#6c757d}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#172033}
 header{background:linear-gradient(135deg,var(--navy),#174a84);color:white;padding:18px 16px;border-bottom:6px solid var(--yellow)}
-.wrap{max-width:1180px;margin:auto}.brand{display:flex;align-items:center;gap:12px}.mark{width:54px;height:54px;border-radius:50%;background:var(--yellow);color:var(--navy);display:grid;place-items:center;font-weight:900;font-size:24px}
+.wrap{max-width:1180px;margin:auto}.brand{display:flex;align-items:center;gap:12px}.mark{width:64px;height:64px;object-fit:contain;display:block;flex:none;background:transparent;border:0;border-radius:0}
 h1{margin:0;font-size:24px}.sub{opacity:.9;margin-top:4px;font-size:14px}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tabs button,.top-actions button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}.tabs button{background:white;color:var(--navy);box-shadow:0 1px 4px #0002}.tabs button.active{background:var(--yellow)}
 main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 3px 14px #00000014;margin:14px 0;overflow:hidden}.section-title{background:var(--orange);color:white;padding:10px 14px;font-weight:800;text-transform:uppercase}
@@ -29,7 +29,7 @@ main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 
 </style>
 </head>
 <body>
-<header><div class="wrap"><div class="brand"><div class="mark">CG</div><div><h1>Checklist Ambulanza</h1><div class="sub">Croce Gialla Emergenza ODV · Dormelletto · Checklist completa</div></div></div></div></header>
+<header><div class="wrap"><div class="brand"><img class="mark" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div><h1>Checklist Ambulanza</h1><div class="sub">Croce Gialla Emergenza ODV · Dormelletto · Checklist completa</div></div></div></div></header>
 <main class="wrap">
 <div class="tabs">
 <button id="tabNuova" class="active" onclick="showView('new')">Nuova checklist</button>
