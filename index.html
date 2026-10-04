@@ -2134,6 +2134,24 @@ Causale: numero preventivo</textarea>
 
    <div class="grid2" style="margin-top:10px">
     <div class="box">
+     <h3 style="margin-top:0">Cliente</h3>
+     <div class="field"><label>Denominazione / Nome e cognome</label><input id="pnClientName" placeholder="Es. Mario Rossi / RSA / Ente"></div>
+     <div class="grid2">
+      <div class="field"><label>CF / P.IVA</label><input id="pnClientVat"></div>
+      <div class="field"><label>Telefono</label><input id="pnClientPhone"></div>
+      <div class="field"><label>Email</label><input id="pnClientEmail" type="email"></div>
+      <div class="field"><label>Indirizzo</label><input id="pnClientAddress"></div>
+      <div class="field"><label>CAP</label><input id="pnClientCap"></div>
+      <div class="field"><label>Comune</label><input id="pnClientCity"></div>
+      <div class="field"><label>Provincia</label><input id="pnClientProvince"></div>
+     </div>
+     <div class="field"><label>Note</label><textarea id="pnClientNotes" rows="2"></textarea></div>
+     <div class="actions"><button id="pnClientSave" type="button" class="btn yellow">💾 Salva cliente</button></div>
+     <div id="pnClientMsg"></div>
+     <div id="pnClientList" style="margin-top:10px"></div>
+    </div>
+
+    <div class="box">
      <h3 style="margin-top:0">Fornitore</h3>
      <div class="field"><label>Denominazione</label><input id="pnSupplierName" placeholder="Es. Fornitore energia"></div>
      <div class="grid2">
@@ -2199,7 +2217,9 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Importo €</label><input id="pnImporto" type="number" min="0" step="0.01"></div>
     <div class="field"><label>Metodo pagamento</label><select id="pnMetodo"><option>Bonifico</option><option>Bonifico istantaneo</option><option>Contante</option><option>POS</option><option>Altro</option></select></div>
     <div class="field"><label>Conto</label><select id="pnConto"></select></div>
-    <div class="field"><label>Cliente / Fornitore</label><input id="pnSoggetto" maxlength="250"></div>
+    <div class="field"><label>Tipo soggetto</label><select id="pnSubjectType"><option value="">Libero</option><option value="CLIENTE">Cliente</option><option value="FORNITORE">Fornitore</option></select></div>
+    <div class="field"><label>Cliente / Fornitore</label><select id="pnSubjectSelect"><option value="">Seleziona...</option></select></div>
+    <div class="field"><label>Nome soggetto</label><input id="pnSoggetto" maxlength="250" placeholder="Compilabile anche manualmente"></div>
     <div class="field"><label>N° documento</label><input id="pnDocumento" maxlength="120"></div>
    </div>
    <div class="field"><label>Note</label><textarea id="pnNote" rows="3"></textarea></div>
@@ -8693,7 +8713,7 @@ $('tsave').onclick=async()=>{
  await loadTariffsView();msg('tmsg','Tariffa aggiornata nella scheda «'+tariff.nome+'».','ok');
 };
 
-let pnCats=[],pnConti=[],pnMov=[],pnClosures=[],pnSuppliers=[],pnRecurring=[],pnEditingId=null,pnAttachmentMovementId=null;
+let pnCats=[],pnConti=[],pnMov=[],pnClosures=[],pnClients=[],pnSuppliers=[],pnRecurring=[],pnEditingId=null,pnAttachmentMovementId=null;
 const PN_START_DATE='2027-01-01';
 const PN_START_MONTH='2027-01';
 const PN_DOC_BUCKET='contabilita-documenti';
@@ -8737,7 +8757,7 @@ function pnReset(){
  $('pnData').value=pnTodayOrStart();
  $('pnTipo').value='ENTRATA';
  pnFillCategorySelect();
- $('pnCausale').value='';$('pnImporto').value='';$('pnMetodo').value='Bonifico';$('pnSoggetto').value='';$('pnDocumento').value='';$('pnNote').value='';
+ $('pnCausale').value='';$('pnImporto').value='';$('pnMetodo').value='Bonifico';$('pnSubjectType').value='';pnFillSubjects();$('pnSubjectSelect').value='';$('pnSoggetto').value='';$('pnDocumento').value='';$('pnNote').value='';
  $('pnFormTitle').textContent='➕ Nuovo movimento';
  $('pnSave').textContent='💾 Salva movimento';
  $('pnCancelEdit').classList.add('hidden');
@@ -8792,6 +8812,43 @@ function pnRenderClosure(){
   if(x)pnAttachmentSetLocked(pnMovementClosed(x));
  }
 }
+function pnClientName(id){
+ const x=pnClients.find(r=>String(r.id)===String(id));
+ return x?.denominazione||'—';
+}
+function pnFillSubjects(){
+ if(!$('pnSubjectSelect'))return;
+ const type=$('pnSubjectType')?.value||'';
+ let rows=[];
+ if(type==='CLIENTE')rows=pnClients.filter(x=>x.attivo!==false).map(x=>({id:x.id,name:x.denominazione}));
+ if(type==='FORNITORE')rows=pnSuppliers.filter(x=>x.attivo!==false).map(x=>({id:x.id,name:x.denominazione}));
+ $('pnSubjectSelect').innerHTML='<option value="">Seleziona...</option>'+rows.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');
+}
+function pnSubjectChanged(){
+ const type=$('pnSubjectType').value,id=$('pnSubjectSelect').value;
+ if(!id)return;
+ const row=type==='CLIENTE'?pnClients.find(x=>String(x.id)===String(id)):pnSuppliers.find(x=>String(x.id)===String(id));
+ if(row)$('pnSoggetto').value=row.denominazione||'';
+}
+function pnRenderClients(){
+ $('pnClientList').innerHTML=pnClients.length?pnClients.map(x=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>'+esc(x.denominazione)+'</b><br><span class="muted">'+esc(x.cf_piva||'')+(x.comune?' · '+esc(x.comune):'')+(x.email?' · '+esc(x.email):'')+'</span></div><button type="button" class="btn danger" data-pn-client-delete="'+esc(x.id)+'">Disattiva</button></div></div>').join(''):'<div class="notice">Nessun cliente registrato.</div>';
+ $('pnClientList').querySelectorAll('[data-pn-client-delete]').forEach(b=>b.onclick=()=>pnDeleteClient(b.dataset.pnClientDelete));
+}
+async function pnSaveClient(){
+ if(!$('pnClientName').value.trim())return msg('pnClientMsg','Inserisci la denominazione o il nome del cliente.','warn');
+ const row={denominazione:$('pnClientName').value.trim(),cf_piva:$('pnClientVat').value.trim()||null,email:$('pnClientEmail').value.trim()||null,telefono:$('pnClientPhone').value.trim()||null,indirizzo:$('pnClientAddress').value.trim()||null,cap:$('pnClientCap').value.trim()||null,comune:$('pnClientCity').value.trim()||null,provincia:$('pnClientProvince').value.trim()||null,note:$('pnClientNotes').value.trim()||null};
+ const r=await sb.from('contabilita_clienti').insert(row);
+ if(r.error)return msg('pnClientMsg','Cliente non salvato: '+r.error.message,'err');
+ ['pnClientName','pnClientVat','pnClientEmail','pnClientPhone','pnClientAddress','pnClientCap','pnClientCity','pnClientProvince','pnClientNotes'].forEach(id=>$(id).value='');
+ await loadPrimaNota();msg('pnClientMsg','Cliente salvato.','ok');
+}
+async function pnDeleteClient(id){
+ if(!confirm('Disattivare questo cliente? I movimenti già registrati resteranno invariati.'))return;
+ const r=await sb.from('contabilita_clienti').update({attivo:false,updated_at:new Date().toISOString()}).eq('id',id);
+ if(r.error)return msg('pnClientMsg','Disattivazione non riuscita: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnClientMsg','Cliente disattivato.','ok');
+}
+
 function pnSupplierName(id){
  const x=pnSuppliers.find(r=>String(r.id)===String(id));
  return x?.denominazione||'—';
@@ -9068,23 +9125,25 @@ function pnRender(){
 async function loadPrimaNota(){
  if(prof?.ruolo!=='AMMINISTRATORE'){selectView('dash');return}
  msg('pnMsg','Caricamento Prima Nota...');
- const [a,b,c,d,e,g]=await Promise.all([
+ const [a,b,c,d,e,f,g]=await Promise.all([
   sb.from('contabilita_categorie').select('*').eq('attiva',true).order('ordine',{ascending:true}),
   sb.from('contabilita_conti').select('*').eq('attivo',true).order('codice',{ascending:true}),
   sb.from('contabilita_movimenti').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(3000),
   sb.from('contabilita_chiusure').select('*').order('anno',{ascending:false}).order('mese',{ascending:false}),
+  sb.from('contabilita_clienti').select('*').eq('attivo',true).order('denominazione',{ascending:true}),
   sb.from('contabilita_fornitori').select('*').eq('attivo',true).order('denominazione',{ascending:true}),
   sb.from('contabilita_spese_ricorrenti').select('*').eq('attiva',true).order('descrizione',{ascending:true})
  ]);
- const err=a.error||b.error||c.error||d.error||e.error||g.error;
+ const err=a.error||b.error||c.error||d.error||e.error||f.error||g.error;
  if(err)return msg('pnMsg','Impossibile caricare la Prima Nota: '+err.message,'err');
  pnCats=(a.data||[]).slice().sort((x,y)=>(Number(x.ordine||0)-Number(y.ordine||0))||String(x.nome).localeCompare(String(y.nome),'it'));
  pnConti=b.data||[];
  pnMov=(c.data||[]).filter(x=>String(x.data||'')>=PN_START_DATE);
  pnClosures=d.data||[];
- pnSuppliers=e.data||[];
+ pnClients=e.data||[];
+ pnSuppliers=f.data||[];
  pnRecurring=g.data||[];
- pnFillCategorySelect();pnFillFilters();pnFillSupplierRecurring();pnRenderSuppliers();pnRenderRecurring();
+ pnFillCategorySelect();pnFillFilters();pnFillSupplierRecurring();pnFillSubjects();pnRenderClients();pnRenderSuppliers();pnRenderRecurring();
  $('pnConto').innerHTML=pnConti.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
  if(!$('pnMonth').value||$('pnMonth').value<PN_START_MONTH)$('pnMonth').value=(today().slice(0,7)<PN_START_MONTH?PN_START_MONTH:today().slice(0,7));
  if(!$('pnData').value||$('pnData').value<PN_START_DATE)pnReset();
@@ -9100,6 +9159,7 @@ function pnEdit(id){
  pnEditingId=x.id;
  $('pnData').value=x.data||PN_START_DATE;$('pnTipo').value=x.tipo||'ENTRATA';pnFillCategorySelect();$('pnCategoria').value=x.categoria_codice||'';
  $('pnCausale').value=x.causale||'';$('pnImporto').value=x.importo??'';$('pnMetodo').value=x.metodo_pagamento||'Bonifico';$('pnConto').value=x.conto_codice||'';
+ $('pnSubjectType').value=x.cliente_id?'CLIENTE':(x.fornitore_id?'FORNITORE':'');pnFillSubjects();$('pnSubjectSelect').value=x.cliente_id||x.fornitore_id||'';
  $('pnSoggetto').value=x.soggetto||'';$('pnDocumento').value=x.numero_documento||'';$('pnNote').value=x.note||'';
  $('pnFormTitle').textContent='✏️ Modifica '+(x.numero_movimento||'movimento');
  $('pnSave').textContent='💾 Salva modifiche';$('pnCancelEdit').classList.remove('hidden');
@@ -9113,7 +9173,8 @@ async function pnSave(){
  if(pnIsMonthClosed(pnMonthKeyFromDate($('pnData').value)))return msg('pnMsg','Il mese selezionato è chiuso. Riaprilo prima di registrare o modificare movimenti.','warn');
  const amount=Number($('pnImporto').value);
  if(!$('pnData').value||!$('pnCausale').value.trim()||!(amount>0))return msg('pnMsg','Compila data, causale e importo.','warn');
- const row={data:$('pnData').value,tipo:$('pnTipo').value,categoria_codice:$('pnCategoria').value,causale:$('pnCausale').value.trim(),importo:amount,metodo_pagamento:$('pnMetodo').value,conto_codice:$('pnConto').value,soggetto:$('pnSoggetto').value.trim()||null,numero_documento:$('pnDocumento').value.trim()||null,note:$('pnNote').value.trim()||null,fonte:'MANUALE',updated_at:new Date().toISOString()};
+ const subjectType=$('pnSubjectType').value,subjectId=$('pnSubjectSelect').value||null;
+ const row={data:$('pnData').value,tipo:$('pnTipo').value,categoria_codice:$('pnCategoria').value,causale:$('pnCausale').value.trim(),importo:amount,metodo_pagamento:$('pnMetodo').value,conto_codice:$('pnConto').value,soggetto:$('pnSoggetto').value.trim()||null,cliente_id:subjectType==='CLIENTE'?subjectId:null,fornitore_id:subjectType==='FORNITORE'?subjectId:null,numero_documento:$('pnDocumento').value.trim()||null,note:$('pnNote').value.trim()||null,fonte:'MANUALE',updated_at:new Date().toISOString()};
  $('pnSave').disabled=true;
  let r;
  if(pnEditingId){
@@ -9274,8 +9335,11 @@ if($('pnPrintMonth'))$('pnPrintMonth').onclick=pnPrintMonth;
 if($('pnAttachmentClose'))$('pnAttachmentClose').onclick=pnCloseAttachments;
 if($('pnAttachmentUpload'))$('pnAttachmentUpload').onclick=pnUploadAttachment;
 if($('pnSaveInitialBalances'))$('pnSaveInitialBalances').onclick=pnSaveInitialBalances;
+if($('pnClientSave'))$('pnClientSave').onclick=pnSaveClient;
 if($('pnSupplierSave'))$('pnSupplierSave').onclick=pnSaveSupplier;
 if($('pnRecurringSave'))$('pnRecurringSave').onclick=pnSaveRecurring;
+if($('pnSubjectType'))$('pnSubjectType').onchange=()=>{pnFillSubjects();$('pnSubjectSelect').value='';};
+if($('pnSubjectSelect'))$('pnSubjectSelect').onchange=pnSubjectChanged;
 if($('pnReportYear'))$('pnReportYear').onchange=pnRenderAnnualReport;
 if($('pnPrintYear'))$('pnPrintYear').onclick=pnPrintYear;
 if($('pnRunStartupCheck'))$('pnRunStartupCheck').onclick=pnRunStartupCheck;
