@@ -5163,7 +5163,12 @@ async function loadOperationalDashboard(){
  if(hoursData?.error)errors.push('Ore volontari: '+(hoursData.error.message||String(hoursData.error)));
  const emgRows=emg.data||[],dimRows=dim.data||[],assRows=ass.data||[],services=sv.data||[],fogli=fg.data||[],expRows=exp.data||[],mezzi=mz.data||[];
  const noteIds=new Set((noteRows.data||[]).map(x=>x.foglio_viaggio_id).filter(Boolean));
- const debitQueue=(noteSheets.data||[]).filter(x=>!noteIds.has(x.id));
+ const debitQueue=(noteSheets.data||[]).filter(x=>{
+  if(noteIds.has(x.id))return false;
+  const t=String(x.tipo_servizio||'').trim().toUpperCase();
+  if(t==='SERVIZIO INTERNO'||t==='INTERNO'||t.includes('SERVIZIO INTERNO'))return false;
+  return true;
+ });
 
  const assGroups=dashOpsGroup(assRows);
  const crewGroups=dashOpsGroup(emgRows).length+dashOpsGroup(dimRows).length+assGroups.length;
