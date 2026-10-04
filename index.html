@@ -3397,27 +3397,37 @@ async function refreshDashboardEmployeeCommitments(){
  if(!box||!items||!count)return;
  if(!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo)){box.classList.add('hidden');return}
  const day=todaySafe();
- const r=await sb.from('impegni_dipendenti').select('id,badge,data,ora_inizio,ora_fine,motivo,note').eq('data',day).order('ora_inizio',{ascending:true});
- if(r.error){
+ const [legacy,personal]=await Promise.all([
+  sb.from('impegni_dipendenti').select('id,badge,data,ora_inizio,ora_fine,motivo,note').eq('data',day).order('ora_inizio',{ascending:true}),
+  sb.from('scadenze_personale')
+   .select('id,badge_personale,nominativo,tipo_scadenza,data_scadenza,ora_appuntamento,note,stato')
+   .eq('data_scadenza',day).eq('stato','ATTIVA').eq('tipo_scadenza','Visita medica personale')
+   .order('ora_appuntamento',{ascending:true})
+ ]);
+ if(legacy.error||personal.error){
+  const err=legacy.error||personal.error;
   box.classList.remove('hidden');count.textContent='!';
-  items.innerHTML='<div class="notice warn">Impossibile caricare gli impegni dipendenti: '+esc(r.error.message)+'</div>';
+  items.innerHTML='<div class="notice warn">Impossibile caricare gli impegni dipendenti: '+esc(err.message)+'</div>';
   return;
  }
- const rows=r.data||[];
+ const rows=[
+  ...(legacy.data||[]).map(x=>({id:x.id,badge:x.badge,nome:null,inizio:x.ora_inizio,fine:x.ora_fine,motivo:x.motivo||'IMPEGNO',note:x.note||null})),
+  ...(personal.data||[]).map(x=>({id:x.id,badge:x.badge_personale,nome:x.nominativo,inizio:x.ora_appuntamento,fine:null,motivo:x.tipo_scadenza||'Visita medica personale',note:x.note||null}))
+ ].sort((a,b)=>String(a.inizio||'').localeCompare(String(b.inizio||'')));
  count.textContent=String(rows.length);
  box.classList.toggle('hidden',rows.length===0);
- const now=new Date();
- const nowMinutes=now.getHours()*60+now.getMinutes();
+ const now=new Date(),nowMinutes=now.getHours()*60+now.getMinutes();
+ const toMin=v=>{const t=String(v||'').slice(0,5);if(!/^\d{2}:\d{2}$/.test(t))return null;const [h,m]=t.split(':').map(Number);return h*60+m};
  items.innerHTML=rows.map(x=>{
   const p=(people||[]).find(v=>String(v.badge)===String(x.badge));
-  const nome=p?.nome_completo||('Badge '+x.badge);
-  const a=String(x.ora_inizio||'').slice(0,5),b=String(x.ora_fine||'').slice(0,5);
-  const toMin=v=>{if(!/^\d{2}:\d{2}$/.test(v))return null;const [h,m]=v.split(':').map(Number);return h*60+m};
+  const nome=x.nome||p?.nome_completo||('Badge '+x.badge);
+  const a=String(x.inizio||'').slice(0,5),b=String(x.fine||'').slice(0,5);
   const ai=toMin(a),bi=toMin(b),inCorso=ai!==null&&bi!==null&&nowMinutes>=ai&&nowMinutes<=bi;
+  const orario=a&&b?a+' – '+b:a?'ore '+a:'Orario non indicato';
   return '<div class="box" style="border-left:5px solid '+(inCorso?'#dc2626':'#f59e0b')+';background:#fff">'+
-   '<div class="actions" style="justify-content:space-between;align-items:flex-start"><div><b>'+esc(nome)+'</b><br><span class="muted">'+esc(dashboardCommitmentTime(x))+'</span></div>'+
+   '<div class="actions" style="justify-content:space-between;align-items:flex-start"><div><b>'+esc(nome)+'</b><br><span class="muted">'+esc(orario)+'</span></div>'+
    '<span class="pill '+(inCorso?'r':'b')+'">'+(inCorso?'NON DISPONIBILE ORA':'PROGRAMMATO')+'</span></div>'+
-   '<div style="margin-top:6px"><b>'+esc(x.motivo||'IMPEGNO')+'</b>'+(x.note?' · '+esc(x.note):'')+'</div></div>';
+   '<div style="margin-top:6px"><b>'+esc(x.motivo)+'</b>'+(x.note?' · '+esc(x.note):'')+'</div></div>';
  }).join('');
 }
 
