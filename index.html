@@ -4301,6 +4301,16 @@ $('fvClose').onclick=async()=>{
  if(!currentFoglioId)return;
  const ok=await saveTravelSheet(true);
  if(!ok)return;
+ const payMode=String(currentFoglio?.modalita_pagamento||$('fvPayMode')?.value||'').toUpperCase();
+ if(String(currentFoglio?.tipo_servizio||'').trim()!=='118'&&['CONTANTI','POS'].includes(payMode)){
+  let receiptCount=0;
+  try{receiptCount=await paymentReceiptCount(currentFoglioId)}
+  catch(e){return msg('fvDetailMsg','Impossibile verificare la ricevuta del pagamento: '+(e.message||String(e)),'err')}
+  if(receiptCount<1){
+   if($('fvReceiptBox'))$('fvReceiptBox').scrollIntoView({behavior:'smooth',block:'center'});
+   return msg('fvReceiptMsg','Per pagamenti in '+payMode+' devi caricare almeno una ricevuta prima di chiudere il Foglio Viaggio.','warn');
+  }
+ }
  if(!confirm('Chiudere definitivamente il Foglio Viaggio? Dopo la chiusura non sarà più modificabile.'))return;
  msg('fvDetailMsg','Chiusura Foglio Viaggio...');
  const closeRpc=prof?.ruolo==='CENTRALINO'?'cge_centralino_chiudi_foglio_viaggio':'cge_chiudi_foglio_viaggio';
