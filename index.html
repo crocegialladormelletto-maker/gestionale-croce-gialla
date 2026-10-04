@@ -2327,6 +2327,7 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Metodo pagamento</label><select id="pnMetodo"><option>Bonifico</option><option>Bonifico istantaneo</option><option>Contante</option><option>POS</option><option>Altro</option></select></div>
     <div class="field"><label>Conto</label><select id="pnConto"></select></div>
     <div class="field"><label>Tipo soggetto</label><select id="pnSubjectType"><option value="">Libero</option><option value="CLIENTE">Cliente</option><option value="FORNITORE">Fornitore</option></select></div>
+    <div class="field"><label>Ricerca cliente / fornitore</label><input id="pnSubjectSearch" placeholder="Digita nome, CF/P.IVA, comune o email"></div>
     <div class="field"><label>Cliente / Fornitore</label><select id="pnSubjectSelect"><option value="">Seleziona...</option></select></div>
     <div class="field"><label>Nome soggetto</label><input id="pnSoggetto" maxlength="250" placeholder="Compilabile anche manualmente"></div>
     <div class="field"><label>N° documento</label><input id="pnDocumento" maxlength="120"></div>
@@ -9246,7 +9247,7 @@ function pnReset(){
  $('pnData').value=pnTodayOrStart();
  $('pnTipo').value='ENTRATA';
  pnFillCategorySelect();
- $('pnCausale').value='';$('pnImporto').value='';$('pnMetodo').value='Bonifico';$('pnSubjectType').value='';pnFillSubjects();$('pnSubjectSelect').value='';$('pnSoggetto').value='';$('pnDocumento').value='';$('pnNote').value='';
+ $('pnCausale').value='';$('pnImporto').value='';$('pnMetodo').value='Bonifico';$('pnSubjectType').value='';$('pnSubjectSearch').value='';pnFillSubjects();$('pnSubjectSelect').value='';$('pnSoggetto').value='';$('pnDocumento').value='';$('pnNote').value='';
  $('pnFormTitle').textContent='➕ Nuovo movimento';
  $('pnSave').textContent='💾 Salva movimento';
  $('pnCancelEdit').classList.add('hidden');
@@ -9308,10 +9309,17 @@ function pnClientName(id){
 function pnFillSubjects(){
  if(!$('pnSubjectSelect'))return;
  const type=$('pnSubjectType')?.value||'';
- let rows=[];
- if(type==='CLIENTE')rows=pnClients.filter(x=>x.attivo!==false).map(x=>({id:x.id,name:x.denominazione}));
- if(type==='FORNITORE')rows=pnSuppliers.filter(x=>x.attivo!==false).map(x=>({id:x.id,name:x.denominazione}));
- $('pnSubjectSelect').innerHTML='<option value="">Seleziona...</option>'+rows.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');
+ const q=String($('pnSubjectSearch')?.value||'').trim().toLowerCase();
+ const current=$('pnSubjectSelect').value||'';
+ let source=[];
+ if(type==='CLIENTE')source=pnClients.filter(x=>x.attivo!==false);
+ if(type==='FORNITORE')source=pnSuppliers.filter(x=>x.attivo!==false);
+ if(q)source=source.filter(x=>[x.denominazione,x.cf_piva,x.comune,x.provincia,x.email,x.telefono].join(' ').toLowerCase().includes(q));
+ const rows=source.map(x=>({id:x.id,name:x.denominazione,cf:x.cf_piva||'',comune:x.comune||''}));
+ $('pnSubjectSelect').innerHTML='<option value="">'+(type?(rows.length?'Seleziona...':'Nessun risultato'):'Seleziona prima Cliente o Fornitore')+'</option>'+rows.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+(x.cf?' · '+esc(x.cf):'')+(x.comune?' · '+esc(x.comune):'')+'</option>').join('');
+ if(rows.some(x=>String(x.id)===String(current)))$('pnSubjectSelect').value=current;
+ $('pnSubjectSearch').disabled=!type;
+ $('pnSubjectSelect').disabled=!type;
 }
 function pnSubjectChanged(){
  const type=$('pnSubjectType').value,id=$('pnSubjectSelect').value;
@@ -9716,7 +9724,7 @@ function pnEdit(id){
  pnEditingId=x.id;
  $('pnData').value=x.data||PN_START_DATE;$('pnTipo').value=x.tipo||'ENTRATA';pnFillCategorySelect();$('pnCategoria').value=x.categoria_codice||'';
  $('pnCausale').value=x.causale||'';$('pnImporto').value=x.importo??'';$('pnMetodo').value=x.metodo_pagamento||'Bonifico';$('pnConto').value=x.conto_codice||'';
- $('pnSubjectType').value=x.cliente_id?'CLIENTE':(x.fornitore_id?'FORNITORE':'');pnFillSubjects();$('pnSubjectSelect').value=x.cliente_id||x.fornitore_id||'';
+ $('pnSubjectType').value=x.cliente_id?'CLIENTE':(x.fornitore_id?'FORNITORE':'');$('pnSubjectSearch').value='';pnFillSubjects();$('pnSubjectSelect').value=x.cliente_id||x.fornitore_id||'';
  $('pnSoggetto').value=x.soggetto||'';$('pnDocumento').value=x.numero_documento||'';$('pnNote').value=x.note||'';
  $('pnFormTitle').textContent='✏️ Modifica '+(x.numero_movimento||'movimento');
  $('pnSave').textContent='💾 Salva modifiche';$('pnCancelEdit').classList.remove('hidden');
@@ -9901,7 +9909,8 @@ if($('pnSupplierCancelEdit'))$('pnSupplierCancelEdit').onclick=pnResetSupplierFo
 if($('pnSupplierSearch'))$('pnSupplierSearch').oninput=pnRenderSuppliers;
 if($('pnSupplierStatus'))$('pnSupplierStatus').onchange=pnRenderSuppliers;
 if($('pnRecurringSave'))$('pnRecurringSave').onclick=pnSaveRecurring;
-if($('pnSubjectType'))$('pnSubjectType').onchange=()=>{pnFillSubjects();$('pnSubjectSelect').value='';};
+if($('pnSubjectType'))$('pnSubjectType').onchange=()=>{$('pnSubjectSearch').value='';pnFillSubjects();$('pnSubjectSelect').value='';};
+if($('pnSubjectSearch'))$('pnSubjectSearch').oninput=()=>{pnFillSubjects();};
 if($('pnSubjectSelect'))$('pnSubjectSelect').onchange=pnSubjectChanged;
 if($('pnReportYear'))$('pnReportYear').onchange=pnRenderAnnualReport;
 if($('pnPrintYear'))$('pnPrintYear').onclick=pnPrintYear;
