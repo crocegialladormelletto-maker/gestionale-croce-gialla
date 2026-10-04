@@ -1893,7 +1893,7 @@
    <input id="pexId" type="hidden">
    <div class="grid4" style="margin-top:10px">
     <div class="field"><label>Dipendente / volontario</label><select id="pexPerson"></select></div>
-    <div class="field"><label>Tipo scadenza</label><select id="pexType"><option>Visita medica del lavoro</option><option>Corso sicurezza</option><option>Patente di guida</option><option>Abilitazione sanitaria</option><option>Formazione / aggiornamento</option><option>Documento</option><option>Altro</option></select></div>
+    <div class="field"><label>Tipo scadenza</label><select id="pexType"><option>Visita medica del lavoro</option><option>Visita medica personale</option><option>Corso sicurezza</option><option>Patente di guida</option><option>Abilitazione sanitaria</option><option>Formazione / aggiornamento</option><option>Documento</option><option>Altro</option></select></div>
     <div class="field"><label>Data scadenza</label><input id="pexDate" type="date"></div>
     <div class="field"><label>Ora appuntamento</label><input id="pexTime" type="time"></div>
     <div class="field"><label>Preavviso (giorni)</label><input id="pexDays" type="number" min="0" max="365" step="1" value="30"></div>
@@ -3310,12 +3310,16 @@ $('duplicateServiceForm').onsubmit=async e=>{
  duplicateSourceService=null;
 };
 
+function isPersonalPersonnelItem(x){
+ return ['VISITA MEDICA PERSONALE','IMPEGNO PERSONALE','PERMESSO PERSONALE'].includes(String(x?.tipo_scadenza||'').trim().toUpperCase());
+}
 function personnelExpiryDays(date){
  if(!date)return null;
  const a=new Date(todaySafe()+'T12:00:00'),b=new Date(date+'T12:00:00');
  return Math.round((b-a)/86400000);
 }
 function personnelExpiryClass(x){
+ if(isPersonalPersonnelItem(x))return 'expiry-ok';
  const d=personnelExpiryDays(x.data_scadenza),pre=Number(x.giorni_preavviso??30);
  if(d===null)return '';
  if(d<0)return 'expiry-expired expiry-critical';
@@ -3324,6 +3328,7 @@ function personnelExpiryClass(x){
  return 'expiry-ok';
 }
 function personnelExpiryLabel(x){
+ if(isPersonalPersonnelItem(x))return 'IMPEGNO';
  const d=personnelExpiryDays(x.data_scadenza);
  if(d===null)return '—';
  if(d<0)return 'SCADUTA DA '+Math.abs(d)+' GG';
@@ -3332,6 +3337,7 @@ function personnelExpiryLabel(x){
  return d+' GIORNI';
 }
 function personnelExpiryStatus(x){
+ if(isPersonalPersonnelItem(x))return 'PROGRAMMATO';
  const d=personnelExpiryDays(x.data_scadenza),pre=Number(x.giorni_preavviso??30);
  if(x.stato!=='ATTIVA')return x.stato;
  if(d<0)return 'SCADUTA';
@@ -3349,7 +3355,7 @@ function fillPersonnelExpiryPeople(){
  $('pexPerson').innerHTML='<option value="">Seleziona nominativo</option>'+rows.map(x=>'<option value="'+esc(x.badge)+'">'+esc(x.nome_completo+' · '+x.badge)+'</option>').join('');
 }
 function updatePersonnelExpiryNav(){
- const active=personnelExpiryRows.filter(x=>x.stato==='ATTIVA');
+ const active=personnelExpiryRows.filter(x=>x.stato==='ATTIVA'&&!isPersonalPersonnelItem(x));
  const alerts=active.filter(x=>{const d=personnelExpiryDays(x.data_scadenza);return d!==null&&d<=Number(x.giorni_preavviso??30)}).length;
  const urgent=active.filter(x=>{const d=personnelExpiryDays(x.data_scadenza);return d!==null&&d<=7}).length;
  const nav=document.querySelector('.nav[data-v="personnelExpiries"]'),badge=$('personnelExpiryNavCount');
@@ -3359,7 +3365,7 @@ function updatePersonnelExpiryNav(){
 function renderDashboardPersonnelExpiryAlert(){
  const box=$('dashPersonnelExpiryAlert'),countEl=$('dashPersonnelExpiryCount'),itemsEl=$('dashPersonnelExpiryItems');
  if(!box||!countEl||!itemsEl)return;
- const active=personnelExpiryRows.filter(x=>x.stato==='ATTIVA');
+ const active=personnelExpiryRows.filter(x=>x.stato==='ATTIVA'&&!isPersonalPersonnelItem(x));
  const alerts=active.filter(x=>{const d=personnelExpiryDays(x.data_scadenza);return d!==null&&d<=Number(x.giorni_preavviso??30)}).sort((a,b)=>String(a.data_scadenza).localeCompare(String(b.data_scadenza)));
  box.classList.toggle('hidden',alerts.length===0);
  countEl.textContent=String(alerts.length);
