@@ -1474,6 +1474,7 @@
 
    <div class="actions">
     <button id="fvSave" class="btn secondary" type="submit">Salva Foglio Viaggio</button>
+    <button id="fvSaveKmClosed" class="btn yellow hidden" type="button">💾 Salva KM</button>
     <button id="fvClose" class="btn yellow" type="button">✓ Chiudi Foglio Viaggio</button>
     <button id="fvPrint" class="btn blue" type="button" onclick="return cgePrintTravelSheetClick(event)">🖨 Stampa / Salva PDF</button>
     <button id="fvDelete" class="btn danger hidden" type="button" data-admin-only="true">🗑 Elimina Foglio Viaggio</button>
@@ -4402,15 +4403,21 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvdService').dataset.serviceId=f.servizio_giornaliero_id||'';
 
  const closed=f.stato==='CHIUSO';
+ const adminClosed118=closed&&is118&&prof?.ruolo==='AMMINISTRATORE';
  document.querySelectorAll('#fvForm input:not([disabled]),#fvForm select,#fvForm textarea').forEach(x=>x.disabled=closed);
+ if(adminClosed118){
+  $('fvKmStart').disabled=false;
+  $('fvKmEnd').disabled=false;
+ }
  if($('fvReceiptFile'))$('fvReceiptFile').disabled=closed;
  if($('fvReceiptUpload'))$('fvReceiptUpload').classList.toggle('hidden',closed);
  $('fvSave').classList.toggle('hidden',closed);
+ $('fvSaveKmClosed').classList.toggle('hidden',!adminClosed118);
  $('fvClose').classList.toggle('hidden',closed);
  $('fvDelete').classList.toggle('hidden',closed||prof?.ruolo!=='AMMINISTRATORE'||!!f.pdf_path);
  fvPreview();
  if(window.ndRefreshForFoglio)await window.ndRefreshForFoglio(f);
- msg('fvDetailMsg',closed?'Foglio Viaggio chiuso: documento non più modificabile.':'',closed?'ok':'');
+ msg('fvDetailMsg',adminClosed118?'Foglio 118 chiuso: da Amministrazione puoi correggere solo i KM di partenza e arrivo.':(closed?'Foglio Viaggio chiuso: documento non più modificabile.':''),closed?'ok':'');
 }
 
 $('fvdBack').onclick=()=>view('travelSheets');
@@ -4457,6 +4464,21 @@ async function saveTravelSheet(silent=false){
  await loadTravelSheetDetail();
  return true;
 }
+async function saveClosed118Km(){
+ if(prof?.ruolo!=='AMMINISTRATORE'||!currentFoglioId||String(currentFoglio?.tipo_servizio||'').trim()!=='118'||currentFoglio?.stato!=='CHIUSO')return;
+ const kmStart=$('fvKmStart').value===''?null:Number($('fvKmStart').value);
+ const kmEnd=$('fvKmEnd').value===''?null:Number($('fvKmEnd').value);
+ if(kmStart===null||kmEnd===null)return msg('fvDetailMsg','Inserisci sia KM partenza sia KM arrivo.','warn');
+ if(kmEnd<kmStart)return msg('fvDetailMsg','I KM di arrivo non possono essere inferiori ai KM di partenza.','warn');
+ if(!confirm('Confermi la modifica dei KM del Foglio Viaggio 118 '+(currentFoglio.numero_foglio||'')+'?'))return;
+ msg('fvDetailMsg','Aggiornamento KM in corso...');
+ const r=await sb.from('fogli_viaggio').update({km_partenza:kmStart,km_arrivo:kmEnd}).eq('id',currentFoglioId).eq('tipo_servizio','118').eq('stato','CHIUSO').select('id,km_partenza,km_arrivo,km_percorsi').maybeSingle();
+ if(r.error)return msg('fvDetailMsg','Modifica KM non riuscita: '+r.error.message,'err');
+ if(!r.data)return msg('fvDetailMsg','Foglio 118 non trovato o non più modificabile.','warn');
+ msg('fvDetailMsg','KM aggiornati correttamente: '+r.data.km_partenza+' → '+r.data.km_arrivo+' ('+r.data.km_percorsi+' km).','ok');
+ await loadTravelSheetDetail(currentFoglioId);
+}
+if($('fvSaveKmClosed'))$('fvSaveKmClosed').onclick=saveClosed118Km;
 $('fvForm').onsubmit=async e=>{e.preventDefault();await saveTravelSheet(false)};
 
 async function cgePrintTravelSheetClick(event){
