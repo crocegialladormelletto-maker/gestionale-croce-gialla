@@ -765,6 +765,7 @@
 <button class="nav" type="button" data-href="checklist-ambulanze/">✅ Archivio checklist ambulanze</button>
 <button class="nav" data-v="tariffs">€ Tariffari</button>
 <button class="nav" data-v="accounting" data-admin-only="true">🧾 Contabilità</button>
+<button class="nav" data-v="primaNota" data-admin-only="true">📒 Prima Nota</button>
 <button class="nav" data-v="activityLog" data-admin-only="true">📋 Registro attività</button>
 <button class="nav" data-v="backup" data-admin-only="true">🔐 Backup & Export</button>
 </aside><main>
@@ -2004,6 +2005,56 @@ Causale: numero preventivo</textarea>
 <div class="section" data-admin-only="true"><h3>Modifica una tariffa della scheda selezionata</h3><div class="grid4"><div class="field"><label>Tariffario selezionato</label><select id="ttar"></select></div><div class="field"><label>Destinazione</label><input id="tdest"></div><div class="field"><label>Tipo mezzo</label><select id="ttype" disabled><option>AMBULANZA</option><option>TRASPORTO SEMPLICE</option></select></div><div class="field"><label>Importo €</label><input id="tday" type="number" min="0" step="1"></div><div class="field"><label>Notturno € (solo se previsto)</label><input id="tnight" type="number" min="0" step="1"></div><div class="field"><label>Provincia</label><input id="tprov"></div></div><div class="toolbar"><button id="tsave" class="btn yellow">Aggiungi / aggiorna tariffa</button></div><div id="tmsg"></div></div>
 </div></section>
 
+<section id="primaNota" class="surface hidden" data-admin-only="true">
+ <div class="hero"><h2>📒 Prima Nota</h2><p>Gestione amministrativa di entrate, uscite, cassa e banca. Accesso riservato all'Amministrazione.</p></div>
+ <div class="pad">
+  <div id="pnMsg"></div>
+  <div class="stats">
+   <div class="stat"><small>ENTRATE MESE</small><b id="pnEntrate" style="color:#12805a">€ 0,00</b></div>
+   <div class="stat"><small>USCITE MESE</small><b id="pnUscite" style="color:#b83b43">€ 0,00</b></div>
+   <div class="stat"><small>SALDO MESE</small><b id="pnSaldo">€ 0,00</b></div>
+   <div class="stat"><small>MOVIMENTI</small><b id="pnMovimentiCount">0</b></div>
+  </div>
+  <div class="stats" style="margin-top:9px">
+   <div class="stat"><small>SALDO CASSA</small><b id="pnCassa">€ 0,00</b></div>
+   <div class="stat"><small>SALDO BANCA</small><b id="pnBanca">€ 0,00</b></div>
+   <div class="stat"><small>TOTALE DISPONIBILITÀ</small><b id="pnTotale">€ 0,00</b></div>
+   <div class="stat"><small>PERIODO</small><b id="pnPeriodo" style="font-size:16px">—</b></div>
+  </div>
+
+  <div class="section">
+   <div class="actions" style="justify-content:space-between;align-items:center">
+    <h3 style="margin:0">➕ Nuovo movimento</h3>
+    <button id="pnRefresh" type="button" class="btn secondary">↻ Aggiorna</button>
+   </div>
+   <div class="grid3" style="margin-top:10px">
+    <div class="field"><label>Data</label><input id="pnData" type="date"></div>
+    <div class="field"><label>Tipo</label><select id="pnTipo"><option value="ENTRATA">Entrata</option><option value="USCITA">Uscita</option></select></div>
+    <div class="field"><label>Categoria</label><select id="pnCategoria"></select></div>
+    <div class="field"><label>Causale</label><input id="pnCausale" maxlength="250" placeholder="Descrizione del movimento"></div>
+    <div class="field"><label>Importo €</label><input id="pnImporto" type="number" min="0" step="0.01"></div>
+    <div class="field"><label>Metodo pagamento</label><select id="pnMetodo"><option>Bonifico</option><option>Bonifico istantaneo</option><option>Contante</option><option>POS</option><option>Altro</option></select></div>
+    <div class="field"><label>Conto</label><select id="pnConto"></select></div>
+    <div class="field"><label>Cliente / Fornitore</label><input id="pnSoggetto" maxlength="250"></div>
+    <div class="field"><label>N° documento</label><input id="pnDocumento" maxlength="120"></div>
+   </div>
+   <div class="field"><label>Note</label><textarea id="pnNote" rows="3"></textarea></div>
+   <div class="actions">
+    <button id="pnSave" type="button" class="btn yellow">💾 Salva movimento</button>
+    <button id="pnClear" type="button" class="btn secondary">Pulisci</button>
+   </div>
+  </div>
+
+  <div class="section">
+   <div class="actions" style="justify-content:space-between;align-items:end">
+    <div><h3 style="margin:0">Movimenti registrati</h3><div class="muted">Ultimi movimenti della Prima Nota.</div></div>
+    <div class="field" style="margin:0;min-width:190px"><label>Mese</label><input id="pnMonth" type="month"></div>
+   </div>
+   <div class="table" style="margin-top:10px"><table><thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Causale</th><th>Soggetto</th><th>Conto</th><th class="num">Importo</th><th>Azioni</th></tr></thead><tbody id="pnBody"></tbody></table></div>
+  </div>
+ </div>
+</section>
+
 <section id="accounting" class="surface hidden"><div class="hero"><h2>Contabilità servizi</h2></div><div class="pad">
 <div class="stats"><div class="stat"><small>TOTALE DA INCASSARE</small><b id="accDue">€ 0</b></div><div class="stat"><small>PAGATI</small><b id="accPaid">0</b></div><div class="stat"><small>PARZIALI</small><b id="accPart">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="accCount">0</b></div></div>
 <div class="section"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="1"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
@@ -2995,7 +3046,7 @@ if($('dashPersonnelExpiryOpen'))$('dashPersonnelExpiryOpen').onclick=()=>view('p
 async function view(v,options={}){
  const current=[...document.querySelectorAll('main>section')].find(x=>!x.classList.contains('hidden'))?.id||'';
  if(current==='people'&&v!=='people')resetPerson();
- if(prof?.ruolo==='CENTRALINO'&&['people','statistics','accounting','accessi','activityLog','backup'].includes(v))v='dash';
+ if(prof?.ruolo==='CENTRALINO'&&['people','statistics','accounting','primaNota','accessi','activityLog','backup'].includes(v))v='dash';
  if(v==='people'&&current!=='people')resetPerson();
  if(v==='new'){
   resetNewServiceForm();
@@ -3003,7 +3054,7 @@ async function view(v,options={}){
   if(options.patient)usePatientForService(options.patient);
  }
  selectView(v);
- const loader=({dash:async()=>{await refreshDashboardPersonnelExpiryAlert();return dashboard();},statistics:loadStatistics,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,travelSheets118:loadTravelSheets118,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,personnelExpiries:loadPersonnelExpiries,tariffs:loadTariffsView,accounting:loadAccounting,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
+ const loader=({dash:async()=>{await refreshDashboardPersonnelExpiryAlert();return dashboard();},statistics:loadStatistics,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,travelSheets118:loadTravelSheets118,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,personnelExpiries:loadPersonnelExpiries,tariffs:loadTariffsView,accounting:loadAccounting,primaNota:loadPrimaNota,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
  const result=await loader();
  selectView(v);
  return result;
@@ -8402,6 +8453,75 @@ $('tsave').onclick=async()=>{
  if(r.error)return msg('tmsg',r.error.message,'err');
  await loadTariffsView();msg('tmsg','Tariffa aggiornata nella scheda «'+tariff.nome+'».','ok');
 };
+
+let pnCats=[],pnConti=[],pnMov=[];
+function pnCatName(code){const x=pnCats.find(r=>r.codice===code);return x?.nome||code||'—'}
+function pnContoName(code){const x=pnConti.find(r=>r.codice===code);return x?.nome||code||'—'}
+function pnReset(){
+ if(!$('pnData'))return;
+ $('pnData').value=today();
+ $('pnTipo').value='ENTRATA';
+ $('pnCausale').value='';$('pnImporto').value='';$('pnSoggetto').value='';$('pnDocumento').value='';$('pnNote').value='';
+}
+function pnRender(){
+ const ym=$('pnMonth').value||today().slice(0,7);
+ $('pnMonth').value=ym;
+ const rows=pnMov.filter(x=>String(x.data||'').startsWith(ym));
+ const en=rows.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo||0),0);
+ const us=rows.filter(x=>x.tipo==='USCITA').reduce((s,x)=>s+Number(x.importo||0),0);
+ $('pnEntrate').textContent=euro(en);$('pnUscite').textContent=euro(us);$('pnSaldo').textContent=euro(en-us);
+ $('pnMovimentiCount').textContent=String(rows.length);
+ try{$('pnPeriodo').textContent=new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric'}).format(new Date(ym+'-01T12:00:00')).replace(/^./,x=>x.toUpperCase())}catch(_){$('pnPeriodo').textContent=ym}
+ let ca=0,ba=0;
+ for(const conto of pnConti){
+  const saldo=Number(conto.saldo_iniziale||0)+pnMov.filter(x=>x.conto_codice===conto.codice).reduce((s,x)=>s+(x.tipo==='ENTRATA'?Number(x.importo||0):-Number(x.importo||0)),0);
+  if(String(conto.codice).toUpperCase()==='CASSA')ca=saldo;
+  if(String(conto.codice).toUpperCase()==='BANCA')ba=saldo;
+ }
+ $('pnCassa').textContent=euro(ca);$('pnBanca').textContent=euro(ba);$('pnTotale').textContent=euro(ca+ba);
+ $('pnBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.data||'')+'</td><td><span class="pill '+(x.tipo==='ENTRATA'?'g':'r')+'">'+esc(x.tipo||'')+'</span></td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.causale||'')+'</td><td>'+esc(x.soggetto||'—')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num"><b>'+euro(x.importo)+'</b></td><td><button type="button" class="btn danger" data-pn-delete="'+esc(x.id)+'">Elimina</button></td></tr>').join(''):'<tr><td colspan="8">Nessun movimento registrato nel mese selezionato.</td></tr>';
+ $('pnBody').querySelectorAll('[data-pn-delete]').forEach(b=>b.onclick=()=>pnDelete(b.dataset.pnDelete));
+}
+async function loadPrimaNota(){
+ if(prof?.ruolo!=='AMMINISTRATORE'){selectView('dash');return}
+ msg('pnMsg','Caricamento Prima Nota...');
+ const [a,b,c]=await Promise.all([
+  sb.from('contabilita_categorie').select('*').eq('attiva',true).order('ordine',{ascending:true}),
+  sb.from('contabilita_conti').select('*').eq('attivo',true).order('codice',{ascending:true}),
+  sb.from('contabilita_movimenti').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(1500)
+ ]);
+ const err=a.error||b.error||c.error;
+ if(err)return msg('pnMsg','Impossibile caricare la Prima Nota: '+err.message,'err');
+ pnCats=a.data||[];pnConti=b.data||[];pnMov=c.data||[];
+ $('pnCategoria').innerHTML=pnCats.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
+ $('pnConto').innerHTML=pnConti.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
+ if(!$('pnMonth').value)$('pnMonth').value=today().slice(0,7);
+ if(!$('pnData').value)pnReset();
+ pnRender();msg('pnMsg','');
+}
+async function pnSave(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const amount=Number($('pnImporto').value);
+ if(!$('pnData').value||!$('pnCausale').value.trim()||!(amount>0))return msg('pnMsg','Compila data, causale e importo.','warn');
+ const row={data:$('pnData').value,tipo:$('pnTipo').value,categoria_codice:$('pnCategoria').value,causale:$('pnCausale').value.trim(),importo:amount,metodo_pagamento:$('pnMetodo').value,conto_codice:$('pnConto').value,soggetto:$('pnSoggetto').value.trim()||null,numero_documento:$('pnDocumento').value.trim()||null,note:$('pnNote').value.trim()||null};
+ $('pnSave').disabled=true;
+ const r=await sb.from('contabilita_movimenti').insert(row);
+ $('pnSave').disabled=false;
+ if(r.error)return msg('pnMsg','Movimento non salvato: '+r.error.message,'err');
+ pnReset();await loadPrimaNota();msg('pnMsg','Movimento registrato correttamente.','ok');
+}
+async function pnDelete(id){
+ if(prof?.ruolo!=='AMMINISTRATORE'||!id)return;
+ if(!confirm('Eliminare questo movimento dalla Prima Nota?'))return;
+ const r=await sb.from('contabilita_movimenti').delete().eq('id',id);
+ if(r.error)return msg('pnMsg','Eliminazione non riuscita: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnMsg','Movimento eliminato.','ok');
+}
+
+if($('pnSave'))$('pnSave').onclick=pnSave;
+if($('pnClear'))$('pnClear').onclick=pnReset;
+if($('pnRefresh'))$('pnRefresh').onclick=loadPrimaNota;
+if($('pnMonth'))$('pnMonth').onchange=pnRender;
 
 async function loadAccounting(){
  const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(500);
