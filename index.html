@@ -5721,7 +5721,7 @@ async function dashboard(){
  const kPromise=isCentral?sb.rpc('cge_centralino_dashboard'):sb.from('v_dashboard_gestionale').select('*').single();
  const [k,sv,ex,pc,ca]=await Promise.all([
   kPromise,
-  sb.from('v_servizi_gestionale').select('*').gte('data_servizio',today()).neq('stato_gestionale','ANNULLATO').order('data_servizio').order('ora_partenza_prevista').limit(7),
+  sb.from('v_servizi_gestionale').select('*').gte('data_servizio',today()).not('stato_gestionale','in','("ANNULLATO","DA CONTABILIZZARE")').order('data_servizio').order('ora_partenza_prevista').limit(7),
   sb.from('v_mezzi_scadenze_gestionale').select('*').in('stato_scadenza',['SCADUTA','ENTRO_30_GIORNI','ENTRO_90_GIORNI']).order('data_scadenza').limit(7),
   sb.rpc('cge_candidature_assistenze_in_attesa_count'),
   sb.rpc('cge_assistenze_critiche_dashboard')
