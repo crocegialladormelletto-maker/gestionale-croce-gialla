@@ -817,7 +817,7 @@
   <div class="ops-kpi-card"><small>SERVIZI OGGI</small><b id="dashOpsServiceCount">0</b></div>
   <div class="ops-kpi-card"><small>FOGLI APERTI</small><b id="dashOpsTravelOpen">0</b></div>
   <div class="ops-kpi-card"><small>FOGLI CHIUSI</small><b id="dashOpsTravelClosed">0</b></div>
-  <div class="ops-kpi-card" data-admin-only="true"><small>NOTE DA CREARE</small><b id="dashOpsNotesToCreate">0</b></div>
+  <div class="ops-kpi-card" data-admin-only="true"><small>NOTE DA CREARE</small><b id="dashOpsNotesToCreate">0</b></div><div class="ops-kpi-card" data-admin-only="true"><small>FATTURE ARUBA</small><b id="dashOpsArubaToCreate">0</b></div>
   <div class="ops-kpi-card"><small>SCADENZE URGENTI</small><b id="dashOpsUrgentExpiry">0</b></div>
   <div class="ops-kpi-card ops-kpi-alert"><small>PROBLEMI DA VERIFICARE</small><b id="dashOpsProblemCount">0</b></div>
  </div>
@@ -853,6 +853,10 @@
   <section class="section ops-card" data-admin-only="true">
    <div class="ops-title"><h3>🧾 Note di Debito da creare</h3><button type="button" id="dashOpenDebitNotes" class="btn secondary">Apri Note di Debito</button></div>
    <div id="dashDebitNotesQueue"></div>
+  </section>
+  <section class="section ops-card" data-admin-only="true">
+   <div class="ops-title"><h3>🧮 Fatture Aruba da emettere</h3><span id="dashArubaBadge" class="pill">0</span></div>
+   <div id="dashArubaQueue"></div>
   </section>
   <section class="section ops-card">
    <div class="ops-title"><h3>⏰ Scadenze urgenti personale</h3><button type="button" class="btn secondary jump" data-v="personnelExpiries">Apri scadenze personale</button></div>
@@ -1544,6 +1548,21 @@
   </div>
  </div>
  <div id="dActionMsg"></div>
+</div>
+
+<div class="section" id="detailDocumentSection" data-admin-only="true">
+ <h3>📑 Documento amministrativo</h3>
+ <div class="notice">Scegli come deve essere gestito questo servizio. Le fatture Aruba non entrano nelle Note di Debito.</div>
+ <div class="grid3" style="margin-top:9px">
+  <div class="field"><label>Documento da emettere</label><select id="dDocumentType">
+   <option value="NOTA_DEBITO">Nota di Debito</option>
+   <option value="FATTURA_ARUBA">Fattura Aruba</option>
+   <option value="NESSUN_DOCUMENTO">Nessun documento</option>
+  </select></div>
+  <div class="field"><label>&nbsp;</label><button id="dDocumentSave" class="btn yellow" type="button">💾 Salva documento</button></div>
+  <div class="field"><label>Stato Aruba</label><div id="dArubaState" class="pill">—</div></div>
+ </div>
+ <div id="dDocumentMsg"></div>
 </div>
 
 <form id="detailForm">
@@ -5141,13 +5160,16 @@ async function loadOperationalDashboard(){
  const day=todaySafe(),now=new Date();
  msg('dashOpsMsg','Aggiornamento quadro operativo...');
  const noteSheetsPromise=prof?.ruolo==='AMMINISTRATORE'
-  ?sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,destinazione,totale_servizio,stato').eq('stato','CHIUSO').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).limit(500)
+  ?sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,destinazione,totale_servizio,stato,servizio_giornaliero_id').eq('stato','CHIUSO').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).limit(500)
   :Promise.resolve({data:[],error:null});
  const notesPromise=prof?.ruolo==='AMMINISTRATORE'
   ?sb.from('note_di_debito').select('id,foglio_viaggio_id,stato').limit(1000)
   :Promise.resolve({data:[],error:null});
  const hoursPromise=prof?.ruolo==='AMMINISTRATORE'?dashMonthlyHours(day).catch(error=>({error})):Promise.resolve(null);
- const [emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,hoursData]=await Promise.all([
+ const adminDocsPromise=prof?.ruolo==='AMMINISTRATORE'
+  ?sb.from('servizi_giornalieri').select('id,foglio_viaggio_id,data_servizio,mezzo,tipo_servizio,destinazione,intestatario_fatturazione,documento_da_emettere,fattura_aruba_emessa,fattura_aruba_emessa_il').neq('stato_gestionale','ANNULLATO').order('data_servizio',{ascending:false}).limit(1000)
+  :Promise.resolve({data:[],error:null});
+ const [emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,hoursData,adminDocs]=await Promise.all([
   sb.rpc('cge_emergenza_turni_v2',{p_dal:day,p_al:day}),
   sb.rpc('cge_dimissioni_turni',{p_dal:day,p_al:day}),
   sb.rpc('cge_assistenza_fasce_turni',{p_dal:day,p_al:day}),
@@ -5157,18 +5179,23 @@ async function loadOperationalDashboard(){
   sb.from('mezzi').select('codice,targa,tipologia,attivo,stato_operativo,km_attuali').order('codice'),
   noteSheetsPromise,
   notesPromise,
-  hoursPromise
+  hoursPromise,
+  adminDocsPromise
  ]);
- const errors=[emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows].filter(x=>x?.error).map(x=>x.error.message);
+ const errors=[emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,adminDocs].filter(x=>x?.error).map(x=>x.error.message);
  if(hoursData?.error)errors.push('Ore volontari: '+(hoursData.error.message||String(hoursData.error)));
  const emgRows=emg.data||[],dimRows=dim.data||[],assRows=ass.data||[],services=sv.data||[],fogli=fg.data||[],expRows=exp.data||[],mezzi=mz.data||[];
  const noteIds=new Set((noteRows.data||[]).map(x=>x.foglio_viaggio_id).filter(Boolean));
+ const docsRows=adminDocs.data||[];
+ const docByService=new Map(docsRows.map(x=>[x.id,x]));
  const debitQueue=(noteSheets.data||[]).filter(x=>{
   if(noteIds.has(x.id))return false;
   const t=String(x.tipo_servizio||'').trim().toUpperCase();
   if(t==='SERVIZIO INTERNO'||t==='INTERNO'||t.includes('SERVIZIO INTERNO'))return false;
-  return true;
+  const doc=x.servizio_giornaliero_id?docByService.get(x.servizio_giornaliero_id):null;
+  return (doc?.documento_da_emettere||'NOTA_DEBITO')==='NOTA_DEBITO';
  });
+ const arubaQueue=docsRows.filter(x=>x.documento_da_emettere==='FATTURA_ARUBA'&&!x.fattura_aruba_emessa&&x.foglio_viaggio_id);
 
  const assGroups=dashOpsGroup(assRows);
  const crewGroups=dashOpsGroup(emgRows).length+dashOpsGroup(dimRows).length+assGroups.length;
@@ -5177,6 +5204,7 @@ async function loadOperationalDashboard(){
  $('dashOpsTravelOpen').textContent=String(fogli.filter(x=>x.stato==='APERTO').length);
  $('dashOpsTravelClosed').textContent=String(fogli.filter(x=>x.stato==='CHIUSO').length);
  if($('dashOpsNotesToCreate'))$('dashOpsNotesToCreate').textContent=prof?.ruolo==='AMMINISTRATORE'?String(debitQueue.length):'—';
+ if($('dashOpsArubaToCreate'))$('dashOpsArubaToCreate').textContent=prof?.ruolo==='AMMINISTRATORE'?String(arubaQueue.length):'—';
  if($('dashOpsUrgentExpiry'))$('dashOpsUrgentExpiry').textContent=String(expRows.length);
 
  const activeEmergencyFascia=dashOpsCurrentEmergencyFascia();
@@ -5272,6 +5300,23 @@ async function loadOperationalDashboard(){
      return '<div class="ops-row ops-row-warn"><div class="ops-crew-line"><strong>'+esc(x.numero_foglio||'Foglio senza numero')+' · '+esc(x.data_servizio||'')+'</strong><span class="pill">'+esc(x.mezzo||'—')+'</span></div>'+
       '<div class="muted">'+esc(name)+' · '+esc(x.tipo_servizio||'Servizio')+(x.destinazione?' · '+esc(x.destinazione):'')+'</div></div>';
     }).join(''):'<div class="ops-row ops-row-ok"><strong>✅ Nessun Foglio Viaggio in attesa di Nota di Debito.</strong></div>';
+ }
+ if($('dashArubaQueue')){
+  if($('dashArubaBadge'))$('dashArubaBadge').textContent=String(arubaQueue.length);
+  $('dashArubaQueue').innerHTML=prof?.ruolo!=='AMMINISTRATORE'
+   ?'<div class="ops-empty">Area riservata all’Amministrazione.</div>'
+   :arubaQueue.length?arubaQueue.slice(0,10).map(x=>
+    '<div class="ops-row ops-row-warn"><div class="ops-crew-line"><strong>'+esc(x.data_servizio||'')+' · Mezzo '+esc(x.mezzo||'—')+'</strong><span class="pill b">ARUBA</span></div>'+
+    '<div class="muted">'+esc(x.intestatario_fatturazione||x.tipo_servizio||'Servizio')+(x.destinazione?' · '+esc(x.destinazione):'')+'</div>'+
+    '<div class="actions" style="margin-top:6px"><button type="button" class="btn secondary" data-aruba-open="'+esc(x.id)+'">Apri servizio</button><button type="button" class="btn yellow" data-aruba-done="'+esc(x.id)+'">✓ Fattura emessa</button></div></div>'
+   ).join(''):'<div class="ops-row ops-row-ok"><strong>✅ Nessuna fattura Aruba da emettere.</strong></div>';
+  $('dashArubaQueue').querySelectorAll('[data-aruba-open]').forEach(b=>b.onclick=()=>openService(b.dataset.arubaOpen));
+  $('dashArubaQueue').querySelectorAll('[data-aruba-done]').forEach(b=>b.onclick=async()=>{
+   if(!confirm('Confermi che la fattura Aruba per questo servizio è stata emessa?'))return;
+   const r=await sb.from('servizi_giornalieri').update({fattura_aruba_emessa:true,fattura_aruba_emessa_il:new Date().toISOString()}).eq('id',b.dataset.arubaDone);
+   if(r.error)return msg('dashOpsMsg','Errore aggiornamento fattura Aruba: '+r.error.message,'err');
+   await loadOperationalDashboard();
+  });
  }
 
  if($('dashUrgentExpiries')){
@@ -6135,6 +6180,16 @@ async function loadServiceDetail(id=currentServiceId){
  $('dStatPayCard').classList.toggle('hidden',isCentral);$('dStatDueCard').classList.toggle('hidden',isCentral);
  $('dStatPay').textContent=isCentral?'—':(s.stato_pagamento||'—');
  $('dStatDue').textContent=isCentral?'—':euro(acc.residuo||0);
+ const docType=s.documento_da_emettere||((String(s.tipo_servizio||'').toUpperCase()==='118'||String(s.tipo_servizio||'').toUpperCase().includes('SERVIZIO INTERNO'))?'NESSUN_DOCUMENTO':'NOTA_DEBITO');
+ if($('dDocumentType'))$('dDocumentType').value=docType;
+ if($('dArubaState')){
+  $('dArubaState').textContent=docType!=='FATTURA_ARUBA'?'NON ARUBA':(s.fattura_aruba_emessa?'EMESSA':'DA EMETTERE');
+  $('dArubaState').className='pill '+(s.fattura_aruba_emessa?'g':docType==='FATTURA_ARUBA'?'r':'');
+ }
+ if($('detailDocumentSection')){
+  const blocked=String(s.tipo_servizio||'').toUpperCase()==='118'||String(s.tipo_servizio||'').toUpperCase().includes('SERVIZIO INTERNO');
+  $('detailDocumentSection').classList.toggle('hidden',blocked||isCentral);
+ }
 
  $('dvehicle').innerHTML=opts(vehicles,'codice',x=>x.codice+' · '+x.targa);
  $('ddate').value=s.data_servizio||'';
@@ -6255,6 +6310,23 @@ function updateDetailEquipmentAmount(){
   $('dFinal').value=Math.max(0,Math.round((Number(currentService.importo_finale)+diff)*100)/100).toFixed(2);
 }
 ['dSediaMotorizzata','dBarellaBariatrica'].forEach(id=>$(id).onchange=updateDetailEquipmentAmount);
+$('dDocumentSave').onclick=async()=>{
+ if(!currentServiceId||prof?.ruolo!=='AMMINISTRATORE')return;
+ const documento=$('dDocumentType').value;
+ const payload={documento_da_emettere:documento,nota_debito_richiesta:documento==='NOTA_DEBITO'};
+ if(documento!=='FATTURA_ARUBA'){payload.fattura_aruba_emessa=false;payload.fattura_aruba_emessa_il=null}
+ const r=await sb.from('servizi_giornalieri').update(payload).eq('id',currentServiceId).select('*').single();
+ if(r.error)return msg('dDocumentMsg','Errore: '+r.error.message,'err');
+ currentService=r.data;
+ if($('dArubaState')){
+  $('dArubaState').textContent=documento==='FATTURA_ARUBA'?'DA EMETTERE':'NON ARUBA';
+  $('dArubaState').className='pill '+(documento==='FATTURA_ARUBA'?'r':'');
+ }
+ msg('dDocumentMsg',documento==='FATTURA_ARUBA'?'Servizio impostato su Fattura Aruba: non comparirà nelle Note di Debito.':'Documento amministrativo aggiornato.','ok');
+ dashMonthlyHoursCache={key:'',at:0,data:null};
+ if(!$('dash').classList.contains('hidden'))void loadOperationalDashboard();
+};
+
 $('dBillingSave').onclick=async()=>{
  if(!currentServiceId||prof?.ruolo!=='AMMINISTRATORE'||!isAssistanceManifestation(currentService?.tipo_servizio))return;
  const email=$('dBillEmail').value.trim().toLowerCase();
