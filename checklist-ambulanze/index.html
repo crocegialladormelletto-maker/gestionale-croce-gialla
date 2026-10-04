@@ -200,7 +200,7 @@ async function saveChecklist(){
  await renderArchive();
 }
 function resetForm(){if(!confirm('Pulire tutta la checklist?'))return;document.querySelectorAll('input,textarea').forEach(x=>x.value='');document.querySelectorAll('select').forEach(x=>x.selectedIndex=0);document.querySelectorAll('.choice').forEach(x=>x.classList.remove('sel','ok','ko','na','warn'));responses={};setNow()}
-async function showView(v){newView.classList.toggle('hidden',v!=='new');archiveView.classList.toggle('hidden',v!=='archive');tabNuova.classList.toggle('active',v==='new');tabArchivio.classList.toggle('active',v==='archive');if(v==='archive')await renderArchive()}
+async function showView(v){newView.classList.toggle('hidden',v!=='new');archiveView.classList.toggle('hidden',v!=='archive');tabNuova.classList.toggle('active',v==='new');tabArchivio.classList.toggle('active',v==='archive');if(v==='new')setNow();if(v==='archive')await renderArchive()}
 async function renderArchive(){
  const access=await currentAccess();
  if(!access){archiveBody.innerHTML='<tr><td colspan="7">Sessione non valida. Accedi dal gestionale principale o dal Tablet del mezzo.</td></tr>';return}
@@ -253,7 +253,7 @@ function exportData(){
  w.document.close();
  setTimeout(()=>{try{w.focus();w.print()}catch(err){alert('Impossibile avviare la stampa PDF.')}},300);
 }
-function setNow(){const d=new Date();data.value=d.toISOString().slice(0,10);ora.value=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function setNow(){const d=new Date();const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');data.value=y+'-'+m+'-'+day;ora.value=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 renderChecklist();setNow();
 (async()=>{
  const access=await currentAccess();
