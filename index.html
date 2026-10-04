@@ -4472,10 +4472,25 @@ async function saveClosed118Km(){
  if(kmEnd<kmStart)return msg('fvDetailMsg','I KM di arrivo non possono essere inferiori ai KM di partenza.','warn');
  if(!confirm('Confermi la modifica dei KM del Foglio Viaggio 118 '+(currentFoglio.numero_foglio||'')+'?'))return;
  msg('fvDetailMsg','Aggiornamento KM in corso...');
- const r=await sb.from('fogli_viaggio').update({km_partenza:kmStart,km_arrivo:kmEnd}).eq('id',currentFoglioId).eq('tipo_servizio','118').eq('stato','CHIUSO').select('id,km_partenza,km_arrivo,km_percorsi').maybeSingle();
+ const r=await sb.from('fogli_viaggio').update({km_partenza:kmStart,km_arrivo:kmEnd}).eq('id',currentFoglioId).eq('tipo_servizio','118').eq('stato','CHIUSO').select('id,km_partenza,km_arrivo,km_percorsi,mezzo,progressivo,numero_foglio').maybeSingle();
  if(r.error)return msg('fvDetailMsg','Modifica KM non riuscita: '+r.error.message,'err');
  if(!r.data)return msg('fvDetailMsg','Foglio 118 non trovato o non più modificabile.','warn');
- msg('fvDetailMsg','KM aggiornati correttamente: '+r.data.km_partenza+' → '+r.data.km_arrivo+' ('+r.data.km_percorsi+' km).','ok');
+
+ let nextInfo='';
+ const nextQ=await sb.from('fogli_viaggio')
+  .select('id,numero_foglio,km_partenza,km_arrivo,km_percorsi,stato,progressivo')
+  .eq('mezzo',r.data.mezzo)
+  .gt('progressivo',r.data.progressivo)
+  .order('progressivo',{ascending:true})
+  .limit(1)
+  .maybeSingle();
+ if(nextQ.error)return msg('fvDetailMsg','KM del foglio aggiornati, ma non è stato possibile verificare il foglio successivo: '+nextQ.error.message,'warn');
+ if(nextQ.data){
+  const nextUpdate=await sb.from('fogli_viaggio').update({km_partenza:kmEnd}).eq('id',nextQ.data.id).select('id,numero_foglio,km_partenza,km_arrivo,km_percorsi').maybeSingle();
+  if(nextUpdate.error)return msg('fvDetailMsg','KM del foglio aggiornati, ma aggiornamento del foglio successivo non riuscito: '+nextUpdate.error.message,'warn');
+  if(nextUpdate.data)nextInfo=' · Foglio successivo '+nextUpdate.data.numero_foglio+': KM partenza aggiornati a '+kmEnd+'.';
+ }
+ msg('fvDetailMsg','KM aggiornati correttamente: '+r.data.km_partenza+' → '+r.data.km_arrivo+' ('+r.data.km_percorsi+' km).'+nextInfo,'ok');
  await loadTravelSheetDetail(currentFoglioId);
 }
 if($('fvSaveKmClosed'))$('fvSaveKmClosed').onclick=saveClosed118Km;
