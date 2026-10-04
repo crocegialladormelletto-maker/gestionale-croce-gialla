@@ -5119,7 +5119,7 @@ let dashMonthlyHoursCache={key:'',at:0,data:null};
 async function dashMonthlyHours(day){
  if(prof?.ruolo!=='AMMINISTRATORE')return null;
  const month=String(day).slice(0,7),from=month+'-01',key=from+'|'+day;
- if(dashMonthlyHoursCache.key===key&&Date.now()-dashMonthlyHoursCache.at<300000&&dashMonthlyHoursCache.data)return dashMonthlyHoursCache.data;
+ if(dashMonthlyHoursCache.key===key&&Date.now()-dashMonthlyHoursCache.at<55000&&dashMonthlyHoursCache.data)return dashMonthlyHoursCache.data;
  const pr=await sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico').limit(1000);
  if(pr.error)throw pr.error;
  const active=(pr.data||[]).filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
@@ -5483,6 +5483,26 @@ function statsBandInterval(fascia){
  const x=String(fascia||'').toUpperCase();
  return ({MATTINO:[420,840],POMERIGGIO:[780,1140],SERA:[1140,1440],NOTTE:[0,420]})[x]||null;
 }
+function statsRomeNow(){
+ const parts=new Intl.DateTimeFormat('en-CA',{
+  timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false
+ }).formatToParts(new Date());
+ const get=t=>parts.find(x=>x.type===t)?.value||'';
+ const hour=Number(get('hour'))%24,minute=Number(get('minute'));
+ return {date:get('year')+'-'+get('month')+'-'+get('day'),minutes:hour*60+minute};
+}
+function statsEffectiveHours(date,interval,fullHours){
+ const full=Math.max(0,Number(fullHours||0));
+ if(!date||!interval)return full;
+ const now=statsRomeNow(),d=String(date).slice(0,10);
+ if(d<now.date)return full;
+ if(d>now.date)return 0;
+ const a=Number(interval[0]),b=Number(interval[1]);
+ if(!Number.isFinite(a)||!Number.isFinite(b))return full;
+ if(now.minutes<=a)return 0;
+ if(now.minutes>=b)return full;
+ return Math.max(0,Math.min(full,(now.minutes-a)/60));
+}
 function statsUncoveredHours(interval,covers){
  if(!interval)return 0;
  const [a,b]=interval;
@@ -5546,11 +5566,12 @@ async function loadShiftStatistics(from,to,people){
  assignments.forEach(x=>{
   const t=turnMap.get(x.turno_id);if(!t||x.risposta==='NON DISPONIBILE')return;
   const int=statsInterval(t.ora_inizio,t.ora_fine);
-  rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftClockHours(t.ora_inizio,t.ora_fine),slot:'GEN|'+t.id,vehicle:t.mezzo||'',interval:int});
+  const fullHours=shiftClockHours(t.ora_inizio,t.ora_fine);
+  rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—',hours:statsEffectiveHours(t.data_turno,int,fullHours),slot:'GEN|'+t.id,vehicle:t.mezzo||'',interval:int});
  });
- emgRows.forEach(x=>rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza / 118',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'EMG|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:statsBandInterval(x.fascia)}));
- dimRows.forEach(x=>rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'DIM|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:statsBandInterval(x.fascia)}));
- assRows.forEach(x=>rows.push({source:'Assistenze',date:x.giorno,type:'Assistenze',badge:x.badge_personale,role:x.ruolo||'—',hours:shiftBandHours(x.fascia),slot:'ASS|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:statsBandInterval(x.fascia)}));
+ emgRows.forEach(x=>{const int=statsBandInterval(x.fascia),full=shiftBandHours(x.fascia);rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza / 118',badge:x.badge_personale,role:x.ruolo||'—',hours:statsEffectiveHours(x.giorno,int,full),slot:'EMG|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:int})});
+ dimRows.forEach(x=>{const int=statsBandInterval(x.fascia),full=shiftBandHours(x.fascia);rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:statsEffectiveHours(x.giorno,int,full),slot:'DIM|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:int})});
+ assRows.forEach(x=>{const int=statsBandInterval(x.fascia),full=shiftBandHours(x.fascia);rows.push({source:'Assistenze',date:x.giorno,type:'Assistenze',badge:x.badge_personale,role:x.ruolo||'—',hours:statsEffectiveHours(x.giorno,int,full),slot:'ASS|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:int})});
 
  // Deduplica solo la stessa presenza nello stesso turno/fascia.
  // Due fasce diverse nello stesso giorno devono essere conteggiate entrambe.
