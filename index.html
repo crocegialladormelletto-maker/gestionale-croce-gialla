@@ -2163,12 +2163,16 @@ Causale: numero preventivo</textarea>
       <div class="field"><label>Telefono</label><input id="pnSupplierPhone"></div>
       <div class="field"><label>Email</label><input id="pnSupplierEmail" type="email"></div>
       <div class="field"><label>IBAN</label><input id="pnSupplierIban"></div>
+      <div class="field"><label>Indirizzo</label><input id="pnSupplierAddress"></div>
+      <div class="field"><label>CAP</label><input id="pnSupplierCap"></div>
+      <div class="field"><label>Comune</label><input id="pnSupplierCity"></div>
+      <div class="field"><label>Provincia</label><input id="pnSupplierProvince"></div>
      </div>
      <div class="field"><label>Note</label><textarea id="pnSupplierNotes" rows="2"></textarea></div>
      <div class="actions"><button id="pnSupplierSave" type="button" class="btn yellow">💾 Salva fornitore</button><button id="pnSupplierCancelEdit" type="button" class="btn secondary hidden">Annulla modifica</button></div>
      <div id="pnSupplierMsg"></div>
      <div class="grid2" style="margin-top:8px">
-      <div class="field"><label>Ricerca fornitori</label><input id="pnSupplierSearch" placeholder="Nome, CF/P.IVA, email"></div>
+      <div class="field"><label>Ricerca fornitori</label><input id="pnSupplierSearch" placeholder="Nome, CF/P.IVA, comune, email"></div>
       <div class="field"><label>Stato</label><select id="pnSupplierStatus"><option value="ACTIVE">Attivi</option><option value="INACTIVE">Disattivati</option><option value="ALL">Tutti</option></select></div>
      </div>
      <div id="pnSupplierList" style="margin-top:10px"></div>
@@ -8929,7 +8933,7 @@ function pnFilteredSuppliers(){
   if(st==='ACTIVE'&&x.attivo===false)return false;
   if(st==='INACTIVE'&&x.attivo!==false)return false;
   if(q){
-   const hay=[x.denominazione,x.cf_piva,x.email,x.telefono].join(' ').toLowerCase();
+   const hay=[x.denominazione,x.cf_piva,x.email,x.telefono,x.indirizzo,x.cap,x.comune,x.provincia].join(' ').toLowerCase();
    if(!hay.includes(q))return false;
   }
   return true;
@@ -8937,26 +8941,26 @@ function pnFilteredSuppliers(){
 }
 function pnRenderSuppliers(){
  const rows=pnFilteredSuppliers();
- $('pnSupplierList').innerHTML=rows.length?rows.map(x=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>'+esc(x.denominazione)+'</b> '+(x.attivo===false?'<span class="pill r">DISATTIVATO</span>':'<span class="pill g">ATTIVO</span>')+'<br><span class="muted">'+esc(x.cf_piva||'')+(x.email?' · '+esc(x.email):'')+' · '+pnSupplierMovementCount(x.id)+' movimenti</span></div><div class="actions"><button type="button" class="btn secondary" data-pn-supplier-edit="'+esc(x.id)+'">Modifica</button><button type="button" class="btn '+(x.attivo===false?'yellow':'danger')+'" data-pn-supplier-toggle="'+esc(x.id)+'">'+(x.attivo===false?'Riattiva':'Disattiva')+'</button></div></div></div>').join(''):'<div class="notice">Nessun fornitore trovato.</div>';
+ $('pnSupplierList').innerHTML=rows.length?rows.map(x=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>'+esc(x.denominazione)+'</b> '+(x.attivo===false?'<span class="pill r">DISATTIVATO</span>':'<span class="pill g">ATTIVO</span>')+'<br><span class="muted">'+esc(x.cf_piva||'')+(x.comune?' · '+esc(x.comune):'')+(x.provincia?' ('+esc(x.provincia)+')':'')+(x.email?' · '+esc(x.email):'')+' · '+pnSupplierMovementCount(x.id)+' movimenti</span></div><div class="actions"><button type="button" class="btn secondary" data-pn-supplier-edit="'+esc(x.id)+'">Modifica</button><button type="button" class="btn '+(x.attivo===false?'yellow':'danger')+'" data-pn-supplier-toggle="'+esc(x.id)+'">'+(x.attivo===false?'Riattiva':'Disattiva')+'</button></div></div></div>').join(''):'<div class="notice">Nessun fornitore trovato.</div>';
  $('pnSupplierList').querySelectorAll('[data-pn-supplier-edit]').forEach(b=>b.onclick=()=>pnEditSupplier(b.dataset.pnSupplierEdit));
  $('pnSupplierList').querySelectorAll('[data-pn-supplier-toggle]').forEach(b=>b.onclick=()=>pnToggleSupplier(b.dataset.pnSupplierToggle));
 }
 function pnResetSupplierForm(){
  pnEditingSupplierId=null;
- ['pnSupplierName','pnSupplierVat','pnSupplierEmail','pnSupplierPhone','pnSupplierIban','pnSupplierNotes'].forEach(id=>$(id).value='');
+ ['pnSupplierName','pnSupplierVat','pnSupplierEmail','pnSupplierPhone','pnSupplierIban','pnSupplierAddress','pnSupplierCap','pnSupplierCity','pnSupplierProvince','pnSupplierNotes'].forEach(id=>$(id).value='');
  $('pnSupplierSave').textContent='💾 Salva fornitore';
  $('pnSupplierCancelEdit').classList.add('hidden');
 }
 function pnEditSupplier(id){
  const x=pnSuppliers.find(r=>String(r.id)===String(id));if(!x)return;
  pnEditingSupplierId=x.id;
- $('pnSupplierName').value=x.denominazione||'';$('pnSupplierVat').value=x.cf_piva||'';$('pnSupplierEmail').value=x.email||'';$('pnSupplierPhone').value=x.telefono||'';$('pnSupplierIban').value=x.iban||'';$('pnSupplierNotes').value=x.note||'';
+ $('pnSupplierName').value=x.denominazione||'';$('pnSupplierVat').value=x.cf_piva||'';$('pnSupplierEmail').value=x.email||'';$('pnSupplierPhone').value=x.telefono||'';$('pnSupplierIban').value=x.iban||'';$('pnSupplierAddress').value=x.indirizzo||'';$('pnSupplierCap').value=x.cap||'';$('pnSupplierCity').value=x.comune||'';$('pnSupplierProvince').value=x.provincia||'';$('pnSupplierNotes').value=x.note||'';
  $('pnSupplierSave').textContent='💾 Salva modifiche';
  $('pnSupplierCancelEdit').classList.remove('hidden');
 }
 async function pnSaveSupplier(){
  if(!$('pnSupplierName').value.trim())return msg('pnSupplierMsg','Inserisci la denominazione.','warn');
- const row={denominazione:$('pnSupplierName').value.trim(),cf_piva:$('pnSupplierVat').value.trim()||null,email:$('pnSupplierEmail').value.trim()||null,telefono:$('pnSupplierPhone').value.trim()||null,iban:$('pnSupplierIban').value.trim()||null,note:$('pnSupplierNotes').value.trim()||null,updated_at:new Date().toISOString()};
+ const row={denominazione:$('pnSupplierName').value.trim(),cf_piva:$('pnSupplierVat').value.trim()||null,email:$('pnSupplierEmail').value.trim()||null,telefono:$('pnSupplierPhone').value.trim()||null,iban:$('pnSupplierIban').value.trim()||null,indirizzo:$('pnSupplierAddress').value.trim()||null,cap:$('pnSupplierCap').value.trim()||null,comune:$('pnSupplierCity').value.trim()||null,provincia:$('pnSupplierProvince').value.trim()||null,note:$('pnSupplierNotes').value.trim()||null,updated_at:new Date().toISOString()};
  if(row.cf_piva){
   const dup=pnSuppliers.find(x=>x.attivo!==false&&String(x.id)!==String(pnEditingSupplierId||'')&&String(x.cf_piva||'').trim().toUpperCase()===row.cf_piva.trim().toUpperCase());
   if(dup)return msg('pnSupplierMsg','Esiste già un fornitore attivo con questo CF/P.IVA: '+dup.denominazione,'warn');
