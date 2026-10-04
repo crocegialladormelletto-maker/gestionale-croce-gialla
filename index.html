@@ -2009,6 +2009,7 @@ Causale: numero preventivo</textarea>
  <div class="hero"><h2>📒 Prima Nota</h2><p>Gestione amministrativa di entrate, uscite, cassa e banca. Accesso riservato all'Amministrazione.</p></div>
  <div class="pad">
   <div id="pnMsg"></div>
+  <div id="pnStartNotice" class="notice warn"><b>Prima Nota operativa dal 1° gennaio 2027.</b> Fino a tale data la consultazione è disponibile, ma la registrazione dei movimenti è disattivata.</div>
   <div class="stats">
    <div class="stat"><small>ENTRATE MESE</small><b id="pnEntrate" style="color:#12805a">€ 0,00</b></div>
    <div class="stat"><small>USCITE MESE</small><b id="pnUscite" style="color:#b83b43">€ 0,00</b></div>
@@ -2028,7 +2029,7 @@ Causale: numero preventivo</textarea>
     <button id="pnRefresh" type="button" class="btn secondary">↻ Aggiorna</button>
    </div>
    <div class="grid3" style="margin-top:10px">
-    <div class="field"><label>Data</label><input id="pnData" type="date"></div>
+    <div class="field"><label>Data</label><input id="pnData" type="date" min="2027-01-01"></div>
     <div class="field"><label>Tipo</label><select id="pnTipo"><option value="ENTRATA">Entrata</option><option value="USCITA">Uscita</option></select></div>
     <div class="field"><label>Categoria</label><select id="pnCategoria"></select></div>
     <div class="field"><label>Causale</label><input id="pnCausale" maxlength="250" placeholder="Descrizione del movimento"></div>
@@ -2048,7 +2049,7 @@ Causale: numero preventivo</textarea>
   <div class="section">
    <div class="actions" style="justify-content:space-between;align-items:end">
     <div><h3 style="margin:0">Movimenti registrati</h3><div class="muted">Ultimi movimenti della Prima Nota.</div></div>
-    <div class="field" style="margin:0;min-width:190px"><label>Mese</label><input id="pnMonth" type="month"></div>
+    <div class="field" style="margin:0;min-width:190px"><label>Mese</label><input id="pnMonth" type="month" min="2027-01"></div>
    </div>
    <div class="table" style="margin-top:10px"><table><thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Causale</th><th>Soggetto</th><th>Conto</th><th class="num">Importo</th><th>Azioni</th></tr></thead><tbody id="pnBody"></tbody></table></div>
   </div>
@@ -8457,14 +8458,20 @@ $('tsave').onclick=async()=>{
 let pnCats=[],pnConti=[],pnMov=[];
 function pnCatName(code){const x=pnCats.find(r=>r.codice===code);return x?.nome||code||'—'}
 function pnContoName(code){const x=pnConti.find(r=>r.codice===code);return x?.nome||code||'—'}
+const PN_START_DATE='2027-01-01';
+const PN_START_MONTH='2027-01';
+function pnTodayOrStart(){
+ const t=today();
+ return t<PN_START_DATE?PN_START_DATE:t;
+}
 function pnReset(){
  if(!$('pnData'))return;
- $('pnData').value=today();
+ $('pnData').value=pnTodayOrStart();
  $('pnTipo').value='ENTRATA';
  $('pnCausale').value='';$('pnImporto').value='';$('pnSoggetto').value='';$('pnDocumento').value='';$('pnNote').value='';
 }
 function pnRender(){
- const ym=$('pnMonth').value||today().slice(0,7);
+ let ym=$('pnMonth').value||today().slice(0,7); if(ym<PN_START_MONTH)ym=PN_START_MONTH;
  $('pnMonth').value=ym;
  const rows=pnMov.filter(x=>String(x.data||'').startsWith(ym));
  const en=rows.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo||0),0);
@@ -8492,15 +8499,20 @@ async function loadPrimaNota(){
  ]);
  const err=a.error||b.error||c.error;
  if(err)return msg('pnMsg','Impossibile caricare la Prima Nota: '+err.message,'err');
- pnCats=a.data||[];pnConti=b.data||[];pnMov=c.data||[];
+ pnCats=a.data||[];pnConti=b.data||[];pnMov=(c.data||[]).filter(x=>String(x.data||'')>=PN_START_DATE);
  $('pnCategoria').innerHTML=pnCats.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
  $('pnConto').innerHTML=pnConti.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
- if(!$('pnMonth').value)$('pnMonth').value=today().slice(0,7);
- if(!$('pnData').value)pnReset();
- pnRender();msg('pnMsg','');
+ if(!$('pnMonth').value||$('pnMonth').value<PN_START_MONTH)$('pnMonth').value=(today().slice(0,7)<PN_START_MONTH?PN_START_MONTH:today().slice(0,7));
+ if(!$('pnData').value||$('pnData').value<PN_START_DATE)pnReset();
+ const operational=today()>=PN_START_DATE;
+ ['pnData','pnTipo','pnCategoria','pnCausale','pnImporto','pnMetodo','pnConto','pnSoggetto','pnDocumento','pnNote','pnSave','pnClear'].forEach(id=>{if($(id))$(id).disabled=!operational});
+ if($('pnStartNotice'))$('pnStartNotice').classList.toggle('hidden',operational);
+ pnRender();msg('pnMsg',operational?'':'Prima Nota predisposta: le registrazioni saranno abilitate dal 1° gennaio 2027.','warn');
 }
 async function pnSave(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
+ if(today()<PN_START_DATE)return msg('pnMsg','La Prima Nota sarà operativa dal 1° gennaio 2027.','warn');
+ if($('pnData').value<PN_START_DATE)return msg('pnMsg','Non è possibile registrare movimenti con data precedente al 1° gennaio 2027.','warn');
  const amount=Number($('pnImporto').value);
  if(!$('pnData').value||!$('pnCausale').value.trim()||!(amount>0))return msg('pnMsg','Compila data, causale e importo.','warn');
  const row={data:$('pnData').value,tipo:$('pnTipo').value,categoria_codice:$('pnCategoria').value,causale:$('pnCausale').value.trim(),importo:amount,metodo_pagamento:$('pnMetodo').value,conto_codice:$('pnConto').value,soggetto:$('pnSoggetto').value.trim()||null,numero_documento:$('pnDocumento').value.trim()||null,note:$('pnNote').value.trim()||null};
@@ -8512,6 +8524,8 @@ async function pnSave(){
 }
 async function pnDelete(id){
  if(prof?.ruolo!=='AMMINISTRATORE'||!id)return;
+ const row=pnMov.find(x=>String(x.id)===String(id));
+ if(row&&String(row.data||'')<PN_START_DATE)return msg('pnMsg','I movimenti precedenti al 1° gennaio 2027 non rientrano nella Prima Nota operativa.','warn');
  if(!confirm('Eliminare questo movimento dalla Prima Nota?'))return;
  const r=await sb.from('contabilita_movimenti').delete().eq('id',id);
  if(r.error)return msg('pnMsg','Eliminazione non riuscita: '+r.error.message,'err');
