@@ -1414,6 +1414,15 @@
      <div class="field"><label>Data pagamento</label><input id="fvPayDate" type="date"></div>
      <div class="field"><label>Stato contabile collegato</label><input id="fvAccountingState" disabled></div>
     </div>
+    <div id="fvReceiptBox" style="margin-top:12px;border-top:1px solid #dbe5ed;padding-top:12px">
+     <h4 style="margin:0 0 6px">📎 Ricevute pagamento</h4>
+     <div class="actions" style="align-items:end">
+      <div class="field" style="flex:1;min-width:240px"><label>Aggiungi foto / PDF</label><input id="fvReceiptFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"></div>
+      <button id="fvReceiptUpload" class="btn secondary" type="button">Carica ricevuta</button>
+     </div>
+     <div id="fvReceiptMsg"></div>
+     <div id="fvReceiptList" style="margin-top:8px"></div>
+    </div>
    </div>
 
    <div class="section"><h3>Annotazioni</h3><textarea id="fvNotes"></textarea></div>
@@ -2604,6 +2613,16 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Modalità pagamento</label><select data-ts-field="modalita_pagamento"><option value="">Non indicata</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="NON DOVUTO">Non dovuto</option><option value="ALTRO">Altro</option></select></div>
      <div class="field"><label>Data pagamento</label><input type="date" data-ts-field="data_pagamento"></div>
     </div>
+    <div id="tabletReceiptSection" class="section hidden" style="margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
+     <h3 style="margin-top:0">📎 Ricevuta pagamento</h3>
+     <p class="muted">Per pagamenti in contanti o con POS puoi scattare una foto della ricevuta/scontrino oppure caricare un PDF o un’immagine.</p>
+     <div class="actions" style="align-items:end">
+      <div class="field" style="flex:1;min-width:240px"><label>Foto / PDF ricevuta</label><input id="tabletReceiptFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment"></div>
+      <button id="tabletReceiptUpload" class="btn yellow" type="button">📤 Carica ricevuta</button>
+     </div>
+     <div id="tabletReceiptMsg"></div>
+     <div id="tabletReceiptList" style="margin-top:8px"></div>
+    </div>
     </div>
     <div class="tablet-sheet-bar">
      <div class="actions"><button id="tabletSaveSheet" class="btn yellow" type="submit">💾 Salva dati</button>
@@ -2905,6 +2924,79 @@ function formatAttachmentBytes(n){
  if(n<1024)return n+' B';
  if(n<1048576)return (n/1024).toLocaleString('it-IT',{maximumFractionDigits:1})+' KB';
  return (n/1048576).toLocaleString('it-IT',{maximumFractionDigits:1})+' MB';
+}
+function paymentReceiptSafeName(name){
+ return String(name||'ricevuta').normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,120)||'ricevuta';
+}
+function paymentReceiptValidate(file){
+ if(!file)return 'Seleziona una foto o un PDF.';
+ const allowed=['application/pdf','image/jpeg','image/png','image/webp'];
+ if(!allowed.includes(file.type)&&!/.(pdf|jpe?g|png|webp)$/i.test(file.name||''))return 'Formato non valido. Usa PDF, JPG, PNG o WEBP.';
+ if(file.size>10*1024*1024)return 'La ricevuta supera 10 MB.';
+ return '';
+}
+async function paymentReceiptOpen(row,msgId){
+ const tab=window.open('about:blank','_blank');
+ if(!tab)return msg(msgId,'Il browser ha bloccato la nuova scheda.','warn');
+ tab.opener=null;
+ const r=await sb.storage.from('ricevute-pagamenti').createSignedUrl(row.storage_path,120);
+ if(r.error){tab.close();return msg(msgId,'Impossibile aprire la ricevuta: '+r.error.message,'err')}
+ tab.location.href=r.data.signedUrl;
+}
+async function loadPaymentReceipts(foglio,context){
+ const listId=context==='tablet'?'tabletReceiptList':'fvReceiptList';
+ const msgId=context==='tablet'?'tabletReceiptMsg':'fvReceiptMsg';
+ const box=$(listId);if(!box||!foglio?.id)return;
+ const r=await sb.from('fogli_viaggio_ricevute').select('*').eq('foglio_viaggio_id',foglio.id).order('created_at',{ascending:false});
+ if(r.error){box.innerHTML='';return msg(msgId,'Impossibile leggere le ricevute: '+r.error.message,'err')}
+ const rows=r.data||[];
+ const canDelete=context!=='tablet'||foglio.stato==='APERTO';
+ box.innerHTML=rows.length?rows.map(x=>
+  '<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>🧾 '+esc(x.nome_file_originale)+'</b><br><span class="muted">'+esc(formatAttachmentBytes(x.dimensione_bytes))+' · '+esc(dt(x.created_at))+'</span></div><div class="actions"><button type="button" class="btn secondary" data-pay-receipt-open="'+esc(x.id)+'">Apri</button>'+(canDelete?'<button type="button" class="btn danger" data-pay-receipt-delete="'+esc(x.id)+'">Elimina</button>':'')+'</div></div></div>'
+ ).join(''):'<div class="muted">Nessuna ricevuta caricata.</div>';
+ box.querySelectorAll('[data-pay-receipt-open]').forEach(b=>b.onclick=()=>{const row=rows.find(x=>x.id===b.dataset.payReceiptOpen);if(row)paymentReceiptOpen(row,msgId)});
+ box.querySelectorAll('[data-pay-receipt-delete]').forEach(b=>b.onclick=async()=>{
+  const row=rows.find(x=>x.id===b.dataset.payReceiptDelete);if(!row)return;
+  if(!confirm('Eliminare la ricevuta «'+row.nome_file_originale+'»?'))return;
+  const st=await sb.storage.from('ricevute-pagamenti').remove([row.storage_path]);
+  if(st.error)return msg(msgId,'Impossibile eliminare il file: '+st.error.message,'err');
+  const dr=await sb.from('fogli_viaggio_ricevute').delete().eq('id',row.id);
+  if(dr.error)return msg(msgId,'File eliminato ma archivio non aggiornato: '+dr.error.message,'err');
+  await loadPaymentReceipts(foglio,context);
+ });
+ msg(msgId,'');
+}
+async function uploadPaymentReceipt(foglio,inputId,context){
+ const input=$(inputId),msgId=context==='tablet'?'tabletReceiptMsg':'fvReceiptMsg';
+ if(!foglio?.id)return msg(msgId,'Foglio Viaggio non disponibile.','warn');
+ const file=input?.files?.[0],err=paymentReceiptValidate(file);
+ if(err)return msg(msgId,err,'warn');
+ const path=String(foglio.mezzo||'XX')+'/'+foglio.id+'/'+Date.now()+'_'+paymentReceiptSafeName(file.name);
+ msg(msgId,'Caricamento ricevuta...');
+ const up=await sb.storage.from('ricevute-pagamenti').upload(path,file,{contentType:file.type||undefined,upsert:false});
+ if(up.error)return msg(msgId,'Caricamento non riuscito: '+up.error.message,'err');
+ const meta=await sb.from('fogli_viaggio_ricevute').insert({
+  foglio_viaggio_id:foglio.id,
+  mezzo:foglio.mezzo,
+  nome_file_originale:file.name,
+  storage_path:path,
+  mime_type:file.type||null,
+  dimensione_bytes:file.size
+ });
+ if(meta.error){
+  await sb.storage.from('ricevute-pagamenti').remove([path]);
+  return msg(msgId,'Ricevuta non registrata: '+meta.error.message,'err');
+ }
+ input.value='';
+ await loadPaymentReceipts(foglio,context);
+ msg(msgId,'Ricevuta caricata e collegata al Foglio Viaggio.','ok');
+}
+function tabletToggleReceiptSection(){
+ const sec=$('tabletReceiptSection');if(!sec)return;
+ const mode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'';
+ const show=!!tabletCurrentSheet&&String(tabletCurrentSheet.tipo_servizio||tabletCurrentService?.tipo_servizio||'').trim()!=='118'&&['CONTANTI','POS'].includes(mode);
+ sec.classList.toggle('hidden',!show);
+ if(!show){if($('tabletReceiptFile'))$('tabletReceiptFile').value='';msg('tabletReceiptMsg','')}
 }
 async function loadServiceAttachments(serviceId=currentServiceId){
  if(!serviceId||!$('dAttachmentsList'))return;
@@ -3685,6 +3777,7 @@ function fvPreview(){
 ['fvKmStart','fvKmEnd','fvBase','fvChairAmount','fvBariAmount'].forEach(id=>$(id).oninput=fvPreview);
 ['fvChair','fvBari'].forEach(id=>$(id).onchange=fvPreview);
 $('fvPayMode').onchange=()=>{if($('fvPayMode').value&&!$('fvPayDate').value)$('fvPayDate').value=today()};
+if($('fvReceiptUpload'))$('fvReceiptUpload').onclick=()=>uploadPaymentReceipt(currentFoglio,'fvReceiptFile','admin');
 
 
 function fvItalianDate(v){
@@ -4115,6 +4208,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvEconomicSection').classList.toggle('hidden',isCentral||is118);
  $('fvPaymentSection').classList.toggle('hidden',isCentral||is118);
  $('fvAccountingState').value=(isCentral||is118)?'—':(acc?acc.stato_contabile+(Number(acc.residuo)>0?' · Residuo '+euro(acc.residuo):''):'—');
+ if(!isCentral&&!is118)await loadPaymentReceipts(f,'admin');
  $('fvNotes').value=f.annotazioni||'';
 
  $('fvdService').classList.toggle('hidden',!f.servizio_giornaliero_id);
@@ -4122,6 +4216,8 @@ async function loadTravelSheetDetail(id=currentFoglioId){
 
  const closed=f.stato==='CHIUSO';
  document.querySelectorAll('#fvForm input:not([disabled]),#fvForm select,#fvForm textarea').forEach(x=>x.disabled=closed);
+ if($('fvReceiptFile'))$('fvReceiptFile').disabled=closed;
+ if($('fvReceiptUpload'))$('fvReceiptUpload').classList.toggle('hidden',closed);
  $('fvSave').classList.toggle('hidden',closed);
  $('fvClose').classList.toggle('hidden',closed);
  $('fvDelete').classList.toggle('hidden',closed||prof?.ruolo!=='AMMINISTRATORE'||!!f.pdf_path);
@@ -9973,6 +10069,15 @@ $('tabletImmediateToggle').onclick=async()=>{
  panel.classList.toggle('hidden');
  if(!panel.classList.contains('hidden')){await tabletLoadCrewPeople();const restored=tabletRestoreImmediateDraft();if(!restored)tabletApplyImmediateTypeRules();await tabletPrefillImmediateKm();}
 };
+if($('tabletReceiptUpload'))$('tabletReceiptUpload').onclick=()=>uploadPaymentReceipt(tabletCurrentSheet,'tabletReceiptFile','tablet');
+const tabletPayModeField=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
+if(tabletPayModeField)tabletPayModeField.onchange=()=>{
+ if(tabletPayModeField.value){
+  const dateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
+  if(dateField&&!dateField.value)dateField.value=todaySafe();
+ }
+ tabletToggleReceiptSection();
+};
 $('tabletPriceGroup').onchange=tabletRenderTariffPrices;
 $('tabletPriceSearch').oninput=tabletRenderTariffPrices;
 $('tabletAdType').onchange=tabletApplyImmediateTypeRules;
@@ -10103,6 +10208,8 @@ async function openTabletDirect118(foglio){
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
  tabletShowSheetIdentity(f);
+ tabletToggleReceiptSection();
+ if(String(f.tipo_servizio||tabletCurrentService?.tipo_servizio||'').trim()!=='118')await loadPaymentReceipts(f,'tablet');
  const patientEditable=!!tabletCurrentService && tabletSheetIs118===false && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno';
  if($('tabletPatientEditSection'))$('tabletPatientEditSection').classList.toggle('hidden',!patientEditable);
  if(patientEditable){
@@ -10131,6 +10238,8 @@ async function openTabletDirect118(foglio){
 }
 async function loadTabletSheet(serviceId){
  $('tabletSheetPanel').classList.add('hidden');tabletCurrentSheet=null;
+ if($('tabletReceiptSection'))$('tabletReceiptSection').classList.add('hidden');
+ if($('tabletReceiptList'))$('tabletReceiptList').innerHTML='';
  if($('tabletSheetNumber'))$('tabletSheetNumber').textContent='—';
  if($('tabletSheetVehicle'))$('tabletSheetVehicle').textContent=tabletMezzo||'—';
  if($('tabletSheetState'))$('tabletSheetState').textContent='—';
@@ -10162,12 +10271,15 @@ async function loadTabletSheet(serviceId){
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
  tabletShowSheetIdentity(f);
+ tabletToggleReceiptSection();
+ if(String(f.tipo_servizio||tabletCurrentService?.tipo_servizio||'').trim()!=='118')await loadPaymentReceipts(f,'tablet');
  document.querySelectorAll('[data-ts-field]').forEach(el=>{
  const key=el.dataset.tsField;el.disabled=closed;
  if(el.type==='checkbox')el.checked=!!f[key];
  else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
  else el.value=f[key]??'';
  });
+ tabletToggleReceiptSection();
  if(!closed && (f.km_partenza===null || f.km_partenza===undefined || f.km_partenza==='')){
   const kmField=document.querySelector('#tabletSheetForm [data-ts-field="km_partenza"]');
   const vr=await sb.from('mezzi').select('km_attuali').eq('codice',tabletMezzo).maybeSingle();
