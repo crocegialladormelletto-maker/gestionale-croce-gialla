@@ -2010,6 +2010,7 @@ Causale: numero preventivo</textarea>
  <div class="pad">
   <div id="pnMsg"></div>
   <div id="pnStartNotice" class="notice warn"><b>Prima Nota operativa dal 1° gennaio 2027.</b> Fino a tale data la consultazione è disponibile, ma la registrazione dei movimenti è disattivata.</div>
+
   <div class="stats">
    <div class="stat"><small>ENTRATE MESE</small><b id="pnEntrate" style="color:#12805a">€ 0,00</b></div>
    <div class="stat"><small>USCITE MESE</small><b id="pnUscite" style="color:#b83b43">€ 0,00</b></div>
@@ -2025,7 +2026,7 @@ Causale: numero preventivo</textarea>
 
   <div class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
-    <h3 style="margin:0">➕ Nuovo movimento</h3>
+    <div><h3 id="pnFormTitle" style="margin:0">➕ Nuovo movimento</h3><div class="muted">Il numero Prima Nota viene assegnato automaticamente al salvataggio.</div></div>
     <button id="pnRefresh" type="button" class="btn secondary">↻ Aggiorna</button>
    </div>
    <div class="grid3" style="margin-top:10px">
@@ -2043,15 +2044,29 @@ Causale: numero preventivo</textarea>
    <div class="actions">
     <button id="pnSave" type="button" class="btn yellow">💾 Salva movimento</button>
     <button id="pnClear" type="button" class="btn secondary">Pulisci</button>
+    <button id="pnCancelEdit" type="button" class="btn secondary hidden">Annulla modifica</button>
+   </div>
+  </div>
+
+  <div class="section">
+   <div class="actions" style="justify-content:space-between;align-items:center">
+    <div><h3 style="margin:0">🔎 Ricerca e filtri</h3><div class="muted">Filtra i movimenti senza modificare i totali generali di Cassa e Banca.</div></div>
+    <button id="pnFiltersClear" type="button" class="btn secondary">Azzera filtri</button>
+   </div>
+   <div class="grid3" style="margin-top:10px">
+    <div class="field"><label>Mese</label><input id="pnMonth" type="month" min="2027-01"></div>
+    <div class="field"><label>Tipo</label><select id="pnFilterTipo"><option value="">Tutti</option><option value="ENTRATA">Entrate</option><option value="USCITA">Uscite</option></select></div>
+    <div class="field"><label>Categoria</label><select id="pnFilterCategoria"><option value="">Tutte</option></select></div>
+    <div class="field"><label>Conto</label><select id="pnFilterConto"><option value="">Tutti</option></select></div>
+    <div class="field" style="grid-column:span 2"><label>Ricerca libera</label><input id="pnSearch" placeholder="Numero, causale, cliente/fornitore, documento o note"></div>
    </div>
   </div>
 
   <div class="section">
    <div class="actions" style="justify-content:space-between;align-items:end">
-    <div><h3 style="margin:0">Movimenti registrati</h3><div class="muted">Ultimi movimenti della Prima Nota.</div></div>
-    <div class="field" style="margin:0;min-width:190px"><label>Mese</label><input id="pnMonth" type="month" min="2027-01"></div>
+    <div><h3 style="margin:0">Movimenti registrati</h3><div class="muted"><span id="pnShownCount">0</span> movimenti visualizzati.</div></div>
    </div>
-   <div class="table" style="margin-top:10px"><table><thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Causale</th><th>Soggetto</th><th>Conto</th><th class="num">Importo</th><th>Azioni</th></tr></thead><tbody id="pnBody"></tbody></table></div>
+   <div class="table" style="margin-top:10px"><table><thead><tr><th>N° Prima Nota</th><th>Data</th><th>Tipo</th><th>Categoria</th><th>Causale</th><th>Soggetto</th><th>Conto</th><th class="num">Importo</th><th>Azioni</th></tr></thead><tbody id="pnBody"></tbody></table></div>
   </div>
  </div>
 </section>
@@ -8455,29 +8470,62 @@ $('tsave').onclick=async()=>{
  await loadTariffsView();msg('tmsg','Tariffa aggiornata nella scheda «'+tariff.nome+'».','ok');
 };
 
-let pnCats=[],pnConti=[],pnMov=[];
-function pnCatName(code){const x=pnCats.find(r=>r.codice===code);return x?.nome||code||'—'}
-function pnContoName(code){const x=pnConti.find(r=>r.codice===code);return x?.nome||code||'—'}
+let pnCats=[],pnConti=[],pnMov=[],pnEditingId=null;
 const PN_START_DATE='2027-01-01';
 const PN_START_MONTH='2027-01';
-function pnTodayOrStart(){
- const t=today();
- return t<PN_START_DATE?PN_START_DATE:t;
+
+function pnCatName(code){const x=pnCats.find(r=>r.codice===code);return x?.nome||code||'—'}
+function pnContoName(code){const x=pnConti.find(r=>r.codice===code);return x?.nome||code||'—'}
+function pnTodayOrStart(){const t=today();return t<PN_START_DATE?PN_START_DATE:t}
+
+function pnFillCategorySelect(){
+ const current=$('pnCategoria')?.value||'';
+ const type=$('pnTipo')?.value||'ENTRATA';
+ const rows=pnCats.filter(x=>x.natura==='ENTRAMBI'||x.natura===type).sort((a,b)=>(Number(a.ordine||0)-Number(b.ordine||0))||String(a.nome).localeCompare(String(b.nome),'it'));
+ $('pnCategoria').innerHTML=rows.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
+ if(rows.some(x=>x.codice===current))$('pnCategoria').value=current;
+}
+function pnFillFilters(){
+ $('pnFilterCategoria').innerHTML='<option value="">Tutte</option>'+pnCats.slice().sort((a,b)=>(Number(a.ordine||0)-Number(b.ordine||0))||String(a.nome).localeCompare(String(b.nome),'it')).map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
+ $('pnFilterConto').innerHTML='<option value="">Tutti</option>'+pnConti.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
 }
 function pnReset(){
  if(!$('pnData'))return;
+ pnEditingId=null;
  $('pnData').value=pnTodayOrStart();
  $('pnTipo').value='ENTRATA';
- $('pnCausale').value='';$('pnImporto').value='';$('pnSoggetto').value='';$('pnDocumento').value='';$('pnNote').value='';
+ pnFillCategorySelect();
+ $('pnCausale').value='';$('pnImporto').value='';$('pnMetodo').value='Bonifico';$('pnSoggetto').value='';$('pnDocumento').value='';$('pnNote').value='';
+ $('pnFormTitle').textContent='➕ Nuovo movimento';
+ $('pnSave').textContent='💾 Salva movimento';
+ $('pnCancelEdit').classList.add('hidden');
+}
+function pnFilteredRows(){
+ let ym=$('pnMonth').value||today().slice(0,7);if(ym<PN_START_MONTH)ym=PN_START_MONTH;$('pnMonth').value=ym;
+ const type=$('pnFilterTipo').value;
+ const cat=$('pnFilterCategoria').value;
+ const conto=$('pnFilterConto').value;
+ const q=String($('pnSearch').value||'').trim().toLowerCase();
+ return pnMov.filter(x=>{
+  if(!String(x.data||'').startsWith(ym))return false;
+  if(type&&x.tipo!==type)return false;
+  if(cat&&x.categoria_codice!==cat)return false;
+  if(conto&&x.conto_codice!==conto)return false;
+  if(q){
+   const hay=[x.numero_movimento,x.causale,x.soggetto,x.numero_documento,x.note,pnCatName(x.categoria_codice),pnContoName(x.conto_codice)].join(' ').toLowerCase();
+   if(!hay.includes(q))return false;
+  }
+  return true;
+ });
 }
 function pnRender(){
- let ym=$('pnMonth').value||today().slice(0,7); if(ym<PN_START_MONTH)ym=PN_START_MONTH;
- $('pnMonth').value=ym;
- const rows=pnMov.filter(x=>String(x.data||'').startsWith(ym));
- const en=rows.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo||0),0);
- const us=rows.filter(x=>x.tipo==='USCITA').reduce((s,x)=>s+Number(x.importo||0),0);
+ let ym=$('pnMonth').value||today().slice(0,7);if(ym<PN_START_MONTH)ym=PN_START_MONTH;$('pnMonth').value=ym;
+ const monthRows=pnMov.filter(x=>String(x.data||'').startsWith(ym));
+ const rows=pnFilteredRows();
+ const en=monthRows.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo||0),0);
+ const us=monthRows.filter(x=>x.tipo==='USCITA').reduce((s,x)=>s+Number(x.importo||0),0);
  $('pnEntrate').textContent=euro(en);$('pnUscite').textContent=euro(us);$('pnSaldo').textContent=euro(en-us);
- $('pnMovimentiCount').textContent=String(rows.length);
+ $('pnMovimentiCount').textContent=String(monthRows.length);$('pnShownCount').textContent=String(rows.length);
  try{$('pnPeriodo').textContent=new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric'}).format(new Date(ym+'-01T12:00:00')).replace(/^./,x=>x.toUpperCase())}catch(_){$('pnPeriodo').textContent=ym}
  let ca=0,ba=0;
  for(const conto of pnConti){
@@ -8486,7 +8534,8 @@ function pnRender(){
   if(String(conto.codice).toUpperCase()==='BANCA')ba=saldo;
  }
  $('pnCassa').textContent=euro(ca);$('pnBanca').textContent=euro(ba);$('pnTotale').textContent=euro(ca+ba);
- $('pnBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.data||'')+'</td><td><span class="pill '+(x.tipo==='ENTRATA'?'g':'r')+'">'+esc(x.tipo||'')+'</span></td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.causale||'')+'</td><td>'+esc(x.soggetto||'—')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num"><b>'+euro(x.importo)+'</b></td><td><button type="button" class="btn danger" data-pn-delete="'+esc(x.id)+'">Elimina</button></td></tr>').join(''):'<tr><td colspan="8">Nessun movimento registrato nel mese selezionato.</td></tr>';
+ $('pnBody').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(x.numero_movimento||'—')+'</b></td><td>'+esc(x.data||'')+'</td><td><span class="pill '+(x.tipo==='ENTRATA'?'g':'r')+'">'+esc(x.tipo||'')+'</span></td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.causale||'')+'</td><td>'+esc(x.soggetto||'—')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num"><b>'+euro(x.importo)+'</b></td><td><div class="actions"><button type="button" class="btn secondary" data-pn-edit="'+esc(x.id)+'">Modifica</button><button type="button" class="btn danger" data-pn-delete="'+esc(x.id)+'">Elimina</button></div></td></tr>').join(''):'<tr><td colspan="9">Nessun movimento corrisponde ai filtri selezionati.</td></tr>';
+ $('pnBody').querySelectorAll('[data-pn-edit]').forEach(b=>b.onclick=()=>pnEdit(b.dataset.pnEdit));
  $('pnBody').querySelectorAll('[data-pn-delete]').forEach(b=>b.onclick=()=>pnDelete(b.dataset.pnDelete));
 }
 async function loadPrimaNota(){
@@ -8495,12 +8544,14 @@ async function loadPrimaNota(){
  const [a,b,c]=await Promise.all([
   sb.from('contabilita_categorie').select('*').eq('attiva',true).order('ordine',{ascending:true}),
   sb.from('contabilita_conti').select('*').eq('attivo',true).order('codice',{ascending:true}),
-  sb.from('contabilita_movimenti').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(1500)
+  sb.from('contabilita_movimenti').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(2000)
  ]);
  const err=a.error||b.error||c.error;
  if(err)return msg('pnMsg','Impossibile caricare la Prima Nota: '+err.message,'err');
- pnCats=a.data||[];pnConti=b.data||[];pnMov=(c.data||[]).filter(x=>String(x.data||'')>=PN_START_DATE);
- $('pnCategoria').innerHTML=pnCats.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
+ pnCats=(a.data||[]).slice().sort((x,y)=>(Number(x.ordine||0)-Number(y.ordine||0))||String(x.nome).localeCompare(String(y.nome),'it'));
+ pnConti=b.data||[];
+ pnMov=(c.data||[]).filter(x=>String(x.data||'')>=PN_START_DATE);
+ pnFillCategorySelect();pnFillFilters();
  $('pnConto').innerHTML=pnConti.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
  if(!$('pnMonth').value||$('pnMonth').value<PN_START_MONTH)$('pnMonth').value=(today().slice(0,7)<PN_START_MONTH?PN_START_MONTH:today().slice(0,7));
  if(!$('pnData').value||$('pnData').value<PN_START_DATE)pnReset();
@@ -8509,33 +8560,62 @@ async function loadPrimaNota(){
  if($('pnStartNotice'))$('pnStartNotice').classList.toggle('hidden',operational);
  pnRender();msg('pnMsg',operational?'':'Prima Nota predisposta: le registrazioni saranno abilitate dal 1° gennaio 2027.','warn');
 }
+function pnEdit(id){
+ if(today()<PN_START_DATE)return msg('pnMsg','Le modifiche saranno abilitate dal 1° gennaio 2027.','warn');
+ const x=pnMov.find(r=>String(r.id)===String(id));if(!x)return;
+ pnEditingId=x.id;
+ $('pnData').value=x.data||PN_START_DATE;$('pnTipo').value=x.tipo||'ENTRATA';pnFillCategorySelect();$('pnCategoria').value=x.categoria_codice||'';
+ $('pnCausale').value=x.causale||'';$('pnImporto').value=x.importo??'';$('pnMetodo').value=x.metodo_pagamento||'Bonifico';$('pnConto').value=x.conto_codice||'';
+ $('pnSoggetto').value=x.soggetto||'';$('pnDocumento').value=x.numero_documento||'';$('pnNote').value=x.note||'';
+ $('pnFormTitle').textContent='✏️ Modifica '+(x.numero_movimento||'movimento');
+ $('pnSave').textContent='💾 Salva modifiche';$('pnCancelEdit').classList.remove('hidden');
+ $('primaNota').scrollIntoView({behavior:'smooth',block:'start'});
+}
 async function pnSave(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
  if(today()<PN_START_DATE)return msg('pnMsg','La Prima Nota sarà operativa dal 1° gennaio 2027.','warn');
  if($('pnData').value<PN_START_DATE)return msg('pnMsg','Non è possibile registrare movimenti con data precedente al 1° gennaio 2027.','warn');
  const amount=Number($('pnImporto').value);
  if(!$('pnData').value||!$('pnCausale').value.trim()||!(amount>0))return msg('pnMsg','Compila data, causale e importo.','warn');
- const row={data:$('pnData').value,tipo:$('pnTipo').value,categoria_codice:$('pnCategoria').value,causale:$('pnCausale').value.trim(),importo:amount,metodo_pagamento:$('pnMetodo').value,conto_codice:$('pnConto').value,soggetto:$('pnSoggetto').value.trim()||null,numero_documento:$('pnDocumento').value.trim()||null,note:$('pnNote').value.trim()||null};
+ const row={data:$('pnData').value,tipo:$('pnTipo').value,categoria_codice:$('pnCategoria').value,causale:$('pnCausale').value.trim(),importo:amount,metodo_pagamento:$('pnMetodo').value,conto_codice:$('pnConto').value,soggetto:$('pnSoggetto').value.trim()||null,numero_documento:$('pnDocumento').value.trim()||null,note:$('pnNote').value.trim()||null,updated_at:new Date().toISOString()};
  $('pnSave').disabled=true;
- const r=await sb.from('contabilita_movimenti').insert(row);
+ let r;
+ if(pnEditingId){
+  const u=await sb.auth.getUser();row.updated_by=u.data.user?.id||null;
+  r=await sb.from('contabilita_movimenti').update(row).eq('id',pnEditingId);
+ }else{
+  r=await sb.from('contabilita_movimenti').insert(row);
+ }
  $('pnSave').disabled=false;
- if(r.error)return msg('pnMsg','Movimento non salvato: '+r.error.message,'err');
- pnReset();await loadPrimaNota();msg('pnMsg','Movimento registrato correttamente.','ok');
+ if(r.error)return msg('pnMsg',(pnEditingId?'Modifica non salvata: ':'Movimento non salvato: ')+r.error.message,'err');
+ const wasEdit=!!pnEditingId;pnReset();await loadPrimaNota();msg('pnMsg',wasEdit?'Movimento modificato correttamente.':'Movimento registrato con numerazione automatica.','ok');
 }
 async function pnDelete(id){
  if(prof?.ruolo!=='AMMINISTRATORE'||!id)return;
  const row=pnMov.find(x=>String(x.id)===String(id));
  if(row&&String(row.data||'')<PN_START_DATE)return msg('pnMsg','I movimenti precedenti al 1° gennaio 2027 non rientrano nella Prima Nota operativa.','warn');
- if(!confirm('Eliminare questo movimento dalla Prima Nota?'))return;
+ if(!confirm('Eliminare '+(row?.numero_movimento||'questo movimento')+' dalla Prima Nota? Il numero non verrà riutilizzato.'))return;
  const r=await sb.from('contabilita_movimenti').delete().eq('id',id);
  if(r.error)return msg('pnMsg','Eliminazione non riuscita: '+r.error.message,'err');
- await loadPrimaNota();msg('pnMsg','Movimento eliminato.','ok');
+ if(String(pnEditingId)===String(id))pnReset();
+ await loadPrimaNota();msg('pnMsg','Movimento eliminato. La numerazione progressiva resta invariata.','ok');
+}
+function pnClearFilters(){
+ $('pnFilterTipo').value='';$('pnFilterCategoria').value='';$('pnFilterConto').value='';$('pnSearch').value='';
+ $('pnMonth').value=(today().slice(0,7)<PN_START_MONTH?PN_START_MONTH:today().slice(0,7));pnRender();
 }
 
 if($('pnSave'))$('pnSave').onclick=pnSave;
 if($('pnClear'))$('pnClear').onclick=pnReset;
+if($('pnCancelEdit'))$('pnCancelEdit').onclick=pnReset;
 if($('pnRefresh'))$('pnRefresh').onclick=loadPrimaNota;
 if($('pnMonth'))$('pnMonth').onchange=pnRender;
+if($('pnTipo'))$('pnTipo').onchange=pnFillCategorySelect;
+if($('pnFilterTipo'))$('pnFilterTipo').onchange=pnRender;
+if($('pnFilterCategoria'))$('pnFilterCategoria').onchange=pnRender;
+if($('pnFilterConto'))$('pnFilterConto').onchange=pnRender;
+if($('pnSearch'))$('pnSearch').oninput=pnRender;
+if($('pnFiltersClear'))$('pnFiltersClear').onclick=pnClearFilters;
 
 async function loadAccounting(){
  const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(500);
