@@ -2048,6 +2048,49 @@ Causale: numero preventivo</textarea>
 
   <div class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
+    <div><h3 style="margin:0">🏷️ Fornitori e spese ricorrenti</h3><div class="muted">Salva i fornitori abituali e prepara modelli per affitto, utenze, assicurazioni, carburante, manutenzioni e altre spese periodiche.</div></div>
+   </div>
+
+   <div class="grid2" style="margin-top:10px">
+    <div class="box">
+     <h3 style="margin-top:0">Fornitore</h3>
+     <div class="field"><label>Denominazione</label><input id="pnSupplierName" placeholder="Es. Fornitore energia"></div>
+     <div class="grid2">
+      <div class="field"><label>CF / P.IVA</label><input id="pnSupplierVat"></div>
+      <div class="field"><label>Telefono</label><input id="pnSupplierPhone"></div>
+      <div class="field"><label>Email</label><input id="pnSupplierEmail" type="email"></div>
+      <div class="field"><label>IBAN</label><input id="pnSupplierIban"></div>
+     </div>
+     <div class="field"><label>Note</label><textarea id="pnSupplierNotes" rows="2"></textarea></div>
+     <div class="actions"><button id="pnSupplierSave" type="button" class="btn yellow">💾 Salva fornitore</button></div>
+     <div id="pnSupplierMsg"></div>
+     <div id="pnSupplierList" style="margin-top:10px"></div>
+    </div>
+
+    <div class="box">
+     <h3 style="margin-top:0">Spesa ricorrente</h3>
+     <div class="field"><label>Descrizione</label><input id="pnRecurringDesc" placeholder="Es. Affitto sede"></div>
+     <div class="grid2">
+      <div class="field"><label>Fornitore</label><select id="pnRecurringSupplier"></select></div>
+      <div class="field"><label>Categoria</label><select id="pnRecurringCategory"></select></div>
+      <div class="field"><label>Conto</label><select id="pnRecurringAccount"></select></div>
+      <div class="field"><label>Importo predefinito €</label><input id="pnRecurringAmount" type="number" min="0" step="0.01"></div>
+      <div class="field"><label>Frequenza</label><select id="pnRecurringFrequency"><option value="MENSILE">Mensile</option><option value="TRIMESTRALE">Trimestrale</option><option value="SEMESTRALE">Semestrale</option><option value="ANNUALE">Annuale</option></select></div>
+      <div class="field"><label>Metodo pagamento</label><select id="pnRecurringMethod"><option>Bonifico</option><option>Bonifico istantaneo</option><option>Contante</option><option>POS</option><option>Altro</option></select></div>
+      <div class="field"><label>Giorno scadenza</label><input id="pnRecurringDay" type="number" min="1" max="31" placeholder="Es. 5"></div>
+      <div class="field"><label>Mese scadenza</label><input id="pnRecurringMonth" type="number" min="1" max="12" placeholder="Solo per annuale"></div>
+     </div>
+     <div class="field"><label>Note</label><textarea id="pnRecurringNotes" rows="2"></textarea></div>
+     <div class="actions"><button id="pnRecurringSave" type="button" class="btn yellow">💾 Salva spesa ricorrente</button></div>
+     <div id="pnRecurringMsg"></div>
+    </div>
+   </div>
+
+   <div class="table" style="margin-top:12px"><table><thead><tr><th>Spesa</th><th>Fornitore</th><th>Categoria</th><th>Frequenza</th><th>Conto</th><th class="num">Importo</th><th>Azioni</th></tr></thead><tbody id="pnRecurringBody"></tbody></table></div>
+  </div>
+
+  <div class="section">
+   <div class="actions" style="justify-content:space-between;align-items:center">
     <div>
      <h3 style="margin:0">🔒 Chiusura mensile e stampa</h3>
      <div class="muted">La chiusura blocca inserimenti, modifiche, eliminazioni e allegati del mese.</div>
@@ -8522,7 +8565,7 @@ $('tsave').onclick=async()=>{
  await loadTariffsView();msg('tmsg','Tariffa aggiornata nella scheda «'+tariff.nome+'».','ok');
 };
 
-let pnCats=[],pnConti=[],pnMov=[],pnClosures=[],pnEditingId=null,pnAttachmentMovementId=null;
+let pnCats=[],pnConti=[],pnMov=[],pnClosures=[],pnSuppliers=[],pnRecurring=[],pnEditingId=null,pnAttachmentMovementId=null;
 const PN_START_DATE='2027-01-01';
 const PN_START_MONTH='2027-01';
 const PN_DOC_BUCKET='contabilita-documenti';
@@ -8621,6 +8664,76 @@ function pnRenderClosure(){
   if(x)pnAttachmentSetLocked(pnMovementClosed(x));
  }
 }
+function pnSupplierName(id){
+ const x=pnSuppliers.find(r=>String(r.id)===String(id));
+ return x?.denominazione||'—';
+}
+function pnRecurringPeriodKey(x,dateStr){
+ const d=new Date((dateStr||PN_START_DATE)+'T12:00:00');
+ const y=d.getFullYear(),m=d.getMonth()+1;
+ if(x.frequenza==='ANNUALE')return String(y);
+ if(x.frequenza==='SEMESTRALE')return y+'-S'+(m<=6?1:2);
+ if(x.frequenza==='TRIMESTRALE')return y+'-T'+Math.ceil(m/3);
+ return y+'-'+String(m).padStart(2,'0');
+}
+function pnFillSupplierRecurring(){
+ $('pnRecurringSupplier').innerHTML='<option value="">Nessun fornitore</option>'+pnSuppliers.filter(x=>x.attivo!==false).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.denominazione)+'</option>').join('');
+ $('pnRecurringCategory').innerHTML=pnCats.filter(x=>x.natura==='USCITA'||x.natura==='ENTRAMBI').map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
+ $('pnRecurringAccount').innerHTML=pnConti.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
+}
+function pnRenderSuppliers(){
+ $('pnSupplierList').innerHTML=pnSuppliers.length?pnSuppliers.map(x=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>'+esc(x.denominazione)+'</b><br><span class="muted">'+esc(x.cf_piva||'')+(x.email?' · '+esc(x.email):'')+'</span></div><button type="button" class="btn danger" data-pn-supplier-delete="'+esc(x.id)+'">Elimina</button></div></div>').join(''):'<div class="notice">Nessun fornitore registrato.</div>';
+ $('pnSupplierList').querySelectorAll('[data-pn-supplier-delete]').forEach(b=>b.onclick=()=>pnDeleteSupplier(b.dataset.pnSupplierDelete));
+}
+function pnRenderRecurring(){
+ $('pnRecurringBody').innerHTML=pnRecurring.length?pnRecurring.map(x=>'<tr><td><b>'+esc(x.descrizione)+'</b></td><td>'+esc(pnSupplierName(x.fornitore_id))+'</td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.frequenza)+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num"><b>'+euro(x.importo_predefinito)+'</b></td><td><div class="actions"><button type="button" class="btn yellow" data-pn-rec-use="'+esc(x.id)+'">Registra in Prima Nota</button><button type="button" class="btn danger" data-pn-rec-delete="'+esc(x.id)+'">Elimina</button></div></td></tr>').join(''):'<tr><td colspan="7">Nessuna spesa ricorrente configurata.</td></tr>';
+ $('pnRecurringBody').querySelectorAll('[data-pn-rec-use]').forEach(b=>b.onclick=()=>pnCreateRecurringMovement(b.dataset.pnRecUse));
+ $('pnRecurringBody').querySelectorAll('[data-pn-rec-delete]').forEach(b=>b.onclick=()=>pnDeleteRecurring(b.dataset.pnRecDelete));
+}
+async function pnSaveSupplier(){
+ if(!$('pnSupplierName').value.trim())return msg('pnSupplierMsg','Inserisci la denominazione.','warn');
+ const row={denominazione:$('pnSupplierName').value.trim(),cf_piva:$('pnSupplierVat').value.trim()||null,email:$('pnSupplierEmail').value.trim()||null,telefono:$('pnSupplierPhone').value.trim()||null,iban:$('pnSupplierIban').value.trim()||null,note:$('pnSupplierNotes').value.trim()||null};
+ const r=await sb.from('contabilita_fornitori').insert(row);
+ if(r.error)return msg('pnSupplierMsg','Fornitore non salvato: '+r.error.message,'err');
+ ['pnSupplierName','pnSupplierVat','pnSupplierEmail','pnSupplierPhone','pnSupplierIban','pnSupplierNotes'].forEach(id=>$(id).value='');
+ await loadPrimaNota();msg('pnSupplierMsg','Fornitore salvato.','ok');
+}
+async function pnDeleteSupplier(id){
+ if(pnRecurring.some(x=>String(x.fornitore_id)===String(id)))return msg('pnSupplierMsg','Fornitore collegato a una spesa ricorrente: elimina prima la spesa ricorrente.','warn');
+ if(!confirm('Eliminare questo fornitore?'))return;
+ const r=await sb.from('contabilita_fornitori').delete().eq('id',id);
+ if(r.error)return msg('pnSupplierMsg','Eliminazione non riuscita: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnSupplierMsg','Fornitore eliminato.','ok');
+}
+async function pnSaveRecurring(){
+ const desc=$('pnRecurringDesc').value.trim(),amount=Number($('pnRecurringAmount').value);
+ if(!desc||!(amount>=0)||!$('pnRecurringCategory').value||!$('pnRecurringAccount').value)return msg('pnRecurringMsg','Compila descrizione, categoria, conto e importo.','warn');
+ const row={descrizione:desc,fornitore_id:$('pnRecurringSupplier').value||null,categoria_codice:$('pnRecurringCategory').value,conto_codice:$('pnRecurringAccount').value,importo_predefinito:amount,frequenza:$('pnRecurringFrequency').value,giorno_scadenza:Number($('pnRecurringDay').value)||null,mese_scadenza:Number($('pnRecurringMonth').value)||null,metodo_pagamento:$('pnRecurringMethod').value,note:$('pnRecurringNotes').value.trim()||null};
+ const r=await sb.from('contabilita_spese_ricorrenti').insert(row);
+ if(r.error)return msg('pnRecurringMsg','Spesa ricorrente non salvata: '+r.error.message,'err');
+ $('pnRecurringDesc').value='';$('pnRecurringAmount').value='';$('pnRecurringDay').value='';$('pnRecurringMonth').value='';$('pnRecurringNotes').value='';
+ await loadPrimaNota();msg('pnRecurringMsg','Spesa ricorrente salvata.','ok');
+}
+async function pnDeleteRecurring(id){
+ if(!confirm('Eliminare questa spesa ricorrente? I movimenti già registrati restano in Prima Nota.'))return;
+ const r=await sb.from('contabilita_spese_ricorrenti').delete().eq('id',id);
+ if(r.error)return msg('pnRecurringMsg','Eliminazione non riuscita: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnRecurringMsg','Spesa ricorrente eliminata.','ok');
+}
+async function pnCreateRecurringMovement(id){
+ if(today()<PN_START_DATE)return msg('pnRecurringMsg','Le spese ricorrenti saranno registrabili dal 1° gennaio 2027.','warn');
+ const x=pnRecurring.find(r=>String(r.id)===String(id));if(!x)return;
+ const date=today(),period=pnRecurringPeriodKey(x,date);
+ if(pnIsMonthClosed(pnMonthKeyFromDate(date)))return msg('pnRecurringMsg','Il mese corrente è chiuso.','warn');
+ const exists=pnMov.some(m=>String(m.spesa_ricorrente_id)===String(x.id)&&m.periodo_ricorrenza===period);
+ if(exists)return msg('pnRecurringMsg','Questa spesa risulta già registrata per il periodo '+period+'.','warn');
+ const supplier=pnSuppliers.find(s=>String(s.id)===String(x.fornitore_id));
+ const row={data:date,tipo:'USCITA',categoria_codice:x.categoria_codice,causale:x.descrizione,importo:Number(x.importo_predefinito||0),metodo_pagamento:x.metodo_pagamento||'Bonifico',conto_codice:x.conto_codice,soggetto:supplier?.denominazione||null,note:x.note||null,fonte:'MANUALE',spesa_ricorrente_id:x.id,periodo_ricorrenza:period};
+ const r=await sb.from('contabilita_movimenti').insert(row);
+ if(r.error)return msg('pnRecurringMsg',r.error.code==='23505'?'Spesa già registrata per questo periodo.':'Registrazione non riuscita: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnRecurringMsg','Spesa registrata in Prima Nota per il periodo '+period+'.','ok');
+}
+
 function pnRenderAccounts(){
  const cash=pnContoByType('CASSA'),bank=pnContoByType('BANCA');
  if($('pnInitialCash'))$('pnInitialCash').value=Number(cash?.saldo_iniziale||0).toFixed(2);
@@ -8694,19 +8807,23 @@ function pnRender(){
 async function loadPrimaNota(){
  if(prof?.ruolo!=='AMMINISTRATORE'){selectView('dash');return}
  msg('pnMsg','Caricamento Prima Nota...');
- const [a,b,c,d]=await Promise.all([
+ const [a,b,c,d,e,g]=await Promise.all([
   sb.from('contabilita_categorie').select('*').eq('attiva',true).order('ordine',{ascending:true}),
   sb.from('contabilita_conti').select('*').eq('attivo',true).order('codice',{ascending:true}),
   sb.from('contabilita_movimenti').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(3000),
-  sb.from('contabilita_chiusure').select('*').order('anno',{ascending:false}).order('mese',{ascending:false})
+  sb.from('contabilita_chiusure').select('*').order('anno',{ascending:false}).order('mese',{ascending:false}),
+  sb.from('contabilita_fornitori').select('*').eq('attivo',true).order('denominazione',{ascending:true}),
+  sb.from('contabilita_spese_ricorrenti').select('*').eq('attiva',true).order('descrizione',{ascending:true})
  ]);
- const err=a.error||b.error||c.error||d.error;
+ const err=a.error||b.error||c.error||d.error||e.error||g.error;
  if(err)return msg('pnMsg','Impossibile caricare la Prima Nota: '+err.message,'err');
  pnCats=(a.data||[]).slice().sort((x,y)=>(Number(x.ordine||0)-Number(y.ordine||0))||String(x.nome).localeCompare(String(y.nome),'it'));
  pnConti=b.data||[];
  pnMov=(c.data||[]).filter(x=>String(x.data||'')>=PN_START_DATE);
  pnClosures=d.data||[];
- pnFillCategorySelect();pnFillFilters();
+ pnSuppliers=e.data||[];
+ pnRecurring=g.data||[];
+ pnFillCategorySelect();pnFillFilters();pnFillSupplierRecurring();pnRenderSuppliers();pnRenderRecurring();
  $('pnConto').innerHTML=pnConti.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
  if(!$('pnMonth').value||$('pnMonth').value<PN_START_MONTH)$('pnMonth').value=(today().slice(0,7)<PN_START_MONTH?PN_START_MONTH:today().slice(0,7));
  if(!$('pnData').value||$('pnData').value<PN_START_DATE)pnReset();
@@ -8895,6 +9012,8 @@ if($('pnPrintMonth'))$('pnPrintMonth').onclick=pnPrintMonth;
 if($('pnAttachmentClose'))$('pnAttachmentClose').onclick=pnCloseAttachments;
 if($('pnAttachmentUpload'))$('pnAttachmentUpload').onclick=pnUploadAttachment;
 if($('pnSaveInitialBalances'))$('pnSaveInitialBalances').onclick=pnSaveInitialBalances;
+if($('pnSupplierSave'))$('pnSupplierSave').onclick=pnSaveSupplier;
+if($('pnRecurringSave'))$('pnRecurringSave').onclick=pnSaveRecurring;
 
 async function loadAccounting(){
  const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(500);
