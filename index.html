@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.27-service-first">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.35-tablet118">
 <script>
 (function(){
  try{
@@ -10107,7 +10107,17 @@ function tabletSetListMode(mode){
 }
 function renderTabletList(){
  const rows=tabletListFiltered();
- $('tabletList').innerHTML=rows.length?rows.map(s=>{
+ const direct118Cards=(['07','09'].includes(String(tabletMezzo))&&tabletDirect118.length)
+  ?tabletDirect118.map(f=>
+   '<article class="tablet-service-card" style="border:3px solid #dc2626;background:#fff7f7">'+
+    '<div class="tablet-service-head"><div><div class="muted">'+esc(tabletDateLabel(f.data_servizio))+'</div><span class="tablet-hour">118 APERTO</span></div>'+
+    '<span class="tablet-vehicle">'+esc(tabletMezzo)+'</span><span class="tablet-pill">APERTO</span></div>'+
+    '<div class="tablet-flow"><b>🚨 '+esc(f.numero_foglio||'Foglio 118')+'</b><br>KM partenza: '+esc(f.km_partenza??'—')+' · Scheda 118: '+esc(f.numero_scheda_118||'da inserire')+'</div>'+
+    '<div class="tablet-actions"><button class="btn danger" type="button" data-open-direct118-top="'+esc(f.id)+'">Apri Foglio 118</button></div>'+
+   '</article>'
+  ).join('')
+  :'';
+ $('tabletList').innerHTML=direct118Cards+(rows.length?rows.map(s=>{
  const crew=tabletCrewFor(s.id),ready=tabletCrewReady(s),st=s.stato_gestionale||s.stato||'DA ESEGUIRE';
  return '<article class="tablet-service-card '+tabletStatusClass(st)+'" data-tablet-card="'+esc(s.id)+'"><div class="tablet-service-head">'+
  '<div><div class="muted">'+esc(tabletDateLabel(s.data_servizio))+'</div><span class="tablet-hour">'+esc(tabletFmt(s.ora_partenza_prevista))+'</span></div>'+
@@ -10120,7 +10130,11 @@ function renderTabletList(){
  '<div class="tablet-actions"><button class="btn blue" type="button" data-tablet-open="'+esc(s.id)+'">Apri servizio / Foglio Viaggio</button>'+
  (s.foglio_viaggio_id?'<button class="btn yellow" type="button" data-tablet-open-sheet="'+esc(s.id)+'">Apri direttamente Foglio Viaggio</button>':'')+
  '</div></article>'
- }).join(''):'<div class="tablet-empty">Nessun servizio in questa vista per il mezzo '+esc(tabletMezzo)+'.<br>Il tablet si aggiorna automaticamente.</div>';
+ }).join(''):(direct118Cards?'':'<div class="tablet-empty">Nessun servizio in questa vista per il mezzo '+esc(tabletMezzo)+'.<br>Il tablet si aggiorna automaticamente.</div>'));
+ $('tabletList').querySelectorAll('[data-open-direct118-top]').forEach(b=>b.onclick=()=>{
+  const f=tabletDirect118.find(x=>x.id===b.dataset.openDirect118Top);
+  if(f)openTabletDirect118(f);
+ });
  // apertura gestita con delega click stabile sul contenitore tabletList
 }
 let tabletListDelegatedOpen=false;
@@ -11417,7 +11431,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.23-stable-tablet07';
+const CGE_APP_BUILD='14.35-tablet118-open-visible';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
