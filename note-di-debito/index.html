@@ -157,7 +157,10 @@ async function loadAll(){
  ]);
  if(fs.error)return msg('listMsg','Errore Fogli Viaggio: '+fs.error.message,'err');
  if(ns.error)return msg('listMsg','Errore Note di Debito: '+ns.error.message,'err');
- sheets=fs.data||[];notes=ns.data||[];updateCounts();render();msg('listMsg','');
+ sheets=(fs.data||[]).filter(f=>{
+  const t=String(f.tipo_servizio||'').trim().toUpperCase();
+  return t!=='SERVIZIO INTERNO'&&t!=='INTERNO'&&!t.includes('SERVIZIO INTERNO');
+ });notes=ns.data||[];updateCounts();render();msg('listMsg','');
 }
 function groups(){
  const ids=new Set(notes.map(n=>n.foglio_viaggio_id));
