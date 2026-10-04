@@ -2653,7 +2653,7 @@ Causale: numero preventivo</textarea>
     <div id="tablet118RouteSection" class="hidden">
     <h3 class="tablet-section-title" style="margin-top:20px">Percorso 118</h3>
     <div class="tablet-fields">
-     <div class="field"><label>Partenza</label><input id="tablet118From" placeholder="Luogo partenza"></div>
+     <div class="field"><label>Partenza</label><input id="tablet118From" placeholder="Inserisci luogo reale di partenza"></div>
      <div class="field"><label>Luogo carico</label><input id="tablet118Load" placeholder="Luogo carico"></div>
      <div class="field"><label>Destinazione</label><input id="tablet118Dest" placeholder="Destinazione"></div>
      <div class="field"><label>Luogo rientro</label><input id="tablet118Return" placeholder="Luogo rientro"></div>
@@ -10583,7 +10583,7 @@ async function openTabletDirect118(foglio){
  const f=foglio,closed=f.stato==='CHIUSO';
  tabletConfigureTimeFields(true);
  tabletPopulate118Crew(f);
- if($('tablet118From'))$('tablet118From').value=f.luogo_partenza||'SEDE CROCE GIALLA DORMELLETTO';
+ if($('tablet118From'))$('tablet118From').value=f.luogo_partenza||'';
  if($('tablet118Load'))$('tablet118Load').value=f.luogo_carico||'';
  if($('tablet118Dest'))$('tablet118Dest').value=f.destinazione||f.ospedale_destinazione||'';
  if($('tablet118Return'))$('tablet118Return').value=f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO';
@@ -10721,7 +10721,7 @@ async function saveTabletSheet(silent=false){
   row.barella_bariatrica=false;
   row.modalita_pagamento=null;
   row.data_pagamento=null;
-  row.luogo_partenza=$('tablet118From')?.value.trim()||'SEDE CROCE GIALLA DORMELLETTO';
+  row.luogo_partenza=$('tablet118From')?.value.trim()||null;
   row.luogo_carico=$('tablet118Load')?.value.trim()||null;
   row.destinazione=$('tablet118Dest')?.value.trim()||null;
   row.luogo_rientro=$('tablet118Return')?.value.trim()||'SEDE CROCE GIALLA DORMELLETTO';
