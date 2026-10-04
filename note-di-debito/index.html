@@ -193,11 +193,11 @@ function render(){
  $('viewTitle').textContent=titles[view][0];$('viewSub').textContent=titles[view][1];
  const arr=g[view].filter(x=>!q||searchable(x).includes(q));
  if(view==='queue'){
-  $('thead').innerHTML='<tr><th>Foglio</th><th>Data</th><th>Paziente / intestatario</th><th>Servizio</th><th>Destinazione</th><th>Totale</th><th></th></tr>';
+  $('thead').innerHTML='<tr><th>Foglio</th><th>Data</th><th>Paziente / intestatario</th><th>Servizio</th><th>Destinazione</th><th>Totale</th><th>Conservazione</th><th></th></tr>';
   $('rows').innerHTML=arr.length?arr.map(f=>{
    const name=f.intestatario_nota_debito||[f.paziente_nome,f.paziente_cognome].filter(Boolean).join(' ')||'—';
-   return '<tr><td><b>'+esc(f.numero_foglio)+'</b><br><span class="muted">Mezzo '+esc(f.mezzo||'—')+'</span></td><td>'+nice(f.data_servizio)+'</td><td>'+esc(name)+'</td><td>'+esc(f.tipo_servizio||'—')+'</td><td>'+esc(f.destinazione||'—')+'</td><td><b>'+money(f.totale_servizio)+'</b></td><td><button class="btn yellow" data-create="'+esc(f.id)+'">Crea bozza</button></td></tr>';
-  }).join(''):'<tr><td colspan="7">Nessun Foglio Viaggio da elaborare.</td></tr>';
+   return '<tr><td><b>'+esc(f.numero_foglio)+'</b><br><span class="muted">Mezzo '+esc(f.mezzo||'—')+'</span></td><td>'+nice(f.data_servizio)+'</td><td>'+esc(name)+'</td><td>'+esc(f.tipo_servizio||'—')+'</td><td>'+esc(f.destinazione||'—')+'</td><td><b>'+money(f.totale_servizio)+'</b></td><td><span class="pill p-warn">NON ANCORA EMESSA</span></td><td><button class="btn yellow" data-create="'+esc(f.id)+'">Crea bozza</button></td></tr>';
+  }).join(''):'<tr><td colspan="8">Nessun Foglio Viaggio da elaborare.</td></tr>';
   document.querySelectorAll('[data-create]').forEach(b=>b.onclick=()=>createNote(b.dataset.create));
  }else{
   $('thead').innerHTML='<tr><th>Numero</th><th>Data</th><th>Intestatario</th><th>Foglio Viaggio</th><th>Totale</th><th>Stato</th><th>Pagamento</th><th>Conservazione</th><th></th></tr>';
