@@ -2527,6 +2527,11 @@ Causale: numero preventivo</textarea>
    <div class="tablet-actions" id="tabletActionBar"></div>
    <div id="tabletSheetPanel" class="section hidden">
     <h3 class="tablet-section-title" id="tabletSheetTitle">Foglio Viaggio</h3>
+    <div class="stats" style="margin:10px 0">
+     <div class="stat" style="border:2px solid var(--y)"><small>NUMERO FOGLIO VIAGGIO</small><b id="tabletSheetNumber" style="font-size:24px">—</b></div>
+     <div class="stat"><small>MEZZO</small><b id="tabletSheetVehicle" style="font-size:20px">—</b></div>
+     <div class="stat"><small>STATO FOGLIO</small><b id="tabletSheetState" style="font-size:20px">—</b></div>
+    </div>
     <div class="notice"><b>Sequenza operativa:</b> 1) Prendi in carico · 2) Svolgi il servizio compilando il Foglio Viaggio · 3) Chiudi servizio. Dopo la chiusura il servizio passa al gestionale principale per la Nota di Debito.</div>
     <div id="tabletSheetMsg"></div>
     <form id="tabletSheetForm">
@@ -9995,6 +10000,12 @@ async function startTabletArea(){
 }
 function stopTabletArea(){if(tabletRefreshTimer)clearInterval(tabletRefreshTimer);tabletRefreshTimer=null}
 function tabletReadOnlyField(label,value){return '<div class="field"><label>'+esc(label)+'</label><div class="notice" style="margin:2px 0">'+esc(value||'—')+'</div></div>'}
+function tabletShowSheetIdentity(f){
+ if(!f)return;
+ if($('tabletSheetNumber'))$('tabletSheetNumber').textContent=f.numero_foglio||'—';
+ if($('tabletSheetVehicle'))$('tabletSheetVehicle').textContent=f.mezzo||tabletMezzo||'—';
+ if($('tabletSheetState'))$('tabletSheetState').textContent=f.stato||'—';
+}
 function renderTabletDetailHeader(){
  const s=tabletCurrentService;if(!s)return;
  $('tabletServiceTitle').textContent=(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+' · mezzo '+tabletMezzo;
@@ -10091,6 +10102,7 @@ async function openTabletDirect118(foglio){
  ['tablet118From','tablet118Load','tablet118Dest','tablet118Return','tablet118Driver','tablet118Leader','tablet118Rescuer','tablet118Second'].forEach(id=>{if($(id))$(id).disabled=closed});
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
+ tabletShowSheetIdentity(f);
  const patientEditable=!!tabletCurrentService && tabletSheetIs118===false && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno';
  if($('tabletPatientEditSection'))$('tabletPatientEditSection').classList.toggle('hidden',!patientEditable);
  if(patientEditable){
@@ -10119,6 +10131,9 @@ async function openTabletDirect118(foglio){
 }
 async function loadTabletSheet(serviceId){
  $('tabletSheetPanel').classList.add('hidden');tabletCurrentSheet=null;
+ if($('tabletSheetNumber'))$('tabletSheetNumber').textContent='—';
+ if($('tabletSheetVehicle'))$('tabletSheetVehicle').textContent=tabletMezzo||'—';
+ if($('tabletSheetState'))$('tabletSheetState').textContent='—';
  const r=await sb.from('fogli_viaggio').select('*').eq('servizio_giornaliero_id',serviceId).eq('mezzo',tabletMezzo).maybeSingle();
  if(r.error)return msg('tabletDetailMsg','Errore Foglio Viaggio: '+r.error.message,'err');
  if(!r.data){
@@ -10146,6 +10161,7 @@ async function loadTabletSheet(serviceId){
  if(!tabletSheetIs118&&isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio))$('tabletPatientLoadTime').classList.add('hidden');
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
+ tabletShowSheetIdentity(f);
  document.querySelectorAll('[data-ts-field]').forEach(el=>{
  const key=el.dataset.tsField;el.disabled=closed;
  if(el.type==='checkbox')el.checked=!!f[key];
