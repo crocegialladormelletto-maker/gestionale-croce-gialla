@@ -2146,8 +2146,12 @@ Causale: numero preventivo</textarea>
       <div class="field"><label>Provincia</label><input id="pnClientProvince"></div>
      </div>
      <div class="field"><label>Note</label><textarea id="pnClientNotes" rows="2"></textarea></div>
-     <div class="actions"><button id="pnClientSave" type="button" class="btn yellow">💾 Salva cliente</button></div>
+     <div class="actions"><button id="pnClientSave" type="button" class="btn yellow">💾 Salva cliente</button><button id="pnClientCancelEdit" type="button" class="btn secondary hidden">Annulla modifica</button></div>
      <div id="pnClientMsg"></div>
+     <div class="grid2" style="margin-top:8px">
+      <div class="field"><label>Ricerca clienti</label><input id="pnClientSearch" placeholder="Nome, CF/P.IVA, comune, email"></div>
+      <div class="field"><label>Stato</label><select id="pnClientStatus"><option value="ACTIVE">Attivi</option><option value="INACTIVE">Disattivati</option><option value="ALL">Tutti</option></select></div>
+     </div>
      <div id="pnClientList" style="margin-top:10px"></div>
     </div>
 
@@ -2161,8 +2165,12 @@ Causale: numero preventivo</textarea>
       <div class="field"><label>IBAN</label><input id="pnSupplierIban"></div>
      </div>
      <div class="field"><label>Note</label><textarea id="pnSupplierNotes" rows="2"></textarea></div>
-     <div class="actions"><button id="pnSupplierSave" type="button" class="btn yellow">💾 Salva fornitore</button></div>
+     <div class="actions"><button id="pnSupplierSave" type="button" class="btn yellow">💾 Salva fornitore</button><button id="pnSupplierCancelEdit" type="button" class="btn secondary hidden">Annulla modifica</button></div>
      <div id="pnSupplierMsg"></div>
+     <div class="grid2" style="margin-top:8px">
+      <div class="field"><label>Ricerca fornitori</label><input id="pnSupplierSearch" placeholder="Nome, CF/P.IVA, email"></div>
+      <div class="field"><label>Stato</label><select id="pnSupplierStatus"><option value="ACTIVE">Attivi</option><option value="INACTIVE">Disattivati</option><option value="ALL">Tutti</option></select></div>
+     </div>
      <div id="pnSupplierList" style="margin-top:10px"></div>
     </div>
 
@@ -8713,7 +8721,7 @@ $('tsave').onclick=async()=>{
  await loadTariffsView();msg('tmsg','Tariffa aggiornata nella scheda «'+tariff.nome+'».','ok');
 };
 
-let pnCats=[],pnConti=[],pnMov=[],pnClosures=[],pnClients=[],pnSuppliers=[],pnRecurring=[],pnEditingId=null,pnAttachmentMovementId=null;
+let pnCats=[],pnConti=[],pnMov=[],pnClosures=[],pnClients=[],pnSuppliers=[],pnRecurring=[],pnEditingId=null,pnAttachmentMovementId=null,pnEditingClientId=null,pnEditingSupplierId=null;
 const PN_START_DATE='2027-01-01';
 const PN_START_MONTH='2027-01';
 const PN_DOC_BUCKET='contabilita-documenti';
@@ -8830,23 +8838,59 @@ function pnSubjectChanged(){
  const row=type==='CLIENTE'?pnClients.find(x=>String(x.id)===String(id)):pnSuppliers.find(x=>String(x.id)===String(id));
  if(row)$('pnSoggetto').value=row.denominazione||'';
 }
+function pnClientMovementCount(id){return pnMov.filter(x=>String(x.cliente_id)===String(id)).length}
+function pnFilteredClients(){
+ const q=String($('pnClientSearch')?.value||'').trim().toLowerCase();
+ const st=$('pnClientStatus')?.value||'ACTIVE';
+ return pnClients.filter(x=>{
+  if(st==='ACTIVE'&&x.attivo===false)return false;
+  if(st==='INACTIVE'&&x.attivo!==false)return false;
+  if(q){
+   const hay=[x.denominazione,x.cf_piva,x.comune,x.email,x.telefono].join(' ').toLowerCase();
+   if(!hay.includes(q))return false;
+  }
+  return true;
+ });
+}
 function pnRenderClients(){
- $('pnClientList').innerHTML=pnClients.length?pnClients.map(x=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>'+esc(x.denominazione)+'</b><br><span class="muted">'+esc(x.cf_piva||'')+(x.comune?' · '+esc(x.comune):'')+(x.email?' · '+esc(x.email):'')+'</span></div><button type="button" class="btn danger" data-pn-client-delete="'+esc(x.id)+'">Disattiva</button></div></div>').join(''):'<div class="notice">Nessun cliente registrato.</div>';
- $('pnClientList').querySelectorAll('[data-pn-client-delete]').forEach(b=>b.onclick=()=>pnDeleteClient(b.dataset.pnClientDelete));
+ const rows=pnFilteredClients();
+ $('pnClientList').innerHTML=rows.length?rows.map(x=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>'+esc(x.denominazione)+'</b> '+(x.attivo===false?'<span class="pill r">DISATTIVATO</span>':'<span class="pill g">ATTIVO</span>')+'<br><span class="muted">'+esc(x.cf_piva||'')+(x.comune?' · '+esc(x.comune):'')+(x.email?' · '+esc(x.email):'')+' · '+pnClientMovementCount(x.id)+' movimenti</span></div><div class="actions"><button type="button" class="btn secondary" data-pn-client-edit="'+esc(x.id)+'">Modifica</button><button type="button" class="btn '+(x.attivo===false?'yellow':'danger')+'" data-pn-client-toggle="'+esc(x.id)+'">'+(x.attivo===false?'Riattiva':'Disattiva')+'</button></div></div></div>').join(''):'<div class="notice">Nessun cliente trovato.</div>';
+ $('pnClientList').querySelectorAll('[data-pn-client-edit]').forEach(b=>b.onclick=()=>pnEditClient(b.dataset.pnClientEdit));
+ $('pnClientList').querySelectorAll('[data-pn-client-toggle]').forEach(b=>b.onclick=()=>pnToggleClient(b.dataset.pnClientToggle));
+}
+function pnResetClientForm(){
+ pnEditingClientId=null;
+ ['pnClientName','pnClientVat','pnClientEmail','pnClientPhone','pnClientAddress','pnClientCap','pnClientCity','pnClientProvince','pnClientNotes'].forEach(id=>$(id).value='');
+ $('pnClientSave').textContent='💾 Salva cliente';
+ $('pnClientCancelEdit').classList.add('hidden');
+}
+function pnEditClient(id){
+ const x=pnClients.find(r=>String(r.id)===String(id));if(!x)return;
+ pnEditingClientId=x.id;
+ $('pnClientName').value=x.denominazione||'';$('pnClientVat').value=x.cf_piva||'';$('pnClientEmail').value=x.email||'';$('pnClientPhone').value=x.telefono||'';$('pnClientAddress').value=x.indirizzo||'';$('pnClientCap').value=x.cap||'';$('pnClientCity').value=x.comune||'';$('pnClientProvince').value=x.provincia||'';$('pnClientNotes').value=x.note||'';
+ $('pnClientSave').textContent='💾 Salva modifiche';
+ $('pnClientCancelEdit').classList.remove('hidden');
 }
 async function pnSaveClient(){
  if(!$('pnClientName').value.trim())return msg('pnClientMsg','Inserisci la denominazione o il nome del cliente.','warn');
- const row={denominazione:$('pnClientName').value.trim(),cf_piva:$('pnClientVat').value.trim()||null,email:$('pnClientEmail').value.trim()||null,telefono:$('pnClientPhone').value.trim()||null,indirizzo:$('pnClientAddress').value.trim()||null,cap:$('pnClientCap').value.trim()||null,comune:$('pnClientCity').value.trim()||null,provincia:$('pnClientProvince').value.trim()||null,note:$('pnClientNotes').value.trim()||null};
- const r=await sb.from('contabilita_clienti').insert(row);
+ const row={denominazione:$('pnClientName').value.trim(),cf_piva:$('pnClientVat').value.trim()||null,email:$('pnClientEmail').value.trim()||null,telefono:$('pnClientPhone').value.trim()||null,indirizzo:$('pnClientAddress').value.trim()||null,cap:$('pnClientCap').value.trim()||null,comune:$('pnClientCity').value.trim()||null,provincia:$('pnClientProvince').value.trim()||null,note:$('pnClientNotes').value.trim()||null,updated_at:new Date().toISOString()};
+ if(row.cf_piva){
+  const dup=pnClients.find(x=>x.attivo!==false&&String(x.id)!==String(pnEditingClientId||'')&&String(x.cf_piva||'').trim().toUpperCase()===row.cf_piva.trim().toUpperCase());
+  if(dup)return msg('pnClientMsg','Esiste già un cliente attivo con questo CF/P.IVA: '+dup.denominazione,'warn');
+ }
+ const nameDup=pnClients.find(x=>x.attivo!==false&&String(x.id)!==String(pnEditingClientId||'')&&String(x.denominazione||'').trim().toLowerCase()===row.denominazione.toLowerCase());
+ if(nameDup&&!confirm('Esiste già un cliente attivo con la stessa denominazione: '+nameDup.denominazione+'. Vuoi continuare comunque?'))return;
+ const r=pnEditingClientId?await sb.from('contabilita_clienti').update(row).eq('id',pnEditingClientId):await sb.from('contabilita_clienti').insert(row);
  if(r.error)return msg('pnClientMsg','Cliente non salvato: '+r.error.message,'err');
- ['pnClientName','pnClientVat','pnClientEmail','pnClientPhone','pnClientAddress','pnClientCap','pnClientCity','pnClientProvince','pnClientNotes'].forEach(id=>$(id).value='');
- await loadPrimaNota();msg('pnClientMsg','Cliente salvato.','ok');
+ pnResetClientForm();await loadPrimaNota();msg('pnClientMsg',pnEditingClientId?'Cliente modificato.':'Cliente salvato.','ok');
 }
-async function pnDeleteClient(id){
- if(!confirm('Disattivare questo cliente? I movimenti già registrati resteranno invariati.'))return;
- const r=await sb.from('contabilita_clienti').update({attivo:false,updated_at:new Date().toISOString()}).eq('id',id);
- if(r.error)return msg('pnClientMsg','Disattivazione non riuscita: '+r.error.message,'err');
- await loadPrimaNota();msg('pnClientMsg','Cliente disattivato.','ok');
+async function pnToggleClient(id){
+ const x=pnClients.find(r=>String(r.id)===String(id));if(!x)return;
+ const newState=x.attivo===false;
+ if(!confirm((newState?'Riattivare ':'Disattivare ')+x.denominazione+'?'))return;
+ const r=await sb.from('contabilita_clienti').update({attivo:newState,updated_at:new Date().toISOString()}).eq('id',id);
+ if(r.error)return msg('pnClientMsg','Operazione non riuscita: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnClientMsg',newState?'Cliente riattivato.':'Cliente disattivato.','ok');
 }
 
 function pnSupplierName(id){
@@ -8866,30 +8910,62 @@ function pnFillSupplierRecurring(){
  $('pnRecurringCategory').innerHTML=pnCats.filter(x=>x.natura==='USCITA'||x.natura==='ENTRAMBI').map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
  $('pnRecurringAccount').innerHTML=pnConti.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
 }
-function pnRenderSuppliers(){
- $('pnSupplierList').innerHTML=pnSuppliers.length?pnSuppliers.map(x=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>'+esc(x.denominazione)+'</b><br><span class="muted">'+esc(x.cf_piva||'')+(x.email?' · '+esc(x.email):'')+'</span></div><button type="button" class="btn danger" data-pn-supplier-delete="'+esc(x.id)+'">Elimina</button></div></div>').join(''):'<div class="notice">Nessun fornitore registrato.</div>';
- $('pnSupplierList').querySelectorAll('[data-pn-supplier-delete]').forEach(b=>b.onclick=()=>pnDeleteSupplier(b.dataset.pnSupplierDelete));
+function pnSupplierMovementCount(id){return pnMov.filter(x=>String(x.fornitore_id)===String(id)).length}
+function pnFilteredSuppliers(){
+ const q=String($('pnSupplierSearch')?.value||'').trim().toLowerCase();
+ const st=$('pnSupplierStatus')?.value||'ACTIVE';
+ return pnSuppliers.filter(x=>{
+  if(st==='ACTIVE'&&x.attivo===false)return false;
+  if(st==='INACTIVE'&&x.attivo!==false)return false;
+  if(q){
+   const hay=[x.denominazione,x.cf_piva,x.email,x.telefono].join(' ').toLowerCase();
+   if(!hay.includes(q))return false;
+  }
+  return true;
+ });
 }
-function pnRenderRecurring(){
- $('pnRecurringBody').innerHTML=pnRecurring.length?pnRecurring.map(x=>'<tr><td><b>'+esc(x.descrizione)+'</b></td><td>'+esc(pnSupplierName(x.fornitore_id))+'</td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.frequenza)+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num"><b>'+euro(x.importo_predefinito)+'</b></td><td><div class="actions"><button type="button" class="btn yellow" data-pn-rec-use="'+esc(x.id)+'">Registra in Prima Nota</button><button type="button" class="btn danger" data-pn-rec-delete="'+esc(x.id)+'">Elimina</button></div></td></tr>').join(''):'<tr><td colspan="7">Nessuna spesa ricorrente configurata.</td></tr>';
- $('pnRecurringBody').querySelectorAll('[data-pn-rec-use]').forEach(b=>b.onclick=()=>pnCreateRecurringMovement(b.dataset.pnRecUse));
- $('pnRecurringBody').querySelectorAll('[data-pn-rec-delete]').forEach(b=>b.onclick=()=>pnDeleteRecurring(b.dataset.pnRecDelete));
+function pnRenderSuppliers(){
+ const rows=pnFilteredSuppliers();
+ $('pnSupplierList').innerHTML=rows.length?rows.map(x=>'<div class="box" style="margin:6px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>'+esc(x.denominazione)+'</b> '+(x.attivo===false?'<span class="pill r">DISATTIVATO</span>':'<span class="pill g">ATTIVO</span>')+'<br><span class="muted">'+esc(x.cf_piva||'')+(x.email?' · '+esc(x.email):'')+' · '+pnSupplierMovementCount(x.id)+' movimenti</span></div><div class="actions"><button type="button" class="btn secondary" data-pn-supplier-edit="'+esc(x.id)+'">Modifica</button><button type="button" class="btn '+(x.attivo===false?'yellow':'danger')+'" data-pn-supplier-toggle="'+esc(x.id)+'">'+(x.attivo===false?'Riattiva':'Disattiva')+'</button></div></div></div>').join(''):'<div class="notice">Nessun fornitore trovato.</div>';
+ $('pnSupplierList').querySelectorAll('[data-pn-supplier-edit]').forEach(b=>b.onclick=()=>pnEditSupplier(b.dataset.pnSupplierEdit));
+ $('pnSupplierList').querySelectorAll('[data-pn-supplier-toggle]').forEach(b=>b.onclick=()=>pnToggleSupplier(b.dataset.pnSupplierToggle));
+}
+function pnResetSupplierForm(){
+ pnEditingSupplierId=null;
+ ['pnSupplierName','pnSupplierVat','pnSupplierEmail','pnSupplierPhone','pnSupplierIban','pnSupplierNotes'].forEach(id=>$(id).value='');
+ $('pnSupplierSave').textContent='💾 Salva fornitore';
+ $('pnSupplierCancelEdit').classList.add('hidden');
+}
+function pnEditSupplier(id){
+ const x=pnSuppliers.find(r=>String(r.id)===String(id));if(!x)return;
+ pnEditingSupplierId=x.id;
+ $('pnSupplierName').value=x.denominazione||'';$('pnSupplierVat').value=x.cf_piva||'';$('pnSupplierEmail').value=x.email||'';$('pnSupplierPhone').value=x.telefono||'';$('pnSupplierIban').value=x.iban||'';$('pnSupplierNotes').value=x.note||'';
+ $('pnSupplierSave').textContent='💾 Salva modifiche';
+ $('pnSupplierCancelEdit').classList.remove('hidden');
 }
 async function pnSaveSupplier(){
  if(!$('pnSupplierName').value.trim())return msg('pnSupplierMsg','Inserisci la denominazione.','warn');
- const row={denominazione:$('pnSupplierName').value.trim(),cf_piva:$('pnSupplierVat').value.trim()||null,email:$('pnSupplierEmail').value.trim()||null,telefono:$('pnSupplierPhone').value.trim()||null,iban:$('pnSupplierIban').value.trim()||null,note:$('pnSupplierNotes').value.trim()||null};
- const r=await sb.from('contabilita_fornitori').insert(row);
+ const row={denominazione:$('pnSupplierName').value.trim(),cf_piva:$('pnSupplierVat').value.trim()||null,email:$('pnSupplierEmail').value.trim()||null,telefono:$('pnSupplierPhone').value.trim()||null,iban:$('pnSupplierIban').value.trim()||null,note:$('pnSupplierNotes').value.trim()||null,updated_at:new Date().toISOString()};
+ if(row.cf_piva){
+  const dup=pnSuppliers.find(x=>x.attivo!==false&&String(x.id)!==String(pnEditingSupplierId||'')&&String(x.cf_piva||'').trim().toUpperCase()===row.cf_piva.trim().toUpperCase());
+  if(dup)return msg('pnSupplierMsg','Esiste già un fornitore attivo con questo CF/P.IVA: '+dup.denominazione,'warn');
+ }
+ const nameDup=pnSuppliers.find(x=>x.attivo!==false&&String(x.id)!==String(pnEditingSupplierId||'')&&String(x.denominazione||'').trim().toLowerCase()===row.denominazione.toLowerCase());
+ if(nameDup&&!confirm('Esiste già un fornitore attivo con la stessa denominazione: '+nameDup.denominazione+'. Vuoi continuare comunque?'))return;
+ const r=pnEditingSupplierId?await sb.from('contabilita_fornitori').update(row).eq('id',pnEditingSupplierId):await sb.from('contabilita_fornitori').insert(row);
  if(r.error)return msg('pnSupplierMsg','Fornitore non salvato: '+r.error.message,'err');
- ['pnSupplierName','pnSupplierVat','pnSupplierEmail','pnSupplierPhone','pnSupplierIban','pnSupplierNotes'].forEach(id=>$(id).value='');
- await loadPrimaNota();msg('pnSupplierMsg','Fornitore salvato.','ok');
+ pnResetSupplierForm();await loadPrimaNota();msg('pnSupplierMsg',pnEditingSupplierId?'Fornitore modificato.':'Fornitore salvato.','ok');
 }
-async function pnDeleteSupplier(id){
- if(pnRecurring.some(x=>String(x.fornitore_id)===String(id)))return msg('pnSupplierMsg','Fornitore collegato a una spesa ricorrente attiva: disattiva prima la spesa ricorrente.','warn');
- if(!confirm('Disattivare questo fornitore? I movimenti già registrati resteranno invariati.'))return;
- const r=await sb.from('contabilita_fornitori').update({attivo:false,updated_at:new Date().toISOString()}).eq('id',id);
- if(r.error)return msg('pnSupplierMsg','Disattivazione non riuscita: '+r.error.message,'err');
- await loadPrimaNota();msg('pnSupplierMsg','Fornitore disattivato.','ok');
+async function pnToggleSupplier(id){
+ const x=pnSuppliers.find(r=>String(r.id)===String(id));if(!x)return;
+ if(x.attivo!==false&&pnRecurring.some(r=>String(r.fornitore_id)===String(id)&&r.attiva!==false))return msg('pnSupplierMsg','Fornitore collegato a una spesa ricorrente attiva: disattiva prima la spesa ricorrente.','warn');
+ const newState=x.attivo===false;
+ if(!confirm((newState?'Riattivare ':'Disattivare ')+x.denominazione+'?'))return;
+ const r=await sb.from('contabilita_fornitori').update({attivo:newState,updated_at:new Date().toISOString()}).eq('id',id);
+ if(r.error)return msg('pnSupplierMsg','Operazione non riuscita: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnSupplierMsg',newState?'Fornitore riattivato.':'Fornitore disattivato.','ok');
 }
+
 async function pnSaveRecurring(){
  const desc=$('pnRecurringDesc').value.trim(),amount=Number($('pnRecurringAmount').value);
  if(!desc||!(amount>=0)||!$('pnRecurringCategory').value||!$('pnRecurringAccount').value)return msg('pnRecurringMsg','Compila descrizione, categoria, conto e importo.','warn');
@@ -9130,8 +9206,8 @@ async function loadPrimaNota(){
   sb.from('contabilita_conti').select('*').eq('attivo',true).order('codice',{ascending:true}),
   sb.from('contabilita_movimenti').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(3000),
   sb.from('contabilita_chiusure').select('*').order('anno',{ascending:false}).order('mese',{ascending:false}),
-  sb.from('contabilita_clienti').select('*').eq('attivo',true).order('denominazione',{ascending:true}),
-  sb.from('contabilita_fornitori').select('*').eq('attivo',true).order('denominazione',{ascending:true}),
+  sb.from('contabilita_clienti').select('*').order('denominazione',{ascending:true}),
+  sb.from('contabilita_fornitori').select('*').order('denominazione',{ascending:true}),
   sb.from('contabilita_spese_ricorrenti').select('*').eq('attiva',true).order('descrizione',{ascending:true})
  ]);
  const err=a.error||b.error||c.error||d.error||e.error||f.error||g.error;
@@ -9336,7 +9412,13 @@ if($('pnAttachmentClose'))$('pnAttachmentClose').onclick=pnCloseAttachments;
 if($('pnAttachmentUpload'))$('pnAttachmentUpload').onclick=pnUploadAttachment;
 if($('pnSaveInitialBalances'))$('pnSaveInitialBalances').onclick=pnSaveInitialBalances;
 if($('pnClientSave'))$('pnClientSave').onclick=pnSaveClient;
+if($('pnClientCancelEdit'))$('pnClientCancelEdit').onclick=pnResetClientForm;
+if($('pnClientSearch'))$('pnClientSearch').oninput=pnRenderClients;
+if($('pnClientStatus'))$('pnClientStatus').onchange=pnRenderClients;
 if($('pnSupplierSave'))$('pnSupplierSave').onclick=pnSaveSupplier;
+if($('pnSupplierCancelEdit'))$('pnSupplierCancelEdit').onclick=pnResetSupplierForm;
+if($('pnSupplierSearch'))$('pnSupplierSearch').oninput=pnRenderSuppliers;
+if($('pnSupplierStatus'))$('pnSupplierStatus').onchange=pnRenderSuppliers;
 if($('pnRecurringSave'))$('pnRecurringSave').onclick=pnSaveRecurring;
 if($('pnSubjectType'))$('pnSubjectType').onchange=()=>{pnFillSubjects();$('pnSubjectSelect').value='';};
 if($('pnSubjectSelect'))$('pnSubjectSelect').onchange=pnSubjectChanged;
