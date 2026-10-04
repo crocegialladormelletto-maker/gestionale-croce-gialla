@@ -415,7 +415,8 @@ function dailyTargetMinutes(badge){
 }
 function printRows(){
  const selectedBadge=$('filterEmp').value||$('printEmp').value||'';
- const alive=events.filter(e=>!e.eliminato_at&&(!selectedBadge||e.badge===selectedBadge)).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+ const selectedMonth=$('month').value||$('printMonth').value||currentMonth;
+ const alive=events.filter(e=>!e.eliminato_at&&(!selectedBadge||e.badge===selectedBadge)&&monthKey(e.evento_at)===selectedMonth).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
  const by={},openByBadge={};
  const dayKey=s=>new Date(s).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
  const ensure=d=>by[d]??={pairs:[],totalMin:0,abs:[]};
@@ -458,7 +459,10 @@ function printRows(){
   const end=new Date(String(a.data_al).slice(0,10)+'T12:00:00');
   while(cur<=end){
    const d=cur.toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
-   ensure(d).abs.push(absenceLabel(a.causale)+(a.ore!=null?' · '+a.ore+' h':''));
+   if(d.slice(0,7)===selectedMonth){
+    const oreLabel=a.ore==null?'':(' · '+fmtMin(Number(a.ore)*60)+' h');
+    ensure(d).abs.push(absenceLabel(a.causale)+oreLabel);
+   }
    cur.setDate(cur.getDate()+1);
   }
  }
