@@ -10095,9 +10095,17 @@ function tabletCrewFor(id){return tabletAssignments.filter(x=>x.servizio_id===id
 function tabletCrewReady(s){const c=tabletCrewFor(s.id),min=Number(s.equipaggio_minimo??(String(s.mezzo||'')==='06'?1:2));return c.length>=min&&c.some(x=>x.ruolo==='AUTISTA')&&(!s.capo_servizio_obbligatorio||c.some(x=>x.ruolo==='CAPO_SERVIZIO'))}
 function tabletListFiltered(){
  const t=todaySafe(),end=tabletShiftDays(365);
- return tabletServices.filter(x=>x.stato_gestionale!=='ANNULLATO'&&x.stato!=='ANNULLATO'&&(
- tabletListMode==='today'?x.data_servizio===t:tabletListMode==='week'?(x.data_servizio>=t&&x.data_servizio<=end):!['COMPLETATO','ANNULLATO'].includes(x.stato||'')&&x.stato_gestionale!=='CHIUSO'
- ));
+ return tabletServices.filter(x=>{
+  const stato=String(x.stato||'').toUpperCase();
+  const gest=String(x.stato_gestionale||'').toUpperCase();
+  // Dopo la chiusura del Foglio Viaggio il servizio resta nel gestionale
+  // amministrativo, ma non deve più comparire nella home del tablet.
+  if(['ANNULLATO','COMPLETATO','CHIUSO'].includes(stato))return false;
+  if(['ANNULLATO','CHIUSO','DA CONTABILIZZARE','CONTABILIZZATO'].includes(gest))return false;
+  if(tabletListMode==='today')return x.data_servizio===t;
+  if(tabletListMode==='week')return x.data_servizio>=t&&x.data_servizio<=end;
+  return true;
+ });
 }
 function tabletSetListMode(mode){
  tabletListMode=mode;
