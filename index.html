@@ -1262,7 +1262,7 @@
 
 
 <section id="travelSheets" class="surface hidden">
- <div class="hero"><h2>Fogli Viaggio</h2><p>Elenco dei fogli elettronici predisposti dai servizi programmati.</p></div>
+ <div class="hero"><h2>Fogli Viaggio</h2><p>Elenco completo di tutti i Fogli Viaggio, compresi i 118. I Fogli 118 restano esclusi dalla contabilità e dalle Note di Debito.</p></div>
  <div class="pad">
   <div class="grid4">
    <div class="field"><label>Data</label><input id="fvDate" type="date"></div>
@@ -4144,7 +4144,7 @@ if($('prUploadBtn'))$('prUploadBtn').onclick=uploadReceiptFromAdministration;
 
 async function loadTravelSheets(){
  msg('fvMsg','Caricamento...');
- let q=sb.from('fogli_viaggio').select('*').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
+ let q=sb.from('fogli_viaggio').select('*').order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
  if($('fvDate').value)q=q.eq('data_servizio',$('fvDate').value);
  if($('fvState').value)q=q.eq('stato',$('fvState').value);
  if($('fvVehicle').value)q=q.eq('mezzo',$('fvVehicle').value);
