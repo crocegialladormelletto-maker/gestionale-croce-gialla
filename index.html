@@ -772,6 +772,7 @@
 <button class="nav" type="button" data-href="registro-viaggi/?v=1.21">📊 Registro servizi</button>
 <button class="nav" data-v="paymentReceipts" data-admin-only="true">🧾 Archivio ricevute</button>
 <button class="nav" type="button" data-admin-only="true" data-href="note-di-debito/">🧾 Note di Debito</button>
+<button class="nav" type="button" id="navArubaInvoices" data-admin-only="true">🧮 Fatture Aruba da emettere</button>
 <button class="nav" data-v="crew">👥 Equipaggi</button>
 <button class="nav sep" data-v="people" data-admin-only="true">🪪 Volontari</button>
 <button class="nav" data-v="communications">📣 Comunicazioni volontari</button>
@@ -5968,6 +5969,7 @@ async function dashboard(){
 }
 $('dashOpsRefresh').onclick=loadOperationalDashboard;
 if($('dashOpenDebitNotes'))$('dashOpenDebitNotes').onclick=()=>location.href='note-di-debito/';
+if($('navArubaInvoices'))$('navArubaInvoices').onclick=()=>{view('dash');setTimeout(()=>{const el=$('dashArubaQueue')?.closest('section');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},120)};
 $('dashOpenCandidates').onclick=()=>openPendingAssistance();
 $('dashCriticalAssistanceOpen').onclick=()=>view('assistance');
 
