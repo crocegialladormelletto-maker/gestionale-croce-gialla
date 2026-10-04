@@ -4229,7 +4229,7 @@ if($('prUploadBtn'))$('prUploadBtn').onclick=uploadReceiptFromAdministration;
 
 async function loadTravelSheets(){
  msg('fvMsg','Caricamento...');
- let q=sb.from('fogli_viaggio').select('*').order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
+ let q=sb.from('fogli_viaggio').select('*').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
  if($('fvDate').value)q=q.eq('data_servizio',$('fvDate').value);
  if($('fvState').value)q=q.eq('stato',$('fvState').value);
  if($('fvVehicle').value)q=q.eq('mezzo',$('fvVehicle').value);
