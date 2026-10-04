@@ -3498,9 +3498,12 @@ async function deletePersonnelExpiry(id){
 }
 async function refreshPersonnelExpiryBadge(){
  if(!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo))return;
- const r=await sb.from('scadenze_personale').select('id,data_scadenza,giorni_preavviso,stato');
+ const r=await sb.from('scadenze_personale').select('id,badge_personale,nominativo,tipo_scadenza,data_scadenza,ora_appuntamento,giorni_preavviso,note,stato');
  if(r.error)return;
- personnelExpiryRows=r.data||[];updatePersonnelExpiryNav();renderDashboardPersonnelExpiryAlert();
+ personnelExpiryRows=r.data||[];
+ updatePersonnelExpiryNav();
+ renderDashboardPersonnelExpiryAlert();
+ if(!$('dash')?.classList.contains('hidden'))await refreshDashboardEmployeeCommitments();
 }
 if($('pexSave'))$('pexSave').onclick=savePersonnelExpiry;
 if($('pexCancel'))$('pexCancel').onclick=resetPersonnelExpiryForm;
