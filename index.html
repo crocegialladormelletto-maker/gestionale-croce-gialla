@@ -2026,6 +2026,27 @@ Causale: numero preventivo</textarea>
 
   <div class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
+    <div><h3 style="margin:0">🏦 Cassa e Banca</h3><div class="muted">Imposta i saldi reali di apertura al 01/01/2027 e controlla i movimenti bancari da riconciliare.</div></div>
+    <span class="pill b">Saldo iniziale 01/01/2027</span>
+   </div>
+   <div class="grid3" style="margin-top:10px">
+    <div class="field"><label>Saldo iniziale Cassa €</label><input id="pnInitialCash" type="number" step="0.01"></div>
+    <div class="field"><label>Saldo iniziale Banca €</label><input id="pnInitialBank" type="number" step="0.01"></div>
+    <div class="field"><label>Data saldo iniziale</label><input id="pnInitialDate" type="date" value="2027-01-01" disabled></div>
+   </div>
+   <div class="actions">
+    <button id="pnSaveInitialBalances" type="button" class="btn yellow">💾 Salva saldi iniziali</button>
+   </div>
+   <div id="pnInitialMsg"></div>
+   <div class="stats" style="margin-top:10px">
+    <div class="stat"><small>BANCA DA RICONCILIARE</small><b id="pnBankPendingCount">0</b></div>
+    <div class="stat"><small>IMPORTO DA RICONCILIARE</small><b id="pnBankPendingAmount">€ 0,00</b></div>
+    <div class="stat"><small>BANCA RICONCILIATI</small><b id="pnBankDoneCount">0</b></div>
+   </div>
+  </div>
+
+  <div class="section">
+   <div class="actions" style="justify-content:space-between;align-items:center">
     <div>
      <h3 style="margin:0">🔒 Chiusura mensile e stampa</h3>
      <div class="muted">La chiusura blocca inserimenti, modifiche, eliminazioni e allegati del mese.</div>
@@ -2087,6 +2108,7 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Tipo</label><select id="pnFilterTipo"><option value="">Tutti</option><option value="ENTRATA">Entrate</option><option value="USCITA">Uscite</option></select></div>
     <div class="field"><label>Categoria</label><select id="pnFilterCategoria"><option value="">Tutte</option></select></div>
     <div class="field"><label>Conto</label><select id="pnFilterConto"><option value="">Tutti</option></select></div>
+    <div class="field"><label>Riconciliazione banca</label><select id="pnFilterRecon"><option value="">Tutti</option><option value="PENDING">Da riconciliare</option><option value="DONE">Riconciliati</option></select></div>
     <div class="field" style="grid-column:span 2"><label>Ricerca libera</label><input id="pnSearch" placeholder="Numero, causale, cliente/fornitore, documento o note"></div>
    </div>
   </div>
@@ -2095,7 +2117,7 @@ Causale: numero preventivo</textarea>
    <div class="actions" style="justify-content:space-between;align-items:end">
     <div><h3 style="margin:0">Movimenti registrati</h3><div class="muted"><span id="pnShownCount">0</span> movimenti visualizzati.</div></div>
    </div>
-   <div class="table" style="margin-top:10px"><table><thead><tr><th>N° Prima Nota</th><th>Data</th><th>Tipo</th><th>Categoria</th><th>Causale</th><th>Soggetto</th><th>Conto</th><th class="num">Importo</th><th>Azioni</th></tr></thead><tbody id="pnBody"></tbody></table></div>
+   <div class="table" style="margin-top:10px"><table><thead><tr><th>N° Prima Nota</th><th>Data</th><th>Tipo</th><th>Categoria</th><th>Causale</th><th>Soggetto</th><th>Conto</th><th class="num">Importo</th><th>Riconciliazione</th><th>Azioni</th></tr></thead><tbody id="pnBody"></tbody></table></div>
   </div>
  </div>
 </section>
@@ -8507,6 +8529,11 @@ const PN_PRINT_LOGO='https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvi
 
 function pnCatName(code){const x=pnCats.find(r=>r.codice===code);return x?.nome||code||'—'}
 function pnContoName(code){const x=pnConti.find(r=>r.codice===code);return x?.nome||code||'—'}
+function pnContoByType(type){return pnConti.find(r=>String(r.tipo||'').toUpperCase()===String(type||'').toUpperCase())||null}
+function pnIsBankMovement(x){
+ const conto=pnConti.find(r=>r.codice===x?.conto_codice);
+ return String(conto?.tipo||'').toUpperCase()==='BANCA';
+}
 function pnTodayOrStart(){const t=today();return t<PN_START_DATE?PN_START_DATE:t}
 function pnMonthKeyFromDate(d){return String(d||'').slice(0,7)}
 function pnMonthParts(ym){const p=String(ym||'').split('-');return {anno:Number(p[0]),mese:Number(p[1])}}
@@ -8549,12 +8576,15 @@ function pnFilteredRows(){
  const type=$('pnFilterTipo').value;
  const cat=$('pnFilterCategoria').value;
  const conto=$('pnFilterConto').value;
+ const recon=$('pnFilterRecon').value;
  const q=String($('pnSearch').value||'').trim().toLowerCase();
  return pnMov.filter(x=>{
   if(!String(x.data||'').startsWith(ym))return false;
   if(type&&x.tipo!==type)return false;
   if(cat&&x.categoria_codice!==cat)return false;
   if(conto&&x.conto_codice!==conto)return false;
+  if(recon==='PENDING'&&(!pnIsBankMovement(x)||x.riconciliato===true))return false;
+  if(recon==='DONE'&&(!pnIsBankMovement(x)||x.riconciliato!==true))return false;
   if(q){
    const hay=[x.numero_movimento,x.causale,x.soggetto,x.numero_documento,x.note,pnCatName(x.categoria_codice),pnContoName(x.conto_codice)].join(' ').toLowerCase();
    if(!hay.includes(q))return false;
@@ -8590,6 +8620,42 @@ function pnRenderClosure(){
   if(x)pnAttachmentSetLocked(pnMovementClosed(x));
  }
 }
+function pnRenderAccounts(){
+ const cash=pnContoByType('CASSA'),bank=pnContoByType('BANCA');
+ if($('pnInitialCash'))$('pnInitialCash').value=Number(cash?.saldo_iniziale||0).toFixed(2);
+ if($('pnInitialBank'))$('pnInitialBank').value=Number(bank?.saldo_iniziale||0).toFixed(2);
+ const bankRows=pnMov.filter(pnIsBankMovement);
+ const pending=bankRows.filter(x=>x.riconciliato!==true);
+ const done=bankRows.filter(x=>x.riconciliato===true);
+ $('pnBankPendingCount').textContent=String(pending.length);
+ $('pnBankPendingAmount').textContent=euro(pending.reduce((s,x)=>s+Number(x.importo||0),0));
+ $('pnBankDoneCount').textContent=String(done.length);
+}
+async function pnSaveInitialBalances(){
+ const cash=pnContoByType('CASSA'),bank=pnContoByType('BANCA');
+ if(!cash||!bank)return msg('pnInitialMsg','Conti Cassa/Banca non configurati.','err');
+ const cashVal=Number($('pnInitialCash').value),bankVal=Number($('pnInitialBank').value);
+ if(!Number.isFinite(cashVal)||!Number.isFinite(bankVal))return msg('pnInitialMsg','Inserisci due saldi validi.','warn');
+ if(pnIsMonthClosed('2027-01'))return msg('pnInitialMsg','Gennaio 2027 è chiuso: riaprilo prima di cambiare i saldi iniziali.','warn');
+ if(!confirm('Salvare i saldi iniziali al 01/01/2027?\nCassa: '+euro(cashVal)+'\nBanca: '+euro(bankVal)))return;
+ const [r1,r2]=await Promise.all([
+  sb.from('contabilita_conti').update({saldo_iniziale:cashVal,data_saldo_iniziale:'2027-01-01'}).eq('codice',cash.codice),
+  sb.from('contabilita_conti').update({saldo_iniziale:bankVal,data_saldo_iniziale:'2027-01-01'}).eq('codice',bank.codice)
+ ]);
+ const err=r1.error||r2.error;
+ if(err)return msg('pnInitialMsg','Salvataggio non riuscito: '+err.message,'err');
+ await loadPrimaNota();msg('pnInitialMsg','Saldi iniziali salvati al 01/01/2027.','ok');
+}
+async function pnSetReconciled(id,value){
+ const x=pnMov.find(r=>String(r.id)===String(id));if(!x||!pnIsBankMovement(x))return;
+ if(pnMovementClosed(x))return msg('pnMsg','Il mese è chiuso: riconciliazione non modificabile.','warn');
+ const u=await sb.auth.getUser();
+ const row=value?{riconciliato:true,riconciliato_il:new Date().toISOString(),riconciliato_da:u.data.user?.id||null,updated_at:new Date().toISOString()}:{riconciliato:false,riconciliato_il:null,riconciliato_da:null,updated_at:new Date().toISOString()};
+ const r=await sb.from('contabilita_movimenti').update(row).eq('id',id);
+ if(r.error)return msg('pnMsg','Riconciliazione non aggiornata: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnMsg',value?'Movimento bancario riconciliato.':'Riconciliazione annullata.','ok');
+}
+
 function pnRender(){
  const ym=pnSelectedMonth();
  const monthRows=pnMov.filter(x=>String(x.data||'').startsWith(ym));
@@ -8606,13 +8672,18 @@ function pnRender(){
   if(String(conto.codice).toUpperCase()==='BANCA')ba=saldo;
  }
  $('pnCassa').textContent=euro(ca);$('pnBanca').textContent=euro(ba);$('pnTotale').textContent=euro(ca+ba);
+ pnRenderAccounts();
  $('pnBody').innerHTML=rows.length?rows.map(x=>{
   const closed=pnMovementClosed(x);
-  return '<tr><td><b>'+esc(x.numero_movimento||'—')+'</b>'+(closed?'<br><span class="pill r">CHIUSO</span>':'')+'</td><td>'+esc(x.data||'')+'</td><td><span class="pill '+(x.tipo==='ENTRATA'?'g':'r')+'">'+esc(x.tipo||'')+'</span></td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.causale||'')+'</td><td>'+esc(x.soggetto||'—')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num"><b>'+euro(x.importo)+'</b></td><td><div class="actions"><button type="button" class="btn secondary" data-pn-attach="'+esc(x.id)+'">📎 Allegati</button><button type="button" class="btn secondary" data-pn-edit="'+esc(x.id)+'" '+(closed?'disabled':'')+'>Modifica</button><button type="button" class="btn danger" data-pn-delete="'+esc(x.id)+'" '+(closed?'disabled':'')+'>Elimina</button></div></td></tr>';
- }).join(''):'<tr><td colspan="9">Nessun movimento corrisponde ai filtri selezionati.</td></tr>';
+  const bank=pnIsBankMovement(x);
+  const recon=bank?(x.riconciliato===true?'<span class="pill g">RICONCILIATO</span>':'<span class="pill b">DA RICONCILIARE</span>'):'—';
+  const reconBtn=bank?'<button type="button" class="btn secondary" data-pn-recon="'+esc(x.id)+'" data-pn-recon-value="'+(x.riconciliato===true?'0':'1')+'" '+(closed?'disabled':'')+'>'+(x.riconciliato===true?'Annulla riconc.':'✓ Riconcilia')+'</button>':'';
+  return '<tr><td><b>'+esc(x.numero_movimento||'—')+'</b>'+(closed?'<br><span class="pill r">CHIUSO</span>':'')+'</td><td>'+esc(x.data||'')+'</td><td><span class="pill '+(x.tipo==='ENTRATA'?'g':'r')+'">'+esc(x.tipo||'')+'</span></td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.causale||'')+'</td><td>'+esc(x.soggetto||'—')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num"><b>'+euro(x.importo)+'</b></td><td>'+recon+'</td><td><div class="actions">'+reconBtn+'<button type="button" class="btn secondary" data-pn-attach="'+esc(x.id)+'">📎 Allegati</button><button type="button" class="btn secondary" data-pn-edit="'+esc(x.id)+'" '+(closed?'disabled':'')+'>Modifica</button><button type="button" class="btn danger" data-pn-delete="'+esc(x.id)+'" '+(closed?'disabled':'')+'>Elimina</button></div></td></tr>';
+ }).join(''):'<tr><td colspan="10">Nessun movimento corrisponde ai filtri selezionati.</td></tr>';
  $('pnBody').querySelectorAll('[data-pn-attach]').forEach(b=>b.onclick=()=>pnOpenAttachments(b.dataset.pnAttach));
  $('pnBody').querySelectorAll('[data-pn-edit]').forEach(b=>b.onclick=()=>pnEdit(b.dataset.pnEdit));
  $('pnBody').querySelectorAll('[data-pn-delete]').forEach(b=>b.onclick=()=>pnDelete(b.dataset.pnDelete));
+ $('pnBody').querySelectorAll('[data-pn-recon]').forEach(b=>b.onclick=()=>pnSetReconciled(b.dataset.pnRecon,b.dataset.pnReconValue==='1'));
  pnRenderClosure();
 }
 async function loadPrimaNota(){
@@ -8683,7 +8754,7 @@ async function pnDelete(id){
  await loadPrimaNota();msg('pnMsg','Movimento eliminato. La numerazione progressiva resta invariata.','ok');
 }
 function pnClearFilters(){
- $('pnFilterTipo').value='';$('pnFilterCategoria').value='';$('pnFilterConto').value='';$('pnSearch').value='';
+ $('pnFilterTipo').value='';$('pnFilterCategoria').value='';$('pnFilterConto').value='';$('pnFilterRecon').value='';$('pnSearch').value='';
  $('pnMonth').value=(today().slice(0,7)<PN_START_MONTH?PN_START_MONTH:today().slice(0,7));pnRender();
 }
 async function pnCloseMonth(){
@@ -8808,6 +8879,7 @@ if($('pnData'))$('pnData').onchange=pnApplyOperationalState;
 if($('pnFilterTipo'))$('pnFilterTipo').onchange=pnRender;
 if($('pnFilterCategoria'))$('pnFilterCategoria').onchange=pnRender;
 if($('pnFilterConto'))$('pnFilterConto').onchange=pnRender;
+if($('pnFilterRecon'))$('pnFilterRecon').onchange=pnRender;
 if($('pnSearch'))$('pnSearch').oninput=pnRender;
 if($('pnFiltersClear'))$('pnFiltersClear').onclick=pnClearFilters;
 if($('pnCloseMonth'))$('pnCloseMonth').onclick=pnCloseMonth;
@@ -8815,6 +8887,7 @@ if($('pnReopenMonth'))$('pnReopenMonth').onclick=pnReopenMonth;
 if($('pnPrintMonth'))$('pnPrintMonth').onclick=pnPrintMonth;
 if($('pnAttachmentClose'))$('pnAttachmentClose').onclick=pnCloseAttachments;
 if($('pnAttachmentUpload'))$('pnAttachmentUpload').onclick=pnUploadAttachment;
+if($('pnSaveInitialBalances'))$('pnSaveInitialBalances').onclick=pnSaveInitialBalances;
 
 async function loadAccounting(){
  const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(500);
