@@ -2026,6 +2026,22 @@ Causale: numero preventivo</textarea>
 
   <div class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
+    <div>
+     <h3 style="margin:0">🔒 Chiusura mensile e stampa</h3>
+     <div class="muted">La chiusura blocca inserimenti, modifiche, eliminazioni e allegati del mese.</div>
+    </div>
+    <span id="pnClosureState" class="pill b">APERTO</span>
+   </div>
+   <div class="actions" style="margin-top:10px">
+    <button id="pnCloseMonth" type="button" class="btn danger">🔒 Chiudi mese</button>
+    <button id="pnReopenMonth" type="button" class="btn secondary">🔓 Riapri mese</button>
+    <button id="pnPrintMonth" type="button" class="btn yellow">🖨️ Stampa / Salva PDF mese</button>
+   </div>
+   <div id="pnClosureMsg"></div>
+  </div>
+
+  <div class="section">
+   <div class="actions" style="justify-content:space-between;align-items:center">
     <div><h3 id="pnFormTitle" style="margin:0">➕ Nuovo movimento</h3><div class="muted">Il numero Prima Nota viene assegnato automaticamente al salvataggio.</div></div>
     <button id="pnRefresh" type="button" class="btn secondary">↻ Aggiorna</button>
    </div>
@@ -2046,6 +2062,19 @@ Causale: numero preventivo</textarea>
     <button id="pnClear" type="button" class="btn secondary">Pulisci</button>
     <button id="pnCancelEdit" type="button" class="btn secondary hidden">Annulla modifica</button>
    </div>
+  </div>
+
+  <div id="pnAttachmentPanel" class="section hidden">
+   <div class="actions" style="justify-content:space-between;align-items:center">
+    <div><h3 style="margin:0">📎 Allegati movimento <span id="pnAttachmentNumber"></span></h3><div class="muted">PDF o immagini JPG/PNG/WEBP, massimo 15 MB per file.</div></div>
+    <button id="pnAttachmentClose" type="button" class="btn secondary">Chiudi</button>
+   </div>
+   <div class="actions" style="margin-top:10px">
+    <input id="pnAttachmentFile" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" style="max-width:520px">
+    <button id="pnAttachmentUpload" type="button" class="btn yellow">⬆️ Carica allegato</button>
+   </div>
+   <div id="pnAttachmentMsg"></div>
+   <div id="pnAttachmentList" style="margin-top:10px"></div>
   </div>
 
   <div class="section">
@@ -8470,14 +8499,28 @@ $('tsave').onclick=async()=>{
  await loadTariffsView();msg('tmsg','Tariffa aggiornata nella scheda «'+tariff.nome+'».','ok');
 };
 
-let pnCats=[],pnConti=[],pnMov=[],pnEditingId=null;
+let pnCats=[],pnConti=[],pnMov=[],pnClosures=[],pnEditingId=null,pnAttachmentMovementId=null;
 const PN_START_DATE='2027-01-01';
 const PN_START_MONTH='2027-01';
+const PN_DOC_BUCKET='contabilita-documenti';
+const PN_PRINT_LOGO='https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=120';
 
 function pnCatName(code){const x=pnCats.find(r=>r.codice===code);return x?.nome||code||'—'}
 function pnContoName(code){const x=pnConti.find(r=>r.codice===code);return x?.nome||code||'—'}
 function pnTodayOrStart(){const t=today();return t<PN_START_DATE?PN_START_DATE:t}
-
+function pnMonthKeyFromDate(d){return String(d||'').slice(0,7)}
+function pnMonthParts(ym){const p=String(ym||'').split('-');return {anno:Number(p[0]),mese:Number(p[1])}}
+function pnIsMonthClosed(ym){
+ const p=pnMonthParts(ym);
+ return pnClosures.some(x=>Number(x.anno)===p.anno&&Number(x.mese)===p.mese&&x.chiuso===true);
+}
+function pnMovementClosed(x){return pnIsMonthClosed(pnMonthKeyFromDate(x?.data))}
+function pnSelectedMonth(){
+ let ym=$('pnMonth').value||today().slice(0,7);
+ if(ym<PN_START_MONTH)ym=PN_START_MONTH;
+ $('pnMonth').value=ym;
+ return ym;
+}
 function pnFillCategorySelect(){
  const current=$('pnCategoria')?.value||'';
  const type=$('pnTipo')?.value||'ENTRATA';
@@ -8499,9 +8542,10 @@ function pnReset(){
  $('pnFormTitle').textContent='➕ Nuovo movimento';
  $('pnSave').textContent='💾 Salva movimento';
  $('pnCancelEdit').classList.add('hidden');
+ pnApplyOperationalState();
 }
 function pnFilteredRows(){
- let ym=$('pnMonth').value||today().slice(0,7);if(ym<PN_START_MONTH)ym=PN_START_MONTH;$('pnMonth').value=ym;
+ const ym=pnSelectedMonth();
  const type=$('pnFilterTipo').value;
  const cat=$('pnFilterCategoria').value;
  const conto=$('pnFilterConto').value;
@@ -8518,8 +8562,36 @@ function pnFilteredRows(){
   return true;
  });
 }
+function pnApplyOperationalState(){
+ const operational=today()>=PN_START_DATE;
+ const formDate=$('pnData')?.value||PN_START_DATE;
+ const formClosed=pnIsMonthClosed(pnMonthKeyFromDate(formDate));
+ const disable=!operational||formClosed;
+ ['pnData','pnTipo','pnCategoria','pnCausale','pnImporto','pnMetodo','pnConto','pnSoggetto','pnDocumento','pnNote','pnSave','pnClear'].forEach(id=>{if($(id))$(id).disabled=disable});
+ if($('pnCancelEdit'))$('pnCancelEdit').disabled=!operational;
+ if($('pnStartNotice'))$('pnStartNotice').classList.toggle('hidden',operational);
+}
+function pnRenderClosure(){
+ const ym=pnSelectedMonth();
+ const closed=pnIsMonthClosed(ym);
+ $('pnClosureState').textContent=closed?'CHIUSO':'APERTO';
+ $('pnClosureState').className='pill '+(closed?'r':'g');
+ const operational=today()>=PN_START_DATE;
+ $('pnCloseMonth').disabled=!operational||closed;
+ $('pnReopenMonth').disabled=!operational||!closed;
+ $('pnPrintMonth').disabled=false;
+ if(pnEditingId){
+  const x=pnMov.find(r=>String(r.id)===String(pnEditingId));
+  if(x&&pnMovementClosed(x))pnReset();
+ }
+ pnApplyOperationalState();
+ if(pnAttachmentMovementId){
+  const x=pnMov.find(r=>String(r.id)===String(pnAttachmentMovementId));
+  if(x)pnAttachmentSetLocked(pnMovementClosed(x));
+ }
+}
 function pnRender(){
- let ym=$('pnMonth').value||today().slice(0,7);if(ym<PN_START_MONTH)ym=PN_START_MONTH;$('pnMonth').value=ym;
+ const ym=pnSelectedMonth();
  const monthRows=pnMov.filter(x=>String(x.data||'').startsWith(ym));
  const rows=pnFilteredRows();
  const en=monthRows.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo||0),0);
@@ -8534,47 +8606,55 @@ function pnRender(){
   if(String(conto.codice).toUpperCase()==='BANCA')ba=saldo;
  }
  $('pnCassa').textContent=euro(ca);$('pnBanca').textContent=euro(ba);$('pnTotale').textContent=euro(ca+ba);
- $('pnBody').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(x.numero_movimento||'—')+'</b></td><td>'+esc(x.data||'')+'</td><td><span class="pill '+(x.tipo==='ENTRATA'?'g':'r')+'">'+esc(x.tipo||'')+'</span></td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.causale||'')+'</td><td>'+esc(x.soggetto||'—')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num"><b>'+euro(x.importo)+'</b></td><td><div class="actions"><button type="button" class="btn secondary" data-pn-edit="'+esc(x.id)+'">Modifica</button><button type="button" class="btn danger" data-pn-delete="'+esc(x.id)+'">Elimina</button></div></td></tr>').join(''):'<tr><td colspan="9">Nessun movimento corrisponde ai filtri selezionati.</td></tr>';
+ $('pnBody').innerHTML=rows.length?rows.map(x=>{
+  const closed=pnMovementClosed(x);
+  return '<tr><td><b>'+esc(x.numero_movimento||'—')+'</b>'+(closed?'<br><span class="pill r">CHIUSO</span>':'')+'</td><td>'+esc(x.data||'')+'</td><td><span class="pill '+(x.tipo==='ENTRATA'?'g':'r')+'">'+esc(x.tipo||'')+'</span></td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.causale||'')+'</td><td>'+esc(x.soggetto||'—')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num"><b>'+euro(x.importo)+'</b></td><td><div class="actions"><button type="button" class="btn secondary" data-pn-attach="'+esc(x.id)+'">📎 Allegati</button><button type="button" class="btn secondary" data-pn-edit="'+esc(x.id)+'" '+(closed?'disabled':'')+'>Modifica</button><button type="button" class="btn danger" data-pn-delete="'+esc(x.id)+'" '+(closed?'disabled':'')+'>Elimina</button></div></td></tr>';
+ }).join(''):'<tr><td colspan="9">Nessun movimento corrisponde ai filtri selezionati.</td></tr>';
+ $('pnBody').querySelectorAll('[data-pn-attach]').forEach(b=>b.onclick=()=>pnOpenAttachments(b.dataset.pnAttach));
  $('pnBody').querySelectorAll('[data-pn-edit]').forEach(b=>b.onclick=()=>pnEdit(b.dataset.pnEdit));
  $('pnBody').querySelectorAll('[data-pn-delete]').forEach(b=>b.onclick=()=>pnDelete(b.dataset.pnDelete));
+ pnRenderClosure();
 }
 async function loadPrimaNota(){
  if(prof?.ruolo!=='AMMINISTRATORE'){selectView('dash');return}
  msg('pnMsg','Caricamento Prima Nota...');
- const [a,b,c]=await Promise.all([
+ const [a,b,c,d]=await Promise.all([
   sb.from('contabilita_categorie').select('*').eq('attiva',true).order('ordine',{ascending:true}),
   sb.from('contabilita_conti').select('*').eq('attivo',true).order('codice',{ascending:true}),
-  sb.from('contabilita_movimenti').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(2000)
+  sb.from('contabilita_movimenti').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(3000),
+  sb.from('contabilita_chiusure').select('*').order('anno',{ascending:false}).order('mese',{ascending:false})
  ]);
- const err=a.error||b.error||c.error;
+ const err=a.error||b.error||c.error||d.error;
  if(err)return msg('pnMsg','Impossibile caricare la Prima Nota: '+err.message,'err');
  pnCats=(a.data||[]).slice().sort((x,y)=>(Number(x.ordine||0)-Number(y.ordine||0))||String(x.nome).localeCompare(String(y.nome),'it'));
  pnConti=b.data||[];
  pnMov=(c.data||[]).filter(x=>String(x.data||'')>=PN_START_DATE);
+ pnClosures=d.data||[];
  pnFillCategorySelect();pnFillFilters();
  $('pnConto').innerHTML=pnConti.map(x=>'<option value="'+esc(x.codice)+'">'+esc(x.nome)+'</option>').join('');
  if(!$('pnMonth').value||$('pnMonth').value<PN_START_MONTH)$('pnMonth').value=(today().slice(0,7)<PN_START_MONTH?PN_START_MONTH:today().slice(0,7));
  if(!$('pnData').value||$('pnData').value<PN_START_DATE)pnReset();
- const operational=today()>=PN_START_DATE;
- ['pnData','pnTipo','pnCategoria','pnCausale','pnImporto','pnMetodo','pnConto','pnSoggetto','pnDocumento','pnNote','pnSave','pnClear'].forEach(id=>{if($(id))$(id).disabled=!operational});
- if($('pnStartNotice'))$('pnStartNotice').classList.toggle('hidden',operational);
- pnRender();msg('pnMsg',operational?'':'Prima Nota predisposta: le registrazioni saranno abilitate dal 1° gennaio 2027.','warn');
+ pnRender();
+ msg('pnMsg',today()>=PN_START_DATE?'':'Prima Nota predisposta: le registrazioni saranno abilitate dal 1° gennaio 2027.','warn');
 }
 function pnEdit(id){
  if(today()<PN_START_DATE)return msg('pnMsg','Le modifiche saranno abilitate dal 1° gennaio 2027.','warn');
  const x=pnMov.find(r=>String(r.id)===String(id));if(!x)return;
+ if(pnMovementClosed(x))return msg('pnMsg','Il mese di questo movimento è chiuso. Riaprilo prima di modificarlo.','warn');
  pnEditingId=x.id;
  $('pnData').value=x.data||PN_START_DATE;$('pnTipo').value=x.tipo||'ENTRATA';pnFillCategorySelect();$('pnCategoria').value=x.categoria_codice||'';
  $('pnCausale').value=x.causale||'';$('pnImporto').value=x.importo??'';$('pnMetodo').value=x.metodo_pagamento||'Bonifico';$('pnConto').value=x.conto_codice||'';
  $('pnSoggetto').value=x.soggetto||'';$('pnDocumento').value=x.numero_documento||'';$('pnNote').value=x.note||'';
  $('pnFormTitle').textContent='✏️ Modifica '+(x.numero_movimento||'movimento');
  $('pnSave').textContent='💾 Salva modifiche';$('pnCancelEdit').classList.remove('hidden');
+ pnApplyOperationalState();
  $('primaNota').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function pnSave(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
  if(today()<PN_START_DATE)return msg('pnMsg','La Prima Nota sarà operativa dal 1° gennaio 2027.','warn');
  if($('pnData').value<PN_START_DATE)return msg('pnMsg','Non è possibile registrare movimenti con data precedente al 1° gennaio 2027.','warn');
+ if(pnIsMonthClosed(pnMonthKeyFromDate($('pnData').value)))return msg('pnMsg','Il mese selezionato è chiuso. Riaprilo prima di registrare o modificare movimenti.','warn');
  const amount=Number($('pnImporto').value);
  if(!$('pnData').value||!$('pnCausale').value.trim()||!(amount>0))return msg('pnMsg','Compila data, causale e importo.','warn');
  const row={data:$('pnData').value,tipo:$('pnTipo').value,categoria_codice:$('pnCategoria').value,causale:$('pnCausale').value.trim(),importo:amount,metodo_pagamento:$('pnMetodo').value,conto_codice:$('pnConto').value,soggetto:$('pnSoggetto').value.trim()||null,numero_documento:$('pnDocumento').value.trim()||null,note:$('pnNote').value.trim()||null,updated_at:new Date().toISOString()};
@@ -8593,29 +8673,148 @@ async function pnSave(){
 async function pnDelete(id){
  if(prof?.ruolo!=='AMMINISTRATORE'||!id)return;
  const row=pnMov.find(x=>String(x.id)===String(id));
- if(row&&String(row.data||'')<PN_START_DATE)return msg('pnMsg','I movimenti precedenti al 1° gennaio 2027 non rientrano nella Prima Nota operativa.','warn');
- if(!confirm('Eliminare '+(row?.numero_movimento||'questo movimento')+' dalla Prima Nota? Il numero non verrà riutilizzato.'))return;
+ if(!row)return;
+ if(pnMovementClosed(row))return msg('pnMsg','Il mese è chiuso: il movimento non può essere eliminato.','warn');
+ if(!confirm('Eliminare '+(row.numero_movimento||'questo movimento')+' dalla Prima Nota? Il numero non verrà riutilizzato.'))return;
  const r=await sb.from('contabilita_movimenti').delete().eq('id',id);
  if(r.error)return msg('pnMsg','Eliminazione non riuscita: '+r.error.message,'err');
  if(String(pnEditingId)===String(id))pnReset();
+ if(String(pnAttachmentMovementId)===String(id))pnCloseAttachments();
  await loadPrimaNota();msg('pnMsg','Movimento eliminato. La numerazione progressiva resta invariata.','ok');
 }
 function pnClearFilters(){
  $('pnFilterTipo').value='';$('pnFilterCategoria').value='';$('pnFilterConto').value='';$('pnSearch').value='';
  $('pnMonth').value=(today().slice(0,7)<PN_START_MONTH?PN_START_MONTH:today().slice(0,7));pnRender();
 }
+async function pnCloseMonth(){
+ if(today()<PN_START_DATE)return msg('pnClosureMsg','La chiusura mensile sarà operativa dal 1° gennaio 2027.','warn');
+ const ym=pnSelectedMonth(),p=pnMonthParts(ym);
+ if(pnIsMonthClosed(ym))return;
+ if(!confirm('Chiudere definitivamente il mese '+ym+'? I movimenti e gli allegati verranno bloccati finché il mese non sarà riaperto.'))return;
+ const u=await sb.auth.getUser();
+ const r=await sb.from('contabilita_chiusure').upsert({anno:p.anno,mese:p.mese,chiuso:true,chiuso_il:new Date().toISOString(),chiuso_da:u.data.user?.id||null},{onConflict:'anno,mese'});
+ if(r.error)return msg('pnClosureMsg','Chiusura non riuscita: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnClosureMsg','Mese '+ym+' chiuso correttamente.','ok');
+}
+async function pnReopenMonth(){
+ if(today()<PN_START_DATE)return msg('pnClosureMsg','La riapertura sarà operativa dal 1° gennaio 2027.','warn');
+ const ym=pnSelectedMonth(),p=pnMonthParts(ym);
+ if(!pnIsMonthClosed(ym))return;
+ if(!confirm('Riaprire il mese '+ym+'? I movimenti torneranno modificabili.'))return;
+ const r=await sb.from('contabilita_chiusure').update({chiuso:false,chiuso_il:null,chiuso_da:null}).eq('anno',p.anno).eq('mese',p.mese);
+ if(r.error)return msg('pnClosureMsg','Riapertura non riuscita: '+r.error.message,'err');
+ await loadPrimaNota();msg('pnClosureMsg','Mese '+ym+' riaperto.','ok');
+}
+function pnPrintMonth(){
+ const ym=pnSelectedMonth();
+ const rows=pnMov.filter(x=>String(x.data||'').startsWith(ym)).slice().sort((a,b)=>String(a.data).localeCompare(String(b.data))||Number(a.numero_progressivo||0)-Number(b.numero_progressivo||0));
+ const en=rows.filter(x=>x.tipo==='ENTRATA').reduce((s,x)=>s+Number(x.importo||0),0);
+ const us=rows.filter(x=>x.tipo==='USCITA').reduce((s,x)=>s+Number(x.importo||0),0);
+ const title=new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric'}).format(new Date(ym+'-01T12:00:00')).replace(/^./,x=>x.toUpperCase());
+ const w=window.open('','_blank');
+ if(!w)return msg('pnClosureMsg','Il browser ha bloccato la finestra di stampa.','warn');
+ const tr=rows.length?rows.map(x=>'<tr><td>'+esc(x.numero_movimento||'—')+'</td><td>'+esc(x.data||'')+'</td><td>'+esc(x.tipo||'')+'</td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.causale||'')+'</td><td>'+esc(x.soggetto||'—')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num">'+euro(x.importo)+'</td></tr>').join(''):'<tr><td colspan="8">Nessun movimento registrato.</td></tr>';
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Prima Nota '+esc(title)+'</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Arial,sans-serif;color:#183247;font-size:11px}header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #ffdb17;padding-bottom:8px;margin-bottom:12px}header img{width:72px;height:72px;object-fit:contain}h1{font-size:20px;margin:0;color:#12375d}h2{font-size:13px;margin:4px 0 0}.meta{margin-left:auto;text-align:right}.summary{display:flex;gap:10px;margin:10px 0}.box{border:1px solid #dbe5ed;border-radius:8px;padding:8px 10px;min-width:150px}.box b{font-size:15px}.green{color:#12805a}.red{color:#b83b43}table{width:100%;border-collapse:collapse}th,td{border:1px solid #dbe5ed;padding:5px;vertical-align:top}th{background:#eef3f7;text-align:left;font-size:9px;text-transform:uppercase}.num{text-align:right;white-space:nowrap}footer{margin-top:10px;font-size:9px;color:#6d8292;text-align:right}</style></head><body><header><img src="'+PN_PRINT_LOGO+'"><div><h1>Croce Gialla Emergenza ODV</h1><h2>Prima Nota · '+esc(title)+'</h2></div><div class="meta"><b>Stato mese: '+(pnIsMonthClosed(ym)?'CHIUSO':'APERTO')+'</b><br>Stampa: '+new Date().toLocaleString('it-IT')+'</div></header><div class="summary"><div class="box">Entrate<br><b class="green">'+euro(en)+'</b></div><div class="box">Uscite<br><b class="red">'+euro(us)+'</b></div><div class="box">Saldo mese<br><b>'+euro(en-us)+'</b></div><div class="box">Movimenti<br><b>'+rows.length+'</b></div></div><table><thead><tr><th>N°</th><th>Data</th><th>Tipo</th><th>Categoria</th><th>Causale</th><th>Soggetto</th><th>Conto</th><th>Importo</th></tr></thead><tbody>'+tr+'</tbody></table><footer>Documento gestionale · Prima Nota Croce Gialla Emergenza ODV</footer><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>');
+ w.document.close();
+}
+function pnAttachmentSafeName(name){
+ return String(name||'allegato').normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,120)||'allegato';
+}
+function pnAttachmentSetLocked(locked){
+ if($('pnAttachmentFile'))$('pnAttachmentFile').disabled=locked;
+ if($('pnAttachmentUpload'))$('pnAttachmentUpload').disabled=locked;
+ if($('pnAttachmentMsg')&&locked)msg('pnAttachmentMsg','Mese chiuso: gli allegati possono essere consultati ma non modificati.','warn');
+}
+async function pnOpenAttachments(id){
+ const x=pnMov.find(r=>String(r.id)===String(id));if(!x)return;
+ pnAttachmentMovementId=x.id;
+ $('pnAttachmentNumber').textContent=x.numero_movimento||'';
+ $('pnAttachmentPanel').classList.remove('hidden');
+ $('pnAttachmentFile').value='';
+ pnAttachmentSetLocked(pnMovementClosed(x));
+ await pnLoadAttachments();
+ $('pnAttachmentPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function pnCloseAttachments(){
+ pnAttachmentMovementId=null;
+ $('pnAttachmentPanel').classList.add('hidden');
+ $('pnAttachmentList').innerHTML='';
+ $('pnAttachmentFile').value='';
+ msg('pnAttachmentMsg','');
+}
+async function pnLoadAttachments(){
+ if(!pnAttachmentMovementId)return;
+ const r=await sb.from('contabilita_documenti').select('*').eq('movimento_id',pnAttachmentMovementId).order('created_at',{ascending:false});
+ if(r.error)return msg('pnAttachmentMsg','Impossibile caricare gli allegati: '+r.error.message,'err');
+ const rows=r.data||[];
+ const movement=pnMov.find(x=>String(x.id)===String(pnAttachmentMovementId));
+ const closed=pnMovementClosed(movement);
+ $('pnAttachmentList').innerHTML=rows.length?rows.map(x=>'<div class="box" style="margin:7px 0"><div class="actions" style="justify-content:space-between;align-items:center"><div><b>📄 '+esc(x.nome_file)+'</b><br><span class="muted">'+Math.max(1,Math.round(Number(x.dimensione_bytes||0)/1024))+' KB · '+esc(dt(x.created_at))+'</span></div><div class="actions"><button type="button" class="btn secondary" data-pn-doc-open="'+esc(x.id)+'">Apri</button><button type="button" class="btn danger" data-pn-doc-delete="'+esc(x.id)+'" '+(closed?'disabled':'')+'>Elimina</button></div></div></div>').join(''):'<div class="notice">Nessun allegato per questo movimento.</div>';
+ $('pnAttachmentList').querySelectorAll('[data-pn-doc-open]').forEach(b=>b.onclick=()=>pnOpenDocument(b.dataset.pnDocOpen,rows));
+ $('pnAttachmentList').querySelectorAll('[data-pn-doc-delete]').forEach(b=>b.onclick=()=>pnDeleteDocument(b.dataset.pnDocDelete,rows));
+ if(!closed)msg('pnAttachmentMsg','');
+}
+async function pnUploadAttachment(){
+ if(!pnAttachmentMovementId)return;
+ const movement=pnMov.find(x=>String(x.id)===String(pnAttachmentMovementId));
+ if(!movement)return;
+ if(pnMovementClosed(movement))return msg('pnAttachmentMsg','Il mese è chiuso: non puoi aggiungere allegati.','warn');
+ const file=$('pnAttachmentFile').files?.[0];
+ if(!file)return msg('pnAttachmentMsg','Seleziona un file.','warn');
+ const allowed=['application/pdf','image/jpeg','image/png','image/webp'];
+ if(!allowed.includes(file.type))return msg('pnAttachmentMsg','Formato non consentito. Usa PDF, JPG, PNG o WEBP.','warn');
+ if(file.size>15*1024*1024)return msg('pnAttachmentMsg','Il file supera 15 MB.','warn');
+ const path=pnAttachmentMovementId+'/'+Date.now()+'_'+pnAttachmentSafeName(file.name);
+ $('pnAttachmentUpload').disabled=true;msg('pnAttachmentMsg','Caricamento in corso...');
+ const up=await sb.storage.from(PN_DOC_BUCKET).upload(path,file,{contentType:file.type,upsert:false});
+ if(up.error){$('pnAttachmentUpload').disabled=false;return msg('pnAttachmentMsg','Caricamento non riuscito: '+up.error.message,'err')}
+ const meta=await sb.from('contabilita_documenti').insert({movimento_id:pnAttachmentMovementId,nome_file:file.name,storage_path:path,mime_type:file.type,dimensione_bytes:file.size});
+ if(meta.error){
+  await sb.storage.from(PN_DOC_BUCKET).remove([path]);
+  $('pnAttachmentUpload').disabled=false;
+  return msg('pnAttachmentMsg','File caricato ma registrazione non riuscita: '+meta.error.message,'err');
+ }
+ $('pnAttachmentUpload').disabled=false;$('pnAttachmentFile').value='';
+ await pnLoadAttachments();msg('pnAttachmentMsg','Allegato caricato correttamente.','ok');
+}
+async function pnOpenDocument(id,rows){
+ const x=(rows||[]).find(r=>String(r.id)===String(id));if(!x)return;
+ const tab=window.open('about:blank','_blank');
+ if(!tab)return msg('pnAttachmentMsg','Il browser ha bloccato la nuova scheda.','warn');
+ tab.opener=null;
+ const r=await sb.storage.from(PN_DOC_BUCKET).createSignedUrl(x.storage_path,120);
+ if(r.error){tab.close();return msg('pnAttachmentMsg','Impossibile aprire il file: '+r.error.message,'err')}
+ tab.location.href=r.data.signedUrl;
+}
+async function pnDeleteDocument(id,rows){
+ const x=(rows||[]).find(r=>String(r.id)===String(id));if(!x)return;
+ const movement=pnMov.find(r=>String(r.id)===String(pnAttachmentMovementId));
+ if(pnMovementClosed(movement))return msg('pnAttachmentMsg','Il mese è chiuso: allegati non eliminabili.','warn');
+ if(!confirm('Eliminare l’allegato «'+x.nome_file+'»?'))return;
+ const st=await sb.storage.from(PN_DOC_BUCKET).remove([x.storage_path]);
+ if(st.error)return msg('pnAttachmentMsg','Impossibile eliminare il file: '+st.error.message,'err');
+ const r=await sb.from('contabilita_documenti').delete().eq('id',id);
+ if(r.error)return msg('pnAttachmentMsg','File eliminato ma archivio non aggiornato: '+r.error.message,'err');
+ await pnLoadAttachments();msg('pnAttachmentMsg','Allegato eliminato.','ok');
+}
 
 if($('pnSave'))$('pnSave').onclick=pnSave;
 if($('pnClear'))$('pnClear').onclick=pnReset;
 if($('pnCancelEdit'))$('pnCancelEdit').onclick=pnReset;
 if($('pnRefresh'))$('pnRefresh').onclick=loadPrimaNota;
-if($('pnMonth'))$('pnMonth').onchange=pnRender;
+if($('pnMonth'))$('pnMonth').onchange=()=>{pnRender();msg('pnClosureMsg','')};
 if($('pnTipo'))$('pnTipo').onchange=pnFillCategorySelect;
+if($('pnData'))$('pnData').onchange=pnApplyOperationalState;
 if($('pnFilterTipo'))$('pnFilterTipo').onchange=pnRender;
 if($('pnFilterCategoria'))$('pnFilterCategoria').onchange=pnRender;
 if($('pnFilterConto'))$('pnFilterConto').onchange=pnRender;
 if($('pnSearch'))$('pnSearch').oninput=pnRender;
 if($('pnFiltersClear'))$('pnFiltersClear').onclick=pnClearFilters;
+if($('pnCloseMonth'))$('pnCloseMonth').onclick=pnCloseMonth;
+if($('pnReopenMonth'))$('pnReopenMonth').onclick=pnReopenMonth;
+if($('pnPrintMonth'))$('pnPrintMonth').onclick=pnPrintMonth;
+if($('pnAttachmentClose'))$('pnAttachmentClose').onclick=pnCloseAttachments;
+if($('pnAttachmentUpload'))$('pnAttachmentUpload').onclick=pnUploadAttachment;
 
 async function loadAccounting(){
  const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(500);
