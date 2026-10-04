@@ -119,11 +119,11 @@ $('tripForm').addEventListener('submit',async e=>{e.preventDefault();if(!canEdit
 function activeTrips(){return trips.filter(x=>!x.eliminato_at)}
 function logicalRegistryNumberMap(){
  const map=new Map();
- activeTrips().forEach(x=>map.set(x.id,Number(x.numero_registro||0)));
+ activeTrips().forEach(x=>map.set(x.id,Number(x.numero_registro_mezzo||0)));
  return map;
 }
-function logicalRegistryNumber(x){return Number(x?.numero_registro||0)||''}
-function filteredArchive(){let a=activeTrips();const ym=$('meseArchivio').value,q=$('fSearch').value.toLowerCase().trim(),dal=$('fDal').value,al=$('fAl').value,m=rvSelectedVehicle||$('fMezzo').value,st=$('fStato')?.value||'';return a.filter(x=>x.stato==='CHIUSO'&&(!ym||x.data.startsWith(ym))&&(!dal||x.data>=dal)&&(!al||x.data<=al)&&(!m||x.mezzo===m)&&(!st||x.stato===st)&&(!q||[x.numero_registro,x.numero_foglio_marcia,x.tipo_servizio,x.richiedente_servizio,x.scheda_118,x.nome_paziente,x.cognome_paziente,x.luogo_partenza,x.luogo_carico,x.luogo_fine,personName(x.autista_badge),personName(x.capo_badge),personName(x.soccorritore_1_badge),personName(x.soccorritore_2_badge)].join(' ').toLowerCase().includes(q))).sort((a,b)=>String(a.data||'').localeCompare(String(b.data||''))||String(a.created_at||'').localeCompare(String(b.created_at||'')))}
+function logicalRegistryNumber(x){return Number(x?.numero_registro_mezzo||0)||''}
+function filteredArchive(){let a=activeTrips();const ym=$('meseArchivio').value,q=$('fSearch').value.toLowerCase().trim(),dal=$('fDal').value,al=$('fAl').value,m=rvSelectedVehicle||$('fMezzo').value,st=$('fStato')?.value||'';return a.filter(x=>x.stato==='CHIUSO'&&(!ym||x.data.startsWith(ym))&&(!dal||x.data>=dal)&&(!al||x.data<=al)&&(!m||x.mezzo===m)&&(!st||x.stato===st)&&(!q||[x.numero_registro_mezzo,x.numero_foglio_marcia,x.tipo_servizio,x.richiedente_servizio,x.scheda_118,x.nome_paziente,x.cognome_paziente,x.luogo_partenza,x.luogo_carico,x.luogo_fine,personName(x.autista_badge),personName(x.capo_badge),personName(x.soccorritore_1_badge),personName(x.soccorritore_2_badge)].join(' ').toLowerCase().includes(q))).sort((a,b)=>String(a.data||'').localeCompare(String(b.data||''))||String(a.created_at||'').localeCompare(String(b.created_at||'')))}
 function monthRecord(ym){return months.find(m=>(m.mese||'').slice(0,7)===ym)}
 function isMonthClosed(ym){const m=monthRecord(ym);if(m)return !!m.chiuso;return !!ym&&ym<ymNow()}
 function monthStatusText(ym){return isMonthClosed(ym)?'🔒 MESE CHIUSO':'🟢 MESE APERTO'}
