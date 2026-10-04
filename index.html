@@ -9999,7 +9999,7 @@ function showMonitorSlide(name){
  $('monitorWeekBtn').className='btn '+(name==='week'?'yellow':'secondary')
 }
 function renderMonitorToday(){
- const rows=monitorSnapshot?.servizi_oggi||[];$('monitorTodaySummary').textContent=rows.length+' '+(rows.length===1?'servizio programmato':'servizi programmati');
+ const rows=(monitorSnapshot?.servizi_oggi||[]).filter(s=>!['DA CONTABILIZZARE','CONTABILIZZATO','CHIUSO','TERMINATO'].includes(String(s.stato||'').toUpperCase()));$('monitorTodaySummary').textContent=rows.length+' '+(rows.length===1?'servizio programmato':'servizi programmati');
  if(!rows.length){$('monitorTodayList').innerHTML='<div class="monitor-empty"><div><b>Nessun servizio programmato per oggi</b><br>Il monitor si aggiorna automaticamente.</div></div>';return}
  $('monitorTodayList').innerHTML=rows.map(s=>{
   const crew=(s.equipaggio||[]).map(x=>esc(x.nome)+' <span class="muted">('+esc(x.ruolo)+')</span>').join('<br>')||'<span class="pill r">Equipaggio non assegnato</span>';
@@ -10048,7 +10048,7 @@ function renderMonitorShifts(){
  }).join('');
 }
 function renderMonitorWeek(){
- const start=new Date((monitorSnapshot?.data||todaySafe())+'T12:00:00'),services=monitorSnapshot?.servizi_settimana||[],turns=monitorSnapshot?.turni_settimana||[];
+ const start=new Date((monitorSnapshot?.data||todaySafe())+'T12:00:00'),services=(monitorSnapshot?.servizi_settimana||[]).filter(s=>!['DA CONTABILIZZARE','CONTABILIZZATO','CHIUSO','TERMINATO'].includes(String(s.stato||'').toUpperCase())),turns=monitorSnapshot?.turni_settimana||[];
  let html='';
  for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const y=calYmd(d),ss=services.filter(x=>x.data===y),tt=turns.filter(x=>x.data===y);
   html+='<div class="monitor-day '+(i===0?'today':'')+'"><div class="monitor-day-head">'+esc(d.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}).replace(/^./,c=>c.toUpperCase()))+'</div>'+
