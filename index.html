@@ -5185,6 +5185,32 @@ function dashSetSmartCard(id,state,value,info){
  const valueEl=$(id+'Value'),infoEl=$(id+'Info');
  if(valueEl)valueEl.textContent=value;if(infoEl)infoEl.textContent=info;
 }
+function isDormellettoCalcioAruba(row){
+ return String(row?.ospedale_destinazione||'').trim().toUpperCase()==='DORMELLETTO CALCIO';
+}
+function dormellettoCalcioBimestre(dateStr){
+ const [y,m]=String(dateStr||'').slice(0,10).split('-').map(Number);
+ if(!y||!m)return null;
+ let sy=y,sm,ey=y,em;
+ if(m===8||m===9){sm=8;em=9}
+ else if(m===10||m===11){sm=10;em=11}
+ else if(m===12){sm=12;ey=y+1;em=1}
+ else if(m===1){sy=y-1;sm=12;em=1}
+ else if(m===2||m===3){sm=2;em=3}
+ else if(m===4||m===5){sm=4;em=5}
+ else {sm=6;em=7}
+ const endDay=new Date(Date.UTC(ey,em,0)).getUTCDate();
+ const pad=n=>String(n).padStart(2,'0');
+ const names=['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+ const label=sy===ey?names[sm]+'–'+names[em]+' '+sy:names[sm]+' '+sy+'–'+names[em]+' '+ey;
+ return {key:sy+'-'+pad(sm),label,start:sy+'-'+pad(sm)+'-01',end:ey+'-'+pad(em)+'-'+pad(endDay)};
+}
+function arubaServiceAmount(row){
+ for(const v of [row?.importo_finale,row?.importo_calcolato,row?.importo_previsto]){
+  if(v!==null&&v!==undefined&&v!=='')return Number(v);
+ }
+ return null;
+}
 
 async function loadOperationalDashboard(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
@@ -5198,7 +5224,7 @@ async function loadOperationalDashboard(){
   :Promise.resolve({data:[],error:null});
  const hoursPromise=prof?.ruolo==='AMMINISTRATORE'?dashMonthlyHours(day).catch(error=>({error})):Promise.resolve(null);
  const adminDocsPromise=prof?.ruolo==='AMMINISTRATORE'
-  ?sb.from('servizi_giornalieri').select('id,foglio_viaggio_id,data_servizio,mezzo,tipo_servizio,destinazione,intestatario_fatturazione,documento_da_emettere,fattura_aruba_emessa,fattura_aruba_emessa_il').neq('stato_gestionale','ANNULLATO').order('data_servizio',{ascending:false}).limit(1000)
+  ?sb.from('servizi_giornalieri').select('id,foglio_viaggio_id,data_servizio,mezzo,tipo_servizio,destinazione,ospedale_destinazione,intestatario_fatturazione,importo_previsto,importo_calcolato,importo_finale,documento_da_emettere,fattura_aruba_emessa,fattura_aruba_emessa_il').neq('stato_gestionale','ANNULLATO').order('data_servizio',{ascending:false}).limit(1000)
   :Promise.resolve({data:[],error:null});
  const [emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,hoursData,adminDocs]=await Promise.all([
   sb.rpc('cge_emergenza_turni_v2',{p_dal:day,p_al:day}),
@@ -5226,7 +5252,17 @@ async function loadOperationalDashboard(){
   const doc=x.servizio_giornaliero_id?docByService.get(x.servizio_giornaliero_id):null;
   return (doc?.documento_da_emettere||'NOTA_DEBITO')==='NOTA_DEBITO';
  });
- const arubaQueue=docsRows.filter(x=>x.documento_da_emettere==='FATTURA_ARUBA'&&!x.fattura_aruba_emessa&&x.foglio_viaggio_id);
+ const arubaPending=docsRows.filter(x=>x.documento_da_emettere==='FATTURA_ARUBA'&&!x.fattura_aruba_emessa);
+ const dormellettoPending=arubaPending.filter(isDormellettoCalcioAruba);
+ const arubaQueue=arubaPending.filter(x=>!isDormellettoCalcioAruba(x)&&x.foglio_viaggio_id);
+ const arubaBimestreMap=new Map();
+ dormellettoPending.forEach(x=>{
+  const p=dormellettoCalcioBimestre(x.data_servizio);if(!p)return;
+  if(!arubaBimestreMap.has(p.key))arubaBimestreMap.set(p.key,{...p,rows:[]});
+  arubaBimestreMap.get(p.key).rows.push(x);
+ });
+ const arubaBimestri=[...arubaBimestreMap.values()].sort((a,b)=>a.start.localeCompare(b.start));
+ const arubaCount=arubaQueue.length+arubaBimestri.length;
 
  const assGroups=dashOpsGroup(assRows);
  const crewGroups=dashOpsGroup(emgRows).length+dashOpsGroup(dimRows).length+assGroups.length;
@@ -5235,7 +5271,7 @@ async function loadOperationalDashboard(){
  $('dashOpsTravelOpen').textContent=String(fogli.filter(x=>x.stato==='APERTO').length);
  $('dashOpsTravelClosed').textContent=String(fogli.filter(x=>x.stato==='CHIUSO').length);
  if($('dashOpsNotesToCreate'))$('dashOpsNotesToCreate').textContent=prof?.ruolo==='AMMINISTRATORE'?String(debitQueue.length):'—';
- if($('dashOpsArubaToCreate'))$('dashOpsArubaToCreate').textContent=prof?.ruolo==='AMMINISTRATORE'?String(arubaQueue.length):'—';
+ if($('dashOpsArubaToCreate'))$('dashOpsArubaToCreate').textContent=prof?.ruolo==='AMMINISTRATORE'?String(arubaCount):'—';
  if($('dashOpsUrgentExpiry'))$('dashOpsUrgentExpiry').textContent=String(expRows.length);
 
  const activeEmergencyFascia=dashOpsCurrentEmergencyFascia();
@@ -5333,19 +5369,46 @@ async function loadOperationalDashboard(){
     }).join(''):'<div class="ops-row ops-row-ok"><strong>✅ Nessun Foglio Viaggio in attesa di Nota di Debito.</strong></div>';
  }
  if($('dashArubaQueue')){
-  if($('dashArubaBadge'))$('dashArubaBadge').textContent=String(arubaQueue.length);
-  $('dashArubaQueue').innerHTML=prof?.ruolo!=='AMMINISTRATORE'
-   ?'<div class="ops-empty">Area riservata all’Amministrazione.</div>'
-   :arubaQueue.length?arubaQueue.slice(0,10).map(x=>
+  if($('dashArubaBadge'))$('dashArubaBadge').textContent=String(arubaCount);
+  const bimestreHtml=arubaBimestri.map(g=>{
+   const rows=g.rows.slice().sort((a,b)=>String(a.data_servizio).localeCompare(String(b.data_servizio)));
+   const values=rows.map(arubaServiceAmount),known=values.filter(v=>v!==null),missing=values.length-known.length;
+   const total=known.reduce((a,b)=>a+b,0);
+   const ready=todaySafe()>g.end;
+   const dates=rows.map(x=>niceDate(x.data_servizio)).join(' · ');
+   return '<div class="ops-row ops-row-warn">'+
+    '<div class="ops-crew-line"><strong>Dormelletto calcio · '+esc(g.label)+'</strong><span class="pill b">BIMESTRE</span></div>'+
+    '<div class="muted">'+rows.length+' servizi · '+esc(dates)+'</div>'+
+    '<div class="muted">Totale registrato '+euro(total)+(missing?' · '+missing+' import'+(missing===1?'o':'i')+' da completare':'')+'</div>'+
+    '<div class="actions" style="margin-top:6px">'+
+     rows.map(x=>'<button type="button" class="btn secondary" data-aruba-open="'+esc(x.id)+'">'+esc(niceDate(x.data_servizio))+'</button>').join('')+
+     (ready?'<button type="button" class="btn yellow" data-aruba-bimestre="'+esc(g.key)+'">✓ Bimestre fatturato</button>':
+      '<span class="pill">IN CORSO FINO AL '+esc(niceDate(g.end))+'</span>')+
+    '</div></div>';
+  }).join('');
+  const singleHtml=arubaQueue.slice(0,10).map(x=>
     '<div class="ops-row ops-row-warn"><div class="ops-crew-line"><strong>'+esc(x.data_servizio||'')+' · Mezzo '+esc(x.mezzo||'—')+'</strong><span class="pill b">ARUBA</span></div>'+
     '<div class="muted">'+esc(x.intestatario_fatturazione||x.tipo_servizio||'Servizio')+(x.destinazione?' · '+esc(x.destinazione):'')+'</div>'+
     '<div class="actions" style="margin-top:6px"><button type="button" class="btn secondary" data-aruba-open="'+esc(x.id)+'">Apri servizio</button><button type="button" class="btn yellow" data-aruba-done="'+esc(x.id)+'">✓ Fattura emessa</button></div></div>'
-   ).join(''):'<div class="ops-row ops-row-ok"><strong>✅ Nessuna fattura Aruba da emettere.</strong></div>';
+   ).join('');
+  $('dashArubaQueue').innerHTML=prof?.ruolo!=='AMMINISTRATORE'
+   ?'<div class="ops-empty">Area riservata all’Amministrazione.</div>'
+   :(bimestreHtml||singleHtml)?bimestreHtml+singleHtml:'<div class="ops-row ops-row-ok"><strong>✅ Nessuna fattura Aruba da emettere.</strong></div>';
   $('dashArubaQueue').querySelectorAll('[data-aruba-open]').forEach(b=>b.onclick=()=>openService(b.dataset.arubaOpen));
   $('dashArubaQueue').querySelectorAll('[data-aruba-done]').forEach(b=>b.onclick=async()=>{
    if(!confirm('Confermi che la fattura Aruba per questo servizio è stata emessa?'))return;
    const r=await sb.from('servizi_giornalieri').update({fattura_aruba_emessa:true,fattura_aruba_emessa_il:new Date().toISOString()}).eq('id',b.dataset.arubaDone);
    if(r.error)return msg('dashOpsMsg','Errore aggiornamento fattura Aruba: '+r.error.message,'err');
+   await loadOperationalDashboard();
+  });
+  $('dashArubaQueue').querySelectorAll('[data-aruba-bimestre]').forEach(b=>b.onclick=async()=>{
+   const g=arubaBimestri.find(x=>x.key===b.dataset.arubaBimestre);if(!g)return;
+   const missing=g.rows.filter(x=>arubaServiceAmount(x)===null).length;
+   const warning=missing?'\nAttenzione: '+missing+' servizi non hanno ancora un importo registrato.':'';
+   if(!confirm('Confermi che la fattura Aruba complessiva per Dormelletto calcio · '+g.label+' è stata emessa?'+warning))return;
+   const ids=g.rows.map(x=>x.id);
+   const r=await sb.from('servizi_giornalieri').update({fattura_aruba_emessa:true,fattura_aruba_emessa_il:new Date().toISOString()}).in('id',ids);
+   if(r.error)return msg('dashOpsMsg','Errore aggiornamento bimestre Aruba: '+r.error.message,'err');
    await loadOperationalDashboard();
   });
  }
