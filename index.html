@@ -4304,7 +4304,7 @@ function fv118RouteText(x){
  return [x.luogo_partenza,x.percorso_tappe,x.destinazione].filter(Boolean).join(' → ')||'—';
 }
 async function load118MonthlySummary(){
- if(prof?.ruolo!=='AMMINISTRATORE')return;
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  const month=$('fv118Month').value||new Date().toISOString().slice(0,7);
  $('fv118Month').value=month;
  const b=fv118MonthBounds(month);
@@ -4387,7 +4387,7 @@ $('fv118MonthPrint').onclick=print118MonthlySummary;
 $('fv118Month').onchange=load118MonthlySummary;
 
 async function loadTravelSheets118(){
- if(prof?.ruolo==='AMMINISTRATORE'){
+ if(['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)){
   if(!$('fv118Month').value)$('fv118Month').value=new Date().toISOString().slice(0,7);
   await load118MonthlySummary();
  }
@@ -4418,6 +4418,12 @@ $('fv118Date').onchange=loadTravelSheets118;
 $('fv118State').onchange=loadTravelSheets118;
 $('fv118Vehicle').onchange=loadTravelSheets118;
 $('fv118Search').oninput=()=>{clearTimeout(window.fv118q);window.fv118q=setTimeout(loadTravelSheets118,250)};
+setInterval(()=>{
+ if(!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo))return;
+ const section=$('travelSheets118');
+ if(!section||section.classList.contains('hidden')||document.hidden)return;
+ loadTravelSheets118();
+},30000);
 
 async function deleteTravelSheet(id){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
