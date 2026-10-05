@@ -10196,7 +10196,8 @@ function renderMonitorToday(){
  $('monitorTodayList').innerHTML=rows.map(s=>{
   const crew=(s.equipaggio||[]).map(x=>esc(x.nome)+' <span class="muted">('+esc(x.ruolo)+')</span>').join('<br>')||'<span class="pill r">Equipaggio non assegnato</span>';
   return '<div class="monitor-service '+monitorStateClass(s.stato)+'">'+
-   '<div><div class="monitor-label">Partenza</div><div class="monitor-time">'+esc(s.ora_partenza||'—')+'</div><div class="muted">Carico '+esc(s.ora_carico||'—')+' · Rientro '+esc(s.ora_rientro||'—')+'</div></div>'+
+   '<div><div class="monitor-label">Partenza</div><div class="monitor-time">'+esc(s.ora_partenza||'—')+'</div></div>'+
+   '<div><div class="monitor-label">Carico paziente</div><div class="monitor-time">'+esc(s.ora_carico||'—')+'</div><div class="muted">Rientro '+esc(s.ora_rientro||'—')+'</div></div>'+
    '<div class="monitor-mezzo">'+esc(s.mezzo||'—')+'</div>'+
    '<div><div class="monitor-label">Servizio</div><div class="monitor-value">'+esc(s.tipo||'Servizio')+'</div>'+(s.priorita&&s.priorita!=='NORMALE'?'<span class="pill r">'+esc(s.priorita)+'</span>':'')+'</div>'+
    '<div><div class="monitor-label">Percorso</div><div class="monitor-value">'+esc(s.partenza||'Sede')+' → '+esc(s.destinazione||'Destinazione')+'</div></div>'+
@@ -10245,7 +10246,7 @@ function renderMonitorWeek(){
  for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const y=calYmd(d),ss=services.filter(x=>x.data===y),tt=turns.filter(x=>x.data===y);
   html+='<div class="monitor-day '+(i===0?'today':'')+'"><div class="monitor-day-head">'+esc(d.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}).replace(/^./,c=>c.toUpperCase()))+'</div>'+
    tt.map(t=>'<div class="monitor-event turn"><b>🕒 '+esc(t.ora_inizio)+'–'+esc(t.ora_fine)+' · '+esc(t.tipo||'Turno')+'</b>Mezzo '+esc(t.mezzo||'—')+(t.equipaggio?.length?'<br>'+t.equipaggio.map(x=>esc(x.nome)+' ('+esc(x.ruolo||'—')+')').join(', '):'')+'</div>').join('')+
-   ss.map(s=>'<div class="monitor-event"><b>🚑 '+esc(s.ora||'—')+' · '+esc(s.tipo||'Servizio')+'</b>Mezzo '+esc(s.mezzo||'—')+'<br>'+esc(s.partenza||'Sede')+' → '+esc(s.destinazione||'Destinazione')+'</div>').join('')+
+   ss.map(s=>'<div class="monitor-event"><b>🚑 Partenza '+esc(s.ora||'—')+(s.ora_carico?' · Carico '+esc(s.ora_carico):'')+' · '+esc(s.tipo||'Servizio')+'</b>Mezzo '+esc(s.mezzo||'—')+'<br>'+esc(s.partenza||'Sede')+' → '+esc(s.destinazione||'Destinazione')+'</div>').join('')+
    (!tt.length&&!ss.length?'<div class="muted" style="padding:12px;text-align:center">Nessun impegno</div>':'')+'</div>'
  }
  $('monitorWeekGrid').innerHTML=html
