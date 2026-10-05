@@ -808,6 +808,10 @@
 
 <div class="stats"><div class="stat"><small>SERVIZI OGGI</small><b id="s1">0</b></div><div class="stat"><small>DA ASSEGNARE</small><b id="s2">0</b></div><div class="stat"><small>IN CORSO</small><b id="s3">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="s4">0</b></div></div>
 <div class="stats" style="margin-top:9px"><div class="stat"><small>PERSONALE ATTIVO</small><b id="s5">0</b></div><div class="stat"><small>TURNI PROSSIMI</small><b id="s6">0</b></div><div class="stat"><small>SCADENZE MEZZI</small><b id="s7">0</b></div><div class="stat"><small>DA INCASSARE</small><b id="s8">€ 0</b></div></div>
+<div class="stats" id="dashFinanceStats" data-admin-only="true" style="margin-top:9px;grid-template-columns:repeat(2,minmax(0,1fr))">
+ <div class="stat"><small>💰 INCASSATO · NOTE DI DEBITO</small><b id="s9">€ 0</b><span class="muted" id="s9Count">0 note pagate</span></div>
+ <div class="stat"><small>⏳ DA INCASSARE · NOTE DI DEBITO</small><b id="s10">€ 0</b><span class="muted" id="s10Count">0 note emesse</span></div>
+</div>
 <div class="ops-board-wrap">
  <div class="ops-board-head">
   <div><h2>📡 Quadro operativo di oggi</h2><div class="muted">Equipaggi, mezzi, servizi, fogli viaggio e criticità in un'unica schermata.</div></div>
@@ -6167,12 +6171,16 @@ async function dashboard(){
  void loadOperationalDashboard();
  const isCentral=prof?.ruolo==='CENTRALINO';
  const kPromise=isCentral?sb.rpc('cge_centralino_dashboard'):sb.from('v_dashboard_gestionale').select('*').single();
- const [k,sv,ex,pc,ca]=await Promise.all([
+ const noteFinancePromise=isCentral
+  ?Promise.resolve({data:[],error:null})
+  :sb.from('note_di_debito').select('id,stato,totale,data_pagamento').eq('stato','EMESSA').limit(5000);
+ const [k,sv,ex,pc,ca,noteFinance]=await Promise.all([
   kPromise,
   sb.from('v_servizi_gestionale').select('*').gte('data_servizio',today()).not('stato_gestionale','in','("ANNULLATO","DA CONTABILIZZARE")').order('data_servizio').order('ora_partenza_prevista').limit(7),
   sb.from('v_mezzi_scadenze_gestionale').select('*').in('stato_scadenza',['SCADUTA','ENTRO_30_GIORNI','ENTRO_90_GIORNI']).order('data_scadenza').limit(7),
   sb.rpc('cge_candidature_assistenze_in_attesa_count'),
-  sb.rpc('cge_assistenze_critiche_dashboard')
+  sb.rpc('cge_assistenze_critiche_dashboard'),
+  noteFinancePromise
  ]);
  const d=isCentral?(k.data?.[0]||{}):(k.data||{}), n=sv.data||[], exp=ex.data||[];
  $('dashPendingCandidates').textContent=pc.error?'—':String(pc.data??0);
@@ -6245,7 +6253,17 @@ async function dashboard(){
  if(isCentral){
   $('s4').textContent=d.fogli_aperti||0;$('s5').textContent=d.turni_oggi||0;$('s6').textContent=d.turni_scoperti_oggi||0;$('s7').textContent=d.scadenze_mezzi_urgenti||0;$('s8').textContent=d.personale_attivo||0;
  }else{
-  $('s4').textContent=d.servizi_da_contabilizzare||0;$('s5').textContent=d.personale_attivo||0;$('s6').textContent=d.turni_prossimi||0;$('s7').textContent=d.scadenze_mezzi_urgenti||0;$('s8').textContent=euro(d.totale_da_incassare||0);
+  $('s4').textContent=d.servizi_da_contabilizzare||0;$('s5').textContent=d.personale_attivo||0;$('s6').textContent=d.turni_prossimi||0;$('s7').textContent=d.scadenze_mezzi_urgenti||0;
+  const nf=noteFinance?.data||[];
+  const paid=nf.filter(x=>!!x.data_pagamento);
+  const due=nf.filter(x=>!x.data_pagamento);
+  const paidTotal=paid.reduce((s,x)=>s+Number(x.totale||0),0);
+  const dueTotal=due.reduce((s,x)=>s+Number(x.totale||0),0);
+  $('s8').textContent=euro(dueTotal);
+  if($('s9'))$('s9').textContent=euro(paidTotal);
+  if($('s10'))$('s10').textContent=euro(dueTotal);
+  if($('s9Count'))$('s9Count').textContent=paid.length+' '+(paid.length===1?'nota pagata':'note pagate');
+  if($('s10Count'))$('s10Count').textContent=due.length+' '+(due.length===1?'nota emessa':'note emesse');
  }
  await loadDimissioniAdmin();
  $('next').innerHTML=n.length?n.map(x=>'<div class="box"><b>'+esc(x.data_servizio)+' · '+esc((x.ora_partenza_prevista||'').slice(0,5))+' · Mezzo '+esc(x.mezzo)+'</b><br>'+esc(x.tipo_servizio||'Servizio')+' · '+esc(x.destinazione||'')+' <span class="pill">'+esc(x.stato_gestionale)+'</span></div>').join(''):'<div class="notice">Nessun servizio programmato.</div>';
