@@ -4092,7 +4092,7 @@ function buildFoglioPrint(f){
   ...((String(f.tipo_servizio||'').trim()!=='118'&&!isAssistanceManifestation(f.tipo_servizio))?[['Carico paziente',fvTime(f.ora_carico_paziente)]]:[]),
   ['Arrivo destinazione',fvTime(f.ora_arrivo_destinazione)],
   ['Ripartenza',fvTime(f.ora_ripartenza)],
-  ...(String(f.tipo_servizio||'').trim()==='118'&&f.ora_arrivo_dea?[['Arrivo in DEA',fvTime(f.ora_arrivo_dea)]]:[]),
+  ...(String(f.tipo_servizio||'').trim()==='118'?[['Arrivo in DEA',fvTime(f.ora_arrivo_dea)||'—']]:[]),
   ['Operatività',fvTime(f.ora_operativita)],
   ['Arrivo sede',fvTime(f.ora_arrivo_sede)],
   ...((String(f.tipo_servizio||'').trim()!=='118')?[['Inizio fermo',fvTime(f.inizio_fermo)],['Fine fermo',fvTime(f.fine_fermo)]]:[])
