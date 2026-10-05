@@ -67,6 +67,7 @@
     </div>
     <div class="pad">
      <div id="detailMsg"></div>
+     <div id="draftNotice" class="notice hidden" style="margin-bottom:12px"></div>
      <form id="form" onsubmit="return false">
       <div class="section"><h3>Intestatario e documento</h3><div class="grid4">
        <div class="field"><label>Data documento</label><input id="dDate" type="date"></div>
@@ -88,7 +89,7 @@
        </div>
       </div>
       <div class="section"><h3>Pagamento</h3><div class="grid3">
-       <div class="field"><label>Modalità</label><select id="dPayment"><option value="">Da concordare</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>BONIFICO A VISTA</option><option>ALTRO</option></select></div>
+       <div class="field"><label>Modalità</label><select id="dPayment"><option value="">Da concordare</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>BONIFICO A VISTA</option><option>BONIFICO DIFFERITO</option><option>ALTRO</option></select></div>
        <div class="field"><label>Data pagamento</label><input id="dPayDate" type="date"></div>
        <div class="field"><label>Stato email</label><input id="dEmailState" disabled></div>
       </div></div>
@@ -204,9 +205,8 @@ function render(){
   $('thead').innerHTML='<tr><th>Foglio</th><th>Data</th><th>Paziente / intestatario</th><th>Servizio</th><th>Destinazione</th><th>Totale</th><th>Conservazione</th><th></th></tr>';
   $('rows').innerHTML=arr.length?arr.map(f=>{
    const name=f.intestatario_nota_debito||[f.paziente_nome,f.paziente_cognome].filter(Boolean).join(' ')||'—';
-   return '<tr><td><b>'+esc(f.numero_foglio)+'</b><br><span class="muted">Mezzo '+esc(f.mezzo||'—')+'</span></td><td>'+nice(f.data_servizio)+'</td><td>'+esc(name)+'</td><td>'+esc(f.tipo_servizio||'—')+'</td><td>'+esc(f.destinazione||'—')+'</td><td><b>'+money(f.totale_servizio)+'</b></td><td><span class="pill p-warn">NON ANCORA EMESSA</span></td><td><div class="actions"><button class="btn secondary" data-preview-test="'+esc(f.id)+'">👁 Anteprima TEST</button><button class="btn yellow" data-create="'+esc(f.id)+'">Crea bozza</button></div></td></tr>';
+   return '<tr><td><b>'+esc(f.numero_foglio)+'</b><br><span class="muted">Mezzo '+esc(f.mezzo||'—')+'</span></td><td>'+nice(f.data_servizio)+'</td><td>'+esc(name)+'</td><td>'+esc(f.tipo_servizio||'—')+'</td><td>'+esc(f.destinazione||'—')+'</td><td><b>'+money(f.totale_servizio)+'</b></td><td><span class="pill p-warn">NON ANCORA EMESSA</span></td><td><button class="btn yellow" data-create="'+esc(f.id)+'">Crea bozza</button></td></tr>';
   }).join(''):'<tr><td colspan="8">Nessun Foglio Viaggio da elaborare.</td></tr>';
-  document.querySelectorAll('[data-preview-test]').forEach(b=>b.onclick=()=>previewTestNote(b.dataset.previewTest));
   document.querySelectorAll('[data-create]').forEach(b=>b.onclick=()=>createNote(b.dataset.create));
  }else{
   $('thead').innerHTML='<tr><th>Numero</th><th>Data</th><th>Intestatario</th><th>Foglio Viaggio</th><th>Totale</th><th>Stato</th><th>Pagamento</th><th>Conservazione</th><th></th></tr>';
@@ -272,6 +272,8 @@ function fill(){
  $('save').classList.toggle('hidden',!draft);$('issue').classList.toggle('hidden',!draft);
  $('savePayment').classList.toggle('hidden',draft);
  $('dPayment').disabled=false;$('dPayDate').disabled=false;
+ $('draftNotice').classList.toggle('hidden',!draft);
+ $('draftNotice').textContent=draft?'BOZZA MODIFICABILE: controlla e completa tutti i dati. Il documento diventerà definitivo solo premendo “Emetti Nota di Debito”.':'';
  ['dConsState','dConsProvider','dConsSent','dConsDone','dConsId','dConsHash','dConsNotes','saveConservation'].forEach(id=>$(id).disabled=draft);
  msg('consMsg',draft?'La conservazione viene gestita dopo l’emissione definitiva della Nota di Debito.':'');
 }
@@ -328,6 +330,7 @@ $('saveConservation').onclick=async()=>{
  await loadAll();
 };
 $('mail').onclick=()=>{
+ if(active?.stato!=='EMESSA')return msg('detailMsg','La Nota di Debito è ancora in BOZZA. Emettila prima di inviarla.','err');
  if(!active?.email)return msg('detailMsg','Email destinatario non presente.','err');
  const subject='Croce Gialla Emergenza ODV – Nota di Debito '+active.numero;
  const body='Gentile destinatario,\n\nin allegato la Nota di Debito '+active.numero+' relativa al servizio del '+nice(active.data_servizio)+'.\n\nCordiali saluti,\nCroce Gialla Emergenza ODV\ntesoreria@crocegiallaemergenza.it';
