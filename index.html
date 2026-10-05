@@ -4736,7 +4736,7 @@ async function loadOperationalCalendar(){
  }
  opCalEvents=[];
  turns.forEach(t=>{const as=assignments.filter(x=>x.turno_id===t.id),cov=turnCoverage(t,as);opCalEvents.push({kind:'turn',date:t.data_turno,time:calTime(t.ora_inizio),vehicle:t.mezzo||'',coverage:cov,coverageClass:cov.cls,title:(t.tipo_turno||'Turno')+' · Mezzo '+(t.mezzo||'—'),subtitle:calTime(t.ora_inizio)+'–'+calTime(t.ora_fine)+' · '+cov.count+' operatori',raw:{...t,assignments:as}})});
- services.forEach(s=>opCalEvents.push({kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),vehicle:s.mezzo||'',title:(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+' · M'+(s.mezzo||'—'),subtitle:(s.luogo_partenza||'—')+' → '+(s.ospedale_destinazione||s.destinazione||'—'),raw:{...s,assignments:serviceAssignments.filter(a=>a.servizio_id===s.id)}}));
+ services.forEach(s=>opCalEvents.push({kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),vehicle:s.mezzo||'',title:(isAssistanceManifestation(s.tipo_servizio)?asServiceName(s):(s.tipo_servizio_altro||s.tipo_servizio||'Servizio'))+' · M'+(s.mezzo||'—'),subtitle:(s.luogo_partenza||'—')+' → '+(isAssistanceManifestation(s.tipo_servizio)?(s.destinazione||s.indirizzo_destinazione||'—'):(s.ospedale_destinazione||s.destinazione||'—')),raw:{...s,assignments:serviceAssignments.filter(a=>a.servizio_id===s.id)}}));
  calAddAvailabilityEvents(opCalEvents,avs,range,true);
  refreshOperationalCalendarView();msg('calMsg','')
 }
@@ -5071,7 +5071,7 @@ async function loadVolunteerCalendar(){
  if(ids.length){const tr=await sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note').in('id',ids).gte('data_turno',range.startYmd).lte('data_turno',range.endYmd).order('data_turno').order('ora_inizio');if(tr.error){msg('vcalMsg',tr.error.message,'err');return}turns=tr.data||[]}
  volCalEvents=[];
  turns.forEach(t=>{const a=tp.find(x=>x.turno_id===t.id);volCalEvents.push({kind:'turn',date:t.data_turno,time:calTime(t.ora_inizio),vehicle:t.mezzo||'',title:(t.tipo_turno||'Turno')+' · Mezzo '+(t.mezzo||'—'),subtitle:'Ruolo '+(a?.ruolo||'—')+' · Assegnato',raw:{...t,assignment:a}})});
- (svR.data||[]).filter(s=>s.data_servizio>=range.startYmd&&s.data_servizio<=range.endYmd).forEach(s=>volCalEvents.push({kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),vehicle:s.mezzo||'',title:(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+' · M'+(s.mezzo||'—'),subtitle:(s.luogo_partenza||s.indirizzo_partenza||'—')+' → '+(s.ospedale_destinazione||s.destinazione||s.indirizzo_destinazione||'—'),raw:s}));
+ (svR.data||[]).filter(s=>s.data_servizio>=range.startYmd&&s.data_servizio<=range.endYmd).forEach(s=>volCalEvents.push({kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),vehicle:s.mezzo||'',title:(isAssistanceManifestation(s.tipo_servizio)?asServiceName(s):(s.tipo_servizio_altro||s.tipo_servizio||'Servizio'))+' · M'+(s.mezzo||'—'),subtitle:(s.luogo_partenza||s.indirizzo_partenza||'—')+' → '+(isAssistanceManifestation(s.tipo_servizio)?(s.destinazione||s.indirizzo_destinazione||'—'):(s.ospedale_destinazione||s.destinazione||s.indirizzo_destinazione||'—')),raw:s}));
  calAddAvailabilityEvents(volCalEvents,avR.data||[],range,false);refreshVolunteerCalendarView();msg('vcalMsg','')
 }
 function renderVolunteerCalendarDay(){
