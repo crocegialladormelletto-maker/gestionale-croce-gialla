@@ -115,6 +115,7 @@
       <button id="savePayment" class="btn green">€ Registra pagamento</button>
       <button id="print" class="btn blue">🖨 Stampa</button>
       <button id="downloadPdf" class="btn green">⬇ Scarica PDF</button>
+      <button id="sendPdfMail" class="btn yellow">📧 Invia con PDF allegato</button>
       <button id="mail" class="btn secondary">✉ Apri email</button>
      </div>
     </div>
@@ -272,6 +273,8 @@ function fill(){
  $('save').classList.toggle('hidden',!draft);$('issue').classList.toggle('hidden',!draft);
  $('savePayment').classList.toggle('hidden',draft);
  $('print').disabled=false;$('downloadPdf').disabled=false;
+ $('sendPdfMail').disabled=draft;
+ $('sendPdfMail').title=draft?'Disponibile dopo l’emissione definitiva':'Invia direttamente la Nota di Debito con PDF allegato';
  $('mail').disabled=draft;
  $('mail').title=draft?'Disponibile dopo l’emissione definitiva':'Apri il programma di posta';
  $('dPayment').disabled=false;$('dPayDate').disabled=false;
@@ -332,6 +335,37 @@ $('saveConservation').onclick=async()=>{
  active=r.data;fill();msg('consMsg','Stato di conservazione aggiornato.','ok');
  await loadAll();
 };
+$('sendPdfMail').onclick=async()=>{
+ if(active?.stato!=='EMESSA')return msg('detailMsg','La Nota di Debito è ancora in BOZZA. Emettila prima dell’invio diretto.','err');
+ if(!active?.email)return msg('detailMsg','Email destinatario non presente.','err');
+ if(!confirm('Inviare la Nota di Debito '+active.numero+' a '+active.email+' con il PDF allegato?'))return;
+ const btn=$('sendPdfMail'),old=btn.textContent;
+ btn.disabled=true;btn.textContent='Invio in corso…';
+ try{
+  const canvas=await renderNoteCanvas(active);
+  const page_jpeg_base64=canvasJpegBase64(canvas);
+  const r=await sb.functions.invoke('invia-nota-debito-email',{
+   body:{nota_id:active.id,page_jpeg_base64}
+  });
+  if(r.error){
+   let detail=r.error.message||String(r.error);
+   try{
+    const ctx=await r.error.context?.json?.();
+    if(ctx?.error)detail=ctx.error;
+   }catch(_){}
+   throw new Error(detail);
+  }
+  if(r.data?.error)throw new Error(r.data.error);
+  const id=active.id;
+  await loadAll();await openNote(id);
+  msg('detailMsg','Email inviata a '+(r.data?.destinatario||active.email)+' con PDF allegato.','ok');
+ }catch(e){
+  msg('detailMsg','Invio non riuscito: '+(e.message||String(e)),'err');
+ }finally{
+  btn.disabled=false;btn.textContent=old;
+ }
+};
+
 $('mail').onclick=()=>{
  if(active?.stato!=='EMESSA')return msg('detailMsg','La Nota di Debito è ancora in BOZZA. Emettila prima di inviarla.','err');
  if(!active?.email)return msg('detailMsg','Email destinatario non presente.','err');
@@ -403,6 +437,28 @@ function buildNotePrintableDocument(n,autoPrint){
   '<style>@page{size:A4;margin:10mm}*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff}body{font-family:Arial,sans-serif;color:#17324a}.nd-print-page{width:190mm;min-height:277mm;margin:0 auto}</style>'+
   '</head><body>'+body+watermark+printScript+'</body></html>';
 }
+async function renderNoteCanvas(n){
+ if(!window.html2canvas)throw new Error('Modulo PDF non disponibile. Ricarica la pagina e riprova.');
+ const html=buildNotePrintableDocument(n,false);
+ const doc=new DOMParser().parseFromString(html,'text/html');
+ const host=document.createElement('div');
+ host.style.cssText='position:fixed;left:-20000px;top:0;width:794px;background:#fff;z-index:-1';
+ host.innerHTML=doc.body.innerHTML;
+ const style=document.createElement('style');
+ style.textContent=[...doc.querySelectorAll('style')].map(x=>x.textContent||'').join('\n');
+ host.prepend(style);
+ document.body.appendChild(host);
+ try{
+  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  return await html2canvas(host,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+ }finally{
+  host.remove();
+ }
+}
+function canvasJpegBase64(canvas){
+ return canvas.toDataURL('image/jpeg',0.94).replace(/^data:image\/jpeg;base64,/,'');
+}
+
 $('print').onclick=()=>{
  if(!active)return msg('detailMsg','Apri prima una Nota di Debito.','err');
  const w=window.open('','_blank');if(!w)return msg('detailMsg','Il browser ha bloccato la finestra di stampa: abilita i popup per questo sito e riprova.','err');
@@ -420,16 +476,7 @@ $('downloadPdf').onclick=async()=>{
  const btn=$('downloadPdf'),old=btn.textContent;btn.disabled=true;btn.textContent='Preparazione PDF…';
  try{
   if(!window.html2canvas||!window.jspdf?.jsPDF)throw new Error('Modulo PDF non disponibile. Ricarica la pagina e riprova.');
-  const html=buildNotePrintableDocument(active,false);
-  const doc=new DOMParser().parseFromString(html,'text/html');
-  const host=document.createElement('div');
-  host.style.cssText='position:fixed;left:-20000px;top:0;width:794px;background:#fff;z-index:-1';
-  host.innerHTML=doc.body.innerHTML;
-  const style=document.createElement('style');style.textContent=[...doc.querySelectorAll('style')].map(x=>x.textContent||'').join('\n');
-  host.prepend(style);document.body.appendChild(host);
-  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-  const canvas=await html2canvas(host,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
-  host.remove();
+  const canvas=await renderNoteCanvas(active);
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const pageW=210,pageH=297,imgH=canvas.height*pageW/canvas.width;
