@@ -1476,6 +1476,7 @@
      <div class="field" id="fvPatientLoadTime"><label>Carico paziente</label><input id="fvLoad" type="time"></div>
      <div class="field"><label>Arrivo destinazione</label><input id="fvArrDest" type="time"></div>
      <div class="field"><label>Ripartenza</label><input id="fvRestart" type="time"></div>
+     <div class="field hidden" id="fvArrDeaField"><label>Arrivo in DEA</label><input id="fvArrDea" type="time"></div>
      <div class="field"><label>Arrivo sede</label><input id="fvArrBase" type="time"></div>
      <div class="field"><label>Operatività</label><input id="fvOperational" type="time"></div>
      <div class="field"><label>Inizio fermo</label><input id="fvStopStart" type="time"></div>
@@ -4611,6 +4612,8 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  if(fvStopEndField)fvStopEndField.classList.toggle('hidden',is118);
  $('fvArrDest').value=fvTime(f.ora_arrivo_destinazione);
  $('fvRestart').value=fvTime(f.ora_ripartenza);
+ $('fvArrDea').value=fvTime(f.ora_arrivo_dea);
+ $('fvArrDeaField').classList.toggle('hidden',!is118);
  $('fvArrBase').value=fvTime(f.ora_arrivo_sede);
  $('fvOperational').value=fvTime(f.ora_operativita);
  $('fvStopStart').value=fvTime(f.inizio_fermo);
@@ -4677,6 +4680,7 @@ async function saveTravelSheet(silent=false){
   ora_carico_paziente:(String(currentFoglio?.tipo_servizio||'').trim()==='118'||isAssistanceManifestation(currentFoglio?.tipo_servizio))?null:($('fvLoad').value||null),
   ora_arrivo_destinazione:$('fvArrDest').value||null,
   ora_ripartenza:$('fvRestart').value||null,
+  ora_arrivo_dea:String(currentFoglio?.tipo_servizio||'').trim()==='118'?($('fvArrDea').value||null):null,
   ora_arrivo_sede:$('fvArrBase').value||null,
   ora_operativita:$('fvOperational').value||null,
   inizio_fermo:$('fvStopStart').value||null,
