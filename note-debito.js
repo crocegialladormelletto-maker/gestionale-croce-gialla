@@ -163,7 +163,7 @@
  function printHtml(n){
   const euro=x=>money(x).replace('€','').trim();
   const total=Number(n.totale ?? (Number(n.importo||0)-Number(n.sconto||0)));
-  const paid=!!n.data_pagamento;
+  const paid=!!n.data_pagamento && String(n.modalita_pagamento||'').toUpperCase()!=='BONIFICO DIFFERITO';
   const rows=[
    {cod:'SERV',desc:n.descrizione||'Servizio sanitario',qty:'1',price:euro(n.importo),discount:Number(n.sconto||0)>0?euro(n.sconto):'0,00',amount:euro(total)},
    {cod:'',desc:'',qty:'',price:'',discount:'',amount:''},
