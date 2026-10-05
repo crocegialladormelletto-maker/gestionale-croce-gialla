@@ -5375,15 +5375,15 @@ async function loadOperationalDashboard(){
    const values=rows.map(arubaServiceAmount),known=values.filter(v=>v!==null),missing=values.length-known.length;
    const total=known.reduce((a,b)=>a+b,0);
    const ready=todaySafe()>g.end;
-   const dates=rows.map(x=>niceDate(x.data_servizio)).join(' · ');
+   const dates=rows.map(x=>fvItalianDate(x.data_servizio)).join(' · ');
    return '<div class="ops-row ops-row-warn">'+
     '<div class="ops-crew-line"><strong>Dormelletto calcio · '+esc(g.label)+'</strong><span class="pill b">BIMESTRE</span></div>'+
     '<div class="muted">'+rows.length+' servizi · '+esc(dates)+'</div>'+
     '<div class="muted">Totale registrato '+euro(total)+(missing?' · '+missing+' import'+(missing===1?'o':'i')+' da completare':'')+'</div>'+
     '<div class="actions" style="margin-top:6px">'+
-     rows.map(x=>'<button type="button" class="btn secondary" data-aruba-open="'+esc(x.id)+'">'+esc(niceDate(x.data_servizio))+'</button>').join('')+
+     rows.map(x=>'<button type="button" class="btn secondary" data-aruba-open="'+esc(x.id)+'">'+esc(fvItalianDate(x.data_servizio))+'</button>').join('')+
      (ready?'<button type="button" class="btn yellow" data-aruba-bimestre="'+esc(g.key)+'">✓ Bimestre fatturato</button>':
-      '<span class="pill">IN CORSO FINO AL '+esc(niceDate(g.end))+'</span>')+
+      '<span class="pill">IN CORSO FINO AL '+esc(fvItalianDate(g.end))+'</span>')+
     '</div></div>';
   }).join('');
   const singleHtml=arubaQueue.slice(0,10).map(x=>
