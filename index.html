@@ -3722,7 +3722,13 @@ async function enter(){
  await sb.auth.signOut();return msg(target,textMsg,'err')
 }
  if(isVolunteerOnlyMode()&&r.data.ruolo!=='VOLONTARIO'){await sb.auth.signOut();applyVolunteerOnlyLogin();return msg('vlmsg','Questa app è riservata ai volontari. Accedi con badge e PIN.','warn')}
- if(isTabletOnlyMode()&&(r.data.ruolo!=='TABLET'||(tabletRequestedVehicle()&&r.data.mezzo!==tabletRequestedVehicle()))){await sb.auth.signOut();applyVolunteerOnlyLogin();return msg('tloginmsg','Questo account non è assegnato al tablet del mezzo richiesto.','err')}
+ if(isTabletOnlyMode()&&r.data.ruolo!=='TABLET'){await sb.auth.signOut();applyVolunteerOnlyLogin();return msg('tloginmsg','Questa pagina è riservata ai Tablet mezzi.','err')}
+ if(isTabletOnlyMode()&&r.data.ruolo==='TABLET'&&/^0[6-9]$/.test(r.data.mezzo||'')){
+  const fixedUrl=new URL(location.href);
+  fixedUrl.searchParams.set('area','tablet');
+  fixedUrl.searchParams.set('mezzo',r.data.mezzo);
+  history.replaceState(null,'',fixedUrl.toString());
+ }
  if(isCentralinoOnlyMode()&&r.data.ruolo!=='CENTRALINO'){await sb.auth.signOut();applyVolunteerOnlyLogin();return msg('cloginmsg','Questo link consente esclusivamente l’accesso al Centralino.','err')}
  prof=r.data;$('login').classList.add('hidden');
  if(r.data.ruolo==='AMMINISTRATORE'){
@@ -3756,9 +3762,8 @@ $('centralinoLoginForm').onsubmit=async e=>{e.preventDefault();const user=$('cus
 $('mgo').onclick=async()=>{const user=$('muser').value.trim().toLowerCase(),password=$('mpw').value;if(user!=='monitor'||!password)return msg('mloginmsg','Inserisci username monitor e password.','warn');msg('mloginmsg','Accesso in corso...');const r=await sb.auth.signInWithPassword({email:monitorLoginEmail(),password});if(r.error)return msg('mloginmsg','Credenziali monitor non valide.','err');enter()};
 $('mpw').onkeydown=e=>{if(e.key==='Enter')$('mgo').click()};
 $('tgo').onclick=async()=>{
- const user=$('tuser').value.trim().toLowerCase(),pass=$('tpw').value,requested=tabletRequestedVehicle();
+ const user=$('tuser').value.trim().toLowerCase(),pass=$('tpw').value;
  if(!/^tablet0[6-9]$/.test(user)||!pass)return msg('tloginmsg','Inserisci username tablet06 / tablet07 / tablet08 / tablet09 e password.','warn');
- if(isTabletOnlyMode()&&requested&&user!=='tablet'+requested)return msg('tloginmsg','Questo link è riservato al mezzo '+requested+'.','warn');
  msg('tloginmsg','Accesso in corso...');
  const r=await sb.auth.signInWithPassword({email:user+'@crocegiallaemergenza.it',password:pass});
  if(r.error)return msg('tloginmsg','Credenziali del Tablet non valide.','err');enter();
