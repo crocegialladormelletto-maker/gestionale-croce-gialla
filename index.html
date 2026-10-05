@@ -1310,8 +1310,18 @@
 
 
 <section id="travelSheets" class="surface hidden">
- <div class="hero"><h2>Fogli Viaggio</h2><p>Elenco completo di tutti i Fogli Viaggio, compresi i 118. I Fogli 118 restano esclusi dalla contabilità e dalle Note di Debito.</p></div>
+ <div class="hero"><h2>Fogli Viaggio</h2><p>Archivio dei Fogli Viaggio ordinari. I Fogli 118 sono gestiti nel relativo archivio separato.</p></div>
  <div class="pad">
+  <div class="section">
+   <h3>📊 Riepilogo mensile Fogli Viaggio</h3>
+   <div class="grid4">
+    <div class="field"><label>Mese</label><input id="fvMonth" type="month"></div>
+    <div class="stat"><small>SERVIZI</small><b id="fvMonthlyCount">0</b></div>
+    <div class="stat"><small>KM TOTALI</small><b id="fvMonthlyKm">0 km</b></div>
+    <div class="stat"><small>FOGLI CHIUSI</small><b id="fvMonthlyClosed">0</b></div>
+   </div>
+   <div id="fvMonthMsg"></div>
+  </div>
   <div class="grid4">
    <div class="field"><label>Data</label><input id="fvDate" type="date"></div>
    <div class="field"><label>Stato</label><select id="fvState"><option value="">Tutti</option><option>APERTO</option><option>CHIUSO</option></select></div>
@@ -4277,6 +4287,10 @@ if($('prClear'))$('prClear').onclick=()=>{['prFrom','prTo','prVehicle','prPayMod
 if($('prUploadBtn'))$('prUploadBtn').onclick=uploadReceiptFromAdministration;
 
 async function loadTravelSheets(){
+ if(['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)){
+  if(!$('fvMonth').value)$('fvMonth').value=new Date().toISOString().slice(0,7);
+  await loadTravelSheetsMonthlySummary();
+ }
  msg('fvMsg','Caricamento...');
  let q=sb.from('fogli_viaggio').select('*').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
  if($('fvDate').value)q=q.eq('data_servizio',$('fvDate').value);
@@ -4292,6 +4306,27 @@ async function loadTravelSheets(){
  document.querySelectorAll('[data-delete-fv]').forEach(b=>b.onclick=()=>deleteTravelSheet(b.dataset.deleteFv));
  msg('fvMsg','');
 }
+async function loadTravelSheetsMonthlySummary(){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const month=$('fvMonth').value||new Date().toISOString().slice(0,7);
+ $('fvMonth').value=month;
+ const b=fv118MonthBounds(month);
+ msg('fvMonthMsg','Aggiornamento riepilogo...');
+ const r=await sb.from('fogli_viaggio')
+  .select('id,data_servizio,tipo_servizio,km_partenza,km_arrivo,km_percorsi,stato')
+  .neq('tipo_servizio','118')
+  .gte('data_servizio',b.start)
+  .lt('data_servizio',b.end);
+ if(r.error)return msg('fvMonthMsg',r.error.message,'err');
+ const rows=r.data||[];
+ const km=rows.reduce((sum,x)=>sum+Number(x.km_percorsi??((x.km_arrivo!=null&&x.km_partenza!=null)?Math.max(0,x.km_arrivo-x.km_partenza):0)),0);
+ $('fvMonthlyCount').textContent=String(rows.length);
+ $('fvMonthlyKm').textContent=km.toLocaleString('it-IT')+' km';
+ $('fvMonthlyClosed').textContent=String(rows.filter(x=>x.stato==='CHIUSO').length);
+ msg('fvMonthMsg','');
+}
+$('fvMonth').onchange=loadTravelSheetsMonthlySummary;
+
 function fv118MonthBounds(value){
  const v=value||new Date().toISOString().slice(0,7);
  const [y,m]=v.split('-').map(Number);
@@ -4451,6 +4486,12 @@ $('fvDate').onchange=loadTravelSheets;
 $('fvState').onchange=loadTravelSheets;
 $('fvVehicle').onchange=loadTravelSheets;
 $('fvSearch').oninput=()=>{clearTimeout(window.fvq);window.fvq=setTimeout(loadTravelSheets,250)};
+setInterval(()=>{
+ if(!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo))return;
+ const section=$('travelSheets');
+ if(!section||section.classList.contains('hidden')||document.hidden)return;
+ loadTravelSheets();
+},30000);
 
 async function openTravelSheet(id){
  currentFoglioId=id;
