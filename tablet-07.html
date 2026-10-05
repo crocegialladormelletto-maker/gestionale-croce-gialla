@@ -2096,7 +2096,7 @@ Causale: numero preventivo</textarea>
     </div>
     <h3 class="tablet-section-title" style="margin-top:20px">Annotazioni di servizio</h3>
     <div class="tablet-fields">
-     <div class="field"><label>Tappe / percorso</label><textarea data-ts-field="percorso_tappe"></textarea></div>
+     <div class="field" id="tabletRouteTappeField"><label>Tappe / percorso</label><textarea data-ts-field="percorso_tappe"></textarea></div>
      <div class="field"><label>Annotazioni</label><textarea data-ts-field="annotazioni"></textarea></div>
     </div>
     <h3 class="tablet-section-title" style="margin-top:20px">Servizio e pagamento</h3>
@@ -8292,9 +8292,11 @@ async function loadTabletSheet(serviceId){
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
  const isInternalSheet=String(tabletCurrentService?.tipo_servizio||f.tipo_servizio||'')==='Servizio interno';
+ const is118Sheet=String(tabletCurrentService?.tipo_servizio||f.tipo_servizio||'').trim()==='118';
+ if($('tabletRouteTappeField'))$('tabletRouteTappeField').classList.toggle('hidden',is118Sheet);
  ['ora_partenza_servizio','ora_carico_paziente','ora_arrivo_destinazione','ora_ripartenza','ora_arrivo_sede','ora_operativita','inizio_fermo','fine_fermo'].forEach(k=>{$('tabletTime_'+k)?.classList.toggle('hidden',isInternalSheet)});
  if($('tabletTimesTitle'))$('tabletTimesTitle').textContent=isInternalSheet?'Percorrenza':'Orari effettivi e percorrenza';
- const patientEditable=!!tabletCurrentService && tabletSheetIs118===false && !isInternalSheet;
+ const patientEditable=!!tabletCurrentService && !is118Sheet && !isInternalSheet;
  if($('tabletPatientEditSection'))$('tabletPatientEditSection').classList.toggle('hidden',!patientEditable);
  if(patientEditable){
   $('tabletPatientFirst').value=tabletCurrentService.paziente_nome||f.paziente_nome||'';
@@ -8345,6 +8347,8 @@ async function saveTabletSheet(silent=false){
   else if(el.type==='number'){row[name]=(name==='km_partenza'||name==='km_arrivo')?tabletKmNumber(el.value):(el.value===''?null:Number(el.value));if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
  }
+ const is118Service=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim()==='118';
+ if(is118Service)delete row.percorso_tappe;
  const isInternalService=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'')==='Servizio interno';
  if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio)||isInternalService)row.ora_carico_paziente=null;
  if(isInternalService){row.importo_inserito=0;row.modalita_pagamento=null;row.data_pagamento=null;}
