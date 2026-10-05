@@ -4120,6 +4120,8 @@ function buildFoglioPrint(f){
    '<div class="print-box"><small>Cognome e nome</small>'+esc([f.paziente_cognome,f.paziente_nome].filter(Boolean).join(' ')||'—')+'</div>'+
    '<div class="print-box"><small>Codice fiscale</small>'+esc(f.codice_fiscale||'—')+'</div>'+
    '<div class="print-box"><small>Telefono</small>'+esc(f.telefono||'—')+'</div>'+
+   '<div class="print-box"><small>Indirizzo di residenza</small>'+esc([f.via,f.civico,f.residenza,f.cap,f.provincia].filter(Boolean).join(' · ')||'—')+'</div>'+
+   '<div class="print-box"><small>E-mail</small>'+esc(f.email||'—')+'</div>'+
   '</div></div>')+
 
   (String(f.tipo_servizio||'').trim()==='118'
