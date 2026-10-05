@@ -112,7 +112,8 @@
       <button id="save" class="btn secondary">Salva bozza</button>
       <button id="issue" class="btn yellow">✓ Emetti Nota di Debito</button>
       <button id="savePayment" class="btn green">€ Registra pagamento</button>
-      <button id="print" class="btn blue">🖨 Stampa / Salva PDF</button>
+      <button id="print" class="btn blue">🖨 Stampa</button>
+      <button id="downloadPdf" class="btn green">⬇ Scarica PDF</button>
       <button id="mail" class="btn secondary">✉ Apri email</button>
      </div>
     </div>
@@ -122,6 +123,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script>
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co';
 const KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
@@ -306,10 +309,8 @@ $('mail').onclick=()=>{
  const body='Gentile destinatario,\n\nin allegato la Nota di Debito '+active.numero+' relativa al servizio del '+nice(active.data_servizio)+'.\n\nCordiali saluti,\nCroce Gialla Emergenza ODV\ntesoreria@crocegiallaemergenza.it';
  location.href='mailto:'+encodeURIComponent(active.email)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
 };
-$('print').onclick=()=>{
- if(!active)return;
- const n=active;
- const w=window.open('','_blank');if(!w)return msg('detailMsg','Consenti i popup per stampare il documento.','err');
+
+function buildNotePrintableDocument(n,autoPrint){
  const total=money(n.totale??(Number(n.importo||0)-Number(n.sconto||0)));
  const html='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(n.numero)+'</title><style>@page{size:A4;margin:13mm}*{box-sizing:border-box}body{font-family:Arial;color:#172533;margin:0;font-size:12px}.page{min-height:270mm;display:flex;flex-direction:column}.head{border-bottom:4px solid #f3c400;padding-bottom:12px;display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.head-left{display:flex;gap:14px;align-items:flex-start}.logo-box{flex:0 0 82px}.logo-box img{display:block;width:78px;height:78px;object-fit:contain;border-radius:50%}.org h1{margin:0;font-size:21px}.doc{text-align:right}.doc h2{margin:0;color:#16324a}.box{border:1px solid #d9e2ea;border-radius:10px;padding:12px;margin-top:13px}.box h3{margin:0 0 8px;color:#16324a}.line{margin:5px 0}.amounts{width:100%;border-collapse:collapse;margin-top:13px}.amounts th,.amounts td{border:1px solid #d9e2ea;padding:9px}.amounts th{background:#f5f7fa}.total{font-size:22px;font-weight:900;text-align:right;margin-top:10px}.footer{margin-top:auto;padding-top:15px}.pay{background:#eef6ff;border:1px solid #aac9e8;border-radius:9px;padding:10px;text-align:center}.tax{font-size:10px;color:#566575;line-height:1.5;margin-top:10px}.five{margin-top:12px;border:2px solid #aac9e8;border-radius:10px;padding:12px;text-align:center}.five b{font-size:18px;color:#16324a}.five .cf{font-size:16px;font-weight:900;margin-top:6px}</style></head><body><div class="page">'+
  '<div class="head"><div class="head-left"><div class="logo-box"><img src="'+NOTE_LOGO+'" alt="Logo Croce Gialla Emergenza ODV"></div><div class="org"><h1>CROCE GIALLA EMERGENZA ODV</h1><div>Via I° Maggio 1 · 28040 Dormelletto (NO)</div><div>C.F. 91023880031 · P. IVA 02809130038</div><div>Tel. 0322 282730 · tesoreria@crocegiallaemergenza.it</div></div></div><div class="doc"><h2>NOTA DI DEBITO</h2><b>'+esc(n.numero)+'</b><div>'+nice(n.data_documento)+'</div></div></div>'+
@@ -320,7 +321,50 @@ $('print').onclick=()=>{
  '<div class="tax">IVA non applicata ai sensi della L. 190/2014 e successive modifiche. Imposta di bollo esente ai sensi dell’art. 82, comma 5, D.Lgs. 117/2017.</div>'+
  '<div class="five"><b>Sostieni Croce Gialla Emergenza ODV con il tuo 5×1000</b><div>Un gesto che non costa nulla e sostiene mezzi, attrezzature e servizi per il territorio.</div><div class="cf">Codice fiscale: 91023880031</div></div></div>'+
  '</div><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>';
+ return autoPrint?html:html.replace('<script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script>','');
+}
+$('print').onclick=()=>{
+ if(!active)return;
+ if(active.stato!=='EMESSA')return msg('detailMsg','Emetti prima la Nota di Debito per poterla stampare.','err');
+ const w=window.open('','_blank');if(!w)return msg('detailMsg','Consenti i popup per stampare il documento.','err');
+ const html=buildNotePrintableDocument(active,true);
  w.document.open();w.document.write(html);w.document.close();
+};
+$('downloadPdf').onclick=async()=>{
+ if(!active)return;
+ if(active.stato!=='EMESSA')return msg('detailMsg','Emetti prima la Nota di Debito per poterla scaricare in PDF.','err');
+ const btn=$('downloadPdf'),old=btn.textContent;btn.disabled=true;btn.textContent='Preparazione PDF…';
+ try{
+  if(!window.html2canvas||!window.jspdf?.jsPDF)throw new Error('Modulo PDF non disponibile. Ricarica la pagina e riprova.');
+  const html=buildNotePrintableDocument(active,false);
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  const host=document.createElement('div');
+  host.style.cssText='position:fixed;left:-20000px;top:0;width:794px;background:#fff;z-index:-1';
+  host.innerHTML=doc.body.innerHTML;
+  const style=document.createElement('style');style.textContent=[...doc.querySelectorAll('style')].map(x=>x.textContent||'').join('\n');
+  host.prepend(style);document.body.appendChild(host);
+  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  const canvas=await html2canvas(host,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+  host.remove();
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pageW=210,pageH=297,imgH=canvas.height*pageW/canvas.width;
+  const img=canvas.toDataURL('image/jpeg',0.96);
+  if(imgH<=pageH)pdf.addImage(img,'JPEG',0,0,pageW,imgH,'FAST');
+  else{
+   let y=0,remaining=imgH,first=true;
+   while(remaining>0){
+    if(!first)pdf.addPage();
+    pdf.addImage(img,'JPEG',0,-y,pageW,imgH,'FAST');
+    y+=pageH;remaining-=pageH;first=false;
+   }
+  }
+  const safe=String(active.numero||'Nota_di_Debito').replace(/[^A-Za-z0-9_-]/g,'_');
+  pdf.save('Nota_di_Debito_'+safe+'.pdf');
+  msg('detailMsg','PDF scaricato. Ora puoi allegarlo a email, PEC o altro invio.','ok');
+ }catch(e){
+  msg('detailMsg','Impossibile creare il PDF: '+(e.message||String(e)),'err');
+ }finally{btn.disabled=false;btn.textContent=old}
 };
 sb.auth.getSession().then(()=>enter());
 </script>
