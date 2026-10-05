@@ -271,6 +271,9 @@ function fill(){
  ['dDate','dName','dCF','dAddress','dCap','dTown','dProvince','dEmail','dDescription','dAmount','dDiscount'].forEach(id=>$(id).disabled=!draft);
  $('save').classList.toggle('hidden',!draft);$('issue').classList.toggle('hidden',!draft);
  $('savePayment').classList.toggle('hidden',draft);
+ $('print').disabled=false;$('downloadPdf').disabled=false;
+ $('mail').disabled=draft;
+ $('mail').title=draft?'Disponibile dopo l’emissione definitiva':'Apri il programma di posta';
  $('dPayment').disabled=false;$('dPayDate').disabled=false;
  $('draftNotice').classList.toggle('hidden',!draft);
  $('draftNotice').textContent=draft?'BOZZA MODIFICABILE: controlla e completa tutti i dati. Il documento diventerà definitivo solo premendo “Emetti Nota di Debito”.':'';
@@ -393,21 +396,27 @@ function buildApprovedNoteBody(n){
  }
 function buildNotePrintableDocument(n,autoPrint){
  const body=buildApprovedNoteBody(n);
- const printScript=autoPrint?'<script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script>':'';
+ const draft=String(n?.stato||'').toUpperCase()==='BOZZA';
+ const watermark=draft?'<div style="position:fixed;left:0;right:0;top:44%;transform:rotate(-24deg);text-align:center;font:900 64px Arial,sans-serif;color:rgba(180,0,0,.14);z-index:9999;pointer-events:none">BOZZA · NON VALIDA</div>':'';
+ const printScript=autoPrint?'<script>window.onload=function(){setTimeout(function(){window.focus();window.print()},350)}<\/script>':'';
  return '<!doctype html><html><head><meta charset="utf-8"><title>'+esc(n.numero||'Nota di Debito')+'</title>'+
   '<style>@page{size:A4;margin:10mm}*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff}body{font-family:Arial,sans-serif;color:#17324a}.nd-print-page{width:190mm;min-height:277mm;margin:0 auto}</style>'+
-  '</head><body>'+body+printScript+'</body></html>';
+  '</head><body>'+body+watermark+printScript+'</body></html>';
 }
 $('print').onclick=()=>{
- if(!active)return;
- if(active.stato!=='EMESSA')return msg('detailMsg','Emetti prima la Nota di Debito per poterla stampare.','err');
- const w=window.open('','_blank');if(!w)return msg('detailMsg','Consenti i popup per stampare il documento.','err');
- const html=buildNotePrintableDocument(active,true);
- w.document.open();w.document.write(html);w.document.close();
+ if(!active)return msg('detailMsg','Apri prima una Nota di Debito.','err');
+ const w=window.open('','_blank');if(!w)return msg('detailMsg','Il browser ha bloccato la finestra di stampa: abilita i popup per questo sito e riprova.','err');
+ try{
+  const html=buildNotePrintableDocument(active,true);
+  w.document.open();w.document.write(html);w.document.close();
+  msg('detailMsg',active.stato==='BOZZA'?'Anteprima di stampa aperta con dicitura BOZZA · NON VALIDA.':'Finestra di stampa aperta.','ok');
+ }catch(e){
+  try{w.close()}catch(_){}
+  msg('detailMsg','Impossibile preparare la stampa: '+(e.message||String(e)),'err');
+ }
 };
 $('downloadPdf').onclick=async()=>{
- if(!active)return;
- if(active.stato!=='EMESSA')return msg('detailMsg','Emetti prima la Nota di Debito per poterla scaricare in PDF.','err');
+ if(!active)return msg('detailMsg','Apri prima una Nota di Debito.','err');
  const btn=$('downloadPdf'),old=btn.textContent;btn.disabled=true;btn.textContent='Preparazione PDF…';
  try{
   if(!window.html2canvas||!window.jspdf?.jsPDF)throw new Error('Modulo PDF non disponibile. Ricarica la pagina e riprova.');
@@ -436,7 +445,7 @@ $('downloadPdf').onclick=async()=>{
   }
   const safe=String(active.numero||'Nota_di_Debito').replace(/[^A-Za-z0-9_-]/g,'_');
   pdf.save('Nota_di_Debito_'+safe+'.pdf');
-  msg('detailMsg','PDF scaricato. Ora puoi allegarlo a email, PEC o altro invio.','ok');
+  msg('detailMsg',active.stato==='BOZZA'?'PDF BOZZA scaricato con dicitura NON VALIDA.':'PDF scaricato. Ora puoi allegarlo a email, PEC o altro invio.','ok');
  }catch(e){
   msg('detailMsg','Impossibile creare il PDF: '+(e.message||String(e)),'err');
  }finally{btn.disabled=false;btn.textContent=old}
