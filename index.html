@@ -1513,8 +1513,8 @@
 
    <div class="section" id="fvPaymentSection"><h3>Pagamento</h3>
     <div class="grid3">
-     <div class="field"><label>Modalità</label><select id="fvPayMode"><option value="">Non registrato</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>ALTRO</option></select></div>
-     <div class="field"><label>Data pagamento</label><input id="fvPayDate" type="date"></div>
+     <div class="field"><label>Modalità</label><select id="fvPayMode"><option value="">Non registrato</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select></div>
+     <div class="field" id="fvPayDateBox"><label>Data pagamento</label><input id="fvPayDate" type="date"></div>
      <div class="field"><label>Stato contabile collegato</label><input id="fvAccountingState" disabled></div>
     </div>
     <div id="fvReceiptBox" style="margin-top:12px;border-top:1px solid #dbe5ed;padding-top:12px">
@@ -2647,7 +2647,7 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Destinazione tariffaria</label><select id="tabletAdTariffDest"><option value="">—</option></select></div>
     <div class="field"><label>Fascia</label><select id="tabletAdNight"><option value="false">Diurno</option><option value="true">Notturno</option></select></div>
     <div class="field"><label>Importo concordato € (solo senza tariffario)</label><input id="tabletAdAmount" type="number" step="0.01" min="0" max="10000" placeholder="Vuoto = da concordare"></div>
-    <div class="field" id="tabletAdPaymentBox"><label>Modalità pagamento</label><select id="tabletAdPayment"><option value="">Da indicare</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="ALTRO">Altro</option></select></div>
+    <div class="field" id="tabletAdPaymentBox"><label>Modalità pagamento</label><select id="tabletAdPayment"><option value="">Da indicare</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="ALTRO">Altro</option></select></div>
     <div class="field" id="tabletAdPaymentDateBox"><label>Data pagamento</label><input id="tabletAdPaymentDate" type="date"></div>
     <div class="field"><label>Note operative</label><textarea id="tabletAdNotes" maxlength="2000"></textarea></div>
    </div>
@@ -2769,8 +2769,8 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Barella bariatrica</label><label class="check"><input type="checkbox" data-ts-field="barella_bariatrica"> Utilizzata</label></div>
      <div class="field"><label>Supplemento bariatrica €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_bariatrica"></div>
      <div class="field"><label>Totale calcolato €</label><input id="tabletSheetTotal" disabled value="—"></div>
-     <div class="field"><label>Modalità pagamento</label><select data-ts-field="modalita_pagamento"><option value="">Non indicata</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="NON DOVUTO">Non dovuto</option><option value="ALTRO">Altro</option></select></div>
-     <div class="field"><label>Data pagamento</label><input type="date" data-ts-field="data_pagamento"></div>
+     <div class="field"><label>Modalità pagamento</label><select data-ts-field="modalita_pagamento"><option value="">Non indicata</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="NON DOVUTO">Non dovuto</option><option value="ALTRO">Altro</option></select></div>
+     <div class="field" id="tabletSheetPayDateBox"><label>Data pagamento</label><input type="date" data-ts-field="data_pagamento"></div>
     </div>
     <div id="tabletReceiptSection" class="section hidden" style="margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
      <h3 style="margin-top:0">📎 Ricevuta pagamento</h3>
@@ -3155,6 +3155,13 @@ async function uploadPaymentReceipt(foglio,inputId,context){
  input.value='';
  await loadPaymentReceipts(foglio,context);
  msg(msgId,'Ricevuta caricata e collegata al Foglio Viaggio.','ok');
+}
+function tabletUpdatePaymentDateVisibility(){
+ const mode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'';
+ const dateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
+ const deferred=mode==='BONIFICO DIFFERITO';
+ if($('tabletSheetPayDateBox'))$('tabletSheetPayDateBox').classList.toggle('hidden',deferred);
+ if(deferred&&dateField)dateField.value='';
 }
 function tabletToggleReceiptSection(){
  const sec=$('tabletReceiptSection');if(!sec)return;
@@ -4003,7 +4010,17 @@ function fvPreview(){
 }
 ['fvKmStart','fvKmEnd','fvBase','fvChairAmount','fvBariAmount'].forEach(id=>$(id).oninput=fvPreview);
 ['fvChair','fvBari'].forEach(id=>$(id).onchange=fvPreview);
-$('fvPayMode').onchange=()=>{if($('fvPayMode').value&&!$('fvPayDate').value)$('fvPayDate').value=today()};
+function fvUpdatePaymentDateVisibility(){
+ const deferred=$('fvPayMode').value==='BONIFICO DIFFERITO';
+ if($('fvPayDateBox'))$('fvPayDateBox').classList.toggle('hidden',deferred);
+ if(deferred)$('fvPayDate').value='';
+}
+$('fvPayMode').onchange=()=>{
+ const mode=$('fvPayMode').value;
+ if(mode&&mode!=='BONIFICO DIFFERITO'&&!$('fvPayDate').value)$('fvPayDate').value=today();
+ if(!mode||mode==='BONIFICO DIFFERITO')$('fvPayDate').value='';
+ fvUpdatePaymentDateVisibility();
+};
 if($('fvReceiptUpload'))$('fvReceiptUpload').onclick=()=>uploadPaymentReceipt(currentFoglio,'fvReceiptFile','admin');
 
 
@@ -4573,6 +4590,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvGrandTotal').value=Number(f.totale_servizio||0).toFixed(2);
  $('fvPayMode').value=f.modalita_pagamento||'';
  $('fvPayDate').value=f.data_pagamento||'';
+ fvUpdatePaymentDateVisibility();
  $('fvEconomicSection').classList.toggle('hidden',isCentral||is118);
  $('fvPaymentSection').classList.toggle('hidden',isCentral||is118);
  $('fvAccountingState').value=(isCentral||is118)?'—':(acc?acc.stato_contabile+(Number(acc.residuo)>0?' · Residuo '+euro(acc.residuo):''):'—');
@@ -4636,7 +4654,7 @@ async function saveTravelSheet(silent=false){
   supplemento_sedia:Number($('fvChairAmount').value||0),
   supplemento_bariatrica:Number($('fvBariAmount').value||0),
   modalita_pagamento:$('fvPayMode').value||null,
-  data_pagamento:$('fvPayDate').value||null
+  data_pagamento:$('fvPayMode').value==='BONIFICO DIFFERITO'?null:($('fvPayDate').value||null)
  });
  const r=await sb.from('fogli_viaggio').update(row).eq('id',currentFoglioId);
  if(r.error){msg('fvDetailMsg',r.error.message,'err');return false}
@@ -10733,6 +10751,13 @@ function tabletUpdateImmediateTariff(){
  if(rows.some(x=>x.tariffa_destinazione_id===selected))$('tabletAdTariffDest').value=selected;
  tabletUpdateImmediateQuote();
 }
+function tabletUpdateImmediatePaymentDateVisibility(){
+ const mode=$('tabletAdPayment')?.value||'';
+ const internal=$('tabletAdType')?.value==='Servizio interno';
+ const deferred=mode==='BONIFICO DIFFERITO';
+ if($('tabletAdPaymentDateBox'))$('tabletAdPaymentDateBox').classList.toggle('hidden',internal||deferred);
+ if((internal||deferred)&&$('tabletAdPaymentDate'))$('tabletAdPaymentDate').value='';
+}
 function tabletApplyImmediateTypeRules(){
  const internal=$('tabletAdType').value==='Servizio interno';
  if($('tabletAdPatientSection'))$('tabletAdPatientSection').classList.toggle('hidden',internal);
@@ -10760,6 +10785,7 @@ function tabletApplyImmediateTypeRules(){
   if($('tabletAdAmount').value==='0')$('tabletAdAmount').value='';
   tabletUpdateImmediateQuote();
  }
+ tabletUpdateImmediatePaymentDateVisibility();
 }
 function tabletUpdateImmediateQuote(){
  const code=$('tabletAdTariffGroup').value;
@@ -10874,7 +10900,7 @@ async function tabletCreateImmediate(){
   if(Number.isFinite(kmClose))kmUpdate.km_arrivo=kmClose;
   const immediateInternal=$('tabletAdType').value==='Servizio interno';
   const payMode=immediateInternal?null:($('tabletAdPayment')?.value||null);
-  const payDate=immediateInternal?null:($('tabletAdPaymentDate')?.value||null);
+  const payDate=(immediateInternal||payMode==='BONIFICO DIFFERITO')?null:($('tabletAdPaymentDate')?.value||null);
   kmUpdate.modalita_pagamento=payMode;
   kmUpdate.data_pagamento=payDate;
   const ku=await sb.from('fogli_viaggio').update(kmUpdate).eq('id',created.foglio_id).eq('mezzo',tabletMezzo).eq('stato','APERTO');
@@ -10908,10 +10934,14 @@ $('tabletImmediateToggle').onclick=async()=>{
 if($('tabletReceiptUpload'))$('tabletReceiptUpload').onclick=()=>uploadPaymentReceipt(tabletCurrentSheet,'tabletReceiptFile','tablet');
 const tabletPayModeField=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
 if(tabletPayModeField)tabletPayModeField.onchange=()=>{
- if(tabletPayModeField.value){
-  const dateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
-  if(dateField&&!dateField.value)dateField.value=todaySafe();
+ const dateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
+ if(tabletPayModeField.value&&tabletPayModeField.value!=='BONIFICO DIFFERITO'){
+  if(dateField&&!dateField.value&&['CONTANTI','POS'].includes(tabletPayModeField.value))dateField.value=todaySafe();
  }
+ if(!tabletPayModeField.value||tabletPayModeField.value==='BONIFICO DIFFERITO'){
+  if(dateField)dateField.value='';
+ }
+ tabletUpdatePaymentDateVisibility();
  tabletToggleReceiptSection();
 };
 $('tabletPriceGroup').onchange=tabletRenderTariffPrices;
@@ -10924,7 +10954,8 @@ $('tabletAdAmount').oninput=tabletUpdateImmediateQuote;
 if($('tabletAdPayment'))$('tabletAdPayment').onchange=()=>{
  const mode=$('tabletAdPayment').value;
  if(mode&&!$('tabletAdPaymentDate').value&&['CONTANTI','POS'].includes(mode))$('tabletAdPaymentDate').value=todaySafe();
- if(!mode)$('tabletAdPaymentDate').value='';
+ if(!mode||mode==='BONIFICO DIFFERITO')$('tabletAdPaymentDate').value='';
+ tabletUpdateImmediatePaymentDateVisibility();
 };
 $('tabletAdDraftSave').onclick=tabletSaveImmediateDraft;
 $('tabletImmediateForm').onsubmit=async e=>{e.preventDefault();await tabletCreateImmediate()};
@@ -11074,6 +11105,8 @@ async function openTabletDirect118(foglio){
   else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
   else el.value=f[key]??'';
  });
+ tabletUpdatePaymentDateVisibility();
+ tabletToggleReceiptSection();
  $('tabletSaveSheet').classList.toggle('hidden',closed);
  $('tabletCloseSheet').classList.toggle('hidden',closed);
  $('tabletCloseSheet').disabled=false;
