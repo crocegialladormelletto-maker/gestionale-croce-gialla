@@ -7790,7 +7790,7 @@ function asMonthRender(){
    (day===todaySafe()?'dim-today ':'')+(day===asMonthSelected?'dim-selected ':'')+
    '" data-as-month-day="'+day+'"><b>'+date.getDate()+'</b>'+
    (events.length?'<small>🎪 '+events.length+'</small>'+events.slice(0,2).map(s=>
-    '<small class="as-month-name">'+esc(asServiceName(s))+'</small>').join(''):'')+'</button>';
+    '<small class="as-month-name">'+esc((calTime(s.ora_partenza_prevista)?calTime(s.ora_partenza_prevista)+' · ':'')+asServiceName(s))+'</small>').join(''):'')+'</button>';
  }
  $('asMonthGrid').innerHTML=html;
  $('asMonthGrid').querySelectorAll('[data-as-month-day]').forEach(button=>
