@@ -2735,6 +2735,32 @@ Causale: numero preventivo</textarea>
      <p><b>Diritti dell’interessato.</b> Nella qualità di interessato, Le sono garantiti tutti i diritti specificati agli artt. 15 - 20 GDPR, tra cui il diritto all’accesso, rettifica e cancellazione dei dati, il diritto di limitazione e opposizione al trattamento, il diritto di revocare il consenso al trattamento (senza pregiudizio per la liceità del trattamento basata sul consenso acquisito prima della revoca), nonché il diritto di proporre reclamo al Garante per la Protezione dei dati personali qualora ritenga che il trattamento che La riguarda violi il GDPR o la normativa italiana. I suddetti diritti possono essere esercitati mediante comunicazione scritta da inviare a mezzo posta elettronica o a mezzo Raccomandata presso la sede dell’Associazione.</p>
      <p><b>Il Data Protection Officer (DPO)</b> nominato dall’Associazione, a cui ciascun interessato può scrivere, in relazione al trattamento dei dati svolto dall’Associazione e/o in relazione ai Suoi diritti, è contattabile ai seguenti indirizzi:<br><b>Email:</b> dpo@crocegiallaemergenza.it<br><b>PEC:</b> leonardosrl@interfreepec.it</p>
      <p><b>Titolare del trattamento.</b> Il titolare del trattamento è l’Associazione Croce Gialla Emergenza ODV, con sede in Via I Maggio, 1 - 28040 Dormelletto (NO), tel. 0322/282730, e-mail crocegialladormelletto@crocegiallaemergenza.it</p>
+     <div class="section" style="margin-top:14px;background:#fff">
+      <h3 style="margin-top:0">✍️ Firma paziente</h3>
+      <p><b>Dichiarazione:</b> “Dichiaro di aver ricevuto e preso visione dell’informativa sul trattamento dei dati personali PA6 ai sensi degli artt. 13 e 14 del Regolamento UE 2016/679 – GDPR.”</p>
+      <div class="field">
+       <label>Stato firma</label>
+       <select id="tabletPrivacySignatureStatus" data-ts-field="privacy_firma_stato">
+        <option value="NON_FIRMATO">Non firmato</option>
+        <option value="FIRMATO">Firmato</option>
+        <option value="IMPOSSIBILITATO">Impossibilitato a firmare</option>
+       </select>
+      </div>
+      <div id="tabletPrivacySignatureArea" style="margin-top:10px">
+       <div class="notice">Firma con il dito nel riquadro sottostante.</div>
+       <canvas id="tabletPrivacySignatureCanvas" width="900" height="300" style="width:100%;height:180px;background:#fff;border:2px solid #173a5e;border-radius:12px;touch-action:none;display:block"></canvas>
+       <div class="actions" style="margin-top:8px">
+        <button id="tabletPrivacyClearSignature" type="button" class="btn secondary">Cancella firma</button>
+        <button id="tabletPrivacyViewSignature" type="button" class="btn secondary hidden">Visualizza firma salvata</button>
+       </div>
+       <div id="tabletPrivacySignaturePreview" class="hidden" style="margin-top:8px"><img id="tabletPrivacySignatureImage" alt="Firma paziente" style="max-width:100%;max-height:220px;border:1px solid #dbe5ed;border-radius:10px;background:#fff"></div>
+      </div>
+      <div id="tabletPrivacyImpossibleArea" class="field hidden" style="margin-top:10px">
+       <label>Motivazione impossibilità alla firma *</label>
+       <textarea id="tabletPrivacySignatureReason" data-ts-field="privacy_firma_motivo" maxlength="500" placeholder="Es. paziente impossibilitato fisicamente a firmare"></textarea>
+      </div>
+      <div id="tabletPrivacySignatureWhen" class="muted" style="margin-top:8px"></div>
+     </div>
      <label class="check" style="margin-top:10px"><input id="tabletPrivacyGiven" type="checkbox" data-ts-field="privacy_informativa_resa"> Informativa privacy resa al paziente / utente</label>
      <div id="tabletPrivacyWhen" class="muted" style="margin-top:6px"></div>
     </div>
@@ -3049,7 +3075,7 @@ let rosterCrewBusy=false,rosterCrewEligible=new Map();
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupAutomaticRows=[],backupBusy=false;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
-let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletDirect118=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='',tabletCrewPeople=[];
+let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletDirect118=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='',tabletCrewPeople=[],tabletPrivacySignatureDirty=false,tabletPrivacySignatureDrawing=false;
 let fv118MonthlyRows=[],paymentReceiptArchiveRows=[],paymentReceiptSheetOptions=[];
 const $=x=>document.getElementById(x), today=()=>new Date().toISOString().slice(0,10);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -11127,6 +11153,66 @@ async function openTabletDirect118(foglio){
  tabletCalcSheet();
  $('tabletDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
+function tabletPrivacySignatureStatusUI(){
+ const status=$('tabletPrivacySignatureStatus')?.value||'NON_FIRMATO';
+ if($('tabletPrivacySignatureArea'))$('tabletPrivacySignatureArea').classList.toggle('hidden',status!=='FIRMATO');
+ if($('tabletPrivacyImpossibleArea'))$('tabletPrivacyImpossibleArea').classList.toggle('hidden',status!=='IMPOSSIBILITATO');
+}
+function tabletPrivacyClearCanvas(){
+ const canvas=$('tabletPrivacySignatureCanvas');if(!canvas)return;
+ const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
+ tabletPrivacySignatureDirty=false;
+}
+function tabletPrivacyInitCanvas(){
+ const canvas=$('tabletPrivacySignatureCanvas');if(!canvas||canvas.dataset.bound==='1')return;
+ canvas.dataset.bound='1';
+ const ctx=canvas.getContext('2d');ctx.lineWidth=5;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#0f172a';
+ const pos=e=>{
+  const r=canvas.getBoundingClientRect(),p=e.touches?.[0]||e.changedTouches?.[0]||e;
+  return {x:(p.clientX-r.left)*(canvas.width/r.width),y:(p.clientY-r.top)*(canvas.height/r.height)};
+ };
+ const start=e=>{e.preventDefault();tabletPrivacySignatureDrawing=true;tabletPrivacySignatureDirty=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)};
+ const move=e=>{if(!tabletPrivacySignatureDrawing)return;e.preventDefault();const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()};
+ const stop=e=>{if(!tabletPrivacySignatureDrawing)return;if(e)e.preventDefault();tabletPrivacySignatureDrawing=false};
+ canvas.addEventListener('pointerdown',start);canvas.addEventListener('pointermove',move);window.addEventListener('pointerup',stop);
+ canvas.addEventListener('touchstart',start,{passive:false});canvas.addEventListener('touchmove',move,{passive:false});canvas.addEventListener('touchend',stop,{passive:false});
+}
+async function tabletPrivacyLoadSavedSignature(){
+ if(!$('tabletPrivacyViewSignature')||!tabletCurrentSheet)return;
+ const has=!!tabletCurrentSheet.privacy_firma_path;
+ $('tabletPrivacyViewSignature').classList.toggle('hidden',!has);
+ $('tabletPrivacySignaturePreview')?.classList.add('hidden');
+ $('tabletPrivacySignatureImage')?.removeAttribute('src');
+}
+async function tabletPrivacyShowSavedSignature(){
+ const path=tabletCurrentSheet?.privacy_firma_path;if(!path)return;
+ const r=await sb.storage.from('privacy-firme').createSignedUrl(path,300);
+ if(r.error)return msg('tabletSheetMsg','Impossibile aprire la firma: '+r.error.message,'err');
+ $('tabletPrivacySignatureImage').src=r.data.signedUrl;
+ $('tabletPrivacySignaturePreview').classList.remove('hidden');
+}
+async function tabletPrivacyUploadSignature(){
+ const status=$('tabletPrivacySignatureStatus')?.value||'NON_FIRMATO';
+ if(status==='IMPOSSIBILITATO'){
+  const reason=$('tabletPrivacySignatureReason')?.value.trim()||'';
+  if(!reason)throw new Error('Indica il motivo per cui il paziente è impossibilitato a firmare.');
+  return {status,path:null,signedAt:null,reason};
+ }
+ if(status!=='FIRMATO')return {status:'NON_FIRMATO',path:null,signedAt:null,reason:null};
+ if(!tabletCurrentSheet)throw new Error('Foglio Viaggio non disponibile.');
+ if(!tabletPrivacySignatureDirty && tabletCurrentSheet.privacy_firma_path){
+  return {status:'FIRMATO',path:tabletCurrentSheet.privacy_firma_path,signedAt:tabletCurrentSheet.privacy_firma_il||new Date().toISOString(),reason:null};
+ }
+ if(!tabletPrivacySignatureDirty)throw new Error('Fai firmare il paziente nel riquadro prima di salvare.');
+ const canvas=$('tabletPrivacySignatureCanvas');
+ const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+ if(!blob)throw new Error('Impossibile acquisire la firma.');
+ const path=String(tabletMezzo)+'/'+tabletCurrentSheet.id+'/firma_privacy.png';
+ const up=await sb.storage.from('privacy-firme').upload(path,blob,{contentType:'image/png',upsert:true});
+ if(up.error)throw up.error;
+ return {status:'FIRMATO',path,signedAt:new Date().toISOString(),reason:null};
+}
+
 async function loadTabletSheet(serviceId){
  $('tabletSheetPanel').classList.add('hidden');tabletCurrentSheet=null;
  if($('tabletReceiptSection'))$('tabletReceiptSection').classList.add('hidden');
@@ -11177,6 +11263,16 @@ async function loadTabletSheet(serviceId){
    ?('Informativa registrata'+(f.privacy_informativa_resa_il?' il '+new Date(f.privacy_informativa_resa_il).toLocaleString('it-IT'):'')+'.')
    :'Informativa non ancora registrata come resa.';
  }
+ tabletPrivacySignatureDirty=false;
+ tabletPrivacyInitCanvas();
+ tabletPrivacyClearCanvas();
+ if($('tabletPrivacySignatureStatus'))$('tabletPrivacySignatureStatus').value=f.privacy_firma_stato||'NON_FIRMATO';
+ if($('tabletPrivacySignatureReason'))$('tabletPrivacySignatureReason').value=f.privacy_firma_motivo||'';
+ if($('tabletPrivacySignatureWhen'))$('tabletPrivacySignatureWhen').textContent=f.privacy_firma_stato==='FIRMATO'
+   ?('Firma registrata'+(f.privacy_firma_il?' il '+new Date(f.privacy_firma_il).toLocaleString('it-IT'):'')+'.')
+   :(f.privacy_firma_stato==='IMPOSSIBILITATO'?'Paziente registrato come impossibilitato a firmare.':'Firma non ancora registrata.');
+ tabletPrivacySignatureStatusUI();
+ await tabletPrivacyLoadSavedSignature();
  if($('tabletPrivacyPanel'))$('tabletPrivacyPanel').classList.add('hidden');
  if(!tabletSheetIs118&&tabletCurrentService){
   if($('tabletRouteDestination')&&!$('tabletRouteDestination').value)$('tabletRouteDestination').value=tabletCurrentService.destinazione||'';
@@ -11195,6 +11291,8 @@ async function loadTabletSheet(serviceId){
   }
  }
  $('tabletSaveSheet').classList.toggle('hidden',closed);$('tabletCloseSheet').classList.toggle('hidden',closed);
+ if($('tabletPrivacyClearSignature'))$('tabletPrivacyClearSignature').disabled=closed;
+ if($('tabletPrivacySignatureCanvas'))$('tabletPrivacySignatureCanvas').style.pointerEvents=closed?'none':'auto';
  $('tabletCloseSheet').disabled=false;
  msg('tabletSheetMsg',closed?'Foglio Viaggio chiuso: è disponibile in sola lettura.':'',closed?'ok':'');
  tabletCalcSheet();
@@ -11232,6 +11330,18 @@ async function saveTabletSheet(silent=false){
   if(el.type==='checkbox')row[name]=el.checked;
   else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
+ }
+ if(tabletCurrentService && String(tabletCurrentService.tipo_servizio||'')!=='118' && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno'){
+  try{
+   const sig=await tabletPrivacyUploadSignature();
+   row.privacy_firma_stato=sig.status;
+   row.privacy_firma_path=sig.path;
+   row.privacy_firma_il=sig.signedAt;
+   row.privacy_firma_motivo=sig.reason;
+  }catch(e){
+   msg('tabletSheetMsg',e.message||String(e),'warn');
+   return false;
+  }
  }
  if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio))row.ora_carico_paziente=null;
  if(Object.prototype.hasOwnProperty.call(row,'privacy_informativa_resa')){
@@ -11294,6 +11404,11 @@ async function saveTabletSheet(silent=false){
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
   tabletCurrentSheet={...tabletCurrentSheet,...row};
+  tabletPrivacySignatureDirty=false;
+  if($('tabletPrivacySignatureWhen'))$('tabletPrivacySignatureWhen').textContent=tabletCurrentSheet.privacy_firma_stato==='FIRMATO'
+   ?('Firma registrata'+(tabletCurrentSheet.privacy_firma_il?' il '+new Date(tabletCurrentSheet.privacy_firma_il).toLocaleString('it-IT'):'')+'.')
+   :(tabletCurrentSheet.privacy_firma_stato==='IMPOSSIBILITATO'?'Paziente registrato come impossibilitato a firmare.':'Firma non ancora registrata.');
+  await tabletPrivacyLoadSavedSignature();
   if(!silent)msg('tabletSheetMsg','Dati salvati. Il Foglio Viaggio resta aperto e può essere completato successivamente.','ok');
   return true;
  }catch(e){msg('tabletSheetMsg',e.message||String(e),'err');return false}
@@ -11363,6 +11478,12 @@ if($('tabletPrivacyToggle'))$('tabletPrivacyToggle').onclick=()=>{
 if($('tabletPrivacyGiven'))$('tabletPrivacyGiven').onchange=()=>{
  if($('tabletPrivacyWhen'))$('tabletPrivacyWhen').textContent=$('tabletPrivacyGiven').checked?'L’informativa verrà registrata al prossimo salvataggio.':'Informativa non ancora registrata come resa.';
 };
+if($('tabletPrivacySignatureStatus'))$('tabletPrivacySignatureStatus').onchange=()=>{
+ tabletPrivacySignatureStatusUI();
+ if($('tabletPrivacySignatureStatus').value!=='FIRMATO')tabletPrivacySignatureDirty=false;
+};
+if($('tabletPrivacyClearSignature'))$('tabletPrivacyClearSignature').onclick=()=>{tabletPrivacyClearCanvas();if($('tabletPrivacySignatureWhen'))$('tabletPrivacySignatureWhen').textContent='Firma cancellata dal riquadro; firma nuovamente prima di salvare.';};
+if($('tabletPrivacyViewSignature'))$('tabletPrivacyViewSignature').onclick=tabletPrivacyShowSavedSignature;
 $('tabletCloseSheet').onclick=tabletCloseSheet;
 $('tabletSheetForm').addEventListener('input',tabletCalcSheet);
 $('tabletPrintSheet').onclick=async()=>{
