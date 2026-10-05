@@ -1403,7 +1403,7 @@
    </div>
    <div id="fv118MonthMsg"></div>
    <div class="table"><table>
-    <thead><tr><th>Data</th><th>Foglio</th><th>Scheda 118</th><th>Mezzo / Targa</th><th>Percorso</th><th>KM partenza</th><th>KM arrivo</th><th>KM effettuati</th><th>Stato</th></tr></thead>
+    <thead><tr><th>Data</th><th>Foglio</th><th>Scheda 118</th><th>Mezzo / Targa</th><th>Percorso</th><th>Arrivo in DEA</th><th>KM partenza</th><th>KM arrivo</th><th>KM effettuati</th><th>Stato</th></tr></thead>
     <tbody id="fv118MonthBody"></tbody>
    </table></div>
   </div>
@@ -1419,7 +1419,7 @@
    <div class="toolbar"><button id="fv118Refresh" class="btn secondary">Aggiorna</button></div>
    <div id="fv118Msg"></div>
    <div class="table"><table>
-    <thead><tr><th>Numero</th><th>Data</th><th>Mezzo</th><th>N. scheda 118</th><th>Destinazione</th><th>Stato</th><th></th></tr></thead>
+    <thead><tr><th>Numero</th><th>Data</th><th>Mezzo</th><th>N. scheda 118</th><th>Destinazione</th><th>Arrivo in DEA</th><th>Stato</th><th></th></tr></thead>
     <tbody id="fv118Body"></tbody>
    </table></div>
   </div>
@@ -4407,7 +4407,7 @@ async function load118MonthlySummary(){
  const b=fv118MonthBounds(month);
  msg('fv118MonthMsg','Caricamento riepilogo mensile...');
  const r=await sb.from('fogli_viaggio')
-  .select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,numero_scheda_118,luogo_partenza,destinazione,ospedale_destinazione,percorso_tappe,km_partenza,km_arrivo,km_percorsi,stato')
+  .select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,numero_scheda_118,luogo_partenza,destinazione,ospedale_destinazione,percorso_tappe,ora_arrivo_dea,km_partenza,km_arrivo,km_percorsi,stato')
   .eq('tipo_servizio','118')
   .gte('data_servizio',b.start)
   .lt('data_servizio',b.end)
@@ -4430,12 +4430,13 @@ async function load118MonthlySummary(){
    '<td>'+esc(x.numero_scheda_118||'—')+'</td>'+
    '<td>'+esc((x.mezzo||'—')+(x.targa?' · '+x.targa:''))+'</td>'+
    '<td>'+esc(fv118RouteText(x))+'</td>'+
+   '<td><b>'+esc(fvTime(x.ora_arrivo_dea)||'—')+'</b></td>'+
    '<td>'+esc(x.km_partenza??'—')+'</td>'+
    '<td>'+esc(x.km_arrivo??'—')+'</td>'+
    '<td><b>'+esc(km??'—')+'</b></td>'+
    '<td><span class="pill '+(x.stato==='CHIUSO'?'g':'')+'">'+esc(x.stato||'—')+'</span></td>'+
   '</tr>';
- }).join(''):'<tr><td colspan="9">Nessun Foglio Viaggio 118 nel mese selezionato.</td></tr>';
+ }).join(''):'<tr><td colspan="10">Nessun Foglio Viaggio 118 nel mese selezionato.</td></tr>';
  msg('fv118MonthMsg','');
 }
 function print118MonthlySummary(){
@@ -4504,9 +4505,10 @@ async function loadTravelSheets118(){
   '<td>'+esc(x.mezzo||'—')+'</td>'+
   '<td>'+esc(x.numero_scheda_118||'—')+'</td>'+
   '<td>'+esc(x.destinazione||'—')+'</td>'+
+  '<td><b>'+esc(fvTime(x.ora_arrivo_dea)||'—')+'</b></td>'+
   '<td><span class="pill '+(x.stato==='CHIUSO'?'g':'')+'">'+esc(x.stato||'—')+'</span></td>'+
   '<td><button class="btn secondary" data-open-fv118="'+esc(x.id)+'">Apri</button></td></tr>'
- ).join(''):'<tr><td colspan="7">Nessun Foglio Viaggio 118.</td></tr>';
+ ).join(''):'<tr><td colspan="8">Nessun Foglio Viaggio 118.</td></tr>';
  $('fv118Body').querySelectorAll('[data-open-fv118]').forEach(b=>b.onclick=()=>openTravelSheet(b.dataset.openFv118));
  msg('fv118Msg','');
 }
