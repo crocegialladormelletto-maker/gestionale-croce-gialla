@@ -4120,12 +4120,6 @@ function buildFoglioPrint(f){
 
   '<div class="print-section"><h3>Annotazioni</h3><div class="print-box" style="min-height:58px">'+esc(f.annotazioni||'Nessuna annotazione').replace(/\n/g,'<br>')+'</div></div>'+
 
-  (String(f.tipo_servizio||'').trim()==='118'?'':'<div class="print-signatures">'+
-   '<div class="print-sign">Firma autista</div>'+
-   '<div class="print-sign">Firma capo servizio / equipaggio</div>'+
-   '<div class="print-sign">Firma paziente / utente</div>'+
-  '</div>')+
-
   '<div class="print-footer"><span>Croce Gialla Emergenza ODV - Foglio Viaggio '+esc(f.numero_foglio||'')+'</span><span>Stampato il '+esc(printTime)+' · Gestionale V13.41</span></div>'+
  '</div>';
 }
