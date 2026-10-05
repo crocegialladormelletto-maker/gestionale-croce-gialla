@@ -2806,7 +2806,7 @@ Causale: numero preventivo</textarea>
     </div>
     <h3 class="tablet-section-title" style="margin-top:20px">Annotazioni di servizio</h3>
     <div class="tablet-fields">
-     <div class="field"><label>Tappe / percorso</label><textarea data-ts-field="percorso_tappe"></textarea></div>
+     <div class="field" id="tabletRouteTappeField"><label>Tappe / percorso</label><textarea data-ts-field="percorso_tappe"></textarea></div>
      <div class="field"><label>Annotazioni</label><textarea data-ts-field="annotazioni"></textarea></div>
     </div>
     <div id="tabletServicePaymentSection">
@@ -11344,6 +11344,7 @@ function tabletConfigureTimeFields(is118){
  if($('tabletStopEndField'))$('tabletStopEndField').classList.toggle('hidden',!!is118);
  if($('tabletServicePaymentSection'))$('tabletServicePaymentSection').classList.toggle('hidden',!!is118);
  if($('tablet118RouteSection'))$('tablet118RouteSection').classList.toggle('hidden',!is118);
+ if($('tabletRouteTappeField'))$('tabletRouteTappeField').classList.toggle('hidden',!!is118);
  if($('tablet118CrewFields'))$('tablet118CrewFields').classList.toggle('hidden',!is118);
  if($('tabletGenericOperationalFields'))$('tabletGenericOperationalFields').classList.toggle('hidden',!!is118);
  if($('tabletDepartureLabel'))$('tabletDepartureLabel').textContent=is118?'Ora partenza servizio':'Partenza effettiva';
@@ -11387,6 +11388,7 @@ async function saveTabletSheet(silent=false){
   if(!row.privacy_informativa_resa)row.privacy_informativa_resa_il=null;
  }
  const tabletSheetType=tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'';
+ if(tabletSheetType==='118')delete row.percorso_tappe;
  if(tabletSheetType==='118'){
   row.ora_carico_paziente=null;
   row.inizio_fermo=null;
