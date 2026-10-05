@@ -5609,8 +5609,8 @@ async function loadShiftStatistics(from,to,people){
  if(fg.error)throw fg.error;
 
  const turns=(tr.data||[]).filter(t=>{
-  const stato=String(t.stato||'').toUpperCase(),tipo=String(t.tipo_turno||'').toUpperCase();
-  return !['ANNULLATO','CANCELLATO'].includes(stato) && !/EMERGENZA|DIMISSION|ASSISTEN/.test(tipo);
+  const stato=String(t.stato||'').toUpperCase();
+  return !['ANNULLATO','CANCELLATO'].includes(stato);
  });
  let assignments=[];
  if(turns.length){
@@ -5633,9 +5633,27 @@ async function loadShiftStatistics(from,to,people){
 
  // Deduplica solo la stessa presenza nello stesso turno/fascia.
  // Due fasce diverse nello stesso giorno devono essere conteggiate entrambe.
+ const specialRows=rows.filter(x=>x.source!=='Turni generali');
  const seenShift=new Set();
  const shiftRows=rows.filter(x=>{
   if(!x.badge)return false;
+
+  // Se un turno generale Emergenza/Dimissioni/Assistenze coincide con
+  // una presenza già registrata nel relativo turnario dedicato,
+  // preferiamo il turnario dedicato ed evitiamo il doppio conteggio.
+  if(x.source==='Turni generali'){
+   const type=String(x.type||'').toUpperCase();
+   const isSpecial=/EMERGENZA|118|DIMISSION|ASSISTEN/.test(type);
+   if(isSpecial&&x.interval){
+    const duplicate=specialRows.some(s=>{
+     if(s.badge!==x.badge||s.date!==x.date||!s.interval)return false;
+     const overlap=Math.min(x.interval[1],s.interval[1])-Math.max(x.interval[0],s.interval[0]);
+     return overlap>0;
+    });
+    if(duplicate)return false;
+   }
+  }
+
   const key=[x.slot,x.badge].join('|');
   if(seenShift.has(key))return false;
   seenShift.add(key);
