@@ -228,7 +228,7 @@ function testNoteFromSheet(f){
   numero:'TEST-NON-VALIDA',data_documento:new Date().toISOString().slice(0,10),data_servizio:f.data_servizio,numero_foglio:f.numero_foglio,
   intestatario:name,cf_piva:f.cf_piva_intestatario||f.codice_fiscale||null,indirizzo:f.indirizzo_fatturazione||f.residenza||null,
   cap:f.cap_fatturazione||f.cap||null,comune:f.comune_fatturazione||null,provincia:f.provincia_fatturazione||f.provincia||null,email:f.email_fatturazione||f.email||null,
-  descrizione:desc,tipo_servizio:f.tipo_servizio||null,luogo_partenza:f.luogo_partenza||null,indirizzo_partenza:f.indirizzo_partenza||null,destinazione:f.destinazione||null,indirizzo_destinazione:f.indirizzo_destinazione||null,ospedale_destinazione:f.ospedale_destinazione||null,importo:Number(f.totale_servizio||0),sconto:0,totale:Number(f.totale_servizio||0),modalita_pagamento:f.modalita_pagamento||null,data_pagamento:f.data_pagamento||null,stato:'EMESSA'
+  descrizione:desc,tipo_servizio:f.tipo_servizio||null,luogo_partenza:f.luogo_partenza||null,indirizzo_partenza:f.indirizzo_partenza||null,destinazione:f.destinazione||null,indirizzo_destinazione:f.indirizzo_destinazione||null,ospedale_destinazione:f.ospedale_destinazione||null,importo:Number(f.totale_servizio||0),sconto:0,totale:Number(f.totale_servizio||0),modalita_pagamento:f.modalita_pagamento||null,data_pagamento:String(f.modalita_pagamento||'').toUpperCase()==='BONIFICO DIFFERITO'?null:(f.data_pagamento||null),stato:'EMESSA'
  };
 }
 function previewTestNote(id){
