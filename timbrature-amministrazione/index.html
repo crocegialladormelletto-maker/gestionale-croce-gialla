@@ -102,7 +102,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div></div>
 
 <section id="page-dashboard" class="adminPage active"><div class="pageHead"><div><h2>Dashboard</h2><div class="muted">Situazione generale delle timbrature</div></div></div><div class="card noPrint">
-<div class="toolbar"><div><h3 style="margin:0">Dashboard controllo</h3><div class="muted">Controlli automatici sulle timbrature registrate. Le segnalazioni servono come supporto operativo e vanno verificate dall'amministrazione.</div></div><button id="refreshTop" class="secondary">↻ AGGIORNA</button></div>
+<div class="toolbar"><div><h3 style="margin:0">Dashboard controllo</h3><div class="muted">Controlli automatici sulle timbrature registrate. Le segnalazioni servono come supporto operativo e vanno verificate dall'amministrazione.</div></div><button id="refreshTop" class="secondary" type="button">↻ AGGIORNA</button></div>
 <div id="todayBanner" class="todayBanner"></div>
 <div id="employeeCommitmentsDashboard" class="card" style="margin-top:14px;padding:14px">
  <div class="toolbar">
@@ -197,7 +197,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <section id="page-storico" class="adminPage">
 <div class="card noPrint">
 <h3>Filtro e stampa mensile</h3>
-<div class="grid"><div><label>Dipendente</label><select id="filterEmp"></select></div><div><label>Mese</label><input id="month" type="month" min="2026-09"></div><div style="display:flex;align-items:end;gap:8px"><button id="refreshBtn" class="secondary" style="flex:1">AGGIORNA</button><button id="printBtn" class="primary" style="flex:1">STAMPA</button></div></div>
+<div class="grid"><div><label>Dipendente</label><select id="filterEmp"></select></div><div><label>Mese</label><input id="month" type="month" min="2026-09"></div><div style="display:flex;align-items:end;gap:8px"><button id="refreshBtn" class="secondary" type="button" style="flex:1">AGGIORNA</button><button id="printBtn" class="primary" style="flex:1">STAMPA</button></div></div>
 <div class="muted">La stampa mostra Data, Entrata, Uscita, Totale ore giornaliere, Straordinari e le eventuali causali del mese.</div>
 </div>
 
@@ -207,7 +207,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div id="register"></div>
 </div></section>
 
-<section id="page-anomalie" class="adminPage"><div class="pageHead"><div><h2>Anomalie</h2><div class="muted">Controlli automatici da verificare</div></div><button id="refreshAnomalies" class="secondary">↻ AGGIORNA</button></div><div class="card noPrint"><div id="anomalyPageBox"></div></div></section>
+<section id="page-anomalie" class="adminPage"><div class="pageHead"><div><h2>Anomalie</h2><div class="muted">Controlli automatici da verificare</div></div><button id="refreshAnomalies" class="secondary" type="button">↻ AGGIORNA</button></div><div class="card noPrint"><div id="anomalyPageBox"></div></div></section>
 
 <section id="page-audit" class="adminPage"><div class="pageHead"><div><h2>Audit</h2><div class="muted">Storico delle modifiche e delle operazioni amministrative</div></div></div>
 <div class="card noPrint">
@@ -263,8 +263,21 @@ async function loadData(){try{
  people=r.people||[];events=r.events||[];context=r.context||[];auditRows=r.audit||[];months=r.months||[];absences=r.absences||[];
  const cr=await sb.from('impegni_dipendenti').select('*').order('data',{ascending:true}).order('ora_inizio',{ascending:true});
  if(cr.error)throw cr.error;commitments=cr.data||[];
- fillPeople();renderAll()
-}catch(e){alert(e.message)}}
+ fillPeople();renderAll();
+ return true
+}catch(e){alert(e.message||String(e));return false}}
+async function refreshData(buttonId){
+ const b=$(buttonId);if(!b)return;
+ const old=b.innerHTML;
+ b.disabled=true;b.innerHTML='↻ AGGIORNAMENTO...';
+ try{
+  const ok=await loadData();
+  await updateLoginMonthState();
+  b.innerHTML=ok?'✓ AGGIORNATO':'⚠ ERRORE';
+ }finally{
+  setTimeout(()=>{b.disabled=false;b.innerHTML=old},900)
+ }
+}
 function fillPeople(){for(const id of ['pinEmp','histEmp','filterEmp','printEmp','absEmp','commitEmp']){const sel=$(id),cur=sel.value;sel.innerHTML=(id==='filterEmp'?'<option value="">Tutti</option>':'')+people.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+'</option>').join('');if([...sel.options].some(o=>o.value===cur))sel.value=cur}}
 function selectedMonthClosed(){const m=$('month').value;return !!months.find(x=>String(x.mese).slice(0,7)===m&&x.chiuso)}
 function analyzeBadge(badge,arr){
@@ -501,8 +514,8 @@ function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr>
 function renderAll(){renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
 function showPage(name){document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
 function printFromSection(){const pe=$('printEmp').value,pm=$('printMonth').value;if(!pe||!pm)return alert('Seleziona dipendente e mese.');$('filterEmp').value=pe;$('month').value=pm;loadData().then(()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows(pe,pm);document.body.classList.add('printingRegister');window.print();document.body.classList.remove('printingRegister');$('register').innerHTML=old})}
-document.querySelectorAll('.sideBtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$('mobileMenuBtn').onclick=()=>$('sideMenu').classList.toggle('open');$('refreshAnomalies').onclick=loadData;$('printMonthlyBtn').onclick=printFromSection;
-$('addAbsence').onclick=addAbsence;$('commitAdd').onclick=addCommitment;$('openCommitmentsPage').onclick=()=>showPage('impegni');$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=loadData;$('refreshTop').onclick=loadData;$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
+document.querySelectorAll('.sideBtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$('mobileMenuBtn').onclick=()=>$('sideMenu').classList.toggle('open');$('refreshAnomalies').onclick=()=>refreshData('refreshAnomalies');$('printMonthlyBtn').onclick=printFromSection;
+$('addAbsence').onclick=addAbsence;$('commitAdd').onclick=addCommitment;$('openCommitmentsPage').onclick=()=>showPage('impegni');$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=()=>refreshData('refreshBtn');$('refreshTop').onclick=()=>refreshData('refreshTop');$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
 $('printBtn').onclick=()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows($('filterEmp').value,$('month').value);window.print();$('register').innerHTML=old};$('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
 const d=new Date();const currentMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');$('month').value=currentMonth;$('printMonth').value=currentMonth;$('absFrom').value=new Date().toLocaleDateString('sv-SE');$('absTo').value=$('absFrom').value;$('commitDate').value=new Date().toLocaleDateString('sv-SE');
 updateLoginMonthState();
