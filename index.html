@@ -365,7 +365,7 @@
 
 
 .as-month-grid .as-month-date{min-height:76px}
-.as-month-grid .as-month-date .as-month-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
+.as-month-grid .as-month-date .as-month-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;padding:2px 4px;border-radius:5px;background:#fff0a1;color:#604d00}.as-month-grid .as-month-date .as-month-name.as-done{background:#dff4e9;color:#166846;box-shadow:inset 3px 0 0 #15734f}.as-month-event.as-done{background:#f3fbf7;border-left:5px solid #15734f}
 .as-month-event .btn{margin-top:8px}
 .as-month-event .dim-person{font-size:12px}
 @media(max-width:650px){.as-month-grid .as-month-date{min-height:65px}.as-month-grid .as-month-date .as-month-name{font-size:9px}}
@@ -7863,8 +7863,10 @@ function asMonthRender(){
    (date.getMonth()!==asMonthCursor.getMonth()?'dim-out ':'')+
    (day===todaySafe()?'dim-today ':'')+(day===asMonthSelected?'dim-selected ':'')+
    '" data-as-month-day="'+day+'"><b>'+date.getDate()+'</b>'+
-   (events.length?'<small>🎪 '+events.length+'</small>'+events.slice(0,2).map(s=>
-    '<small class="as-month-name">'+esc((calTime(s.ora_partenza_prevista)?calTime(s.ora_partenza_prevista)+' · ':'')+asServiceName(s))+'</small>').join(''):'')+'</button>';
+   (events.length?'<small>🎪 '+events.length+'</small>'+events.slice(0,2).map(s=>{
+    const done=s.data_servizio<todaySafe()&&['TERMINATO','DA CONTABILIZZARE','CHIUSO'].includes(String(s.stato_gestionale||'').toUpperCase());
+    return '<small class="as-month-name '+(done?'as-done':'')+'">'+esc((calTime(s.ora_partenza_prevista)?calTime(s.ora_partenza_prevista)+' · ':'')+asServiceName(s))+'</small>';
+   }).join(''):'')+'</button>';
  }
  $('asMonthGrid').innerHTML=html;
  $('asMonthGrid').querySelectorAll('[data-as-month-day]').forEach(button=>
@@ -7888,7 +7890,8 @@ function asMonthRenderSelected(){
    ' · Inizio '+(calTime(s.ora_inizio_assistenza_prevista)||'—')+
    ' · Fine '+(calTime(s.ora_fine_assistenza_prevista)||'—')+
    ' · Rientro '+(calTime(s.ora_rientro_previsto)||'—');
-  return '<div class="dim-slot as-month-event"><b>🎪 '+esc(asServiceName(s))+'</b>'+
+  const done=s.data_servizio<todaySafe()&&['TERMINATO','DA CONTABILIZZARE','CHIUSO'].includes(String(s.stato_gestionale||'').toUpperCase());
+  return '<div class="dim-slot as-month-event '+(done?'as-done':'')+'"><b>🎪 '+esc(asServiceName(s))+'</b>'+
    '<div class="muted">'+esc(s.destinazione||s.indirizzo_destinazione||'Luogo da indicare')+
    ' · Mezzo '+esc(s.mezzo||'—')+'</div>'+
    '<div class="muted">'+esc(times)+'</div>'+crewHtml+
