@@ -4398,8 +4398,19 @@ function fv118MonthBounds(value){
  return {start,end,label:new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric'}).format(new Date(y,m-1,1))};
 }
 function fv118RouteText(x){
- const parts=[x.luogo_partenza,x.percorso_tappe,x.destinazione||x.ospedale_destinazione,x.luogo_rientro].filter(Boolean);
- return parts.join(' → ')||'—';
+ const structured=[
+  x.luogo_partenza,
+  x.luogo_carico,
+  x.destinazione||x.ospedale_destinazione,
+  x.luogo_rientro
+ ].filter(v=>String(v||'').trim());
+ const normalized=[];
+ for(const value of structured){
+  const s=String(value).trim();
+  if(!normalized.length||normalized[normalized.length-1].toLowerCase()!==s.toLowerCase()) normalized.push(s);
+ }
+ if(normalized.length>=2)return normalized.join(' → ');
+ return [x.luogo_partenza,x.percorso_tappe,x.destinazione||x.ospedale_destinazione,x.luogo_rientro].filter(Boolean).join(' → ')||'—';
 }
 async function load118MonthlySummary(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
@@ -4408,7 +4419,7 @@ async function load118MonthlySummary(){
  const b=fv118MonthBounds(month);
  msg('fv118MonthMsg','Caricamento riepilogo mensile...');
  const r=await sb.from('fogli_viaggio')
-  .select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,numero_scheda_118,luogo_partenza,destinazione,ospedale_destinazione,percorso_tappe,luogo_rientro,ora_arrivo_dea,km_partenza,km_arrivo,km_percorsi,stato')
+  .select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,numero_scheda_118,luogo_partenza,luogo_carico,destinazione,ospedale_destinazione,percorso_tappe,luogo_rientro,ora_arrivo_dea,km_partenza,km_arrivo,km_percorsi,stato')
   .eq('tipo_servizio','118')
   .gte('data_servizio',b.start)
   .lt('data_servizio',b.end)
