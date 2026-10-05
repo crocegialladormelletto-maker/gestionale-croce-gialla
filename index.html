@@ -10883,7 +10883,12 @@ $('tabletAdDraftSave').onclick=tabletSaveImmediateDraft;
 $('tabletImmediateForm').onsubmit=async e=>{e.preventDefault();await tabletCreateImmediate()};
 
 async function startTabletArea(){
- stopTabletArea();$('tabletTitle').textContent='Tablet mezzo '+tabletMezzo;$('tabletWho').textContent='Solo servizi assegnati al mezzo '+tabletMezzo;
+ stopTabletArea();
+ const tabletVehicleResult=await sb.from('mezzi').select('codice,targa,tipologia,attivo,stato_operativo,km_attuali').eq('codice',tabletMezzo).maybeSingle();
+ if(!tabletVehicleResult.error&&tabletVehicleResult.data){
+  vehicles=[...vehicles.filter(v=>String(v.codice)!==String(tabletMezzo)),tabletVehicleResult.data];
+ }
+ $('tabletTitle').textContent='Tablet mezzo '+tabletMezzo;$('tabletWho').textContent='Solo servizi assegnati al mezzo '+tabletMezzo;
  if($('tabletChecklist07'))$('tabletChecklist07').style.display=(['07','08','09'].includes(String(tabletMezzo))?'inline-flex':'none');
  if($('tabletNew118'))$('tabletNew118').style.display=(['07','09'].includes(String(tabletMezzo))?'inline-flex':'none');
  $('tabletPriceVehicle').textContent=tabletMezzo;$('tabletImmediateVehicle').textContent=tabletMezzo;
