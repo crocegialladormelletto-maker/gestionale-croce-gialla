@@ -950,6 +950,23 @@
    </div>
   </div>
 
+  <div class="stats-board">
+   <div class="stats-card" style="border:2px solid #bbf7d0">
+    <div class="actions" style="justify-content:space-between;align-items:center">
+     <div><h3>✅ 28 ore mensili raggiunte / superate</h3><div class="muted">Mese corrente · ore reali, senza limite massimo.</div></div>
+     <span id="statsMonthlyThresholdCount" class="pill g">0</span>
+    </div>
+    <div id="statsMonthlyThresholdList" style="margin-top:12px"><div class="muted">Calcolo in corso…</div></div>
+   </div>
+   <div class="stats-card" style="border:2px solid #bfdbfe">
+    <div class="actions" style="justify-content:space-between;align-items:center">
+     <div><h3>✅ 84 ore trimestrali raggiunte / superate</h3><div class="muted">Trimestre corrente · ore reali, senza limite massimo.</div></div>
+     <span id="statsQuarterThresholdCount" class="pill b">0</span>
+    </div>
+    <div id="statsQuarterThresholdList" style="margin-top:12px"><div class="muted">Calcolo in corso…</div></div>
+   </div>
+  </div>
+
   <div class="stats-card" style="margin-top:12px">
    <h3>Andamento mensile dei servizi</h3><div class="muted">Numero servizi per mese nel periodo selezionato.</div>
    <div id="statsMonthly" class="stats-bars"></div>
@@ -5813,6 +5830,61 @@ async function statsRenderVolunteer(badge){
   '<div><b>Ore per mese</b><div class="stats-mini-bars" style="margin-top:8px">'+(Object.entries(months).length?Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0])).map(([m,h])=>'<div class="stats-mini-row"><span>'+esc(m)+'</span><div class="stats-mini-track"><div class="stats-mini-fill" style="width:'+Math.max(2,h/maxMonth*100)+'%"></div></div><b>'+h.toLocaleString('it-IT',{maximumFractionDigits:1})+' h</b></div>').join(''):'<div class="muted">Nessuna ora.</div>')+'</div></div></div></div></div>';
  box.querySelector('[data-vol-detail]')?.addEventListener('click',()=>statsVolunteerDetail(badge));
 }
+async function statsRenderThresholds(allPeople){
+ const monthBox=$('statsMonthlyThresholdList'),quarterBox=$('statsQuarterThresholdList');
+ const monthCount=$('statsMonthlyThresholdCount'),quarterCount=$('statsQuarterThresholdCount');
+ if(!monthBox||!quarterBox)return;
+
+ monthBox.innerHTML='<div class="muted">Calcolo in corso…</div>';
+ quarterBox.innerHTML='<div class="muted">Calcolo in corso…</div>';
+
+ const now=new Date();
+ const todayD=statsISODate(now);
+ const monthFrom=statsISODate(new Date(now.getFullYear(),now.getMonth(),1));
+ const qMonth=Math.floor(now.getMonth()/3)*3;
+ const quarterFrom=statsISODate(new Date(now.getFullYear(),qMonth,1));
+
+ try{
+  const [monthStats,quarterStats]=await Promise.all([
+   loadShiftStatistics(monthFrom,todayD,allPeople||[]),
+   loadShiftStatistics(quarterFrom,todayD,allPeople||[])
+  ]);
+
+  const pmap=new Map((allPeople||[]).map(p=>[p.badge,p]));
+  const active=(allPeople||[]).filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
+
+  const monthly=active.map(p=>({
+   badge:p.badge,
+   name:statsPersonName(p),
+   hours:Number(monthStats.byBadgeHours?.[p.badge]||0)
+  })).filter(x=>x.hours>=28).sort((a,b)=>b.hours-a.hours||a.name.localeCompare(b.name,'it'));
+
+  const quarterly=active.map(p=>({
+   badge:p.badge,
+   name:statsPersonName(p),
+   hours:Number(quarterStats.byBadgeHours?.[p.badge]||0)
+  })).filter(x=>x.hours>=84).sort((a,b)=>b.hours-a.hours||a.name.localeCompare(b.name,'it'));
+
+  if(monthCount)monthCount.textContent=String(monthly.length);
+  if(quarterCount)quarterCount.textContent=String(quarterly.length);
+
+  const render=(rows,threshold)=>rows.length
+   ?'<div class="ops-hours-list">'+rows.map(x=>{
+      const over=Math.max(0,x.hours-threshold);
+      return '<div class="ops-hours-person"><div class="line"><b>'+esc(x.name)+'</b><strong>'+
+       x.hours.toLocaleString('it-IT',{maximumFractionDigits:1})+' h / '+threshold+' h</strong></div>'+
+       '<div class="muted">Superamento soglia: +'+over.toLocaleString('it-IT',{maximumFractionDigits:1})+' h</div></div>';
+    }).join('')+'</div>'
+   :'<div class="muted">Nessun volontario ha ancora raggiunto la soglia.</div>';
+
+  monthBox.innerHTML=render(monthly,28);
+  quarterBox.innerHTML=render(quarterly,84);
+ }catch(e){
+  monthBox.innerHTML='<div class="notice err">Calcolo mensile non disponibile: '+esc(e.message||String(e))+'</div>';
+  quarterBox.innerHTML='<div class="notice err">Calcolo trimestrale non disponibile: '+esc(e.message||String(e))+'</div>';
+ }
+}
+
 function statsRenderVehicles(services,shiftStats,from,to){
  const map={};['06','07','08','09'].forEach(v=>map[v]={services:0,emergency:0,assistance:0,days:new Set()});
  services.forEach(x=>{const v=String(x.mezzo||'');if(!map[v])return;map[v].services++;map[v].days.add(x.data_servizio);if(statsTypeLabel(x)==='Assistenze')map[v].assistance++});
@@ -5840,6 +5912,7 @@ async function loadStatistics(){
   return refDate>=from&&refDate<=to;
  });
  const allPeople=pr.data||[],people=allPeople.filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
+ statsRenderThresholds(allPeople);
  const serviceCats={};services.forEach(x=>{const k=statsTypeLabel(x);serviceCats[k]=(serviceCats[k]||0)+1});
  let shiftStats;
  try{shiftStats=await loadShiftStatistics(from,to,allPeople)}
