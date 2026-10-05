@@ -116,7 +116,6 @@
       <button id="print" class="btn blue">🖨 Stampa</button>
       <button id="downloadPdf" class="btn green">⬇ Scarica PDF</button>
       <button id="sendPdfMail" class="btn yellow">📧 Invia con PDF allegato</button>
-      <button id="mail" class="btn secondary">✉ Apri email</button>
      </div>
     </div>
    </section>
@@ -275,8 +274,6 @@ function fill(){
  $('print').disabled=false;$('downloadPdf').disabled=false;
  $('sendPdfMail').disabled=draft;
  $('sendPdfMail').title=draft?'Disponibile dopo l’emissione definitiva':'Invia direttamente la Nota di Debito con PDF allegato';
- $('mail').disabled=draft;
- $('mail').title=draft?'Disponibile dopo l’emissione definitiva':'Apri il programma di posta';
  $('dPayment').disabled=false;$('dPayDate').disabled=false;
  $('draftNotice').classList.toggle('hidden',!draft);
  $('draftNotice').textContent=draft?'BOZZA MODIFICABILE: controlla e completa tutti i dati. Il documento diventerà definitivo solo premendo “Emetti Nota di Debito”.':'';
@@ -366,13 +363,6 @@ $('sendPdfMail').onclick=async()=>{
  }
 };
 
-$('mail').onclick=()=>{
- if(active?.stato!=='EMESSA')return msg('detailMsg','La Nota di Debito è ancora in BOZZA. Emettila prima di inviarla.','err');
- if(!active?.email)return msg('detailMsg','Email destinatario non presente.','err');
- const subject='Croce Gialla Emergenza ODV – Nota di Debito '+active.numero;
- const body='Gentile destinatario,\n\nin allegato la Nota di Debito '+active.numero+' relativa al servizio del '+nice(active.data_servizio)+'.\n\nCordiali saluti,\nCroce Gialla Emergenza ODV\ntesoreria@crocegiallaemergenza.it';
- location.href='mailto:'+encodeURIComponent(active.email)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
-};
 
 function buildApprovedNoteBody(n){
   const euro=x=>money(x).replace('€','').trim();
