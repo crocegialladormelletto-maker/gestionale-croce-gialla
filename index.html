@@ -4736,7 +4736,16 @@ async function loadOperationalCalendar(){
  }
  opCalEvents=[];
  turns.forEach(t=>{const as=assignments.filter(x=>x.turno_id===t.id),cov=turnCoverage(t,as);opCalEvents.push({kind:'turn',date:t.data_turno,time:calTime(t.ora_inizio),vehicle:t.mezzo||'',coverage:cov,coverageClass:cov.cls,title:(t.tipo_turno||'Turno')+' · Mezzo '+(t.mezzo||'—'),subtitle:calTime(t.ora_inizio)+'–'+calTime(t.ora_fine)+' · '+cov.count+' operatori',raw:{...t,assignments:as}})});
- services.forEach(s=>opCalEvents.push({kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),vehicle:s.mezzo||'',title:(isAssistanceManifestation(s.tipo_servizio)?asServiceName(s):(s.tipo_servizio_altro||s.tipo_servizio||'Servizio'))+' · M'+(s.mezzo||'—'),subtitle:(s.luogo_partenza||'—')+' → '+(isAssistanceManifestation(s.tipo_servizio)?(s.destinazione||s.indirizzo_destinazione||'—'):(s.ospedale_destinazione||s.destinazione||'—')),raw:{...s,assignments:serviceAssignments.filter(a=>a.servizio_id===s.id)}}));
+ services.forEach(s=>{
+ const assignments=serviceAssignments.filter(a=>a.servizio_id===s.id);
+ const from=[s.luogo_partenza,s.indirizzo_partenza].filter(Boolean).join(' · ')||'—';
+ const to=isAssistanceManifestation(s.tipo_servizio)
+  ?([s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · ')||'—')
+  :([s.ospedale_destinazione||s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · ')||'—');
+ const title=(isAssistanceManifestation(s.tipo_servizio)?asServiceName(s):(s.tipo_servizio_altro||s.tipo_servizio||'Servizio'))+' · M'+(s.mezzo||'—');
+ const subtitle=from+' → '+to+' · Equipaggio '+assignments.length;
+ opCalEvents.push({kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),vehicle:s.mezzo||'',title,subtitle,raw:{...s,assignments}});
+});
  calAddAvailabilityEvents(opCalEvents,avs,range,true);
  refreshOperationalCalendarView();msg('calMsg','')
 }
@@ -4745,7 +4754,7 @@ function renderOperationalCalendarDay(){
  const d=new Date(opCalSelected+'T12:00:00');title.textContent=new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d).replace(/^./,c=>c.toUpperCase());
  const rows=calendarFilteredEvents('cal',opCalEvents).filter(e=>e.date===opCalSelected).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
  box.innerHTML=rows.length?rows.map(e=>{
-  if(e.kind==='service')return '<div class="cal-detail-item service"><b>'+(e.time?esc(e.time)+' · ':'')+esc(e.title)+'</b><br>'+esc(e.subtitle||'')+'<br><span class="muted">Equipaggio: '+esc(calendarCrewSummary(e.raw.assignments))+'</span><br><span class="muted">Stato '+esc(e.raw.stato_gestionale||'—')+(e.raw.priorita?' · Priorità '+esc(e.raw.priorita):'')+'</span><div class="actions" style="margin-top:7px"><button class="btn secondary" data-cal-open-service="'+esc(e.raw.id)+'">Apri servizio</button></div></div>';
+  if(e.kind==='service')return '<div class="cal-detail-item service"><b>'+(e.time?esc(e.time)+' · ':'')+esc(e.title)+'</b><br>'+esc(e.subtitle||'')+'<br><span class="muted">Equipaggio: '+esc(calendarCrewSummary(e.raw.assignments))+'</span><div class="actions" style="margin-top:7px"><button class="btn secondary" data-cal-open-service="'+esc(e.raw.id)+'">Apri servizio</button></div></div>';
   if(e.kind==='turn'){const names=(e.raw.assignments||[]).map(a=>{const p=people.find(x=>x.badge===a.badge_personale);return (p?.nome_completo||a.badge_personale)+' ('+(a.ruolo||'—')+(String(a.risposta||'').toUpperCase()==='NON DISPONIBILE'?' · non disponibile':'')+')'}).join(', ');return '<div class="cal-detail-item turn"><b>'+esc(e.time||'')+' · '+esc(e.title)+'</b><br>'+esc(calTime(e.raw.ora_inizio))+'–'+esc(calTime(e.raw.ora_fine))+(names?'<br><span class="muted">'+esc(names)+'</span>':'<br><span class="muted">Nessun operatore assegnato</span>')+'<div class="actions" style="margin-top:7px"><button class="btn secondary" data-cal-open-shifts="1">Vai ai turni</button></div></div>'}
   return '<div class="cal-detail-item '+e.kind+'"><b>'+esc((e.time?e.time+' · ':'')+e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'</div>'
  }).join(''):'<div class="notice">Nessun elemento per questa giornata con i filtri selezionati.</div>';
