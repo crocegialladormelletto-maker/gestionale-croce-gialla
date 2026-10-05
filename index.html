@@ -2720,6 +2720,16 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>E-mail</label><input id="tabletPatientEmail" type="email" maxlength="254"></div>
     </div>
     <div id="tabletPatientIncomplete" class="notice warn hidden"><b>DATI PAZIENTE INCOMPLETI</b> · completa le informazioni disponibili durante il servizio.</div>
+    <div class="actions" style="margin-top:12px">
+     <button id="tabletPrivacyToggle" class="btn secondary" type="button">🔐 Privacy / dati paziente</button>
+    </div>
+    <div id="tabletPrivacyPanel" class="notice hidden" style="margin-top:10px">
+     <b>Informativa privacy – uso operativo</b>
+     <p style="margin:8px 0 0">I dati anagrafici e i dati relativi al servizio vengono trattati da Croce Gialla Emergenza ODV esclusivamente per la gestione del trasporto/soccorso, degli adempimenti amministrativi e degli obblighi di legge. I dati sono accessibili solo al personale autorizzato e non devono essere inserite informazioni non necessarie al servizio.</p>
+     <p style="margin:8px 0">Per l'informativa completa sul trattamento dei dati personali il paziente/utente può rivolgersi a Croce Gialla Emergenza ODV.</p>
+     <label class="check"><input id="tabletPrivacyGiven" type="checkbox" data-ts-field="privacy_informativa_resa"> Informativa privacy resa al paziente / utente</label>
+     <div id="tabletPrivacyWhen" class="muted" style="margin-top:6px"></div>
+    </div>
     <h3 class="tablet-section-title" style="margin-top:20px">Destinazione paziente</h3>
     <div class="notice">Se il paziente viene portato in una RSA o altra struttura, l’equipaggio può completare qui la destinazione effettiva.</div>
     <div class="tablet-fields">
@@ -11154,6 +11164,12 @@ async function loadTabletSheet(serviceId){
  else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
  else el.value=f[key]??'';
  });
+ if($('tabletPrivacyWhen')){
+  $('tabletPrivacyWhen').textContent=f.privacy_informativa_resa
+   ?('Informativa registrata'+(f.privacy_informativa_resa_il?' il '+new Date(f.privacy_informativa_resa_il).toLocaleString('it-IT'):'')+'.')
+   :'Informativa non ancora registrata come resa.';
+ }
+ if($('tabletPrivacyPanel'))$('tabletPrivacyPanel').classList.add('hidden');
  if(!tabletSheetIs118&&tabletCurrentService){
   if($('tabletRouteDestination')&&!$('tabletRouteDestination').value)$('tabletRouteDestination').value=tabletCurrentService.destinazione||'';
   if($('tabletRouteStructure')&&!$('tabletRouteStructure').value)$('tabletRouteStructure').value=tabletCurrentService.ospedale_destinazione||'';
@@ -11176,6 +11192,8 @@ async function loadTabletSheet(serviceId){
  tabletCalcSheet();
 }
 function tabletConfigureTimeFields(is118){
+ if($('tabletPrivacyToggle'))$('tabletPrivacyToggle').classList.toggle('hidden',!!is118);
+ if($('tabletPrivacyPanel')&&is118)$('tabletPrivacyPanel').classList.add('hidden');
  if($('tabletPatientLoadTime'))$('tabletPatientLoadTime').classList.toggle('hidden',!!is118);
  if($('tabletArrivoDeaTime'))$('tabletArrivoDeaTime').classList.toggle('hidden',!is118);
  if($('tabletStopStartField'))$('tabletStopStartField').classList.toggle('hidden',!!is118);
@@ -11208,6 +11226,10 @@ async function saveTabletSheet(silent=false){
   else row[name]=el.value.trim()||null;
  }
  if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio))row.ora_carico_paziente=null;
+ if(Object.prototype.hasOwnProperty.call(row,'privacy_informativa_resa')){
+  if(row.privacy_informativa_resa && !tabletCurrentSheet?.privacy_informativa_resa_il)row.privacy_informativa_resa_il=new Date().toISOString();
+  if(!row.privacy_informativa_resa)row.privacy_informativa_resa_il=null;
+ }
  const tabletSheetType=tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'';
  if(tabletSheetType==='118'){
   row.ora_carico_paziente=null;
@@ -11327,6 +11349,12 @@ $('tabletNew118').onclick=async()=>{
 };
 $('tabletHideDetail').onclick=()=>{$('tabletDetail').classList.add('hidden');tabletCurrentService=null;tabletCurrentSheet=null;window.scrollTo({top:0,behavior:'smooth'})};
 $('tabletSheetForm').onsubmit=async(e)=>{e.preventDefault();await saveTabletSheet()};
+if($('tabletPrivacyToggle'))$('tabletPrivacyToggle').onclick=()=>{
+ if($('tabletPrivacyPanel'))$('tabletPrivacyPanel').classList.toggle('hidden');
+};
+if($('tabletPrivacyGiven'))$('tabletPrivacyGiven').onchange=()=>{
+ if($('tabletPrivacyWhen'))$('tabletPrivacyWhen').textContent=$('tabletPrivacyGiven').checked?'L’informativa verrà registrata al prossimo salvataggio.':'Informativa non ancora registrata come resa.';
+};
 $('tabletCloseSheet').onclick=tabletCloseSheet;
 $('tabletSheetForm').addEventListener('input',tabletCalcSheet);
 $('tabletPrintSheet').onclick=async()=>{
