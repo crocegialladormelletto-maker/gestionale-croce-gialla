@@ -11428,7 +11428,7 @@ async function saveTabletSheet(silent=false){
   const email=$('tabletPatientEmail')?.value.trim().toLowerCase()||'';
   if(cf && cf.length!==16)return msg('tabletSheetMsg','Controlla il codice fiscale del paziente.','warn'),false;
   if(email && $('tabletPatientEmail') && !$('tabletPatientEmail').checkValidity())return msg('tabletSheetMsg','Controlla l’indirizzo e-mail del paziente.','warn'),false;
-  const pr=await sb.rpc('cge_tablet_aggiorna_dati_paziente',{
+  const patientPayload={
    p_servizio:tabletCurrentService.id,
    p_nome:$('tabletPatientFirst')?.value.trim()||null,
    p_cognome:$('tabletPatientLast')?.value.trim()||null,
@@ -11437,9 +11437,21 @@ async function saveTabletSheet(silent=false){
    p_telefono:$('tabletPatientPhone')?.value.trim()||null,
    p_indirizzo:$('tabletPatientAddress')?.value.trim()||null,
    p_email:email||null
-  });
-  if(pr.error)return msg('tabletSheetMsg','Dati paziente: '+pr.error.message,'err'),false;
-  if(pr.data)tabletCurrentService={...tabletCurrentService,...pr.data};
+  };
+  const norm=v=>String(v??'').trim();
+  const patientChanged=
+   norm(patientPayload.p_nome)!==norm(tabletCurrentService.paziente_nome)||
+   norm(patientPayload.p_cognome)!==norm(tabletCurrentService.paziente_cognome)||
+   norm(patientPayload.p_codice_fiscale).toUpperCase()!==norm(tabletCurrentService.codice_fiscale).toUpperCase()||
+   norm(patientPayload.p_data_nascita)!==norm(tabletCurrentService.data_nascita)||
+   norm(patientPayload.p_telefono)!==norm(tabletCurrentService.telefono)||
+   norm(patientPayload.p_indirizzo)!==norm(tabletCurrentService.paziente_indirizzo)||
+   norm(patientPayload.p_email).toLowerCase()!==norm(tabletCurrentService.paziente_email).toLowerCase();
+  if(patientChanged){
+   const pr=await sb.rpc('cge_tablet_aggiorna_dati_paziente',patientPayload);
+   if(pr.error)return msg('tabletSheetMsg','Dati paziente: '+pr.error.message,'err'),false;
+   if(pr.data)tabletCurrentService={...tabletCurrentService,...pr.data};
+  }
   const dr=await sb.rpc('cge_tablet_aggiorna_destinazione',{
    p_servizio:tabletCurrentService.id,
    p_destinazione:$('tabletRouteDestination')?.value.trim()||null,
