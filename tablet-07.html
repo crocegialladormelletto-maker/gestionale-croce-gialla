@@ -2007,6 +2007,7 @@ Causale: numero preventivo</textarea>
   <span class="muted" id="tabletUpdated">Aggiornamento automatico ogni 20 secondi</span>
   <button id="tabletTariffToggle" type="button" class="btn secondary">€ Consulta tariffari</button>
   <button id="tabletImmediateToggle" type="button" class="btn yellow">✚ Servizio non programmato</button>
+  <button id="tabletArchiveToggle" type="button" class="btn secondary">📚 Storico fogli</button>
  </div>
  <div id="tabletPricePanel" class="surface hidden" style="margin:12px 0">
   <div class="hero"><h2>Tariffari del mezzo <span id="tabletPriceVehicle"></span></h2><p>Consultazione dei prezzi per dimissioni e trasporti richiesti all'ultimo momento.</p></div>
@@ -2061,6 +2062,21 @@ Causale: numero preventivo</textarea>
    <div class="actions"><button id="tabletAdDraftSave" type="button" class="btn secondary">💾 Salva dati</button><button id="tabletAdSubmit" type="submit" class="btn yellow">Crea servizio e Foglio Viaggio</button></div><div class="muted" style="margin-top:6px">Salva dati conserva la compilazione sul tablet senza creare ancora il servizio. Potrai riaprirla e completarla successivamente.</div>
    <div id="tabletAdMsg"></div>
    </form>
+  </div>
+ </div>
+ <div id="tabletArchivePanel" class="surface hidden" style="margin:12px 0">
+  <div class="hero"><div class="actions" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+   <div><h2>📚 Storico Fogli Viaggio · mezzo <span id="tabletArchiveVehicle">—</span></h2><p>Consultazione in sola lettura dei Fogli Viaggio chiusi. Utilizzabile anche in caso di controllo.</p></div>
+   <button id="tabletArchiveClose" type="button" class="btn secondary">✕ Chiudi storico</button>
+  </div></div>
+  <div class="pad">
+   <div class="grid3">
+    <div class="field"><label>Data</label><input id="tabletArchiveDate" type="date"></div>
+    <div class="field"><label>Ricerca</label><input id="tabletArchiveSearch" placeholder="Numero foglio, destinazione..."></div>
+    <div class="field"><label>&nbsp;</label><button id="tabletArchiveRefresh" type="button" class="btn blue">↻ Aggiorna storico</button></div>
+   </div>
+   <div id="tabletArchiveMsg"></div><div id="tabletArchiveList" style="margin-top:10px"></div>
+   <div id="tabletArchiveDetail" class="section hidden" style="margin-top:12px"></div>
   </div>
  </div>
  <div class="surface"><div class="hero"><h2 id="tabletListTitle">Servizi assegnati</h2><p>Vengono mostrati solo i servizi del mezzo associato a questo tablet.</p></div>
@@ -2358,7 +2374,7 @@ let rosterCrewBusy=false,rosterCrewEligible=new Map();
 let nextCrewServiceId=null,crewLoadSequence=0,crewRows=[];
 let servicesSearchSequence=0,activityLogSequence=0,backupSummaryRows=[],backupAutomaticRows=[],backupBusy=false;
 let monitorSnapshot=null,monitorSlide='today',monitorRotateOn=true,monitorRefreshTimer=null,monitorRotateTimer=null,monitorClockTimer=null;
-let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='',tabletCrewPeople=[];
+let tabletMezzo='',tabletServices=[],tabletAssignments=[],tabletArchiveSheets=[],tabletCurrentService=null,tabletCurrentSheet=null,tabletListMode='week',tabletRefreshTimer=null,tabletBusy=false,tabletTariffRows=[],tabletPriceGroup='',tabletCrewPeople=[];
 const $=x=>document.getElementById(x), today=()=>new Date().toISOString().slice(0,10);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const euro=n=>'€ '+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -7936,6 +7952,72 @@ async function tabletRefreshList(){
   }
  }
 }
+
+
+function tabletArchiveCard(f){
+ const route=[f.luogo_partenza||'Sede',f.destinazione||f.ospedale_destinazione||'—'].filter(Boolean).join(' → ');
+ return '<article class="tablet-service-card" style="border:2px solid #94a3b8;background:#f8fafc">'+
+  '<div class="tablet-service-head"><div><div class="muted">'+esc(tabletDateLabel(f.data_servizio))+'</div><span class="tablet-hour">'+esc(f.numero_foglio||'Foglio')+'</span></div>'+
+  '<span class="tablet-vehicle">'+esc(f.mezzo||tabletMezzo)+'</span><span class="tablet-pill">CHIUSO</span></div>'+
+  '<div class="tablet-flow"><b>'+esc(String(f.tipo_servizio||'').trim()==='118'?'🚨 Emergenza 118':(f.tipo_servizio||'Servizio'))+'</b><br>'+esc(route)+'</div>'+
+  '<div class="muted">KM '+esc(f.km_partenza??'—')+' → '+esc(f.km_arrivo??'—')+'</div>'+
+  '<div class="tablet-actions"><button class="btn blue" type="button" data-tablet-archive-open="'+esc(f.id)+'">Consulta</button></div>'+
+ '</article>';
+}
+function renderTabletArchive(){
+ if(!$('tabletArchiveList'))return;
+ let rows=tabletArchiveSheets.slice();
+ const date=$('tabletArchiveDate')?.value||'', q=($('tabletArchiveSearch')?.value||'').toLowerCase().trim();
+ if(date)rows=rows.filter(f=>f.data_servizio===date);
+ if(q)rows=rows.filter(f=>JSON.stringify(f).toLowerCase().includes(q));
+ $('tabletArchiveList').innerHTML=rows.length?rows.map(tabletArchiveCard).join(''):'<div class="tablet-empty">Nessun Foglio Viaggio chiuso trovato.</div>';
+ $('tabletArchiveList').querySelectorAll('[data-tablet-archive-open]').forEach(b=>b.onclick=()=>{
+  const f=tabletArchiveSheets.find(x=>String(x.id)===String(b.dataset.tabletArchiveOpen));if(f)showTabletArchiveDetail(f);
+ });
+}
+function showTabletArchiveDetail(f){
+ tabletCurrentSheet=f;currentFoglio=f;
+ const crew=[f.autista&&('Autista: '+f.autista),f.capo_servizio&&('Capo servizio: '+f.capo_servizio),f.soccorritore&&('Soccorritore: '+f.soccorritore),f.secondo_soccorritore&&('Secondo soccorritore: '+f.secondo_soccorritore)].filter(Boolean).join(' · ')||'—';
+ const times=[
+  ['Partenza',f.ora_partenza_servizio||f.ora_partenza],
+  ['Arrivo destinazione',f.ora_arrivo_destinazione],
+  ['Ripartenza',f.ora_ripartenza],
+  ['Arrivo DEA',f.ora_arrivo_dea],
+  ['Operatività',f.ora_operativita],
+  ['Arrivo sede',f.ora_arrivo_sede]
+ ].filter(x=>x[1]).map(x=>'<div class="field"><label>'+esc(x[0])+'</label><div class="notice">'+esc(tabletFmt(x[1]))+'</div></div>').join('');
+ $('tabletArchiveDetail').innerHTML=
+  '<div class="actions" style="justify-content:space-between;align-items:center"><h3 style="margin:0">📄 '+esc(f.numero_foglio||'Foglio Viaggio')+' · sola lettura</h3><button id="tabletArchivePrint" type="button" class="btn secondary">🖨 Stampa / PDF</button></div>'+
+  '<div class="tablet-fields" style="margin-top:10px">'+
+   tabletReadOnlyField('Data',tabletDateLabel(f.data_servizio))+
+   tabletReadOnlyField('Mezzo / targa',[f.mezzo,f.targa].filter(Boolean).join(' · '))+
+   tabletReadOnlyField('Tipo servizio',f.tipo_servizio||'—')+
+   tabletReadOnlyField('Partenza',f.luogo_partenza||'—')+
+   tabletReadOnlyField('Destinazione',f.destinazione||f.ospedale_destinazione||'—')+
+   tabletReadOnlyField('Equipaggio',crew)+
+   tabletReadOnlyField('KM partenza',f.km_partenza??'—')+
+   tabletReadOnlyField('KM arrivo',f.km_arrivo??'—')+
+  '</div><div class="grid3">'+times+'</div>'+
+  '<div class="notice ok" style="margin-top:10px">Foglio chiuso: consultabile e stampabile, non modificabile dal tablet.</div>';
+ $('tabletArchiveDetail').classList.remove('hidden');
+ $('tabletArchivePrint').onclick=()=>{currentFoglio=f;printCurrentFoglio();};
+ $('tabletArchiveDetail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function loadTabletArchive(){
+ if(!tabletMezzo)return;
+ msg('tabletArchiveMsg','Caricamento storico...');
+ const r=await sb.from('fogli_viaggio').select('*').eq('mezzo',String(tabletMezzo)).eq('stato','CHIUSO').order('data_servizio',{ascending:false}).order('progressivo',{ascending:false}).limit(250);
+ if(r.error){tabletArchiveSheets=[];renderTabletArchive();return msg('tabletArchiveMsg','Storico non disponibile: '+r.error.message,'err');}
+ tabletArchiveSheets=r.data||[];renderTabletArchive();msg('tabletArchiveMsg','');
+}
+if($('tabletArchiveToggle'))$('tabletArchiveToggle').onclick=async()=>{
+ $('tabletArchivePanel').classList.toggle('hidden');
+ if(!$('tabletArchivePanel').classList.contains('hidden')){if($('tabletArchiveVehicle'))$('tabletArchiveVehicle').textContent=tabletMezzo||'—';await loadTabletArchive();$('tabletArchivePanel').scrollIntoView({behavior:'smooth',block:'start'});}
+};
+if($('tabletArchiveClose'))$('tabletArchiveClose').onclick=()=>{$('tabletArchivePanel').classList.add('hidden');$('tabletArchiveDetail')?.classList.add('hidden');};
+if($('tabletArchiveRefresh'))$('tabletArchiveRefresh').onclick=loadTabletArchive;
+if($('tabletArchiveDate'))$('tabletArchiveDate').onchange=renderTabletArchive;
+if($('tabletArchiveSearch'))$('tabletArchiveSearch').oninput=()=>{clearTimeout(window.tabletArchiveSearchTimer);window.tabletArchiveSearchTimer=setTimeout(renderTabletArchive,180)};
 
 function tabletCrewSelectOptions(rows,label){
  return '<option value="">— '+esc(label)+' —</option>'+rows.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+' · badge '+esc(p.badge)+'</option>').join('');
