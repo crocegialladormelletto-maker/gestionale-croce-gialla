@@ -3056,10 +3056,9 @@ function buildFoglioPrint(f){
 
  const notes='<div class="print-section"><h3>Annotazioni</h3><div class="print-box" style="min-height:58px">'+esc(f.annotazioni||'Nessuna annotazione').replace(/\n/g,'<br>')+'</div></div>';
 
- const signatures=is118?'':'<div class="print-signatures">'+
+ const signatures=is118?'':'<div class="print-signatures" style="grid-template-columns:repeat(2,1fr)">'+
    '<div class="print-sign">Firma autista</div>'+
    '<div class="print-sign">Firma capo servizio / equipaggio</div>'+
-   '<div class="print-sign">Firma paziente / utente</div>'+
   '</div>';
 
  return '<div class="print-page">'+header+top+patient+(is118?route118:routeNormal)+times+km+crewBlock+economic+privacyBlock+notes+signatures+
