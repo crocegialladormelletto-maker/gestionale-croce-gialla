@@ -807,7 +807,7 @@
 </div>
 
 <div class="stats"><div class="stat"><small>SERVIZI OGGI</small><b id="s1">0</b></div><div class="stat"><small>DA ASSEGNARE</small><b id="s2">0</b></div><div class="stat"><small>IN CORSO</small><b id="s3">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="s4">0</b></div></div>
-<div class="stats" style="margin-top:9px"><div class="stat"><small>PERSONALE ATTIVO</small><b id="s5">0</b></div><div class="stat"><small>TURNI PROSSIMI</small><b id="s6">0</b></div><div class="stat"><small>SCADENZE MEZZI</small><b id="s7">0</b></div><div class="stat"><small>DA INCASSARE</small><b id="s8">€ 0</b></div></div>
+<div class="stats" style="margin-top:9px"><div class="stat"><small>PERSONALE ATTIVO</small><b id="s5">0</b></div><div class="stat"><small>TURNI PROSSIMI</small><b id="s6">0</b></div><div class="stat"><small>SCADENZE MEZZI</small><b id="s7">0</b></div><div class="stat" id="dashLegacyDueStat"><small>PERSONALE ATTIVO</small><b id="s8">0</b></div></div>
 <div class="stats" id="dashFinanceStats" data-admin-only="true" style="margin-top:9px;grid-template-columns:repeat(2,minmax(0,1fr))">
  <div class="stat"><small>💰 INCASSATO · NOTE DI DEBITO</small><b id="s9">€ 0</b><span class="muted" id="s9Count">0 note pagate</span></div>
  <div class="stat"><small>⏳ DA INCASSARE · NOTE DI DEBITO</small><b id="s10">€ 0</b><span class="muted" id="s10Count">0 note emesse</span></div>
@@ -6272,12 +6272,13 @@ async function dashboard(){
   $('dashCriticalAssistanceList').querySelectorAll('[data-dash-critical-service]').forEach(b=>b.onclick=()=>openService(b.dataset.dashCriticalService));
  }
 
+ if($('dashLegacyDueStat'))$('dashLegacyDueStat').classList.toggle('hidden',!isCentral);
  const labels=isCentral?[
   ['s1','SERVIZI OGGI'],['s2','DA ASSEGNARE'],['s3','IN CORSO'],['s4','FOGLI APERTI'],
   ['s5','TURNI OGGI'],['s6','TURNI SCOPERTI'],['s7','SCADENZE MEZZI'],['s8','PERSONALE ATTIVO']
  ]:[
   ['s1','SERVIZI OGGI'],['s2','DA ASSEGNARE'],['s3','IN CORSO'],['s4','DA CONTABILIZZARE'],
-  ['s5','PERSONALE ATTIVO'],['s6','TURNI PROSSIMI'],['s7','SCADENZE MEZZI'],['s8','DA INCASSARE']
+  ['s5','PERSONALE ATTIVO'],['s6','TURNI PROSSIMI'],['s7','SCADENZE MEZZI']
  ];
  labels.forEach(([id,label])=>{$(id).closest('.stat').querySelector('small').textContent=label});
  $('s1').textContent=d.servizi_oggi||0;
@@ -6292,7 +6293,6 @@ async function dashboard(){
   const due=nf.filter(x=>!x.data_pagamento);
   const paidTotal=paid.reduce((s,x)=>s+Number(x.totale||0),0);
   const dueTotal=due.reduce((s,x)=>s+Number(x.totale||0),0);
-  $('s8').textContent=euro(dueTotal);
   if($('s9'))$('s9').textContent=euro(paidTotal);
   if($('s10'))$('s10').textContent=euro(dueTotal);
   if($('s9Count'))$('s9Count').textContent=paid.length+' '+(paid.length===1?'nota pagata':'note pagate');
