@@ -11478,6 +11478,18 @@ async function tabletCloseSheet(){
  if(kmClose==='')return msg('tabletSheetMsg','Inserisci i KM di chiusura / rientro prima di chiudere il Foglio Viaggio.','warn');
  if(Number(kmClose)<Number(kmStart))return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
  const saved=await saveTabletSheet(true);if(!saved)return;
+ const closeType=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase();
+ const privacyRequired=closeType!=='118'&&!closeType.includes('EMERGENZA')&&!closeType.includes('SERVIZIO INTERNO')&&closeType!=='INTERNO';
+ if(privacyRequired){
+  const signatureStatus=String(tabletCurrentSheet?.privacy_firma_stato||'NON_FIRMATO').toUpperCase();
+  const validSigned=signatureStatus==='FIRMATO'&&!!tabletCurrentSheet?.privacy_firma_path;
+  const validUnable=signatureStatus==='IMPOSSIBILITATO'&&!!String(tabletCurrentSheet?.privacy_firma_motivo||'').trim();
+  if(!validSigned&&!validUnable){
+   if($('tabletPrivacyPanel'))$('tabletPrivacyPanel').classList.remove('hidden');
+   if($('tabletPrivacyToggle'))$('tabletPrivacyToggle').scrollIntoView({behavior:'smooth',block:'center'});
+   return msg('tabletSheetMsg','Firma privacy obbligatoria: fai firmare il paziente oppure seleziona “Impossibilitato a firmare” e indica la motivazione prima di chiudere il Foglio Viaggio.','warn');
+  }
+ }
  const payMode=String(tabletCurrentSheet?.modalita_pagamento||document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'').toUpperCase();
  if(!standalone118&&['CONTANTI','POS'].includes(payMode)){
   let receiptCount=0;
