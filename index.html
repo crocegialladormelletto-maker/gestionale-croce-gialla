@@ -11376,7 +11376,7 @@ function tabletCalcSheet(){
  const sum=n('importo_inserito')+(get('sedia_montascale').checked?n('supplemento_sedia'):0)+(get('barella_bariatrica').checked?n('supplemento_bariatrica'):0);
  $('tabletSheetTotal').value=sum.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
-async function saveTabletSheet(silent=false){
+async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(!tabletCurrentSheet||tabletCurrentSheet.stato==='CHIUSO'||tabletBusy)return false;
  const row={};
  for(const el of document.querySelectorAll('#tabletSheetForm [data-ts-field]')){
@@ -11447,12 +11447,12 @@ async function saveTabletSheet(silent=false){
    norm(patientPayload.p_telefono)!==norm(tabletCurrentService.telefono)||
    norm(patientPayload.p_indirizzo)!==norm(tabletCurrentService.paziente_indirizzo)||
    norm(patientPayload.p_email).toLowerCase()!==norm(tabletCurrentService.paziente_email).toLowerCase();
-  if(patientChanged){
+  if(patientChanged&&!skipPatientServiceSync){
    const pr=await sb.rpc('cge_tablet_aggiorna_dati_paziente',patientPayload);
    if(pr.error)return msg('tabletSheetMsg','Dati paziente: '+pr.error.message,'err'),false;
    if(pr.data)tabletCurrentService={...tabletCurrentService,...pr.data};
   }
-  const dr=await sb.rpc('cge_tablet_aggiorna_destinazione',{
+  const dr=skipPatientServiceSync?{data:null,error:null}:await sb.rpc('cge_tablet_aggiorna_destinazione',{
    p_servizio:tabletCurrentService.id,
    p_destinazione:$('tabletRouteDestination')?.value.trim()||null,
    p_indirizzo_destinazione:$('tabletRouteAddress')?.value.trim()||null,
@@ -11489,7 +11489,7 @@ async function tabletCloseSheet(){
  if(kmStart==='')return msg('tabletSheetMsg','Inserisci i KM di partenza prima di chiudere il Foglio Viaggio.','warn');
  if(kmClose==='')return msg('tabletSheetMsg','Inserisci i KM di chiusura / rientro prima di chiudere il Foglio Viaggio.','warn');
  if(Number(kmClose)<Number(kmStart))return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
- const saved=await saveTabletSheet(true);if(!saved)return;
+ const saved=await saveTabletSheet(true,true);if(!saved)return;
  const closeType=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase();
  const privacyRequired=closeType!=='118'&&!closeType.includes('EMERGENZA')&&!closeType.includes('SERVIZIO INTERNO')&&closeType!=='INTERNO';
  if(privacyRequired){
