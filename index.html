@@ -4107,6 +4107,19 @@ function buildFoglioPrint(f){
  ].filter(x=>x[1]);
  const pay=f.modalita_pagamento?(f.modalita_pagamento+(f.data_pagamento?' · '+fvItalianDate(f.data_pagamento):'')):'Non registrato';
  const printTime=new Date().toLocaleString('it-IT');
+ const serviceType=String(f.tipo_servizio||'').trim().toUpperCase();
+ const privacyRequired=serviceType!=='118'&&!serviceType.includes('EMERGENZA')&&!serviceType.includes('SERVIZIO INTERNO')&&serviceType!=='INTERNO';
+ const privacyStatus=String(f.privacy_firma_stato||'NON_FIRMATO').toUpperCase();
+ const privacyStatusText=privacyStatus==='FIRMATO'?'Firma acquisita digitalmente':privacyStatus==='IMPOSSIBILITATO'?'Paziente impossibilitato a firmare':'Firma da acquisire';
+ const privacyBlock=privacyRequired?'<div class="print-section"><h3>Privacy e firma paziente / utente</h3>'+
+  '<div class="print-grid2">'+
+   '<div class="print-box"><small>Informativa privacy</small>'+(f.privacy_informativa_resa?'Resa al paziente / utente':'Da rendere / registrare')+'</div>'+
+   '<div class="print-box"><small>Stato firma</small>'+esc(privacyStatusText)+'</div>'+
+  '</div>'+
+  (privacyStatus==='IMPOSSIBILITATO'&&f.privacy_firma_motivo?'<div class="print-box" style="margin-top:6px"><small>Motivazione impossibilità alla firma</small>'+esc(f.privacy_firma_motivo)+'</div>':'')+
+  '<div class="print-box" style="margin-top:7px"><small>Dichiarazione</small>Dichiaro di aver ricevuto e preso visione dell’informativa sul trattamento dei dati personali PA6 ai sensi degli artt. 13 e 14 del Regolamento UE 2016/679 – GDPR.</div>'+
+  '<div class="print-signatures" style="grid-template-columns:1fr;margin-top:18px"><div class="print-sign">Firma paziente / utente per presa visione privacy</div></div>'+
+ '</div>':'';
 
  return '<div class="print-page">'+
   '<div class="print-head">'+
@@ -4168,6 +4181,8 @@ function buildFoglioPrint(f){
    '<td><b>'+euro(f.totale_servizio)+'</b></td>'+
    '<td>'+esc(pay)+'</td>'+
   '</tr></tbody></table></div>')+
+
+  privacyBlock+
 
   '<div class="print-section"><h3>Annotazioni</h3><div class="print-box" style="min-height:58px">'+esc(f.annotazioni||'Nessuna annotazione').replace(/\n/g,'<br>')+'</div></div>'+
 
