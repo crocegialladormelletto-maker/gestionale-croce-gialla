@@ -4149,7 +4149,6 @@ function buildFoglioPrint(f){
      '<div class="print-box"><small>Destinazione</small>'+esc(f.destinazione||f.ospedale_destinazione||'—')+'</div>'+
      '<div class="print-box"><small>Luogo rientro</small>'+esc(f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO')+'</div>'+
     '</div>'+
-    (f.percorso_tappe?'<div class="print-box" style="margin-top:7px"><small>Tappe aggiuntive / percorso</small>'+esc(f.percorso_tappe).replace(/\n/g,'<br>')+'</div>':'')+
    '</div>'
    :'<div class="print-section"><h3>Percorso</h3><div class="print-grid2">'+
      '<div class="print-box"><small>Partenza</small>'+esc([f.luogo_partenza,f.indirizzo_partenza].filter(Boolean).join(' - ')||'—')+'</div>'+
