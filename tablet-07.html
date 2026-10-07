@@ -2960,14 +2960,14 @@ function fvPreview(){
  $('fvdKm').textContent=km===null?'—':km;
 
  const base=Number($('fvBase').value||0);
- const chair=$('fvChair').checked?Number($('fvChairAmount').value||0):0;
- const bari=$('fvBari').checked?Number($('fvBariAmount').value||0):0;
+ const chair=$('fvChair')?.checked?Number($('fvChairAmount')?.value||0):0;
+ const bari=$('fvBari')?.checked?Number($('fvBariAmount')?.value||0):0;
  const total=base+chair+bari;
  $('fvGrandTotal').value=total.toFixed(2);
  $('fvdTotal').textContent=euro(total);
 }
-['fvKmStart','fvKmEnd','fvBase','fvChairAmount','fvBariAmount'].forEach(id=>$(id).oninput=fvPreview);
-['fvChair','fvBari'].forEach(id=>$(id).onchange=fvPreview);
+['fvKmStart','fvKmEnd','fvBase','fvChairAmount','fvBariAmount'].forEach(id=>{const el=$(id);if(el)el.oninput=fvPreview});
+['fvChair','fvBari'].forEach(id=>{const el=$(id);if(el)el.onchange=fvPreview});
 $('fvPayMode').onchange=()=>{if($('fvPayMode').value&&!$('fvPayDate').value)$('fvPayDate').value=today()};
 
 
@@ -3322,8 +3322,8 @@ async function saveTravelSheet(silent=false){
  };
  if(prof?.ruolo!=='CENTRALINO')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
-  sedia_montascale:$('fvChair').checked,
-  barella_bariatrica:$('fvBari').checked,
+  sedia_montascale:!!$('fvChair')?.checked,
+  barella_bariatrica:!!$('fvBari')?.checked,
   supplemento_sedia:Number($('fvChairAmount').value||0),
   supplemento_bariatrica:Number($('fvBariAmount').value||0),
   modalita_pagamento:$('fvPayMode').value||null,
