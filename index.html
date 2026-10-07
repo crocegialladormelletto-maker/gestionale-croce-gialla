@@ -924,7 +924,7 @@
    <div class="stats-kpi" data-stats-go="emergency"><small>EMERGENZA / 118</small><b id="statsEmergency">0</b><span>servizi classificati emergenza</span></div>
    <div class="stats-kpi" data-stats-go="assistance"><small>ASSISTENZE</small><b id="statsAssistance">0</b><span>manifestazioni ed eventi</span></div>
    <div class="stats-kpi" data-stats-go="shifts"><small>TURNI ASSEGNATI</small><b id="statsKm">0</b><span>dalle sezioni turni</span></div>
-   <div class="stats-kpi" data-stats-go="shifts"><small>ORE VOLONTARI</small><b id="statsHours">0</b><span>calcolate dai turni caricati</span></div>
+   <div class="stats-kpi" data-stats-go="shifts"><small>ORE VOLONTARI</small><b id="statsHours">0</b><span>turni + servizi effettuati non già coperti da un turno</span></div>
   </div>
 
   <div class="stats-board">
@@ -949,7 +949,7 @@
     <div class="stats-donut-wrap" style="margin-top:12px"><div id="statsDonut" class="stats-donut"></div><div id="statsLegend" class="stats-legend"></div></div>
    </div>
    <div class="stats-card">
-    <h3>Top 10 volontari per ore</h3><div class="muted">Ore calcolate esclusivamente dai turni caricati nel gestionale.</div>
+    <h3>Top 10 volontari per ore</h3><div class="muted">Ore da turni e servizi effettuati, evitando il doppio conteggio quando il servizio ricade dentro un turno.</div>
     <div id="statsTopVolunteers" style="margin-top:12px"></div>
    </div>
   </div>
@@ -992,7 +992,7 @@
 
   <div class="stats-card" style="margin-top:12px">
    <div class="actions" style="justify-content:space-between;align-items:end">
-    <div><h3>👤 Statistica singolo volontario</h3><div class="muted">Turni e ore provengono esclusivamente dalle sezioni turni del gestionale.</div></div>
+    <div><h3>👤 Statistica singolo volontario</h3><div class="muted">I turni provengono dalle sezioni turni; le ore comprendono anche i servizi effettuati fuori turno.</div></div>
     <div class="field" style="min-width:280px"><label>Volontario</label><select id="statsVolunteerSelect"><option value="">Seleziona volontario</option></select></div>
    </div>
    <div id="statsVolunteerBox" class="notice" style="margin-top:10px">Seleziona un volontario per vedere il dettaglio.</div>
@@ -5794,7 +5794,7 @@ async function createCustomReport(){
     reportRenderTable('Ore volontari divise per ruolo',['Ruolo','Presenze','Ore'],rows,[{label:'PRESENZE',value:ss.rows.length},{label:'ORE TOTALI',value:ss.totalHours.toLocaleString('it-IT',{maximumFractionDigits:1})}]);
    }
   }else if(['SERVICES_SUMMARY','SERVICES_TYPE'].includes(type)){
-   let q=sb.from('servizi_giornalieri').select('data_servizio,mezzo,categoria_servizio,tipo_servizio,tipo_servizio_altro,stato_gestionale').gte('data_servizio',from).lte('data_servizio',to).neq('stato_gestionale','ANNULLATO').limit(5000);
+   let q=sb.from('fogli_viaggio').select('data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,stato').eq('stato','CHIUSO').gte('data_servizio',from).lte('data_servizio',to).limit(5000);
    const r=await q;if(r.error)throw r.error;const rows0=r.data||[];
    if(type==='SERVICES_SUMMARY'){
     const by={};rows0.forEach(x=>{const k=statsTypeLabel(x);by[k]=(by[k]||0)+1});
@@ -5809,15 +5809,15 @@ async function createCustomReport(){
    const pr=await sb.from('personale').select('badge,nome_completo,nome,cognome').limit(1000);if(pr.error)throw pr.error;
    const ss=await loadShiftStatistics(from,to,pr.data||[]);
    if(type==='SHIFTS_PERSON'){
-    let rows=ss.top;
-    if(filter)rows=Object.entries(ss.byBadge).filter(([b])=>b===filter).map(([badge,n])=>({badge,n,name:statsPersonName((pr.data||[]).find(p=>p.badge===badge))}));
+    let rows=Object.entries(ss.shiftByBadge).map(([badge,n])=>({badge,n,name:statsPersonName((pr.data||[]).find(p=>p.badge===badge))})).sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name,'it'));
+    if(filter)rows=rows.filter(x=>x.badge===filter);
     reportRenderTable('Turni per volontario',['Badge','Volontario','Turni / presenze'],rows.map(x=>[x.badge,x.name,x.n]),[{label:'PRESENZE',value:rows.reduce((s,x)=>s+x.n,0)},{label:'VOLONTARI',value:rows.length}]);
    }else if(type==='SHIFTS_ROLE'){
-    const rows=Object.entries(ss.byRole).sort((a,b)=>b[1]-a[1]);
-    reportRenderTable('Turni per ruolo',['Ruolo','Presenze'],rows,[{label:'PRESENZE',value:ss.rows.length},{label:'RUOLI',value:rows.length}]);
+    const rows=Object.entries(ss.shiftByRole).sort((a,b)=>b[1]-a[1]);
+    reportRenderTable('Turni per ruolo',['Ruolo','Presenze'],rows,[{label:'PRESENZE',value:ss.shiftAssignments},{label:'RUOLI',value:rows.length}]);
    }else{
-    const rows=Object.entries(ss.byType).sort((a,b)=>b[1]-a[1]);
-    reportRenderTable('Turni per tipologia',['Tipologia','Presenze'],rows,[{label:'PRESENZE',value:ss.rows.length},{label:'TIPOLOGIE',value:rows.length}]);
+    const rows=Object.entries(ss.shiftByType).sort((a,b)=>b[1]-a[1]);
+    reportRenderTable('Turni per tipologia',['Tipologia','Presenze'],rows,[{label:'PRESENZE',value:ss.shiftAssignments},{label:'TIPOLOGIE',value:rows.length}]);
    }
   }else if(type==='QUALIFICATIONS'||type==='DAE_EXPIRY'){
    const [qr,pr]=await Promise.all([sb.from('personale_qualifiche').select('badge_personale,codice_qualifica,valida_dal,valida_al,attiva').eq('attiva',true).limit(5000),sb.from('personale').select('badge,nome_completo,nome,cognome').limit(1000)]);
@@ -6039,14 +6039,33 @@ async function loadShiftStatistics(from,to,people){
  const pmap=new Map((people||[]).map(p=>[p.badge,p]));
  const top=Object.entries(byBadge).map(([badge,n])=>({badge,n,hours:byBadgeHours[badge]||0,name:shiftPersonNameFromMap(badge,pmap)})).sort((a,b)=>b.n-a.n).slice(0,10);
  const topHours=Object.entries(byBadgeHours).map(([badge,hours])=>({badge,hours,n:byBadge[badge]||0,name:shiftPersonNameFromMap(badge,pmap)})).sort((a,b)=>b.hours-a.hours).slice(0,10);
+
+ const shiftByBadge={},shiftByRole={},shiftByType={},shiftByTypeHours={};
+ shiftRows.forEach(x=>{
+  shiftByBadge[x.badge]=(shiftByBadge[x.badge]||0)+1;
+  shiftByRole[x.role]=(shiftByRole[x.role]||0)+1;
+  shiftByType[x.type]=(shiftByType[x.type]||0)+1;
+  shiftByTypeHours[x.type]=(shiftByTypeHours[x.type]||0)+Number(x.hours||0);
+ });
+ const shiftTop=Object.entries(shiftByBadge)
+  .map(([badge,n])=>({badge,n,name:shiftPersonNameFromMap(badge,pmap)}))
+  .sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name,'it'))
+  .slice(0,10);
+
  const slotSeen=new Set(),byTypeSlots={};
  shiftRows.forEach(x=>{const k=x.slot||[x.source,x.date,x.type].join('|');if(slotSeen.has(k))return;slotSeen.add(k);byTypeSlots[x.type]=(byTypeSlots[x.type]||0)+1});
+ const generalSlots=new Set(shiftRows.filter(x=>x.source==='Turni generali').map(x=>x.slot)).size;
+ const specialSlots=new Set(shiftRows.filter(x=>x.source!=='Turni generali').map(x=>x.slot)).size;
+
  return {
-  rows:valid,
+  rows:valid,shiftRows,
   byBadge,byBadgeHours,byRole,byRoleHours,byType,byTypeHours,byTypeSlots,top,topHours,
+  shiftByBadge,shiftByRole,shiftByType,shiftByTypeHours,shiftTop,
+  shiftAssignments:shiftRows.length,
+  shiftPeople:Object.keys(shiftByBadge).length,
   totalHours:valid.reduce((s,x)=>s+Number(x.hours||0),0),
-  general:shiftRows.filter(x=>x.source==='Turni generali').length,
-  special:shiftRows.filter(x=>x.source!=='Turni generali').length,
+  general:generalSlots,
+  special:specialSlots,
   serviceHours:serviceRows.reduce((s,x)=>s+Number(x.hours||0),0),
   serviceRows
  };
@@ -6074,14 +6093,14 @@ function statsRenderDetail(title,headers,rows){
 }
 function statsCategoryDetail(category){
  const s=lastStatsSnapshot;if(!s)return;
- const shiftRows=(s.shiftStats?.rows||[]).filter(x=>x.type===category);
  const serviceRows=(s.serviceRows||[]).filter(x=>statsTypeLabel(x)===category);
- if(['Emergenza / 118','Dimissioni','Assistenze'].includes(category)&&shiftRows.length){
-  const slots=new Map();
-  shiftRows.forEach(x=>{const k=x.slot||[x.date,x.type].join('|');if(!slots.has(k))slots.set(k,x)});
-  return statsRenderDetail(category,['Data','Tipologia','Fonte','Fascia/turno'],[...slots.values()].map(x=>[reportFormatDate(x.date),x.type,x.source,String(x.slot||'').split('|').slice(-1)[0]||'—']));
- }
- statsRenderDetail(category,['Data','Tipologia','Mezzo','Stato'],serviceRows.map(x=>[reportFormatDate(x.data_servizio),x.tipo_servizio_altro||x.tipo_servizio||category,x.mezzo||'—',x.stato_gestionale||'—']));
+ statsRenderDetail(category,['Data','Foglio','Tipologia','Mezzo','Stato'],serviceRows.map(x=>[
+  reportFormatDate(x.data_servizio),
+  x.numero_foglio||'—',
+  x.tipo_servizio_altro||x.tipo_servizio||category,
+  x.mezzo||'—',
+  x.stato||'—'
+ ]));
 }
 function statsVolunteerDetail(badge){
  const s=lastStatsSnapshot;if(!s)return;
@@ -6095,11 +6114,11 @@ async function statsLoadComparison(){
  $('statsComparePeriod').textContent='Periodo precedente: '+reportFormatDate(prev.from)+' – '+reportFormatDate(prev.to);
  try{
   const [sv,ss]=await Promise.all([
-   sb.from('servizi_giornalieri').select('id,data_servizio,categoria_servizio,tipo_servizio,tipo_servizio_altro,mezzo,stato_gestionale').gte('data_servizio',prev.from).lte('data_servizio',prev.to).neq('stato_gestionale','ANNULLATO').limit(5000),
+   sb.from('fogli_viaggio').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,stato').eq('stato','CHIUSO').gte('data_servizio',prev.from).lte('data_servizio',prev.to).limit(5000),
    loadShiftStatistics(prev.from,prev.to,s.allPeople||[])
   ]);
   if(sv.error)throw sv.error;
-  const prevServices=sv.data||[],prevEmergency=Number(ss.byTypeSlots?.['Emergenza / 118']||0),prevAss=Math.max(prevServices.filter(x=>statsTypeLabel(x)==='Assistenze').length,Number(ss.byTypeSlots?.['Assistenze']||0));
+  const prevServices=sv.data||[],prevEmergency=prevServices.filter(x=>statsTypeLabel(x)==='Emergenza / 118').length,prevAss=prevServices.filter(x=>statsTypeLabel(x)==='Assistenze').length;
   const data=[
    ['Servizi',s.services,prevServices.length],
    ['Emergenza / 118',s.emergency,prevEmergency],
@@ -6113,6 +6132,7 @@ async function statsRenderVolunteer(badge){
  const box=$('statsVolunteerBox'),s=lastStatsSnapshot;if(!badge||!s){box.className='notice';box.textContent='Seleziona un volontario per vedere il dettaglio.';return}
  const person=(s.allPeople||[]).find(p=>p.badge===badge),name=statsPersonName(person);
  const rows=(s.shiftStats?.rows||[]).filter(x=>x.badge===badge);
+ const volunteerShiftRows=(s.shiftStats?.shiftRows||[]).filter(x=>x.badge===badge);
  const totalHours=rows.reduce((a,x)=>a+Number(x.hours||0),0),byType={},byRole={},months={};
  rows.forEach(x=>{byType[x.type]=(byType[x.type]||0)+1;byRole[x.role]=(byRole[x.role]||0)+1;const m=String(x.date||'').slice(0,7);if(m)months[m]=(months[m]||0)+Number(x.hours||0)});
  const now=new Date(),monthFrom=statsISODate(new Date(now.getFullYear(),now.getMonth(),1)),quarterMonth=Math.floor(now.getMonth()/3)*3,quarterFrom=statsISODate(new Date(now.getFullYear(),quarterMonth,1)),todayD=statsISODate(now);
@@ -6125,9 +6145,9 @@ async function statsRenderVolunteer(badge){
  const maxMonth=Math.max(1,...Object.values(months));
  box.className='';
  box.innerHTML='<div class="stats-person-grid"><div><h3 style="margin-top:0">'+esc(name)+'</h3><div class="muted">Badge '+esc(badge)+'</div>'+
-  '<div class="actions" style="margin-top:10px"><button type="button" class="btn secondary" data-vol-detail="'+esc(badge)+'">Vedi tutti i turni</button></div></div>'+
+  '<div class="actions" style="margin-top:10px"><button type="button" class="btn secondary" data-vol-detail="'+esc(badge)+'">Vedi dettaglio attività</button></div></div>'+
   '<div><div class="stats-person-kpis">'+
-  '<div class="stat"><small>TURNI / PRESENZE</small><b>'+rows.length+'</b></div>'+
+  '<div class="stat"><small>TURNI / PRESENZE</small><b>'+volunteerShiftRows.length+'</b></div>'+
   '<div class="stat"><small>ORE NEL PERIODO</small><b>'+totalHours.toLocaleString('it-IT',{maximumFractionDigits:1})+'</b></div>'+
   '<div class="stat"><small>MESE CORRENTE</small><b>'+monthHours.toLocaleString('it-IT',{maximumFractionDigits:1})+' / 28 h</b></div>'+
   '<div class="stat"><small>TRIMESTRE CORRENTE</small><b>'+quarterHours.toLocaleString('it-IT',{maximumFractionDigits:1})+' / 84 h</b></div></div>'+
@@ -6190,12 +6210,16 @@ async function statsRenderThresholds(allPeople){
  }
 }
 
-function statsRenderVehicles(services,shiftStats,emergencySheets,from,to){
+function statsRenderVehicles(programmedServices,closedSheets,from,to){
  const map={};['06','07','08','09'].forEach(v=>map[v]={services:0,emergency:0,assistance:0,days:new Set()});
- services.forEach(x=>{const v=String(x.mezzo||'');if(!map[v])return;map[v].services++;map[v].days.add(x.data_servizio);if(statsTypeLabel(x)==='Assistenze')map[v].assistance++});
- (emergencySheets||[]).forEach(x=>{const v=String(x.mezzo||'');if(!map[v])return;map[v].emergency++;if(x.data_servizio)map[v].days.add(x.data_servizio)});
- const slotSeen=new Set();
- (shiftStats.rows||[]).forEach(x=>{const v=String(x.vehicle||'');if(!map[v]||!v||x.type!=='Assistenze')return;const key=(x.slot||[x.date,x.type].join('|'))+'|'+v;if(slotSeen.has(key))return;slotSeen.add(key);map[v].days.add(x.date);map[v].assistance++});
+ (programmedServices||[]).forEach(x=>{const v=String(x.mezzo||'');if(!map[v])return;map[v].services++});
+ (closedSheets||[]).forEach(x=>{
+  const v=String(x.mezzo||'');if(!map[v])return;
+  if(x.data_servizio)map[v].days.add(x.data_servizio);
+  const type=statsTypeLabel(x);
+  if(type==='Emergenza / 118')map[v].emergency++;
+  if(type==='Assistenze')map[v].assistance++;
+ });
  const periodDays=Math.max(1,statsDaysBetween(from,to));
  $('statsVehicleCards').innerHTML=Object.entries(map).map(([v,d])=>{const pct=Math.min(100,Math.round(d.days.size/periodDays*100));return '<div class="stats-vehicle-card"><small>MEZZO</small><b>'+esc(v)+'</b><small>Servizi programmati: <strong>'+d.services+'</strong></small><small>Emergenza/118: <strong>'+d.emergency+'</strong></small><small>Assistenze: <strong>'+d.assistance+'</strong></small><small>Giornate di utilizzo: <strong>'+d.days.size+'</strong></small><small>Utilizzo nel periodo: <strong>'+pct+'%</strong></small></div>'}).join('');
 }
@@ -6206,33 +6230,33 @@ async function loadStatistics(){
  if(!$('statsFrom').value){const n=new Date(),f=new Date(n.getFullYear(),0,1);$('statsFrom').value=statsISODate(f);$('statsTo').value=statsISODate(n)}
  const from=$('statsFrom').value,to=$('statsTo').value;if(!from||!to||from>to)return msg('statsMsg','Controlla il periodo selezionato.','warn');
  msg('statsMsg','Aggiornamento statistiche in corso...');
- const [sr,pr,cr,er]=await Promise.all([
+ const [sr,pr,cr,fr]=await Promise.all([
   sb.from('servizi_giornalieri').select('id,data_servizio,categoria_servizio,tipo_servizio,tipo_servizio_altro,mezzo,stato_gestionale').gte('data_servizio',from).lte('data_servizio',to).neq('stato_gestionale','ANNULLATO').limit(5000),
   sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico').limit(1000),
   sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,categoria_servizio,paziente_nome,paziente_cognome,destinazione,ospedale_destinazione,motivo_annullamento,annullato_il,stato_gestionale').eq('stato_gestionale','ANNULLATO').order('annullato_il',{ascending:false,nullsFirst:false}).limit(5000),
-  sb.from('fogli_viaggio').select('id,data_servizio,mezzo,numero_foglio,stato').eq('tipo_servizio','118').eq('stato','CHIUSO').gte('data_servizio',from).lte('data_servizio',to).limit(5000)
+  sb.from('fogli_viaggio').select('id,data_servizio,mezzo,numero_foglio,tipo_servizio,tipo_servizio_altro,stato,km_percorsi,km_partenza,km_arrivo,paziente_nome,paziente_cognome,destinazione,ospedale_destinazione').eq('stato','CHIUSO').gte('data_servizio',from).lte('data_servizio',to).limit(5000)
  ]);
- const err=sr.error||pr.error||cr.error||er.error;if(err)return msg('statsMsg','Errore caricamento statistiche: '+err.message,'err');
- const services=sr.data||[],emergencySheets=er.data||[];
+ const err=sr.error||pr.error||cr.error||fr.error;if(err)return msg('statsMsg','Errore caricamento statistiche: '+err.message,'err');
+ const programmedServices=sr.data||[],closedSheets=fr.data||[];
+ const emergencySheets=closedSheets.filter(x=>statsTypeLabel(x)==='Emergenza / 118');
  const cancelled=(cr.data||[]).filter(x=>{
   const refDate=x.annullato_il?statsISODate(new Date(x.annullato_il)):String(x.data_servizio||'');
   return refDate>=from&&refDate<=to;
  });
  const allPeople=pr.data||[],people=allPeople.filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
  statsRenderThresholds(allPeople);
- const serviceCats={};services.forEach(x=>{const k=statsTypeLabel(x);serviceCats[k]=(serviceCats[k]||0)+1});
+ const serviceCats={};closedSheets.forEach(x=>{const k=statsTypeLabel(x);serviceCats[k]=(serviceCats[k]||0)+1});
  let shiftStats;
  try{shiftStats=await loadShiftStatistics(from,to,allPeople)}
  catch(e){msg('statsMsg','Errore caricamento turni: '+(e.message||String(e)),'err');return}
  const cats={...serviceCats};
- ['Emergenza / 118','Dimissioni','Assistenze'].forEach(k=>{const v=Number(shiftStats.byTypeSlots?.[k]||0);if(v>0)cats[k]=v});
- const emergency=Number(shiftStats.byTypeSlots?.['Emergenza / 118']||0);
- const assistance=Math.max(Number(serviceCats['Assistenze']||0),Number(shiftStats.byTypeSlots?.['Assistenze']||0));
+ const emergency=Number(serviceCats['Emergenza / 118']||0);
+ const assistance=Number(serviceCats['Assistenze']||0);
  const hours=shiftStats.totalHours;
- $('statsPeople').textContent=people.length;$('statsServices').textContent=services.length;$('statsEmergency').textContent=emergency;$('statsAssistance').textContent=assistance;$('statsKm').textContent=shiftStats.rows.length;$('statsHours').textContent=hours.toLocaleString('it-IT',{maximumFractionDigits:1});
+ $('statsPeople').textContent=people.length;$('statsServices').textContent=closedSheets.length;$('statsEmergency').textContent=emergency;$('statsAssistance').textContent=assistance;$('statsKm').textContent=shiftStats.shiftAssignments;$('statsHours').textContent=hours.toLocaleString('it-IT',{maximumFractionDigits:1});
  const cancelledReasons={};cancelled.forEach(x=>{const reason=String(x.motivo_annullamento||'Motivazione non indicata').trim()||'Motivazione non indicata';cancelledReasons[reason]=(cancelledReasons[reason]||0)+1});
  const cancelledVehicles=new Set(cancelled.map(x=>String(x.mezzo||'').trim()).filter(Boolean));
- const cancelledDenom=services.length+cancelled.length;
+ const cancelledDenom=closedSheets.length+cancelled.length;
  const cancelledRate=cancelledDenom?Math.round(cancelled.length/cancelledDenom*1000)/10:0;
  $('statsCancelledTotal').textContent=cancelled.length;
  $('statsCancelledRate').textContent=cancelledRate.toLocaleString('it-IT',{maximumFractionDigits:1})+'%';
@@ -6248,12 +6272,12 @@ async function loadStatistics(){
   return '<tr><td>'+esc(x.data_servizio||'—')+'</td><td>'+esc(x.mezzo||'—')+'</td><td>'+esc(type)+'</td><td>'+esc(patient)+'</td><td><b>'+esc(x.motivo_annullamento||'Motivazione non indicata')+'</b></td><td>'+esc(cancelledAt)+'</td><td><button type="button" class="btn secondary" data-open-cancelled="'+esc(x.id)+'">Apri</button></td></tr>';
  }).join(''):'<tr><td colspan="7">Nessun servizio annullato nel periodo selezionato.</td></tr>';
  $('statsCancelledBody').querySelectorAll('[data-open-cancelled]').forEach(b=>b.onclick=()=>openService(b.dataset.openCancelled));
- $('statsShiftAssignments').textContent=shiftStats.rows.length;
- $('statsShiftPeople').textContent=Object.keys(shiftStats.byBadge).length;
+ $('statsShiftAssignments').textContent=shiftStats.shiftAssignments;
+ $('statsShiftPeople').textContent=shiftStats.shiftPeople;
  $('statsGeneralShifts').textContent=shiftStats.general;
  $('statsSpecialShifts').textContent=shiftStats.special;
- const maxShift=Math.max(1,...shiftStats.top.map(x=>x.n));
- $('statsTopShiftVolunteers').innerHTML=shiftStats.top.length?shiftStats.top.map(x=>'<div class="stats-top-row stats-click" data-stats-volunteer="'+esc(x.badge)+'"><b>'+esc(x.name)+'</b><div class="stats-top-track"><div class="stats-top-fill" style="width:'+Math.max(2,x.n/maxShift*100)+'%"></div></div><strong>'+x.n+'</strong></div>').join(''):'<div class="notice">Nessun turno assegnato nel periodo.</div>';
+ const maxShift=Math.max(1,...shiftStats.shiftTop.map(x=>x.n));
+ $('statsTopShiftVolunteers').innerHTML=shiftStats.shiftTop.length?shiftStats.shiftTop.map(x=>'<div class="stats-top-row stats-click" data-stats-volunteer="'+esc(x.badge)+'"><b>'+esc(x.name)+'</b><div class="stats-top-track"><div class="stats-top-fill" style="width:'+Math.max(2,x.n/maxShift*100)+'%"></div></div><strong>'+x.n+'</strong></div>').join(''):'<div class="notice">Nessun turno assegnato nel periodo.</div>';
  const colors=['#ff7176','#6885e8','#ff8a09','#9ad94f','#70dda0','#d8bd00','#0891b2','#7c3aed'];
  const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]);const total=Math.max(1,entries.reduce((s,x)=>s+Number(x[1]||0),0));let acc=0,parts=[];
  entries.forEach(([k,v],i)=>{const start=acc/total*360;acc+=v;const end=acc/total*360;parts.push(colors[i%colors.length]+' '+start+'deg '+end+'deg')});
@@ -6261,17 +6285,17 @@ async function loadStatistics(){
  $('statsLegend').innerHTML=entries.length?entries.map(([k,v],i)=>'<div class="stats-legend-row stats-click" data-stats-category="'+esc(k)+'"><span class="stats-dot" style="background:'+colors[i%colors.length]+'"></span><span>'+esc(k)+'</span><b>'+v+'</b></div>').join(''):'<div class="notice">Nessuna attività nel periodo.</div>';
  const top=shiftStats.topHours,maxH=Math.max(1,...top.map(x=>x.hours));
  $('statsTopVolunteers').innerHTML=top.length?top.map(x=>'<div class="stats-top-row stats-click" data-stats-volunteer="'+esc(x.badge)+'"><b>'+esc(x.name)+'</b><div class="stats-top-track"><div class="stats-top-fill" style="width:'+Math.max(2,x.hours/maxH*100)+'%"></div></div><strong>'+x.hours.toLocaleString('it-IT',{maximumFractionDigits:1})+' h</strong></div>').join(''):'<div class="notice">Nessuna ora disponibile dai turni caricati nel periodo.</div>';
- const months={};services.forEach(x=>{const k=String(x.data_servizio||'').slice(0,7);if(k)months[k]=(months[k]||0)+1});
+ const months={};closedSheets.forEach(x=>{const k=String(x.data_servizio||'').slice(0,7);if(k)months[k]=(months[k]||0)+1});
  const monthEntries=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0])).slice(-12),maxM=Math.max(1,...monthEntries.map(x=>x[1]));
  $('statsMonthly').innerHTML=monthEntries.length?monthEntries.map(([m,v])=>{const d=new Date(m+'-01T12:00:00'),lab=new Intl.DateTimeFormat('it-IT',{month:'short',year:'2-digit'}).format(d);return '<div class="stats-month"><strong>'+v+'</strong><div class="stats-month-bar" style="height:'+Math.max(3,v/maxM*175)+'px"></div><small>'+esc(lab)+'</small></div>'}).join(''):'<div class="notice">Nessun servizio nel periodo selezionato.</div>';
- const typeRows=Object.entries(shiftStats.byType).sort((a,b)=>b[1]-a[1]);
- $('statsVehicles').innerHTML=typeRows.length?'<div class="stats-vehicle-row"><b>Tipo</b><b>Presenze</b><b>Ore</b><b>Quota</b></div>'+typeRows.map(([k,v])=>'<div class="stats-vehicle-row"><b>'+esc(k)+'</b><span>'+v+'</span><strong>'+Number(shiftStats.byTypeHours[k]||0).toLocaleString('it-IT',{maximumFractionDigits:1})+' h</strong><strong>'+Math.round(v/Math.max(1,shiftStats.rows.length)*100)+'%</strong></div>').join(''):'<div class="notice">Nessun turno caricato nel periodo.</div>';
- lastStatsSnapshot={from,to,services:services.length,cancelled:cancelled.length,cancelledRows:cancelled,people:people.length,emergency,assistance,hours,cats,top:shiftStats.topHours,shiftStats,serviceRows:services,allPeople};
+ const typeRows=Object.entries(shiftStats.shiftByType).sort((a,b)=>b[1]-a[1]);
+ $('statsVehicles').innerHTML=typeRows.length?'<div class="stats-vehicle-row"><b>Tipo</b><b>Presenze</b><b>Ore</b><b>Quota</b></div>'+typeRows.map(([k,v])=>'<div class="stats-vehicle-row"><b>'+esc(k)+'</b><span>'+v+'</span><strong>'+Number(shiftStats.shiftByTypeHours[k]||0).toLocaleString('it-IT',{maximumFractionDigits:1})+' h</strong><strong>'+Math.round(v/Math.max(1,shiftStats.shiftAssignments)*100)+'%</strong></div>').join(''):'<div class="notice">Nessun turno caricato nel periodo.</div>';
+ lastStatsSnapshot={from,to,services:closedSheets.length,cancelled:cancelled.length,cancelledRows:cancelled,people:people.length,emergency,assistance,hours,cats,top:shiftStats.topHours,shiftStats,serviceRows:closedSheets,programmedServices,allPeople};
  const volSel=$('statsVolunteerSelect'),keep=volSel.value;
  volSel.innerHTML='<option value="">Seleziona volontario</option>'+allPeople.slice().sort((a,b)=>statsPersonName(a).localeCompare(statsPersonName(b),'it')).map(p=>'<option value="'+esc(p.badge)+'">'+esc(statsPersonName(p))+' · '+esc(p.badge)+'</option>').join('');
  if([...volSel.options].some(o=>o.value===keep))volSel.value=keep;
  await populateReportFilter();
- statsRenderVehicles(services,shiftStats,emergencySheets,from,to);
+ statsRenderVehicles(programmedServices,closedSheets,from,to);
  await statsLoadComparison();
  if(volSel.value)await statsRenderVolunteer(volSel.value);
  $('statsLegend').querySelectorAll('[data-stats-category]').forEach(x=>x.onclick=()=>statsCategoryDetail(x.dataset.statsCategory));
@@ -6420,7 +6444,7 @@ $('statsOpenShifts')?.addEventListener('click',()=>view('shifts'));
 $('statsRefresh')?.addEventListener('click',loadStatistics);
 $('statsExport')?.addEventListener('click',()=>{
  const s=lastStatsSnapshot;if(!s)return alert('Aggiorna prima le statistiche.');
- const rows=[['Periodo',s.from+' - '+s.to],['Volontari attivi',s.people],['Servizi',s.services],['Emergenza / 118',s.emergency],['Assistenze',s.assistance],['Turni / presenze',s.shiftStats?.rows?.length||0],['Ore volontari',s.hours.toFixed(1)],[],['Tipologia servizi','Servizi'],...Object.entries(s.cats),[],['Top volontari per ore','Ore'],...s.top.map(x=>[x.name,x.hours.toFixed(1)]),[],['Top volontari per turni','Turni'],...(s.shiftStats?.top||[]).map(x=>[x.name,x.n]),[],['Tipologia turni','Presenze','Ore'],...Object.entries(s.shiftStats?.byType||{}).map(([k,v])=>[k,v,(s.shiftStats?.byTypeHours?.[k]||0).toFixed(1)])];
+ const rows=[['Periodo',s.from+' - '+s.to],['Volontari attivi',s.people],['Servizi',s.services],['Emergenza / 118',s.emergency],['Assistenze',s.assistance],['Turni / presenze',s.shiftStats?.shiftAssignments||0],['Ore volontari',s.hours.toFixed(1)],[],['Tipologia servizi','Servizi'],...Object.entries(s.cats),[],['Top volontari per ore','Ore'],...s.top.map(x=>[x.name,x.hours.toFixed(1)]),[],['Top volontari per turni','Turni'],...(s.shiftStats?.shiftTop||[]).map(x=>[x.name,x.n]),[],['Tipologia turni','Presenze','Ore'],...Object.entries(s.shiftStats?.shiftByType||{}).map(([k,v])=>[k,v,(s.shiftStats?.shiftByTypeHours?.[k]||0).toFixed(1)])];
  const csv='\ufeff'+rows.map(r=>r.map(statsEscapeCsv).join(';')).join('\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Statistiche_Croce_Gialla_'+s.from+'_'+s.to+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
 });
 document.querySelectorAll('[data-stats-go]').forEach(x=>x.addEventListener('click',()=>openStatsDetail(x.dataset.statsGo)));
