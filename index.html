@@ -11490,6 +11490,15 @@ async function loadTabletSheet(serviceId){
  else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
  else el.value=f[key]??'';
  });
+ if(!tabletSheetIs118&&tabletCurrentService){
+  if($('tabletPatientFirst'))$('tabletPatientFirst').value=f.paziente_nome||tabletCurrentService.paziente_nome||'';
+  if($('tabletPatientLast'))$('tabletPatientLast').value=f.paziente_cognome||tabletCurrentService.paziente_cognome||'';
+  if($('tabletPatientCf'))$('tabletPatientCf').value=f.codice_fiscale||tabletCurrentService.codice_fiscale||'';
+  if($('tabletPatientDob'))$('tabletPatientDob').value=f.data_nascita||tabletCurrentService.data_nascita||'';
+  if($('tabletPatientPhone'))$('tabletPatientPhone').value=f.telefono||tabletCurrentService.telefono||'';
+  if($('tabletPatientAddress'))$('tabletPatientAddress').value=f.residenza||[f.via,f.civico].filter(Boolean).join(' ')||tabletCurrentService.paziente_indirizzo||'';
+  if($('tabletPatientEmail'))$('tabletPatientEmail').value=f.email||tabletCurrentService.paziente_email||'';
+ }
  if($('tabletPrivacyWhen')){
   $('tabletPrivacyWhen').textContent=f.privacy_informativa_resa
    ?('Informativa registrata'+(f.privacy_informativa_resa_il?' il '+new Date(f.privacy_informativa_resa_il).toLocaleString('it-IT'):'')+'.')
@@ -11609,13 +11618,13 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   if(email && $('tabletPatientEmail') && !$('tabletPatientEmail').checkValidity())return msg('tabletSheetMsg','Controlla l’indirizzo e-mail del paziente.','warn'),false;
   const patientPayload={
    p_servizio:tabletCurrentService.id,
-   p_nome:$('tabletPatientFirst')?.value.trim()||null,
-   p_cognome:$('tabletPatientLast')?.value.trim()||null,
-   p_codice_fiscale:cf||null,
-   p_data_nascita:$('tabletPatientDob')?.value||null,
-   p_telefono:$('tabletPatientPhone')?.value.trim()||null,
-   p_indirizzo:$('tabletPatientAddress')?.value.trim()||null,
-   p_email:email||null
+   p_nome:$('tabletPatientFirst')?.value.trim()||tabletCurrentSheet?.paziente_nome||tabletCurrentService?.paziente_nome||null,
+   p_cognome:$('tabletPatientLast')?.value.trim()||tabletCurrentSheet?.paziente_cognome||tabletCurrentService?.paziente_cognome||null,
+   p_codice_fiscale:cf||tabletCurrentSheet?.codice_fiscale||tabletCurrentService?.codice_fiscale||null,
+   p_data_nascita:$('tabletPatientDob')?.value||tabletCurrentSheet?.data_nascita||tabletCurrentService?.data_nascita||null,
+   p_telefono:$('tabletPatientPhone')?.value.trim()||tabletCurrentSheet?.telefono||tabletCurrentService?.telefono||null,
+   p_indirizzo:$('tabletPatientAddress')?.value.trim()||tabletCurrentSheet?.residenza||tabletCurrentService?.paziente_indirizzo||null,
+   p_email:email||tabletCurrentSheet?.email||tabletCurrentService?.paziente_email||null
   };
   const norm=v=>String(v??'').trim();
   const patientChanged=
@@ -12323,7 +12332,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.38-tablet-payment-deferred-all';
+const CGE_APP_BUILD='14.39-tablet-patient-prefill';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
