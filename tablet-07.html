@@ -7994,7 +7994,9 @@ function showTabletArchiveDetail(f){
    tabletReadOnlyField('Mezzo / targa',[f.mezzo,f.targa].filter(Boolean).join(' · '))+
    tabletReadOnlyField('Tipo servizio',f.tipo_servizio||'—')+
    tabletReadOnlyField('Partenza',f.luogo_partenza||'—')+
+   (String(f.tipo_servizio||'').trim()==='118'?tabletReadOnlyField('Target',f.luogo_carico||'—'):'')+
    tabletReadOnlyField('Destinazione',f.destinazione||f.ospedale_destinazione||'—')+
+   (String(f.tipo_servizio||'').trim()==='118'?tabletReadOnlyField('Luogo rientro',f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO'):'')+
    tabletReadOnlyField('Equipaggio',crew)+
    tabletReadOnlyField('KM partenza',f.km_partenza??'—')+
    tabletReadOnlyField('KM arrivo',f.km_arrivo??'—')+
