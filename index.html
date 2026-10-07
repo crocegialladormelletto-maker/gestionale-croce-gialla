@@ -11477,7 +11477,7 @@ async function openTabletDirect118(foglio){
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
  tabletShowSheetIdentity(f);
  tabletToggleReceiptSection();
- if(String(f.tipo_servizio||tabletCurrentService?.tipo_servizio||'').trim()!=='118')await loadPaymentReceipts(f,'tablet');
+ if(!tabletIs118Type(f.tipo_servizio||tabletCurrentService?.tipo_servizio))await loadPaymentReceipts(f,'tablet');
  const patientEditable=false;
  if($('tabletPatientEditSection'))$('tabletPatientEditSection').classList.toggle('hidden',!patientEditable);
  if(patientEditable){
@@ -11595,7 +11595,7 @@ async function loadTabletSheet(serviceId){
    if(!upd.error&&upd.data){tabletCurrentSheet=upd.data;f=upd.data;}
   }
  }
- const tabletSheetIs118=(tabletCurrentService?.tipo_servizio||f.tipo_servizio)==='118';
+ const tabletSheetIs118=tabletIs118Type(tabletCurrentService?.tipo_servizio||f.tipo_servizio);
  tabletConfigureTimeFields(tabletSheetIs118);
  const tabletBillingEvent=!tabletSheetIs118&&isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio);
  if($('tabletBillingSection'))$('tabletBillingSection').classList.toggle('hidden',!tabletBillingEvent);
@@ -11674,6 +11674,10 @@ function tabletIsImmediateService(id){
  try{return JSON.parse(localStorage.getItem(tabletImmediateIdsKey())||'[]').map(String).includes(String(id))}
  catch(_){return false}
 }
+function tabletIs118Type(value){
+ const s=String(value||'').trim().toUpperCase();
+ return s==='118'||s.includes('118')||s.includes('EMERGENZA');
+}
 function tabletConfigureTimeFields(is118){
  const isImmediate=tabletIsImmediateService(tabletCurrentService?.id);
  if($('tabletPrivacyToggle'))$('tabletPrivacyToggle').classList.toggle('hidden',!!is118);
@@ -11710,7 +11714,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
  }
- if(tabletCurrentService && String(tabletCurrentService.tipo_servizio||'')!=='118' && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno'){
+ if(tabletCurrentService && !tabletIs118Type(tabletCurrentService.tipo_servizio) && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno'){
   try{
    const sig=await tabletPrivacyUploadSignature();
    row.privacy_firma_stato=sig.status;
@@ -11728,8 +11732,9 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   if(!row.privacy_informativa_resa)row.privacy_informativa_resa_il=null;
  }
  const tabletSheetType=tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'';
+ const tabletSheetIs118=tabletIs118Type(tabletSheetType);
  delete row.percorso_tappe;
- if(tabletSheetType==='118'){
+ if(tabletSheetIs118){
   row.ora_carico_paziente=null;
   row.inizio_fermo=null;
   row.fine_fermo=null;
@@ -11748,7 +11753,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   row.secondo_soccorritore=$('tablet118Second')?.value||null;
  }
  if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
- if(tabletCurrentService && tabletSheetType!=='118' && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno'){
+ if(tabletCurrentService && !tabletSheetIs118 && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno'){
   const cf=$('tabletPatientCf')?.value.trim().toUpperCase()||'';
   const email=$('tabletPatientEmail')?.value.trim().toLowerCase()||'';
   if(cf && cf.length!==16)return msg('tabletSheetMsg','Controlla il codice fiscale del paziente.','warn'),false;
@@ -11786,7 +11791,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   if(dr.error)return msg('tabletSheetMsg','Destinazione/RSA: '+dr.error.message,'err'),false;
   if(dr.data)tabletCurrentService={...tabletCurrentService,...dr.data};
  }
- if(tabletSheetType!=='118'&&row.importo_inserito===null){
+ if(!tabletSheetIs118&&row.importo_inserito===null){
   const savedBase=tabletCurrentSheet?.importo_inserito;
   if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
   else return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
@@ -12469,7 +12474,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.41-data-presa-servizio';
+const CGE_APP_BUILD='14.42-tablet118-codici';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
