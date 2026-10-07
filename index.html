@@ -1616,7 +1616,7 @@
 <form id="detailForm">
  <div class="section"><h3>Servizio e orari</h3>
   <div class="grid4">
-   <div class="field"><label>Data servizio</label><input id="ddate" type="date"></div><div class="field"><label>Data presa servizio</label><input id="dPresaServizio" type="date"></div>
+   <div class="field"><label>Data servizio</label><input id="ddate" type="date"></div>
    <div class="field"><label>Mezzo</label><select id="dvehicle"></select></div>
    <div class="field"><label>Tipo servizio</label><input id="dtype"></div>
    <div class="field"><label>Priorità</label><select id="dpriority"><option>BASSA</option><option>NORMALE</option><option>ALTA</option><option>URGENTE</option></select></div>
@@ -1627,6 +1627,11 @@
    <div class="field"><label>Partenza effettiva</label><input id="dOpe" type="time"></div>
    <div class="field" id="detailPatientLoadActual"><label>Carico paziente effettivo</label><input id="dOce" type="time"></div>
    <div class="field"><label>Rientro effettivo</label><input id="dOre" type="time"></div>
+  </div>
+ </div>
+ <div class="section" id="detailManagementData"><h3>Dati gestionali</h3>
+  <div class="grid4">
+   <div class="field"><label>Data presa servizio</label><input id="dPresaServizio" type="date"></div>
   </div>
  </div>
 
@@ -1769,7 +1774,8 @@
 </dialog>
 
 <section id="new" class="surface hidden"><div class="hero"><h2>Nuovo servizio ordinario</h2><p id="newServiceTimesHelp">Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.</p></div><div class="pad"><div id="duplicatePreparedNotice" class="notice ok hidden"></div><form id="form">
-<div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data servizio *</label><input id="d" type="date" required></div><div class="field"><label>Data presa servizio *</label><input id="presaServizio" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label id="newDepartureLabel">Partenza prevista *</label><input id="op" type="time" required></div><div class="field hidden" id="newPatientLoadTime"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field" id="newDestinationTime"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field hidden" id="newAssistanceStartTime"><label>Inizio assistenza</label><input id="asStart" type="time"></div><div class="field hidden" id="newAssistanceEndTime"><label>Fine assistenza</label><input id="asEnd" type="time"></div><div class="field"><label id="newReturnLabel">Rientro previsto</label><input id="or" type="time"></div></div></div>
+<div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data servizio *</label><input id="d" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label id="newDepartureLabel">Partenza prevista *</label><input id="op" type="time" required></div><div class="field hidden" id="newPatientLoadTime"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field" id="newDestinationTime"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field hidden" id="newAssistanceStartTime"><label>Inizio assistenza</label><input id="asStart" type="time"></div><div class="field hidden" id="newAssistanceEndTime"><label>Fine assistenza</label><input id="asEnd" type="time"></div><div class="field"><label id="newReturnLabel">Rientro previsto</label><input id="or" type="time"></div></div></div>
+<div class="section" id="newManagementData"><h3>Dati gestionali</h3><div class="grid3"><div class="field"><label>Data presa servizio *</label><input id="presaServizio" type="date" required></div></div></div>
 <div class="section" id="newPatientSection"><h3>Paziente / utente</h3>
 <div class="box" style="margin-bottom:12px">
  <h4 style="margin:0 0 6px">Richiama un paziente già registrato</h4>
@@ -3837,6 +3843,8 @@ function applyRoleUI(){
  setTimeout(()=>refreshPersonnelExpiryBadge(),250);
 
  const isCentral=prof?.ruolo==='CENTRALINO';
+ const canSeeManagementDate=['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo);
+ ['newManagementData','detailManagementData'].forEach(id=>{if($(id))$(id).classList.toggle('hidden',!canSeeManagementDate)});
  document.body.classList.toggle('cge-role-centralino',isCentral);
  document.body.classList.toggle('cge-role-amministrazione',prof?.ruolo==='AMMINISTRATORE');
  document.querySelectorAll('[data-admin-only="true"]').forEach(x=>{
