@@ -964,7 +964,7 @@
    </div>
    <div class="stats-card" style="border:2px solid #bfdbfe">
     <div class="actions" style="justify-content:space-between;align-items:center">
-     <div><h3>✅ 84 ore trimestrali raggiunte / superate</h3><div class="muted">Trimestre corrente · ore reali, senza limite massimo.</div></div>
+     <div><h3>✅ 84 ore trimestrali raggiunte / superate</h3><div class="muted">Storico dell’anno per trimestre · ore reali, senza limite massimo.</div></div>
      <span id="statsQuarterThresholdCount" class="pill b">0</span>
     </div>
     <div id="statsQuarterThresholdList" style="margin-top:12px"><div class="muted">Calcolo in corso…</div></div>
@@ -6165,18 +6165,12 @@ async function statsRenderThresholds(allPeople){
  quarterBox.innerHTML='<div class="muted">Calcolo in corso…</div>';
 
  const now=new Date();
+ const year=now.getFullYear();
  const todayD=statsISODate(now);
- const monthFrom=statsISODate(new Date(now.getFullYear(),now.getMonth(),1));
- const qMonth=Math.floor(now.getMonth()/3)*3;
- const quarterFrom=statsISODate(new Date(now.getFullYear(),qMonth,1));
+ const monthFrom=statsISODate(new Date(year,now.getMonth(),1));
 
  try{
-  const [monthStats,quarterStats]=await Promise.all([
-   loadShiftStatistics(monthFrom,todayD,allPeople||[]),
-   loadShiftStatistics(quarterFrom,todayD,allPeople||[])
-  ]);
-
-  const pmap=new Map((allPeople||[]).map(p=>[p.badge,p]));
+  const monthStats=await loadShiftStatistics(monthFrom,todayD,allPeople||[]);
   const active=(allPeople||[]).filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
 
   const monthly=active.map(p=>({
@@ -6185,26 +6179,44 @@ async function statsRenderThresholds(allPeople){
    hours:Number(monthStats.byBadgeHours?.[p.badge]||0)
   })).filter(x=>x.hours>=28).sort((a,b)=>b.hours-a.hours||a.name.localeCompare(b.name,'it'));
 
-  const quarterly=active.map(p=>({
-   badge:p.badge,
-   name:statsPersonName(p),
-   hours:Number(quarterStats.byBadgeHours?.[p.badge]||0)
-  })).filter(x=>x.hours>=84).sort((a,b)=>b.hours-a.hours||a.name.localeCompare(b.name,'it'));
+  const currentQuarter=Math.floor(now.getMonth()/3);
+  const quarterRows=[];
+  for(let q=0;q<=currentQuarter;q++){
+   const qStart=new Date(year,q*3,1);
+   const qEndNatural=new Date(year,q*3+3,0);
+   const qEnd=q===currentQuarter?now:qEndNatural;
+   const qs=statsISODate(qStart),qe=statsISODate(qEnd);
+   const qsData=await loadShiftStatistics(qs,qe,allPeople||[]);
+   active.forEach(p=>{
+    const hours=Number(qsData.byBadgeHours?.[p.badge]||0);
+    if(hours>=84)quarterRows.push({
+     badge:p.badge,
+     name:statsPersonName(p),
+     hours,
+     quarter:q+1,
+     period:reportFormatDate(qs)+' – '+reportFormatDate(qe)
+    });
+   });
+  }
+
+  quarterRows.sort((a,b)=>a.quarter-b.quarter||b.hours-a.hours||a.name.localeCompare(b.name,'it'));
+  const quarterlyPeople=new Set(quarterRows.map(x=>x.badge));
 
   if(monthCount)monthCount.textContent=String(monthly.length);
-  if(quarterCount)quarterCount.textContent=String(quarterly.length);
+  if(quarterCount)quarterCount.textContent=String(quarterlyPeople.size);
 
   const render=(rows,threshold)=>rows.length
    ?'<div class="ops-hours-list">'+rows.map(x=>{
       const over=Math.max(0,x.hours-threshold);
       return '<div class="ops-hours-person"><div class="line"><b>'+esc(x.name)+'</b><strong>'+
        x.hours.toLocaleString('it-IT',{maximumFractionDigits:1})+' h / '+threshold+' h</strong></div>'+
+       (x.quarter?'<div class="muted"><b>'+x.quarter+'° trimestre</b> · '+esc(x.period)+'</div>':'')+
        '<div class="muted">Superamento soglia: +'+over.toLocaleString('it-IT',{maximumFractionDigits:1})+' h</div></div>';
     }).join('')+'</div>'
    :'<div class="muted">Nessun volontario ha ancora raggiunto la soglia.</div>';
 
   monthBox.innerHTML=render(monthly,28);
-  quarterBox.innerHTML=render(quarterly,84);
+  quarterBox.innerHTML=render(quarterRows,84);
  }catch(e){
   monthBox.innerHTML='<div class="notice err">Calcolo mensile non disponibile: '+esc(e.message||String(e))+'</div>';
   quarterBox.innerHTML='<div class="notice err">Calcolo trimestrale non disponibile: '+esc(e.message||String(e))+'</div>';
