@@ -3566,7 +3566,11 @@ function dashboardCommitmentTime(x){
 async function refreshDashboardEmployeeCommitments(){
  const box=$('dashEmployeeCommitments'),items=$('dashEmployeeCommitmentsItems'),count=$('dashEmployeeCommitmentsCount');
  if(!box||!items||!count)return;
- if(!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo)){box.classList.add('hidden');return}
+ box.classList.add('hidden');
+ box.classList.remove('dash-commitments-pulse');
+ count.textContent='0';
+ items.innerHTML='';
+ if(!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo))return;
  const day=todaySafe();
  const horizonDate=new Date(day+'T12:00:00');horizonDate.setDate(horizonDate.getDate()+7);
  const horizon=[horizonDate.getFullYear(),String(horizonDate.getMonth()+1).padStart(2,'0'),String(horizonDate.getDate()).padStart(2,'0')].join('-');
@@ -3597,7 +3601,9 @@ async function refreshDashboardEmployeeCommitments(){
   return cutoff===null?true:nowMinutes<cutoff;
  }).sort((a,b)=>String(a.data||day).localeCompare(String(b.data||day))||String(a.inizio||'').localeCompare(String(b.inizio||'')));
  count.textContent=String(rows.length);
- box.classList.toggle('hidden',rows.length===0);box.classList.toggle('dash-commitments-pulse',rows.length>0);
+ if(rows.length===0)return;
+ box.classList.remove('hidden');
+ box.classList.add('dash-commitments-pulse');
  items.innerHTML=rows.map(x=>{
   const p=(people||[]).find(v=>String(v.badge)===String(x.badge));
   const nome=x.nome||p?.nome_completo||('Badge '+x.badge);
