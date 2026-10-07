@@ -1467,6 +1467,7 @@
     <div class="field"><label>Destinazione</label><input id="fvd118To" disabled></div>
     <div class="field"><label>Luogo rientro</label><input id="fvd118Return" disabled></div>
     <div class="field"><label class="check"><input id="fvTransportedMsa" type="checkbox"> Trasportato da MSA</label></div>
+    <div class="field"><label class="check"><input id="fvTransportedHeli" type="checkbox"> Trasportato da Elisoccorso</label></div>
    </div>
    <div id="fv118Codes" class="grid3 hidden" style="margin-top:10px">
     <div class="field"><label>Invio · Colore</label><select id="fvInvioColore"><option value="">—</option><option value="B">B · Bianco</option><option value="V">V · Verde</option><option value="G">G · Giallo</option><option value="R">R · Rosso</option></select></div>
@@ -2736,6 +2737,7 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Destinazione</label><input id="tablet118Dest" placeholder="Destinazione"></div>
      <div class="field"><label>Luogo rientro</label><input id="tablet118Return" placeholder="Luogo rientro"></div>
      <div class="field"><label class="check" style="margin-top:28px"><input type="checkbox" data-ts-field="trasportato_da_msa"> Trasportato da MSA</label></div>
+     <div class="field"><label class="check" style="margin-top:28px"><input type="checkbox" data-ts-field="trasportato_da_elisoccorso"> Trasportato da Elisoccorso</label></div>
     </div>
     <h3 class="tablet-section-title" style="margin-top:20px">Codici 118</h3>
     <div class="notice">Il <b>Codice di invio</b> identifica la partenza dell'intervento. Il <b>Codice di rientro</b> è facoltativo e può restare vuoto se non trasportate voi il paziente.</div>
@@ -4189,6 +4191,7 @@ function buildFoglioPrint(f){
      '<div class="print-box"><small>Destinazione</small>'+esc(f.destinazione||f.ospedale_destinazione||'—')+'</div>'+
      '<div class="print-box"><small>Luogo rientro</small>'+esc(f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO')+'</div>'+
      '<div class="print-box"><small>Trasportato da MSA</small>'+(f.trasportato_da_msa?'☑ Sì':'☐ No')+'</div>'+
+     '<div class="print-box"><small>Trasportato da Elisoccorso</small>'+(f.trasportato_da_elisoccorso?'☑ Sì':'☐ No')+'</div>'+
      '<div class="print-box"><small>Codice di invio</small><b>'+esc(cge118CodeText(f.codice_invio_colore,f.codice_invio_patologia,f.codice_invio_luogo))+'</b></div>'+
      '<div class="print-box"><small>Codice di rientro</small><b>'+esc(cge118CodeText(f.codice_rientro_colore,f.codice_rientro_patologia,f.codice_rientro_luogo))+'</b></div>'+
     '</div>'+
@@ -4674,6 +4677,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvd118To').value=f.destinazione||f.ospedale_destinazione||'—';
  $('fvd118Return').value=f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO';
  if($('fvTransportedMsa'))$('fvTransportedMsa').checked=!!f.trasportato_da_msa;
+ if($('fvTransportedHeli'))$('fvTransportedHeli').checked=!!f.trasportato_da_elisoccorso;
  if($('fv118Codes'))$('fv118Codes').classList.toggle('hidden',!is118);
  if($('fvInvioColore'))$('fvInvioColore').value=f.codice_invio_colore||'';
  if($('fvInvioPatologia'))$('fvInvioPatologia').value=f.codice_invio_patologia||'';
@@ -4771,6 +4775,7 @@ async function saveTravelSheet(silent=false){
  };
  if(String(currentFoglio?.tipo_servizio||'').trim()==='118'){
   row.trasportato_da_msa=!!$('fvTransportedMsa')?.checked;
+  row.trasportato_da_elisoccorso=!!$('fvTransportedHeli')?.checked;
   row.codice_invio_colore=$('fvInvioColore')?.value||null;
   row.codice_invio_patologia=$('fvInvioPatologia')?.value||null;
   row.codice_invio_luogo=$('fvInvioLuogo')?.value||null;
