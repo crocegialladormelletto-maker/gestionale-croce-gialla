@@ -2130,7 +2130,6 @@ Causale: numero preventivo</textarea>
     </div>    </div>
     <h3 class="tablet-section-title" style="margin-top:20px">Annotazioni di servizio</h3>
     <div class="tablet-fields">
-     <div class="field" id="tabletRouteTappeField"><label>Tappe / percorso</label><textarea data-ts-field="percorso_tappe"></textarea></div>
      <div class="field"><label>Annotazioni</label><textarea data-ts-field="annotazioni"></textarea></div>
     </div>
     <h3 class="tablet-section-title" style="margin-top:20px">Servizio e pagamento</h3>
@@ -3038,7 +3037,6 @@ function buildFoglioPrint(f){
     '<div class="print-box"><small>Luogo intervento / carico</small>'+esc(f.luogo_carico||'—')+'</div>'+
     '<div class="print-box"><small>Destinazione / DEA</small>'+esc([f.destinazione,f.ospedale_destinazione].filter(Boolean).join(' - ')||'—')+'</div>'+
    '</div>'+
-   (f.percorso_tappe?'<div class="print-box" style="margin-top:7px"><small>Tappe / percorso completo</small>'+esc(f.percorso_tappe).replace(/\n/g,'<br>')+'</div>':'')+
   '</div>';
 
  const routeNormal='<div class="print-section"><h3>Percorso</h3><div class="print-grid2">'+
