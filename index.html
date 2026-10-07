@@ -3581,14 +3581,21 @@ async function refreshDashboardEmployeeCommitments(){
   items.innerHTML='<div class="notice warn">Impossibile caricare gli impegni dipendenti: '+esc(err.message)+'</div>';
   return;
  }
- const rows=[
-  ...(legacy.data||[]).map(x=>({id:x.id,badge:x.badge,nome:null,inizio:x.ora_inizio,fine:x.ora_fine,motivo:x.motivo||'IMPEGNO',note:x.note||null})),
-  ...(personal.data||[]).map(x=>({id:x.id,badge:x.badge_personale,nome:x.nominativo,data:x.data_scadenza,inizio:x.ora_appuntamento,fine:null,motivo:x.tipo_scadenza||'Visita medica personale',note:x.note||null}))
- ].sort((a,b)=>String(a.data||day).localeCompare(String(b.data||day))||String(a.inizio||'').localeCompare(String(b.inizio||'')));
- count.textContent=String(rows.length);
- box.classList.toggle('hidden',rows.length===0);box.classList.toggle('dash-commitments-pulse',rows.length>0);
  const now=new Date(),nowMinutes=now.getHours()*60+now.getMinutes();
  const toMin=v=>{const t=String(v||'').slice(0,5);if(!/^\d{2}:\d{2}$/.test(t))return null;const [h,m]=t.split(':').map(Number);return h*60+m};
+ const rows=[
+  ...(legacy.data||[]).map(x=>({id:x.id,badge:x.badge,nome:null,data:x.data||day,inizio:x.ora_inizio,fine:x.ora_fine,motivo:x.motivo||'IMPEGNO',note:x.note||null})),
+  ...(personal.data||[]).map(x=>({id:x.id,badge:x.badge_personale,nome:x.nominativo,data:x.data_scadenza,inizio:x.ora_appuntamento,fine:null,motivo:x.tipo_scadenza||'Visita medica personale',note:x.note||null}))
+ ].filter(x=>{
+  const d=String(x.data||day);
+  if(d>day)return true;
+  if(d<day)return false;
+  const endMin=toMin(x.fine),startMin=toMin(x.inizio);
+  const cutoff=endMin!==null?endMin:startMin;
+  return cutoff===null?true:nowMinutes<cutoff;
+ }).sort((a,b)=>String(a.data||day).localeCompare(String(b.data||day))||String(a.inizio||'').localeCompare(String(b.inizio||'')));
+ count.textContent=String(rows.length);
+ box.classList.toggle('hidden',rows.length===0);box.classList.toggle('dash-commitments-pulse',rows.length>0);
  items.innerHTML=rows.map(x=>{
   const p=(people||[]).find(v=>String(v.badge)===String(x.badge));
   const nome=x.nome||p?.nome_completo||('Badge '+x.badge);
@@ -3683,6 +3690,12 @@ if($('pexRefresh'))$('pexRefresh').onclick=loadPersonnelExpiries;
 if($('pexFilter'))$('pexFilter').onchange=loadPersonnelExpiries;
 if($('dashPersonnelExpiryOpen'))$('dashPersonnelExpiryOpen').onclick=()=>view('personnelExpiries');
 if($('dashEmployeeCommitmentsManage'))$('dashEmployeeCommitmentsManage').onclick=()=>{location.href='timbrature-amministrazione/'};
+setInterval(()=>{
+ if(document.hidden||!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo))return;
+ const dash=$('dash');
+ if(!dash||dash.classList.contains('hidden'))return;
+ refreshDashboardEmployeeCommitments();
+},60000);
 
 async function view(v,options={}){
  const current=[...document.querySelectorAll('main>section')].find(x=>!x.classList.contains('hidden'))?.id||'';
@@ -12349,7 +12362,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.39-tablet-patient-prefill';
+const CGE_APP_BUILD='14.40-dashboard-impegni-scaduti';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
