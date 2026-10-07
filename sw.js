@@ -1,5 +1,5 @@
 // Service Worker App Volontari - configurazione stabile
-const CACHE_NAME = 'cge-volontari-static-v34';
+const CACHE_NAME = 'cge-volontari-static-v35';
 const APP_BASE = '/gestionale-croce-gialla/';
 const STATIC_ASSETS = [
   APP_BASE + 'app-volontari.html',
