@@ -10844,6 +10844,12 @@ async function openTabletArchiveSheet(f){
   else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
   else el.value=f[key]??'';
  });
+ if(is118){
+  if($('tablet118From')){$('tablet118From').value=f.luogo_partenza||'';$('tablet118From').disabled=true;}
+  if($('tablet118Load')){$('tablet118Load').value=f.luogo_carico||'';$('tablet118Load').disabled=true;}
+  if($('tablet118Dest')){$('tablet118Dest').value=f.destinazione||f.ospedale_destinazione||'';$('tablet118Dest').disabled=true;}
+  if($('tablet118Return')){$('tablet118Return').value=f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO';$('tablet118Return').disabled=true;}
+ }
  $('tabletSaveSheet').classList.add('hidden');
  $('tabletCloseSheet').classList.add('hidden');
  if($('tabletPrivacyClearSignature'))$('tabletPrivacyClearSignature').disabled=true;
