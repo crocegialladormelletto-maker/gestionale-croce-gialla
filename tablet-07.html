@@ -2109,6 +2109,7 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>KM chiusura / rientro *</label><input type="number" min="0" step="1" data-ts-field="km_arrivo"></div>
      <div class="field"><label>KM percorsi</label><input id="tabletKmTotal" disabled value="—"></div>
      <div class="field"><label>N. scheda 118 (se 118)</label><input data-ts-field="numero_scheda_118"></div>
+     <div class="field hidden" id="tabletTransportedMsaField"><label class="check" style="margin-top:28px"><input type="checkbox" data-ts-field="trasportato_da_msa"> Trasportato da MSA</label></div>
     </div>
     <h3 class="tablet-section-title" style="margin-top:20px">Annotazioni di servizio</h3>
     <div class="tablet-fields">
@@ -8367,6 +8368,8 @@ async function loadTabletSheet(serviceId){
   msg('tabletDetailMsg','Foglio Viaggio non ancora predisposto. Premi «Prendi in carico» per crearlo, dopo il completamento dell’equipaggio.','warn');return;
  }
  tabletCurrentSheet=r.data;let f=r.data,closed=f.stato==='CHIUSO';
+ const tabletLoadedIs118=String(tabletCurrentService?.tipo_servizio||f.tipo_servizio||'').trim()==='118';
+ if($('tabletTransportedMsaField'))$('tabletTransportedMsaField').classList.toggle('hidden',!tabletLoadedIs118);
  if(!closed&&f.km_partenza==null){
   const lastKm=await sb.from('fogli_viaggio')
    .select('km_arrivo,data_servizio,progressivo,modificato_il')
@@ -8443,6 +8446,7 @@ async function saveTabletSheet(silent=false){
   else row[name]=el.value.trim()||null;
  }
  const is118Service=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim()==='118';
+ if($('tabletTransportedMsaField'))$('tabletTransportedMsaField').classList.toggle('hidden',!is118Service);
  if(is118Service)delete row.percorso_tappe;
  const isInternalService=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'')==='Servizio interno';
  if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio)||isInternalService)row.ora_carico_paziente=null;
