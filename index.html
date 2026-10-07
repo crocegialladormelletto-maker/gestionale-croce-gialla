@@ -1466,6 +1466,7 @@
     <div class="field"><label>Target</label><input id="fvd118Load" disabled></div>
     <div class="field"><label>Destinazione</label><input id="fvd118To" disabled></div>
     <div class="field"><label>Luogo rientro</label><input id="fvd118Return" disabled></div>
+    <div class="field"><label class="check"><input id="fvTransportedMsa" type="checkbox"> Trasportato da MSA</label></div>
    </div>
   </div>
 
@@ -2726,6 +2727,7 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Target</label><input id="tablet118Load" placeholder="Target"></div>
      <div class="field"><label>Destinazione</label><input id="tablet118Dest" placeholder="Destinazione"></div>
      <div class="field"><label>Luogo rientro</label><input id="tablet118Return" placeholder="Luogo rientro"></div>
+     <div class="field"><label class="check" style="margin-top:28px"><input type="checkbox" data-ts-field="trasportato_da_msa"> Trasportato da MSA</label></div>
     </div>
     </div>
     <div id="tabletPatientEditSection">
@@ -4164,6 +4166,7 @@ function buildFoglioPrint(f){
      '<div class="print-box"><small>Target</small>'+esc(f.luogo_carico||'—')+'</div>'+
      '<div class="print-box"><small>Destinazione</small>'+esc(f.destinazione||f.ospedale_destinazione||'—')+'</div>'+
      '<div class="print-box"><small>Luogo rientro</small>'+esc(f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO')+'</div>'+
+     '<div class="print-box"><small>Trasportato da MSA</small>'+(f.trasportato_da_msa?'☑ Sì':'☐ No')+'</div>'+
     '</div>'+
    '</div>'
    :'<div class="print-section"><h3>Percorso</h3><div class="print-grid2">'+
@@ -4646,6 +4649,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvd118Load').value=f.luogo_carico||'—';
  $('fvd118To').value=f.destinazione||f.ospedale_destinazione||'—';
  $('fvd118Return').value=f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO';
+ if($('fvTransportedMsa'))$('fvTransportedMsa').checked=!!f.trasportato_da_msa;
 
  $('fvStart').value=fvTime(f.ora_partenza_servizio);
  $('fvLoad').value=fvTime(f.ora_carico_paziente);
@@ -4735,6 +4739,7 @@ async function saveTravelSheet(silent=false){
   versione_app:'V13.41'
  };
  if(String(currentFoglio?.tipo_servizio||'').trim()==='118'){
+  row.trasportato_da_msa=!!$('fvTransportedMsa')?.checked;
   row.ora_carico_paziente=null;
   row.inizio_fermo=null;
   row.fine_fermo=null;
