@@ -11625,7 +11625,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   if(!row.privacy_informativa_resa)row.privacy_informativa_resa_il=null;
  }
  const tabletSheetType=tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'';
- if(tabletSheetType==='118'||tabletIsImmediateService(tabletCurrentService?.id))delete row.percorso_tappe;
+ delete row.percorso_tappe;
  if(tabletSheetType==='118'){
   row.ora_carico_paziente=null;
   row.inizio_fermo=null;
