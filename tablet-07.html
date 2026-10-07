@@ -8388,6 +8388,10 @@ async function tabletRefreshListAfterAct(id){
  const newer=tabletServices.find(x=>x.id===id);if(newer)tabletCurrentService=newer;
  renderTabletDetailHeader();await loadTabletSheet(id)
 }
+function tabletIs118Type(value){
+ const s=String(value||'').trim().toUpperCase();
+ return s==='118'||s.includes('118')||s.includes('EMERGENZA');
+}
 async function loadTabletSheet(serviceId){
  $('tabletSheetPanel').classList.add('hidden');tabletCurrentSheet=null;
  const r=await sb.from('fogli_viaggio').select('*').eq('servizio_giornaliero_id',serviceId).eq('mezzo',tabletMezzo).maybeSingle();
@@ -8396,7 +8400,7 @@ async function loadTabletSheet(serviceId){
   msg('tabletDetailMsg','Foglio Viaggio non ancora predisposto. Premi «Prendi in carico» per crearlo, dopo il completamento dell’equipaggio.','warn');return;
  }
  tabletCurrentSheet=r.data;let f=r.data,closed=f.stato==='CHIUSO';
- const tabletLoadedIs118=String(tabletCurrentService?.tipo_servizio||f.tipo_servizio||'').trim()==='118';
+ const tabletLoadedIs118=tabletIs118Type(tabletCurrentService?.tipo_servizio||f.tipo_servizio);
  if($('tabletTransportedMsaField'))$('tabletTransportedMsaField').classList.toggle('hidden',!tabletLoadedIs118);
  if($('tabletTransportedHeliField'))$('tabletTransportedHeliField').classList.toggle('hidden',!tabletLoadedIs118);
  if($('tablet118CodesSection'))$('tablet118CodesSection').classList.toggle('hidden',!tabletLoadedIs118);
@@ -8420,7 +8424,7 @@ async function loadTabletSheet(serviceId){
  $('tabletSheetPanel').classList.remove('hidden');
  $('tabletSheetTitle').textContent='Foglio Viaggio '+f.numero_foglio+' · '+f.stato;
  const isInternalSheet=String(tabletCurrentService?.tipo_servizio||f.tipo_servizio||'')==='Servizio interno';
- const is118Sheet=String(tabletCurrentService?.tipo_servizio||f.tipo_servizio||'').trim()==='118';
+ const is118Sheet=tabletIs118Type(tabletCurrentService?.tipo_servizio||f.tipo_servizio);
 
  ['ora_partenza_servizio','ora_carico_paziente','ora_arrivo_destinazione','ora_ripartenza','ora_arrivo_sede','ora_operativita','inizio_fermo','fine_fermo'].forEach(k=>{$('tabletTime_'+k)?.classList.toggle('hidden',isInternalSheet)});
  if($('tabletTimesTitle'))$('tabletTimesTitle').textContent=isInternalSheet?'Percorrenza':'Orari effettivi e percorrenza';
@@ -8482,7 +8486,7 @@ async function saveTabletSheet(silent=false){
   else if(el.type==='number'){row[name]=(name==='km_partenza'||name==='km_arrivo')?tabletKmNumber(el.value):(el.value===''?null:Number(el.value));if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
  }
- const is118Service=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim()==='118';
+ const is118Service=tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio);
  if($('tabletTransportedMsaField'))$('tabletTransportedMsaField').classList.toggle('hidden',!is118Service);
  if($('tabletTransportedHeliField'))$('tabletTransportedHeliField').classList.toggle('hidden',!is118Service);
  if($('tablet118CodesSection'))$('tablet118CodesSection').classList.toggle('hidden',!is118Service);
@@ -8491,7 +8495,7 @@ async function saveTabletSheet(silent=false){
  if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio)||isInternalService)row.ora_carico_paziente=null;
  if(isInternalService){row.importo_inserito=0;row.modalita_pagamento=null;row.data_pagamento=null;}
  if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
- if(!isInternalService&&tabletCurrentService?.tipo_servizio!=='118'&&row.importo_inserito===null)return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
+ if(!isInternalService&&!is118Service&&row.importo_inserito===null)return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id').maybeSingle();
@@ -9108,7 +9112,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.21-T07-dedicated';
+const CGE_APP_BUILD='14.22-T07-118-codici';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
