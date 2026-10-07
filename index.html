@@ -1611,7 +1611,7 @@
 <form id="detailForm">
  <div class="section"><h3>Servizio e orari</h3>
   <div class="grid4">
-   <div class="field"><label>Data</label><input id="ddate" type="date"></div>
+   <div class="field"><label>Data servizio</label><input id="ddate" type="date"></div><div class="field"><label>Data presa servizio</label><input id="dPresaServizio" type="date"></div>
    <div class="field"><label>Mezzo</label><select id="dvehicle"></select></div>
    <div class="field"><label>Tipo servizio</label><input id="dtype"></div>
    <div class="field"><label>Priorità</label><select id="dpriority"><option>BASSA</option><option>NORMALE</option><option>ALTA</option><option>URGENTE</option></select></div>
@@ -1764,7 +1764,7 @@
 </dialog>
 
 <section id="new" class="surface hidden"><div class="hero"><h2>Nuovo servizio ordinario</h2><p id="newServiceTimesHelp">Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.</p></div><div class="pad"><div id="duplicatePreparedNotice" class="notice ok hidden"></div><form id="form">
-<div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data *</label><input id="d" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label id="newDepartureLabel">Partenza prevista *</label><input id="op" type="time" required></div><div class="field hidden" id="newPatientLoadTime"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field" id="newDestinationTime"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field hidden" id="newAssistanceStartTime"><label>Inizio assistenza</label><input id="asStart" type="time"></div><div class="field hidden" id="newAssistanceEndTime"><label>Fine assistenza</label><input id="asEnd" type="time"></div><div class="field"><label id="newReturnLabel">Rientro previsto</label><input id="or" type="time"></div></div></div>
+<div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data servizio *</label><input id="d" type="date" required></div><div class="field"><label>Data presa servizio *</label><input id="presaServizio" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label id="newDepartureLabel">Partenza prevista *</label><input id="op" type="time" required></div><div class="field hidden" id="newPatientLoadTime"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field" id="newDestinationTime"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field hidden" id="newAssistanceStartTime"><label>Inizio assistenza</label><input id="asStart" type="time"></div><div class="field hidden" id="newAssistanceEndTime"><label>Fine assistenza</label><input id="asEnd" type="time"></div><div class="field"><label id="newReturnLabel">Rientro previsto</label><input id="or" type="time"></div></div></div>
 <div class="section" id="newPatientSection"><h3>Paziente / utente</h3>
 <div class="box" style="margin-bottom:12px">
  <h4 style="margin:0 0 6px">Richiama un paziente già registrato</h4>
@@ -3314,6 +3314,7 @@ function resetNewServiceForm(){
  form.querySelectorAll('input:not([type="checkbox"]):not([type="radio"]),textarea').forEach(el=>{el.value=''});
  form.querySelectorAll('input[type="checkbox"],input[type="radio"]').forEach(el=>{el.checked=false});
  ['m','t','tar','tarDest'].forEach(id=>{$(id).value=''});
+ if($('presaServizio'))$('presaServizio').value=todaySafe();
  $('tarNight').value='false';
  $('tarChangeType').value='NONE';$('tarChangeValue').value='';$('tarChangeValue').disabled=true;$('tarAdjustment').classList.add('hidden');$('tarBasePrice').value='—';$('imp').readOnly=false;
  servicePatientId=null;patientLookupRows=[];
@@ -6609,6 +6610,7 @@ async function loadServiceDetail(id=currentServiceId){
 
  $('dvehicle').innerHTML=opts(vehicles,'codice',x=>x.codice+' · '+x.targa);
  $('ddate').value=s.data_servizio||'';
+ $('dPresaServizio').value=s.data_presa_servizio||'';
  $('dvehicle').value=s.mezzo||'';
  $('dtype').value=s.tipo_servizio||'';
  $('dpriority').value=s.priorita||'NORMALE';
@@ -6664,6 +6666,7 @@ async function loadServiceDetail(id=currentServiceId){
  document.querySelectorAll('#detailForm input,#detailForm select,#detailForm textarea').forEach(x=>x.disabled=locked);
  $('dvehicle').disabled=locked;
  $('ddate').disabled=locked||!!foglio;
+ $('dPresaServizio').disabled=locked;
  $('dSave').disabled=locked;
  if(billingEvent&&!isCentral){
   ['dBillName','dBillCfPiva','dBillAddress','dBillCap','dBillCity','dBillProvince','dBillEmail','dBillPecSdi','dBillingSave'].forEach(id=>{if($(id))$(id).disabled=false});
@@ -6784,6 +6787,7 @@ $('detailForm').onsubmit=async e=>{
  const isEvent=isAssistanceManifestation($('dtype').value);
  const row={
   data_servizio:$('ddate').value,
+  data_presa_servizio:$('dPresaServizio').value||null,
   mezzo:$('dvehicle').value,
   tipo_servizio:$('dtype').value.trim(),
   priorita:$('dpriority').value,
@@ -6954,7 +6958,7 @@ $('form').onsubmit=async e=>{
    linkedPatient=pr.data.id;servicePatientId=linkedPatient;
   }
  }
- const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:isEvent?null:($('odest').value||null),ora_inizio_assistenza_prevista:isEvent?($('asStart').value||null):null,ora_fine_assistenza_prevista:isEvent?($('asEnd').value||null):null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,luogo_carico_paziente:isEvent?null:($('loadPlace').value.trim()||null),indirizzo_carico_paziente:isEvent?null:($('loadAddress').value.trim()||null),destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?price.base:null,importo_finale:amount,sedia_motorizzata:$('newSediaMotorizzata').checked,barella_bariatrica:$('newBarellaBariatrica').checked,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
+ const p={paziente_id:isEvent?null:(linkedPatient||null),data_servizio:$('d').value,data_presa_servizio:$('presaServizio').value||todaySafe(),ora_prevista:$('op').value||null,ora_partenza_prevista:$('op').value||null,ora_carico_paziente_prevista:isAssistanceManifestation($('t').value)?null:($('oc').value||null),ora_arrivo_destinazione_prevista:isEvent?null:($('odest').value||null),ora_inizio_assistenza_prevista:isEvent?($('asStart').value||null):null,ora_fine_assistenza_prevista:isEvent?($('asEnd').value||null):null,ora_rientro_previsto:$('or').value||null,mezzo:$('m').value,tipo_servizio:$('t').value,categoria_servizio:$('t').value==='Servizio interno'?'INTERNO':'ORDINARIO',paziente_nome:isEvent?null:($('pn').value.trim()||null),paziente_cognome:isEvent?null:($('pc').value.trim()||null),codice_fiscale:isEvent?null:($('cf').value.trim().toUpperCase()||null),data_nascita:isEvent?null:($('dn').value||null),telefono:isEvent?null:($('tel').value.trim()||null),paziente_indirizzo:isEvent?null:($('patientAddress').value.trim()||null),paziente_email:isEvent?null:($('patientEmail').value.trim().toLowerCase()||null),luogo_partenza:$('lp').value.trim()||null,indirizzo_partenza:$('ip').value.trim()||null,luogo_carico_paziente:isEvent?null:($('loadPlace').value.trim()||null),indirizzo_carico_paziente:isEvent?null:($('loadAddress').value.trim()||null),destinazione:$('dest').value.trim()||selectedTariff?.destinazione||null,indirizzo_destinazione:$('idest').value.trim()||null,ospedale_destinazione:$('strutt').value.trim()||null,note:composeEventNotes($('note').value,$('eventRefName').value,$('eventRefPhone').value,isEvent),tariffario_id:$('tar').value||null,tariffa_destinazione_id:selectedTariff?.tariffa_destinazione_id||null,importo_previsto:amount,importo_calcolato:selectedTariff?price.base:null,importo_finale:amount,sedia_motorizzata:$('newSediaMotorizzata').checked,barella_bariatrica:$('newBarellaBariatrica').checked,modalita_tariffaria:selectedTariff?'TARIFFARIO':'CONCORDATA',stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',capo_servizio_obbligatorio:false,equipaggio_minimo:$('m').value==='06'?1:2};
  const pendingAttachments=Array.from($('newServiceAttachments')?.files||[]);
  for(const file of pendingAttachments){
   const attachmentError=serviceAttachmentValidate(file);
@@ -12362,7 +12366,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.40-dashboard-impegni-scaduti';
+const CGE_APP_BUILD='14.41-data-presa-servizio';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
