@@ -3568,12 +3568,14 @@ async function refreshDashboardEmployeeCommitments(){
  if(!box||!items||!count)return;
  if(!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo)){box.classList.add('hidden');return}
  const day=todaySafe();
+ const horizonDate=new Date(day+'T12:00:00');horizonDate.setDate(horizonDate.getDate()+7);
+ const horizon=[horizonDate.getFullYear(),String(horizonDate.getMonth()+1).padStart(2,'0'),String(horizonDate.getDate()).padStart(2,'0')].join('-');
  const [legacy,personal]=await Promise.all([
-  sb.from('impegni_dipendenti').select('id,badge,data,ora_inizio,ora_fine,motivo,note').eq('data',day).order('ora_inizio',{ascending:true}),
+  sb.from('impegni_dipendenti').select('id,badge,data,ora_inizio,ora_fine,motivo,note').gte('data',day).lte('data',horizon).order('data',{ascending:true}).order('ora_inizio',{ascending:true}),
   sb.from('scadenze_personale')
    .select('id,badge_personale,nominativo,tipo_scadenza,data_scadenza,ora_appuntamento,note,stato')
-   .gte('data_scadenza',day).eq('stato','ATTIVA').eq('tipo_scadenza','Visita medica personale')
-   .order('ora_appuntamento',{ascending:true})
+   .gte('data_scadenza',day).lte('data_scadenza',horizon).eq('stato','ATTIVA').eq('tipo_scadenza','Visita medica personale')
+   .order('data_scadenza',{ascending:true}).order('ora_appuntamento',{ascending:true})
  ]);
  if(legacy.error||personal.error){
   const err=legacy.error||personal.error;
