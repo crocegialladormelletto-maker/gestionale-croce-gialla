@@ -1463,7 +1463,7 @@
    </div>
    <div class="grid4 hidden" id="fv118RouteFields" style="margin-top:10px">
     <div class="field"><label>Partenza</label><input id="fvd118From" disabled></div>
-    <div class="field"><label>Luogo carico</label><input id="fvd118Load" disabled></div>
+    <div class="field"><label>Target</label><input id="fvd118Load" disabled></div>
     <div class="field"><label>Destinazione</label><input id="fvd118To" disabled></div>
     <div class="field"><label>Luogo rientro</label><input id="fvd118Return" disabled></div>
    </div>
@@ -2723,7 +2723,7 @@ Causale: numero preventivo</textarea>
     <h3 class="tablet-section-title" style="margin-top:20px">Percorso 118</h3>
     <div class="tablet-fields">
      <div class="field"><label>Partenza</label><input id="tablet118From" placeholder="Inserisci luogo reale di partenza"></div>
-     <div class="field"><label>Luogo carico</label><input id="tablet118Load" placeholder="Luogo carico"></div>
+     <div class="field"><label>Target</label><input id="tablet118Load" placeholder="Target"></div>
      <div class="field"><label>Destinazione</label><input id="tablet118Dest" placeholder="Destinazione"></div>
      <div class="field"><label>Luogo rientro</label><input id="tablet118Return" placeholder="Luogo rientro"></div>
     </div>
@@ -4161,7 +4161,7 @@ function buildFoglioPrint(f){
   (String(f.tipo_servizio||'').trim()==='118'
    ?'<div class="print-section"><h3>Percorso</h3><div class="print-grid2">'+
      '<div class="print-box"><small>Partenza</small>'+esc(f.luogo_partenza||'—')+'</div>'+
-     '<div class="print-box"><small>Luogo carico</small>'+esc(f.luogo_carico||'—')+'</div>'+
+     '<div class="print-box"><small>Target</small>'+esc(f.luogo_carico||'—')+'</div>'+
      '<div class="print-box"><small>Destinazione</small>'+esc(f.destinazione||f.ospedale_destinazione||'—')+'</div>'+
      '<div class="print-box"><small>Luogo rientro</small>'+esc(f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO')+'</div>'+
     '</div>'+
