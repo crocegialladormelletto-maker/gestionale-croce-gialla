@@ -1004,11 +1004,16 @@
   </div>
 
   <div class="stats-card" style="margin-top:12px;border:2px solid #fecaca">
-   <div class="actions" style="justify-content:space-between;align-items:center">
-    <div><h3>❌ Servizi annullati</h3><div class="muted">Raccoglie tutti i servizi annullati nel periodo selezionato, con motivazione e incidenza sul totale.</div></div>
-    <span id="statsCancelledBadge" class="pill r">0 annullati</span>
+   <div class="actions" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <div><h3>❌ Servizi annullati del mese</h3><div class="muted">Il contatore riparte da zero il primo giorno di ogni mese. Lo storico rimane sempre consultabile per mese di annullamento.</div></div>
+    <div class="actions">
+     <div class="field" style="min-width:180px"><label>Storico mese</label><input id="statsCancelledMonth" type="month"></div>
+     <button id="statsCancelledCurrent" type="button" class="btn secondary">Mese corrente</button>
+     <span id="statsCancelledBadge" class="pill r">0 annullati</span>
+    </div>
    </div>
    <div class="report-summary">
+    <div class="stat"><small>MESE ANALIZZATO</small><b id="statsCancelledPeriodLabel">—</b></div>
     <div class="stat"><small>SERVIZI ANNULLATI</small><b id="statsCancelledTotal">0</b></div>
     <div class="stat"><small>INCIDENZA</small><b id="statsCancelledRate">0%</b></div>
     <div class="stat"><small>MOTIVAZIONI DIVERSE</small><b id="statsCancelledReasons">0</b></div>
@@ -6234,22 +6239,81 @@ function statsRenderVehicles(programmedServices,closedSheets,from,to){
  $('statsVehicleCards').innerHTML=Object.entries(map).map(([v,d])=>{const pct=Math.min(100,Math.round(d.days.size/periodDays*100));return '<div class="stats-vehicle-card"><small>MEZZO</small><b>'+esc(v)+'</b><small>Servizi programmati: <strong>'+d.services+'</strong></small><small>Emergenza/118: <strong>'+d.emergency+'</strong></small><small>Assistenze: <strong>'+d.assistance+'</strong></small><small>KM percorsi: <strong>'+d.km.toLocaleString('it-IT')+'</strong></small><small>Giornate di utilizzo: <strong>'+d.days.size+'</strong></small><small>Utilizzo nel periodo: <strong>'+pct+'%</strong></small></div>'}).join('');
 }
 
+
+function statsMonthBounds(ym){
+ const m=/^(\d{4})-(\d{2})$/.exec(String(ym||''));
+ if(!m)return null;
+ const y=Number(m[1]),mo=Number(m[2]);
+ const start=new Date(y,mo-1,1),end=new Date(y,mo,0);
+ return {from:statsISODate(start),to:statsISODate(end),label:new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric'}).format(start)};
+}
+function statsCurrentMonth(){
+ const n=new Date();
+ return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');
+}
+async function loadCancelledMonthlyStats(monthValue){
+ const input=$('statsCancelledMonth');
+ const ym=monthValue||input?.value||statsCurrentMonth();
+ if(input&&!input.value)input.value=ym;
+ const bounds=statsMonthBounds(ym);
+ if(!bounds)return;
+ const [cr,done]=await Promise.all([
+  sb.from('servizi_giornalieri')
+   .select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,categoria_servizio,paziente_nome,paziente_cognome,destinazione,ospedale_destinazione,motivo_annullamento,annullato_il,stato_gestionale')
+   .eq('stato_gestionale','ANNULLATO')
+   .gte('annullato_il',bounds.from+'T00:00:00')
+   .lte('annullato_il',bounds.to+'T23:59:59.999999')
+   .order('annullato_il',{ascending:false})
+   .limit(5000),
+  sb.from('fogli_viaggio')
+   .select('id')
+   .eq('stato','CHIUSO')
+   .gte('data_servizio',bounds.from)
+   .lte('data_servizio',bounds.to)
+   .limit(5000)
+ ]);
+ const err=cr.error||done.error;
+ if(err){
+  $('statsCancelledBadge').textContent='!';
+  $('statsCancelledBody').innerHTML='<tr><td colspan="7">Errore caricamento annullati: '+esc(err.message)+'</td></tr>';
+  return;
+ }
+ const cancelled=cr.data||[],completed=(done.data||[]).length;
+ const reasons={};cancelled.forEach(x=>{const reason=String(x.motivo_annullamento||'Motivazione non indicata').trim()||'Motivazione non indicata';reasons[reason]=(reasons[reason]||0)+1});
+ const vehicles=new Set(cancelled.map(x=>String(x.mezzo||'').trim()).filter(Boolean));
+ const denom=completed+cancelled.length;
+ const rate=denom?Math.round(cancelled.length/denom*1000)/10:0;
+ $('statsCancelledPeriodLabel').textContent=bounds.label.replace(/^./,x=>x.toUpperCase());
+ $('statsCancelledTotal').textContent=cancelled.length;
+ $('statsCancelledRate').textContent=rate.toLocaleString('it-IT',{maximumFractionDigits:1})+'%';
+ $('statsCancelledReasons').textContent=Object.keys(reasons).length;
+ $('statsCancelledVehicles').textContent=vehicles.size;
+ $('statsCancelledBadge').textContent=cancelled.length+' '+(cancelled.length===1?'annullato':'annullati');
+ const reasonRows=Object.entries(reasons).sort((a,b)=>b[1]-a[1]);
+ $('statsCancelledReasonsList').innerHTML=reasonRows.length?'<div class="stats-vehicle-row"><b>Motivazione</b><b>Numero</b><b>Quota</b><b></b></div>'+reasonRows.map(([reason,n])=>'<div class="stats-vehicle-row"><b>'+esc(reason)+'</b><span>'+n+'</span><strong>'+Math.round(n/Math.max(1,cancelled.length)*100)+'%</strong><span></span></div>').join(''):'<div class="notice">Nessun servizio annullato nel mese selezionato.</div>';
+ $('statsCancelledBody').innerHTML=cancelled.length?cancelled.map(x=>{
+  const patient=[x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||x.ospedale_destinazione||x.destinazione||'—';
+  const type=x.tipo_servizio_altro||x.tipo_servizio||x.categoria_servizio||'Servizio';
+  const cancelledAt=x.annullato_il?new Date(x.annullato_il).toLocaleString('it-IT'):'—';
+  return '<tr><td>'+esc(x.data_servizio||'—')+'</td><td>'+esc(x.mezzo||'—')+'</td><td>'+esc(type)+'</td><td>'+esc(patient)+'</td><td><b>'+esc(x.motivo_annullamento||'Motivazione non indicata')+'</b></td><td>'+esc(cancelledAt)+'</td><td><button type="button" class="btn secondary" data-open-cancelled="'+esc(x.id)+'">Apri</button></td></tr>';
+ }).join(''):'<tr><td colspan="7">Nessun servizio annullato nel mese selezionato.</td></tr>';
+ $('statsCancelledBody').querySelectorAll('[data-open-cancelled]').forEach(b=>b.onclick=()=>openService(b.dataset.openCancelled));
+}
+
 async function loadStatistics(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
  if(!$('reportFrom').value)reportResetUI();
  if(!$('statsFrom').value){const n=new Date(),f=new Date(n.getFullYear(),0,1);$('statsFrom').value=statsISODate(f);$('statsTo').value=statsISODate(n)}
  const from=$('statsFrom').value,to=$('statsTo').value;if(!from||!to||from>to)return msg('statsMsg','Controlla il periodo selezionato.','warn');
  msg('statsMsg','Aggiornamento statistiche in corso...');
- const [sr,pr,cr,fr]=await Promise.all([
+ const [sr,pr,fr]=await Promise.all([
   sb.from('servizi_giornalieri').select('id,data_servizio,categoria_servizio,tipo_servizio,tipo_servizio_altro,mezzo,stato_gestionale').gte('data_servizio',from).lte('data_servizio',to).neq('stato_gestionale','ANNULLATO').limit(5000),
   sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico').limit(1000),
-  sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,categoria_servizio,paziente_nome,paziente_cognome,destinazione,ospedale_destinazione,motivo_annullamento,annullato_il,stato_gestionale').eq('stato_gestionale','ANNULLATO').gte('data_servizio',from).lte('data_servizio',to).order('data_servizio',{ascending:false}).limit(5000),
   sb.from('fogli_viaggio').select('id,data_servizio,mezzo,numero_foglio,tipo_servizio,tipo_servizio_altro,stato,km_percorsi,km_partenza,km_arrivo,paziente_nome,paziente_cognome,destinazione,ospedale_destinazione').eq('stato','CHIUSO').gte('data_servizio',from).lte('data_servizio',to).limit(5000)
  ]);
- const err=sr.error||pr.error||cr.error||fr.error;if(err)return msg('statsMsg','Errore caricamento statistiche: '+err.message,'err');
+ const err=sr.error||pr.error||fr.error;if(err)return msg('statsMsg','Errore caricamento statistiche: '+err.message,'err');
  const programmedServices=sr.data||[],closedSheets=fr.data||[];
  const emergencySheets=closedSheets.filter(x=>statsTypeLabel(x)==='Emergenza / 118');
- const cancelled=cr.data||[];
  const allPeople=pr.data||[],people=allPeople.filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
  statsRenderThresholds(allPeople);
  const serviceCats={};closedSheets.forEach(x=>{const k=statsTypeLabel(x);serviceCats[k]=(serviceCats[k]||0)+1});
@@ -6267,24 +6331,7 @@ async function loadStatistics(){
   return sum+(Number.isFinite(a)&&Number.isFinite(b)&&b>=a?b-a:0);
  },0);
  $('statsPeople').textContent=people.length;$('statsServices').textContent=closedSheets.length;$('statsEmergency').textContent=emergency;$('statsAssistance').textContent=assistance;$('statsKm').textContent=totalKm.toLocaleString('it-IT');$('statsHours').textContent=hours.toLocaleString('it-IT',{maximumFractionDigits:1});
- const cancelledReasons={};cancelled.forEach(x=>{const reason=String(x.motivo_annullamento||'Motivazione non indicata').trim()||'Motivazione non indicata';cancelledReasons[reason]=(cancelledReasons[reason]||0)+1});
- const cancelledVehicles=new Set(cancelled.map(x=>String(x.mezzo||'').trim()).filter(Boolean));
- const cancelledDenom=closedSheets.length+cancelled.length;
- const cancelledRate=cancelledDenom?Math.round(cancelled.length/cancelledDenom*1000)/10:0;
- $('statsCancelledTotal').textContent=cancelled.length;
- $('statsCancelledRate').textContent=cancelledRate.toLocaleString('it-IT',{maximumFractionDigits:1})+'%';
- $('statsCancelledReasons').textContent=Object.keys(cancelledReasons).length;
- $('statsCancelledVehicles').textContent=cancelledVehicles.size;
- $('statsCancelledBadge').textContent=cancelled.length+' '+(cancelled.length===1?'annullato':'annullati');
- const cancelReasonRows=Object.entries(cancelledReasons).sort((a,b)=>b[1]-a[1]);
- $('statsCancelledReasonsList').innerHTML=cancelReasonRows.length?'<div class="stats-vehicle-row"><b>Motivazione</b><b>Numero</b><b>Quota</b><b></b></div>'+cancelReasonRows.map(([reason,n])=>'<div class="stats-vehicle-row"><b>'+esc(reason)+'</b><span>'+n+'</span><strong>'+Math.round(n/Math.max(1,cancelled.length)*100)+'%</strong><span></span></div>').join(''):'<div class="notice">Nessun servizio annullato nel periodo selezionato.</div>';
- $('statsCancelledBody').innerHTML=cancelled.length?cancelled.map(x=>{
-  const patient=[x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||x.ospedale_destinazione||x.destinazione||'—';
-  const type=x.tipo_servizio_altro||x.tipo_servizio||x.categoria_servizio||'Servizio';
-  const cancelledAt=x.annullato_il?new Date(x.annullato_il).toLocaleString('it-IT'):'—';
-  return '<tr><td>'+esc(x.data_servizio||'—')+'</td><td>'+esc(x.mezzo||'—')+'</td><td>'+esc(type)+'</td><td>'+esc(patient)+'</td><td><b>'+esc(x.motivo_annullamento||'Motivazione non indicata')+'</b></td><td>'+esc(cancelledAt)+'</td><td><button type="button" class="btn secondary" data-open-cancelled="'+esc(x.id)+'">Apri</button></td></tr>';
- }).join(''):'<tr><td colspan="7">Nessun servizio annullato nel periodo selezionato.</td></tr>';
- $('statsCancelledBody').querySelectorAll('[data-open-cancelled]').forEach(b=>b.onclick=()=>openService(b.dataset.openCancelled));
+ await loadCancelledMonthlyStats();
  $('statsShiftAssignments').textContent=shiftStats.shiftAssignments;
  $('statsShiftPeople').textContent=shiftStats.shiftPeople;
  $('statsGeneralShifts').textContent=shiftStats.general;
@@ -6303,7 +6350,7 @@ async function loadStatistics(){
  $('statsMonthly').innerHTML=monthEntries.length?monthEntries.map(([m,v])=>{const d=new Date(m+'-01T12:00:00'),lab=new Intl.DateTimeFormat('it-IT',{month:'short',year:'2-digit'}).format(d);return '<div class="stats-month"><strong>'+v+'</strong><div class="stats-month-bar" style="height:'+Math.max(3,v/maxM*175)+'px"></div><small>'+esc(lab)+'</small></div>'}).join(''):'<div class="notice">Nessun servizio nel periodo selezionato.</div>';
  const typeRows=Object.entries(shiftStats.shiftByType).sort((a,b)=>b[1]-a[1]);
  $('statsVehicles').innerHTML=typeRows.length?'<div class="stats-vehicle-row"><b>Tipo</b><b>Presenze</b><b>Ore</b><b>Quota</b></div>'+typeRows.map(([k,v])=>'<div class="stats-vehicle-row"><b>'+esc(k)+'</b><span>'+v+'</span><strong>'+Number(shiftStats.shiftByTypeHours[k]||0).toLocaleString('it-IT',{maximumFractionDigits:1})+' h</strong><strong>'+Math.round(v/Math.max(1,shiftStats.shiftAssignments)*100)+'%</strong></div>').join(''):'<div class="notice">Nessun turno caricato nel periodo.</div>';
- lastStatsSnapshot={from,to,services:closedSheets.length,cancelled:cancelled.length,cancelledRows:cancelled,people:people.length,emergency,assistance,km:totalKm,hours,cats,top:shiftStats.topHours,shiftStats,serviceRows:closedSheets,programmedServices,allPeople};
+ lastStatsSnapshot={from,to,services:closedSheets.length,people:people.length,emergency,assistance,km:totalKm,hours,cats,top:shiftStats.topHours,shiftStats,serviceRows:closedSheets,programmedServices,allPeople};
  const volSel=$('statsVolunteerSelect'),keep=volSel.value;
  volSel.innerHTML='<option value="">Seleziona volontario</option>'+allPeople.slice().sort((a,b)=>statsPersonName(a).localeCompare(statsPersonName(b),'it')).map(p=>'<option value="'+esc(p.badge)+'">'+esc(statsPersonName(p))+' · '+esc(p.badge)+'</option>').join('');
  if([...volSel.options].some(o=>o.value===keep))volSel.value=keep;
@@ -6454,6 +6501,8 @@ $('statsYear')?.addEventListener('click',()=>statsSetPeriod('year'));
 $('statsCompareRefresh')?.addEventListener('click',statsLoadComparison);
 $('statsVolunteerSelect')?.addEventListener('change',e=>statsRenderVolunteer(e.target.value));
 $('statsOpenShifts')?.addEventListener('click',()=>view('shifts'));
+$('statsCancelledMonth')?.addEventListener('change',e=>loadCancelledMonthlyStats(e.target.value));
+$('statsCancelledCurrent')?.addEventListener('click',()=>{const m=statsCurrentMonth();if($('statsCancelledMonth'))$('statsCancelledMonth').value=m;loadCancelledMonthlyStats(m)});
 $('statsRefresh')?.addEventListener('click',loadStatistics);
 $('statsExport')?.addEventListener('click',()=>{
  const s=lastStatsSnapshot;if(!s)return alert('Aggiorna prima le statistiche.');
