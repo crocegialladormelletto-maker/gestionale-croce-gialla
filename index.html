@@ -6190,11 +6190,12 @@ async function statsRenderThresholds(allPeople){
  }
 }
 
-function statsRenderVehicles(services,shiftStats,from,to){
+function statsRenderVehicles(services,shiftStats,emergencySheets,from,to){
  const map={};['06','07','08','09'].forEach(v=>map[v]={services:0,emergency:0,assistance:0,days:new Set()});
  services.forEach(x=>{const v=String(x.mezzo||'');if(!map[v])return;map[v].services++;map[v].days.add(x.data_servizio);if(statsTypeLabel(x)==='Assistenze')map[v].assistance++});
+ (emergencySheets||[]).forEach(x=>{const v=String(x.mezzo||'');if(!map[v])return;map[v].emergency++;if(x.data_servizio)map[v].days.add(x.data_servizio)});
  const slotSeen=new Set();
- (shiftStats.rows||[]).forEach(x=>{const v=String(x.vehicle||'');if(!map[v]||!v)return;const key=(x.slot||[x.date,x.type].join('|'))+'|'+v;if(slotSeen.has(key))return;slotSeen.add(key);map[v].days.add(x.date);if(x.type==='Emergenza / 118')map[v].emergency++;if(x.type==='Assistenze')map[v].assistance++});
+ (shiftStats.rows||[]).forEach(x=>{const v=String(x.vehicle||'');if(!map[v]||!v||x.type!=='Assistenze')return;const key=(x.slot||[x.date,x.type].join('|'))+'|'+v;if(slotSeen.has(key))return;slotSeen.add(key);map[v].days.add(x.date);map[v].assistance++});
  const periodDays=Math.max(1,statsDaysBetween(from,to));
  $('statsVehicleCards').innerHTML=Object.entries(map).map(([v,d])=>{const pct=Math.min(100,Math.round(d.days.size/periodDays*100));return '<div class="stats-vehicle-card"><small>MEZZO</small><b>'+esc(v)+'</b><small>Servizi programmati: <strong>'+d.services+'</strong></small><small>Emergenza/118: <strong>'+d.emergency+'</strong></small><small>Assistenze: <strong>'+d.assistance+'</strong></small><small>Giornate di utilizzo: <strong>'+d.days.size+'</strong></small><small>Utilizzo nel periodo: <strong>'+pct+'%</strong></small></div>'}).join('');
 }
@@ -6205,13 +6206,14 @@ async function loadStatistics(){
  if(!$('statsFrom').value){const n=new Date(),f=new Date(n.getFullYear(),0,1);$('statsFrom').value=statsISODate(f);$('statsTo').value=statsISODate(n)}
  const from=$('statsFrom').value,to=$('statsTo').value;if(!from||!to||from>to)return msg('statsMsg','Controlla il periodo selezionato.','warn');
  msg('statsMsg','Aggiornamento statistiche in corso...');
- const [sr,pr,cr]=await Promise.all([
+ const [sr,pr,cr,er]=await Promise.all([
   sb.from('servizi_giornalieri').select('id,data_servizio,categoria_servizio,tipo_servizio,tipo_servizio_altro,mezzo,stato_gestionale').gte('data_servizio',from).lte('data_servizio',to).neq('stato_gestionale','ANNULLATO').limit(5000),
   sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico').limit(1000),
-  sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,categoria_servizio,paziente_nome,paziente_cognome,destinazione,ospedale_destinazione,motivo_annullamento,annullato_il,stato_gestionale').eq('stato_gestionale','ANNULLATO').order('annullato_il',{ascending:false,nullsFirst:false}).limit(5000)
+  sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,categoria_servizio,paziente_nome,paziente_cognome,destinazione,ospedale_destinazione,motivo_annullamento,annullato_il,stato_gestionale').eq('stato_gestionale','ANNULLATO').order('annullato_il',{ascending:false,nullsFirst:false}).limit(5000),
+  sb.from('fogli_viaggio').select('id,data_servizio,mezzo,numero_foglio,stato').eq('tipo_servizio','118').eq('stato','CHIUSO').gte('data_servizio',from).lte('data_servizio',to).limit(5000)
  ]);
- const err=sr.error||pr.error||cr.error;if(err)return msg('statsMsg','Errore caricamento statistiche: '+err.message,'err');
- const services=sr.data||[];
+ const err=sr.error||pr.error||cr.error||er.error;if(err)return msg('statsMsg','Errore caricamento statistiche: '+err.message,'err');
+ const services=sr.data||[],emergencySheets=er.data||[];
  const cancelled=(cr.data||[]).filter(x=>{
   const refDate=x.annullato_il?statsISODate(new Date(x.annullato_il)):String(x.data_servizio||'');
   return refDate>=from&&refDate<=to;
@@ -6269,7 +6271,7 @@ async function loadStatistics(){
  volSel.innerHTML='<option value="">Seleziona volontario</option>'+allPeople.slice().sort((a,b)=>statsPersonName(a).localeCompare(statsPersonName(b),'it')).map(p=>'<option value="'+esc(p.badge)+'">'+esc(statsPersonName(p))+' · '+esc(p.badge)+'</option>').join('');
  if([...volSel.options].some(o=>o.value===keep))volSel.value=keep;
  await populateReportFilter();
- statsRenderVehicles(services,shiftStats,from,to);
+ statsRenderVehicles(services,shiftStats,emergencySheets,from,to);
  await statsLoadComparison();
  if(volSel.value)await statsRenderVolunteer(volSel.value);
  $('statsLegend').querySelectorAll('[data-stats-category]').forEach(x=>x.onclick=()=>statsCategoryDetail(x.dataset.statsCategory));
