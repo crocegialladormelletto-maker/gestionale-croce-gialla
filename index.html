@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.38-tablet-payment-deferred-all">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.39-tablet-immediate-no-route-tappe">
 <script>
 (function(){
  try{
@@ -11163,6 +11163,7 @@ async function tabletCreateImmediate(){
   if(r.error)throw r.error;
   if(!r.data?.servizio_id||!r.data?.foglio_id)throw new Error('Risposta incompleta: aggiorna e verifica il servizio.');
   created=r.data;
+  tabletRememberImmediateService(created.servizio_id);
   const kmStart=$('tabletAdKmStart')?.value===''?null:Number($('tabletAdKmStart').value);
   const kmClose=$('tabletAdKmClose')?.value===''?null:Number($('tabletAdKmClose').value);
   const kmUpdate={};
@@ -11538,7 +11539,23 @@ async function loadTabletSheet(serviceId){
  msg('tabletSheetMsg',closed?'Foglio Viaggio chiuso: è disponibile in sola lettura.':'',closed?'ok':'');
  tabletCalcSheet();
 }
+function tabletImmediateIdsKey(){return 'cge_tablet_immediate_service_ids_'+String(tabletMezzo||'')}
+function tabletRememberImmediateService(id){
+ if(!id)return;
+ try{
+  const key=tabletImmediateIdsKey();
+  const ids=JSON.parse(localStorage.getItem(key)||'[]').map(String).filter(Boolean);
+  const next=[String(id),...ids.filter(x=>x!==String(id))].slice(0,200);
+  localStorage.setItem(key,JSON.stringify(next));
+ }catch(_){}
+}
+function tabletIsImmediateService(id){
+ if(!id)return false;
+ try{return JSON.parse(localStorage.getItem(tabletImmediateIdsKey())||'[]').map(String).includes(String(id))}
+ catch(_){return false}
+}
 function tabletConfigureTimeFields(is118){
+ const isImmediate=tabletIsImmediateService(tabletCurrentService?.id);
  if($('tabletPrivacyToggle'))$('tabletPrivacyToggle').classList.toggle('hidden',!!is118);
  if($('tabletPrivacyPanel')&&is118)$('tabletPrivacyPanel').classList.add('hidden');
  if($('tabletPatientLoadTime'))$('tabletPatientLoadTime').classList.toggle('hidden',!!is118);
@@ -11547,7 +11564,7 @@ function tabletConfigureTimeFields(is118){
  if($('tabletStopEndField'))$('tabletStopEndField').classList.toggle('hidden',!!is118);
  if($('tabletServicePaymentSection'))$('tabletServicePaymentSection').classList.toggle('hidden',!!is118);
  if($('tablet118RouteSection'))$('tablet118RouteSection').classList.toggle('hidden',!is118);
- if($('tabletRouteTappeField'))$('tabletRouteTappeField').classList.toggle('hidden',!!is118);
+ if($('tabletRouteTappeField'))$('tabletRouteTappeField').classList.toggle('hidden',!!is118||isImmediate);
  if($('tablet118CrewFields'))$('tablet118CrewFields').classList.toggle('hidden',!is118);
  if($('tabletGenericOperationalFields'))$('tabletGenericOperationalFields').classList.toggle('hidden',!!is118);
  if($('tabletDepartureLabel'))$('tabletDepartureLabel').textContent=is118?'Ora partenza servizio':'Partenza effettiva';
@@ -11591,7 +11608,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   if(!row.privacy_informativa_resa)row.privacy_informativa_resa_il=null;
  }
  const tabletSheetType=tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'';
- if(tabletSheetType==='118')delete row.percorso_tappe;
+ if(tabletSheetType==='118'||tabletIsImmediateService(tabletCurrentService?.id))delete row.percorso_tappe;
  if(tabletSheetType==='118'){
   row.ora_carico_paziente=null;
   row.inizio_fermo=null;
