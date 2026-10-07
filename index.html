@@ -6134,6 +6134,9 @@ async function statsRenderVolunteer(badge){
  const person=(s.allPeople||[]).find(p=>p.badge===badge),name=statsPersonName(person);
  const rows=(s.shiftStats?.rows||[]).filter(x=>x.badge===badge);
  const volunteerShiftRows=(s.shiftStats?.shiftRows||[]).filter(x=>x.badge===badge);
+ const volunteerServiceRows=(s.shiftStats?.serviceRows||[]).filter(x=>x.badge===badge);
+ const shiftHours=volunteerShiftRows.reduce((a,x)=>a+Number(x.hours||0),0);
+ const serviceExtraHours=volunteerServiceRows.reduce((a,x)=>a+Number(x.hours||0),0);
  const totalHours=rows.reduce((a,x)=>a+Number(x.hours||0),0),byType={},byRole={},months={};
  rows.forEach(x=>{byType[x.type]=(byType[x.type]||0)+1;byRole[x.role]=(byRole[x.role]||0)+1;const m=String(x.date||'').slice(0,7);if(m)months[m]=(months[m]||0)+Number(x.hours||0)});
  const now=new Date(),monthFrom=statsISODate(new Date(now.getFullYear(),now.getMonth(),1)),quarterMonth=Math.floor(now.getMonth()/3)*3,quarterFrom=statsISODate(new Date(now.getFullYear(),quarterMonth,1)),todayD=statsISODate(now);
@@ -6149,7 +6152,7 @@ async function statsRenderVolunteer(badge){
   '<div class="actions" style="margin-top:10px"><button type="button" class="btn secondary" data-vol-detail="'+esc(badge)+'">Vedi dettaglio attività</button></div></div>'+
   '<div><div class="stats-person-kpis">'+
   '<div class="stat"><small>TURNI / PRESENZE</small><b>'+volunteerShiftRows.length+'</b></div>'+
-  '<div class="stat"><small>ORE NEL PERIODO</small><b>'+totalHours.toLocaleString('it-IT',{maximumFractionDigits:1})+'</b></div>'+
+  '<div class="stat"><small>ORE NEL PERIODO</small><b>'+totalHours.toLocaleString('it-IT',{maximumFractionDigits:1})+'</b><span class="muted">Turni '+shiftHours.toLocaleString('it-IT',{maximumFractionDigits:1})+' h + servizi fuori turno '+serviceExtraHours.toLocaleString('it-IT',{maximumFractionDigits:1})+' h</span></div>'+
   '<div class="stat"><small>MESE CORRENTE</small><b>'+monthHours.toLocaleString('it-IT',{maximumFractionDigits:1})+' / 28 h</b></div>'+
   '<div class="stat"><small>TRIMESTRE CORRENTE</small><b>'+quarterHours.toLocaleString('it-IT',{maximumFractionDigits:1})+' / 84 h</b></div></div>'+
   '<div class="grid2"><div><b>Per tipologia</b><div style="margin-top:6px">'+(Object.entries(byType).length?Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([k,v])=>'<div class="box">'+esc(k)+' <b style="float:right">'+v+'</b></div>').join(''):'<div class="muted">Nessun turno.</div>')+'</div></div>'+
