@@ -10773,9 +10773,24 @@ function renderTabletDirect118(){
    '<div class="tablet-actions"><button class="btn danger" type="button" data-open-direct118="'+esc(f.id)+'">Apri Foglio 118</button></div>'+
   '</article>'
  ).join(''):'<div class="tablet-empty">Nessun Foglio 118 aperto.</div>';
- $('tabletDirect118List').querySelectorAll('[data-open-direct118]').forEach(b=>b.onclick=()=>{
-  const f=tabletDirect118.find(x=>x.id===b.dataset.openDirect118);
-  if(f)openTabletDirect118(f);
+ $('tabletDirect118List').querySelectorAll('[data-open-direct118]').forEach(b=>b.onclick=async()=>{
+  const id=b.dataset.openDirect118;
+  if(!id)return;
+  b.disabled=true;
+  msg('tabletMsg','Apertura Foglio 118...');
+  try{
+   const rr=await sb.from('fogli_viaggio').select('*').eq('id',id).eq('mezzo',String(tabletMezzo)).eq('tipo_servizio','118').maybeSingle();
+   if(rr.error)throw rr.error;
+   if(!rr.data)throw new Error('Foglio 118 non trovato o non più disponibile.');
+   const ix=tabletDirect118.findIndex(x=>String(x.id)===String(id));
+   if(ix>=0)tabletDirect118[ix]=rr.data;
+   msg('tabletMsg','');
+   openTabletDirect118(rr.data);
+  }catch(e){
+   msg('tabletMsg','Impossibile aprire il Foglio 118: '+(e.message||String(e)),'err');
+  }finally{
+   b.disabled=false;
+  }
  });
 }
 async function tabletRefreshList(){
@@ -12308,7 +12323,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.36-tablet118-codici-separati';
+const CGE_APP_BUILD='14.37-tablet118-open-fix';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
