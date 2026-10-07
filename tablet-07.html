@@ -2141,8 +2141,8 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Barella bariatrica</label><label class="check"><input type="checkbox" data-ts-field="barella_bariatrica"> Utilizzata</label></div>
      <div class="field"><label>Supplemento bariatrica €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_bariatrica"></div>
      <div class="field"><label>Totale calcolato €</label><input id="tabletSheetTotal" disabled value="—"></div>
-     <div class="field"><label>Modalità pagamento</label><select data-ts-field="modalita_pagamento"><option value="">Non indicata</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="NON DOVUTO">Non dovuto</option><option value="ALTRO">Altro</option></select></div>
-     <div class="field"><label>Data pagamento</label><input type="date" data-ts-field="data_pagamento"></div>
+     <div class="field"><label>Modalità pagamento</label><select data-ts-field="modalita_pagamento"><option value="">Non indicata</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="NON DOVUTO">Non dovuto</option><option value="ALTRO">Altro</option></select></div>
+     <div class="field" id="tabletSheetPayDateBox"><label>Data pagamento</label><input type="date" data-ts-field="data_pagamento"></div>
     </div>
     <div class="tablet-sheet-bar">
      <div class="actions"><button id="tabletSaveSheet" class="btn yellow" type="submit">💾 Salva dati</button>
@@ -8264,6 +8264,17 @@ $('tabletImmediateToggle').onclick=async()=>{
  panel.classList.toggle('hidden');
  if(!panel.classList.contains('hidden')){await tabletLoadCrewPeople();const restored=tabletRestoreImmediateDraft();if(!restored)tabletApplyImmediateTypeRules();await tabletPrefillImmediateKm();}
 };
+const tabletPayModeField=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
+if(tabletPayModeField)tabletPayModeField.onchange=()=>{
+ const dateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
+ if(tabletPayModeField.value&&tabletPayModeField.value!=='BONIFICO DIFFERITO'){
+  if(dateField&&!dateField.value&&['CONTANTI','POS'].includes(tabletPayModeField.value))dateField.value=todaySafe();
+ }
+ if(!tabletPayModeField.value||tabletPayModeField.value==='BONIFICO DIFFERITO'){
+  if(dateField)dateField.value='';
+ }
+ tabletUpdatePaymentDateVisibility();
+};
 $('tabletPriceGroup').onchange=tabletRenderTariffPrices;
 $('tabletPriceSearch').oninput=tabletRenderTariffPrices;
 $('tabletAdType').onchange=tabletApplyImmediateTypeRules;
@@ -8447,6 +8458,13 @@ function tabletKmNumber(value){
  else s=s.replace(',','.');
  const n=Number(s);
  return Number.isFinite(n)?Math.trunc(n):null;
+}
+function tabletUpdatePaymentDateVisibility(){
+ const mode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'';
+ const dateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
+ const deferred=mode==='BONIFICO DIFFERITO';
+ if($('tabletSheetPayDateBox'))$('tabletSheetPayDateBox').classList.toggle('hidden',deferred);
+ if(deferred&&dateField)dateField.value='';
 }
 function tabletCalcSheet(){
  const kmARaw=document.querySelector('[data-ts-field="km_partenza"]')?.value??'',kmBRaw=document.querySelector('[data-ts-field="km_arrivo"]')?.value??'';
