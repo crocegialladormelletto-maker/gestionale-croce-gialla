@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.35-tablet118">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.38-tablet-payment-deferred-all">
 <script>
 (function(){
  try{
@@ -12323,7 +12323,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.37-tablet118-open-fix';
+const CGE_APP_BUILD='14.38-tablet-payment-deferred-all';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
