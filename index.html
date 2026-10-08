@@ -11658,6 +11658,10 @@ async function loadTabletSheet(serviceId){
   }
  }
  const tabletSheetIs118=tabletIs118Type(tabletCurrentService?.tipo_servizio||f.tipo_servizio);
+ // Restore patient editing when switching from a direct 118 sheet to an ordinary or immediate service.
+ const tabletPatientEditable=!tabletSheetIs118 && String(tabletCurrentService?.tipo_servizio||f.tipo_servizio||'').trim().toUpperCase()!=='SERVIZIO INTERNO' && !isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio);
+ if($('tabletPatientEditSection'))$('tabletPatientEditSection').classList.toggle('hidden',!tabletPatientEditable);
+ ['tabletPatientFirst','tabletPatientLast','tabletPatientCf','tabletPatientDob','tabletPatientPhone','tabletPatientAddress','tabletPatientEmail'].forEach(id=>{if($(id))$(id).disabled=closed||!tabletPatientEditable;});
  tabletConfigureTimeFields(tabletSheetIs118);
  const tabletBillingEvent=!tabletSheetIs118&&isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio);
  if($('tabletBillingSection'))$('tabletBillingSection').classList.toggle('hidden',!tabletBillingEvent);
