@@ -11708,6 +11708,7 @@ function tabletCalcSheet(){
 async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(!tabletCurrentSheet||tabletCurrentSheet.stato==='CHIUSO'||tabletBusy)return false;
  const row={};
+ let privacySaveError=null;
  for(const el of document.querySelectorAll('#tabletSheetForm [data-ts-field]')){
   const name=el.dataset.tsField;
   if(el.type==='checkbox')row[name]=el.checked;
@@ -11722,8 +11723,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
    row.privacy_firma_il=sig.signedAt;
    row.privacy_firma_motivo=sig.reason;
   }catch(e){
-   msg('tabletSheetMsg',e.message||String(e),'warn');
-   return false;
+   privacySaveError=e.message||String(e);
   }
  }
  if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio))row.ora_carico_paziente=null;
@@ -11753,6 +11753,20 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   row.secondo_soccorritore=$('tablet118Second')?.value||null;
  }
  if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
+ if(!tabletSheetIs118&&row.importo_inserito===null){
+  const savedBase=tabletCurrentSheet?.importo_inserito;
+  if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
+  else return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
+ }
+ tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
+ try{
+  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id').maybeSingle();
+  if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
+  tabletCurrentSheet={...tabletCurrentSheet,...row};
+  const syncWarnings=[];
+
+  // La sincronizzazione accessoria non deve bloccare il salvataggio del foglio.
+  // Il foglio e la firma vengono prima confermati dal database.
  if(tabletCurrentService && !tabletSheetIs118 && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno'){
   const cf=$('tabletPatientCf')?.value.trim().toUpperCase()||'';
   const email=$('tabletPatientEmail')?.value.trim().toLowerCase()||'';
@@ -11779,7 +11793,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
    norm(patientPayload.p_email).toLowerCase()!==norm(tabletCurrentService.paziente_email).toLowerCase();
   if(patientChanged&&!skipPatientServiceSync){
    const pr=await sb.rpc('cge_tablet_aggiorna_dati_paziente',patientPayload);
-   if(pr.error)return msg('tabletSheetMsg','Dati paziente: '+pr.error.message,'err'),false;
+   if(pr.error)syncWarnings.push('Dati paziente: '+pr.error.message);
    if(pr.data)tabletCurrentService={...tabletCurrentService,...pr.data};
   }
   const dr=skipPatientServiceSync?{data:null,error:null}:await sb.rpc('cge_tablet_aggiorna_destinazione',{
@@ -11788,25 +11802,19 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
    p_indirizzo_destinazione:$('tabletRouteAddress')?.value.trim()||null,
    p_struttura:$('tabletRouteStructure')?.value.trim()||null
   });
-  if(dr.error)return msg('tabletSheetMsg','Destinazione/RSA: '+dr.error.message,'err'),false;
+  if(dr.error)syncWarnings.push('Destinazione/RSA: '+dr.error.message);
   if(dr.data)tabletCurrentService={...tabletCurrentService,...dr.data};
  }
- if(!tabletSheetIs118&&row.importo_inserito===null){
-  const savedBase=tabletCurrentSheet?.importo_inserito;
-  if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
-  else return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
- }
- tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
- try{
-  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id').maybeSingle();
-  if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
-  tabletCurrentSheet={...tabletCurrentSheet,...row};
+
+
   tabletPrivacySignatureDirty=false;
   if($('tabletPrivacySignatureWhen'))$('tabletPrivacySignatureWhen').textContent=tabletCurrentSheet.privacy_firma_stato==='FIRMATO'
    ?('Firma registrata'+(tabletCurrentSheet.privacy_firma_il?' il '+new Date(tabletCurrentSheet.privacy_firma_il).toLocaleString('it-IT'):'')+'.')
    :(tabletCurrentSheet.privacy_firma_stato==='IMPOSSIBILITATO'?'Paziente registrato come impossibilitato a firmare.':'Firma non ancora registrata.');
-  await tabletPrivacyLoadSavedSignature();
-  if(!silent)msg('tabletSheetMsg','Dati salvati. Il Foglio Viaggio resta aperto e può essere completato successivamente.','ok');
+  if(!privacySaveError)await tabletPrivacyLoadSavedSignature().catch(e=>syncWarnings.push('Visualizzazione firma: '+(e.message||String(e))));
+  if(privacySaveError)syncWarnings.unshift('Firma privacy NON salvata: '+privacySaveError);
+  if(syncWarnings.length)msg('tabletSheetMsg','Foglio salvato, ma attenzione: '+syncWarnings.join(' | '),'warn');
+  else if(!silent)msg('tabletSheetMsg','Dati salvati. Il Foglio Viaggio resta aperto e può essere completato successivamente.','ok');
   return true;
  }catch(e){msg('tabletSheetMsg',e.message||String(e),'err');return false}
  finally{tabletBusy=false}
