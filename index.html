@@ -11678,13 +11678,13 @@ async function loadTabletSheet(serviceId){
  else el.value=f[key]??'';
  });
  if(!tabletSheetIs118&&tabletCurrentService){
-  if($('tabletPatientFirst'))$('tabletPatientFirst').value=f.paziente_nome||tabletCurrentService.paziente_nome||'';
+  if($('tabletPatientFirst'))$('tabletPatientFirst').value=tabletCurrentService.paziente_nome||f.paziente_nome||'';
   if($('tabletPatientLast'))$('tabletPatientLast').value=f.paziente_cognome||tabletCurrentService.paziente_cognome||'';
-  if($('tabletPatientCf'))$('tabletPatientCf').value=f.codice_fiscale||tabletCurrentService.codice_fiscale||'';
-  if($('tabletPatientDob'))$('tabletPatientDob').value=f.data_nascita||tabletCurrentService.data_nascita||'';
-  if($('tabletPatientPhone'))$('tabletPatientPhone').value=f.telefono||tabletCurrentService.telefono||'';
-  if($('tabletPatientAddress'))$('tabletPatientAddress').value=f.residenza||[f.via,f.civico].filter(Boolean).join(' ')||tabletCurrentService.paziente_indirizzo||'';
-  if($('tabletPatientEmail'))$('tabletPatientEmail').value=f.email||tabletCurrentService.paziente_email||'';
+  if($('tabletPatientCf'))$('tabletPatientCf').value=tabletCurrentService.codice_fiscale||f.codice_fiscale||'';
+  if($('tabletPatientDob'))$('tabletPatientDob').value=tabletCurrentService.data_nascita||f.data_nascita||'';
+  if($('tabletPatientPhone'))$('tabletPatientPhone').value=tabletCurrentService.telefono||f.telefono||'';
+  if($('tabletPatientAddress'))$('tabletPatientAddress').value=tabletCurrentService.paziente_indirizzo||f.residenza||[f.via,f.civico].filter(Boolean).join(' ')||'';
+  if($('tabletPatientEmail'))$('tabletPatientEmail').value=tabletCurrentService.paziente_email||f.email||'';
  }
  if($('tabletPrivacyWhen')){
   $('tabletPrivacyWhen').textContent=f.privacy_informativa_resa
@@ -11817,6 +11817,20 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   row.capo_servizio=$('tablet118Leader')?.value||null;
   row.soccorritore=$('tablet118Rescuer')?.value||null;
   row.secondo_soccorritore=$('tablet118Second')?.value||null;
+ }
+ if(!tabletSheetIs118 && tabletCurrentService && String(tabletSheetType).trim().toUpperCase()!=='SERVIZIO INTERNO' && !isAssistanceManifestation(tabletSheetType)){
+  const readPatient=(id,oldValue)=>$(id)?.value.trim()||oldValue||null;
+  const cf=readPatient('tabletPatientCf',tabletCurrentSheet.codice_fiscale||tabletCurrentService.codice_fiscale);
+  const email=readPatient('tabletPatientEmail',tabletCurrentSheet.email||tabletCurrentService.paziente_email);
+  if(cf && cf.length!==16)return msg('tabletSheetMsg','Controlla il codice fiscale del paziente.','warn'),false;
+  if(email && $('tabletPatientEmail') && !$('tabletPatientEmail').checkValidity())return msg('tabletSheetMsg','Controlla la email del paziente.','warn'),false;
+  row.paziente_nome=readPatient('tabletPatientFirst',tabletCurrentSheet.paziente_nome||tabletCurrentService.paziente_nome);
+  row.paziente_cognome=readPatient('tabletPatientLast',tabletCurrentSheet.paziente_cognome||tabletCurrentService.paziente_cognome);
+  row.codice_fiscale=cf?.toUpperCase()||null;
+  row.data_nascita=$('tabletPatientDob')?.value||tabletCurrentSheet.data_nascita||tabletCurrentService.data_nascita||null;
+  row.telefono=readPatient('tabletPatientPhone',tabletCurrentSheet.telefono||tabletCurrentService.telefono);
+  row.residenza=readPatient('tabletPatientAddress',tabletCurrentSheet.residenza||tabletCurrentService.paziente_indirizzo);
+  row.email=email?.toLowerCase()||null;
  }
  if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
  if(!tabletSheetIs118&&row.importo_inserito===null){
