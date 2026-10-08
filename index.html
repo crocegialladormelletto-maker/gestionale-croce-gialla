@@ -11940,9 +11940,13 @@ $('tabletToday').onclick=()=>tabletSetListMode('today');
 $('tabletWeek').onclick=()=>tabletSetListMode('week');
 $('tabletOpen').onclick=()=>tabletSetListMode('open');
 $('tabletRefresh').onclick=tabletRefreshList;
-$('tabletNew118').onclick=async()=>{
+$('tabletNew118').onclick=async(e)=>{
+ if(e){e.preventDefault();e.stopPropagation();}
  if(!['07','09'].includes(String(tabletMezzo))||tabletBusy)return;
- tabletBusy=true;msg('tabletMsg','Creazione Foglio 118...');
+ // Un servizio programmato o non programmato non può creare automaticamente un 118.
+ // Richiedi una conferma esplicita, anche in caso di clic involontario durante l'apertura di altri servizi.
+ if(!confirm('ATTENZIONE: vuoi davvero APRIRE UN NUOVO FOGLIO 118 sul mezzo '+tabletMezzo+'?\\n\\nPremi ANNULLA se stai aprendo un servizio programmato o non programmato.'))return;
+ tabletBusy=true;msg('tabletMsg','Verifica Foglio 118 in corso...');
  try{
   const r=await sb.rpc('cge_tablet_nuovo_foglio_118');
   if(r.error)throw r.error;
