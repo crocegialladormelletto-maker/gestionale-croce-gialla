@@ -11903,6 +11903,12 @@ if($('tabletPrivacyClearSignature'))$('tabletPrivacyClearSignature').onclick=()=
 if($('tabletPrivacyViewSignature'))$('tabletPrivacyViewSignature').onclick=tabletPrivacyShowSavedSignature;
 $('tabletCloseSheet').onclick=tabletCloseSheet;
 $('tabletSheetForm').addEventListener('input',tabletCalcSheet);
+$('tabletSheetForm').addEventListener('change',e=>{
+ if(e.target?.matches('[data-ts-field="modalita_pagamento"]')){
+  tabletUpdatePaymentDateVisibility();
+  tabletToggleReceiptSection();
+ }
+});
 $('tabletPrintSheet').onclick=async()=>{
  if(!tabletCurrentSheet)return;
  const printWindow=openFoglioPrintWindow();
