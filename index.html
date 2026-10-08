@@ -3267,7 +3267,7 @@ function tabletUpdatePaymentDateVisibility(){
 function tabletToggleReceiptSection(){
  const sec=$('tabletReceiptSection');if(!sec)return;
  const mode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'';
- const show=!!tabletCurrentSheet&&String(tabletCurrentSheet.tipo_servizio||tabletCurrentService?.tipo_servizio||'').trim()!=='118'&&['CONTANTI','POS'].includes(mode);
+ const show=!!tabletCurrentSheet&&!tabletIs118Type(tabletCurrentSheet.tipo_servizio||tabletCurrentService?.tipo_servizio||'');
  sec.classList.toggle('hidden',!show);
  if(!show){if($('tabletReceiptFile'))$('tabletReceiptFile').value='';msg('tabletReceiptMsg','')}
 }
