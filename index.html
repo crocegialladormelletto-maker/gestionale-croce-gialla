@@ -11055,7 +11055,16 @@ async function loadTabletArchive(){
 }
 async function openTabletArchiveSheet(f){
  tabletCurrentSheet=f;
- tabletCurrentService=tabletServices.find(s=>String(s.id)===String(f.servizio_giornaliero_id))||{
+ // Historic sheets can be outside the current services list: fetch the linked service to recover the latest patient information.
+ let archivePatientService=null;
+ if(String(f.tipo_servizio||'').trim()!=='118' && f.servizio_giornaliero_id){
+  const linked=await sb.from('servizi_giornalieri')
+   .select('id,paziente_nome,paziente_cognome,codice_fiscale,data_nascita,telefono,paziente_indirizzo,paziente_email')
+   .eq('id',f.servizio_giornaliero_id).maybeSingle();
+  if(!linked.error)archivePatientService=linked.data;
+  else msg('tabletArchiveMsg','Dati paziente del servizio non disponibili: '+linked.error.message,'warn');
+ }
+ tabletCurrentService=archivePatientService||tabletServices.find(s=>String(s.id)===String(f.servizio_giornaliero_id))||{
   id:f.servizio_giornaliero_id||null,
   data_servizio:f.data_servizio,
   mezzo:f.mezzo,
@@ -11092,6 +11101,18 @@ async function openTabletArchiveSheet(f){
   if($('tablet118Load')){$('tablet118Load').value=f.luogo_carico||'';$('tablet118Load').disabled=true;}
   if($('tablet118Dest')){$('tablet118Dest').value=f.destinazione||f.ospedale_destinazione||'';$('tablet118Dest').disabled=true;}
   if($('tablet118Return')){$('tablet118Return').value=f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO';$('tablet118Return').disabled=true;}
+ }
+ if($('tabletPatientEditSection'))$('tabletPatientEditSection').classList.toggle('hidden',is118||String(f.tipo_servizio||'').trim().toUpperCase()==='SERVIZIO INTERNO'||isAssistanceManifestation(f.tipo_servizio));
+ if(!is118){
+  const patient=archivePatientService||tabletCurrentService||{};
+  const setArchivePatient=(id,val)=>{if($(id)){$(id).value=val||'';$(id).disabled=true;}};
+  setArchivePatient('tabletPatientFirst',patient.paziente_nome||f.paziente_nome);
+  setArchivePatient('tabletPatientLast',patient.paziente_cognome||f.paziente_cognome);
+  setArchivePatient('tabletPatientCf',patient.codice_fiscale||f.codice_fiscale);
+  setArchivePatient('tabletPatientDob',patient.data_nascita||f.data_nascita);
+  setArchivePatient('tabletPatientPhone',patient.telefono||f.telefono);
+  setArchivePatient('tabletPatientAddress',patient.paziente_indirizzo||f.residenza||[f.via,f.civico].filter(Boolean).join(' '));
+  setArchivePatient('tabletPatientEmail',patient.paziente_email||f.email);
  }
  $('tabletSaveSheet').classList.add('hidden');
  $('tabletCloseSheet').classList.add('hidden');
