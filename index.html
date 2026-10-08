@@ -5491,11 +5491,14 @@ async function loadOperationalDashboard(){
  const notesPromise=prof?.ruolo==='AMMINISTRATORE'
   ?sb.from('note_di_debito').select('id,foglio_viaggio_id,stato').limit(1000)
   :Promise.resolve({data:[],error:null});
+ const debitPaymentsPromise=prof?.ruolo==='AMMINISTRATORE'
+  ?sb.from('pagamenti_servizi').select('servizio_id,importo,modalita,data_pagamento,stato').eq('stato','REGISTRATO').limit(2000)
+  :Promise.resolve({data:[],error:null});
  const hoursPromise=prof?.ruolo==='AMMINISTRATORE'?dashMonthlyHours(day).catch(error=>({error})):Promise.resolve(null);
  const adminDocsPromise=prof?.ruolo==='AMMINISTRATORE'
   ?sb.from('servizi_giornalieri').select('id,foglio_viaggio_id,data_servizio,mezzo,tipo_servizio,destinazione,ospedale_destinazione,intestatario_fatturazione,importo_previsto,importo_calcolato,importo_finale,documento_da_emettere,fattura_aruba_emessa,fattura_aruba_emessa_il').neq('stato_gestionale','ANNULLATO').order('data_servizio',{ascending:false}).limit(1000)
   :Promise.resolve({data:[],error:null});
- const [emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,hoursData,adminDocs]=await Promise.all([
+ const [emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,hoursData,adminDocs,debitPayments]=await Promise.all([
   sb.rpc('cge_emergenza_turni_v2',{p_dal:day,p_al:day}),
   sb.rpc('cge_dimissioni_turni',{p_dal:day,p_al:day}),
   sb.rpc('cge_assistenza_fasce_turni',{p_dal:day,p_al:day}),
@@ -5506,14 +5509,23 @@ async function loadOperationalDashboard(){
   noteSheetsPromise,
   notesPromise,
   hoursPromise,
-  adminDocsPromise
+  adminDocsPromise,
+  debitPaymentsPromise
  ]);
- const errors=[emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,adminDocs].filter(x=>x?.error).map(x=>x.error.message);
+ const errors=[emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,adminDocs,debitPayments].filter(x=>x?.error).map(x=>x.error.message);
  if(hoursData?.error)errors.push('Ore volontari: '+(hoursData.error.message||String(hoursData.error)));
  const emgRows=emg.data||[],dimRows=dim.data||[],assRows=ass.data||[],services=sv.data||[],fogli=fg.data||[],expRows=exp.data||[],mezzi=mz.data||[];
  const noteIds=new Set((noteRows.data||[]).map(x=>x.foglio_viaggio_id).filter(Boolean));
  const docsRows=adminDocs.data||[];
  const docByService=new Map(docsRows.map(x=>[x.id,x]));
+ const debitPaidByService=new Map();
+ (debitPayments.data||[]).forEach(p=>{
+  if(!p.servizio_id)return;
+  const group=debitPaidByService.get(p.servizio_id)||{total:0,modes:new Set()};
+  group.total+=Number(p.importo)||0;
+  if(p.modalita)group.modes.add(p.modalita);
+  debitPaidByService.set(p.servizio_id,group);
+ });
  const debitQueue=(noteSheets.data||[]).filter(x=>{
   if(noteIds.has(x.id))return false;
   const t=String(x.tipo_servizio||'').trim().toUpperCase();
@@ -5634,7 +5646,14 @@ async function loadOperationalDashboard(){
    :debitQueue.length?debitQueue.slice(0,8).map(x=>{
      const name=[x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'Intestatario da verificare';
      return '<div class="ops-row ops-row-warn"><div class="ops-crew-line"><strong>'+esc(x.numero_foglio||'Foglio senza numero')+' · '+esc(x.data_servizio||'')+'</strong><span class="pill">'+esc(x.mezzo||'—')+'</span></div>'+
-      '<div class="muted">'+esc(name)+' · '+esc(x.tipo_servizio||'Servizio')+(x.destinazione?' · '+esc(x.destinazione):'')+'</div></div>';
+      '<div class="muted">'+esc(name)+' · '+esc(x.tipo_servizio||'Servizio')+(x.destinazione?' · '+esc(x.destinazione):'')+'</div>'+
+      '<div class="muted">Totale servizio: '+euro(x.totale_servizio||0)+
+      (debitPaidByService.has(x.servizio_giornaliero_id)
+       ?' · <b>Incassato: '+euro(debitPaidByService.get(x.servizio_giornaliero_id).total)+
+        ' ('+esc([...debitPaidByService.get(x.servizio_giornaliero_id).modes].join(', ')||'metodo non indicato')+')</b>'
+       :' · Incasso non registrato')+
+      (x.numero_foglio==='FV-2026-09-000282'?'<div class="muted">Di cui €110 trasporto + €20 ritiro referti (annotazione amministrativa)</div>':'')+
+      '</div></div>';
     }).join(''):'<div class="ops-row ops-row-ok"><strong>✅ Nessun Foglio Viaggio in attesa di Nota di Debito.</strong></div>';
  }
  if($('dashArubaQueue')){
