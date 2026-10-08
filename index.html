@@ -4756,8 +4756,23 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvChairAmount').value=f.supplemento_sedia??15;
  $('fvBariAmount').value=f.supplemento_bariatrica??20;
  $('fvGrandTotal').value=Number(f.totale_servizio||0).toFixed(2);
- $('fvPayMode').value=f.modalita_pagamento||'';
- $('fvPayDate').value=f.data_pagamento||'';
+ // Per i fogli chiusi il pagamento è registrato separatamente in pagamenti_servizi.
+ // Mostra quello effettivo anche se i campi storici del foglio sono vuoti.
+ let payMode=f.modalita_pagamento||'',payDate=f.data_pagamento||'';
+ if(f.servizio_giornaliero_id&&(!payMode||!payDate)){
+  const payment=await sb.from('pagamenti_servizi')
+   .select('modalita,data_pagamento,stato')
+   .eq('servizio_id',f.servizio_giornaliero_id)
+   .eq('foglio_viaggio_id',f.id)
+   .eq('stato','REGISTRATO')
+   .order('created_at',{ascending:false}).limit(1).maybeSingle();
+  if(!payment.error&&payment.data){
+   payMode=payMode||payment.data.modalita||'';
+   payDate=payDate||payment.data.data_pagamento||'';
+  }
+ }
+ $('fvPayMode').value=payMode;
+ $('fvPayDate').value=payDate;
  fvUpdatePaymentDateVisibility();
  $('fvEconomicSection').classList.toggle('hidden',isCentral||is118);
  $('fvPaymentSection').classList.toggle('hidden',isCentral||is118);
