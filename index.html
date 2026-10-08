@@ -1553,6 +1553,7 @@
    <div class="actions">
     <button id="fvSave" class="btn secondary" type="submit">Salva Foglio Viaggio</button>
     <button id="fvSaveKmClosed" class="btn yellow hidden" type="button">💾 Salva KM</button>
+    <button id="fvCorrectAccounting" class="btn yellow hidden" type="button">✎ Correggi dati contabili</button>
     <button id="fvClose" class="btn yellow" type="button">✓ Chiudi Foglio Viaggio</button>
     <button id="fvPrint" class="btn blue" type="button" onclick="return cgePrintTravelSheetClick(event)">🖨 Stampa / Salva PDF</button>
     <button id="fvDelete" class="btn danger hidden" type="button" data-admin-only="true">🗑 Elimina Foglio Viaggio</button>
@@ -4794,6 +4795,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  if($('fvReceiptUpload'))$('fvReceiptUpload').classList.toggle('hidden',closed);
  $('fvSave').classList.toggle('hidden',closed);
  $('fvSaveKmClosed').classList.toggle('hidden',!adminClosed118);
+ $('fvCorrectAccounting').classList.toggle('hidden',!(prof?.ruolo==='AMMINISTRATORE'&&closed&&!is118));
  $('fvClose').classList.toggle('hidden',closed);
  $('fvDelete').classList.toggle('hidden',closed||prof?.ruolo!=='AMMINISTRATORE'||!!f.pdf_path);
  fvPreview();
@@ -4883,7 +4885,33 @@ async function saveClosed118Km(){
  msg('fvDetailMsg','KM aggiornati correttamente: '+r.data.km_partenza+' → '+r.data.km_arrivo+' ('+r.data.km_percorsi+' km).'+nextInfo,'ok');
  await loadTravelSheetDetail(currentFoglioId);
 }
-if($('fvSaveKmClosed'))$('fvSaveKmClosed').onclick=saveClosed118Km;
+if($('fvSaveKmClosed'))async function correctClosedSheetAccounting(){
+ if(prof?.ruolo!=='AMMINISTRATORE'||!currentFoglioId||currentFoglio?.stato!=='CHIUSO'||String(currentFoglio.tipo_servizio||'').trim()==='118')return;
+ const f=currentFoglio;
+ const rawAmount=prompt('Totale incassato corretto (€) per '+f.numero_foglio+' (inclusi eventuali extra):',String(f.totale_servizio||0));
+ if(rawAmount===null)return;
+ const amount=Number(rawAmount.trim().replace(',','.'));
+ if(!Number.isFinite(amount)||amount<0)return msg('fvDetailMsg','Importo non valido.','warn');
+ const mode=prompt('Metodo pagamento (POS, CONTANTI, BONIFICO, BONIFICO DIFFERITO, ALTRO):',f.modalita_pagamento||'POS');
+ if(mode===null)return;
+ const paymentMode=mode.trim().toUpperCase();
+ if(!['POS','CONTANTI','BONIFICO','BONIFICO DIFFERITO','ALTRO'].includes(paymentMode))return msg('fvDetailMsg','Metodo pagamento non riconosciuto.','warn');
+ const day=prompt('Data pagamento (AAAA-MM-GG):',f.data_pagamento||f.data_servizio||'');
+ if(day===null)return;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(day.trim()))return msg('fvDetailMsg','Data non valida.','warn');
+ const reason=prompt('Motivazione amministrativa obbligatoria della correzione (minimo 12 caratteri):','Allineamento ricevuta, incasso e foglio viaggio');
+ if(reason===null)return;
+ if(reason.trim().length<12)return msg('fvDetailMsg','Specifica una motivazione dettagliata.','warn');
+ if(!confirm('Correggere SOLO i dati contabili del foglio '+f.numero_foglio+' a '+euro(amount)+' con '+paymentMode+'? Il pagamento NON verrà registrato nuovamente.'))return;
+ msg('fvDetailMsg','Verifica amministrativa dell’incasso e correzione in corso...');
+ const result=await sb.rpc('cge_amministratore_correggi_contabilita_foglio',{p_foglio:f.id,p_totale:amount,p_metodo:paymentMode,p_data:day.trim(),p_motivo:reason.trim()});
+ if(result.error)return msg('fvDetailMsg','Correzione non eseguita: '+result.error.message,'err');
+ await loadTravelSheetDetail(f.id);
+ msg('fvDetailMsg','Dati contabili corretti con tracciamento amministrativo. Nessun nuovo incasso generato.','ok');
+}
+$('fvCorrectAccounting').onclick=correctClosedSheetAccounting;
+
+$('fvSaveKmClosed').onclick=saveClosed118Km;
 $('fvForm').onsubmit=async e=>{e.preventDefault();await saveTravelSheet(false)};
 
 async function cgePrintTravelSheetClick(event){
