@@ -4885,7 +4885,7 @@ async function saveClosed118Km(){
  msg('fvDetailMsg','KM aggiornati correttamente: '+r.data.km_partenza+' → '+r.data.km_arrivo+' ('+r.data.km_percorsi+' km).'+nextInfo,'ok');
  await loadTravelSheetDetail(currentFoglioId);
 }
-if($('fvSaveKmClosed'))async function correctClosedSheetAccounting(){
+async function correctClosedSheetAccounting(){
  if(prof?.ruolo!=='AMMINISTRATORE'||!currentFoglioId||currentFoglio?.stato!=='CHIUSO'||String(currentFoglio.tipo_servizio||'').trim()==='118')return;
  const f=currentFoglio;
  const rawAmount=prompt('Totale incassato corretto (€) per '+f.numero_foglio+' (inclusi eventuali extra):',String(f.totale_servizio||0));
@@ -4911,7 +4911,7 @@ if($('fvSaveKmClosed'))async function correctClosedSheetAccounting(){
 }
 $('fvCorrectAccounting').onclick=correctClosedSheetAccounting;
 
-$('fvSaveKmClosed').onclick=saveClosed118Km;
+if($('fvSaveKmClosed'))$('fvSaveKmClosed').onclick=saveClosed118Km;
 $('fvForm').onsubmit=async e=>{e.preventDefault();await saveTravelSheet(false)};
 
 async function cgePrintTravelSheetClick(event){
