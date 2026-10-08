@@ -11914,10 +11914,11 @@ $('tabletNew118').onclick=async()=>{
  try{
   const r=await sb.rpc('cge_tablet_nuovo_foglio_118');
   if(r.error)throw r.error;
+  const wasAlreadyOpen=tabletDirect118.some(x=>x.id===r.data?.id);
   await openTabletDirect118(r.data);
   tabletDirect118=[r.data,...tabletDirect118.filter(x=>x.id!==r.data?.id)];
   renderTabletDirect118();
-  msg('tabletMsg','Foglio 118 creato: '+(r.data?.numero_foglio||'nuovo foglio')+'.','ok');
+  msg('tabletMsg',(wasAlreadyOpen?'Foglio 118 già aperto: ':'Foglio 118 disponibile: ')+(r.data?.numero_foglio||'foglio in corso')+'. Completa e chiudi questo foglio prima di aprirne un altro.','ok');
  }catch(e){msg('tabletMsg',e.message||String(e),'err')}
  finally{tabletBusy=false}
 };
