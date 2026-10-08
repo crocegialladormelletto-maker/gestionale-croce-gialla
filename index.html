@@ -11702,7 +11702,7 @@ function tabletCalcSheet(){
  $('tabletKmTotal').value=kmA!==''&&kmB!==''&&Number(kmB)>=Number(kmA)?String(Number(kmB)-Number(kmA)):'—';
  const get=k=>document.querySelector('#tabletSheetForm [data-ts-field="'+k+'"]');
  const n=k=>Number(get(k)?.value||0);
- const sum=n('importo_inserito')+(get('sedia_montascale').checked?n('supplemento_sedia'):0)+(get('barella_bariatrica').checked?n('supplemento_bariatrica'):0);
+ const sum=n('importo_inserito')+(get('sedia_montascale')?.checked?n('supplemento_sedia'):0)+(get('barella_bariatrica')?.checked?n('supplemento_bariatrica'):0);
  $('tabletSheetTotal').value=sum.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
