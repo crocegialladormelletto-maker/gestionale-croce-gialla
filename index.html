@@ -5827,7 +5827,7 @@ async function populateReportFilter(){
  if(reportTypeNeedsPerson(type)){
   let rows=lastStatsSnapshot?.allPeople||[];
   if(!rows.length){
-   const r=await sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico').limit(1000);
+   const r=await sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico,dipendente').limit(1000);
    if(r.error){msg('reportMsg','Impossibile caricare l’elenco volontari: '+r.error.message,'err');return}
    rows=r.data||[];
   }
