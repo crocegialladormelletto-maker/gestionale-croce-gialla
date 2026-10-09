@@ -12649,7 +12649,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.44-tablet-draft-help';
+const CGE_APP_BUILD='14.45-dimissioni-mezzo';;
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
