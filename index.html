@@ -5468,10 +5468,10 @@ async function dashMonthlyHours(day){
  if(prof?.ruolo!=='AMMINISTRATORE')return null;
  const month=String(day).slice(0,7),from=month+'-01',key=from+'|'+day;
  if(dashMonthlyHoursCache.key===key&&Date.now()-dashMonthlyHoursCache.at<55000&&dashMonthlyHoursCache.data)return dashMonthlyHoursCache.data;
- const pr=await sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico').limit(1000);
+ const pr=await sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico,dipendente').limit(1000);
  if(pr.error)throw pr.error;
- const active=(pr.data||[]).filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
- const ss=await loadShiftStatistics(from,day,pr.data||[]);
+ const active=(pr.data||[]).filter(p=>p.dipendente!==true&&p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
+ const ss=await loadShiftStatistics(from,day,pr.data||[],true);
  const rows=active.map(p=>({badge:p.badge,name:statsPersonName(p),hours:Number(ss.byBadgeHours?.[p.badge]||0)}))
   .filter(x=>x.hours<28).sort((a,b)=>a.hours-b.hours||a.name.localeCompare(b.name,'it'));
  const data={rows,active:active.length,from,to:day};
@@ -5993,7 +5993,7 @@ async function statsRpcRange(name,from,to){
  }
  return rows;
 }
-async function loadShiftStatistics(from,to,people){
+async function loadShiftStatistics(from,to,people,volunteersOnly=false){
  const [tr,emgRows,dimRows,assRows,fg]=await Promise.all([
   sb.from('turni').select('id,data_turno,tipo_turno,ora_inizio,ora_fine,stato,mezzo').gte('data_turno',from).lte('data_turno',to).limit(5000),
   statsRpcRange('cge_emergenza_turni_v2',from,to),
@@ -6033,7 +6033,7 @@ async function loadShiftStatistics(from,to,people){
  // Due fasce diverse nello stesso giorno devono essere conteggiate entrambe.
  const specialRows=rows.filter(x=>x.source!=='Turni generali');
  const seenShift=new Set();
- const shiftRows=rows.filter(x=>{
+ let shiftRows=rows.filter(x=>{
   if(!x.badge)return false;
 
   // Se un turno generale Emergenza/Dimissioni/Assistenze coincide con
@@ -6068,7 +6068,7 @@ async function loadShiftStatistics(from,to,people){
   coverage.get(key).push(x.interval);
  });
 
- const serviceRows=[];
+ let serviceRows=[];
  (fg.data||[]).forEach(f=>{
   const startTime=f.ora_partenza_servizio||f.ora_partenza_prevista;
   const endTime=f.ora_arrivo_sede||f.ora_operativita||f.ora_arrivo_destinazione;
@@ -6105,6 +6105,11 @@ async function loadShiftStatistics(from,to,people){
   });
  });
 
+ if(volunteersOnly){
+  const volunteers=new Set((people||[]).filter(p=>p.dipendente!==true).map(p=>String(p.badge)));
+  shiftRows=shiftRows.filter(x=>volunteers.has(String(x.badge)));
+  serviceRows=serviceRows.filter(x=>volunteers.has(String(x.badge)));
+ }
  const valid=[...shiftRows,...serviceRows];
  const byBadge={},byBadgeHours={},byRole={},byRoleHours={},byType={},byTypeHours={};
  valid.forEach(x=>{
@@ -6251,11 +6256,11 @@ async function statsRenderThresholds(allPeople){
 
  try{
   const [monthStats,yearStats]=await Promise.all([
-   loadShiftStatistics(monthFrom,todayD,allPeople||[]),
-   loadShiftStatistics(yearFrom,todayD,allPeople||[])
+   loadShiftStatistics(monthFrom,todayD,allPeople||[],true),
+   loadShiftStatistics(yearFrom,todayD,allPeople||[],true)
   ]);
 
-  const active=(allPeople||[]).filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
+  const active=(allPeople||[]).filter(p=>p.dipendente!==true&&p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
 
   const monthly=active.map(p=>({
    badge:p.badge,
@@ -6385,11 +6390,11 @@ async function loadStatistics(){
  const err=sr.error||pr.error||fr.error;if(err)return msg('statsMsg','Errore caricamento statistiche: '+err.message,'err');
  const programmedServices=sr.data||[],closedSheets=fr.data||[];
  const emergencySheets=closedSheets.filter(x=>statsTypeLabel(x)==='Emergenza / 118');
- const allPeople=pr.data||[],people=allPeople.filter(p=>p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
+ const allPeople=pr.data||[],people=allPeople.filter(p=>p.dipendente!==true&&p.attivo!==false&&(p.stato_anagrafico||'ATTIVO')==='ATTIVO');
  statsRenderThresholds(allPeople);
  const serviceCats={};closedSheets.forEach(x=>{const k=statsTypeLabel(x);serviceCats[k]=(serviceCats[k]||0)+1});
  let shiftStats;
- try{shiftStats=await loadShiftStatistics(from,to,allPeople)}
+ try{shiftStats=await loadShiftStatistics(from,to,allPeople,true)}
  catch(e){msg('statsMsg','Errore caricamento turni: '+(e.message||String(e)),'err');return}
  const cats={...serviceCats};
  const emergency=Number(serviceCats['Emergenza / 118']||0);
