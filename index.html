@@ -2626,7 +2626,7 @@ Causale: numero preventivo</textarea>
   <span class="muted" id="tabletUpdated">Aggiornamento automatico ogni 20 secondi</span>
   <button id="tabletTariffToggle" type="button" class="btn secondary">€ Consulta tariffari</button>
   <button id="tabletImmediateToggle" type="button" class="btn yellow">✚ Nuovo servizio non programmato</button>
-  <button id="tabletResumeDraft" type="button" class="btn blue hidden">📝 Riprendi bozza salvata</button>
+  <button id="tabletResumeDraft" type="button" class="btn blue">📝 Riprendi bozza salvata</button>
   <button id="tabletArchiveToggle" type="button" class="btn secondary">📚 Storico fogli</button>
  </div>
  <div id="tabletPricePanel" class="surface hidden" style="margin:12px 0">
@@ -11304,7 +11304,9 @@ function tabletImmediateDraftKey(){return 'cge_tablet_immediate_draft_'+String(t
 function tabletUpdateImmediateDraftButton(){
  const button=$('tabletResumeDraft');if(!button)return;
  let data=null;try{data=JSON.parse(localStorage.getItem(tabletImmediateDraftKey())||'null')}catch(_){}
- button.classList.toggle('hidden',!data);
+ button.classList.remove('hidden');
+ button.disabled=!data;
+ button.title=data?'Riprendi la bozza memorizzata sul tablet':'Nessuna bozza salvata trovata su questo tablet';
  if(data?.saved_at)button.title='Ultimo salvataggio: '+new Date(data.saved_at).toLocaleString('it-IT')+' (non è l’orario di partenza)';
 }
 function tabletSaveImmediateDraft(){
@@ -11424,7 +11426,7 @@ $('tabletResumeDraft').onclick=async()=>{
 };
 $('tabletImmediateToggle').onclick=async()=>{
  tabletUpdateImmediateDraftButton();
- if(!$('tabletResumeDraft').classList.contains('hidden')){
+ if(!$('tabletResumeDraft').disabled){
   return msg('tabletAdMsg','Hai già una bozza salvata. Usa «Riprendi bozza salvata» prima di iniziare un nuovo servizio, per non sovrascriverla.','warn');
  }
 
@@ -12624,7 +12626,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.42-tablet118-codici';
+const CGE_APP_BUILD='14.43-tablet-draft-button-visible';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
