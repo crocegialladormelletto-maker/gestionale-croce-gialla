@@ -11476,6 +11476,8 @@ async function startTabletArea(){
  $('tabletAdRescuer').required=false;
  $('tabletAdRescuerRequired').textContent='(facoltativo)';
  $('tabletPricePanel').classList.add('hidden');$('tabletImmediatePanel').classList.add('hidden');
+ // Il codice del mezzo è disponibile solo dopo l'accesso: controlla ora la bozza locale.
+ tabletUpdateImmediateDraftButton();
  await tabletLoadCrewPeople();
  await tabletLoadTariffs();
  $('tabletDetail').classList.add('hidden');tabletCurrentService=null;tabletCurrentSheet=null;tabletSetListMode('week');await tabletRefreshList();
