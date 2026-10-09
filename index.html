@@ -2679,7 +2679,7 @@ Causale: numero preventivo</textarea>
     <div class="field" id="tabletAdPaymentDateBox"><label>Data pagamento</label><input id="tabletAdPaymentDate" type="date"></div>
     <div class="field"><label>Note operative</label><textarea id="tabletAdNotes" maxlength="2000"></textarea></div>
    </div>
-   <div id="tabletAdQuote" class="notice">Seleziona un tariffario oppure lascia il prezzo da concordare con il Centralino.</div>
+   <div id="tabletAdQuote" class="notice">Seleziona un tariffario oppure lascia il prezzo da concordare con il Centralino.</div><div class="notice" id="tabletAdReceiptNotice">Se scegli POS o CONTANTI, dopo aver creato il servizio il tablet aprirà il Foglio Viaggio e ti chiederà di caricare la ricevuta prima della chiusura.</div>
    <div class="actions"><button id="tabletAdDraftSave" type="button" class="btn secondary">💾 Salva dati</button><button id="tabletAdSubmit" type="submit" class="btn yellow">Crea servizio e Foglio Viaggio</button></div><div class="muted" style="margin-top:6px">Salva dati conserva la compilazione sul tablet senza creare ancora il servizio. Potrai riaprirla e completarla successivamente.</div>
    <div id="tabletAdMsg"></div>
    </form>
@@ -11393,7 +11393,14 @@ async function tabletCreateImmediate(){
   $('tabletImmediatePanel').classList.add('hidden');
   tabletSetListMode('today');
   await tabletRefreshList();
-  if(tabletServices.some(x=>x.id===created.servizio_id))await openTabletService(created.servizio_id);
+  if(tabletServices.some(x=>x.id===created.servizio_id)){
+   await openTabletService(created.servizio_id);
+   if(['POS','CONTANTI'].includes(payMode)){
+    tabletToggleReceiptSection();
+    msg('tabletReceiptMsg','Pagamento '+payMode+': carica ora la foto o il PDF della ricevuta prima di chiudere il Foglio Viaggio.','warn');
+    if($('tabletReceiptSection'))$('tabletReceiptSection').scrollIntoView({behavior:'smooth',block:'center'});
+   }
+  }
  }
 }
 $('tabletTariffToggle').onclick=()=>{
