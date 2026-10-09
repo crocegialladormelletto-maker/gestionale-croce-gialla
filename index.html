@@ -2625,7 +2625,8 @@ Causale: numero preventivo</textarea>
   <button id="tabletChecklist07" class="btn yellow" type="button" style="background:#0077ff;color:#fff;border-color:#005fd1;font-weight:900">✅ Checklist Ambulanza</button>
   <span class="muted" id="tabletUpdated">Aggiornamento automatico ogni 20 secondi</span>
   <button id="tabletTariffToggle" type="button" class="btn secondary">€ Consulta tariffari</button>
-  <button id="tabletImmediateToggle" type="button" class="btn yellow">✚ Servizio non programmato</button>
+  <button id="tabletImmediateToggle" type="button" class="btn yellow">✚ Nuovo servizio non programmato</button>
+  <button id="tabletResumeDraft" type="button" class="btn blue hidden">📝 Riprendi bozza salvata</button>
   <button id="tabletArchiveToggle" type="button" class="btn secondary">📚 Storico fogli</button>
  </div>
  <div id="tabletPricePanel" class="surface hidden" style="margin:12px 0">
@@ -11300,12 +11301,18 @@ async function tabletPrefillImmediateKm(){
  }
 }
 function tabletImmediateDraftKey(){return 'cge_tablet_immediate_draft_'+String(tabletMezzo||'');}
+function tabletUpdateImmediateDraftButton(){
+ const button=$('tabletResumeDraft');if(!button)return;
+ let data=null;try{data=JSON.parse(localStorage.getItem(tabletImmediateDraftKey())||'null')}catch(_){}
+ button.classList.toggle('hidden',!data);
+ if(data?.saved_at)button.title='Ultimo salvataggio: '+new Date(data.saved_at).toLocaleString('it-IT')+' (non è l’orario di partenza)';
+}
 function tabletSaveImmediateDraft(){
  const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdPayment','tabletAdPaymentDate','tabletAdNotes'];
  const data={};
  ids.forEach(id=>{if($(id))data[id]=$(id).value;});
  data.saved_at=new Date().toISOString();
- try{localStorage.setItem(tabletImmediateDraftKey(),JSON.stringify(data));msg('tabletAdMsg','Dati salvati. La bozza resta disponibile su questo tablet.','ok')}
+ try{localStorage.setItem(tabletImmediateDraftKey(),JSON.stringify(data));tabletUpdateImmediateDraftButton();msg('tabletAdMsg','Dati salvati sul tablet. Riprendili dal pulsante «Riprendi bozza salvata»; non sono ancora un Foglio Viaggio nel gestionale.','ok')}
  catch(e){msg('tabletAdMsg','Impossibile salvare la bozza su questo tablet.','err')}
 }
 function tabletRestoreImmediateDraft(){
@@ -11320,7 +11327,7 @@ function tabletRestoreImmediateDraft(){
  msg('tabletAdMsg','Bozza precedente ripristinata. Puoi completarla e creare il servizio quando vuoi.','ok');
  return true;
 }
-function tabletClearImmediateDraft(){try{localStorage.removeItem(tabletImmediateDraftKey())}catch(_){}}
+function tabletClearImmediateDraft(){try{localStorage.removeItem(tabletImmediateDraftKey())}catch(_){}tabletUpdateImmediateDraftButton();}
 async function tabletCreateImmediate(){
  if(tabletBusy)return;
  if(!$('tabletAdType').value)return msg('tabletAdMsg','Seleziona il tipo di servizio.','warn');
@@ -11407,10 +11414,23 @@ $('tabletTariffToggle').onclick=()=>{
  $('tabletPricePanel').classList.toggle('hidden');
  if(!$('tabletPricePanel').classList.contains('hidden'))tabletRenderTariffPrices();
 };
+tabletUpdateImmediateDraftButton();
+$('tabletResumeDraft').onclick=async()=>{
+ const panel=$('tabletImmediatePanel');
+ panel.classList.remove('hidden');
+ await tabletLoadCrewPeople();
+ if(!tabletRestoreImmediateDraft())return msg('tabletAdMsg','Nessuna bozza trovata su questo tablet.','warn');
+ panel.scrollIntoView({behavior:'smooth',block:'start'});
+};
 $('tabletImmediateToggle').onclick=async()=>{
+ tabletUpdateImmediateDraftButton();
+ if(!$('tabletResumeDraft').classList.contains('hidden')){
+  return msg('tabletAdMsg','Hai già una bozza salvata. Usa «Riprendi bozza salvata» prima di iniziare un nuovo servizio, per non sovrascriverla.','warn');
+ }
+
  const panel=$('tabletImmediatePanel');
  panel.classList.toggle('hidden');
- if(!panel.classList.contains('hidden')){await tabletLoadCrewPeople();const restored=tabletRestoreImmediateDraft();if(!restored)tabletApplyImmediateTypeRules();await tabletPrefillImmediateKm();}
+ if(!panel.classList.contains('hidden')){await tabletLoadCrewPeople();tabletApplyImmediateTypeRules();await tabletPrefillImmediateKm();}
 };
 if($('tabletReceiptUpload'))$('tabletReceiptUpload').onclick=()=>uploadPaymentReceipt(tabletCurrentSheet,'tabletReceiptFile','tablet');
 const tabletPayModeField=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
