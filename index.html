@@ -4171,7 +4171,7 @@ function buildFoglioPrint(f){
  ].filter(x=>!isAssistanceManifestation(f.tipo_servizio)||x[0]!=='Carico previsto');
  const actual=[
   ['Partenza',fvTime(f.ora_partenza_servizio)],
-  ...((String(f.tipo_servizio||'').trim()!=='118'&&!isAssistanceManifestation(f.tipo_servizio))?[['Carico paziente',fvTime(f.ora_carico_paziente)]]:[]),
+  ...((String(f.tipo_servizio||'').trim()!=='118'&&!isAssistanceManifestation(f.tipo_servizio)&&!String(f.tipo_servizio||'').toUpperCase().includes('SERVIZIO INTERNO'))?[['Carico paziente',fvTime(f.ora_carico_paziente)]]:[]),
   ['Arrivo destinazione',fvTime(f.ora_arrivo_destinazione)],
   ['Ripartenza',fvTime(f.ora_ripartenza)],
   ...(String(f.tipo_servizio||'').trim()==='118'?[['Arrivo in DEA',fvTime(f.ora_arrivo_dea)||'—']]:[]),
@@ -4728,7 +4728,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
 
  $('fvStart').value=fvTime(f.ora_partenza_servizio);
  $('fvLoad').value=fvTime(f.ora_carico_paziente);
- $('fvPatientLoadTime').classList.toggle('hidden',is118||isAssistanceManifestation(f.tipo_servizio));
+ $('fvPatientLoadTime').classList.toggle('hidden',is118||isAssistanceManifestation(f.tipo_servizio)||String(f.tipo_servizio||'').trim().toUpperCase().includes('SERVIZIO INTERNO'));
  const fvStopStartField=$('fvStopStart')?.closest('.field');
  const fvStopEndField=$('fvStopEnd')?.closest('.field');
  if(fvStopStartField)fvStopStartField.classList.toggle('hidden',is118);
@@ -4816,7 +4816,7 @@ async function saveTravelSheet(silent=false){
  }
  const row={
   ora_partenza_servizio:$('fvStart').value||null,
-  ora_carico_paziente:(String(currentFoglio?.tipo_servizio||'').trim()==='118'||isAssistanceManifestation(currentFoglio?.tipo_servizio))?null:($('fvLoad').value||null),
+  ora_carico_paziente:(String(currentFoglio?.tipo_servizio||'').trim()==='118'||isAssistanceManifestation(currentFoglio?.tipo_servizio)||String(currentFoglio?.tipo_servizio||'').trim().toUpperCase().includes('SERVIZIO INTERNO'))?null:($('fvLoad').value||null),
   ora_arrivo_destinazione:$('fvArrDest').value||null,
   ora_ripartenza:$('fvRestart').value||null,
   ora_arrivo_dea:String(currentFoglio?.tipo_servizio||'').trim()==='118'?($('fvArrDea').value||null):null,
@@ -11796,7 +11796,8 @@ function tabletConfigureTimeFields(is118){
  const isImmediate=tabletIsImmediateService(tabletCurrentService?.id);
  if($('tabletPrivacyToggle'))$('tabletPrivacyToggle').classList.toggle('hidden',!!is118);
  if($('tabletPrivacyPanel')&&is118)$('tabletPrivacyPanel').classList.add('hidden');
- if($('tabletPatientLoadTime'))$('tabletPatientLoadTime').classList.toggle('hidden',!!is118);
+ const isInternal=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase().includes('SERVIZIO INTERNO');
+ if($('tabletPatientLoadTime'))$('tabletPatientLoadTime').classList.toggle('hidden',!!is118||isInternal);
  if($('tabletArrivoDeaTime'))$('tabletArrivoDeaTime').classList.toggle('hidden',!is118);
  if($('tabletStopStartField'))$('tabletStopStartField').classList.toggle('hidden',!!is118);
  if($('tabletStopEndField'))$('tabletStopEndField').classList.toggle('hidden',!!is118);
@@ -11840,7 +11841,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
    privacySaveError=e.message||String(e);
   }
  }
- if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio))row.ora_carico_paziente=null;
+ if(isAssistanceManifestation(tabletCurrentService?.tipo_servizio)||String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase().includes('SERVIZIO INTERNO'))row.ora_carico_paziente=null;
  if(Object.prototype.hasOwnProperty.call(row,'privacy_informativa_resa')){
   if(row.privacy_informativa_resa && !tabletCurrentSheet?.privacy_informativa_resa_il)row.privacy_informativa_resa_il=new Date().toISOString();
   if(!row.privacy_informativa_resa)row.privacy_informativa_resa_il=null;
