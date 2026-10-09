@@ -8006,7 +8006,8 @@ function dimRenderDay(kind){
    (admin&&prof?.ruolo==='AMMINISTRATORE'?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-dim-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
    '</div>').join(''),
   missing=['AUTISTA','SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)).map(dimRoleLabel),
-  state=covered?'Coperto · autista e soccorritore presenti':'Da completare · mancano '+missing.join(' e ');
+  state=covered?'Coperto · autista e soccorritore presenti':'Da completare · mancano '+missing.join(' e '),
+  mezzo=slot.find(x=>x.mezzo)?.mezzo||'';
   const eligible=['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)&&vfcalQualificationRows.some(q=>
    q.codice_qualifica===role&&(!q.valida_dal||q.valida_dal<=day)&&(!q.valida_al||q.valida_al>=day)));
   const action=!admin&&day>=todayY&&!mine?
@@ -8016,12 +8017,15 @@ function dimRenderDay(kind){
     '<div class="muted">Non ci sono ruoli disponibili per l’iscrizione in questa fascia.</div>'):
     (!admin&&mine?'<div class="notice ok">Sei iscritto definitivamente a questa fascia. Per variazioni contatta l’Amministrazione.</div>':'');
   return '<div class="dim-slot '+(covered?'dim-complete':'dim-incomplete')+'"><b>'+esc(label)+' <span class="vol-fascia-hours">'+esc(volFasciaOrario(fascia))+'</span>'+'</b> <span class="pill '+(covered?'g':'')+'">'+esc(state)+'</span>'+
-   (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+action+
+   (peopleHtml||'<div class="muted">Nessun volontario iscritto.</div>')+
+   (slot.length?'<div class="muted">🚑 '+(mezzo?'Mezzo assegnato: <b>'+esc(mezzo)+'</b>':'Mezzo non ancora assegnato')+'</div>':'')+action+
+   (admin&&slot.length?'<div class="dim-admin-assign"><b>Mezzo della fascia</b>'+emgMezzoEditor(day,fascia,slot).replaceAll('data-emg-mezzo-','data-dim-mezzo-')+'</div>':'')+
    (admin?dimAdminAssignControls(day,fascia,slot):'')+'</div>';
  }).join('');
  if(admin){
   $(prefix+'Day').querySelectorAll('[data-dim-remove]').forEach(button=>button.onclick=()=>dimRemove(button.dataset.dimRemove));
   $(prefix+'Day').querySelectorAll('[data-dim-assign]').forEach(button=>button.onclick=()=>dimAdminAssign(day,button.dataset.dimAssign,button.dataset.dimRole));
+  $(prefix+'Day').querySelectorAll('[data-dim-mezzo-save]').forEach(button=>button.onclick=()=>dimAssignMezzo(button));
  }else{
   $(prefix+'Day').querySelectorAll('[data-dim-join]').forEach(button=>button.onclick=()=>dimJoin(day,button.dataset.dimJoin));
  }
@@ -8079,7 +8083,7 @@ async function loadDimissioniVol(){
  if(!volunteerBadge)return;
  const seq=++dimVolSeq,range=calVisibleRange(dimVolCursor,'month');
  msg('dimVolMsg','Caricamento turni dimissioni...');
- const r=await sb.rpc('cge_dimissioni_turni',{p_dal:range.startYmd,p_al:range.endYmd});
+ const r=await sb.rpc('cge_dimissioni_turni_con_mezzo',{p_dal:range.startYmd,p_al:range.endYmd});
  if(seq!==dimVolSeq)return;
  if(r.error)return msg('dimVolMsg',r.error.message,'err');
  dimVolRows=r.data||[];dimRenderMonth('Vol');msg('dimVolMsg','');
@@ -8089,11 +8093,24 @@ async function loadDimissioniAdmin(){
  const seq=++dimAdminSeq,range=calVisibleRange(dimAdminCursor,'month');
  ++dimAdminEligibleSeq;dimAdminEligible=[];
  msg('dimAdminMsg','Caricamento turni dimissioni...');
- const r=await sb.rpc('cge_dimissioni_turni',{p_dal:range.startYmd,p_al:range.endYmd});
+ const r=await sb.rpc('cge_dimissioni_turni_con_mezzo',{p_dal:range.startYmd,p_al:range.endYmd});
  if(seq!==dimAdminSeq)return;
  if(r.error)return msg('dimAdminMsg',r.error.message,'err');
  dimAdminRows=r.data||[];dimRenderMonth('Admin');msg('dimAdminMsg','');
  await loadDimissioniEligible();
+}
+async function dimAssignMezzo(button){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||dimAdminBusy)return;
+ const giorno=button.dataset.dimMezzoDay,fascia=button.dataset.dimMezzoSave;
+ const mezzo=button.parentElement?.querySelector('[data-dim-mezzo-select]')?.value||'';
+ dimAdminBusy=true;
+ try{
+  const result=await sb.rpc('cge_dimissioni_assegna_mezzo',{p_giorno:giorno,p_fascia:fascia,p_mezzo:mezzo||null});
+  if(result.error)throw result.error;
+  await loadDimissioniAdmin();
+  msg('dimAdminMsg',mezzo?'Mezzo '+mezzo+' assegnato alla fascia '+fascia+'.':'Mezzo rimosso dalla fascia '+fascia+'.','ok');
+ }catch(e){msg('dimAdminMsg',e.message||String(e),'err')}
+ finally{dimAdminBusy=false}
 }
 async function dimJoin(day,fascia){
  if(dimVolBusy)return;
