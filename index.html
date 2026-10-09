@@ -11305,8 +11305,9 @@ function tabletUpdateImmediateDraftButton(){
  const button=$('tabletResumeDraft');if(!button)return;
  let data=null;try{data=JSON.parse(localStorage.getItem(tabletImmediateDraftKey())||'null')}catch(_){}
  button.classList.remove('hidden');
- button.disabled=!data;
- button.title=data?'Riprendi la bozza memorizzata sul tablet':'Nessuna bozza salvata trovata su questo tablet';
+ button.disabled=false;
+ button.dataset.hasDraft=data?'yes':'no';
+ button.title=data?'Riprendi la bozza memorizzata sul tablet':'Bozza non presente in questa sessione: apri l’app originale dove l’hai salvata';
  if(data?.saved_at)button.title='Ultimo salvataggio: '+new Date(data.saved_at).toLocaleString('it-IT')+' (non è l’orario di partenza)';
 }
 function tabletSaveImmediateDraft(){
@@ -11420,13 +11421,18 @@ tabletUpdateImmediateDraftButton();
 $('tabletResumeDraft').onclick=async()=>{
  const panel=$('tabletImmediatePanel');
  panel.classList.remove('hidden');
+ if($('tabletResumeDraft').dataset.hasDraft!=='yes'){
+  msg('tabletAdMsg','Nessuna bozza in questa sessione del browser. Se i dati sono nell’app installata, apri quell’app originale: le bozze locali possono essere separate fra app e browser. Non cancellare dati o cache.','warn');
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+  return;
+ }
  await tabletLoadCrewPeople();
- if(!tabletRestoreImmediateDraft())return msg('tabletAdMsg','Nessuna bozza trovata su questo tablet.','warn');
+ if(!tabletRestoreImmediateDraft())return msg('tabletAdMsg','Nessuna bozza trovata in questa sessione. Apri l’app originale dove hai salvato i dati.','warn');
  panel.scrollIntoView({behavior:'smooth',block:'start'});
 };
 $('tabletImmediateToggle').onclick=async()=>{
  tabletUpdateImmediateDraftButton();
- if(!$('tabletResumeDraft').disabled){
+ if($('tabletResumeDraft').dataset.hasDraft==='yes'){
   return msg('tabletAdMsg','Hai già una bozza salvata. Usa «Riprendi bozza salvata» prima di iniziare un nuovo servizio, per non sovrascriverla.','warn');
  }
 
@@ -12626,7 +12632,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.43-tablet-draft-button-visible';
+const CGE_APP_BUILD='14.44-tablet-draft-help';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
