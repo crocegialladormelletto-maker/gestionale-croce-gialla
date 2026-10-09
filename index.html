@@ -5831,7 +5831,7 @@ async function populateReportFilter(){
    if(r.error){msg('reportMsg','Impossibile caricare l’elenco volontari: '+r.error.message,'err');return}
    rows=r.data||[];
   }
-  rows.slice().sort((a,b)=>statsPersonName(a).localeCompare(statsPersonName(b),'it')).forEach(p=>{
+  rows.filter(p=>p.dipendente!==true).slice().sort((a,b)=>statsPersonName(a).localeCompare(statsPersonName(b),'it')).forEach(p=>{
    sel.insertAdjacentHTML('beforeend','<option value="'+esc(p.badge)+'">'+esc(statsPersonName(p))+' · '+esc(p.badge)+'</option>');
   });
   if(current&&[...sel.options].some(o=>o.value===current))sel.value=current;
@@ -5858,8 +5858,8 @@ async function createCustomReport(){
  msg('reportMsg','Creazione report in corso...');
  try{
   if(['HOURS_TOTAL','HOURS_ROLE','HOURS_PERSON'].includes(type)){
-   const pr=await sb.from('personale').select('badge,nome_completo,nome,cognome').limit(1000);if(pr.error)throw pr.error;
-   const ss=await loadShiftStatistics(from,to,pr.data||[]);
+   const pr=await sb.from('personale').select('badge,nome_completo,nome,cognome,dipendente').limit(1000);if(pr.error)throw pr.error;
+   const ss=await loadShiftStatistics(from,to,pr.data||[],true);
    if(type==='HOURS_TOTAL'||type==='HOURS_PERSON'){
     let list=ss.allHours;
     if(type==='HOURS_PERSON'&&filter)list=Object.entries(ss.byBadgeHours).filter(([b])=>b===filter).map(([badge,hours])=>({badge,hours,n:ss.byBadge[badge]||0,name:statsPersonName((pr.data||[]).find(p=>p.badge===badge))}));
@@ -5882,8 +5882,8 @@ async function createCustomReport(){
     reportRenderTable('Servizi per tipologia',['Tipo servizio','Numero'],rows,[{label:'SERVIZI',value:rows0.length},{label:'TIPI',value:rows.length}]);
    }
   }else if(['SHIFTS_PERSON','SHIFTS_ROLE','SHIFTS_TYPE'].includes(type)){
-   const pr=await sb.from('personale').select('badge,nome_completo,nome,cognome').limit(1000);if(pr.error)throw pr.error;
-   const ss=await loadShiftStatistics(from,to,pr.data||[]);
+   const pr=await sb.from('personale').select('badge,nome_completo,nome,cognome,dipendente').limit(1000);if(pr.error)throw pr.error;
+   const ss=await loadShiftStatistics(from,to,pr.data||[],true);
    if(type==='SHIFTS_PERSON'){
     let rows=Object.entries(ss.shiftByBadge).map(([badge,n])=>({badge,n,name:statsPersonName((pr.data||[]).find(p=>p.badge===badge))})).sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name,'it'));
     if(filter)rows=rows.filter(x=>x.badge===filter);
@@ -6197,7 +6197,7 @@ async function statsLoadComparison(){
  try{
   const [sv,ss]=await Promise.all([
    sb.from('fogli_viaggio').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,stato').eq('stato','CHIUSO').gte('data_servizio',prev.from).lte('data_servizio',prev.to).limit(5000),
-   loadShiftStatistics(prev.from,prev.to,s.allPeople||[])
+   loadShiftStatistics(prev.from,prev.to,s.allPeople||[],true)
   ]);
   if(sv.error)throw sv.error;
   const prevServices=sv.data||[],prevEmergency=prevServices.filter(x=>statsTypeLabel(x)==='Emergenza / 118').length,prevAss=prevServices.filter(x=>statsTypeLabel(x)==='Assistenze').length;
@@ -6223,7 +6223,7 @@ async function statsRenderVolunteer(badge){
  const now=new Date(),monthFrom=statsISODate(new Date(now.getFullYear(),now.getMonth(),1)),quarterMonth=Math.floor(now.getMonth()/3)*3,quarterFrom=statsISODate(new Date(now.getFullYear(),quarterMonth,1)),todayD=statsISODate(now);
  let monthHours=0,quarterHours=0;
  try{
-  const ss=await loadShiftStatistics(quarterFrom,todayD,s.allPeople||[]);
+  const ss=await loadShiftStatistics(quarterFrom,todayD,s.allPeople||[],true);
   monthHours=(ss.rows||[]).filter(x=>x.badge===badge&&x.date>=monthFrom).reduce((a,x)=>a+Number(x.hours||0),0);
   quarterHours=(ss.rows||[]).filter(x=>x.badge===badge).reduce((a,x)=>a+Number(x.hours||0),0);
  }catch(e){}
@@ -6384,7 +6384,7 @@ async function loadStatistics(){
  msg('statsMsg','Aggiornamento statistiche in corso...');
  const [sr,pr,fr]=await Promise.all([
   sb.from('servizi_giornalieri').select('id,data_servizio,categoria_servizio,tipo_servizio,tipo_servizio_altro,mezzo,stato_gestionale').gte('data_servizio',from).lte('data_servizio',to).neq('stato_gestionale','ANNULLATO').limit(5000),
-  sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico').limit(1000),
+  sb.from('personale').select('badge,nome_completo,nome,cognome,attivo,stato_anagrafico,dipendente').limit(1000),
   sb.from('fogli_viaggio').select('id,data_servizio,mezzo,numero_foglio,tipo_servizio,tipo_servizio_altro,stato,km_percorsi,km_partenza,km_arrivo,paziente_nome,paziente_cognome,destinazione,ospedale_destinazione').eq('stato','CHIUSO').gte('data_servizio',from).lte('data_servizio',to).limit(5000)
  ]);
  const err=sr.error||pr.error||fr.error;if(err)return msg('statsMsg','Errore caricamento statistiche: '+err.message,'err');
