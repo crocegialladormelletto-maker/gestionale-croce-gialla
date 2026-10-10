@@ -1180,7 +1180,7 @@ function updateMinuteStateUI(){
  const selectedApproved=$('vStatus').value==='APPROVATO';
  $('vStatus').disabled=minutesBusy||alreadyApproved;
  const canDeleteDraft=!!currentMinuteId&&!alreadyApproved;
- $('vSave').textContent=alreadyApproved?'💾 Salva modifiche':selectedApproved?'💾 Salva e approva':'💾 Salva bozza';
+ $('vSave').textContent='💾 Salva modifiche';
  $('vApprove').disabled=alreadyApproved||minutesBusy;
  $('vApprove').textContent=alreadyApproved?'✅ Verbale approvato':'✅ Approva verbale';
  $('vDeleteDraft').classList.toggle('hidden',!canDeleteDraft);
@@ -1248,14 +1248,14 @@ async function saveMinute(approve=false){
 
  const previousStatus=currentMinute?.stato||'BOZZA';
  const previousApproval=currentMinute?.data_approvazione||'';
- const wantsApproval=approve||$('vStatus').value==='APPROVATO';
+ const wantsApproval=approve;
  if(wantsApproval&&previousStatus!=='APPROVATO'){
   if(!confirm('Confermi l’approvazione definitiva del verbale? La data di approvazione sarà quella del verbale ('+$('vDate').value+').'))return;
  }
  if(wantsApproval){
   $('vStatus').value='APPROVATO';
   if(previousStatus!=='APPROVATO')$('vApprovalDate').value=$('vDate').value;
- }else{
+ }else if(previousStatus!=='APPROVATO'){
   $('vStatus').value='BOZZA';
   $('vApprovalDate').value='';
  }
