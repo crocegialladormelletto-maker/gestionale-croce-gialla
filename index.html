@@ -11826,10 +11826,13 @@ function tabletIs118Type(value){
 }
 function tabletConfigureTimeFields(is118){
  const isImmediate=tabletIsImmediateService(tabletCurrentService?.id);
- if($('tabletPrivacyToggle'))$('tabletPrivacyToggle').classList.toggle('hidden',!!is118);
- if($('tabletPrivacyPanel')&&is118)$('tabletPrivacyPanel').classList.add('hidden');
- const isInternal=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase().includes('SERVIZIO INTERNO');
- if($('tabletPatientLoadTime'))$('tabletPatientLoadTime').classList.toggle('hidden',!!is118||isInternal);
+ const sheetType=tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'';
+ const isInternal=String(sheetType).trim().toUpperCase().includes('SERVIZIO INTERNO');
+ const isEvent=isAssistanceManifestation(sheetType);
+ const noPatientExpected=!!is118||isInternal||isEvent;
+ if($('tabletPrivacyToggle'))$('tabletPrivacyToggle').classList.toggle('hidden',noPatientExpected);
+ if($('tabletPrivacyPanel')&&noPatientExpected)$('tabletPrivacyPanel').classList.add('hidden');
+ if($('tabletPatientLoadTime'))$('tabletPatientLoadTime').classList.toggle('hidden',noPatientExpected);
  if($('tabletArrivoDeaTime'))$('tabletArrivoDeaTime').classList.toggle('hidden',!is118);
  if($('tabletStopStartField'))$('tabletStopStartField').classList.toggle('hidden',!!is118);
  if($('tabletStopEndField'))$('tabletStopEndField').classList.toggle('hidden',!!is118);
@@ -11862,7 +11865,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
  }
- if(tabletCurrentService && !tabletIs118Type(tabletCurrentService.tipo_servizio) && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno'){
+ if(tabletCurrentService && !tabletIs118Type(tabletCurrentService.tipo_servizio) && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno' && !isAssistanceManifestation(tabletCurrentService.tipo_servizio)){
   try{
    const sig=await tabletPrivacyUploadSignature();
    row.privacy_firma_stato=sig.status;
@@ -11928,7 +11931,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
 
   // La sincronizzazione accessoria non deve bloccare il salvataggio del foglio.
   // Il foglio e la firma vengono prima confermati dal database.
- if(tabletCurrentService && !tabletSheetIs118 && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno'){
+ if(tabletCurrentService && !tabletSheetIs118 && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno' && !isAssistanceManifestation(tabletSheetType)){
   const cf=$('tabletPatientCf')?.value.trim().toUpperCase()||'';
   const email=$('tabletPatientEmail')?.value.trim().toLowerCase()||'';
   if(cf && cf.length!==16)return msg('tabletSheetMsg','Controlla il codice fiscale del paziente.','warn'),false;
@@ -11990,7 +11993,7 @@ async function tabletCloseSheet(){
  if(Number(kmClose)<Number(kmStart))return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
  const saved=await saveTabletSheet(true,false);if(!saved)return;
  const closeType=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase();
- const privacyRequired=closeType!=='118'&&!closeType.includes('EMERGENZA')&&!closeType.includes('SERVIZIO INTERNO')&&closeType!=='INTERNO';
+ const privacyRequired=closeType!=='118'&&!closeType.includes('EMERGENZA')&&!closeType.includes('SERVIZIO INTERNO')&&closeType!=='INTERNO'&&!isAssistanceManifestation(closeType);
  if(privacyRequired){
   const signatureStatus=String(tabletCurrentSheet?.privacy_firma_stato||'NON_FIRMATO').toUpperCase();
   const validSigned=signatureStatus==='FIRMATO'&&!!tabletCurrentSheet?.privacy_firma_path;
@@ -12014,7 +12017,7 @@ async function tabletCloseSheet(){
  }
  const confirmText=standalone118
   ?'Chiudere definitivamente il Foglio Viaggio 118? Verifica numero scheda 118, destinazione, equipaggio e KM rientro.'
-  :'Chiudere il servizio? I dati del Foglio Viaggio verranno chiusi e il servizio passerà al gestionale per la Nota di Debito.';
+  :'Chiudere il servizio? I dati del Foglio Viaggio verranno chiusi e il servizio passerà al gestionale per la gestione amministrativa.';
  if(!confirm(confirmText))return;
  tabletBusy=true;msg('tabletSheetMsg',standalone118?'Chiusura Foglio 118 in corso...':'Chiusura servizio in corso...');
  try{
@@ -12026,7 +12029,7 @@ async function tabletCloseSheet(){
    msg('tabletSheetMsg','Foglio Viaggio 118 chiuso correttamente. I KM rientro hanno aggiornato i KM attuali della '+tabletCurrentSheet.mezzo+'.','ok');
   }else{
    tabletBusy=false;await tabletRefreshListAfterAct(tabletCurrentService.id);
-   msg('tabletSheetMsg','Servizio chiuso. Ora è disponibile nel gestionale principale per la Nota di Debito.','ok');
+   msg('tabletSheetMsg','Servizio chiuso. Il Foglio Viaggio è disponibile nel gestionale principale per la gestione amministrativa.','ok');
   }
  }catch(e){msg('tabletSheetMsg',e.message||String(e),'err')}
  finally{tabletBusy=false}
