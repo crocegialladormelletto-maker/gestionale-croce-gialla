@@ -1176,12 +1176,13 @@ function newMinuteOfType(type){
  $('vType').scrollIntoView({behavior:'smooth',block:'center'});
 }
 function updateMinuteStateUI(){
- const approved=$('vStatus').value==='APPROVATO';
- $('vStatus').disabled=minutesBusy||currentMinute?.stato==='APPROVATO';
- const canDeleteDraft=!!currentMinuteId&&$('vStatus').value==='BOZZA';
- $('vSave').textContent=approved?'💾 Salva modifiche':'💾 Salva bozza';
- $('vApprove').disabled=approved||minutesBusy;
- $('vApprove').textContent=approved?'✅ Verbale approvato':'✅ Approva verbale';
+ const alreadyApproved=currentMinute?.stato==='APPROVATO';
+ const selectedApproved=$('vStatus').value==='APPROVATO';
+ $('vStatus').disabled=minutesBusy||alreadyApproved;
+ const canDeleteDraft=!!currentMinuteId&&!alreadyApproved;
+ $('vSave').textContent=alreadyApproved?'💾 Salva modifiche':selectedApproved?'💾 Salva e approva':'💾 Salva bozza';
+ $('vApprove').disabled=alreadyApproved||minutesBusy;
+ $('vApprove').textContent=alreadyApproved?'✅ Verbale approvato':'✅ Approva verbale';
  $('vDeleteDraft').classList.toggle('hidden',!canDeleteDraft);
  $('vDeleteDraft').disabled=minutesBusy;
 }
