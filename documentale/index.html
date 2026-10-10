@@ -261,7 +261,7 @@
        <div class="field"><label>Ora inizio</label><input id="vStart" type="time"></div>
        <div class="field"><label>Ora fine</label><input id="vEnd" type="time"></div>
        <div class="field"><label>Luogo</label><input id="vPlace" placeholder="Es. Sede Croce Gialla"></div>
-       <div class="field"><label>Stato (automatico)</label><select id="vStatus" disabled><option>BOZZA</option><option>APPROVATO</option><option>ANNULLATO</option></select></div>
+       <div class="field"><label>Stato verbale</label><select id="vStatus"><option>BOZZA</option><option>APPROVATO</option></select></div>
        <div class="field"><label>Data approvazione (interna)</label><input id="vApprovalDate" type="date" disabled></div>
        <div class="field"><label>Titolo</label><input id="vHeading" placeholder="Verbale del Consiglio Direttivo"></div>
       </div>
@@ -1177,6 +1177,7 @@ function newMinuteOfType(type){
 }
 function updateMinuteStateUI(){
  const approved=$('vStatus').value==='APPROVATO';
+ $('vStatus').disabled=minutesBusy||currentMinute?.stato==='APPROVATO';
  const canDeleteDraft=!!currentMinuteId&&$('vStatus').value==='BOZZA';
  $('vSave').textContent=approved?'💾 Salva modifiche':'💾 Salva bozza';
  $('vApprove').disabled=approved||minutesBusy;
@@ -1244,19 +1245,23 @@ async function saveMinute(approve=false){
  if(!$('vDate').value)return msg('vmsg','Inserisci la data della riunione.','warn');
  if(!$('vHeading').value.trim())return msg('vmsg','Inserisci il titolo del verbale.','warn');
 
- const previousStatus=$('vStatus').value||'BOZZA';
- const previousApproval=$('vApprovalDate').value||'';
- if(approve){
+ const previousStatus=currentMinute?.stato||'BOZZA';
+ const previousApproval=currentMinute?.data_approvazione||'';
+ const wantsApproval=approve||$('vStatus').value==='APPROVATO';
+ if(wantsApproval&&previousStatus!=='APPROVATO'){
+  if(!confirm('Confermi l’approvazione definitiva del verbale? La data di approvazione sarà quella del verbale ('+$('vDate').value+').'))return;
+ }
+ if(wantsApproval){
   $('vStatus').value='APPROVATO';
-  if(!$('vApprovalDate').value)$('vApprovalDate').value=today();
- }else if(!currentMinuteId){
+  if(previousStatus!=='APPROVATO')$('vApprovalDate').value=$('vDate').value;
+ }else{
   $('vStatus').value='BOZZA';
   $('vApprovalDate').value='';
  }
 
  minutesBusy=true;$('vSave').disabled=true;$('vApprove').disabled=true;
  const wasEdit=!!currentMinuteId;
- msg('vmsg',approve?'Approvazione del verbale...':(wasEdit?'Aggiornamento verbale...':'Salvataggio bozza...'));
+ msg('vmsg',wantsApproval?'Salvataggio del verbale approvato...':(wasEdit?'Aggiornamento verbale...':'Salvataggio bozza...'));
  try{
   const params=minuteParams();let id=currentMinuteId,code=currentMinute?.verbale_codice||'';
   if(wasEdit){
@@ -1281,7 +1286,7 @@ async function saveMinute(approve=false){
   $('vYear').value=Number(String(params.p_data_riunione).slice(0,4));
   await loadMinutesList();
   await openMinute(id,false);
-  if(approve)msg('vmsg','Verbale '+(currentMinute?.verbale_codice||code)+' approvato correttamente.','ok');
+  if(wantsApproval&&previousStatus!=='APPROVATO')msg('vmsg','Verbale '+(currentMinute?.verbale_codice||code)+' approvato correttamente.','ok');
   else msg('vmsg',wasEdit?'Verbale aggiornato.':'Bozza '+code+' salvata.','ok');
  }catch(e){
   $('vStatus').value=previousStatus;
@@ -1479,6 +1484,8 @@ $('vAssemblyCall').onchange=applyAssemblyCallToMinute;
 $('vBoardCall').onchange=applyBoardCallToMinute;
 $('vAiGenerate').onclick=()=>useMinuteAI('genera');$('vAiImprove').onclick=()=>useMinuteAI('migliora');
 $('vDate').addEventListener('change',updateNextMinuteCode);
+$('vStatus').onchange=()=>{if($('vStatus').value==='APPROVATO'&&!$('vApprovalDate').value)$('vApprovalDate').value=$('vDate').value;else if($('vStatus').value==='BOZZA')$('vApprovalDate').value='';updateMinuteStateUI()};
+$('vDate').addEventListener('change',()=>{if($('vStatus').value==='APPROVATO'&&currentMinute?.stato!=='APPROVATO')$('vApprovalDate').value=$('vDate').value});
 $('vSave').onclick=()=>saveMinute(false);$('vApprove').onclick=()=>saveMinute(true);$('vDeleteDraft').onclick=()=>currentMinuteId&&deleteDraftMinute(currentMinuteId);$('vDuplicate').onclick=()=>currentMinuteId&&duplicateMinute(currentMinuteId);$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
 $('vSignedUpload').onclick=uploadSignedMinute;$('vSignedOpen').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,false);$('vSignedDownload').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,true);$('vSignedDelete').onclick=()=>currentMinuteId&&deleteSignedMinute(currentMinuteId);
 $('vSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadMinutesList()}};
