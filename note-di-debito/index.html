@@ -141,15 +141,15 @@ $('backMain').onclick=()=>location.href='../';
 async function loadAll(){
  msg('listMsg','Aggiornamento dati...');
  const [fs,ns,ds]=await Promise.all([
-  sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,codice_fiscale,intestatario_nota_debito,cf_piva_intestatario,indirizzo_fatturazione,cap_fatturazione,comune_fatturazione,provincia_fatturazione,email_fatturazione,email,residenza,via,civico,cap,provincia,luogo_partenza,indirizzo_partenza,destinazione,indirizzo_destinazione,ospedale_destinazione,totale_servizio,stato,modalita_pagamento,data_pagamento,servizio_giornaliero_id').eq('stato','CHIUSO').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).limit(1000),
+  sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,codice_fiscale,intestatario_nota_debito,cf_piva_intestatario,indirizzo_fatturazione,cap_fatturazione,comune_fatturazione,provincia_fatturazione,email_fatturazione,email,residenza,via,civico,cap,provincia,luogo_partenza,luogo_carico,indirizzo_partenza,destinazione,indirizzo_destinazione,ospedale_destinazione,totale_servizio,stato,modalita_pagamento,data_pagamento,servizio_giornaliero_id').eq('stato','CHIUSO').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).limit(1000),
   sb.from('note_di_debito').select('*').order('created_at',{ascending:false}).limit(1000),
-  sb.from('servizi_giornalieri').select('id,documento_da_emettere,fattura_aruba_emessa').limit(3000)
+  sb.from('servizi_giornalieri').select('id,documento_da_emettere,fattura_aruba_emessa,luogo_carico_paziente,indirizzo_carico_paziente').limit(3000)
  ]);
  if(fs.error)return msg('listMsg','Errore Fogli Viaggio: '+fs.error.message,'err');
  if(ns.error)return msg('listMsg','Errore Note di Debito: '+ns.error.message,'err');
  if(ds.error)return msg('listMsg','Errore classificazione documenti: '+ds.error.message,'err');
  const docByService=new Map((ds.data||[]).map(x=>[x.id,x]));
- sheets=(fs.data||[]).filter(f=>{
+ sheets=(fs.data||[]).map(f=>{const service=docByService.get(f.servizio_giornaliero_id);return {...f,luogo_carico_descrizione:f.luogo_carico||[service?.luogo_carico_paziente,service?.indirizzo_carico_paziente].filter(Boolean).join(' ')||'luogo di carico non indicato'};}).filter(f=>{
   const t=String(f.tipo_servizio||'').trim().toUpperCase();
   if(t==='SERVIZIO INTERNO'||t==='INTERNO'||t.includes('SERVIZIO INTERNO'))return false;
   const d=f.servizio_giornaliero_id?docByService.get(f.servizio_giornaliero_id):null;
@@ -206,7 +206,7 @@ function testNoteFromSheet(f){
  const name=f.intestatario_nota_debito||[f.paziente_nome,f.paziente_cognome].filter(Boolean).join(' ')||'TEST';
  const desc=(String(f.tipo_servizio||'').toUpperCase().includes('ASSISTENZA')||String(f.tipo_servizio||'').toUpperCase().includes('MANIFESTAZIONE'))
   ?'PROVA NON VALIDA – Servizio di assistenza manifestazione – '+(f.ospedale_destinazione||f.destinazione||'Manifestazione')+' del '+nice(f.data_servizio)+'. Foglio Viaggio '+(f.numero_foglio||'—')+'.'
-  :'PROVA NON VALIDA – Servizio di trasporto del '+nice(f.data_servizio)+', da '+(f.luogo_partenza||'—')+' a '+(f.destinazione||'—')+'. Foglio Viaggio '+(f.numero_foglio||'—')+'.';
+  :'PROVA NON VALIDA – Servizio di trasporto del '+nice(f.data_servizio)+', da '+(f.luogo_carico_descrizione||'luogo di carico non indicato')+' a '+(f.destinazione||'—')+'. Foglio Viaggio '+(f.numero_foglio||'—')+'.';
  return {
   numero:'TEST-NON-VALIDA',data_documento:new Date().toISOString().slice(0,10),data_servizio:f.data_servizio,numero_foglio:f.numero_foglio,
   intestatario:name,cf_piva:f.cf_piva_intestatario||f.codice_fiscale||null,indirizzo:f.indirizzo_fatturazione||f.residenza||null,
