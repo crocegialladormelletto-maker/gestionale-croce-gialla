@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.41-aruba-09">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.42-assistenze">
 <script>
 (function(){
  try{
@@ -11031,7 +11031,7 @@ async function tabletRefreshList(){
   if(direct.error)return msg('tabletMsg','Fogli 118 diretti non disponibili: '+direct.error.message,'err');
   tabletDirect118=direct.data||[];
  }else tabletDirect118=[];
- $('tabletUpdated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · automaticamente ogni 20 secondi · versione tablet 14.41 (Aruba)';
+ $('tabletUpdated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · automaticamente ogni 20 secondi · versione tablet 14.42 (assistenze)';
  msg('tabletMsg','');renderTabletList();renderTabletDirect118();
  if(tabletCurrentService&&!document.getElementById('tabletDetail').classList.contains('hidden')){
   const newer=tabletServices.find(x=>x.id===tabletCurrentService.id);
@@ -11919,11 +11919,11 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
  // L'importo delle assistenze fatturate con Aruba viene gestito in amministrazione.
  // Non inventare 0 euro sul foglio se il prezzo non è stato ancora concordato.
- const tabletIsArubaAssistance=isAssistanceManifestation(tabletSheetType)&&tabletCurrentService?.documento_da_emettere==='FATTURA_ARUBA';
+ const tabletIsAssistance=isAssistanceManifestation(tabletSheetType);
  if(!tabletSheetIs118&&row.importo_inserito===null){
   const savedBase=tabletCurrentSheet?.importo_inserito;
   if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
-  else if(!tabletIsArubaAssistance) return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
+  else if(!tabletIsAssistance) return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
  }
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
