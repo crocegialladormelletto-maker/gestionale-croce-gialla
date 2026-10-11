@@ -11802,7 +11802,7 @@ async function loadTabletSheet(serviceId){
  if($('tabletPrivacyClearSignature'))$('tabletPrivacyClearSignature').disabled=closed;
  if($('tabletPrivacySignatureCanvas'))$('tabletPrivacySignatureCanvas').style.pointerEvents=closed?'none':'auto';
  $('tabletCloseSheet').disabled=false;
- msg('tabletSheetMsg',closed?'Foglio Viaggio chiuso: è disponibile in sola lettura.':'',closed?'ok':'');
+ msg('tabletSheetMsg',closed?'Foglio Viaggio chiuso: è disponibile in sola lettura.':isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio)?'Assistenza manifestazione: importo base facoltativo. La fatturazione si gestisce in amministrazione.':'',closed||isAssistanceManifestation(tabletCurrentService?.tipo_servizio||f.tipo_servizio)?'ok':'');
  tabletCalcSheet();
 }
 function tabletImmediateIdsKey(){return 'cge_tablet_immediate_service_ids_'+String(tabletMezzo||'')}
@@ -11919,11 +11919,11 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(row.km_partenza!=null&&row.km_arrivo!=null&&row.km_arrivo<row.km_partenza)return msg('tabletSheetMsg','KM rientro inferiori ai KM partenza.','warn'),false;
  // L'importo delle assistenze fatturate con Aruba viene gestito in amministrazione.
  // Non inventare 0 euro sul foglio se il prezzo non è stato ancora concordato.
- const tabletArubaAssistance=isAssistanceManifestation(tabletSheetType)&&tabletCurrentService?.documento_da_emettere==='FATTURA_ARUBA';
+ const tabletIsAssistance=isAssistanceManifestation(tabletSheetType);
  if(!tabletSheetIs118&&row.importo_inserito===null){
   const savedBase=tabletCurrentSheet?.importo_inserito;
   if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
-  else if(!tabletArubaAssistance) return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
+  else if(!tabletIsAssistance) return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
  }
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
