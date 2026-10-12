@@ -1916,7 +1916,15 @@
   <div class="stat"><small>APP NON ATTIVA</small><b id="pAppMissingCount">0</b></div>
  </div>
  <div class="actions" style="margin-top:12px;align-items:center;flex-wrap:wrap">
-  <b>Filtro rapido:</b>
+  <b>Elenco personale:</b>
+  <button id="pPeopleActiveVol" type="button" class="btn yellow">Volontari attivi</button>
+  <button id="pPeopleActiveDep" type="button" class="btn secondary">Dipendenti attivi</button>
+  <button id="pPeopleCessati" type="button" class="btn secondary">Archivio cessati</button>
+  <button id="pPeopleAll" type="button" class="btn secondary">Tutti</button>
+  <span class="muted">Le schede cessate restano conservate con il relativo storico.</span>
+ </div>
+ <div class="actions" style="margin-top:8px;align-items:center;flex-wrap:wrap">
+  <b>Filtro APP:</b>
   <button id="pAppFilterAll" type="button" class="btn yellow">Tutti</button>
   <button id="pAppFilterOk" type="button" class="btn secondary">✓ APP OK</button>
   <button id="pAppFilterMissing" type="button" class="btn secondary">APP NON ATTIVA</button>
@@ -7452,6 +7460,10 @@ function assignNextVolunteerBadge(){
  $('pb').disabled=false;
 }
 $('pnew').onclick=()=>{resetPerson();assignNextVolunteerBadge();};
+['ACTIVE_VOL','ACTIVE_DEP','CESSATI','ALL'].forEach((filter,i)=>{
+ const id=['pPeopleActiveVol','pPeopleActiveDep','pPeopleCessati','pPeopleAll'][i];
+ $(id).onclick=()=>{peopleCategoryFilter=filter;peopleAppFilter='ALL';renderPeopleTable()};
+});
 $('pAppFilterAll').onclick=()=>{peopleAppFilter='ALL';renderPeopleTable()};
 $('pAppFilterOk').onclick=()=>{peopleAppFilter='OK';renderPeopleTable()};
 $('pAppFilterMissing').onclick=()=>{peopleAppFilter='MISSING';renderPeopleTable()};
@@ -7480,6 +7492,7 @@ function updateVolunteerAppSummary(){
  else{$('pappsummary').className='notice';$('pappsummary').textContent='APP NON ATTIVA · credenziali non ancora assegnate.'}
 }
 let peopleAppFilter='ALL';
+let peopleCategoryFilter='ACTIVE_VOL';
 let peopleHoursCache=[];
 
 function volunteerIsActive(p){
@@ -7500,6 +7513,10 @@ function refreshPeopleAppStats(){
 function renderPeopleTable(){
  if(!$('ptbody'))return;
  let list=[...people].sort((a,b)=>String(a.badge||'').localeCompare(String(b.badge||''),'it',{numeric:true,sensitivity:'base'}));
+ const isCessato=p=>String(p.stato_anagrafico||'').trim().toUpperCase()==='CESSATO';
+ if(peopleCategoryFilter==='ACTIVE_VOL')list=list.filter(p=>!p.dipendente&&!isCessato(p));
+ if(peopleCategoryFilter==='ACTIVE_DEP')list=list.filter(p=>!!p.dipendente&&!isCessato(p));
+ if(peopleCategoryFilter==='CESSATI')list=list.filter(isCessato);
  if(peopleAppFilter==='OK')list=list.filter(p=>volunteerIsActive(p)&&volunteerAppOk(p));
  if(peopleAppFilter==='MISSING')list=list.filter(p=>volunteerIsActive(p)&&!volunteerAppOk(p));
 
@@ -7514,13 +7531,17 @@ function renderPeopleTable(){
  $('ptbody').querySelectorAll('[data-edit-person]').forEach(b=>b.onclick=()=>window.editPerson(b.dataset.editPerson));
  $('ptbody').querySelectorAll('[data-person-documents]').forEach(b=>b.onclick=()=>{window.editPerson(b.dataset.personDocuments);$('pdocSection').scrollIntoView({behavior:'smooth',block:'start'});});
 
+ ['ACTIVE_VOL','ACTIVE_DEP','CESSATI','ALL'].forEach((filter,i)=>{
+  const id=['pPeopleActiveVol','pPeopleActiveDep','pPeopleCessati','pPeopleAll'][i];
+  if($(id))$(id).className='btn '+(peopleCategoryFilter===filter?'yellow':'secondary');
+ });
  if($('pAppFilterAll'))$('pAppFilterAll').className='btn '+(peopleAppFilter==='ALL'?'yellow':'secondary');
  if($('pAppFilterOk'))$('pAppFilterOk').className='btn '+(peopleAppFilter==='OK'?'yellow':'secondary');
  if($('pAppFilterMissing'))$('pAppFilterMissing').className='btn '+(peopleAppFilter==='MISSING'?'yellow':'secondary');
  if($('pAppFilterInfo'))$('pAppFilterInfo').textContent=
   peopleAppFilter==='OK'?'Solo volontari attivi con APP OK · '+list.length:
   peopleAppFilter==='MISSING'?'Solo volontari attivi con APP NON ATTIVA · '+list.length:
-  'Tutti i volontari · '+list.length;
+  ({ACTIVE_VOL:'Volontari non cessati',ACTIVE_DEP:'Dipendenti non cessati',CESSATI:'Archivio personale cessato',ALL:'Tutto il personale'})[peopleCategoryFilter]+' · '+list.length;
 }
 function normalizePeopleBirthField(){
  const peopleSection=$('people');
