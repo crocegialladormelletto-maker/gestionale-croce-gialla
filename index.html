@@ -5580,6 +5580,8 @@ async function loadOperationalDashboard(){
  const errors=[emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,adminDocs,debitPayments].filter(x=>x?.error).map(x=>x.error.message);
  if(hoursData?.error)errors.push('Ore volontari: '+(hoursData.error.message||String(hoursData.error)));
  const emgRows=emg.data||[],dimRows=dim.data||[],assRows=ass.data||[],services=sv.data||[],fogli=fg.data||[],expRows=exp.data||[],mezzi=mz.data||[];
+ // Il quadro operativo mostra solo servizi ancora da svolgere o in corso; quelli chiusi restano consultabili negli archivi.
+ const activeTodayServices=services.filter(x=>!['CHIUSO','TERMINATO','COMPLETATO','CONTABILIZZATO','ANNULLATO'].includes(String(x.stato_gestionale||'').trim().toUpperCase())&&!['CHIUSO','COMPLETATO','ANNULLATO'].includes(String(x.stato_operativo||'').trim().toUpperCase()));
  const noteIds=new Set((noteRows.data||[]).filter(x=>String(x.stato||'').trim().toUpperCase()==='EMESSA').map(x=>x.foglio_viaggio_id).filter(Boolean));
  const docsRows=adminDocs.data||[];
  const docByService=new Map(docsRows.map(x=>[x.id,x]));
@@ -5613,7 +5615,7 @@ async function loadOperationalDashboard(){
  const assGroups=dashOpsGroup(assRows);
  const crewGroups=dashOpsGroup(emgRows).length+dashOpsGroup(dimRows).length+assGroups.length;
  $('dashOpsCrewCount').textContent=String(crewGroups);
- $('dashOpsServiceCount').textContent=String(services.length);
+ $('dashOpsServiceCount').textContent=String(activeTodayServices.length);
  $('dashOpsTravelOpen').textContent=String(fogli.filter(x=>x.stato==='APERTO').length);
  $('dashOpsTravelClosed').textContent=String(fogli.filter(x=>x.stato==='CHIUSO').length);
  if($('dashOpsNotesToCreate'))$('dashOpsNotesToCreate').textContent=prof?.ruolo==='AMMINISTRATORE'?String(debitQueue.length):'—';
@@ -5660,7 +5662,7 @@ async function loadOperationalDashboard(){
   if($('dashHoursBelow'))$('dashHoursBelow').innerHTML='<div class="ops-empty">Impossibile calcolare le ore in questo momento.</div>';
  }
  $('dashVehicleStatus').innerHTML=mezzi.length?mezzi.map(m=>{
-  const todayServices=services.filter(x=>x.mezzo===m.codice);
+  const todayServices=activeTodayServices.filter(x=>x.mezzo===m.codice);
   const openSheet=fogli.some(x=>x.mezzo===m.codice&&x.stato==='APERTO');
   const status=String(m.stato_operativo||'DISPONIBILE').toUpperCase();
   const alert=!m.attivo||!['DISPONIBILE','OPERATIVO'].includes(status);
@@ -5683,7 +5685,7 @@ async function loadOperationalDashboard(){
   dashOpsCrewBlock('🚑 Dimissioni',dimRows,false)+
   dashOpsCrewBlock('🎪 Assistenze',assRows,false);
 
- $('dashTodayServices').innerHTML=services.length?services.map(x=>{
+ $('dashTodayServices').innerHTML=activeTodayServices.length?activeTodayServices.map(x=>{
   const time=(x.ora_partenza_prevista||'').slice(0,5)||'Orario —';
   const crew=Number(x.componenti_equipaggio||0);
   const complete=!!x.equipaggio_completo;
@@ -5695,7 +5697,7 @@ async function loadOperationalDashboard(){
    '<div class="muted" style="margin-top:5px">Equipaggio: '+crew+' componente/i'+
    (x.numero_foglio?' · Foglio '+esc(x.numero_foglio):' · Nessun foglio viaggio')+'</div>'+
    '<div class="actions" style="margin-top:6px"><button type="button" class="btn secondary" data-dash-ops-service="'+esc(x.id)+'">Apri servizio</button></div></div>';
- }).join(''):'<div class="ops-empty">Nessun servizio programmato per oggi.</div>';
+ }).join(''):'<div class="ops-empty">Nessun servizio aperto o in corso per oggi.</div>';
  $('dashTodayServices').querySelectorAll('[data-dash-ops-service]').forEach(b=>b.onclick=()=>openService(b.dataset.dashOpsService));
 
  $('dashTodayTravel').innerHTML=fogli.length?fogli.map(x=>
