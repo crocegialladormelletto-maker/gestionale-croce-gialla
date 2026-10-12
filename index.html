@@ -1924,7 +1924,7 @@
  </div>
 </div>
 
-<div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Stato</th><th>Qualifiche</th><th>Ore mese</th><th>Ore trimestre</th><th>Telefono</th><th>Stato APP</th><th></th></tr></thead><tbody id="ptbody"></tbody></table></div></div></section>
+<div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Inquadramento</th><th>Stato</th><th>Qualifiche</th><th>Ore mese</th><th>Ore trimestre</th><th>Telefono</th><th>Stato APP</th><th></th></tr></thead><tbody id="ptbody"></tbody></table></div></div></section>
 
 <section id="shifts" class="surface hidden"><div class="hero"><h2>Turni</h2></div><div class="pad">
 <div class="section"><h3>Nuovo turno</h3><div class="grid4"><div class="field"><label>Data *</label><input id="sd" type="date"></div><div class="field"><label>Inizio *</label><input id="ssi" type="time"></div><div class="field"><label>Fine *</label><input id="sse" type="time"></div><div class="field"><label>Mezzo</label><select id="sm"></select></div><div class="field"><label>Tipo</label><select id="stype"><option>EMERGENZA</option><option>ORDINARIO</option><option>DIMISSIONI</option><option>ASSISTENZA</option></select></div><div class="field"><label>Note</label><input id="snote"></div></div><div class="toolbar"><button id="ssave" class="btn yellow">Crea turno</button></div><div id="shiftmsg"></div></div>
@@ -7506,8 +7506,8 @@ function renderPeopleTable(){
   const mh=peopleHoursCache.find(x=>x.badge===p.badge)||{};
   const mese=Number(mh.ore_mese||0), trim=Number(mh.ore_trimestre||0);
   const minM=Number(mh.ore_minime_mensili||p.ore_minime_mensili||28), minT=Number(mh.ore_minime_trimestrali||p.ore_minime_trimestrali||84);
-  return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo)+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs||'—')+'</td><td><b>'+esc(mese.toFixed(2))+'</b> / '+esc(minM)+'</td><td><b>'+esc(trim.toFixed(2))+'</b> / '+esc(minT)+'</td><td>'+esc(p.telefono||'—')+'</td><td>'+volunteerAppStatusMarkup(p)+'</td><td><button class="btn secondary" data-edit-person="'+esc(p.badge)+'">Apri / modifica</button> <button class="btn blue" type="button" data-person-documents="'+esc(p.badge)+'">📁 Documenti</button></td></tr>';
- }).join(''):'<tr><td colspan="9">Nessun volontario corrisponde al filtro selezionato.</td></tr>';
+  return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo)+'</b></td><td><b>'+esc(p.dipendente?'DIPENDENTE':'VOLONTARIO')+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs||'—')+'</td><td><b>'+esc(mese.toFixed(2))+'</b> / '+esc(minM)+'</td><td><b>'+esc(trim.toFixed(2))+'</b> / '+esc(minT)+'</td><td>'+esc(p.telefono||'—')+'</td><td>'+volunteerAppStatusMarkup(p)+'</td><td><button class="btn secondary" data-edit-person="'+esc(p.badge)+'">Apri / modifica</button> <button class="btn blue" type="button" data-person-documents="'+esc(p.badge)+'">📁 Documenti</button></td></tr>';
+ }).join(''):'<tr><td colspan="10">Nessuna persona corrisponde al filtro selezionato.</td></tr>';
 
  $('ptbody').querySelectorAll('[data-edit-person]').forEach(b=>b.onclick=()=>window.editPerson(b.dataset.editPerson));
  $('ptbody').querySelectorAll('[data-person-documents]').forEach(b=>b.onclick=()=>{window.editPerson(b.dataset.personDocuments);$('pdocSection').scrollIntoView({behavior:'smooth',block:'start'});});
