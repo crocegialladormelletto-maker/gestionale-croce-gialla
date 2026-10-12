@@ -3976,7 +3976,8 @@ function qualificationDisplayName(q){
  const name=String(q?.nome||'');
  return code==='ALLEGATO_A'||/operatore\s+allegato\s*a\b/i.test(name)?'Accompagnatore':(name||q?.codice||'—');
 }
-function renderQualChecks(selected=[]){$('pquals').innerHTML=qualifications.map(q=>'<label class="check"><input type="checkbox" data-qual="'+esc(q.codice)+'" '+(selected.includes(q.codice)?'checked':'')+'> '+esc(qualificationDisplayName(q))+'</label>').join('')}
+const HIDDEN_ACCOMPAGNATORE_QUALIFICHE=new Set(['ACCOMPAGNATORE','ALLEGATO_A']);
+function renderQualChecks(selected=[]){$('pquals').innerHTML=qualifications.filter(q=>!HIDDEN_ACCOMPAGNATORE_QUALIFICHE.has(String(q.codice||'').toUpperCase())).map(q=>'<label class="check"><input type="checkbox" data-qual="'+esc(q.codice)+'" '+(selected.includes(q.codice)?'checked':'')+'> '+esc(qualificationDisplayName(q))+'</label>').join('')}
 function qualifiedPeople(role){let qcode=role==='ACCOMPAGNATORE'?'ALLEGATO_A':role;return people.filter(p=>p.attivo!==false&&pq.some(x=>x.badge_personale===p.badge&&x.codice_qualifica===qcode&&x.attiva))}
 function refreshCrewPeople(){$('cp').innerHTML=opts(qualifiedPeople($('cr').value),'badge',x=>x.nome_completo+' · '+x.badge)}
 $('cr').onchange=refreshCrewPeople;
@@ -7502,7 +7503,7 @@ function renderPeopleTable(){
  if(peopleAppFilter==='MISSING')list=list.filter(p=>volunteerIsActive(p)&&!volunteerAppOk(p));
 
  $('ptbody').innerHTML=list.length?list.map(p=>{
-  const qs=pq.filter(x=>x.badge_personale===p.badge).map(x=>qualificationDisplayName(qualifications.find(q=>q.codice===x.codice_qualifica)||{codice:x.codice_qualifica})).join(', ');
+  const qs=pq.filter(x=>x.badge_personale===p.badge&&!HIDDEN_ACCOMPAGNATORE_QUALIFICHE.has(String(x.codice_qualifica||'').toUpperCase())).map(x=>qualificationDisplayName(qualifications.find(q=>q.codice===x.codice_qualifica)||{codice:x.codice_qualifica})).join(', ');
   const mh=peopleHoursCache.find(x=>x.badge===p.badge)||{};
   const mese=Number(mh.ore_mese||0), trim=Number(mh.ore_trimestre||0);
   const minM=Number(mh.ore_minime_mensili||p.ore_minime_mensili||28), minT=Number(mh.ore_minime_trimestrali||p.ore_minime_trimestrali||84);
@@ -7622,7 +7623,7 @@ $('psave').onclick=async()=>{
  }
  const row={badge,nome:$('pname').value.trim(),cognome:$('psurname').value.trim(),nome_completo:$('pname').value.trim()+' '+$('psurname').value.trim(),telefono:$('pphone').value.trim()||null,email:$('pemail').value.trim()||null,data_nascita:$('pbirth').value||null,data_ingresso:$('pentry').value||null,data_uscita:$('pexit').value||null,codice_fiscale:$('pcf').value.trim().toUpperCase()||null,indirizzo:$('paddress').value.trim()||null,comune:$('pcity').value.trim()||null,provincia:$('pprovince').value.trim().toUpperCase()||null,cap:$('pcap').value.trim()||null,dipendente:$('pdep').value==='true',ore_minime_mensili:Number($('pminm').value||28),ore_minime_trimestrali:Number($('pmint').value||84),stato_anagrafico:$('pstate').value,attivo:$('pstate').value==='ATTIVO',app_credenziali_consegnate:$('pappcreds').value==='true',app_credenziali_data:$('pappcreds').value==='true'?($('pappcredsdate').value||todaySafe()):null,app_installata:$('pappcreds').value==='true'?true:$('pappinstalled').value==='true',app_installazione_data:$('pappcreds').value==='true'?($('pappinstalldate').value||$('pappcredsdate').value||todaySafe()):($('pappinstalled').value==='true'?($('pappinstalldate').value||todaySafe()):null)};
  const r=editingPersonBadge?await sb.from('personale').update(row).eq('badge',badge):await sb.from('personale').upsert(row,{onConflict:'badge'});if(r.error)return msg('pmsg',r.error.message,'err');
- const selected=[...document.querySelectorAll('[data-qual]:checked')].map(x=>x.dataset.qual);const dq=await sb.from('personale_qualifiche').delete().eq('badge_personale',badge);if(dq.error)return msg('pmsg','Anagrafica salvata, errore aggiornamento qualifiche: '+dq.error.message,'err');
+ const selected=[...document.querySelectorAll('[data-qual]:checked')].map(x=>x.dataset.qual).concat(pq.filter(x=>x.badge_personale===badge&&HIDDEN_ACCOMPAGNATORE_QUALIFICHE.has(String(x.codice_qualifica||'').toUpperCase())).map(x=>x.codice_qualifica));const dq=await sb.from('personale_qualifiche').delete().eq('badge_personale',badge);if(dq.error)return msg('pmsg','Anagrafica salvata, errore aggiornamento qualifiche: '+dq.error.message,'err');
  if(selected.length){const ins=await sb.from('personale_qualifiche').insert(selected.map(c=>({badge_personale:badge,codice_qualifica:c,attiva:true})));if(ins.error)return msg('pmsg','Anagrafica salvata, errore qualifiche: '+ins.error.message,'err')}
  msg('pmsg','Scheda personale aggiornata.','ok');await loadPeopleView();window.editPerson(badge)
 };
