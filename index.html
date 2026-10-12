@@ -6014,7 +6014,17 @@ function statsDateChunks(from,to,maxDays=60){
 async function statsRpcRange(name,from,to){
  const chunks=statsDateChunks(from,to,60),rows=[];
  for(const [a,b] of chunks){
-  const r=await sb.rpc(name,{p_dal:a,p_al:b});
+  let r=await sb.rpc(name,{p_dal:a,p_al:b});
+  if(r.error && /non autorizzat|jwt|token|sessione/i.test(r.error.message||'')){
+   const refreshed=await sb.auth.refreshSession();
+   if(refreshed.error || !refreshed.data?.session){
+    throw new Error('Sessione scaduta: esci dal gestionale e accedi nuovamente come Amministratore.');
+   }
+   r=await sb.rpc(name,{p_dal:a,p_al:b});
+   if(r.error && /non autorizzat/i.test(r.error.message||'')){
+    throw new Error('L’account in uso non risulta autorizzato a consultare i turni 118. Esci e rientra con l’account Amministratore; se usi più finestre del gestionale, verifica di non aver effettuato accessi con altri ruoli.');
+   }
+  }
   if(r.error)throw r.error;
   rows.push(...(r.data||[]));
  }
