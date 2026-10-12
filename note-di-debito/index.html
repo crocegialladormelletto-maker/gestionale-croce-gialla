@@ -279,7 +279,7 @@ $('issue').onclick=async()=>{
 $('savePayment').onclick=async()=>{
  if(active.stato!=='EMESSA')return;
  if(!$('dPayDate').value)return msg('detailMsg','Inserisci la data del pagamento.','err');
- const r=await sb.from('note_di_debito').update({modalita_pagamento:$('dPayment').value||null,data_pagamento:$('dPayDate').value,updated_at:new Date().toISOString()}).eq('id',active.id).select('*').single();
+ const r=await sb.rpc('cge_registra_pagamento_nota_debito',{p_nota_id:active.id,p_modalita:$('dPayment').value||null,p_data:$('dPayDate').value});
  if(r.error)return msg('detailMsg',r.error.message,'err');
  const id=active.id;await loadAll();await openNote(id);msg('detailMsg','Pagamento registrato.','ok');
 };
