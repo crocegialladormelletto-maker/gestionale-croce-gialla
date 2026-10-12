@@ -7530,13 +7530,16 @@ function renderPeopleTable(){
  if(peopleAppFilter==='OK')list=list.filter(p=>volunteerIsActive(p)&&volunteerAppOk(p));
  if(peopleAppFilter==='MISSING')list=list.filter(p=>volunteerIsActive(p)&&!volunteerAppOk(p));
 
+ const hideVolunteerHours=peopleCategoryFilter==='ACTIVE_DEP';
+ const peopleHeaders=$('ptbody').closest('table')?.querySelectorAll('thead th');
+ if(peopleHeaders){[5,6].forEach(i=>{if(peopleHeaders[i])peopleHeaders[i].classList.toggle('hidden',hideVolunteerHours)})}
  $('ptbody').innerHTML=list.length?list.map(p=>{
   const qs=pq.filter(x=>x.badge_personale===p.badge&&!HIDDEN_ACCOMPAGNATORE_QUALIFICHE.has(String(x.codice_qualifica||'').toUpperCase())).map(x=>qualificationDisplayName(qualifications.find(q=>q.codice===x.codice_qualifica)||{codice:x.codice_qualifica})).join(', ');
   const mh=peopleHoursCache.find(x=>x.badge===p.badge)||{};
   const mese=Number(mh.ore_mese||0), trim=Number(mh.ore_trimestre||0);
   const minM=Number(mh.ore_minime_mensili||p.ore_minime_mensili||28), minT=Number(mh.ore_minime_trimestrali||p.ore_minime_trimestrali||84);
-  return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo)+'</b></td><td><b>'+esc(p.dipendente?'DIPENDENTE':'VOLONTARIO')+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs||'—')+'</td><td><b>'+esc(mese.toFixed(2))+'</b> / '+esc(minM)+'</td><td><b>'+esc(trim.toFixed(2))+'</b> / '+esc(minT)+'</td><td>'+esc(p.telefono||'—')+'</td><td>'+volunteerAppStatusMarkup(p)+'</td><td><button class="btn secondary" data-edit-person="'+esc(p.badge)+'">Apri / modifica</button> <button class="btn blue" type="button" data-person-documents="'+esc(p.badge)+'">📁 Documenti</button></td></tr>';
- }).join(''):'<tr><td colspan="10">Nessuna persona corrisponde al filtro selezionato.</td></tr>';
+  return '<tr><td>'+esc(p.badge)+'</td><td><b>'+esc(p.nome_completo)+'</b></td><td><b>'+esc(p.dipendente?'DIPENDENTE':'VOLONTARIO')+'</b></td><td>'+esc(p.stato_anagrafico||'ATTIVO')+'</td><td>'+esc(qs||'—')+'</td>'+(hideVolunteerHours?'':'<td>'+(p.dipendente?'—':'<b>'+esc(mese.toFixed(2))+'</b> / '+esc(minM))+'</td><td>'+(p.dipendente?'—':'<b>'+esc(trim.toFixed(2))+'</b> / '+esc(minT))+'</td>')+'<td>'+esc(p.telefono||'—')+'</td><td>'+volunteerAppStatusMarkup(p)+'</td><td><button class="btn secondary" data-edit-person="'+esc(p.badge)+'">Apri / modifica</button> <button class="btn blue" type="button" data-person-documents="'+esc(p.badge)+'">📁 Documenti</button></td></tr>';
+ }).join(''):'<tr><td colspan="'+(hideVolunteerHours?8:10)+'">Nessuna persona corrisponde al filtro selezionato.</td></tr>';
 
  $('ptbody').querySelectorAll('[data-edit-person]').forEach(b=>b.onclick=()=>window.editPerson(b.dataset.editPerson));
  $('ptbody').querySelectorAll('[data-person-documents]').forEach(b=>b.onclick=()=>{window.editPerson(b.dataset.personDocuments);$('pdocSection').scrollIntoView({behavior:'smooth',block:'start'});});
