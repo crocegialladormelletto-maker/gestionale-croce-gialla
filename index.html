@@ -5580,7 +5580,7 @@ async function loadOperationalDashboard(){
  const errors=[emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,adminDocs,debitPayments].filter(x=>x?.error).map(x=>x.error.message);
  if(hoursData?.error)errors.push('Ore volontari: '+(hoursData.error.message||String(hoursData.error)));
  const emgRows=emg.data||[],dimRows=dim.data||[],assRows=ass.data||[],services=sv.data||[],fogli=fg.data||[],expRows=exp.data||[],mezzi=mz.data||[];
- const noteIds=new Set((noteRows.data||[]).map(x=>x.foglio_viaggio_id).filter(Boolean));
+ const noteIds=new Set((noteRows.data||[]).filter(x=>String(x.stato||'').trim().toUpperCase()==='EMESSA').map(x=>x.foglio_viaggio_id).filter(Boolean));
  const docsRows=adminDocs.data||[];
  const docByService=new Map(docsRows.map(x=>[x.id,x]));
  const debitPaidByService=new Map();
