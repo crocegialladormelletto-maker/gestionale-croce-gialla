@@ -1474,6 +1474,11 @@
     <div class="field"><label class="check"><input id="fvTransportedMsa" type="checkbox"> Trasportato da MSA</label></div>
     <div class="field"><label class="check"><input id="fvTransportedHeli" type="checkbox"> Trasportato da Elisoccorso</label></div>
    </div>
+   <div id="fv118OutcomeReadOnly" class="section hidden"><h3>Esito dell'intervento 118</h3><div class="grid3">
+    <div class="field"><label>Esito</label><input id="fv118Outcome" disabled></div>
+    <div class="field"><label>Note sull'esito</label><textarea id="fv118OutcomeNotes" disabled></textarea></div>
+    <div class="field"><label>Documentazione rifiuto</label><input id="fv118OutcomeDoc" disabled></div>
+   </div></div>
    <div id="fv118Codes" class="grid3 hidden" style="margin-top:10px">
     <div class="field"><label>Invio · Colore</label><select id="fvInvioColore"><option value="">—</option><option value="B">B · Bianco</option><option value="V">V · Verde</option><option value="G">G · Giallo</option><option value="R">R · Rosso</option></select></div>
     <div class="field"><label>Invio · Patologia</label><select id="fvInvioPatologia"><option value="">—</option><option value="01">01 · Traumatica</option><option value="02">02 · Cardiocircolatoria</option><option value="03">03 · Respiratoria</option><option value="04">04 · Neurologica</option><option value="05">05 · Psichiatrica</option><option value="06">06 · Neoplastica</option><option value="07">07 · Intossicazione</option><option value="08">08 · Metabolica</option><option value="09">09 · Gastroenterologica</option><option value="10">10 · Urologica</option><option value="11">11 · Oculistica</option><option value="12">12 · Otorinolaringoiatrica</option><option value="13">13 · Dermatologica</option><option value="14">14 · Ostetrico-ginecologica</option><option value="15">15 · Infettiva</option><option value="19">19 · Altra patologia</option><option value="20">20 · Patologia non identificata</option></select></div>
@@ -2751,6 +2756,14 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Luogo rientro</label><input id="tablet118Return" placeholder="Luogo rientro"></div>
      <div class="field"><label class="check" style="margin-top:28px"><input type="checkbox" data-ts-field="trasportato_da_msa"> Trasportato da MSA</label></div>
      <div class="field"><label class="check" style="margin-top:28px"><input type="checkbox" data-ts-field="trasportato_da_elisoccorso"> Trasportato da Elisoccorso</label></div>
+    </div>
+    <div class="section" id="tablet118OutcomeSection" style="margin-top:14px">
+     <h3>Esito dell'intervento 118</h3>
+     <div class="tablet-fields">
+      <div class="field"><label>Esito</label><select data-ts-field="esito_intervento_118"><option value="REGOLARE">Intervento regolare</option><option value="ANNULLATO_CO">Annullato dalla Centrale Operativa</option><option value="RIFIUTO_TRASPORTO">Rifiuto trasporto del paziente</option><option value="NON_TRASPORTATO_ALTRO">Trasporto non effettuato - altro motivo</option></select></div>
+      <div class="field"><label>Note sull'esito</label><textarea data-ts-field="esito_intervento_118_note" rows="2" placeholder="Motivazione o dettagli dell'esito"></textarea></div>
+      <div class="field"><label>Riferimento documentazione rifiuto (se applicabile)</label><input data-ts-field="rifiuto_trasporto_documentazione" placeholder="Riferimento al verbale o documentazione sanitaria"></div>
+     </div>
     </div>
     <h3 class="tablet-section-title" style="margin-top:20px">Codice di invio</h3>
     <div class="notice">Codice assegnato alla partenza dell'intervento.</div>
@@ -4718,6 +4731,10 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvd118Return').value=f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO';
  if($('fvTransportedMsa'))$('fvTransportedMsa').checked=!!f.trasportato_da_msa;
  if($('fvTransportedHeli'))$('fvTransportedHeli').checked=!!f.trasportato_da_elisoccorso;
+ if($('fv118OutcomeReadOnly'))$('fv118OutcomeReadOnly').classList.toggle('hidden',!is118);
+ if($('fv118Outcome'))$('fv118Outcome').value=({'REGOLARE':'Intervento regolare','ANNULLATO_CO':'Annullato dalla Centrale Operativa','RIFIUTO_TRASPORTO':'Rifiuto trasporto del paziente','NON_TRASPORTATO_ALTRO':'Trasporto non effettuato - altro motivo'})[f.esito_intervento_118||'REGOLARE']||f.esito_intervento_118;
+ if($('fv118OutcomeNotes'))$('fv118OutcomeNotes').value=f.esito_intervento_118_note||'';
+ if($('fv118OutcomeDoc'))$('fv118OutcomeDoc').value=f.rifiuto_trasporto_documentazione||'';
  if($('fv118Codes'))$('fv118Codes').classList.toggle('hidden',!is118);
  if($('fvInvioColore'))$('fvInvioColore').value=f.codice_invio_colore||'';
  if($('fvInvioPatologia'))$('fvInvioPatologia').value=f.codice_invio_patologia||'';
