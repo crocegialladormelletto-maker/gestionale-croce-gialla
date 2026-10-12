@@ -1899,7 +1899,7 @@
  <h3>📁 Documenti caricati dai volontari</h3>
  <p class="muted">Archivio condiviso con l’app volontari: i documenti caricati dal titolare sono disponibili anche qui, nella sua scheda, senza duplicazioni. Accesso riservato all’Amministrazione.</p>
  <div class="actions" style="justify-content:space-between;align-items:center"><b id="pdocPerson"></b><button type="button" class="btn secondary" id="pdocRefresh">Aggiorna documenti</button></div>
- <div id="pdocMsg"></div><div id="pdocList"><div class="notice">Seleziona un volontario dall’elenco qui sotto e premi «Documenti» per consultare i file caricati dalla sua app.</div></div>
+ <div class="section" style="margin:12px 0"><h4>Carica documento dalla amministrazione</h4><div class="grid4"><div class="field"><label>Categoria</label><select id="pdocCat"><option value="CARTA_IDENTITA">Carta d'identità</option><option value="CODICE_FISCALE">Codice fiscale</option><option value="ATTESTATO">Attestato</option><option value="ALTRO">Altro documento</option></select></div><div class="field"><label>Titolo</label><input id="pdocTitle"></div><div class="field"><label>Scadenza (facoltativa)</label><input id="pdocExpiry" type="date"></div><div class="field"><label>Documento (PDF o immagine)</label><input id="pdocFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp"></div></div><div class="field"><label>Note</label><input id="pdocNote"></div><button id="pdocUpload" type="button" class="btn yellow">Carica nella scheda selezionata</button></div><div id="pdocMsg"></div><div id="pdocList"><div class="notice">Seleziona un volontario dall’elenco qui sotto e premi «Documenti» per consultare i file caricati dalla sua app.</div></div>
 </div></div>
 
 <div class="section" style="margin-top:14px">
@@ -7586,6 +7586,26 @@ async function adminOpenPersonDocument(id,download){
  if(r.error){tab.close();return msg('pdocMsg','Impossibile aprire il documento: '+r.error.message,'err')}
  tab.location.href=r.data.signedUrl;
 }
+$('pdocUpload').onclick=async()=>{
+ if(prof?.ruolo!=='AMMINISTRATORE')return msg('pdocMsg','Operazione riservata all’amministrazione.','err');
+ const badge=adminPersonDocumentsBadge,file=$('pdocFile').files?.[0];
+ if(!badge||!people.some(p=>p.badge===badge))return msg('pdocMsg','Apri prima i documenti del volontario corretto.','warn');
+ if(!file)return msg('pdocMsg','Seleziona un documento.','warn');
+ const types={'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+ if(!types[file.type]||file.size>10485760)return msg('pdocMsg','Accettati PDF, JPG, PNG e WEBP fino a 10 MB.','warn');
+ const path=badge+'/'+crypto.randomUUID()+'.'+types[file.type];
+ $('pdocUpload').disabled=true;msg('pdocMsg','Caricamento in corso...');
+ try{
+  const up=await sb.storage.from('documenti-volontari').upload(path,file,{contentType:file.type,upsert:false});
+  if(up.error)throw up.error;
+  const u=await sb.auth.getUser();
+  const db=await sb.from('documenti_personale').insert({badge_personale:badge,categoria:$('pdocCat').value,titolo:$('pdocTitle').value.trim()||null,nome_file_originale:file.name,storage_path:path,mime_type:file.type,dimensione_bytes:file.size,data_scadenza:$('pdocExpiry').value||null,note:$('pdocNote').value.trim()||null,uploaded_by:u.data.user?.id||null});
+  if(db.error){await sb.storage.from('documenti-volontari').remove([path]);throw db.error}
+  $('pdocFile').value='';$('pdocTitle').value='';$('pdocExpiry').value='';$('pdocNote').value='';
+  await loadAdminPersonDocuments(badge);msg('pdocMsg','Documento caricato nella scheda.','ok');
+ }catch(e){msg('pdocMsg','Caricamento non riuscito: '+(e.message||e),'err')}
+ finally{$('pdocUpload').disabled=false}
+};
 $('pdocRefresh').onclick=()=>{
  const badge=$('pb').value.trim();
  if(badge)loadAdminPersonDocuments(badge);
