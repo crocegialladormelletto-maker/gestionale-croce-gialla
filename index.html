@@ -774,7 +774,8 @@
 <button class="nav" type="button" data-admin-only="true" data-href="note-di-debito/">🧾 Note di Debito</button>
 <button class="nav" type="button" id="navArubaInvoices" data-admin-only="true">🧮 Fatture Aruba da emettere</button>
 <button class="nav" data-v="crew">👥 Equipaggi</button>
-<button class="nav sep" data-v="people" data-admin-only="true">🪪 Volontari</button>
+<button class="nav sep" data-v="people" data-people-filter="ACTIVE_VOL" data-admin-only="true">🪪 Volontari</button>
+<button class="nav" data-v="people" data-people-filter="ACTIVE_DEP" data-admin-only="true">👔 Dipendenti</button>
 <button class="nav" data-v="communications">📣 Comunicazioni volontari</button>
 <button class="nav" type="button" data-admin-only="true" data-href="personale-formazione/">🎓 Personale e formazione</button>
 <button class="nav" data-v="shifts">🕒 Turni</button>
@@ -3166,7 +3167,7 @@ function msg(id,t,c=''){const e=$(id);if(e)e.innerHTML=t?'<div class="notice '+c
 function opts(list,val,label){return '<option value="">—</option>'+list.map(x=>'<option value="'+esc(x[val])+'">'+esc(label(x))+'</option>').join('')}
 function selectView(v){
  document.querySelectorAll('main>section').forEach(x=>x.classList.toggle('hidden',x.id!==v));
- document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+ document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.v===v && (v!=='people'||!b.dataset.peopleFilter||b.dataset.peopleFilter===peopleCategoryFilter)));
 }
 function serviceAttachmentSafeName(name){
  return String(name||'allegato.pdf').normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,120)||'allegato.pdf';
@@ -3759,7 +3760,7 @@ async function view(v,options={}){
  selectView(v);
  return result;
 }
-document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>{if(b.dataset.href){if(editingPersonBadge)resetPerson();location.href=b.dataset.href;return}view(b.dataset.v)});
+document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>{if(b.dataset.href){if(editingPersonBadge)resetPerson();location.href=b.dataset.href;return}if(b.dataset.v==='people'&&b.dataset.peopleFilter){peopleCategoryFilter=b.dataset.peopleFilter;peopleAppFilter='ALL';}view(b.dataset.v)});
 function volunteerGoTo(target){
  const el=$(target);if(!el)return;
  $('volApp').querySelector('.vol-layout')?.classList.remove('vol-menu-open');
@@ -7472,7 +7473,7 @@ function assignNextVolunteerBadge(){
 $('pnew').onclick=()=>{resetPerson();assignNextVolunteerBadge();};
 ['ACTIVE_VOL','ACTIVE_DEP','CESSATI','ALL'].forEach((filter,i)=>{
  const id=['pPeopleActiveVol','pPeopleActiveDep','pPeopleCessati','pPeopleAll'][i];
- $(id).onclick=()=>{peopleCategoryFilter=filter;peopleAppFilter='ALL';renderPeopleTable()};
+ $(id).onclick=()=>{peopleCategoryFilter=filter;peopleAppFilter='ALL';renderPeopleTable();selectView('people')};
 });
 $('pAppFilterAll').onclick=()=>{peopleAppFilter='ALL';renderPeopleTable()};
 $('pAppFilterOk').onclick=()=>{peopleAppFilter='OK';renderPeopleTable()};
