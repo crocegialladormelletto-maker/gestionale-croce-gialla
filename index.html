@@ -2457,6 +2457,7 @@ Causale: numero preventivo</textarea>
 </section>
 
 <section id="accounting" class="surface hidden"><div class="hero"><h2>Contabilità servizi</h2></div><div class="pad">
+<div class="section" data-admin-only="true"><h3>Verifica invio email Note di Debito</h3><p class="muted">Invia una sola email di prova dalla tesoreria ad amministrazione@crocegiallaemergenza.it. Nessun documento o cliente viene coinvolto.</p><button type="button" id="accTestEmail" class="btn blue">✉ Invia email di prova</button><div id="accTestEmailMsg" style="margin-top:9px"></div></div>
 <div class="stats"><div class="stat"><small>TOTALE DA INCASSARE</small><b id="accDue">€ 0</b></div><div class="stat"><small>PAGATI</small><b id="accPaid">0</b></div><div class="stat"><small>PARZIALI</small><b id="accPart">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="accCount">0</b></div></div>
 <div class="section"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="1"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
 <div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto</th><th>Pagamento</th><th>Stato gestionale</th></tr></thead><tbody id="accBody"></tbody></table></div></div></section>
@@ -10760,6 +10761,25 @@ if($('pnReportYear'))$('pnReportYear').onchange=pnRenderAnnualReport;
 if($('pnPrintYear'))$('pnPrintYear').onclick=pnPrintYear;
 if($('pnRunStartupCheck'))$('pnRunStartupCheck').onclick=pnRunStartupCheck;
 if($('pnRunDryTest'))$('pnRunDryTest').onclick=pnRunDryTest;
+
+if($('accTestEmail'))$('accTestEmail').onclick=async()=>{
+ const b=$('accTestEmail');
+ if(prof?.ruolo!=='AMMINISTRATORE')return msg('accTestEmailMsg','Operazione riservata all’amministrazione.','err');
+ if(!confirm('Inviare una sola email di prova a amministrazione@crocegiallaemergenza.it?'))return;
+ b.disabled=true;
+ msg('accTestEmailMsg','Invio prova in corso...');
+ try{
+  const {data,error}=await sb.functions.invoke('test-invio-email-amministrazione',{body:{}});
+  if(error){
+   let detail=error.message||'Richiesta non riuscita';
+   try{if(error.context?.json){const out=await error.context.json();detail=out.error||detail}}catch(_){}
+   throw new Error(detail);
+  }
+  if(!data?.ok)throw new Error(data?.error||'Invio non confermato');
+  msg('accTestEmailMsg','Resend ha accettato il messaggio per amministrazione@crocegiallaemergenza.it. Controlla la casella destinataria.','ok');
+ }catch(e){msg('accTestEmailMsg','Invio non confermato: '+(e.message||String(e))+'. Verifica Resend prima di ripetere il test.','err')}
+ finally{b.disabled=false}
+};
 
 async function loadAccounting(){
  const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(500);
