@@ -5187,7 +5187,11 @@ function volRosterRenderDay(){
    '<div class="muted">'+esc(description)+'</div>'+volunteerSpecialEquipmentHTML(e)+controls+'</div>';
  }).join(''):'<div class="notice">Nessuna manifestazione programmata per questo giorno. Scegli una data con 🎪 oppure chiedi al Centralino di inserire il servizio.</div>';
  $('volRosterDay').querySelectorAll('[data-vol-roster-join]').forEach(button=>
-  button.onclick=()=>volRosterJoin(button.dataset.volRosterKind,button.dataset.volRosterJoin));
+  button.addEventListener('click',async()=>{
+   button.disabled=true;
+   try{await volRosterJoin(button.dataset.volRosterKind,button.dataset.volRosterJoin)}
+   finally{if(button.isConnected)button.disabled=false}
+  }));
 }
 async function loadVolRoster(){
  if(!volunteerBadge)return;
@@ -5231,7 +5235,10 @@ async function loadVolRoster(){
 async function volRosterJoin(kind,id){
  if(volRosterBusy)return;
  const event=volRosterEvents.find(e=>e.kind===kind&&e.id===id);
- if(!event||event.mine||event.day<todaySafe())return;
+ if(!event)return msg('volRosterMsg','Manifestazione non trovata: aggiorna il calendario.','warn');
+ if(event.mine)return msg('volRosterMsg','Risulti già iscritto a questa manifestazione.','ok');
+ if(event.day<todaySafe())return msg('volRosterMsg','La data della manifestazione è già trascorsa.','warn');
+ msg('volRosterMsg','Verifica iscrizione in corso...');
  const role=$('volRosterDay').querySelector('[data-vol-roster-role="'+kind+'-'+id+'"]')?.value;
  if(!volRosterEligible(event.day,kind).some(x=>x[0]===role))
   return msg('volRosterMsg','Seleziona un ruolo per cui sei qualificato.','warn');
@@ -5244,9 +5251,10 @@ async function volRosterJoin(kind,id){
    p_tipo:kind,p_elemento:id,p_ruolo:role
   });
   if(result.error)throw result.error;
+  await loadVolRoster();
   await loadVolunteerArea();
-  msg('volRosterMsg','Turno definitivo registrato.','ok');
- }catch(e){msg('volRosterMsg',e.message||String(e),'err')}
+  msg('volRosterMsg','Iscrizione registrata. Controlla il nominativo nell’equipaggio; se non compare, aggiorna la schermata amministrativa.','ok');
+ }catch(e){msg('volRosterMsg','Iscrizione non riuscita: '+(e.message||String(e)),'err')}
  finally{volRosterBusy=false}
 }
 $('volRosterPrev').onclick=()=>{
