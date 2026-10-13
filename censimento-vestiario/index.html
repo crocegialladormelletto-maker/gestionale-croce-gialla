@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Censimento vestiario — Croce Gialla Emergenza</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#152d46;background:#eef4f9}*{box-sizing:border-box}body{margin:0}header{background:#143c62;color:white;padding:24px 18px;border-bottom:7px solid #fdd626}header>div,main{max-width:720px;margin:auto}h1{font-size:1.55rem;margin:0}header p{margin:6px 0 0;color:#d9e8f3}main{padding:20px 14px 60px}.card{background:white;border:1px solid #dae5ed;border-radius:16px;padding:22px;box-shadow:0 6px 18px #143c6210;margin-bottom:15px}h2{font-size:1.13rem;margin:0 0 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}label{display:block;font-weight:650;font-size:.9rem;margin-bottom:6px}input,select,textarea{width:100%;padding:12px;border:1px solid #b5c8d8;border-radius:8px;font:inherit;color:#193b56;background:white}textarea{min-height:80px}button{padding:14px 20px;border:0;border-radius:9px;background:#fdd626;color:#123958;font:inherit;font-weight:800;cursor:pointer;width:100%}button:disabled{opacity:.6;cursor:wait}.line{display:grid;grid-template-columns:1.4fr 1fr 90px;gap:12px;align-items:end;margin:12px 0;padding-bottom:12px;border-bottom:1px solid #ecf0f4}.line strong{display:block;margin-bottom:4px}.hint{color:#506c7f;font-size:.88rem;margin:8px 0}.feedback{padding:13px;border-radius:8px;margin-top:13px;display:none;white-space:pre-wrap}.error{display:block;background:#fff0f0;color:#8d1820}.ok{display:block;background:#edf9f1;color:#14683d}.hidden{display:none!important}@media(max-width:500px){.grid{grid-template-columns:1fr}.line{grid-template-columns:1fr 1fr;gap:8px}.line strong{grid-column:1/-1}}
+</style></head>
+<body><header><div><div style="font-size:.8rem;font-weight:800;color:#ffdf28;letter-spacing:.08em">CROCE GIALLA EMERGENZA ODV</div><h1>Censimento vestiario personale</h1><p>Taglie e capi attualmente in dotazione</p></div></header>
+<main>
+<div class="card"><h2>I tuoi dati</h2><div class="grid">
+<div><label for="name">Cognome e nome *</label><input id="name" autocomplete="name" maxlength="150" placeholder="Come risulta nell'anagrafica dell'associazione" required></div>
+<div><label for="badge">Numero badge personale *</label><input id="badge" maxlength="30" inputmode="text" autocomplete="off" placeholder="Numero del tuo badge" required></div></div>
+<p class="hint">Indica il nominativo e il badge assegnati dall'associazione. I dati servono per associare correttamente la dichiarazione alla tua scheda.</p></div>
+<div class="card"><h2>Taglie e quantità possedute</h2>
+<p class="hint">Indica per ogni capo la taglia e quanti pezzi hai attualmente. Scrivi 0 se non possiedi quel capo.</p>
+<div id="items"></div></div>
+<div class="card"><h2>Altre informazioni</h2>
+<label for="notes">Note, capi aggiuntivi, necessità di sostituzione</label><textarea id="notes" maxlength="800" placeholder="Facoltativo"></textarea>
+<p class="hint">La tua dichiarazione sarà verificata dall'amministrazione prima di aggiornare l'inventario. Non costituisce verbale di consegna o riconsegna.</p>
+<label style="display:flex;gap:10px;align-items:flex-start;font-weight:500"><input type="checkbox" id="confirm" style="width:20px;height:20px;flex:none">Confermo che le quantità dichiarate corrispondono ai capi in mio possesso.</label>
+<button id="submit" type="button">Invia censimento vestiario</button><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+</main>
+<script>
+const API="https://ihottewckpwpwqzpxusl.supabase.co",KEY="sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4";
+const products=['Giacca','Pantalone','T-Shirt','Felpa / pile','Gilet','Polo','Altro'];
+const sizes=['','XXS','XS','S','M','L','XL','XXL','3XL','4XL','5XL','Taglia unica','Non so'];
+const target=document.getElementById('items');
+products.forEach((p,i)=>{
+const row=document.createElement('div');row.className='line';
+const title=document.createElement('strong');title.textContent=p;row.append(title);
+const a=document.createElement('div'), b=document.createElement('div');
+const lab1=document.createElement('label'),lab2=document.createElement('label');lab1.textContent='Taglia';lab2.textContent='Quantità';
+const select=document.createElement('select');select.id='s'+i;select.setAttribute('aria-label',p+' taglia');
+sizes.forEach(s=>{const op=document.createElement('option');op.value=s;op.textContent=s||'Seleziona';select.append(op)});
+const q=document.createElement('input');q.id='q'+i;q.type='number';q.min='0';q.max='30';q.step='1';q.value='0';q.setAttribute('aria-label',p+' quantità');
+a.append(lab1,select);b.append(lab2,q);row.append(a,b);target.append(row);
+});
+const fb=document.getElementById('feedback'),btn=document.getElementById('submit');
+btn.addEventListener('click',async()=>{
+fb.className='feedback';fb.textContent='';
+const name=document.getElementById('name').value.trim(),badge=document.getElementById('badge').value.trim(),notes=document.getElementById('notes').value.trim();
+if(!name||!badge||!document.getElementById('confirm').checked){fb.className='feedback error';fb.textContent='Compila nome, numero badge e conferma la dichiarazione.';return;}
+const taglie={},dotazione={};
+for(let i=0;i<products.length;i++){
+let q=Number(document.getElementById('q'+i).value),size=document.getElementById('s'+i).value;
+if(!Number.isInteger(q)||q<0||q>30){fb.className='feedback error';fb.textContent='Controlla le quantità: devono essere numeri interi tra 0 e 30.';return;}
+if(q>0&&!size){fb.className='feedback error';fb.textContent='Seleziona la taglia per '+products[i]+'.';return;}
+dotazione[products[i]]=q;taglie[products[i]]=size;
+}
+btn.disabled=true;btn.textContent='Invio in corso…';
+try{
+const response=await fetch(API+'/rest/v1/rpc/vestiario_invia_censimento',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({p_badge:badge,p_nome:name,p_taglie:taglie,p_dotazione:dotazione,p_note:notes})});
+const result=await response.json().catch(()=>null);
+if(!response.ok)throw Error(result?.message||'Invio non riuscito');
+fb.className='feedback ok';fb.textContent='Censimento inviato correttamente. La tua dichiarazione è in attesa di verifica amministrativa.';document.getElementById('confirm').checked=false;
+}catch(e){fb.className='feedback error';fb.textContent=e.message==='Failed to fetch'?'Connessione assente. Riprova quando sei online.':e.message;}
+finally{btn.disabled=false;btn.textContent='Invia censimento vestiario'}
+});
+</script></body></html>
