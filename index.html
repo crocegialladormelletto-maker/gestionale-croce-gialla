@@ -3014,7 +3014,7 @@ Causale: numero preventivo</textarea>
   <p class="muted">Le giornate con 🎪 contengono manifestazioni programmate. Tocca il giorno per scegliere la manifestazione, verificare luogo e orari e iscriverti definitivamente. Non ci sono fasce generiche.</p>
   <div id="volRosterMsg"></div>
   <div class="dim-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
-  <div id="volRosterGrid" class="dim-month-grid"></div>
+  <div id="volRosterGrid" class="dim-month-grid"></div><div class="muted" style="margin:8px 0;font-size:12px">Equipaggi: <span class="cal-crew-dot empty"></span> da assegnare · <span class="cal-crew-dot partial"></span> da completare · <span class="cal-crew-dot complete"></span> completi</div>
   <h3 id="volRosterDayTitle" style="margin-top:15px"></h3>
   <div id="volRosterDay"></div>
  </div>
@@ -5145,6 +5145,14 @@ function volRosterTitle(event){
  if(event.kind==='TURNO_ASSISTENZA')return '🎪 Turno assistenza manifestazione';
  return '🎪 '+(event.nome||'Assistenza manifestazione');
 }
+function volRosterCrewState(e){
+ return volunteerEventCrewState(volRosterOccupied.filter(x=>x.servizio_id===e.id),e.mezzo);
+}
+function volRosterCrewDot(e){
+ const state=volRosterCrewState(e);
+ const label=state==='complete'?'Equipaggio completo':state==='partial'?'Equipaggio da completare':'Equipaggio da assegnare';
+ return '<span class="cal-crew-dot '+state+'" title="'+esc(label)+'" aria-label="'+esc(label)+'"></span>';
+}
 function volRosterRender(){
  const range=calVisibleRange(volRosterCursor,'month');
  $('volRosterTitle').textContent=calMonthTitle(volRosterCursor);
@@ -5157,7 +5165,7 @@ function volRosterRender(){
    (date.getMonth()!==volRosterCursor.getMonth()?'dim-out ':'')+
    (day===todaySafe()?'dim-today ':'')+(day===volRosterSelected?'dim-selected':'')+
    '" data-vol-roster-day="'+day+'"><b>'+date.getDate()+'</b>'+
-   '<small>'+(ass?'🎪 '+ass:'')+'</small></button>';
+   '<small>'+(ass?'🎪 '+ass+' '+items.map(e=>volRosterCrewDot(e)).join(' '):'')+'</small></button>';
  }
  $('volRosterGrid').innerHTML=html;
  $('volRosterGrid').querySelectorAll('[data-vol-roster-day]').forEach(button=>
@@ -5191,7 +5199,7 @@ function volRosterRenderDay(){
    else if(!qualified.length)controls+='<div class="muted">Nessun ruolo abilitato dalle tue qualifiche per questa data.</div>';
    else controls+='<div class="muted">Non ci sono ruoli liberi compatibili con le tue qualifiche. Contatta il Centralino.</div>';
   }
-  return '<div class="box" style="margin:8px 0"><b>'+esc(volRosterTitle(e))+'</b>'+
+  return '<div class="box" style="margin:8px 0"><b>'+volRosterCrewDot(e)+esc(volRosterTitle(e))+'</b>'+'<div class="muted" style="margin-top:4px">'+esc(volRosterCrewState(e)==='complete'?'Equipaggio completo':volRosterCrewState(e)==='partial'?'Equipaggio da completare':'Equipaggio da assegnare')+'</div>'+
    '<div class="muted">'+esc(description)+'</div>'+volunteerSpecialEquipmentHTML(e)+controls+'</div>';
  }).join(''):'<div class="notice">Nessuna manifestazione programmata per questo giorno. Scegli una data con 🎪 oppure chiedi al Centralino di inserire il servizio.</div>';
  $('volRosterDay').querySelectorAll('[data-vol-roster-join]').forEach(button=>
