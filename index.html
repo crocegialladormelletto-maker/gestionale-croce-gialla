@@ -3145,7 +3145,7 @@ let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsReq
 let volNotifications=[];
 let opCalCursor=new Date(),opCalSelected=todaySafe(),opCalEvents=[],opCalMode='month',opCalVehicle='';
 let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month';
-let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalOccupiedRoles=[],vfcalOrdRoutes=[],vfcalQualificationRows=[],vfcalAppBusy=false;
+let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalOccupiedRoles=[],vfcalOrdRoutes=[],vfcalCrewNames=[],vfcalQualificationRows=[],vfcalAppBusy=false;
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[],emFasciaRows=[],emRosterSeq=0;
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
 let asMonthCursor=new Date(),asMonthSelected=todaySafe(),asMonthServices=[],asMonthCrew=[],asMonthSeq=0;
@@ -5334,17 +5334,18 @@ async function loadVolunteerFutureCalendar(){
  const request=++vfcalLoadSequence;
  msg('vfcalMsg','Caricamento servizi futuri...');
  const range=calVisibleRange(vfcalCursor,vfcalMode);
- const [r,occupied,routes,equipment]=await Promise.all([
+ const [r,occupied,routes,equipment,crewNames]=await Promise.all([
   sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_ordinari_percorsi',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_ordinari_dotazioni',{p_dal:range.startYmd,p_al:range.endYmd})
+  sb.rpc('cge_volontario_ordinari_dotazioni',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_equipaggi_servizi_visibili_v2',{p_dal:range.startYmd,p_al:range.endYmd})
  ]);
  if(request!==vfcalLoadSequence)return;
- if(r.error||occupied.error||routes.error||equipment.error){
-  vfcalEvents=[];vfcalApplications=[];vfcalOccupiedRoles=[];vfcalOrdRoutes=[];
+ if(r.error||occupied.error||routes.error||equipment.error||crewNames.error){
+  vfcalEvents=[];vfcalApplications=[];vfcalOccupiedRoles=[];vfcalOrdRoutes=[];vfcalCrewNames=[];
   refreshVolunteerFutureCalendarView();
-  return msg('vfcalMsg','Impossibile caricare i servizi futuri: '+(r.error||occupied.error||routes.error||equipment.error).message,'err');
+  return msg('vfcalMsg','Impossibile caricare i servizi futuri: '+(r.error||occupied.error||routes.error||equipment.error||crewNames.error).message,'err');
  }
  const rows=r.data||[],ids=rows.filter(s=>isAssistanceManifestation(s.tipo_servizio)).map(s=>s.id);
  let applications=[];
@@ -5357,6 +5358,7 @@ async function loadVolunteerFutureCalendar(){
  if(request!==vfcalLoadSequence)return;
  vfcalApplications=applications;
  vfcalOccupiedRoles=occupied.data||[];
+ vfcalCrewNames=crewNames.data||[];
  const equipmentById=new Map((equipment.data||[]).map(x=>[x.servizio_id,x]));
  vfcalOrdRoutes=(routes.data||[]).map(x=>({...x,...(equipmentById.get(x.servizio_id)||{})}));
  vfcalEvents=rows.map(s=>{
@@ -5397,8 +5399,11 @@ function renderVolunteerFutureCalendarDay(){
     else if(app?.stato!=='IN_ATTESA')signup='<div class="muted">'+(eligible.length?'I ruoli per cui sei qualificato sono già occupati.':'Nessuna qualifica valida per questa assistenza.')+' Contatta il Centralino.</div>';
    }
   }
+  const assignedCrew=vfcalCrewNames.filter(x=>x.servizio_id===s.id);
+  const crewListing='<div class="muted" style="margin-top:7px"><b>Equipaggio assegnato:</b> '+(assignedCrew.length?assignedCrew.map(x=>esc(x.nome_completo||'Operatore')+' · '+esc((VOL_ROSTER_ROLES.find(z=>z[0]===x.ruolo)||[])[1]||x.ruolo)).join(' | '):'Nessun operatore assegnato')+'</div>';
   const pickupAndDestination=vfcalOrdRoutes.find(route=>route.servizio_id===s.id);
   return '<div class="cal-detail-item service"><b>'+(evt?'<span class="cal-crew-dot '+esc(e.crewState||'empty')+'" aria-label="'+esc(e.crewState==='complete'?'Equipaggio completo':e.crewState==='partial'?'Equipaggio incompleto':'Equipaggio da assegnare')+'" title="'+esc(e.crewState==='complete'?'Equipaggio completo':e.crewState==='partial'?'Equipaggio incompleto':'Equipaggio da assegnare')+'"></span>':'')+esc(e.title)+'</b>'+(evt?'<div class="muted" style="margin-top:5px">'+esc(e.crewState==='complete'?'🟢 Equipaggio completo':e.crewState==='partial'?'🟡 Equipaggio da completare':'🔴 Equipaggio da assegnare')+'</div>':'')+(e.subtitle?'<br>'+esc(e.subtitle):'')+'<br><span class="muted">'+esc(times)+'</span>'+volunteerOrdinaryRouteHTML(pickupAndDestination)+volunteerSpecialEquipmentHTML(pickupAndDestination)+
+   +crewListing+
    '<br><span class="pill '+(s.assegnato_a_me?'g':'b')+'">'+(s.assegnato_a_me?'Sei assegnato a questo servizio':'Servizio programmato')+'</span>'+signup+'</div>';
  }).join(''):'<div class="notice">Nessun servizio futuro programmato per questo giorno.</div>';
  box.querySelectorAll('[data-vf-join]').forEach(b=>b.onclick=()=>submitVolunteerAssistanceApplication(b.dataset.vfJoin,'ISCRIVITI'));
