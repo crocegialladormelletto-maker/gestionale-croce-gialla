@@ -5223,10 +5223,12 @@ async function loadVolRoster(){
   sb.rpc('cge_volontario_assistenze_equipaggi',{p_dal:range.startYmd,p_al:range.endYmd})
  ]);
  if(seq!==volRosterSeq)return;
- if(services.error||occupied.error||equipment.error||crewNames.error){
+ if(services.error||occupied.error||equipment.error){
   volRosterEvents=[];volRosterOccupied=[];volRosterCrewNames=[];volRosterApplications=[];volRosterRender();
-  return msg('volRosterMsg','Errore calendario: '+(services.error||occupied.error||equipment.error||crewNames.error).message,'err');
+  return msg('volRosterMsg','Errore calendario: '+(services.error||occupied.error||equipment.error).message,'err');
  }
+ // Un eventuale errore nella lettura dei nomi non deve mai nascondere calendario e pallini.
+ if(crewNames.error)msg('volRosterMsg','Calendario disponibile; nominativi temporaneamente non caricati: '+crewNames.error.message,'warn');
  const rows=(services.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio));
  const ids=rows.map(s=>s.id);
  let applications=[];
@@ -5239,7 +5241,7 @@ async function loadVolRoster(){
  }
  if(seq!==volRosterSeq)return;
  volRosterOccupied=occupied.data||[];
- volRosterCrewNames=crewNames.data||[];
+ volRosterCrewNames=crewNames.error?[]:(crewNames.data||[]);
  volRosterApplications=applications;
  const equipmentById=new Map((equipment.data||[]).map(x=>[x.servizio_id,x]));
  volRosterEvents=rows.map(s=>({
@@ -5250,7 +5252,7 @@ async function loadVolRoster(){
   nome:s.nome_manifestazione,luogo:s.luogo_manifestazione,
   mezzo:s.mezzo,mine:s.assegnato_a_me
  }));
- volRosterRender();msg('volRosterMsg','');
+ volRosterRender();if(!crewNames.error)msg('volRosterMsg','');
 }
 
 async function volRosterJoin(kind,id){
