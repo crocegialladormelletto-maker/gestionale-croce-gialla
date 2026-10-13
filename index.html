@@ -12693,7 +12693,7 @@ function renderVolOrd(){
   const day=calYmd(dt),items=volOrdItems.filter(x=>x.data_servizio===day);
   html+='<button type="button" class="dim-date '+(dt.getMonth()!==volOrdCursor.getMonth()?'dim-out ':'')+
    (day===todaySafe()?'dim-today ':'')+(day===volOrdSelected?'dim-selected':'')+
-   '" data-vol-ord-day="'+day+'"><b>'+dt.getDate()+'</b><small>'+(items.length?'🚐 '+items.length:'')+'</small></button>';
+   '" data-vol-ord-day="'+day+'"><b>'+dt.getDate()+'</b><small>'+(items.length?'🚐 '+items.length+' '+items.map(x=>{const crew=volOrdCrew.filter(c=>c.servizio_id===x.id);const state=volunteerEventCrewState(crew.map(c=>({...c,badge_personale:c.nome_completo||c.ruolo})),x.mezzo);const label=state==='complete'?'Equipaggio completo':state==='partial'?'Equipaggio da completare':'Equipaggio da assegnare';return '<span class="cal-crew-dot '+state+'" title="'+esc(label)+'" aria-label="'+esc(label)+'"></span>'}).join(' '):'')+'</small></button>';
  }
  $('volOrdGrid').innerHTML=html;
  $('volOrdGrid').querySelectorAll('[data-vol-ord-day]').forEach(b=>b.onclick=()=>{volOrdSelected=b.dataset.volOrdDay;renderVolOrd()});
