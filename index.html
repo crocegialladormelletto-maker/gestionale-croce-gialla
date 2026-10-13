@@ -3120,7 +3120,7 @@ Causale: numero preventivo</textarea>
      </div>
      <div class="muted" style="margin:8px 0">Per le assistenze alle manifestazioni puoi iscriverti direttamente e definitivamente con un ruolo per cui sei qualificato. Gli altri servizi rimangono di sola consultazione; non sono visibili dati dei pazienti.</div>
      <div id="vfcalMsg"></div>
-     <div class="calendar-wrap" style="margin-top:9px"><div class="cal-weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div></div><div id="vfcalGrid" class="cal-grid"></div></div>
+     <div class="calendar-wrap" style="margin-top:9px"><div class="cal-weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div></div><div id="vfcalGrid" class="cal-grid"></div><div class="muted" style="margin-top:8px;font-size:12px">Equipaggi assistenze: <span class="cal-crew-dot empty"></span> da assegnare · <span class="cal-crew-dot partial"></span> da completare · <span class="cal-crew-dot complete"></span> completi</div></div>
      <div style="margin-top:10px"><h3 id="vfcalDayTitle">Servizi del giorno</h3><div id="vfcalDayDetails"></div></div>
     </div>
    </section>
@@ -5384,7 +5384,7 @@ function renderVolunteerFutureCalendarDay(){
    }
   }
   const pickupAndDestination=vfcalOrdRoutes.find(route=>route.servizio_id===s.id);
-  return '<div class="cal-detail-item service"><b>'+esc(e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'<br><span class="muted">'+esc(times)+'</span>'+volunteerOrdinaryRouteHTML(pickupAndDestination)+volunteerSpecialEquipmentHTML(pickupAndDestination)+
+  return '<div class="cal-detail-item service"><b>'+(evt?'<span class="cal-crew-dot '+esc(e.crewState||'empty')+'" aria-label="'+esc(e.crewState==='complete'?'Equipaggio completo':e.crewState==='partial'?'Equipaggio incompleto':'Equipaggio da assegnare')+'" title="'+esc(e.crewState==='complete'?'Equipaggio completo':e.crewState==='partial'?'Equipaggio incompleto':'Equipaggio da assegnare')+'"></span>':'')+esc(e.title)+'</b>'+(evt?'<div class="muted" style="margin-top:5px">'+esc(e.crewState==='complete'?'🟢 Equipaggio completo':e.crewState==='partial'?'🟡 Equipaggio da completare':'🔴 Equipaggio da assegnare')+'</div>':'')+(e.subtitle?'<br>'+esc(e.subtitle):'')+'<br><span class="muted">'+esc(times)+'</span>'+volunteerOrdinaryRouteHTML(pickupAndDestination)+volunteerSpecialEquipmentHTML(pickupAndDestination)+
    '<br><span class="pill '+(s.assegnato_a_me?'g':'b')+'">'+(s.assegnato_a_me?'Sei assegnato a questo servizio':'Servizio programmato')+'</span>'+signup+'</div>';
  }).join(''):'<div class="notice">Nessun servizio futuro programmato per questo giorno.</div>';
  box.querySelectorAll('[data-vf-join]').forEach(b=>b.onclick=()=>submitVolunteerAssistanceApplication(b.dataset.vfJoin,'ISCRIVITI'));
