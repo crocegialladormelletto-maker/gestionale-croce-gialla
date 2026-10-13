@@ -5216,19 +5216,18 @@ async function loadVolRoster(){
  if(!volunteerBadge)return;
  const seq=++volRosterSeq,range=calVisibleRange(volRosterCursor,'month');
  msg('volRosterMsg','Caricamento delle manifestazioni...');
- const [services,occupied,equipment,crewNames]=await Promise.all([
+ const crewNamesPromise=sb.rpc('cge_volontario_assistenze_equipaggi',{p_dal:range.startYmd,p_al:range.endYmd});
+ const [services,occupied,equipment]=await Promise.all([
   sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_ordinari_dotazioni',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_assistenze_equipaggi',{p_dal:range.startYmd,p_al:range.endYmd})
+  sb.rpc('cge_volontario_ordinari_dotazioni',{p_dal:range.startYmd,p_al:range.endYmd})
  ]);
  if(seq!==volRosterSeq)return;
  if(services.error||occupied.error||equipment.error){
   volRosterEvents=[];volRosterOccupied=[];volRosterCrewNames=[];volRosterApplications=[];volRosterRender();
   return msg('volRosterMsg','Errore calendario: '+(services.error||occupied.error||equipment.error).message,'err');
  }
- // Un eventuale errore nella lettura dei nomi non deve mai nascondere calendario e pallini.
- if(crewNames.error)msg('volRosterMsg','Calendario disponibile; nominativi temporaneamente non caricati: '+crewNames.error.message,'warn');
+
  const rows=(services.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio));
  const ids=rows.map(s=>s.id);
  let applications=[];
@@ -5241,7 +5240,7 @@ async function loadVolRoster(){
  }
  if(seq!==volRosterSeq)return;
  volRosterOccupied=occupied.data||[];
- volRosterCrewNames=crewNames.error?[]:(crewNames.data||[]);
+ volRosterCrewNames=[];
  volRosterApplications=applications;
  const equipmentById=new Map((equipment.data||[]).map(x=>[x.servizio_id,x]));
  volRosterEvents=rows.map(s=>({
@@ -5252,7 +5251,15 @@ async function loadVolRoster(){
   nome:s.nome_manifestazione,luogo:s.luogo_manifestazione,
   mezzo:s.mezzo,mine:s.assegnato_a_me
  }));
- volRosterRender();if(!crewNames.error)msg('volRosterMsg','');
+ volRosterRender();msg('volRosterMsg','');
+ // Carica i nominativi separatamente senza impedire la visualizzazione dei turni e dei pallini.
+ const crewNames=await crewNamesPromise;
+ if(seq!==volRosterSeq)return;
+ if(crewNames.error){
+  return msg('volRosterMsg','Equipaggi visibili; caricamento nomi non riuscito: '+crewNames.error.message,'warn');
+ }
+ volRosterCrewNames=crewNames.data||[];
+ volRosterRender();
 }
 
 async function volRosterJoin(kind,id){
