@@ -6,10 +6,10 @@
 </style></head>
 <body><header><div><div style="font-size:.8rem;font-weight:800;color:#ffdf28;letter-spacing:.08em">CROCE GIALLA EMERGENZA ODV</div><h1>Censimento vestiario personale</h1><p>Taglie e capi attualmente in dotazione</p></div></header>
 <main>
-<div class="card"><h2>I tuoi dati</h2><div class="grid">
-<div><label for="name">Cognome e nome *</label><input id="name" autocomplete="name" maxlength="150" placeholder="Come risulta nell'anagrafica dell'associazione" required></div>
-<div><label for="badge">Numero badge personale *</label><input id="badge" maxlength="30" inputmode="text" autocomplete="off" placeholder="Numero del tuo badge" required></div></div>
-<p class="hint">Indica il nominativo e il badge assegnati dall'associazione. I dati servono per associare correttamente la dichiarazione alla tua scheda.</p></div>
+<div class="card"><h2>I tuoi dati</h2>
+<label for="person">Seleziona il tuo nome e cognome *</label>
+<select id="person" required><option value="">Caricamento nominativi…</option></select>
+<p class="hint">Seleziona il tuo nominativo dall'elenco del personale attivo. Non occorre digitare il badge.</p></div>
 <div class="card"><h2>Taglie e quantità possedute</h2>
 <p class="hint">Indica per ogni capo la taglia e quanti pezzi hai attualmente. Scrivi 0 se non possiedi quel capo.</p>
 <div id="items"></div></div>
@@ -21,6 +21,18 @@
 </main>
 <script>
 const API="https://ihottewckpwpwqzpxusl.supabase.co",KEY="sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4";
+async function loadPersonnel(){
+const select=document.getElementById('person');
+try{
+ const res=await fetch(API+'/rest/v1/rpc/vestiario_elenco_personale',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:'{}'});
+ if(!res.ok)throw Error('Elenco temporaneamente non disponibile');
+ const people=await res.json();
+ select.replaceChildren();
+ const first=document.createElement('option');first.value='';first.textContent='Seleziona nome e cognome';select.append(first);
+ for(const p of people){const op=document.createElement('option');op.value=p.badge;op.textContent=p.nominativo;select.append(op)}
+}catch(e){select.replaceChildren();const op=document.createElement('option');op.textContent='Errore nel caricamento — ricarica la pagina';op.value='';select.append(op)}
+}
+loadPersonnel();
 const products=['Giacca','Pantalone','T-Shirt','Felpa / pile','Gilet','Polo','Altro'];
 const sizes=['','XXS','XS','S','M','L','XL','XXL','3XL','4XL','5XL','Taglia unica','Non so'];
 const target=document.getElementById('items');
@@ -37,8 +49,8 @@ a.append(lab1,select);b.append(lab2,q);row.append(a,b);target.append(row);
 const fb=document.getElementById('feedback'),btn=document.getElementById('submit');
 btn.addEventListener('click',async()=>{
 fb.className='feedback';fb.textContent='';
-const name=document.getElementById('name').value.trim(),badge=document.getElementById('badge').value.trim(),notes=document.getElementById('notes').value.trim();
-if(!name||!badge||!document.getElementById('confirm').checked){fb.className='feedback error';fb.textContent='Compila nome, numero badge e conferma la dichiarazione.';return;}
+const selection=document.getElementById('person'),badge=selection.value,name=selection.options[selection.selectedIndex]?.textContent||'',notes=document.getElementById('notes').value.trim();
+if(!badge||!document.getElementById('confirm').checked){fb.className='feedback error';fb.textContent='Seleziona il tuo nominativo e conferma la dichiarazione.';return;}
 const taglie={},dotazione={};
 for(let i=0;i<products.length;i++){
 let q=Number(document.getElementById('q'+i).value),size=document.getElementById('s'+i).value;
