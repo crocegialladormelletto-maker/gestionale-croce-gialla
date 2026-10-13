@@ -12683,6 +12683,52 @@ async function volMarkAllNotificationsRead(){
  await loadVolunteerNotificationsOnly();msg('volNotificationMsg','Avvisi segnati come letti.','ok');
 }
 $('volNotificationsReadAll').onclick=volMarkAllNotificationsRead;
+let volOrdCursor=new Date(),volOrdSelected=todaySafe(),volOrdItems=[],volOrdCrew=[],volOrdSeq=0;
+function renderVolOrd(){
+ const range=calVisibleRange(volOrdCursor,'month');
+ $('volOrdTitle').textContent=calMonthTitle(volOrdCursor);
+ let html='';
+ for(let i=0;i<range.cells;i++){
+  const dt=new Date(range.start);dt.setDate(range.start.getDate()+i);
+  const day=calYmd(dt),items=volOrdItems.filter(x=>x.data_servizio===day);
+  html+='<button type="button" class="dim-date '+(dt.getMonth()!==volOrdCursor.getMonth()?'dim-out ':'')+
+   (day===todaySafe()?'dim-today ':'')+(day===volOrdSelected?'dim-selected':'')+
+   '" data-vol-ord-day="'+day+'"><b>'+dt.getDate()+'</b><small>'+(items.length?'🚐 '+items.length:'')+'</small></button>';
+ }
+ $('volOrdGrid').innerHTML=html;
+ $('volOrdGrid').querySelectorAll('[data-vol-ord-day]').forEach(b=>b.onclick=()=>{volOrdSelected=b.dataset.volOrdDay;renderVolOrd()});
+ $('volOrdDayTitle').textContent='Servizi ordinari · '+dimDayTitle(volOrdSelected);
+ const entries=volOrdItems.filter(x=>x.data_servizio===volOrdSelected).sort((a,b)=>String(a.ora_partenza_prevista||'').localeCompare(String(b.ora_partenza_prevista||'')));
+ $('volOrdDay').innerHTML=entries.length?entries.map(x=>{
+  const crew=volOrdCrew.filter(c=>c.servizio_id===x.id);
+  const roster=crew.length?crew.map(c=>'<div class="dim-person">• '+esc(c.nome_completo||'Operatore')+' · <b>'+esc((VOL_ROSTER_ROLES.find(role=>role[0]===c.ruolo)||[])[1]||c.ruolo)+'</b></div>').join(''):'<div class="muted">Nessun operatore assegnato.</div>';
+  const state=volunteerEventCrewState(crew.map(c=>({...c,badge_personale:c.nome_completo||c.ruolo})),x.mezzo);
+  const label=state==='complete'?'Equipaggio completo':state==='partial'?'Equipaggio da completare':'Equipaggio da assegnare';
+  return '<div class="box" style="margin:8px 0"><b><span class="cal-crew-dot '+state+'"></span>'+esc(x.tipo_servizio_altro||x.tipo_servizio||'Servizio ordinario')+'</b>'+
+   '<div class="muted">'+esc(label)+' · Mezzo '+esc(x.mezzo||'—')+' · Partenza '+esc(calTime(x.ora_partenza_prevista)||'—')+'</div>'+
+   '<div class="muted" style="margin-top:6px"><b>Equipaggio assegnato:</b></div>'+roster+'</div>';
+ }).join(''):'<div class="notice">Nessun servizio ordinario programmato per questa giornata.</div>';
+}
+async function loadVolOrd(){
+ if(!volunteerBadge)return;
+ const seq=++volOrdSeq,range=calVisibleRange(volOrdCursor,'month');
+ msg('volOrdMsg','Caricamento servizi ordinari...');
+ const [services,crew]=await Promise.all([
+  sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_equipaggi_servizi_visibili_v2',{p_dal:range.startYmd,p_al:range.endYmd})
+ ]);
+ if(seq!==volOrdSeq)return;
+ if(services.error){volOrdItems=[];volOrdCrew=[];renderVolOrd();return msg('volOrdMsg','Errore caricamento servizi ordinari: '+services.error.message,'err')}
+ volOrdItems=(services.data||[]).filter(x=>!isAssistanceManifestation(x.tipo_servizio));
+ volOrdCrew=crew.error?[]:(crew.data||[]);
+ renderVolOrd();
+ msg('volOrdMsg',crew.error?'Calendario caricato, ma i nomi degli equipaggi non sono disponibili: '+crew.error.message:'',crew.error?'warn':'');
+}
+$('volOrdPrev').onclick=()=>{volOrdCursor=new Date(volOrdCursor.getFullYear(),volOrdCursor.getMonth()-1,1);volOrdSelected=calYmd(volOrdCursor);loadVolOrd()};
+$('volOrdNext').onclick=()=>{volOrdCursor=new Date(volOrdCursor.getFullYear(),volOrdCursor.getMonth()+1,1);volOrdSelected=calYmd(volOrdCursor);loadVolOrd()};
+$('volOrdToday').onclick=()=>{volOrdCursor=new Date();volOrdSelected=todaySafe();loadVolOrd()};
+$('volOrdRefresh').onclick=loadVolOrd;
+
 async function loadVolunteerArea(){
  if(!volunteerBadge)return;
  msg('volmsg','Aggiornamento dati...');
