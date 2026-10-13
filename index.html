@@ -3150,7 +3150,7 @@ let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[],em
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
 let asMonthCursor=new Date(),asMonthSelected=todaySafe(),asMonthServices=[],asMonthCrew=[],asMonthSeq=0;
 let dimVolCursor=new Date(),dimVolSelected=todaySafe(),dimVolRows=[],dimVolSeq=0,dimVolBusy=false;
-let volRosterCursor=new Date(),volRosterSelected=todaySafe(),volRosterEvents=[],volRosterOccupied=[],volRosterApplications=[],volRosterSeq=0,volRosterBusy=false;
+let volRosterCrewNames=[];let volRosterCursor=new Date(),volRosterSelected=todaySafe(),volRosterEvents=[],volRosterOccupied=[],volRosterApplications=[],volRosterSeq=0,volRosterBusy=false;
 let dimAdminCursor=new Date(),dimAdminSelected=todaySafe(),dimAdminRows=[],dimAdminEligible=[],dimAdminSeq=0,dimAdminEligibleSeq=0,dimAdminBusy=false;
 let emgVolCursor=new Date(),emgVolSelected=todaySafe(),emgVolRows=[],emgVolSeq=0,emgVolBusy=false;
 let emgAdminCursor=new Date(),emgAdminSelected=todaySafe(),emgAdminRows=[],emgAdminEligible=[],emgAdminSeq=0,emgAdminEligibleSeq=0,emgAdminBusy=false;
@@ -5181,11 +5181,14 @@ function volRosterRenderDay(){
   const app=volRosterApplications.find(a=>a.servizio_id===e.id);
   const qualified=volRosterEligible(e.day,'SERVIZIO_ASSISTENZA');
   const free=qualified.filter(([role])=>!volRosterOccupied.some(x=>x.servizio_id===e.id&&x.ruolo===role));
-  const roles=app?.stato==='IN_ATTESA'?free.filter(([role])=>role===app.ruolo):free;
+  const roles=volRosterCrewState(e)==='complete'?[]:(app?.stato==='IN_ATTESA'?free.filter(([role])=>role===app.ruolo):free);
   const description='Data '+e.day+' · '+(e.start||'—')+'–'+(e.end||'—')+
     ' · Mezzo '+(e.mezzo||'—')+(e.luogo?' · '+e.luogo:'');
+  const assigned=volRosterCrewNames.filter(x=>x.servizio_id===e.id);
+  const rosterHtml='<div class="muted" style="margin-top:6px"><b>Equipaggio assegnato:</b> '+(assigned.length?assigned.map(x=>esc(x.nome_completo||'Operatore')+' ('+esc((VOL_ROSTER_ROLES.find(z=>z[0]===x.ruolo)||[])[1]||x.ruolo)+')').join(' · '):'Nessun operatore ancora assegnato')+'</div>';
   let controls='';
-  if(e.mine)controls='<div class="notice ok">Sei già iscritto definitivamente a questa manifestazione. Per variazioni contatta il Centralino.</div>';
+  if(volRosterCrewState(e)==='complete'&&!e.mine)controls='<div class="notice ok">Equipaggio completo: iscrizioni chiuse.</div>';
+  else if(e.mine)controls='<div class="notice ok">Sei già iscritto definitivamente a questa manifestazione. Per variazioni contatta il Centralino.</div>';
   else if(app?.stato==='CONFERMATA')controls='<div class="notice ok">Candidatura già confermata: verifica l’equipaggio con il Centralino.</div>';
   else if(app?.stato==='NON_CONFERMATA')controls='<div class="notice">Una candidatura precedente non è stata confermata. Contatta il Centralino.</div>';
   else if(day>=todaySafe()){
@@ -5200,7 +5203,7 @@ function volRosterRenderDay(){
    else controls+='<div class="muted">Non ci sono ruoli liberi compatibili con le tue qualifiche. Contatta il Centralino.</div>';
   }
   return '<div class="box" style="margin:8px 0"><b>'+volRosterCrewDot(e)+esc(volRosterTitle(e))+'</b>'+'<div class="muted" style="margin-top:4px">'+esc(volRosterCrewState(e)==='complete'?'Equipaggio completo':volRosterCrewState(e)==='partial'?'Equipaggio da completare':'Equipaggio da assegnare')+'</div>'+
-   '<div class="muted">'+esc(description)+'</div>'+volunteerSpecialEquipmentHTML(e)+controls+'</div>';
+   '<div class="muted">'+esc(description)+'</div>'+rosterHtml+volunteerSpecialEquipmentHTML(e)+controls+'</div>';
  }).join(''):'<div class="notice">Nessuna manifestazione programmata per questo giorno. Scegli una data con 🎪 oppure chiedi al Centralino di inserire il servizio.</div>';
  $('volRosterDay').querySelectorAll('[data-vol-roster-join]').forEach(button=>
   button.addEventListener('click',async()=>{
@@ -5213,15 +5216,16 @@ async function loadVolRoster(){
  if(!volunteerBadge)return;
  const seq=++volRosterSeq,range=calVisibleRange(volRosterCursor,'month');
  msg('volRosterMsg','Caricamento delle manifestazioni...');
- const [services,occupied,equipment]=await Promise.all([
+ const [services,occupied,equipment,crewNames]=await Promise.all([
   sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_ordinari_dotazioni',{p_dal:range.startYmd,p_al:range.endYmd})
+  sb.rpc('cge_volontario_ordinari_dotazioni',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_assistenze_equipaggi',{p_dal:range.startYmd,p_al:range.endYmd})
  ]);
  if(seq!==volRosterSeq)return;
- if(services.error||occupied.error||equipment.error){
-  volRosterEvents=[];volRosterOccupied=[];volRosterApplications=[];volRosterRender();
-  return msg('volRosterMsg','Errore calendario: '+(services.error||occupied.error||equipment.error).message,'err');
+ if(services.error||occupied.error||equipment.error||crewNames.error){
+  volRosterEvents=[];volRosterOccupied=[];volRosterCrewNames=[];volRosterApplications=[];volRosterRender();
+  return msg('volRosterMsg','Errore calendario: '+(services.error||occupied.error||equipment.error||crewNames.error).message,'err');
  }
  const rows=(services.data||[]).filter(s=>isAssistanceManifestation(s.tipo_servizio));
  const ids=rows.map(s=>s.id);
@@ -5235,6 +5239,7 @@ async function loadVolRoster(){
  }
  if(seq!==volRosterSeq)return;
  volRosterOccupied=occupied.data||[];
+ volRosterCrewNames=crewNames.data||[];
  volRosterApplications=applications;
  const equipmentById=new Map((equipment.data||[]).map(x=>[x.servizio_id,x]));
  volRosterEvents=rows.map(s=>({
@@ -5253,6 +5258,7 @@ async function volRosterJoin(kind,id){
  const event=volRosterEvents.find(e=>e.kind===kind&&e.id===id);
  if(!event)return msg('volRosterMsg','Manifestazione non trovata: aggiorna il calendario.','warn');
  if(event.mine)return msg('volRosterMsg','Risulti già iscritto a questa manifestazione.','ok');
+ if(volRosterCrewState(event)==='complete')return msg('volRosterMsg','Equipaggio completo: iscrizioni chiuse.','warn');
  if(event.day<todaySafe())return msg('volRosterMsg','La data della manifestazione è già trascorsa.','warn');
  msg('volRosterMsg','Verifica iscrizione in corso...');
  const role=$('volRosterDay').querySelector('[data-vol-roster-role="'+kind+'-'+id+'"]')?.value;
