@@ -5403,7 +5403,7 @@ function renderVolunteerFutureCalendarDay(){
   const crewListing='<div class="muted" style="margin-top:7px"><b>Equipaggio assegnato:</b> '+(assignedCrew.length?assignedCrew.map(x=>esc(x.nome_completo||'Operatore')+' · '+esc((VOL_ROSTER_ROLES.find(z=>z[0]===x.ruolo)||[])[1]||x.ruolo)).join(' | '):'Nessun operatore assegnato')+'</div>';
   const pickupAndDestination=vfcalOrdRoutes.find(route=>route.servizio_id===s.id);
   return '<div class="cal-detail-item service"><b>'+(evt?'<span class="cal-crew-dot '+esc(e.crewState||'empty')+'" aria-label="'+esc(e.crewState==='complete'?'Equipaggio completo':e.crewState==='partial'?'Equipaggio incompleto':'Equipaggio da assegnare')+'" title="'+esc(e.crewState==='complete'?'Equipaggio completo':e.crewState==='partial'?'Equipaggio incompleto':'Equipaggio da assegnare')+'"></span>':'')+esc(e.title)+'</b>'+(evt?'<div class="muted" style="margin-top:5px">'+esc(e.crewState==='complete'?'🟢 Equipaggio completo':e.crewState==='partial'?'🟡 Equipaggio da completare':'🔴 Equipaggio da assegnare')+'</div>':'')+(e.subtitle?'<br>'+esc(e.subtitle):'')+'<br><span class="muted">'+esc(times)+'</span>'+volunteerOrdinaryRouteHTML(pickupAndDestination)+volunteerSpecialEquipmentHTML(pickupAndDestination)+
-   +crewListing+
+   crewListing+
    '<br><span class="pill '+(s.assegnato_a_me?'g':'b')+'">'+(s.assegnato_a_me?'Sei assegnato a questo servizio':'Servizio programmato')+'</span>'+signup+'</div>';
  }).join(''):'<div class="notice">Nessun servizio futuro programmato per questo giorno.</div>';
  box.querySelectorAll('[data-vf-join]').forEach(b=>b.onclick=()=>submitVolunteerAssistanceApplication(b.dataset.vfJoin,'ISCRIVITI'));
