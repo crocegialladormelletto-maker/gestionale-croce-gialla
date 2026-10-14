@@ -3742,7 +3742,20 @@ setInterval(()=>{
  refreshDashboardEmployeeCommitments();
 },60000);
 
+async function checkGestionaleAuth(){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return true;
+ const {data,error}=await sb.auth.getSession();
+ if(!error&&data?.session?.access_token)return true;
+ // Non effettuare chiamate come anon: generano falsi "permission denied".
+ const refresh=await sb.auth.refreshSession();
+ if(!refresh.error&&refresh.data?.session?.access_token)return true;
+ alert('Sessione del gestionale scaduta. Accedi nuovamente: i servizi e i turni salvati non sono stati cancellati.');
+ $('app').classList.add('hidden');
+ $('login').classList.remove('hidden');
+ return false;
+}
 async function view(v,options={}){
+ if(!await checkGestionaleAuth())return;
  const current=[...document.querySelectorAll('main>section')].find(x=>!x.classList.contains('hidden'))?.id||'';
  if(current==='serviceDetail'&&v!=='serviceDetail')resetServiceDetailForm();
  if(current==='assistance'&&v!=='assistance')closeAssistanceCrewPanels();
@@ -5071,6 +5084,7 @@ function refreshOperationalCalendarView(){
  $('calMonth').className='btn '+(opCalMode==='month'?'yellow':'secondary');$('calWeek').className='btn '+(opCalMode==='week'?'yellow':'secondary')
 }
 async function loadOperationalCalendar(){
+ if(!await checkGestionaleAuth())return;
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  msg('calMsg','Caricamento calendario...');
  const range=calVisibleRange(opCalCursor,opCalMode),startIso=range.startYmd+'T00:00:00',endIso=range.endYmd+'T23:59:59';
@@ -8043,6 +8057,7 @@ async function emRemoveFasciaAssignment(id){
 }
 
 async function loadEmergencyRoster(skipAdmin=false){
+ if(!await checkGestionaleAuth())return;
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  if(!skipAdmin)void loadEmergenzaAdmin();
  const seq=++emRosterSeq,range=emPeriodRange();
@@ -8453,6 +8468,7 @@ async function loadEmergenzaVol(){
  emgVolRows=r.data||[];emgRenderMonth('Vol');msg('emgVolMsg','');
 }
 async function loadEmergenzaAdmin(){
+ if(!await checkGestionaleAuth())return;
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  const seq=++emgAdminSeq,range=calVisibleRange(emgAdminCursor,'month');
  ++emgAdminEligibleSeq;emgAdminEligible=[];
