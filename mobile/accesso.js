@@ -31,11 +31,11 @@ const [year,month]=m.split('-').map(Number),offset=(new Date(Date.UTC(year,month
 const out=['L','M','M','G','V','S','D'].map(x=>'<div class="weekday">'+x+'</div>');
 for(let i=0;i<offset;i++)out.push('<div class="blank"></div>');
 for(let d=1;d<=last;d++){const date=m+'-'+String(d).padStart(2,'0'),rows=grouped[date]||[];
-const dots=rows.slice(0,5).map(x=>'<span class="dot '+((x.tipo_servizio||'').toLowerCase().includes('assistenza')?'assistenza':/visita|trasferimento|ordinario/i.test(x.tipo_servizio||'')?'ordinario':'')+'"></span>').join('');
-out.push('<button type="button" class="day '+(rows.length?'':'empty')+'" data-date="'+date+'"><strong>'+d+'</strong><small>'+(rows.length?rows.length+' serv.':'Libero')+'</small><span class="dots">'+dots+'</span></button>')}
+const classes=[...new Set(rows.map(x=>(x.tipo_servizio||'').toLowerCase().includes('assistenza')?'assistenza':/visita|trasferimento|ordinario/i.test(x.tipo_servizio||'')?'ordinario':'dimissione'))];const dots=classes.map(t=>'<span class="dot '+t+'"></span>').join('');
+out.push('<button type="button" class="day '+(rows.length?'busy':'empty')+'" data-date="'+date+'" aria-label="'+d+' '+(rows.length?rows.length+' servizi':'nessun servizio')+'"><strong>'+d+'</strong><span class="dots">'+dots+'</span><small>'+(rows.length?rows.length+' serv.':'–')+'</small></button>')}
 $('calendar').innerHTML=out.join('');
 $('calendarStatus').textContent='Calendario '+m+': '+(r.data||[]).filter(category).length+' servizi. Seleziona una giornata.';
-showDay(m+'-'+String(Math.min(Number(today.slice(-2)),last)).padStart(2,'0'),grouped);
+showDay(m===today.slice(0,7)?today:m+'-01',grouped);
 window.cgeGrouped=grouped;
 function showDay(date,map){document.querySelectorAll('[data-date]').forEach(b=>b.classList.toggle('selected',b.dataset.date===date));const rows=map[date]||[];$('dayDetails').innerHTML='<b>'+safe(date)+'</b> · '+(rows.length?rows.length+' servizi':'Nessun servizio registrato')+rows.map(x=>'<p>'+safe((x.ora_partenza_prevista||'').slice(0,5)+' · '+x.tipo_servizio+' · mezzo '+x.mezzo+' · '+(x.destinazione||''))+'</p>').join('');$('date').value=date;}
 
