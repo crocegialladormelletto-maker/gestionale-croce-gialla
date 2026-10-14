@@ -27,13 +27,23 @@ const last=new Date(Number(m.slice(0,4)),Number(m.slice(5,7)),0).getDate();
 const r=await db.from('servizi_giornalieri').select('data_servizio,tipo_servizio,ora_partenza_prevista,destinazione,mezzo').gte('data_servizio',m+'-01').lte('data_servizio',m+'-'+String(last).padStart(2,'0')).order('ora_partenza_prevista');
 if(r.error){$('calendarStatus').textContent='Errore nel caricamento: '+r.error.message;msg('Calendario non disponibile: '+r.error.message);return}
 const grouped={};for(const x of (r.data||[]).filter(category))(grouped[x.data_servizio]??=[]).push(x);
-const out=[];for(let d=1;d<=last;d++){const date=m+'-'+String(d).padStart(2,'0'),rows=grouped[date]||[];out.push('<button class="day '+(rows.length?'':'empty')+'" data-date="'+date+'">'+d+' · '+(rows.length?rows.length+' servizi':'Nessun servizio')+'</button>');if(rows.length)out.push('<div style="padding-left:18px">'+rows.map(x=>safe((x.ora_partenza_prevista||'').slice(0,5)+' '+x.tipo_servizio+' mezzo '+x.mezzo+' '+(x.destinazione||''))).join('<hr>')+'</div>')}
-$('calendar').innerHTML=out.join('');$('calendarStatus').textContent='Calendario di '+m+' caricato: '+(r.data||[]).filter(category).length+' servizi. Tocca un giorno per inserire un servizio.';
+const [year,month]=m.split('-').map(Number),offset=(new Date(Date.UTC(year,month-1,1)).getUTCDay()+6)%7;
+const out=['L','M','M','G','V','S','D'].map(x=>'<div class="weekday">'+x+'</div>');
+for(let i=0;i<offset;i++)out.push('<div class="blank"></div>');
+for(let d=1;d<=last;d++){const date=m+'-'+String(d).padStart(2,'0'),rows=grouped[date]||[];
+const dots=rows.slice(0,5).map(x=>'<span class="dot '+((x.tipo_servizio||'').toLowerCase().includes('assistenza')?'assistenza':/visita|trasferimento|ordinario/i.test(x.tipo_servizio||'')?'ordinario':'')+'"></span>').join('');
+out.push('<button type="button" class="day '+(rows.length?'':'empty')+'" data-date="'+date+'"><strong>'+d+'</strong><small>'+(rows.length?rows.length+' serv.':'Libero')+'</small><span class="dots">'+dots+'</span></button>')}
+$('calendar').innerHTML=out.join('');
+$('calendarStatus').textContent='Calendario '+m+': '+(r.data||[]).filter(category).length+' servizi. Seleziona una giornata.';
+showDay(m+'-'+String(Math.min(Number(today.slice(-2)),last)).padStart(2,'0'),grouped);
+window.cgeGrouped=grouped;
+function showDay(date,map){document.querySelectorAll('[data-date]').forEach(b=>b.classList.toggle('selected',b.dataset.date===date));const rows=map[date]||[];$('dayDetails').innerHTML='<b>'+safe(date)+'</b> · '+(rows.length?rows.length+' servizi':'Nessun servizio registrato')+rows.map(x=>'<p>'+safe((x.ora_partenza_prevista||'').slice(0,5)+' · '+x.tipo_servizio+' · mezzo '+x.mezzo+' · '+(x.destinazione||''))+'</p>').join('');$('date').value=date;}
+
 }
 $('refresh').onclick=async()=>{try{await calendar()}catch(e){$('calendarStatus').textContent='Errore: '+e.message;msg('Errore calendario: '+e.message)}};$('category').onchange=calendar;
-$('calendar').onclick=e=>{const b=e.target.closest('[data-date]');if(b){$('date').value=b.dataset.date;$('date').scrollIntoView({behavior:'smooth',block:'center'})}};
+$('calendar').onclick=e=>{const b=e.target.closest('[data-date]');if(b){const date=b.dataset.date;document.querySelectorAll('[data-date]').forEach(x=>x.classList.toggle('selected',x===b));$('date').value=date;const rows=(window.cgeGrouped||{})[date]||[];$('dayDetails').innerHTML='<b>'+safe(date)+'</b> · '+(rows.length?rows.length+' servizi':'Nessun servizio registrato')+rows.map(x=>'<p>'+safe((x.ora_partenza_prevista||'').slice(0,5)+' · '+x.tipo_servizio+' · mezzo '+x.mezzo+' · '+(x.destinazione||''))+'</p>').join('')}};$('newForDay').onclick=()=>{$('new').scrollIntoView({behavior:'smooth',block:'start'})};
 $('new').onsubmit=async e=>{e.preventDefault();const t=$('type').value;
 if(t!=='Assistenza manifestazione'&&(!$('name').value.trim()||!$('surname').value.trim())){msg('Inserisci nome e cognome paziente');return}
-const r=await db.from('servizi_giornalieri').insert({data_servizio:$('date').value,ora_prevista:$('time').value,ora_partenza_prevista:$('time').value,mezzo:$('vehicle').value,tipo_servizio:t,categoria_servizio:'ORDINARIO',luogo_carico_paziente:$('pickup').value||null,destinazione:$('destination').value||null,paziente_nome:$('name').value||null,paziente_cognome:$('surname').value||null,fonte:'MOBILE_DIREZIONE',creato_da:user.id}).select('id').single();
+const r=await db.from('servizi_giornalieri').insert({data_servizio:$('date').value,ora_prevista:$('time').value,ora_partenza_prevista:$('time').value,ora_carico_paziente_prevista:$('loadTime').value||null,ora_arrivo_destinazione_prevista:$('arrivalTime').value||null,ora_rientro_previsto:$('endTime').value||null,mezzo:$('vehicle').value,tipo_servizio:t,categoria_servizio:'ORDINARIO',luogo_carico_paziente:$('pickup').value||null,destinazione:$('destination').value||null,paziente_nome:$('name').value||null,paziente_cognome:$('surname').value||null,fonte:'MOBILE_DIREZIONE',creato_da:user.id}).select('id').single();
 if(r.error){msg('Errore inserimento: '+r.error.message);return}msg('Servizio inserito correttamente');await calendar()};
 check().catch(e=>msg('Problema temporaneo di accesso: '+e.message));
