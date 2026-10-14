@@ -69,7 +69,14 @@
      <div id="detailMsg"></div>
      <div id="draftNotice" class="notice hidden" style="margin-bottom:12px"></div>
      <form id="form" onsubmit="return false">
-      <div class="section"><h3>Intestatario e documento</h3><div class="grid4">
+      <div class="section"><h3>Intestatario della Nota di Debito</h3>
+ <p class="muted">La scelta cambia soltanto la Nota di Debito, non i dati del paziente o del Foglio Viaggio.</p>
+ <div class="grid3">
+  <div class="field"><label>A chi intestare il documento?</label><select id="dRecipientMode"><option value="originale">Intestatario originale del servizio</option><option value="diverso">Persona o azienda diversa</option></select></div>
+  <div class="field" id="dRecipientRecallBox"><label>Richiama intestatario già utilizzato</label><select id="dRecipientRecall"><option value="">— Inserisci un nuovo intestatario —</option></select></div>
+ </div><div id="dRecipientHelp" class="muted" style="margin-top:8px"></div>
+ </div>
+ <div class="section"><h3>Intestatario e documento</h3><div class="grid4">
        <div class="field"><label>Data documento</label><input id="dDate" type="date"></div>
        <div class="field"><label>Data servizio</label><input id="dServiceDate" type="date" disabled></div>
        <div class="field"><label>Intestatario *</label><input id="dName"></div>
@@ -253,6 +260,49 @@ function fill(){
  $('dPayment').disabled=false;$('dPayDate').disabled=false;
  $('draftNotice').classList.toggle('hidden',!draft);
  $('draftNotice').textContent=draft?'BOZZA MODIFICABILE: controlla e completa tutti i dati. Il documento diventerà definitivo solo premendo “Emetti Nota di Debito”.':'';
+ updateRecipientSelector();
+}
+function originalRecipient(){
+ const f=sheets.find(x=>String(x.id)===String(active?.foglio_viaggio_id));
+ if(!f)return null;
+ return {
+  intestatario:f.intestatario_nota_debito||[f.paziente_nome,f.paziente_cognome].filter(Boolean).join(' '),
+  cf_piva:f.cf_piva_intestatario||f.codice_fiscale||'',
+  indirizzo:f.indirizzo_fatturazione||f.residenza||'',
+  cap:f.cap_fatturazione||f.cap||'',comune:f.comune_fatturazione||'',
+  provincia:f.provincia_fatturazione||f.provincia||'',
+  email:f.email_fatturazione||f.email||''
+ };
+}
+function setRecipientFields(person){
+ if(!person)return;
+ for(const [id,k] of Object.entries({dName:'intestatario',dCF:'cf_piva',dAddress:'indirizzo',dCap:'cap',dTown:'comune',dProvince:'provincia',dEmail:'email'}))
+  $(id).value=person[k]||'';
+}
+function updateRecipientSelector(){
+ const original=originalRecipient(),mode=$('dRecipientMode'),recall=$('dRecipientRecall'),box=$('dRecipientRecallBox');
+ const editable=active?.stato==='BOZZA';
+ mode.disabled=!editable;recall.disabled=!editable;
+ const current=String($('dName').value||'').trim().toLocaleLowerCase('it-IT');
+ const base=String(original?.intestatario||'').trim().toLocaleLowerCase('it-IT');
+ mode.value=original&&current===base?'originale':'diverso';
+ if(!original)mode.value='diverso';
+ box.classList.toggle('hidden',mode.value!=='diverso'||!editable);
+ const people=new Map();
+ notes.forEach(n=>{
+  if(!n.intestatario||n.id===active?.id)return;
+  const key=String(n.cf_piva||n.intestatario).trim().toLocaleLowerCase('it-IT');
+  if(!people.has(key))people.set(key,n);
+ });
+ recall.innerHTML='<option value="">— Inserisci un nuovo intestatario —</option>'+[...people].map(([key,n])=>'<option value="'+esc(key)+'">'+esc(n.intestatario)+(n.cf_piva?' · '+esc(n.cf_piva):'')+'</option>').join('');
+ recall.onchange=()=>{if(recall.value)setRecipientFields(people.get(recall.value))};
+ mode.onchange=()=>{
+  if(mode.value==='originale'&&original){setRecipientFields(original);box.classList.add('hidden')}
+  else {box.classList.remove('hidden');setRecipientFields({})}
+ };
+ $('dRecipientHelp').textContent=editable
+  ?'Puoi modificare i dati nei campi qui sotto e salvarli nella bozza. Gli intestatari usati in altre note sono richiamabili dal menu.'
+  :'Nota emessa: intestatario non modificabile.';
 }
 function calcTotal(){$('dTotal').textContent=money(Math.max(0,Number($('dAmount').value||0)-Number($('dDiscount').value||0)))}
 $('dAmount').oninput=calcTotal;$('dDiscount').oninput=calcTotal;
