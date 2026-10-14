@@ -8551,14 +8551,63 @@ function asMonthRenderSelected(){
    '<div class="muted">'+esc(s.destinazione||s.indirizzo_destinazione||'Luogo da indicare')+
    ' · Mezzo '+esc(s.mezzo||'—')+'</div>'+
    '<div class="muted">'+esc(times)+'</div>'+crewHtml+
-   '<div class="actions" style="margin-top:7px"><button type="button" class="btn yellow" data-as-change-vehicle="'+esc(s.id)+'">🚑 Cambia mezzo</button><button type="button" class="btn secondary" data-as-month-open="'+esc(s.id)+'">✚ Apri / completa equipaggio</button></div></div>';
+   '<div class="actions" style="margin-top:7px"><button type="button" class="btn blue" data-as-edit-service="'+esc(s.id)+'">✎ Modifica servizio e orari</button><button type="button" class="btn yellow" data-as-change-vehicle="'+esc(s.id)+'">🚑 Cambia mezzo</button><button type="button" class="btn secondary" data-as-month-open="'+esc(s.id)+'">✚ Apri / completa equipaggio</button></div></div>';
  }).join(''):'<div class="notice">Nessuna manifestazione programmata in questa data. Per inserirne una, utilizza «Nuovo servizio».</div>';
+ $('asMonthDay').querySelectorAll('[data-as-edit-service]').forEach(button=>button.onclick=()=>asEditService(button.dataset.asEditService));
  $('asMonthDay').querySelectorAll('[data-as-month-open]').forEach(button=>
   button.onclick=()=>asMonthOpenService(button.dataset.asMonthOpen));
  $('asMonthDay').querySelectorAll('[data-as-change-vehicle]').forEach(button=>
   button.onclick=()=>asChangeServiceVehicle(button.dataset.asChangeVehicle));
  $('asMonthDay').querySelectorAll('[data-as-service-remove]').forEach(button=>
   button.onclick=()=>asRemoveServiceCrew(button.dataset.asServiceRemove));
+}
+async function asEditService(id){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const s=asMonthServices.find(x=>String(x.id)===String(id));
+ if(!s)return msg('asMonthMsg','Assistenza non trovata: aggiorna il calendario.','err');
+ if(['ANNULLATO','CHIUSO','TERMINATO','DA CONTABILIZZARE'].includes(String(s.stato_gestionale||'').toUpperCase()))
+  return msg('asMonthMsg','Questo servizio è già chiuso: non è possibile modificarne gli orari dal calendario.','warn');
+ const existing=document.getElementById('asEditOverlay');if(existing)existing.remove();
+ const overlay=document.createElement('div');overlay.id='asEditOverlay';
+ overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:#10283cbf;display:grid;place-items:center;padding:15px;overflow:auto';
+ overlay.innerHTML='<form id="asEditForm" class="card" style="width:min(630px,100%);max-height:90vh;overflow:auto;padding:20px;box-shadow:0 14px 45px #0005">'+
+  '<h2 style="margin:0 0 5px">✎ Modifica assistenza</h2><p class="muted">Mezzo ed equipaggio rimangono invariati. Le modifiche saranno visibili nei calendari dopo il salvataggio.</p>'+
+  '<div class="grid2">'+
+  '<div class="field"><label>Data assistenza</label><input name="date" type="date" required></div>'+
+  '<div class="field"><label>Partenza</label><input name="departure" type="time"></div>'+
+  '<div class="field"><label>Inizio assistenza</label><input name="start" type="time"></div>'+
+  '<div class="field"><label>Fine assistenza</label><input name="end" type="time"></div>'+
+  '<div class="field"><label>Rientro previsto</label><input name="returnTime" type="time"></div>'+
+  '</div><div class="field" style="margin-top:10px"><label>Luogo / destinazione</label><input name="destination" type="text"></div>'+
+  '<div class="actions" style="margin-top:14px"><button type="submit" class="btn yellow">Salva modifiche</button><button type="button" id="asEditCancel" class="btn secondary">Annulla</button></div><div id="asEditFeedback" class="notice hidden"></div></form>';
+ document.body.appendChild(overlay);
+ const f=overlay.querySelector('form');
+ f.elements.date.value=s.data_servizio||'';
+ f.elements.departure.value=calTime(s.ora_partenza_prevista)||'';
+ f.elements.start.value=calTime(s.ora_inizio_assistenza_prevista)||'';
+ f.elements.end.value=calTime(s.ora_fine_assistenza_prevista)||'';
+ f.elements.returnTime.value=calTime(s.ora_rientro_previsto)||'';
+ f.elements.destination.value=s.destinazione||s.indirizzo_destinazione||'';
+ const close=()=>overlay.remove();
+ overlay.querySelector('#asEditCancel').onclick=close;
+ overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+ f.onsubmit=async e=>{
+  e.preventDefault();
+  if(!f.reportValidity())return;
+  const save=f.querySelector('[type="submit"]'),feedback=overlay.querySelector('#asEditFeedback');
+  save.disabled=true;feedback.classList.remove('hidden');feedback.textContent='Salvataggio in corso...';
+  const values={data_servizio:f.elements.date.value,ora_partenza_prevista:f.elements.departure.value||null,
+   ora_inizio_assistenza_prevista:f.elements.start.value||null,ora_fine_assistenza_prevista:f.elements.end.value||null,
+   ora_rientro_previsto:f.elements.returnTime.value||null,destinazione:f.elements.destination.value.trim()||null};
+  const result=await sb.from('servizi_giornalieri').update(values).eq('id',s.id).select('id').maybeSingle();
+  if(result.error||!result.data){
+   feedback.textContent='Modifica non salvata: '+(result.error?.message||'permesso negato o servizio non trovato');
+   feedback.classList.add('err');save.disabled=false;return;
+  }
+  close();
+  await loadAssistanceRoster();
+  msg('asMonthMsg','Orari e dettagli dell’assistenza aggiornati. Equipaggio e mezzo invariati.','ok');
+ };
 }
 async function loadAssistanceMonth(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
