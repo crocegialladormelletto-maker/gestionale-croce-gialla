@@ -25,7 +25,7 @@ a{display:inline-block;margin-top:8px;background:#12375d;color:#fff;text-decorat
 <body>
 <div class="card">
 <h1>Croce Gialla Emergenza</h1>
-<div class="badge">APP VOLONTARI · STABILE</div>
+<div class="badge">APP VOLONTARI · AGGIORNAMENTO AUTOMATICO</div>
 <div class="spin"></div>
 <p id="status">Apertura dell'app aggiornata…</p>
 <a id="manual" href="/gestionale-croce-gialla/?area=volontari&fresh=1" hidden>Apri App Volontari</a>
@@ -36,8 +36,10 @@ a{display:inline-block;margin-top:8px;background:#12375d;color:#fff;text-decorat
  const target='/gestionale-croce-gialla/?area=volontari&fresh='+Date.now();
  try{
   if('serviceWorker' in navigator){
-   await navigator.serviceWorker.register('/gestionale-croce-gialla/sw.js?v=33',{scope:'/gestionale-croce-gialla/'});
-   await navigator.serviceWorker.ready;
+   const reg=await navigator.serviceWorker.register('/gestionale-croce-gialla/sw.js?v=36',{scope:'/gestionale-croce-gialla/',updateViaCache:'none'});
+   // Aggiorna in apertura senza attendere un worker pronto: non bloccare mai l'accesso.
+   void reg.update().catch(()=>{});
+   if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
   }
  }catch(e){
   console.warn('Service worker non disponibile',e);
