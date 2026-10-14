@@ -5343,12 +5343,13 @@ async function loadVolunteerFutureCalendar(){
  const request=++vfcalLoadSequence;
  msg('vfcalMsg','Caricamento servizi futuri...');
  const range=calVisibleRange(vfcalCursor,vfcalMode);
- const [r,occupied,routes,equipment,crewNames]=await Promise.all([
+ const [r,occupied,routes,equipment,crewNames,assignedDetails]=await Promise.all([
   sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_ordinari_percorsi',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_ordinari_dotazioni',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_equipaggi_servizi_visibili_v2',{p_dal:range.startYmd,p_al:range.endYmd})
+  sb.rpc('cge_volontario_equipaggi_servizi_visibili_v2',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_dettagli_servizi_assegnati_v1',{p_dal:range.startYmd,p_al:range.endYmd})
  ]);
  if(request!==vfcalLoadSequence)return;
  if(r.error||occupied.error||routes.error||equipment.error||crewNames.error){
@@ -5368,6 +5369,7 @@ async function loadVolunteerFutureCalendar(){
  vfcalApplications=applications;
  vfcalOccupiedRoles=occupied.data||[];
  vfcalCrewNames=crewNames.data||[];
+ volAssignedDetails=assignedDetails.error?[]:(assignedDetails.data||[]);
  const equipmentById=new Map((equipment.data||[]).map(x=>[x.servizio_id,x]));
  vfcalOrdRoutes=(routes.data||[]).map(x=>({...x,...(equipmentById.get(x.servizio_id)||{})}));
  vfcalEvents=rows.map(s=>{
@@ -5412,7 +5414,7 @@ function renderVolunteerFutureCalendarDay(){
   const crewListing='<div class="muted" style="margin-top:7px"><b>Equipaggio assegnato:</b> '+(assignedCrew.length?assignedCrew.map(x=>esc(x.nome_completo||'Operatore')+' · '+esc((VOL_ROSTER_ROLES.find(z=>z[0]===x.ruolo)||[])[1]||x.ruolo)).join(' | '):'Nessun operatore assegnato')+'</div>';
   const pickupAndDestination=vfcalOrdRoutes.find(route=>route.servizio_id===s.id);
   return '<div class="cal-detail-item service"><b>'+(evt?'<span class="cal-crew-dot '+esc(e.crewState||'empty')+'" aria-label="'+esc(e.crewState==='complete'?'Equipaggio completo':e.crewState==='partial'?'Equipaggio incompleto':'Equipaggio da assegnare')+'" title="'+esc(e.crewState==='complete'?'Equipaggio completo':e.crewState==='partial'?'Equipaggio incompleto':'Equipaggio da assegnare')+'"></span>':'')+esc(e.title)+'</b>'+(evt?'<div class="muted" style="margin-top:5px">'+esc(e.crewState==='complete'?'🟢 Equipaggio completo':e.crewState==='partial'?'🟡 Equipaggio da completare':'🔴 Equipaggio da assegnare')+'</div>':'')+(e.subtitle?'<br>'+esc(e.subtitle):'')+'<br><span class="muted">'+esc(times)+'</span>'+volunteerOrdinaryRouteHTML(pickupAndDestination)+volunteerSpecialEquipmentHTML(pickupAndDestination)+
-   crewListing+
+   crewListing+volAssignedDetailsHtml(s.id,volAssignedDetails)+
    '<br><span class="pill '+(s.assegnato_a_me?'g':'b')+'">'+(s.assegnato_a_me?'Sei assegnato a questo servizio':'Servizio programmato')+'</span>'+signup+'</div>';
  }).join(''):'<div class="notice">Nessun servizio futuro programmato per questo giorno.</div>';
  box.querySelectorAll('[data-vf-join]').forEach(b=>b.onclick=()=>submitVolunteerAssistanceApplication(b.dataset.vfJoin,'ISCRIVITI'));
@@ -12683,7 +12685,24 @@ async function volMarkAllNotificationsRead(){
  await loadVolunteerNotificationsOnly();msg('volNotificationMsg','Avvisi segnati come letti.','ok');
 }
 $('volNotificationsReadAll').onclick=volMarkAllNotificationsRead;
-let volOrdCursor=new Date(),volOrdSelected=todaySafe(),volOrdItems=[],volOrdCrew=[],volOrdSeq=0;
+let volAssignedDetails=[];
+function volAssignedDetailsHtml(serviceId,details){
+ const d=(details||[]).find(x=>x.servizio_id===serviceId);
+ if(!d)return '';
+ const fields=[['Partenza',d.ora_partenza_prevista],['Carico paziente',d.ora_carico_paziente_prevista],
+ ['Appuntamento',d.ora_appuntamento_prevista],['Arrivo a destinazione',d.ora_arrivo_destinazione_prevista],
+ ['Inizio assistenza',d.ora_inizio_assistenza_prevista],['Fine assistenza',d.ora_fine_assistenza_prevista],
+ ['Rientro previsto',d.ora_rientro_previsto]].filter(x=>x[1]);
+ const addr=([d.destinazione,d.ospedale_destinazione,d.indirizzo_destinazione].filter(Boolean).join(' · '));
+ const pickup=[d.luogo_carico_paziente,d.indirizzo_carico_paziente].filter(Boolean).join(' · ');
+ const start=[d.luogo_partenza,d.indirizzo_partenza].filter(Boolean).join(' · ');
+ return '<div class="box" style="margin-top:9px;background:#f1f7fb"><b>📋 Dettagli del tuo servizio assegnato</b>'+
+  (fields.length?'<div style="margin-top:6px">'+fields.map(x=>'<div><b>'+esc(x[0])+':</b> '+esc(calTime(x[1]))+'</div>').join('')+'</div>':'')+
+  (start?'<div><b>Partenza da:</b> '+esc(start)+'</div>':'')+
+  (pickup?'<div><b>Carico:</b> '+esc(pickup)+'</div>':'')+
+  (addr?'<div><b>Destinazione:</b> '+esc(addr)+'</div>':'')+'</div>';
+}
+let volOrdCursor=new Date(),volOrdSelected=todaySafe(),volOrdItems=[],volOrdCrew=[],volOrdDetails=[],volOrdSeq=0;
 function renderVolOrd(){
  const range=calVisibleRange(volOrdCursor,'month');
  $('volOrdTitle').textContent=calMonthTitle(volOrdCursor);
@@ -12706,21 +12725,23 @@ function renderVolOrd(){
   const label=state==='complete'?'Equipaggio completo':state==='partial'?'Equipaggio da completare':'Equipaggio da assegnare';
   return '<div class="box" style="margin:8px 0"><b><span class="cal-crew-dot '+state+'"></span>'+esc(x.tipo_servizio_altro||x.tipo_servizio||'Servizio ordinario')+'</b>'+
    '<div class="muted">'+esc(label)+' · Mezzo '+esc(x.mezzo||'—')+' · Partenza '+esc(calTime(x.ora_partenza_prevista)||'—')+'</div>'+
-   '<div class="muted" style="margin-top:6px"><b>Equipaggio assegnato:</b></div>'+roster+'</div>';
+   '<div class="muted" style="margin-top:6px"><b>Equipaggio assegnato:</b></div>'+roster+volAssignedDetailsHtml(x.id,volOrdDetails)+'</div>';
  }).join(''):'<div class="notice">Nessun servizio ordinario programmato per questa giornata.</div>';
 }
 async function loadVolOrd(){
  if(!volunteerBadge)return;
  const seq=++volOrdSeq,range=calVisibleRange(volOrdCursor,'month');
  msg('volOrdMsg','Caricamento servizi ordinari...');
- const [services,crew]=await Promise.all([
+ const [services,crew,details]=await Promise.all([
   sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_equipaggi_servizi_visibili_v2',{p_dal:range.startYmd,p_al:range.endYmd})
+  sb.rpc('cge_volontario_equipaggi_servizi_visibili_v2',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_dettagli_servizi_assegnati_v1',{p_dal:range.startYmd,p_al:range.endYmd})
  ]);
  if(seq!==volOrdSeq)return;
  if(services.error){volOrdItems=[];volOrdCrew=[];renderVolOrd();return msg('volOrdMsg','Errore caricamento servizi ordinari: '+services.error.message,'err')}
  volOrdItems=(services.data||[]).filter(x=>!isAssistanceManifestation(x.tipo_servizio));
  volOrdCrew=crew.error?[]:(crew.data||[]);
+ volOrdDetails=details.error?[]:(details.data||[]);
  renderVolOrd();
  msg('volOrdMsg',crew.error?'Calendario caricato, ma i nomi degli equipaggi non sono disponibili: '+crew.error.message:'',crew.error?'warn':'');
 }
