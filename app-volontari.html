@@ -36,7 +36,7 @@ a{display:inline-block;margin-top:8px;background:#12375d;color:#fff;text-decorat
  const target='/gestionale-croce-gialla/?area=volontari&fresh='+Date.now();
  try{
   if('serviceWorker' in navigator){
-   const reg=await navigator.serviceWorker.register('/gestionale-croce-gialla/sw.js?v=36',{scope:'/gestionale-croce-gialla/',updateViaCache:'none'});
+   const reg=await navigator.serviceWorker.register('/gestionale-croce-gialla/sw.js?v=37',{scope:'/gestionale-croce-gialla/',updateViaCache:'none'});
    // Aggiorna in apertura senza attendere un worker pronto: non bloccare mai l'accesso.
    void reg.update().catch(()=>{});
    if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
