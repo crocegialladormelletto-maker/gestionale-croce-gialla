@@ -3150,7 +3150,7 @@ let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[],em
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
 let asMonthCursor=new Date(),asMonthSelected=todaySafe(),asMonthServices=[],asMonthCrew=[],asMonthSeq=0;
 let dimVolCursor=new Date(),dimVolSelected=todaySafe(),dimVolRows=[],dimVolSeq=0,dimVolBusy=false;
-let volRosterCrewNames=[];let volRosterCursor=new Date(),volRosterSelected=todaySafe(),volRosterEvents=[],volRosterOccupied=[],volRosterApplications=[],volRosterSeq=0,volRosterBusy=false;
+let volRosterCrewNames=[];let volRosterAssignedDetails=[];let volRosterCursor=new Date(),volRosterSelected=todaySafe(),volRosterEvents=[],volRosterOccupied=[],volRosterApplications=[],volRosterSeq=0,volRosterBusy=false;
 let dimAdminCursor=new Date(),dimAdminSelected=todaySafe(),dimAdminRows=[],dimAdminEligible=[],dimAdminSeq=0,dimAdminEligibleSeq=0,dimAdminBusy=false;
 let emgVolCursor=new Date(),emgVolSelected=todaySafe(),emgVolRows=[],emgVolSeq=0,emgVolBusy=false;
 let emgAdminCursor=new Date(),emgAdminSelected=todaySafe(),emgAdminRows=[],emgAdminEligible=[],emgAdminSeq=0,emgAdminEligibleSeq=0,emgAdminBusy=false;
@@ -5203,7 +5203,7 @@ function volRosterRenderDay(){
    else controls+='<div class="muted">Non ci sono ruoli liberi compatibili con le tue qualifiche. Contatta il Centralino.</div>';
   }
   return '<div class="box" style="margin:8px 0"><b>'+volRosterCrewDot(e)+esc(volRosterTitle(e))+'</b>'+'<div class="muted" style="margin-top:4px">'+esc(volRosterCrewState(e)==='complete'?'Equipaggio completo':volRosterCrewState(e)==='partial'?'Equipaggio da completare':'Equipaggio da assegnare')+'</div>'+
-   '<div class="muted">'+esc(description)+'</div>'+rosterHtml+volunteerSpecialEquipmentHTML(e)+controls+'</div>';
+   '<div class="muted">'+esc(description)+'</div>'+rosterHtml+volAssignedDetailsHtml(e.id,volRosterAssignedDetails)+volunteerSpecialEquipmentHTML(e)+controls+'</div>';
  }).join(''):'<div class="notice">Nessuna manifestazione programmata per questo giorno. Scegli una data con 🎪 oppure chiedi al Centralino di inserire il servizio.</div>';
  $('volRosterDay').querySelectorAll('[data-vol-roster-join]').forEach(button=>
   button.addEventListener('click',async()=>{
@@ -5217,6 +5217,7 @@ async function loadVolRoster(){
  const seq=++volRosterSeq,range=calVisibleRange(volRosterCursor,'month');
  msg('volRosterMsg','Caricamento delle manifestazioni...');
  const crewNamesPromise=sb.rpc('cge_volontario_assistenze_equipaggi',{p_dal:range.startYmd,p_al:range.endYmd});
+ const detailsPromise=sb.rpc('cge_volontario_dettagli_servizi_assegnati_v1',{p_dal:range.startYmd,p_al:range.endYmd});
  const [services,occupied,equipment]=await Promise.all([
   sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd}),
@@ -5241,6 +5242,7 @@ async function loadVolRoster(){
  if(seq!==volRosterSeq)return;
  volRosterOccupied=occupied.data||[];
  volRosterCrewNames=[];
+ volRosterAssignedDetails=[];
  volRosterApplications=applications;
  const equipmentById=new Map((equipment.data||[]).map(x=>[x.servizio_id,x]));
  volRosterEvents=rows.map(s=>({
@@ -5252,6 +5254,10 @@ async function loadVolRoster(){
   mezzo:s.mezzo,mine:s.assegnato_a_me
  }));
  volRosterRender();msg('volRosterMsg','');
+ const details=await detailsPromise;
+ if(seq!==volRosterSeq)return;
+ volRosterAssignedDetails=details.error?[]:(details.data||[]);
+ volRosterRender();
  // Carica i nominativi separatamente senza impedire la visualizzazione dei turni e dei pallini.
  const crewNames=await crewNamesPromise;
  if(seq!==volRosterSeq)return;
