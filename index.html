@@ -5079,14 +5079,15 @@ async function loadOperationalCalendar(){
   sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note').gte('data_turno',range.startYmd).lte('data_turno',range.endYmd).order('data_turno').order('ora_inizio'),
   sb.from('disponibilita_personale').select('id,badge_personale,inizio,fine,tipo,preferenza_mezzo,note').lte('inizio',endIso).gte('fine',startIso).order('inizio')
  ]);
- const err=[sr.error,tr.error,ar.error].find(Boolean);if(err){msg('calMsg',err.message,'err');return}
+ const failures=[['Servizi',sr.error],['Turni',tr.error],['Disponibilità',ar.error]].filter(x=>x[1]);
  const turns=tr.data||[],services=sr.data||[],avs=ar.data||[];let assignments=[];
- if(turns.length){const rr=await sb.from('turni_personale').select('turno_id,badge_personale,ruolo,risposta,confermato').in('turno_id',turns.map(x=>x.id));if(rr.error){msg('calMsg',rr.error.message,'err');return}assignments=rr.data||[]}
+ if(failures.length)msg('calMsg','Alcuni dati non sono stati caricati: '+failures.map(x=>x[0]+': '+x[1].message).join(' | '),'warn');
+ if(turns.length){const rr=await sb.from('turni_personale').select('turno_id,badge_personale,ruolo,risposta,confermato').in('turno_id',turns.map(x=>x.id));if(rr.error){msg('calMsg','Turni visualizzati senza nominativi: '+rr.error.message,'warn')}else assignments=rr.data||[]}
  let serviceAssignments=[];
  if(services.length){
   const srCrew=await sb.from('servizi_equipaggio').select('servizio_id,badge_personale,ruolo').in('servizio_id',services.map(x=>x.id));
-  if(srCrew.error){msg('calMsg','Errore lettura equipaggi servizi: '+srCrew.error.message,'err');return}
-  serviceAssignments=srCrew.data||[];
+  if(srCrew.error){msg('calMsg','Servizi visualizzati senza equipaggio: '+srCrew.error.message,'warn')}
+  else serviceAssignments=srCrew.data||[];
  }
  opCalEvents=[];
  turns.forEach(t=>{const as=assignments.filter(x=>x.turno_id===t.id),cov=turnCoverage(t,as);opCalEvents.push({kind:'turn',date:t.data_turno,time:calTime(t.ora_inizio),vehicle:t.mezzo||'',coverage:cov,coverageClass:cov.cls,title:(t.tipo_turno||'Turno')+' · Mezzo '+(t.mezzo||'—'),subtitle:calTime(t.ora_inizio)+'–'+calTime(t.ora_fine)+' · '+cov.count+' operatori',raw:{...t,assignments:as}})});
@@ -5102,7 +5103,7 @@ async function loadOperationalCalendar(){
  opCalEvents.push({kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),vehicle:s.mezzo||'',coverageClass:donePast?'service-done':'',title,subtitle,raw:{...s,assignments}});
 });
  calAddAvailabilityEvents(opCalEvents,avs,range,true);
- refreshOperationalCalendarView();msg('calMsg','')
+ refreshOperationalCalendarView();if(!failures.length&&!sr.error&&!tr.error&&!ar.error)msg('calMsg','');
 }
 function renderOperationalCalendarDay(){
  const title=$('calDayTitle'),box=$('calDayDetails');if(!title||!box)return;
