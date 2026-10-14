@@ -3938,7 +3938,7 @@ $('tgo').onclick=async()=>{
 };
 $('tpw').onkeydown=e=>{if(e.key==='Enter')$('tgo').click()};
 $('vpinToggle').onclick=()=>{const show=$('vpin').type==='password';$('vpin').type=show?'text':'password';$('vpinToggle').textContent=show?'Nascondi':'Mostra'};
-$('vgo').onclick=async()=>{const badge=$('vbadge').value.trim(),pin=$('vpin').value;if(!badge||!pin)return msg('vlmsg','Inserisci badge e PIN.','warn');msg('vlmsg','Accesso in corso...');const r=await sb.auth.signInWithPassword({email:volunteerLoginEmail(badge),password:pin});if(r.error)return msg('vlmsg','Badge o PIN non validi.','err');try{if($('vremember').checked)localStorage.setItem('cge_volunteer_badge',badge);else localStorage.removeItem('cge_volunteer_badge')}catch(_){};enter()};
+$('vgo').onclick=async()=>{const badge=$('vbadge').value.trim(),pin=$('vpin').value;if(!badge||!pin)return msg('vlmsg','Inserisci badge e PIN.','warn');const b=$('vgo');b.disabled=true;msg('vlmsg','Accesso in corso...');try{const r=await sb.auth.signInWithPassword({email:volunteerLoginEmail(badge),password:pin});if(r.error)return msg('vlmsg','Badge o PIN non validi: '+r.error.message,'err');try{if($('vremember').checked)localStorage.setItem('cge_volunteer_badge',badge);else localStorage.removeItem('cge_volunteer_badge')}catch(_){}await enter();if(!$('volApp').classList.contains('hidden'))msg('vlmsg','');else if($('vlmsg').textContent==='Accesso in corso...')msg('vlmsg','Accesso non completato: verifica che il badge sia attivo.','err');}catch(e){msg('vlmsg','Accesso non riuscito: '+(e?.message||String(e)),'err')}finally{b.disabled=false}};
 $('vpin').onkeydown=e=>{if(e.key==='Enter')$('vgo').click()};
 $('out').onclick=async()=>{resetPerson();await sb.auth.signOut();location.reload()};
 $('vout').onclick=async()=>{
@@ -12827,16 +12827,6 @@ async function loadVolunteerArea(){
   let turns=[];
   const ids=[...new Set(tp.map(x=>x.turno_id).filter(Boolean))];
   if(ids.length){const tr=await sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note').in('id',ids).gte('data_turno',today()).order('data_turno').order('ora_inizio');if(tr.error)throw tr.error;turns=tr.data||[]}
-  // Dettagli operativi accessibili al solo personale assegnato tramite RPC autorizzata.
-  const serviceDates=services.map(s=>s.data_servizio).filter(Boolean).sort();
-  let mainAssignedDetails=[],mainDetailsError=null;
-  if(serviceDates.length){
-   const detailsResult=await sb.rpc('cge_volontario_dettagli_servizi_assegnati_v1',{
-    p_dal:serviceDates[0],p_al:serviceDates[serviceDates.length-1]
-   });
-   if(detailsResult.error)mainDetailsError=detailsResult.error;
-   else mainAssignedDetails=detailsResult.data||[];
-  }
   const tmap=Object.fromEntries(turns.map(x=>[x.id,x]));
   const futureAssignments=tp.map(a=>({...a,turno:tmap[a.turno_id]})).filter(x=>x.turno);
   $('volHoursM').textContent=Number(hours.ore_mese||0).toFixed(1);$('volHoursT').textContent=Number(hours.ore_trimestre||0).toFixed(1);
@@ -12860,12 +12850,9 @@ async function loadVolunteerArea(){
     '<div><b>Destinazione:</b> '+esc(x.ospedale_destinazione||x.destinazione||x.indirizzo_destinazione||'Da indicare')+'</div>';
    return '<div class="box" style="margin:7px 0"><b>'+esc(x.data_servizio)+' · '+esc(x.tipo_servizio_altro||x.tipo_servizio||'Servizio')+'</b> <span class="pill b">'+esc(x.ruolo_assegnato||'—')+'</span>'+
     '<div class="muted">Mezzo '+esc(x.mezzo||'—')+' · Stato '+esc(x.stato||'—')+'</div>'+
-    basic+volAssignedDetailsHtml(x.id,mainAssignedDetails)+
+    basic+
     (aids?'<div class="pill">'+esc(aids)+'</div>':'')+'</div>';
   }).join(''):'<div class="notice">Nessun servizio assegnato.</div>';
-  if(mainDetailsError){
-   $('volServices').insertAdjacentHTML('afterbegin','<div class="notice warn">Alcuni orari o indirizzi dettagliati non sono disponibili: '+esc(mainDetailsError.message||'accesso ai dettagli non riuscito')+'. Contatta il Centralino.</div>');
-  }
   await Promise.all([loadVolunteerCalendar(),loadVolunteerFutureCalendar(),loadDimissioniVol(),loadEmergenzaVol(),loadVolRoster(),loadVolOrd()]);
   renderVolunteerHomeTurns(futureAssignments,services);
   msg('volmsg','');
