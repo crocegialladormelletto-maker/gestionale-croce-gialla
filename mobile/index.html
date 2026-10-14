@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#12375d">
+<meta name="robots" content="noindex,nofollow">
+<title>Gestionale Mobile · Croce Gialla Emergenza</title>
+<link rel="icon" href="../icons/icon-192-v6.png">
+<style>
+:root{--navy:#12375d;--yellow:#ffdb17;--bg:#f2f5f8}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg)}
+#shell{display:flex;flex-direction:column;height:100%;height:100dvh}
+header{flex:none;display:flex;align-items:center;justify-content:space-between;gap:9px;background:var(--navy);color:white;padding:9px 14px;padding-top:max(9px,env(safe-area-inset-top))}
+header strong{font-size:15px}header small{display:block;color:var(--yellow);font-size:11px}
+header button{background:#244e70;color:white;border:1px solid #56728a;border-radius:9px;padding:9px;font-weight:700}
+#screen{flex:1;min-height:0;width:100%;border:0;background:var(--bg)}
+nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;flex:none;padding:6px 6px max(8px,env(safe-area-inset-bottom));background:white;border-top:1px solid #d9e2ea;box-shadow:0 -3px 16px #12375d16}
+nav button{min-width:0;border:0;border-radius:10px;padding:8px 2px;background:#eef3f8;color:var(--navy);font-size:10px;font-weight:800;line-height:1.3}
+nav button span{display:block;font-size:21px;margin-bottom:2px}
+nav button.active{background:var(--navy);color:white}nav button[data-go="new"]{background:#147444;color:white}
+#more{display:none;position:absolute;left:8px;right:8px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:5;padding:12px;border-radius:16px;background:white;border:1px solid #d9e2ea;box-shadow:0 8px 40px #12375d55;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:58vh;overflow-y:auto}
+#more.open{display:grid}#more button{padding:14px 6px;border:1px solid #d9e2ea;background:#f2f6fa;border-radius:10px;font-weight:800;color:var(--navy);font-size:12px}
+#alert{position:absolute;top:58px;left:12px;right:12px;z-index:6;background:#fff4cf;border:1px solid #e1b944;border-radius:10px;padding:12px;color:#4e3c00;font-weight:700;font-size:13px;display:none}
+@media(min-width:850px){#shell{max-width:750px;margin:auto;box-shadow:0 0 30px #12375d25}}
+</style>
+</head>
+<body>
+<div id="shell">
+<header><div><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Mobile</strong></div><button type="button" id="reload">↻ Aggiorna</button></header>
+<div id="alert" role="status"></div>
+<iframe title="Gestionale operativo Croce Gialla" id="screen" src="../index.html?area=gestionale&amp;mobile=1" allow="clipboard-write"></iframe>
+<div id="more">
+<button data-go="servicesOrd">🚐 Servizi ordinari</button>
+<button data-go="emergency">🚨 Emergenza 118</button>
+<button data-go="assistance">🎪 Assistenze</button>
+<button data-go="calendar">📅 Calendario</button>
+<button data-go="crew">👥 Equipaggi</button>
+<button data-go="vehicles">🚑 Mezzi</button>
+<button data-go="travelSheets">📄 Fogli viaggio</button>
+<button data-go="travelSheets118">📝 Fogli 118</button>
+<button data-go="patients">🪪 Pazienti</button>
+<button data-go="debitNotes">💶 Note di debito</button>
+<button data-go="statistics">📊 Statistiche</button>
+<button data-go="dash">🏠 Dashboard</button>
+</div>
+<nav aria-label="Navigazione gestionale mobile">
+<button class="active" data-go="dash"><span>🏠</span>Oggi</button>
+<button data-go="services"><span>📋</span>Servizi</button>
+<button data-go="new"><span>➕</span>Nuovo</button>
+<button data-go="calendar"><span>📅</span>Calendario</button>
+<button id="moreBtn" aria-expanded="false"><span>☰</span>Altro</button>
+</nav>
+</div>
+<script>
+'use strict';
+const frame=document.getElementById('screen'),more=document.getElementById('more'),moreBtn=document.getElementById('moreBtn'),alertBox=document.getElementById('alert');
+function notice(message){alertBox.textContent=message;alertBox.style.display='block';setTimeout(()=>alertBox.style.display='none',4800)}
+function embeddedDocument(){try{return frame.contentDocument}catch(_){return null}}
+function applyMobileStyle(){
+ const doc=embeddedDocument();if(!doc||!doc.head)return;
+ if(doc.getElementById('cge-mobile-style'))return;
+ const style=doc.createElement('style');style.id='cge-mobile-style';style.textContent=`
+ @media screen {
+ html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+ #app.shell{padding:5px!important;width:100%!important;max-width:100%!important}
+ #app>.top .head{padding:8px 10px!important;gap:7px!important;flex-wrap:wrap!important}
+ #app>.top .head .brand strong{font-size:14px!important}
+ #app>.top .head .crest-img{width:37px!important;height:37px!important}
+ #app>.layout{display:block!important;margin-top:6px!important;width:100%!important}
+ #app>.layout>.side{display:none!important}
+ #app>.layout>main{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;max-height:none!important;overflow:visible!important}
+ #app main .pad{padding:9px!important}
+ #app main .hero{padding:10px!important}
+ #app main .grid2,#app main .grid3,#app main .grid4{grid-template-columns:minmax(0,1fr)!important}
+ #app main input,#app main select,#app main textarea{max-width:100%!important;font-size:16px!important}
+ #app main .actions button{min-height:41px}
+ #app .dim-dash-layout{display:block!important;height:auto!important}
+ #app .dim-dash-side,#app .dim-dash-main{width:100%!important;max-height:none!important;overflow:visible!important}
+ #app main .table-wrap,#app main .calendar-wrap{overflow-x:auto!important;max-width:100%!important}
+ #app main table{max-width:none}
+ #app section{max-width:100%!important}
+ .login{padding:10px!important}
+ }
+ `;doc.head.appendChild(style);
+}
+function navigate(section){
+ const doc=embeddedDocument();
+ if(!doc){notice('Gestionale non disponibile. Riprova ad aggiornare.');return}
+ if(!doc.getElementById('app')||doc.getElementById('app').classList.contains('hidden')){notice('Accedi prima con le credenziali del gestionale.');return}
+ const button=[...doc.querySelectorAll('.nav[data-v]')].find(el=>el.dataset.v===section);
+ if(!button){notice('Questa sezione non è disponibile con il tuo accesso.');return}
+ if(button.classList.contains('hidden')||button.hidden||button.style.display==='none'){notice('Questa sezione non è abilitata per il tuo profilo.');return}
+ button.click();
+ document.querySelectorAll('nav button[data-go]').forEach(el=>el.classList.toggle('active',el.dataset.go===section));
+ more.classList.remove('open');moreBtn.setAttribute('aria-expanded','false');
+ try{frame.contentWindow.scrollTo(0,0)}catch(_){}
+}
+document.querySelectorAll('[data-go]').forEach(btn=>btn.addEventListener('click',()=>navigate(btn.dataset.go)));
+moreBtn.addEventListener('click',()=>{const opened=more.classList.toggle('open');moreBtn.setAttribute('aria-expanded',String(opened))});
+document.getElementById('reload').addEventListener('click',()=>{frame.contentWindow.location.reload()});
+frame.addEventListener('load',()=>{applyMobileStyle()});
+setInterval(applyMobileStyle,1500);
+</script>
+</body>
+</html>
