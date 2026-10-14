@@ -2,7 +2,7 @@
   "name": "Croce Gialla - Direzione Mobile",
   "short_name": "CG Direzione",
   "description": "Gestionale mobile riservato alla direzione",
-  "start_url": "./",
+  "start_url": "./accesso.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f2f5f8",
