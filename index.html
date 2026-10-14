@@ -5074,12 +5074,21 @@ async function loadOperationalCalendar(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  msg('calMsg','Caricamento calendario...');
  const range=calVisibleRange(opCalCursor,opCalMode),startIso=range.startYmd+'T00:00:00',endIso=range.endYmd+'T23:59:59';
- const [sr,tr,ar]=await Promise.all([
+ const readCalendar=()=>Promise.all([
   sb.from('servizi_giornalieri').select('id,data_servizio,ora_partenza_prevista,ora_carico_paziente_prevista,ora_rientro_previsto,mezzo,tipo_servizio,tipo_servizio_altro,luogo_partenza,indirizzo_partenza,destinazione,indirizzo_destinazione,ospedale_destinazione,stato_gestionale,priorita').gte('data_servizio',range.startYmd).lte('data_servizio',range.endYmd).neq('stato_gestionale','ANNULLATO').order('data_servizio').order('ora_partenza_prevista'),
   sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note').gte('data_turno',range.startYmd).lte('data_turno',range.endYmd).order('data_turno').order('ora_inizio'),
   sb.from('disponibilita_personale').select('id,badge_personale,inizio,fine,tipo,preferenza_mezzo,note').lte('inizio',endIso).gte('fine',startIso).order('inizio')
  ]);
- const failures=[['Servizi',sr.error],['Turni',tr.error],['Disponibilità',ar.error]].filter(x=>x[1]);
+ let [sr,tr,ar]=await readCalendar();
+ if(sr.error||tr.error||ar.error){
+  msg('calMsg','Connessione temporaneamente instabile: nuovo tentativo di caricamento...');
+  [sr,tr,ar]=await readCalendar();
+ }
+ if(sr.error||tr.error||ar.error){
+  msg('calMsg','Aggiornamento non riuscito: i dati già visualizzati sono stati conservati. Riprova con Calendario. '+[sr.error,tr.error,ar.error].filter(Boolean).map(e=>e.message).join(' | '),'err');
+  return;
+ }
+ const failures=[];
  const turns=tr.data||[],services=sr.data||[],avs=ar.data||[];let assignments=[];
  if(failures.length)msg('calMsg','Alcuni dati non sono stati caricati: '+failures.map(x=>x[0]+': '+x[1].message).join(' | '),'warn');
  if(turns.length){const rr=await sb.from('turni_personale').select('turno_id,badge_personale,ruolo,risposta,confermato').in('turno_id',turns.map(x=>x.id));if(rr.error){msg('calMsg','Turni visualizzati senza nominativi: '+rr.error.message,'warn')}else assignments=rr.data||[]}
@@ -12958,7 +12967,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.45-dimissioni-mezzo';;
+const CGE_APP_BUILD='14.46-calendari-stabili';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
