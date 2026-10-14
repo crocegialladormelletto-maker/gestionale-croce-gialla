@@ -40,7 +40,32 @@ window.cgeGrouped=grouped;
 function showDay(date,map){document.querySelectorAll('[data-date]').forEach(b=>b.classList.toggle('selected',b.dataset.date===date));const rows=map[date]||[];$('dayDetails').innerHTML='<b>'+safe(date)+'</b> · '+(rows.length?rows.length+' servizi':'Nessun servizio registrato')+rows.map(x=>'<p>'+safe((x.ora_partenza_prevista||'').slice(0,5)+' · '+x.tipo_servizio+' · mezzo '+x.mezzo+' · '+(x.destinazione||''))+'</p>').join('');$('date').value=date;}
 
 }
-async function showServices(){const from=$('servicesFrom').value,to=$('servicesTo').value;if(!from||!to||from>to){$('servicesStatus').textContent='Seleziona un intervallo di date valido.';return}$('servicesStatus').textContent='Caricamento servizi…';const r=await db.from('servizi_giornalieri').select('data_servizio,tipo_servizio,ora_partenza_prevista,mezzo,destinazione,luogo_carico_paziente,stato_gestionale').gte('data_servizio',from).lte('data_servizio',to).order('data_servizio').order('ora_partenza_prevista').limit(500);if(r.error){$('servicesStatus').textContent='Errore: '+r.error.message;return}const rows=r.data||[];$('servicesStatus').textContent=rows.length+' servizi nel periodo selezionato'+(rows.length===500?' (primi 500)':'');$('servicesList').innerHTML=rows.map(x=>'<article><b>'+safe(x.data_servizio)+' · '+safe((x.ora_partenza_prevista||'').slice(0,5))+' · Mezzo '+safe(x.mezzo)+'</b><p>'+safe(x.tipo_servizio)+' · '+safe(x.stato_gestionale||'')+'</p><p>'+safe([x.luogo_carico_paziente,x.destinazione].filter(Boolean).join(' → ')||'Destinazione da definire')+'</p></article>').join('')||'<p>Nessun servizio registrato nel periodo.</p>'} $('loadServices').onclick=showServices;
+async function showServices(){
+ const from=$('servicesFrom').value,to=$('servicesTo').value;
+ if(!from||!to||from>to){$('servicesStatus').textContent='Seleziona un intervallo di date valido.';return}
+ $('servicesStatus').textContent='Caricamento servizi ed equipaggi…';
+ const r=await db.from('servizi_giornalieri').select('id,data_servizio,tipo_servizio,ora_partenza_prevista,mezzo,destinazione,luogo_carico_paziente,stato_gestionale').gte('data_servizio',from).lte('data_servizio',to).order('data_servizio').order('ora_partenza_prevista').limit(500);
+ if(r.error){$('servicesStatus').textContent='Errore: '+r.error.message;return}
+ const rows=r.data||[],crewMap={};
+ const ids=rows.map(x=>x.id);
+ let warning='';
+ if(ids.length){
+  const crew=await db.from('servizi_equipaggio').select('servizio_id,badge_personale,ruolo').in('servizio_id',ids);
+  if(crew.error){warning=' · Equipaggi non disponibili: '+crew.error.message}
+  else{
+   const badges=[...new Set((crew.data||[]).map(x=>x.badge_personale).filter(Boolean))];
+   let names={};
+   if(badges.length){
+    const people=await db.from('personale').select('badge,nome_completo').in('badge',badges);
+    if(people.error)warning=' · Nominativi non disponibili: '+people.error.message;
+    else names=Object.fromEntries((people.data||[]).map(p=>[p.badge,p.nome_completo]));
+   }
+   for(const person of crew.data||[])(crewMap[person.servizio_id]??=[]).push((names[person.badge_personale]||'Badge '+person.badge_personale)+' ('+(person.ruolo||'Equipaggio')+')');
+  }
+ }
+ $('servicesStatus').textContent=rows.length+' servizi nel periodo selezionato'+(rows.length===500?' (primi 500)':'')+warning;
+ $('servicesList').innerHTML=rows.map(x=>'<article><b>'+safe(x.data_servizio)+' · '+safe((x.ora_partenza_prevista||'').slice(0,5))+' · Mezzo '+safe(x.mezzo)+'</b><p>'+safe(x.tipo_servizio)+' · '+safe(x.stato_gestionale||'')+'</p><p>'+safe([x.luogo_carico_paziente,x.destinazione].filter(Boolean).join(' → ')||'Destinazione da definire')+'</p><p><strong>👥 Equipaggio:</strong> '+((crewMap[x.id]||[]).length? (crewMap[x.id]||[]).map(safe).join(', '):warning?'Non disponibile':'Non ancora assegnato')+'</p></article>').join('')||'<p>Nessun servizio registrato nel periodo.</p>';
+} $('loadServices').onclick=showServices;
 $('refresh').onclick=async()=>{try{await calendar()}catch(e){$('calendarStatus').textContent='Errore: '+e.message;msg('Errore calendario: '+e.message)}};$('category').onchange=calendar;
 $('calendar').onclick=e=>{const b=e.target.closest('[data-date]');if(b){const date=b.dataset.date;document.querySelectorAll('[data-date]').forEach(x=>x.classList.toggle('selected',x===b));$('date').value=date;const rows=(window.cgeGrouped||{})[date]||[];$('dayDetails').innerHTML='<b>'+safe(date)+'</b> · '+(rows.length?rows.length+' servizi':'Nessun servizio registrato')+rows.map(x=>'<p>'+safe((x.ora_partenza_prevista||'').slice(0,5)+' · '+x.tipo_servizio+' · mezzo '+x.mezzo+' · '+(x.destinazione||''))+'</p>').join('')}};$('newForDay').onclick=()=>{$('new').scrollIntoView({behavior:'smooth',block:'start'})};document.querySelectorAll('#mobileNav [data-target]').forEach(button=>button.onclick=async()=>{const target=button.dataset.target;document.querySelectorAll('#mobileNav button').forEach(b=>b.classList.toggle('active',b===button));if(target==='new'&&!$('date').value)$('date').value=today;if(target==='calendar')await calendar();const id={home:'homeSection',calendar:'calendarSection',new:'newSection',services:'servicesSection'}[target];if(target==='services')await showServices();$(id).scrollIntoView({behavior:'smooth',block:'start'})});
 $('new').onsubmit=async e=>{e.preventDefault();const t=$('type').value;
