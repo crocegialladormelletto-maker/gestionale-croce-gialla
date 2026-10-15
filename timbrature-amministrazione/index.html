@@ -425,7 +425,7 @@ async function reopenMonth(){const reason=prompt('Motivo della riapertura del me
 async function createEmployee(){
  const button=$('createEmployeeBtn');if(button.disabled)return;
  const b={action:'create_employee',badge:$('newBadge').value.trim(),nome:$('newFirst').value.trim(),cognome:$('newLast').value.trim(),data_ingresso:$('newStart').value,qualifica:$('newRole').value.trim(),ore_settimanali:Number($('newHours').value),pin:$('newPin').value.trim()};
- if(!b.badge||!b.nome||!b.cognome||!b.data_ingresso||!b.ore_settimanali||!/^\\d{4,8}$/.test(b.pin)){msg('newEmployeeMsg','Compila tutti i campi obbligatori e usa un PIN di 4-8 cifre.','err');return}
+ if(!b.badge||!b.nome||!b.cognome||!b.data_ingresso||!b.ore_settimanali||!/^[0-9]{4,8}$/.test(b.pin)){msg('newEmployeeMsg','Compila tutti i campi obbligatori e usa un PIN di 4-8 cifre.','err');return}
  button.disabled=true;
  try{await api(b);$('newPin').value='';await loadData();$('pinEmp').value=b.badge;msg('newEmployeeMsg','Dipendente registrato. Ora compare nella lista PIN e nelle timbrature.','ok');}
  catch(e){msg('newEmployeeMsg',e.message||String(e),'err')}
