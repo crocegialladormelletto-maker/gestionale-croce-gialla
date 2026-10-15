@@ -6149,7 +6149,7 @@ async function statsRpcRange(name,from,to){
 async function loadShiftStatistics(from,to,people,volunteersOnly=false){
  const [tr,emgRows,dimRows,assRows,fg]=await Promise.all([
   sb.from('turni').select('id,data_turno,tipo_turno,ora_inizio,ora_fine,stato,mezzo').gte('data_turno',from).lte('data_turno',to).limit(5000),
-  statsRpcRange('cge_emergenza_turni_v2',from,to),
+  Promise.all([statsRpcRange('cge_emergenza_turni_v2',from,to),statsRpcRange('cge_emergenza_orari_personali',from,to)]).then(([rows,times])=>{const byId=new Map(times.map(x=>[x.id,x]));return rows.map(x=>({...x,...(byId.get(x.id)||{})}))}),
   statsRpcRange('cge_dimissioni_turni',from,to),
   statsRpcRange('cge_assistenza_fasce_turni',from,to),
   sb.from('fogli_viaggio')
@@ -6178,7 +6178,19 @@ async function loadShiftStatistics(from,to,people,volunteersOnly=false){
   const fullHours=shiftClockHours(t.ora_inizio,t.ora_fine);
   rows.push({source:'Turni generali',date:t.data_turno,type:t.tipo_turno||'Turno',badge:x.badge_personale,role:x.ruolo||'—',hours:statsEffectiveHours(t.data_turno,int,fullHours),slot:'GEN|'+t.id,vehicle:t.mezzo||'',interval:int});
  });
- emgRows.forEach(x=>{const int=statsBandInterval(x.fascia),full=shiftBandHours(x.fascia);rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza / 118',badge:x.badge_personale,role:x.ruolo||'—',hours:statsEffectiveHours(x.giorno,int,full),slot:'EMG|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:int})});
+ emgRows.forEach(x=>{
+  const band=statsBandInterval(x.fascia);
+  if(!band)return;
+  const fromCustom=x.ora_inizio?calTime(x.ora_inizio):'',toCustom=x.ora_fine?calTime(x.ora_fine):'';
+  const timeMinutes=v=>{const a=String(v||'').split(':').map(Number);return a.length>=2&&Number.isFinite(a[0])&&Number.isFinite(a[1])?a[0]*60+a[1]:null};
+  let fromMinutes=fromCustom?timeMinutes(fromCustom):band[0],toMinutes=toCustom?timeMinutes(toCustom):band[1];
+  if(fromMinutes===null||toMinutes===null)return;
+  if(x.fascia==='SERA'&&toMinutes===0)toMinutes=1440;
+  else if(toMinutes<=fromMinutes)toMinutes+=1440;
+  if(x.fascia==='NOTTE'&&fromMinutes>=720)fromMinutes-=1440;
+  const int=[fromMinutes,toMinutes],full=Math.max(0,(toMinutes-fromMinutes)/60);
+  rows.push({source:'Emergenza',date:x.giorno,type:'Emergenza / 118',badge:x.badge_personale,role:x.ruolo||'—',hours:statsEffectiveHours(x.giorno,int,full),slot:'EMG|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:int});
+ });
  dimRows.forEach(x=>{const int=statsBandInterval(x.fascia),full=shiftBandHours(x.fascia);rows.push({source:'Dimissioni',date:x.giorno,type:'Dimissioni',badge:x.badge_personale,role:x.ruolo||'—',hours:statsEffectiveHours(x.giorno,int,full),slot:'DIM|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:int})});
  assRows.forEach(x=>{const int=statsBandInterval(x.fascia),full=shiftBandHours(x.fascia);rows.push({source:'Assistenze',date:x.giorno,type:'Assistenze',badge:x.badge_personale,role:x.ruolo||'—',hours:statsEffectiveHours(x.giorno,int,full),slot:'ASS|'+x.giorno+'|'+x.fascia,vehicle:x.mezzo||'',interval:int})});
 
