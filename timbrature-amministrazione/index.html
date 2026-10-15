@@ -183,8 +183,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <h3>Registrazione nuovo dipendente</h3>
 <div class="grid"><div><label>Matricola / Badge *</label><input id="newBadge" maxlength="16" placeholder="Es. 40"></div><div><label>Nome *</label><input id="newFirst" maxlength="80"></div><div><label>Cognome *</label><input id="newLast" maxlength="80"></div></div>
 <div class="grid"><div><label>Data di assunzione *</label><input id="newStart" type="date"></div><div><label>Qualifica</label><input id="newRole" maxlength="100" placeholder="Es. Autista soccorritore"></div><div><label>Ore contrattuali settimanali *</label><input id="newHours" type="number" min="1" max="60" step="0.5" value="40"></div></div>
-<div class="grid"><div><label>PIN iniziale (4-8 cifre) *</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password" placeholder="PIN personale"></div><div style="display:flex;align-items:end"><button id="createEmployeeBtn" class="primary" type="button">SALVA NUOVO DIPENDENTE</button></div><div style="display:flex;align-items:end"><button id="cancelEmployeeBtn" class="secondary" type="button">ANNULLA</button></div></div>
-<div class="muted" style="margin-top:10px">Il dipendente sarà inserito nell'anagrafica generale e potrà timbrare dalla data di assunzione. Il PIN non viene conservato in chiaro.</div>
+<div class="grid"><div><label>PIN iniziale (facoltativo, 4-8 cifre)</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password" placeholder="PIN personale"></div><div style="display:flex;align-items:end"><button id="createEmployeeBtn" class="primary" type="button">SALVA NUOVO DIPENDENTE</button></div><div style="display:flex;align-items:end"><button id="cancelEmployeeBtn" class="secondary" type="button">ANNULLA</button></div></div>
+<div class="muted" style="margin-top:10px">Puoi salvare il dipendente senza PIN e assegnarlo successivamente da Gestione PIN dipendenti. Potrà timbrare soltanto dopo aver ricevuto un PIN e dalla data di assunzione. Il PIN non viene conservato in chiaro.</div>
 <div id="newEmployeeMsg" class="notice hidden"></div>
 </div>
 <div class="grid"><div><label>Dipendente</label><select id="pinEmp"></select></div><div><label>Nuovo PIN</label><input id="pinVal" type="password" inputmode="numeric" maxlength="8" placeholder="4-8 cifre"></div><div style="display:flex;align-items:end"><button id="savePin" class="primary" style="width:100%">SALVA PIN</button></div></div>
@@ -425,9 +425,9 @@ async function reopenMonth(){const reason=prompt('Motivo della riapertura del me
 async function createEmployee(){
  const button=$('createEmployeeBtn');if(button.disabled)return;
  const b={action:'create_employee',badge:$('newBadge').value.trim(),nome:$('newFirst').value.trim(),cognome:$('newLast').value.trim(),data_ingresso:$('newStart').value,qualifica:$('newRole').value.trim(),ore_settimanali:Number($('newHours').value),pin:$('newPin').value.trim()};
- if(!b.badge||!b.nome||!b.cognome||!b.data_ingresso||!b.ore_settimanali||!/^[0-9]{4,8}$/.test(b.pin)){msg('newEmployeeMsg','Compila tutti i campi obbligatori e usa un PIN di 4-8 cifre.','err');return}
+ if(!b.badge||!b.nome||!b.cognome||!b.data_ingresso||!b.ore_settimanali||(b.pin!==''&&!/^[0-9]{4,8}$/.test(b.pin))){msg('newEmployeeMsg','Compila tutti i campi obbligatori. Il PIN è facoltativo; se inserito deve avere 4-8 cifre.','err');return}
  button.disabled=true;
- try{await api(b);$('newPin').value='';await loadData();$('pinEmp').value=b.badge;msg('newEmployeeMsg','Dipendente registrato. Ora compare nella lista PIN e nelle timbrature.','ok');}
+ try{await api(b);$('newPin').value='';await loadData();$('pinEmp').value=b.badge;msg('newEmployeeMsg',b.pin?'Dipendente registrato con PIN. Ora compare nelle timbrature.':'Dipendente salvato senza PIN. Puoi assegnarlo successivamente nella sezione Gestione PIN dipendenti.','ok');}
  catch(e){msg('newEmployeeMsg',e.message||String(e),'err')}
  finally{button.disabled=false}
 }
