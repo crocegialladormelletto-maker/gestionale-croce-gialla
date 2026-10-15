@@ -1560,6 +1560,7 @@
    <div class="actions">
     <button id="fvSave" class="btn secondary" type="submit">Salva Foglio Viaggio</button>
     <button id="fvSaveKmClosed" class="btn yellow hidden" type="button">💾 Salva KM</button>
+    <button id="fvReopen118" class="btn secondary hidden" type="button" data-admin-only="true">🔓 Riapri foglio 118</button>
     <button id="fvCorrectAccounting" class="btn yellow hidden" type="button">✎ Correggi dati contabili</button>
     <button id="fvClose" class="btn yellow" type="button">✓ Chiudi Foglio Viaggio</button>
     <button id="fvPrint" class="btn blue" type="button" onclick="return cgePrintTravelSheetClick(event)">🖨 Stampa / Salva PDF</button>
@@ -4838,6 +4839,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  if($('fvReceiptUpload'))$('fvReceiptUpload').classList.toggle('hidden',closed);
  $('fvSave').classList.toggle('hidden',closed);
  $('fvSaveKmClosed').classList.toggle('hidden',!adminClosed118);
+ $('fvReopen118').classList.toggle('hidden',!adminClosed118);
  $('fvCorrectAccounting').classList.toggle('hidden',!(prof?.ruolo==='AMMINISTRATORE'&&closed&&!is118));
  $('fvClose').classList.toggle('hidden',closed);
  $('fvDelete').classList.toggle('hidden',closed||prof?.ruolo!=='AMMINISTRATORE'||!!f.pdf_path);
@@ -4846,7 +4848,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  msg('fvDetailMsg',adminClosed118?'Foglio 118 chiuso: da Amministrazione puoi correggere solo i KM di partenza e arrivo.':(closed?'Foglio Viaggio chiuso: documento non più modificabile.':''),closed?'ok':'');
 }
 
-$('fvdBack').onclick=()=>view('travelSheets');
+$('fvdBack').onclick=()=>view(String(currentFoglio?.tipo_servizio||'').trim()==='118'?'travelSheets118':'travelSheets');
 $('fvdService').onclick=()=>{const id=$('fvdService').dataset.serviceId;if(id)openService(id)};
 
 async function saveTravelSheet(silent=false){
@@ -4899,6 +4901,21 @@ async function saveTravelSheet(silent=false){
  await loadTravelSheetDetail();
  return true;
 }
+$('fvReopen118').onclick=async()=>{
+ if(prof?.ruolo!=='AMMINISTRATORE'||!currentFoglioId||currentFoglio?.stato!=='CHIUSO'||String(currentFoglio?.tipo_servizio||'').trim()!=='118')return;
+ const numero=currentFoglio.numero_foglio||'';
+ if(!confirm('Riaprire il Foglio Viaggio 118 '+numero+'? Il documento tornerà modificabile solo agli utenti autorizzati. Dopo la rettifica occorre salvarlo e richiuderlo.'))return;
+ $('fvReopen118').disabled=true;
+ msg('fvDetailMsg','Riapertura del foglio in corso...');
+ try{
+  const r=await sb.from('fogli_viaggio').update({stato:'APERTO'}).eq('id',currentFoglioId).eq('stato','CHIUSO').eq('tipo_servizio','118').select('id,stato,numero_foglio').maybeSingle();
+  if(r.error)throw r.error;
+  if(!r.data)throw new Error('Riapertura non autorizzata o foglio non trovato.');
+  await loadTravelSheetDetail();
+  msg('fvDetailMsg','Foglio 118 riaperto. Modifica i dati, premi Salva Foglio Viaggio e poi Chiudi Foglio Viaggio.','ok');
+ }catch(e){msg('fvDetailMsg','Riapertura non riuscita: '+(e.message||String(e)),'err')}
+ finally{$('fvReopen118').disabled=false}
+};
 async function saveClosed118Km(){
  if(prof?.ruolo!=='AMMINISTRATORE'||!currentFoglioId||String(currentFoglio?.tipo_servizio||'').trim()!=='118'||currentFoglio?.stato!=='CHIUSO')return;
  const kmStart=$('fvKmStart').value===''?null:Number($('fvKmStart').value);
