@@ -4891,6 +4891,15 @@ async function saveTravelSheet(silent=false){
   row.inizio_fermo=null;
   row.fine_fermo=null;
  }
+ // Persist crew corrections for 118 sheets; these fields were previously only displayed.
+ if(prof?.ruolo==='AMMINISTRATORE'&&String(currentFoglio?.tipo_servizio||'').trim()==='118')Object.assign(row,{
+  autista:$('fvDriver').value.trim()||null,
+  capo_servizio:$('fvLeader').value.trim()||null,
+  soccorritore:$('fvRescuer').value.trim()||null,
+  secondo_soccorritore:$('fvSecond').value.trim()||null,
+  accompagnatore:$('fvCompanion').value.trim()||null,
+  affiancato:$('fvTrainee').value.trim()||null
+ });
  if(prof?.ruolo!=='CENTRALINO'&&String(currentFoglio?.tipo_servizio||'').trim()!=='118')Object.assign(row,{
   importo_inserito:$('fvBase').value===''?null:Number($('fvBase').value),
   sedia_montascale:$('fvChair').checked,
