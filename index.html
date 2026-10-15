@@ -4716,6 +4716,9 @@ async function openTravelSheet(id){
 }
 window.openTravelSheet=openTravelSheet;
 
+// Capture editable controls once, before any closed sheet disables them.
+const fvInitiallyEditable=Array.from(document.querySelectorAll('#fvForm input,#fvForm select,#fvForm textarea'));
+fvInitiallyEditable.forEach(x=>{if(!x.disabled)x.dataset.fvEditable='1';});
 async function loadTravelSheetDetail(id=currentFoglioId){
  if(!id)return;
  msg('fvDetailMsg','Caricamento...');
@@ -4830,7 +4833,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
 
  const closed=f.stato==='CHIUSO';
  const adminClosed118=closed&&is118&&prof?.ruolo==='AMMINISTRATORE';
- document.querySelectorAll('#fvForm input:not([disabled]),#fvForm select,#fvForm textarea').forEach(x=>x.disabled=closed);
+ document.querySelectorAll('#fvForm input,#fvForm select,#fvForm textarea').forEach(x=>{if(x.dataset.fvEditable==='1')x.disabled=closed;});
  if(adminClosed118){
   $('fvKmStart').disabled=false;
   $('fvKmEnd').disabled=false;
