@@ -179,6 +179,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <section id="page-dipendenti" class="adminPage"><div class="pageHead"><div><h2>Dipendenti / PIN</h2><div class="muted">Gestione accessi alla postazione timbrature</div></div></div>
 <div class="card noPrint">
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px"><h3>Gestione PIN dipendenti</h3><button id="newEmployeeBtn" class="green" type="button">+ NUOVO DIPENDENTE</button></div>
+<div class="card noPrint" style="border:2px solid #d9c8ff">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">Da volontario a dipendente</h3><div class="muted">Mantieni la stessa matricola e tutto lo storico dei servizi.</div></div><button id="showConversionBtn" class="primary" type="button">⇄ CONVERTI VOLONTARIO</button></div>
+<div id="conversionForm" class="hidden" style="margin-top:15px">
+<div class="grid"><div><label>Volontario da convertire *</label><select id="convertBadge"><option value="">Caricamento…</option></select></div><div><label>Data di assunzione *</label><input id="convertDate" type="date"></div><div><label>Ore contrattuali settimanali *</label><input id="convertHours" type="number" min="1" max="60" step=".5" value="40"></div></div>
+<label>Qualifica</label><input id="convertRole" placeholder="Es. Autista soccorritore" maxlength="100">
+<div class="notice">La conversione modifica la classificazione da volontario a dipendente. Non cancella lo storico e non cambia la matricola. Il PIN si può assegnare successivamente.</div>
+<button id="convertSave" type="button" class="green">CONFERMA CONVERSIONE</button> <button id="convertCancel" type="button" class="secondary">ANNULLA</button>
+<div id="convertMsg" class="notice hidden"></div>
+</div></div>
 <div id="newEmployeeForm" class="notice hidden" style="margin:14px 0;padding:18px">
 <h3>Registrazione nuovo dipendente</h3>
 <div class="grid"><div><label>Matricola / Badge *</label><input id="newBadge" maxlength="16" placeholder="Es. 40"></div><div><label>Nome *</label><input id="newFirst" maxlength="80"></div><div><label>Cognome *</label><input id="newLast" maxlength="80"></div></div>
@@ -422,6 +431,22 @@ function renderMonthState(){
 }
 async function closeMonth(){const an=monthlyAnalyses().flatMap(x=>x.an);if(an.length&&!confirm('Sono presenti '+an.length+' anomalie. Vuoi chiudere comunque il mese?'))return;if(!confirm('Confermi la chiusura del mese '+$('month').value+'?'))return;const note=prompt('Nota di chiusura (facoltativa):','Verificato da amministrazione')||'';try{await api({action:'close_month',month:$('month').value,note});await loadData()}catch(e){alert(e.message)}}
 async function reopenMonth(){const reason=prompt('Motivo della riapertura del mese:','');if(!reason?.trim())return;try{await api({action:'reopen_month',month:$('month').value,reason});await loadData()}catch(e){alert(e.message)}}
+async function openConversion(){
+ $('conversionForm').classList.remove('hidden');
+ try{const r=await api({action:'volunteers_for_conversion'});const sel=$('convertBadge');sel.innerHTML='<option value="">Seleziona volontario…</option>';
+  for(const p of r.people||[]){const o=document.createElement('option');o.value=p.badge;o.textContent=p.nome_completo+' (matricola '+p.badge+')';sel.appendChild(o)}
+  if([...sel.options].some(o=>o.value==='39'))sel.value='39';
+ }catch(e){msg('convertMsg',e.message,'err')}
+}
+async function saveConversion(){
+ const badge=$('convertBadge').value,date=$('convertDate').value,ore=Number($('convertHours').value),qualifica=$('convertRole').value.trim(),btn=$('convertSave');
+ if(!badge||!date||!Number.isFinite(ore)||ore<=0||ore>60){msg('convertMsg','Seleziona il volontario e compila data di assunzione e ore settimanali.','err');return}
+ const nome=$('convertBadge').selectedOptions[0]?.textContent||badge;
+ if(!confirm('Confermi la conversione di '+nome+' in DIPENDENTE dal '+date+'? La matricola e lo storico rimarranno invariati.'))return;
+ btn.disabled=true;
+ try{await api({action:'convert_volunteer',badge,data_ingresso:date,ore_settimanali:ore,qualifica});await loadData();$('pinEmp').value=badge;msg('convertMsg','Conversione salvata. Dipendente visibile in Gestione PIN e Timbrature. Puoi impostare il PIN successivamente.','ok');$('convertBadge').innerHTML='<option value="">Conversione completata</option>'}
+ catch(e){msg('convertMsg',e.message||String(e),'err')}finally{btn.disabled=false}
+}
 async function createEmployee(){
  const button=$('createEmployeeBtn');if(button.disabled)return;
  const b={action:'create_employee',badge:$('newBadge').value.trim(),nome:$('newFirst').value.trim(),cognome:$('newLast').value.trim(),data_ingresso:$('newStart').value,qualifica:$('newRole').value.trim(),ore_settimanali:Number($('newHours').value),pin:$('newPin').value.trim()};
@@ -532,7 +557,7 @@ function renderAll(){renderMonthState();renderTodayBanner();renderCommitments();
 function showPage(name){document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
 function printFromSection(){const pe=$('printEmp').value,pm=$('printMonth').value;if(!pe||!pm)return alert('Seleziona dipendente e mese.');$('filterEmp').value=pe;$('month').value=pm;loadData().then(()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows(pe,pm);document.body.classList.add('printingRegister');window.print();document.body.classList.remove('printingRegister');$('register').innerHTML=old})}
 document.querySelectorAll('.sideBtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$('mobileMenuBtn').onclick=()=>$('sideMenu').classList.toggle('open');$('refreshAnomalies').onclick=()=>refreshData('refreshAnomalies');$('printMonthlyBtn').onclick=printFromSection;
-$('addAbsence').onclick=addAbsence;$('commitAdd').onclick=addCommitment;$('openCommitmentsPage').onclick=()=>showPage('impegni');$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('newEmployeeBtn').onclick=()=>$('newEmployeeForm').classList.toggle('hidden');$('cancelEmployeeBtn').onclick=()=>$('newEmployeeForm').classList.add('hidden');$('createEmployeeBtn').onclick=createEmployee;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=()=>refreshData('refreshBtn');$('refreshTop').onclick=()=>refreshData('refreshTop');$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
+$('addAbsence').onclick=addAbsence;$('commitAdd').onclick=addCommitment;$('openCommitmentsPage').onclick=()=>showPage('impegni');$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('showConversionBtn').onclick=openConversion;$('convertSave').onclick=saveConversion;$('convertCancel').onclick=()=>$('conversionForm').classList.add('hidden');$('newEmployeeBtn').onclick=()=>$('newEmployeeForm').classList.toggle('hidden');$('cancelEmployeeBtn').onclick=()=>$('newEmployeeForm').classList.add('hidden');$('createEmployeeBtn').onclick=createEmployee;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=()=>refreshData('refreshBtn');$('refreshTop').onclick=()=>refreshData('refreshTop');$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
 $('printBtn').onclick=()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows($('filterEmp').value,$('month').value);window.print();$('register').innerHTML=old};$('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
 const d=new Date();const currentMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');$('month').value=currentMonth;$('printMonth').value=currentMonth;$('absFrom').value=new Date().toLocaleDateString('sv-SE');$('absTo').value=$('absFrom').value;$('commitDate').value=new Date().toLocaleDateString('sv-SE');
 updateLoginMonthState();
