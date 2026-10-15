@@ -5365,13 +5365,14 @@ function volunteerOrdinaryRouteHTML(route){
 function volunteerPublicServiceHTML(s,route){
  // Solo informazioni operative, nessuna anagrafica o informazione clinica.
  const d={...(s||{}),...(route||{})};
+ const excludedPickup=/^(servizio interno|118|emergenza 118|emergenza\/urgenza)$/i.test(String(s?.tipo_servizio||'').trim());
  const oraFine=calTime(s.ora_fine_assistenza_prevista||s.ora_rientro_previsto);
  const values=[
   ['Orario di partenza',calTime(s.ora_partenza_prevista)],
-  ['Orario di carico',calTime(d.ora_carico_paziente_prevista)],
+  ...(!excludedPickup?[['Orario di carico',calTime(d.ora_carico_paziente_prevista)]]:[]),
   ['Orario di fine servizio',oraFine],
   ['Luogo di partenza',[d.luogo_partenza,d.indirizzo_partenza].filter(Boolean).join(' · ')],
-  ['Luogo di carico del paziente',[d.luogo_carico_paziente,d.indirizzo_carico_paziente].filter(Boolean).join(' · ')],
+  ...(!excludedPickup?[['Luogo di carico del paziente',[d.luogo_carico_paziente,d.indirizzo_carico_paziente].filter(Boolean).join(' · ')]]:[]),
   ['Destinazione',[d.destinazione,d.indirizzo_destinazione,d.ospedale_destinazione].filter(Boolean).join(' · ')]
  ];
  return '<div class="vol-route-preview" style="margin-top:8px" aria-label="Informazioni operative del servizio">'+
