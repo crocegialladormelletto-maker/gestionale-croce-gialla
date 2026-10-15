@@ -4834,6 +4834,8 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  const closed=f.stato==='CHIUSO';
  const adminClosed118=closed&&is118&&prof?.ruolo==='AMMINISTRATORE';
  document.querySelectorAll('#fvForm input,#fvForm select,#fvForm textarea').forEach(x=>{if(x.dataset.fvEditable==='1')x.disabled=closed;});
+ // Equipaggio: the original markup starts disabled, but admins may edit it on open sheets.
+ ['fvDriver','fvLeader','fvRescuer','fvSecond','fvCompanion','fvTrainee'].forEach(id=>{$(id).disabled=closed||prof?.ruolo!=='AMMINISTRATORE';});
  if(adminClosed118){
   $('fvKmStart').disabled=false;
   $('fvKmEnd').disabled=false;
