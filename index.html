@@ -5368,7 +5368,7 @@ function volunteerPublicServiceHTML(s,route){
  const oraFine=calTime(s.ora_fine_assistenza_prevista||s.ora_rientro_previsto);
  const values=[
   ['Orario di partenza',calTime(s.ora_partenza_prevista)],
-  ['Orario di carico',calTime(s.ora_carico_paziente_prevista)],
+  ['Orario di carico',calTime(d.ora_carico_paziente_prevista)],
   ['Orario di fine servizio',oraFine],
   ['Luogo di partenza',[d.luogo_partenza,d.indirizzo_partenza].filter(Boolean).join(' · ')],
   ['Luogo di carico del paziente',[d.luogo_carico_paziente,d.indirizzo_carico_paziente].filter(Boolean).join(' · ')],
@@ -5391,7 +5391,7 @@ async function loadVolunteerFutureCalendar(){
  const [r,occupied,routes,equipment,crewNames,assignedDetails]=await Promise.all([
   sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_assistenze_ruoli_occupati',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_ordinari_percorsi',{p_dal:range.startYmd,p_al:range.endYmd}),
+  sb.rpc('cge_volontario_percorsi_operativi_v2',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_ordinari_dotazioni',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_equipaggi_servizi_visibili_v2',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_dettagli_servizi_assegnati_v1',{p_dal:range.startYmd,p_al:range.endYmd})
@@ -12832,7 +12832,7 @@ async function loadVolOrd(){
   sb.rpc('cge_volontario_calendario_servizi',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_equipaggi_servizi_visibili_v2',{p_dal:range.startYmd,p_al:range.endYmd}),
   sb.rpc('cge_volontario_dettagli_servizi_assegnati_v1',{p_dal:range.startYmd,p_al:range.endYmd}),
-  sb.rpc('cge_volontario_ordinari_percorsi',{p_dal:range.startYmd,p_al:range.endYmd})
+  sb.rpc('cge_volontario_percorsi_operativi_v2',{p_dal:range.startYmd,p_al:range.endYmd})
  ]);
  if(seq!==volOrdSeq)return;
  if(services.error){volOrdItems=[];volOrdCrew=[];renderVolOrd();return msg('volOrdMsg','Errore caricamento servizi ordinari: '+services.error.message,'err')}
