@@ -3144,7 +3144,7 @@ let prof=null,people=[],qualifications=[],pq=[],vehicles=[],tariffs=[],tariffDes
 let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsRequest=0;
 let volNotifications=[];
 let opCalCursor=new Date(),opCalSelected=todaySafe(),opCalEvents=[],opCalMode='month',opCalVehicle='';
-let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month';
+let volCalCursor=new Date(),volCalSelected=todaySafe(),volCalEvents=[],volCalMode='month',volShiftChanges=[];
 let vfcalCursor=new Date(),vfcalSelected=todaySafe(),vfcalEvents=[],vfcalMode='month',vfcalLoadSequence=0,vfcalApplications=[],vfcalOccupiedRoles=[],vfcalOrdRoutes=[],vfcalCrewNames=[],vfcalQualificationRows=[],vfcalAppBusy=false;
 let emCursor=new Date(),emView='day',emVehicle='',emTurns=[],emAssignments=[],emFasciaRows=[],emRosterSeq=0;
 let asCursor=new Date(),asView='day',asVehicle='',asTurns=[],asAssignments=[],asServices=[],asServiceAssignments=[],asCandidates=[],asLoadSequence=0;
@@ -5515,7 +5515,9 @@ async function loadVolunteerCalendar(){
   sb.rpc('cge_volontario_servizi')
  ]);
  const err=[tpR.error,avR.error,svR.error].find(Boolean);if(err){msg('vcalMsg',err.message,'err');return}
- const tp=tpR.data||[];let turns=[];const ids=[...new Set(tp.map(x=>x.turno_id).filter(Boolean))];
+ const tp=tpR.data||[];let turns=[];
+ const shiftChangeR=await sb.rpc('cge_leggi_variazioni_turni',{p_dal:range.startYmd,p_al:range.endYmd});
+ volShiftChanges=shiftChangeR.error?[]:(shiftChangeR.data||[]);const ids=[...new Set(tp.map(x=>x.turno_id).filter(Boolean))];
  if(ids.length){const tr=await sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note').in('id',ids).gte('data_turno',range.startYmd).lte('data_turno',range.endYmd).order('data_turno').order('ora_inizio');if(tr.error){msg('vcalMsg',tr.error.message,'err');return}turns=tr.data||[]}
  volCalEvents=[];
  const serviceRows=(svR.data||[]).filter(s=>s.data_servizio>=range.startYmd&&s.data_servizio<=range.endYmd);
@@ -5532,10 +5534,24 @@ function renderVolunteerCalendarDay(){
  const d=new Date(volCalSelected+'T12:00:00');title.textContent=new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d).replace(/^./,c=>c.toUpperCase());
  const rows=calendarFilteredEvents('vcal',volCalEvents).filter(e=>e.date===volCalSelected).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
  box.innerHTML=rows.length?rows.map(e=>{
-  if(e.kind==='turn'){const a=e.raw.assignment||{};return '<div class="cal-detail-item turn"><b>'+esc(e.time||'')+' · '+esc(e.title)+'</b><br>'+esc(calTime(e.raw.ora_inizio))+'–'+esc(calTime(e.raw.ora_fine))+' · Ruolo '+esc(a.ruolo||'—')+' <span class="pill g">Assegnato</span></div>'}
+  if(e.kind==='turn'){
+   const a=e.raw.assignment||{},change=volShiftChanges.find(v=>v.assegnazione_id===a.id);
+   const start=calTime(change?.ora_inizio||e.raw.ora_inizio),end=calTime(change?.ora_fine||e.raw.ora_fine);
+   const status=change?.stato||'Orario standard',editable=e.raw.data_turno>=todaySafe()&&a.id;
+   return '<div class="cal-detail-item turn"><b>'+esc(e.time||'')+' · '+esc(e.title)+'</b><br>Turno standard: '+esc(calTime(e.raw.ora_inizio))+'–'+esc(calTime(e.raw.ora_fine))+
+    '<br><b>Il tuo orario:</b> '+esc(start)+'–'+esc(end)+' · '+esc(status)+' · Ruolo '+esc(a.ruolo||'—')+
+    (editable?'<div class="actions" style="margin-top:8px"><input type="time" aria-label="Ora di inizio personale" data-my-shift-from="'+esc(a.id)+'" value="'+esc(start)+'"><input type="time" aria-label="Ora di fine personale" data-my-shift-to="'+esc(a.id)+'" value="'+esc(end)+'"><button class="btn yellow" type="button" data-my-shift-save="'+esc(a.id)+'">Richiedi variazione</button></div>':'')+'</div>';
+  }
   if(e.kind==='service')return '<div class="cal-detail-item service"><b>'+esc((e.time?e.time+' · ':'')+e.title)+'</b><br>'+esc(e.subtitle||'')+volunteerPublicServiceHTML(e.raw,null)+'<div class="muted">Ruolo '+esc(e.raw.ruolo_assegnato||'—')+' · Stato '+esc(e.raw.stato||'—')+'</div></div>';
   return '<div class="cal-detail-item '+e.kind+'"><b>'+esc((e.time?e.time+' · ':'')+e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'</div>'
  }).join(''):'<div class="notice">Nessun impegno o disponibilità per questa giornata.</div>';
+ box.querySelectorAll('[data-my-shift-save]').forEach(b=>b.onclick=async()=>{
+  const id=b.dataset.myShiftSave,from=box.querySelector('[data-my-shift-from="'+id+'"]')?.value,to=box.querySelector('[data-my-shift-to="'+id+'"]')?.value;
+  if(!from||!to||from===to)return msg('vcalMsg','Inserisci orari validi.','warn');
+  const r=await sb.rpc('cge_richiedi_orario_turno',{p_assegnazione:id,p_inizio:from,p_fine:to});
+  if(r.error)return msg('vcalMsg',r.error.message,'err');
+  await loadVolunteerCalendar();msg('vcalMsg','Variazione inviata a Centralino e Amministrazione per approvazione.','ok');
+ });
 }
 function moveVolunteerCalendar(delta){if(volCalMode==='week')volCalCursor=new Date(volCalCursor.getFullYear(),volCalCursor.getMonth(),volCalCursor.getDate()+delta*7);else volCalCursor=new Date(volCalCursor.getFullYear(),volCalCursor.getMonth()+delta,1);volCalSelected=calYmd(volCalCursor);loadVolunteerCalendar()}
 $('vcalPrev').onclick=()=>moveVolunteerCalendar(-1);$('vcalNext').onclick=()=>moveVolunteerCalendar(1);
@@ -8938,11 +8954,41 @@ $('asManage').onclick=()=>{view('shifts');$('stype').value='ASSISTENZA';$('sd').
 async function loadShifts(){
  const r=await sb.from('v_turni_gestionale').select('*').gte('data_turno',new Date(Date.now()-7*86400000).toISOString().slice(0,10)).order('data_turno').order('ora_inizio');
  const sh=r.data||[];
+ if(r.error)return msg('shiftmsg','Errore turni: '+r.error.message,'err');
+ const shiftIds=sh.map(x=>x.id);
+ const [assignR,changesR]=await Promise.all([
+  shiftIds.length?sb.from('turni_personale').select('id,turno_id,badge_personale,ruolo').in('turno_id',shiftIds):Promise.resolve({data:[],error:null}),
+  sb.rpc('cge_leggi_variazioni_turni',{p_dal:new Date(Date.now()-7*86400000).toISOString().slice(0,10),p_al:new Date(Date.now()+62*86400000).toISOString().slice(0,10)})
+ ]);
+ if(assignR.error||changesR.error)return msg('shiftmsg','Orari individuali: '+(assignR.error||changesR.error).message,'err');
+ const shiftAssignments=assignR.data||[],shiftChanges=changesR.data||[];
  $('shiftSel').innerHTML=opts(sh.filter(x=>x.data_turno>=today()),'id',x=>x.data_turno+' · '+x.ora_inizio.slice(0,5)+'-'+x.ora_fine.slice(0,5)+' · '+(x.mezzo||'senza mezzo'));
  $('shiftList').innerHTML=sh.length?sh.map(x=>{
   const members=(x.equipaggio||[]).map(z=>{const unavailable=z.risposta==='NON DISPONIBILE';return esc(z.nome||z.badge)+' ('+esc(z.ruolo||'—')+') <span class="pill '+(unavailable?'r':'g')+'">'+(unavailable?'Non disponibile':'Assegnato')+'</span>'+(z.nota_risposta_volontario?' <span class="muted">· '+esc(z.nota_risposta_volontario)+'</span>':'')}).join('<br>');
-  return '<div class="box"><b>'+esc(x.data_turno)+' · '+esc(x.ora_inizio.slice(0,5))+'-'+esc(x.ora_fine.slice(0,5))+' · '+esc(x.tipo_turno)+'</b><br>Mezzo '+esc(x.mezzo||'—')+'<div style="margin-top:6px">'+(members||'Nessun operatore assegnato')+'</div>'+(x.data_turno>=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())?'<div class="actions" style="margin-top:8px"><button type="button" class="btn danger" data-delete-shift="'+esc(x.id)+'">🗑 Cancella turno</button></div>':'')+'</div>';
+  const custom=shiftAssignments.filter(a=>a.turno_id===x.id).map(a=>{
+   const change=shiftChanges.find(v=>v.assegnazione_id===a.id);
+   const person=people.find(p=>p.badge===a.badge_personale);
+   const start=calTime(change?.ora_inizio||x.ora_inizio),end=calTime(change?.ora_fine||x.ora_fine);
+   const status=change?.stato||'STANDARD';
+   return '<div style="margin-top:8px;padding:8px;border:1px solid #dbe5ef;border-radius:8px"><b>'+esc(person?.nome_completo||a.badge_personale)+' · '+esc(a.ruolo)+'</b>'+
+   '<div class="muted">Orario individuale: '+esc(start)+'–'+esc(end)+' · '+esc(status)+'</div>'+
+   (x.data_turno>=todaySafe()?'<div class="actions" style="margin-top:5px"><input type="time" data-shift-from="'+esc(a.id)+'" value="'+esc(start)+'" aria-label="Dalle ore" style="max-width:130px"><input type="time" data-shift-to="'+esc(a.id)+'" value="'+esc(end)+'" aria-label="Alle ore" style="max-width:130px"><button type="button" class="btn secondary" data-shift-save="'+esc(a.id)+'">Imposta orario</button>'+
+   (status==='IN_ATTESA'?'<button type="button" class="btn yellow" data-shift-approve="'+esc(a.id)+'">Approva</button><button type="button" class="btn secondary" data-shift-reject="'+esc(a.id)+'">Respingi</button>':'')+'</div>':'')+'</div>';
+  }).join('');
+  return '<div class="box"><b>'+esc(x.data_turno)+' · '+esc(x.ora_inizio.slice(0,5))+'-'+esc(x.ora_fine.slice(0,5))+' · '+esc(x.tipo_turno)+'</b><br>Mezzo '+esc(x.mezzo||'—')+'<div style="margin-top:6px">'+(members||'Nessun operatore assegnato')+'</div>'+custom+(x.data_turno>=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())?'<div class="actions" style="margin-top:8px"><button type="button" class="btn danger" data-delete-shift="'+esc(x.id)+'">🗑 Cancella turno</button></div>':'')+'</div>';
  }).join(''):'<div class="notice">Nessun turno inserito.</div>';
+ $('shiftList').querySelectorAll('[data-shift-save]').forEach(b=>b.onclick=async()=>{
+  const id=b.dataset.shiftSave,from=$('shiftList').querySelector('[data-shift-from="'+id+'"]')?.value,to=$('shiftList').querySelector('[data-shift-to="'+id+'"]')?.value;
+  if(!from||!to||from===to)return msg('shiftmsg','Inserisci due orari validi.','warn');
+  const r=await sb.rpc('cge_imposta_orario_operatore',{p_assegnazione:id,p_inizio:from,p_fine:to});
+  if(r.error)return msg('shiftmsg',r.error.message,'err');
+  await loadShifts();msg('shiftmsg','Orario personalizzato approvato.','ok');
+ });
+ for(const kind of ['approve','reject'])$('shiftList').querySelectorAll('[data-shift-'+kind+']').forEach(b=>b.onclick=async()=>{
+  const r=await sb.rpc('cge_valuta_variazione_turno',{p_assegnazione:b.dataset['shift'+kind[0].toUpperCase()+kind.slice(1)],p_approva:kind==='approve'});
+  if(r.error)return msg('shiftmsg',r.error.message,'err');
+  await loadShifts();msg('shiftmsg','Variazione '+(kind==='approve'?'approvata':'respinta')+'.','ok');
+ });
  $('shiftList').querySelectorAll('[data-delete-shift]').forEach(b=>b.onclick=()=>deleteShift(b.dataset.deleteShift,sh));
 }
 async function deleteShift(id,sh){
