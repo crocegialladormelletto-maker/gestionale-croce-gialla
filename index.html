@@ -8399,10 +8399,16 @@ function emgRenderDay(kind){
   const slot=emgRowsFor(rows,day,fascia),
   covered=emgSlotCovered(slot),mine=slot.some(x=>x.badge_personale===volunteerBadge),
   mezzo=emgAssignedMezzo(slot),
-  peopleHtml=slot.map(row=>'<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
-   ' · <b>'+esc(emgRoleLabel(row.ruolo))+'</b>'+
+  peopleHtml=slot.map(row=>{
+   const standard=({MATTINO:['07:00','14:00'],POMERIGGIO:['13:00','19:00'],SERA:['19:00','00:00'],NOTTE:['00:00','07:00']})[fascia]||['00:00','00:00'];
+   const start=calTime(row.ora_inizio_personale)||standard[0],end=calTime(row.ora_fine_personale)||standard[1];
+   const canEdit=day>=todayY&&(admin||row.badge_personale===volunteerBadge);
+   return '<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
+   ' · <b>'+esc(emgRoleLabel(row.ruolo))+'</b> · <strong>'+esc(start)+'–'+esc(end)+'</strong>'+
    (admin&&['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-emg-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
-   '</div>').join(''),
+   (canEdit?'<div class="actions" style="margin:5px 0"><input type="time" data-emg-from="'+esc(row.id)+'" value="'+esc(start)+'" aria-label="Inizio orario personale" style="max-width:115px"><input type="time" data-emg-to="'+esc(row.id)+'" value="'+esc(end)+'" aria-label="Fine orario personale" style="max-width:115px"><button type="button" class="btn secondary" data-emg-time-save="'+esc(row.id)+'">Salva orario</button></div>':'')+
+   '</div>';
+  }).join(''),
   missing=['AUTISTA','CAPO_SERVIZIO'].filter(role=>!slot.some(x=>x.ruolo===role)).map(emgRoleLabel),
   state=covered?'Completo · autista e capo servizio presenti':'Da completare · mancano '+missing.join(' e ');
   const eligible=['AUTISTA','CAPO_SERVIZIO','SOCCORRITORE','SECONDO_SOCCORRITORE'].filter(role=>!slot.some(x=>x.ruolo===role)&&vfcalQualificationRows.some(q=>
@@ -8419,6 +8425,15 @@ function emgRenderDay(kind){
    (admin&&slot.length?'<div class="dim-admin-assign"><b>Mezzo della fascia</b>'+emgMezzoEditor(day,fascia,slot)+'</div>':'')+
    (admin?emgAdminAssignControls(day,fascia,slot):'')+'</div>';
  }).join('');
+ $(prefix+'Day').querySelectorAll('[data-emg-time-save]').forEach(button=>button.onclick=async()=>{
+  const id=button.dataset.emgTimeSave,from=$(prefix+'Day').querySelector('[data-emg-from="'+id+'"]')?.value,to=$(prefix+'Day').querySelector('[data-emg-to="'+id+'"]')?.value;
+  if(!from||!to||from===to)return msg(prefix+'Msg','Indica due orari validi.','warn');
+  button.disabled=true;
+  const result=await sb.rpc('cge_emergenza_imposta_orario',{p_id:id,p_inizio:from,p_fine:to});
+  if(result.error){button.disabled=false;return msg(prefix+'Msg',result.error.message,'err')}
+  if(admin)await loadEmergenzaAdmin();else await loadEmergenzaVol();
+  msg(prefix+'Msg','Orario individuale salvato e subito valido.','ok');
+ });
  if(admin){
   $(prefix+'Day').querySelectorAll('[data-emg-remove]').forEach(button=>button.onclick=()=>emgRemove(button.dataset.emgRemove));
   $(prefix+'Day').querySelectorAll('[data-emg-assign]').forEach(button=>button.onclick=()=>emgAdminAssign(day,button.dataset.emgAssign,button.dataset.emgRole));
@@ -8480,10 +8495,12 @@ async function loadEmergenzaVol(){
  if(!volunteerBadge)return;
  const seq=++emgVolSeq,range=calVisibleRange(emgVolCursor,'month');
  msg('emgVolMsg','Caricamento turni emergenza...');
- const r=await sb.rpc('cge_emergenza_turni_v2',{p_dal:range.startYmd,p_al:range.endYmd});
+ const [r,timeR]=await Promise.all([sb.rpc('cge_emergenza_turni_v2',{p_dal:range.startYmd,p_al:range.endYmd}),sb.rpc('cge_emergenza_orari_personali',{p_dal:range.startYmd,p_al:range.endYmd})]);
  if(seq!==emgVolSeq)return;
+ if(timeR.error)return msg('emgVolMsg',timeR.error.message,'err');
  if(r.error)return msg('emgVolMsg',r.error.message,'err');
- emgVolRows=r.data||[];emgRenderMonth('Vol');msg('emgVolMsg','');
+ const times=new Map((timeR.data||[]).map(x=>[x.id,x]));
+ emgVolRows=(r.data||[]).map(x=>({...x,...(times.get(x.id)||{})}));emgRenderMonth('Vol');msg('emgVolMsg','');
 }
 async function loadEmergenzaAdmin(){
  if(!await checkGestionaleAuth())return;
@@ -8491,10 +8508,12 @@ async function loadEmergenzaAdmin(){
  const seq=++emgAdminSeq,range=calVisibleRange(emgAdminCursor,'month');
  ++emgAdminEligibleSeq;emgAdminEligible=[];
  msg('emgAdminMsg','Caricamento turni emergenza...');
- const r=await sb.rpc('cge_emergenza_turni_v2',{p_dal:range.startYmd,p_al:range.endYmd});
+ const [r,timeR]=await Promise.all([sb.rpc('cge_emergenza_turni_v2',{p_dal:range.startYmd,p_al:range.endYmd}),sb.rpc('cge_emergenza_orari_personali',{p_dal:range.startYmd,p_al:range.endYmd})]);
  if(seq!==emgAdminSeq)return;
+ if(timeR.error)return msg('emgAdminMsg',timeR.error.message,'err');
  if(r.error)return msg('emgAdminMsg',r.error.message,'err');
- emgAdminRows=r.data||[];emgRenderMonth('Admin');msg('emgAdminMsg','');
+ const times=new Map((timeR.data||[]).map(x=>[x.id,x]));
+ emgAdminRows=(r.data||[]).map(x=>({...x,...(times.get(x.id)||{})}));emgRenderMonth('Admin');msg('emgAdminMsg','');
  await loadEmergenzaEligible();
 }
 async function emgJoin(day,fascia){
