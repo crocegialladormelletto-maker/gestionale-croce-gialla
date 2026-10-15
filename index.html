@@ -5536,11 +5536,11 @@ function renderVolunteerCalendarDay(){
  box.innerHTML=rows.length?rows.map(e=>{
   if(e.kind==='turn'){
    const a=e.raw.assignment||{},change=volShiftChanges.find(v=>v.assegnazione_id===a.id);
-   const start=calTime(change?.ora_inizio||e.raw.ora_inizio),end=calTime(change?.ora_fine||e.raw.ora_fine);
+   const start=calTime(change?.stato==='APPROVATA'?change.ora_inizio:e.raw.ora_inizio),end=calTime(change?.stato==='APPROVATA'?change.ora_fine:e.raw.ora_fine);
    const status=change?.stato||'Orario standard',editable=e.raw.data_turno>=todaySafe()&&a.id;
    return '<div class="cal-detail-item turn"><b>'+esc(e.time||'')+' · '+esc(e.title)+'</b><br>Turno standard: '+esc(calTime(e.raw.ora_inizio))+'–'+esc(calTime(e.raw.ora_fine))+
     '<br><b>Il tuo orario:</b> '+esc(start)+'–'+esc(end)+' · '+esc(status)+' · Ruolo '+esc(a.ruolo||'—')+
-    (editable?'<div class="actions" style="margin-top:8px"><input type="time" aria-label="Ora di inizio personale" data-my-shift-from="'+esc(a.id)+'" value="'+esc(start)+'"><input type="time" aria-label="Ora di fine personale" data-my-shift-to="'+esc(a.id)+'" value="'+esc(end)+'"><button class="btn yellow" type="button" data-my-shift-save="'+esc(a.id)+'">Richiedi variazione</button></div>':'')+'</div>';
+    (editable?'<div class="actions" style="margin-top:8px"><input type="time" aria-label="Ora di inizio personale" data-my-shift-from="'+esc(a.id)+'" value="'+esc(start)+'"><input type="time" aria-label="Ora di fine personale" data-my-shift-to="'+esc(a.id)+'" value="'+esc(end)+'"><button class="btn yellow" type="button" data-my-shift-save="'+esc(a.id)+'">Salva il mio orario</button></div>':'')+'</div>';
   }
   if(e.kind==='service')return '<div class="cal-detail-item service"><b>'+esc((e.time?e.time+' · ':'')+e.title)+'</b><br>'+esc(e.subtitle||'')+volunteerPublicServiceHTML(e.raw,null)+'<div class="muted">Ruolo '+esc(e.raw.ruolo_assegnato||'—')+' · Stato '+esc(e.raw.stato||'—')+'</div></div>';
   return '<div class="cal-detail-item '+e.kind+'"><b>'+esc((e.time?e.time+' · ':'')+e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'</div>'
@@ -5550,7 +5550,7 @@ function renderVolunteerCalendarDay(){
   if(!from||!to||from===to)return msg('vcalMsg','Inserisci orari validi.','warn');
   const r=await sb.rpc('cge_richiedi_orario_turno',{p_assegnazione:id,p_inizio:from,p_fine:to});
   if(r.error)return msg('vcalMsg',r.error.message,'err');
-  await loadVolunteerCalendar();msg('vcalMsg','Variazione inviata a Centralino e Amministrazione per approvazione.','ok');
+  await loadVolunteerCalendar();msg('vcalMsg','Orario aggiornato: già valido e visibile al Centralino e in Amministrazione.','ok');
  });
 }
 function moveVolunteerCalendar(delta){if(volCalMode==='week')volCalCursor=new Date(volCalCursor.getFullYear(),volCalCursor.getMonth(),volCalCursor.getDate()+delta*7);else volCalCursor=new Date(volCalCursor.getFullYear(),volCalCursor.getMonth()+delta,1);volCalSelected=calYmd(volCalCursor);loadVolunteerCalendar()}
@@ -8969,7 +8969,7 @@ async function loadShifts(){
    const change=shiftChanges.find(v=>v.assegnazione_id===a.id);
    const person=people.find(p=>p.badge===a.badge_personale);
    const start=calTime(change?.ora_inizio||x.ora_inizio),end=calTime(change?.ora_fine||x.ora_fine);
-   const status=change?.stato||'STANDARD';
+   const status=change?.stato==='APPROVATA'?'Personalizzato':(change?.stato||'Standard');
    return '<div style="margin-top:8px;padding:8px;border:1px solid #dbe5ef;border-radius:8px"><b>'+esc(person?.nome_completo||a.badge_personale)+' · '+esc(a.ruolo)+'</b>'+
    '<div class="muted">Orario individuale: '+esc(start)+'–'+esc(end)+' · '+esc(status)+'</div>'+
    (x.data_turno>=todaySafe()?'<div class="actions" style="margin-top:5px"><input type="time" data-shift-from="'+esc(a.id)+'" value="'+esc(start)+'" aria-label="Dalle ore" style="max-width:130px"><input type="time" data-shift-to="'+esc(a.id)+'" value="'+esc(end)+'" aria-label="Alle ore" style="max-width:130px"><button type="button" class="btn secondary" data-shift-save="'+esc(a.id)+'">Imposta orario</button>'+
