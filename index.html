@@ -8406,7 +8406,7 @@ function emgRenderDay(kind){
    return '<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
    ' · <b>'+esc(emgRoleLabel(row.ruolo))+'</b> · <strong>'+esc(start)+'–'+esc(end)+'</strong>'+
    (admin&&['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-emg-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
-   (canEdit?'<div class="actions" style="margin:5px 0"><input type="time" data-emg-from="'+esc(row.id)+'" value="'+esc(start)+'" aria-label="Inizio orario personale" style="max-width:115px"><input type="time" data-emg-to="'+esc(row.id)+'" value="'+esc(end)+'" aria-label="Fine orario personale" style="max-width:115px"><button type="button" class="btn secondary" data-emg-time-save="'+esc(row.id)+'">Salva orario</button></div>':'')+
+   (canEdit?'<button type="button" class="btn secondary" style="padding:4px 8px;margin-left:8px" data-emg-time-edit="'+esc(row.id)+'">Modifica</button><div class="actions hidden" data-emg-time-editor="'+esc(row.id)+'" style="margin:5px 0"><input type="time" data-emg-from="'+esc(row.id)+'" value="'+esc(start)+'" aria-label="Inizio orario personale" style="max-width:115px"><input type="time" data-emg-to="'+esc(row.id)+'" value="'+esc(end)+'" aria-label="Fine orario personale" style="max-width:115px"><button type="button" class="btn yellow" data-emg-time-save="'+esc(row.id)+'">Salva orario</button><button type="button" class="btn secondary" data-emg-time-cancel="'+esc(row.id)+'">Annulla</button></div>':'')+
    '</div>';
   }).join(''),
   missing=['AUTISTA','CAPO_SERVIZIO'].filter(role=>!slot.some(x=>x.ruolo===role)).map(emgRoleLabel),
@@ -8425,14 +8425,35 @@ function emgRenderDay(kind){
    (admin&&slot.length?'<div class="dim-admin-assign"><b>Mezzo della fascia</b>'+emgMezzoEditor(day,fascia,slot)+'</div>':'')+
    (admin?emgAdminAssignControls(day,fascia,slot):'')+'</div>';
  }).join('');
+ $(prefix+'Day').querySelectorAll('[data-emg-time-edit]').forEach(button=>button.onclick=()=>{
+  const editor=$(prefix+'Day').querySelector('[data-emg-time-editor="'+button.dataset.emgTimeEdit+'"]');
+  if(editor)editor.classList.remove('hidden');
+  button.classList.add('hidden');
+ });
+ $(prefix+'Day').querySelectorAll('[data-emg-time-cancel]').forEach(button=>button.onclick=()=>{
+  const id=button.dataset.emgTimeCancel,editor=$(prefix+'Day').querySelector('[data-emg-time-editor="'+id+'"]');
+  if(editor)editor.classList.add('hidden');
+  const edit=$(prefix+'Day').querySelector('[data-emg-time-edit="'+id+'"]');
+  if(edit)edit.classList.remove('hidden');
+ });
  $(prefix+'Day').querySelectorAll('[data-emg-time-save]').forEach(button=>button.onclick=async()=>{
   const id=button.dataset.emgTimeSave,from=$(prefix+'Day').querySelector('[data-emg-from="'+id+'"]')?.value,to=$(prefix+'Day').querySelector('[data-emg-to="'+id+'"]')?.value;
   if(!from||!to||from===to)return msg(prefix+'Msg','Indica due orari validi.','warn');
   button.disabled=true;
   const result=await sb.rpc('cge_emergenza_imposta_orario',{p_id:id,p_inizio:from,p_fine:to});
   if(result.error){button.disabled=false;return msg(prefix+'Msg',result.error.message,'err')}
-  if(admin)await loadEmergenzaAdmin();else await loadEmergenzaVol();
-  msg(prefix+'Msg','Orario individuale salvato e subito valido.','ok');
+  // Conferma i valori rileggendo il database prima di annunciare il salvataggio.
+  const selected=admin?emgAdminSelected:emgVolSelected;
+  const verify=await sb.rpc('cge_emergenza_orari_personali',{p_dal:selected,p_al:selected});
+  const saved=verify.error?null:(verify.data||[]).find(x=>x.id===id);
+  if(verify.error||calTime(saved?.ora_inizio)!==from||calTime(saved?.ora_fine)!==to){
+   button.disabled=false;
+   return msg(prefix+'Msg','Impossibile verificare il nuovo orario. Riprova con Aggiorna. '+(verify.error?.message||''),'err');
+  }
+  const rows=admin?emgAdminRows:emgVolRows,entry=rows.find(x=>x.id===id);
+  if(entry){entry.ora_inizio_personale=saved.ora_inizio;entry.ora_fine_personale=saved.ora_fine;}
+  emgRenderMonth(admin?'Admin':'Vol');
+  msg(prefix+'Msg','Orario salvato: '+from+'–'+to+'.','ok');
  });
  if(admin){
   $(prefix+'Day').querySelectorAll('[data-emg-remove]').forEach(button=>button.onclick=()=>emgRemove(button.dataset.emgRemove));
