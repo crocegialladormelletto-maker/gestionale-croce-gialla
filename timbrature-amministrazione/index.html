@@ -307,7 +307,7 @@ function analyzeBadge(badge,arr){
    if(lastExit){
    const exitDay=new Date(lastExit.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
    const entryDay=new Date(e.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
-   if(entryDay>=exitDay){
+   if(entryDay>exitDay){ // Rientri nella stessa giornata: pause fra frazioni di lavoro, non riposo giornaliero
     const rest=(new Date(e.evento_at)-new Date(lastExit.evento_at))/60000;
     if(rest<660)an.push({type:'RIPOSO < 11 ORE',at:e.evento_at,badge,msg:'Riposo '+fmtMin(rest)+' tra uscita '+time(lastExit.evento_at)+' del '+new Date(lastExit.evento_at).toLocaleDateString('it-IT',{timeZone:'Europe/Rome'})+' e nuova entrata '+time(e.evento_at)+' del '+new Date(e.evento_at).toLocaleDateString('it-IT',{timeZone:'Europe/Rome'})+'.',rest:true})
    }
