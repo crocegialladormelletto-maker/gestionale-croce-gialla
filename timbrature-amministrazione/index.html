@@ -499,7 +499,7 @@ function printRows(selectedBadge='',selectedMonth=''){
     ensure(d).pairs.push({i:open,o:e});
     if(mins>=0)ensure(d).totalMin+=mins;
     const exitDay=dayKey(e.evento_at);
-    if(isMartinoliBadge(badge)&&nightExit(e,context))ensure(exitDay).abs.push('SMONTO NOTTE');
+    if(isMartinoliBadge(badge)&&nightExit(e,context)){if(exitDay!==d)ensure(exitDay).abs.push('SMONTO NOTTE');else ensure(d).pairs[ensure(d).pairs.length-1].smonto=true;}
     delete openByBadge[badge];
    }else{
     const d=dayKey(e.evento_at);
@@ -558,7 +558,7 @@ function printRows(selectedBadge='',selectedMonth=''){
 
   if(v.pairs.length){
    v.pairs.forEach((p,j)=>{
-    h+='<tr><td>'+(j===0?dateLabel:'')+'</td><td>'+(p.i?time(p.i.evento_at):'')+'</td><td>'+(p.o?time(p.o.evento_at):'')+'</td><td>'+(j===0?fmtMin(v.totalMin):'')+'</td><td>'+(j===0?(target==null?'—':fmtMin(overtime)):'')+'</td></tr>';
+    h+='<tr><td>'+(j===0?dateLabel:'')+'</td><td>'+(p.i?time(p.i.evento_at):'')+'</td><td>'+(p.o?time(p.o.evento_at)+(p.smonto?' · SMONTO NOTTE':''):'')+'</td><td>'+(j===0?fmtMin(v.totalMin):'')+'</td><td>'+(j===0?(target==null?'—':fmtMin(overtime)):'')+'</td></tr>';
    });
   }
   if(v.abs.length){
