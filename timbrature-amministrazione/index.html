@@ -405,16 +405,18 @@ function renderSummary(){
  const rows=monthlyAnalyses();$('monthlySummary').innerHTML='<table><thead><tr><th>Dipendente</th><th>Ore registrate</th><th>Giornate</th><th>Riposi &lt; 11h</th><th>Anomalie</th><th>Stato attuale</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><b>'+esc(x.nome_completo)+'</b></td><td>'+fmtMin(x.total)+'</td><td>'+x.days+'</td><td>'+x.rest+'</td><td>'+x.an.length+'</td><td>'+(x.open?'🟢 In servizio':'Fuori servizio')+'</td></tr>').join('')+'</tbody></table>'
 }
 function absenceLabel(x){return x==='L104'?'L.104':x}
+function isMartinoliWorkingDay(date){const d=new Date(String(date).slice(0,10)+'T12:00:00');return d.getDay()!==0}
+function displayAbsenceHours(a){if(a.ore==null)return '—';if(isMartinoliBadge(a.badge)&&['FERIE','PERMESSO'].includes(a.causale)&&Math.abs(Number(a.ore)-380/60)<0.02)return '6,20 H';return Number(a.ore).toLocaleString('it-IT',{maximumFractionDigits:2})+' h'}
 function renderAbsences(){
  const m=$('month').value;
  const rows=absences.filter(x=>String(x.data_dal).slice(0,7)===m||String(x.data_al).slice(0,7)===m).sort((a,b)=>String(a.data_dal).localeCompare(String(b.data_dal)));
- $('absenceList').innerHTML=rows.length?'<table><thead><tr><th>Dipendente</th><th>Causale</th><th>Periodo</th><th>Ore</th><th>Nota</th><th>Azioni</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><b>'+esc(person(x.badge))+'</b></td><td><span class="pill hist">'+esc(absenceLabel(x.causale))+'</span></td><td>'+new Date(x.data_dal+'T12:00').toLocaleDateString('it-IT')+(x.data_al!==x.data_dal?' → '+new Date(x.data_al+'T12:00').toLocaleDateString('it-IT'):'')+'</td><td>'+(x.ore==null?'—':esc(x.ore))+'</td><td>'+esc(x.nota||'')+'</td><td>'+(monthClosed?'🔒 Mese chiuso':'<button class="danger mini" onclick="deleteAbsence(\''+x.id+'\')">Elimina</button>')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna causale registrata nel mese selezionato.</div>';
+ $('absenceList').innerHTML=rows.length?'<table><thead><tr><th>Dipendente</th><th>Causale</th><th>Periodo</th><th>Ore</th><th>Nota</th><th>Azioni</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><b>'+esc(person(x.badge))+'</b></td><td><span class="pill hist">'+esc(absenceLabel(x.causale))+'</span></td><td>'+new Date(x.data_dal+'T12:00').toLocaleDateString('it-IT')+(x.data_al!==x.data_dal?' → '+new Date(x.data_al+'T12:00').toLocaleDateString('it-IT'):'')+'</td><td>'+esc(displayAbsenceHours(x))+'</td><td>'+esc(x.nota||'')+'</td><td>'+(monthClosed?'🔒 Mese chiuso':'<button class="danger mini" onclick="deleteAbsence(\''+x.id+'\')">Elimina</button>')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna causale registrata nel mese selezionato.</div>';
 }
 async function addAbsence(){
  try{
   if(monthClosed)throw new Error('Il mese selezionato è chiuso.');
   const dal=$('absFrom').value,al=$('absTo').value||dal;if(!dal)throw new Error('Inserisci la data.');
-  await api({action:'absence_add',badge:$('absEmp').value,causale:$('absType').value,data_dal:dal,data_al:al,ore:$('absHours').value||null,nota:$('absNote').value.trim()});
+  const badge=$('absEmp').value,causale=$('absType').value;let ore=$('absHours').value||null;if(isMartinoliBadge(badge)&&['FERIE','PERMESSO'].includes(causale)){if(!isMartinoliWorkingDay(dal)||!isMartinoliWorkingDay(al))throw new Error('La domenica è riposo settimanale: registra ferie e permessi solo nei giorni lavorativi.');if(ore==null)ore=380/60;else if(Math.abs(Number(ore)-6.2)<0.001||Math.abs(Number(ore)-380/60)<0.02)ore=380/60;}await api({action:'absence_add',badge,causale,data_dal:dal,data_al:al,ore,nota:$('absNote').value.trim()});
   $('absHours').value='';$('absNote').value='';msg('absMsg','Causale inserita correttamente.','ok');await loadData();
  }catch(e){msg('absMsg',e.message,'err')}
 }
@@ -518,7 +520,7 @@ function printRows(selectedBadge='',selectedMonth=''){
   while(cur<=end){
    const d=cur.toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
    if(d.slice(0,7)===selectedMonth){
-    const oreLabel=a.ore==null?'':(' · '+(['RIPOSO','PERMESSO'].includes(a.causale)?Number(a.ore).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+' H':fmtMin(Number(a.ore)*60)+' h'));
+    const oreLabel=a.ore==null?'':(' · '+(isMartinoliBadge(a.badge)&&['FERIE','PERMESSO'].includes(a.causale)&&Math.abs(Number(a.ore)-380/60)<0.02?'6,20 H':(['RIPOSO','PERMESSO'].includes(a.causale)?Number(a.ore).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+' H':fmtMin(Number(a.ore)*60)+' h')));
     ensure(d).abs.push(absenceLabel(a.causale)+oreLabel);
    }
    cur.setDate(cur.getDate()+1);
