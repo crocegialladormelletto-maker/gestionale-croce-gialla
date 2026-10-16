@@ -528,12 +528,28 @@ function printRows(selectedBadge='',selectedMonth=''){
  }
 
  const target=dailyTargetMinutes(selectedBadge);
+ // CCNL ANPAS-Misericordie art. 55: straordinario oltre 38 ore effettive settimanali.
+ // Conteggia anche le giornate precedenti appartenenti alla stessa settimana a cavallo del mese.
+ const weekKey=d=>{const x=new Date(d+'T12:00:00');const wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x.toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'})};
+ const weeklyPrior={};
+ if(selectedBadge&&isMartinoliBadge(selectedBadge)){
+  const ordered=context.filter(e=>!e.eliminato_at&&e.badge===selectedBadge).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+  let entry=null;
+  for(const e of ordered){if(e.tipo==='ENTRATA')entry=e;else if(e.tipo==='USCITA'&&entry){const day=dayKey(entry.evento_at);if(day.slice(0,7)<selectedMonth){const w=weekKey(day);weeklyPrior[w]=(weeklyPrior[w]||0)+Math.max(0,(new Date(e.evento_at)-new Date(entry.evento_at))/60000)}entry=null}}
+ }
+ const weeklyRunning={...weeklyPrior};
  let totalWorked=0,totalOvertime=0,totalOrdinary=0;
  let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th><th>Totale ore giornaliere</th><th>Straordinari</th></tr></thead><tbody>';
  for(const d of Object.keys(by).sort()){
   const v=by[d],dateLabel=new Date(d+'T12:00:00').toLocaleDateString('it-IT');
-  const overtime=target==null?0:Math.max(0,v.totalMin-target);
-  const ordinary=target==null?v.totalMin:Math.min(v.totalMin,target);
+  let overtime=0,ordinary=v.totalMin;
+  if(target!=null){
+   if(selectedBadge&&isMartinoliBadge(selectedBadge)){
+    const week=weekKey(d),before=weeklyRunning[week]||0,after=before+v.totalMin;
+    overtime=Math.max(0,after-2280)-Math.max(0,before-2280);
+    weeklyRunning[week]=after;ordinary=v.totalMin-overtime;
+   }else{ overtime=Math.max(0,v.totalMin-target);ordinary=v.totalMin-overtime; }
+  }
   totalWorked+=v.totalMin;
   totalOvertime+=overtime;
   totalOrdinary+=ordinary;
