@@ -518,7 +518,7 @@ function printRows(selectedBadge='',selectedMonth=''){
   while(cur<=end){
    const d=cur.toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
    if(d.slice(0,7)===selectedMonth){
-    const oreLabel=a.ore==null?'':(' · '+fmtMin(Number(a.ore)*60)+' h');
+    const oreLabel=a.ore==null?'':(' · '+(['RIPOSO','PERMESSO'].includes(a.causale)?Number(a.ore).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+' H':fmtMin(Number(a.ore)*60)+' h'));
     ensure(d).abs.push(absenceLabel(a.causale)+oreLabel);
    }
    cur.setDate(cur.getDate()+1);
