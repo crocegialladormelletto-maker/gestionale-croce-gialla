@@ -5624,7 +5624,7 @@ function dashOpsCrewBlock(title,rows,showVehicle){
  if(!groups.length)return '<div class="ops-empty">'+esc(title)+': nessuna iscrizione per oggi.</div>';
  return '<div style="margin-bottom:10px"><b>'+esc(title)+'</b>'+groups.map(([fascia,members])=>{
   const mezzo=showVehicle?(members.find(x=>x.mezzo)?.mezzo||''):'';
-  const requiredSecondRole=showVehicle?'CAPO_SERVIZIO':'SOCCORRITORE';
+  const requiredSecondRole=(showVehicle||title.includes('Dimissioni'))?'CAPO_SERVIZIO':'SOCCORRITORE';
   const hasAut=members.some(x=>x.ruolo==='AUTISTA'),hasSecond=members.some(x=>x.ruolo===requiredSecondRole),
    covered=hasAut&&hasSecond;
   return '<div class="ops-row '+(covered?'ops-row-ok':'ops-row-warn')+'">'+
@@ -5769,7 +5769,7 @@ async function loadOperationalDashboard(){
   activeEmergencyFascia+' · '+volFasciaOrario(activeEmergencyFascia)+(currentEmergency.length?' · '+currentEmergency.length+' presenze':' · nessuna presenza'));
 
  const dimGroups=dashOpsGroup(dimRows);
- const dimIncomplete=dimGroups.filter(([,members])=>!(members.some(x=>x.ruolo==='AUTISTA')&&members.some(x=>x.ruolo==='SOCCORRITORE')));
+ const dimIncomplete=dimGroups.filter(([,members])=>!(members.some(x=>x.ruolo==='AUTISTA')&&members.some(x=>x.ruolo==='CAPO_SERVIZIO')));
  dashSetSmartCard('dashSmartDischarges',!dimGroups.length?'ok':dimIncomplete.length?'warn':'ok',
   !dimGroups.length?'NESSUN TURNO':dimIncomplete.length?'DA COMPLETARE':'COPERTE',
   dimGroups.length?dimGroups.length+' fascia/e · '+dimRows.length+' presenze':'Nessuna fascia caricata oggi');
@@ -8212,7 +8212,7 @@ const VOL_FASCIA_ORARI={MATTINO:'07:00–14:00',POMERIGGIO:'14:00–19:00',SERA:
 function volFasciaOrario(fascia){return VOL_FASCIA_ORARI[fascia]||'';}
 function dimRoleLabel(role){return role==='AUTISTA'?'Autista':role==='CAPO_SERVIZIO'?'Capo servizio':role==='SECONDO_SOCCORRITORE'?'Secondo soccorritore':'Soccorritore'}
 function dimRowsFor(rows,day,fascia){return rows.filter(row=>row.giorno===day&&row.fascia===fascia)}
-function dimSlotCovered(rows){return rows.some(row=>row.ruolo==='AUTISTA')&&rows.some(row=>row.ruolo==='SOCCORRITORE')}
+function dimSlotCovered(rows){return rows.some(row=>row.ruolo==='AUTISTA')&&rows.some(row=>row.ruolo==='CAPO_SERVIZIO')}
 function dimDayTitle(day){return new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(day+'T12:00:00')).replace(/^./,c=>c.toUpperCase())}
 function dimRenderMonth(kind){
  const admin=kind==='Admin',cursor=admin?dimAdminCursor:dimVolCursor,
