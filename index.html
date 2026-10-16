@@ -5932,8 +5932,8 @@ async function loadOperationalDashboard(){
    problems.push({level:'warn',title:'Emergenza 118 '+fascia+' senza mezzo',detail:'Assegna il mezzo all’equipaggio della fascia.'});
  });
  dashOpsGroup(dimRows).forEach(([fascia,members])=>{
-  if(!(members.some(x=>x.ruolo==='AUTISTA')&&members.some(x=>x.ruolo==='SOCCORRITORE')))
-   problems.push({level:'warn',title:'Dimissioni '+fascia+' incomplete',detail:'Autista e soccorritore non risultano entrambi presenti.'});
+  if(!(members.some(x=>x.ruolo==='AUTISTA')&&members.some(x=>x.ruolo==='CAPO_SERVIZIO')))
+   problems.push({level:'warn',title:'Dimissioni '+fascia+' incomplete',detail:'Autista e capo servizio non risultano entrambi presenti.'});
  });
  mezzi.filter(m=>!m.attivo||!['DISPONIBILE','OPERATIVO'].includes(String(m.stato_operativo||'').toUpperCase())).forEach(m=>problems.push({
   level:'alert',title:'Mezzo '+(m.codice||'—')+' non disponibile',detail:'Stato mezzo: '+(m.stato_operativo||'NON ATTIVO')
