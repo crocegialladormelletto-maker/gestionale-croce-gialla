@@ -307,7 +307,7 @@ function analyzeBadge(badge,arr){
    if(lastExit){
    const exitDay=new Date(lastExit.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
    const entryDay=new Date(e.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
-   if(entryDay>exitDay){
+   if(entryDay>=exitDay){
     const rest=(new Date(e.evento_at)-new Date(lastExit.evento_at))/60000;
     if(rest<660)an.push({type:'RIPOSO < 11 ORE',at:e.evento_at,badge,msg:'Riposo '+fmtMin(rest)+' tra uscita '+time(lastExit.evento_at)+' del '+new Date(lastExit.evento_at).toLocaleDateString('it-IT',{timeZone:'Europe/Rome'})+' e nuova entrata '+time(e.evento_at)+' del '+new Date(e.evento_at).toLocaleDateString('it-IT',{timeZone:'Europe/Rome'})+'.',rest:true})
    }
@@ -379,7 +379,7 @@ function renderTodayBanner(){
  const rows=badges.map(b=>{
   const xs=todayEvents.filter(e=>e.badge===b);
   const a=todayAbs.find(x=>x.badge===b);
-  const parts=xs.map(e=>'<b>'+esc(e.tipo==='ENTRATA'?'Entrata':(isMartinoliBadge(b)&&nightExit(e)?'Uscita · SMONTO NOTTE':'Uscita'))+'</b> '+esc(time(e.evento_at)));
+  const parts=xs.map(e=>'<b>'+esc(e.tipo==='ENTRATA'?'Entrata':(nightExit(e)?'Uscita · SMONTO NOTTE':'Uscita'))+'</b> '+esc(time(e.evento_at)));
   if(a)parts.push('<b>Causale:</b> '+esc(absenceLabel(a.causale))+(a.ore!=null?' · '+esc(a.ore)+' h':'')+(a.nota?' · '+esc(a.nota):''));
   let status='USCITO',cls='out';
   if(inNow.some(p=>p.badge===b)){status='IN SERVIZIO';cls='in'}
@@ -499,7 +499,7 @@ function printRows(selectedBadge='',selectedMonth=''){
     ensure(d).pairs.push({i:open,o:e});
     if(mins>=0)ensure(d).totalMin+=mins;
     const exitDay=dayKey(e.evento_at);
-    if(isMartinoliBadge(badge)&&nightExit(e,context)){if(exitDay!==d)ensure(exitDay).abs.push('SMONTO NOTTE');else ensure(d).pairs[ensure(d).pairs.length-1].smonto=true;}
+    if(nightExit(e,context)){ensure(d).pairs[ensure(d).pairs.length-1].smonto=true;}
     delete openByBadge[badge];
    }else{
     const d=dayKey(e.evento_at);
@@ -574,7 +574,7 @@ function printRows(selectedBadge='',selectedMonth=''){
  }
  return h+'</table>'
 }
-function renderRegister(){let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo==='USCITA'&&isMartinoliBadge(e.badge)&&nightExit(e)?'USCITA · SMONTO NOTTE':e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':monthClosed?'🔒 Mese chiuso':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}h+='</tbody></table>';$('register').innerHTML=events.length?h:'<div class="muted">Nessuna timbratura.</div>';const fe=$('filterEmp').value;const meseLabel=formatMonthLabel($('month').value||'');$('printHead').innerHTML='<div class="printBrand"><div class="printBrandRow"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100" alt="Logo Croce Gialla Emergenza ODV"><div class="printBrandText"><div class="line1">CROCE GIALLA EMERGENZA ODV</div><div class="line2">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</div></div></div><div class="printBrandMonth">'+esc(meseLabel)+'</div>'+(monthClosed?'<div class="printClosedStamp">🔒 MESE CHIUSO – REGISTRO DEFINITIVO</div>':'')+'</div>'}
+function renderRegister(){let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo==='USCITA'&&nightExit(e)?'USCITA · SMONTO NOTTE':e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':monthClosed?'🔒 Mese chiuso':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}h+='</tbody></table>';$('register').innerHTML=events.length?h:'<div class="muted">Nessuna timbratura.</div>';const fe=$('filterEmp').value;const meseLabel=formatMonthLabel($('month').value||'');$('printHead').innerHTML='<div class="printBrand"><div class="printBrandRow"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100" alt="Logo Croce Gialla Emergenza ODV"><div class="printBrandText"><div class="line1">CROCE GIALLA EMERGENZA ODV</div><div class="line2">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</div></div></div><div class="printBrandMonth">'+esc(meseLabel)+'</div>'+(monthClosed?'<div class="printClosedStamp">🔒 MESE CHIUSO – REGISTRO DEFINITIVO</div>':'')+'</div>'}
 function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
 function renderAll(){renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
 function showPage(name){document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
