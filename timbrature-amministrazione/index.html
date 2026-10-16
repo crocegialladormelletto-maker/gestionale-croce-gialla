@@ -416,7 +416,7 @@ async function addAbsence(){
  try{
   if(monthClosed)throw new Error('Il mese selezionato è chiuso.');
   const dal=$('absFrom').value,al=$('absTo').value||dal;if(!dal)throw new Error('Inserisci la data.');
-  const badge=$('absEmp').value,causale=$('absType').value;let ore=$('absHours').value||null;if(isMartinoliBadge(badge)&&['FERIE','PERMESSO'].includes(causale)){if(!isMartinoliWorkingDay(dal)||!isMartinoliWorkingDay(al))throw new Error('La domenica è riposo settimanale: registra ferie e permessi solo nei giorni lavorativi.');if(ore==null)ore=380/60;else if(Math.abs(Number(ore)-6.2)<0.001||Math.abs(Number(ore)-380/60)<0.02)ore=380/60;}await api({action:'absence_add',badge,causale,data_dal:dal,data_al:al,ore,nota:$('absNote').value.trim()});
+  const badge=$('absEmp').value,causale=$('absType').value;let ore=$('absHours').value||null;if(isMartinoliBadge(badge)&&['FERIE','PERMESSO'].includes(causale)){if(dal>al)throw new Error('La data finale precede quella iniziale.');for(let d=new Date(dal+'T12:00:00'),end=new Date(al+'T12:00:00');d<=end;d.setDate(d.getDate()+1)){if(d.getDay()===0)throw new Error('Il periodo include una domenica di riposo: separa le causali nei soli giorni lavorativi.')}if(ore==null)ore=380/60;else if(Math.abs(Number(ore)-6.2)<0.001||Math.abs(Number(ore)-380/60)<0.02)ore=380/60;}await api({action:'absence_add',badge,causale,data_dal:dal,data_al:al,ore,nota:$('absNote').value.trim()});
   $('absHours').value='';$('absNote').value='';msg('absMsg','Causale inserita correttamente.','ok');await loadData();
  }catch(e){msg('absMsg',e.message,'err')}
 }
