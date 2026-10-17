@@ -22,6 +22,46 @@
  }catch(_){}
 })();
 </script>
+<script>
+// Tablet 08: apertura del modulo sempre disponibile sul collegamento già installato.
+// Gestore indipendente dal resto del gestionale; non modifica servizi né bozze salvate.
+(function(){
+ document.addEventListener('click',function(ev){
+  const btn=ev.target&&ev.target.closest&&ev.target.closest('#tabletImmediateToggle');
+  if(!btn)return;
+  const tabletApp=document.getElementById('tabletApp');
+  if(!tabletApp||tabletApp.classList.contains('hidden'))return;
+  const url=new URLSearchParams(location.search);
+  const display=document.getElementById('tabletTitle')?.textContent||'';
+  if(url.get('mezzo')!=='08'&&!/mezzo\\s*08/i.test(display))return;
+  const panel=document.getElementById('tabletImmediatePanel');
+  if(!panel)return;
+  ev.preventDefault();ev.stopImmediatePropagation();
+  const opening=panel.classList.contains('hidden');
+  panel.classList.toggle('hidden',!opening);
+  btn.textContent=opening?'✕ Chiudi nuovo servizio':'✚ Nuovo servizio non programmato';
+  btn.setAttribute('aria-expanded',String(opening));
+  if(!opening)return;
+  const notice=document.getElementById('tabletAdMsg');
+  if(notice){notice.textContent='Modulo aperto. Compila i campi per creare il nuovo servizio.';notice.className='notice ok'}
+  panel.scrollIntoView({behavior:'auto',block:'start'});
+  (async()=>{
+   try{
+    if(typeof tabletUpdateImmediateDraftButton==='function')tabletUpdateImmediateDraftButton();
+    if(typeof tabletApplyImmediateTypeRules==='function')tabletApplyImmediateTypeRules();
+    const pending=[];
+    if(typeof tabletLoadCrewPeople==='function')pending.push(tabletLoadCrewPeople());
+    if(typeof tabletPrefillImmediateKm==='function')pending.push(tabletPrefillImmediateKm());
+    const settled=await Promise.allSettled(pending);
+    const errors=settled.filter(x=>x.status==='rejected').map(x=>String(x.reason?.message||x.reason));
+    if(errors.length&&notice){notice.textContent='Modulo aperto. Alcuni dati non sono disponibili: '+errors.join('; ');notice.className='notice warn'}
+   }catch(e){
+    if(notice){notice.textContent='Modulo aperto. Verificare dati equipaggio: '+(e.message||String(e));notice.className='notice warn'}
+   }
+  })();
+ },true);
+})();
+</script>
 <link rel="icon" type="image/png" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192-v6.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/gestionale-croce-gialla/icons/icon-512-v6.png">
 <link rel="apple-touch-icon" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192-v6.png">
@@ -11428,7 +11468,7 @@ async function tabletRefreshList(){
   if(direct.error)return msg('tabletMsg','Fogli 118 diretti non disponibili: '+direct.error.message,'err');
   tabletDirect118=direct.data||[];
  }else tabletDirect118=[];
- $('tabletUpdated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · automaticamente ogni 20 secondi · versione tablet 14.50 (apertura nuovi servizi)';
+ $('tabletUpdated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · automaticamente ogni 20 secondi · versione tablet 14.51 (collegamento esistente)';
  msg('tabletMsg','');renderTabletList();renderTabletDirect118();
  if(tabletCurrentService&&!document.getElementById('tabletDetail').classList.contains('hidden')){
   const newer=tabletServices.find(x=>x.id===tabletCurrentService.id);
@@ -13165,7 +13205,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.50-tablet08-apertura-immediata';
+const CGE_APP_BUILD='14.51-tablet08-collegamento-esistente';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
