@@ -11715,6 +11715,7 @@ async function tabletPrefillImmediateKm(){
   if(initialKm[String(tabletMezzo)]!=null)$('tabletAdKmStart').value=String(initialKm[String(tabletMezzo)]);
  }
 }
+let tabletImmediateRestoredDraft=false;
 function tabletImmediateDraftKey(){return 'cge_tablet_immediate_draft_'+String(tabletMezzo||'');}
 function tabletUpdateImmediateDraftButton(){
  const button=$('tabletResumeDraft');if(!button)return;
@@ -11726,11 +11727,12 @@ function tabletUpdateImmediateDraftButton(){
  if(data?.saved_at)button.title='Ultimo salvataggio: '+new Date(data.saved_at).toLocaleString('it-IT')+' (non è l’orario di partenza)';
 }
 function tabletSaveImmediateDraft(){
+ if(!tabletImmediateRestoredDraft&&$('tabletResumeDraft')?.dataset.hasDraft==='yes'&&!confirm('Hai una bozza precedente salvata sul tablet. Vuoi sostituirla con questi nuovi dati? Premi Annulla per conservarla.'))return;
  const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdPayment','tabletAdPaymentDate','tabletAdNotes'];
  const data={};
  ids.forEach(id=>{if($(id))data[id]=$(id).value;});
  data.saved_at=new Date().toISOString();
- try{localStorage.setItem(tabletImmediateDraftKey(),JSON.stringify(data));tabletUpdateImmediateDraftButton();msg('tabletAdMsg','Dati salvati sul tablet. Riprendili dal pulsante «Riprendi bozza salvata»; non sono ancora un Foglio Viaggio nel gestionale.','ok')}
+ try{localStorage.setItem(tabletImmediateDraftKey(),JSON.stringify(data));tabletImmediateRestoredDraft=true;tabletUpdateImmediateDraftButton();msg('tabletAdMsg','Dati salvati sul tablet. Riprendili dal pulsante «Riprendi bozza salvata»; non sono ancora un Foglio Viaggio nel gestionale.','ok')}
  catch(e){msg('tabletAdMsg','Impossibile salvare la bozza su questo tablet.','err')}
 }
 function tabletRestoreImmediateDraft(){
@@ -11742,6 +11744,7 @@ function tabletRestoreImmediateDraft(){
  if(data.tabletAdTariffDest!=null&&$('tabletAdTariffDest'))$('tabletAdTariffDest').value=data.tabletAdTariffDest;
  ['tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond'].forEach(id=>{if($(id)&&data[id]!=null)$(id).value=data[id];});
  tabletApplyImmediateTypeRules();tabletUpdateImmediateQuote();
+ tabletImmediateRestoredDraft=true;
  msg('tabletAdMsg','Bozza precedente ripristinata. Puoi completarla e creare il servizio quando vuoi.','ok');
  return true;
 }
@@ -11774,6 +11777,7 @@ async function tabletCreateImmediate(){
  if(!confirm('Creare ORA un servizio non programmato per il mezzo '+tabletMezzo+' e il relativo Foglio Viaggio?'))return;
  tabletBusy=true;msg('tabletAdMsg','Creazione servizio e Foglio Viaggio...');
  let created=null;
+ let createdPayMode=null;
  try{
   const args={
    p_tipo:$('tabletAdType').value,p_luogo_partenza:$('tabletAdOrigin').value.trim(),
@@ -11799,6 +11803,7 @@ async function tabletCreateImmediate(){
   if(Number.isFinite(kmClose))kmUpdate.km_arrivo=kmClose;
   const immediateInternal=$('tabletAdType').value==='Servizio interno';
   const payMode=immediateInternal?null:($('tabletAdPayment')?.value||null);
+  createdPayMode=payMode;
   const payDate=(immediateInternal||payMode==='BONIFICO DIFFERITO')?null:($('tabletAdPaymentDate')?.value||null);
   kmUpdate.modalita_pagamento=payMode;
   kmUpdate.data_pagamento=payDate;
@@ -11809,10 +11814,12 @@ async function tabletCreateImmediate(){
   }).eq('id',created.servizio_id);
   if(su.error)throw su.error;
   msg('tabletAdMsg','Servizio creato. Foglio Viaggio '+created.numero_foglio+' collegato.','ok');
-  tabletClearImmediateDraft();
+  // Non cancellare una bozza precedente se è stato creato un nuovo servizio vuoto.
+  if(tabletImmediateRestoredDraft||$('tabletResumeDraft')?.dataset.hasDraft!=='yes')tabletClearImmediateDraft();
+  tabletImmediateRestoredDraft=false;
   $('tabletImmediateForm').reset();
   tabletApplyImmediateTypeRules();
- }catch(e){msg('tabletAdMsg','Impossibile creare il servizio: '+(e.message||String(e)),'err')}
+ }catch(e){msg('tabletAdMsg',created?'Servizio '+created.numero_foglio+' creato, ma aggiornamento dei dati accessori non riuscito: '+(e.message||String(e)):'Impossibile creare il servizio: '+(e.message||String(e)),created?'warn':'err')}
  finally{tabletBusy=false}
  if(created){
   $('tabletImmediatePanel').classList.add('hidden');
@@ -11820,9 +11827,9 @@ async function tabletCreateImmediate(){
   await tabletRefreshList();
   if(tabletServices.some(x=>x.id===created.servizio_id)){
    await openTabletService(created.servizio_id);
-   if(['POS','CONTANTI'].includes(payMode)){
+   if(['POS','CONTANTI'].includes(createdPayMode)){
     tabletToggleReceiptSection();
-    msg('tabletReceiptMsg','Pagamento '+payMode+': carica ora la foto o il PDF della ricevuta prima di chiudere il Foglio Viaggio.','warn');
+    msg('tabletReceiptMsg','Pagamento '+createdPayMode+': carica ora la foto o il PDF della ricevuta prima di chiudere il Foglio Viaggio.','warn');
     if($('tabletReceiptSection'))$('tabletReceiptSection').scrollIntoView({behavior:'smooth',block:'center'});
    }
   }
@@ -11847,13 +11854,18 @@ $('tabletResumeDraft').onclick=async()=>{
 };
 $('tabletImmediateToggle').onclick=async()=>{
  tabletUpdateImmediateDraftButton();
- if($('tabletResumeDraft').dataset.hasDraft==='yes'){
-  return msg('tabletAdMsg','Hai già una bozza salvata. Usa «Riprendi bozza salvata» prima di iniziare un nuovo servizio, per non sovrascriverla.','warn');
- }
-
+ const hasPreviousDraft=$('tabletResumeDraft')?.dataset.hasDraft==='yes';
  const panel=$('tabletImmediatePanel');
  panel.classList.toggle('hidden');
- if(!panel.classList.contains('hidden')){await tabletLoadCrewPeople();tabletApplyImmediateTypeRules();await tabletPrefillImmediateKm();}
+ if(!panel.classList.contains('hidden')){
+  await tabletLoadCrewPeople();
+  tabletApplyImmediateTypeRules();
+  await tabletPrefillImmediateKm();
+  if(hasPreviousDraft&&!tabletImmediateRestoredDraft){
+   msg('tabletAdMsg','Modulo pronto. È presente anche una bozza precedente, che rimane salvata: per recuperarla premi «Riprendi bozza salvata». Puoi creare un nuovo servizio senza eliminare la bozza.','warn');
+  }
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+ }
 };
 if($('tabletReceiptUpload'))$('tabletReceiptUpload').onclick=()=>uploadPaymentReceipt(tabletCurrentSheet,'tabletReceiptFile','tablet');
 const tabletPayModeField=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
@@ -13130,7 +13142,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.48-orari-118';
+const CGE_APP_BUILD='14.49-tablet-08-non-programmati';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
