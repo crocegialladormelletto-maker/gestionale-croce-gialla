@@ -3688,8 +3688,11 @@ async function refreshDashboardEmployeeCommitments(){
   return cutoff===null?true:nowMinutes<cutoff;
  }).sort((a,b)=>String(a.data||day).localeCompare(String(b.data||day))||String(a.inizio||'').localeCompare(String(b.inizio||'')));
  count.textContent=String(rows.length);
- if(rows.length===0)return;
  box.classList.remove('hidden');
+ if(rows.length===0){
+  items.innerHTML='<div class="muted">Nessun impegno previsto nei prossimi 7 giorni. Usa «Gestisci impegni» per consultarli o inserirne di nuovi.</div>';
+  return;
+ }
  box.classList.add('dash-commitments-pulse');
  items.innerHTML=rows.map(x=>{
   const p=(people||[]).find(v=>String(v.badge)===String(x.badge));
