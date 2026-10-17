@@ -4638,6 +4638,17 @@ if($('prRefresh'))$('prRefresh').onclick=loadPaymentReceiptsArchive;
 if($('prClear'))$('prClear').onclick=()=>{['prFrom','prTo','prVehicle','prPayMode','prSearch'].forEach(id=>{$(id).value=''});loadPaymentReceiptsArchive()};
 if($('prUploadBtn'))$('prUploadBtn').onclick=uploadReceiptFromAdministration;
 
+// Uniforma SOLO la visualizzazione del numero, senza alterare il dato salvato.
+function displayFoglioNumero(f){
+ const raw=String(f?.numero_foglio??'').trim();
+ if(!raw)return '—';
+ if(/^FV-\d{4}-\d{2}-\d{6}$/i.test(raw))return raw;
+ if(!/^\d+$/.test(raw))return raw;
+ const mezzo=String(f?.mezzo??'').padStart(2,'0');
+ const year=/^\d{4}/.exec(String(f?.data_servizio||''))?.[0];
+ if(!/^\d{2}$/.test(mezzo)||!year)return raw;
+ return 'FV-'+year+'-'+mezzo+'-'+raw.padStart(6,'0');
+}
 async function loadTravelSheets(){
  if(['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)){
   if(!$('fvMonth').value)$('fvMonth').value=new Date().toISOString().slice(0,7);
@@ -4653,7 +4664,7 @@ async function loadTravelSheets(){
  let rows=r.data||[];
  const z=$('fvSearch').value.toLowerCase().trim();
  if(z)rows=rows.filter(x=>JSON.stringify(x).toLowerCase().includes(z));
- $('fvBody').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(x.numero_foglio)+'</b></td><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.mezzo)+'</td><td>'+esc(x.tipo_servizio||'—')+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+esc(x.luogo_partenza||'—')+' → '+esc(x.destinazione||'—')+'</td><td><span class="pill '+(x.stato==='CHIUSO'?'g':'')+'">'+esc(x.stato)+'</span></td><td class="'+(prof?.ruolo==='CENTRALINO'?'hidden':'')+'">'+euro(x.totale_servizio)+'</td><td><div class="actions"><button class="btn secondary" data-open-fv="'+esc(x.id)+'">Apri</button>'+(prof?.ruolo==='AMMINISTRATORE'&&x.stato==='APERTO'&&!x.pdf_path?'<button class="btn danger" data-delete-fv="'+esc(x.id)+'">Elimina</button>':'')+'</div></td></tr>').join(''):'<tr><td colspan="9">Nessun Foglio Viaggio.</td></tr>';
+ $('fvBody').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(displayFoglioNumero(x))+'</b></td><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.mezzo)+'</td><td>'+esc(x.tipo_servizio||'—')+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+esc(x.luogo_partenza||'—')+' → '+esc(x.destinazione||'—')+'</td><td><span class="pill '+(x.stato==='CHIUSO'?'g':'')+'">'+esc(x.stato)+'</span></td><td class="'+(prof?.ruolo==='CENTRALINO'?'hidden':'')+'">'+euro(x.totale_servizio)+'</td><td><div class="actions"><button class="btn secondary" data-open-fv="'+esc(x.id)+'">Apri</button>'+(prof?.ruolo==='AMMINISTRATORE'&&x.stato==='APERTO'&&!x.pdf_path?'<button class="btn danger" data-delete-fv="'+esc(x.id)+'">Elimina</button>':'')+'</div></td></tr>').join(''):'<tr><td colspan="9">Nessun Foglio Viaggio.</td></tr>';
  document.querySelectorAll('[data-open-fv]').forEach(b=>b.onclick=()=>openTravelSheet(b.dataset.openFv));
  document.querySelectorAll('[data-delete-fv]').forEach(b=>b.onclick=()=>deleteTravelSheet(b.dataset.deleteFv));
  msg('fvMsg','');
