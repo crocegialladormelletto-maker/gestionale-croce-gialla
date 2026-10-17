@@ -474,6 +474,38 @@ function dailyTargetMinutes(badge){
  if(n.includes('BRUGHERA')&&n.includes('FRANCESCA'))return 300; // 5 ore
  return null;
 }
+// Prospetto automatico CCNL art.55/57: minuti effettivi, settimana lun-dom, fuso italiano.
+// Importi retributivi percentuali da valorizzare con paga oraria; indennita ordinarie in euro.
+function ccnlPremiumReport(badge,month){
+ const n=String(person(badge)||'').toUpperCase(),mart=n.includes('MARTINOLI')&&n.includes('ANDREA'),brug=n.includes('BRUGHERA')&&n.includes('FRANCESCA');
+ if(!mart&&!brug)return '';
+ const local=t=>new Date(t).toLocaleString('sv-SE',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+ const week=d=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()-(x.getDay()+6)%7);return x.toISOString().slice(0,10)};
+ const easter=y=>{const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k+70)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=(h+l-7*m+114)%31+1;const t=new Date(Date.UTC(y,mo-1,da+1));return t.toISOString().slice(0,10)};
+ const festive=d=>{const y=Number(d.slice(0,4)),fixed=['01-01','01-06','04-25','05-01','06-02','08-15','11-01','12-08','12-25','12-26'];return new Date(d+'T12:00:00').getDay()===0||fixed.includes(d.slice(5))||d===easter(y)};
+ const ev=context.filter(e=>e.badge===badge&&!e.eliminato_at).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+ let open=null;const chunks=[];
+ for(const e of ev){if(e.tipo==='ENTRATA')open=e;else if(e.tipo==='USCITA'&&open){const a=new Date(open.evento_at).getTime(),b=new Date(e.evento_at).getTime();if(b>a&&b-a<=24*3600000)chunks.push([a,b]);open=null;}}
+ const running={},tot={sup25:0,extra20:0,extra30:0,extra50:0,ordNight:0,ordFest:0,ordFestNight:0,ordinary:0};
+ const byDay={};let warning=false;
+ for(const [a,b] of chunks){
+  for(let t=a;t<b;t+=60000){
+   const loc=local(t),date=loc.slice(0,10),hour=Number(loc.slice(11,13)),w=week(date),used=running[w]||0,night=hour>=22||hour<6,fest=festive(date),limit=mart?2280:1800;
+   const kind=used<limit?'ordinary':used<2280?'supplementary':'overtime';running[w]=used+1;
+   if(date.slice(0,7)!==month)continue;
+   const key=kind==='ordinary'?(fest?(night?'ordFestNight':'ordFest'):(night?'ordNight':'ordinary')):(fest&&night?'extra50':(fest||night?'extra30':kind==='supplementary'?'sup25':'extra20'));
+   tot[key]++;if(fest&&new Date(date+'T12:00:00').getDay()===0)byDay[date]=true;
+  }
+ }
+ const format=m=>(Math.floor(m/60)+':'+String(m%60).padStart(2,'0'));
+ const euros=(tot.ordNight*2.5+tot.ordFest*2+tot.ordFestNight*4.5)/60;
+ const premiums=[['Supplementare diurno +25%',tot.sup25],['Straordinario diurno +20%',tot.extra20],['Notturno/festivo supplementare o straordinario +30%',tot.extra30],['Festivo notturno supplementare o straordinario +50%',tot.extra50]];
+ const ordinary=[['Notturno ordinario · €2,50/h',tot.ordNight],['Festivo ordinario · €2,00/h',tot.ordFest],['Festivo notturno ordinario · €4,50/h',tot.ordFestNight]];
+ return '<div style="margin-top:16px"><h3>Prospetto automatico maggiorazioni CCNL · '+esc(person(badge))+'</h3><p><b>Art. 55:</b> percentuali non cumulabili. <b>Art. 57:</b> indennità solo per ore ordinarie.</p><table class="printTable"><thead><tr><th>Voce</th><th>Ore</th></tr></thead><tbody>'+
+ premiums.concat(ordinary).map(([label,min])=>'<tr><td>'+esc(label)+'</td><td>'+format(min)+'</td></tr>').join('')+
+ '<tr><td><b>Totale indennità ordinarie art.57 (lordo)</b></td><td><b>€ '+euros.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+'</b></td></tr></tbody></table>'+
+ '<p><small>Le percentuali art.55 richiedono la retribuzione oraria art.53 per il calcolo in euro. Festività patronale, eventuale riposo settimanale spostato, autorizzazione ore aggiuntive e banca ore richiedono conferma amministrativa. Giorni domenicali lavorati: '+Object.keys(byDay).sort().join(', ').replace(/^$/,'nessuno')+'. Verificare riposo compensativo. Minuti ripartiti sulla data effettiva, anche a cavallo di mezzanotte. Prospetto da verificare prima delle paghe.</small></p></div>';
+}
 function printRows(selectedBadge='',selectedMonth=''){
  selectedBadge=selectedBadge||$('filterEmp').value||'';
  selectedMonth=selectedMonth||$('month').value||currentMonth;
@@ -580,7 +612,7 @@ function printRows(selectedBadge='',selectedMonth=''){
   h+='<tfoot><tr><th colspan="3">TOTALI MESE</th><th>'+fmtMin(totalWorked)+'</th><th>'+fmtMin(totalSupplementary)+'</th><th>'+fmtMin(totalOvertime)+'</th></tr>';
   h+='<tr><td colspan="6"><b>Riferimento contrattuale:</b> '+(isMartinoliBadge(selectedBadge)?'38:00 settimanali (6:20 lun–sab; domenica riposo)':String(person(selectedBadge)||'').toUpperCase().includes('BRUGHERA')?'30:00 settimanali (5:00 lun–sab; domenica riposo)':'giornaliero '+fmtMin(target))+' · <b>Ore ordinarie lavorate:</b> '+fmtMin(totalOrdinary)+' · <b>Ore supplementari:</b> '+fmtMin(totalSupplementary)+' · <b>Ore straordinarie:</b> '+fmtMin(totalOvertime)+'</td></tr></tfoot>';
  }
- return h+'</table>'
+ return h+'</table>'+ccnlPremiumReport(selectedBadge,selectedMonth)
 }
 function renderRegister(){let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo==='USCITA'&&nightExit(e)?'USCITA · SMONTO NOTTE':e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':monthClosed?'🔒 Mese chiuso':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}h+='</tbody></table>';$('register').innerHTML=events.length?h:'<div class="muted">Nessuna timbratura.</div>';const fe=$('filterEmp').value;const meseLabel=formatMonthLabel($('month').value||'');$('printHead').innerHTML='<div class="printBrand"><div class="printBrandRow"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100" alt="Logo Croce Gialla Emergenza ODV"><div class="printBrandText"><div class="line1">CROCE GIALLA EMERGENZA ODV</div><div class="line2">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</div></div></div><div class="printBrandMonth">'+esc(meseLabel)+'</div>'+(monthClosed?'<div class="printClosedStamp">🔒 MESE CHIUSO – REGISTRO DEFINITIVO</div>':'')+'</div>'}
 function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
