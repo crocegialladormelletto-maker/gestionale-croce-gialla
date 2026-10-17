@@ -5080,8 +5080,22 @@ async function saveTravelSheet(silent=false){
   modalita_pagamento:$('fvPayMode').value||null,
   data_pagamento:$('fvPayMode').value==='BONIFICO DIFFERITO'?null:($('fvPayDate').value||null)
  });
- const r=await sb.from('fogli_viaggio').update(row).eq('id',currentFoglioId);
+ const r=await sb.from('fogli_viaggio').update(row).eq('id',currentFoglioId).select('id,paziente_nome,paziente_cognome').maybeSingle();
  if(r.error){msg('fvDetailMsg',r.error.message,'err');return false}
+ if(!r.data){msg('fvDetailMsg','Nessuna modifica registrata: verifica permessi e stato del foglio.','err');return false}
+ if(Object.prototype.hasOwnProperty.call(row,'paziente_cognome')){
+  if(String(r.data.paziente_cognome||'').trim()!==String(row.paziente_cognome||'').trim()){
+   msg('fvDetailMsg','Il cognome non risulta salvato nel Foglio Viaggio.','err');return false;
+  }
+  if(currentFoglio?.servizio_giornaliero_id){
+   const sr=await sb.from('servizi_giornalieri').update({
+    paziente_nome:row.paziente_nome,paziente_cognome:row.paziente_cognome
+   }).eq('id',currentFoglio.servizio_giornaliero_id).select('id,paziente_cognome').maybeSingle();
+   if(sr.error||!sr.data||String(sr.data.paziente_cognome||'').trim()!==String(row.paziente_cognome||'').trim()){
+    msg('fvDetailMsg','Foglio aggiornato, ma il servizio collegato NON è sincronizzato: '+(sr.error?.message||'controllare i permessi')+'.','err');return false;
+   }
+  }
+ }
  if(!silent)msg('fvDetailMsg','Foglio Viaggio salvato.','ok');
  await loadTravelSheetDetail();
  return true;
