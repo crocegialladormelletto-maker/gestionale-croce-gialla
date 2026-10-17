@@ -11428,7 +11428,7 @@ async function tabletRefreshList(){
   if(direct.error)return msg('tabletMsg','Fogli 118 diretti non disponibili: '+direct.error.message,'err');
   tabletDirect118=direct.data||[];
  }else tabletDirect118=[];
- $('tabletUpdated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · automaticamente ogni 20 secondi · versione tablet 14.42 (assistenze)';
+ $('tabletUpdated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · automaticamente ogni 20 secondi · versione tablet 14.50 (apertura nuovi servizi)';
  msg('tabletMsg','');renderTabletList();renderTabletDirect118();
  if(tabletCurrentService&&!document.getElementById('tabletDetail').classList.contains('hidden')){
   const newer=tabletServices.find(x=>x.id===tabletCurrentService.id);
@@ -11856,19 +11856,38 @@ $('tabletResumeDraft').onclick=async()=>{
  if(!tabletRestoreImmediateDraft())return msg('tabletAdMsg','Nessuna bozza trovata in questa sessione. Apri l’app originale dove hai salvato i dati.','warn');
  panel.scrollIntoView({behavior:'smooth',block:'start'});
 };
-$('tabletImmediateToggle').onclick=async()=>{
- tabletUpdateImmediateDraftButton();
- const hasPreviousDraft=$('tabletResumeDraft')?.dataset.hasDraft==='yes';
- const panel=$('tabletImmediatePanel');
- panel.classList.toggle('hidden');
+$('tabletImmediateToggle').onclick=async e=>{
+ if(e)e.preventDefault();
+ const button=$('tabletImmediateToggle'),panel=$('tabletImmediatePanel');
+ if(!panel)return msg('tabletMsg','Modulo del nuovo servizio non disponibile. Ricarica la pagina.','err');
  if(!panel.classList.contains('hidden')){
-  await tabletLoadCrewPeople();
+  panel.classList.add('hidden');
+  button.textContent='✚ Nuovo servizio non programmato';
+  button.setAttribute('aria-expanded','false');
+  return;
+ }
+ // Il modulo deve aprirsi IMMEDIATAMENTE, anche quando il tablet ha una connessione lenta.
+ panel.classList.remove('hidden');
+ button.textContent='✕ Chiudi nuovo servizio';
+ button.setAttribute('aria-expanded','true');
+ msg('tabletAdMsg','Nuovo servizio: modulo aperto. Compila i dati e premi «Crea servizio e Foglio Viaggio».','ok');
+ panel.scrollIntoView({behavior:'auto',block:'start'});
+ let hasPreviousDraft=false;
+ try{
+  tabletUpdateImmediateDraftButton();
+  hasPreviousDraft=$('tabletResumeDraft')?.dataset.hasDraft==='yes';
   tabletApplyImmediateTypeRules();
-  await tabletPrefillImmediateKm();
-  if(hasPreviousDraft&&!tabletImmediateRestoredDraft){
-   msg('tabletAdMsg','Modulo pronto. È presente anche una bozza precedente, che rimane salvata: per recuperarla premi «Riprendi bozza salvata». Puoi creare un nuovo servizio senza eliminare la bozza.','warn');
+  // Le chiamate di rete non devono impedire la visualizzazione del modulo.
+  const results=await Promise.allSettled([tabletLoadCrewPeople(),tabletPrefillImmediateKm()]);
+  if(panel.classList.contains('hidden'))return;
+  const failures=results.filter(r=>r.status==='rejected');
+  if(failures.length){
+   msg('tabletAdMsg','Modulo aperto, ma alcuni dati non sono stati aggiornati: '+failures.map(r=>r.reason?.message||String(r.reason)).join(' · ')+'. Riprova con «Aggiorna» senza cancellare la bozza.','warn');
+  }else if(hasPreviousDraft&&!tabletImmediateRestoredDraft){
+   msg('tabletAdMsg','Modulo pronto. La bozza precedente rimane salvata: usa «Riprendi bozza salvata» per recuperarla.','warn');
   }
-  panel.scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(error){
+  msg('tabletAdMsg','Modulo aperto, ma alcuni campi non sono disponibili: '+(error?.message||String(error))+'. Non cancellare la bozza.','err');
  }
 };
 if($('tabletReceiptUpload'))$('tabletReceiptUpload').onclick=()=>uploadPaymentReceipt(tabletCurrentSheet,'tabletReceiptFile','tablet');
@@ -13146,7 +13165,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.49-tablet-08-non-programmati';
+const CGE_APP_BUILD='14.50-tablet08-apertura-immediata';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
