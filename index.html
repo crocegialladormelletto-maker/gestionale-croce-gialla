@@ -2520,7 +2520,7 @@ Causale: numero preventivo</textarea>
 <div class="section" data-admin-only="true"><h3>Verifica invio email Note di Debito</h3><p class="muted">Invia una sola email di prova dalla tesoreria ad amministrazione@crocegiallaemergenza.it. Nessun documento o cliente viene coinvolto.</p><button type="button" id="accTestEmail" class="btn blue">✉ Invia email di prova</button><div id="accTestEmailMsg" style="margin-top:9px"></div></div>
 <div class="stats"><div class="stat"><small>TOTALE DA INCASSARE</small><b id="accDue">€ 0</b></div><div class="stat"><small>PAGATI</small><b id="accPaid">0</b></div><div class="stat"><small>PARZIALI</small><b id="accPart">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="accCount">0</b></div></div>
 <div class="section"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="1"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
-<div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto</th><th>Pagamento</th><th>Stato gestionale</th></tr></thead><tbody id="accBody"></tbody></table></div></div></section>
+<div class="section"><h3>Servizi contabili</h3><p class="muted">I servizi futuri e quelli non ancora svolti restano nei calendari. Lo storico dei servizi effettuati rimane disponibile.</p><div class="actions"><button id="accFilterDue" class="btn yellow" type="button">Da incassare</button><button id="accFilterDeferred" class="btn secondary" type="button">Bonifici differiti</button><button id="accFilterPaid" class="btn secondary" type="button">Incassati</button><button id="accFilterHistory" class="btn secondary" type="button">Storico completo</button></div><div id="accFilterInfo" class="muted"></div></div><div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto</th><th>Pagamento</th><th>Stato gestionale</th></tr></thead><tbody id="accBody"></tbody></table></div></div></section>
 
 <section id="communications" class="surface hidden">
  <div class="hero"><h2>📣 Comunicazioni ai volontari</h2>
@@ -11348,16 +11348,45 @@ if($('accTestEmail'))$('accTestEmail').onclick=async()=>{
  finally{b.disabled=false}
 };
 
+let accCurrentFilter='due';
+let accAccountingRows=[];
+function accCompleted(x){
+ const status=String(x.stato_gestionale||'').toUpperCase();
+ const operational=String(x.stato||'').toUpperCase();
+ const todayLocal=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Rome'});
+ return String(x.data_servizio||'')<=todayLocal &&
+  !['ANNULLATO','DA ASSEGNARE','CONFERMATO','IN CORSO'].includes(status) &&
+  (['DA CONTABILIZZARE','TERMINATO','CHIUSO','CONTABILIZZATO'].includes(status)||operational==='COMPLETATO');
+}
+function accRenderFiltered(){
+ const a=accAccountingRows;
+ const deferred=x=>String(x.modalita_pagamento_prevista||x.modalita_pagamento||'').toUpperCase()==='BONIFICO DIFFERITO';
+ const rows=a.filter(x=>{
+  if(accCurrentFilter==='history')return true;
+  if(accCurrentFilter==='paid')return Number(x.residuo||0)<=0&&Number(x.importo_incassato||0)>0;
+  if(accCurrentFilter==='deferred')return Number(x.residuo||0)>0&&deferred(x);
+  return Number(x.residuo||0)>0&&!deferred(x);
+ });
+ for(const [key,id] of [['due','accFilterDue'],['deferred','accFilterDeferred'],['paid','accFilterPaid'],['history','accFilterHistory']]){
+  $(id).className='btn '+(accCurrentFilter===key?'yellow':'secondary');
+ }
+ $('accFilterInfo').textContent=rows.length+' servizi visualizzati · solo servizi effettuati';
+ $('accBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.tipo_servizio)+' · mezzo '+esc(x.mezzo)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>Servizio '+euro(x.importo_dovuto)+'<br><strong>Incassato '+euro(x.importo_incassato)+'</strong><br><span class="muted">Residuo '+euro(x.residuo)+'</span></td><td><span class="pill b">'+esc(x.stato_contabile)+'</span></td><td>'+esc(x.stato_gestionale||'—')+'</td></tr>').join(''):'<tr><td colspan="6">Nessun servizio per questo filtro.</td></tr>';
+}
 async function loadAccounting(){
- const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(500);
- const a=r.data||[], due=a.filter(x=>Number(x.residuo)>0);
+ const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(1000);
+ if(r.error){msg('accMsg','Impossibile caricare la contabilità: '+r.error.message,'err');return}
+ const a=(r.data||[]).filter(x=>accCompleted(x)&&String(x.tipo_servizio||'').trim()!=='118'&&String(x.stato_gestionale||'').toUpperCase()!=='ANNULLATO');
+ accAccountingRows=a;
+ const due=a.filter(x=>Number(x.residuo)>0);
  $('accDue').textContent=euro(due.reduce((z,x)=>z+Number(x.residuo||0),0));
  $('accPaid').textContent=a.filter(x=>x.stato_contabile==='SALDATO').length;
  $('accPart').textContent=a.filter(x=>x.stato_contabile==='PARZIALE').length;
- $('accCount').textContent=a.filter(x=>x.stato_gestionale==='DA CONTABILIZZARE').length;
+ $('accCount').textContent=a.filter(x=>x.stato_gestionale==='DA CONTABILIZZARE'&&Number(x.importo_dovuto||0)>0).length;
  $('accService').innerHTML=opts(due,'servizio_id',x=>x.data_servizio+' · '+x.mezzo+' · '+x.tipo_servizio+' · '+([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||x.destinazione||''));
- $('accBody').innerHTML=a.length?a.map(x=>'<tr><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.tipo_servizio)+' · mezzo '+esc(x.mezzo)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>Servizio '+euro(x.importo_dovuto)+'<br><strong>Incassato '+euro(x.importo_incassato)+'</strong><br><span class="muted">Residuo '+euro(x.residuo)+'</span></td><td><span class="pill b">'+esc(x.stato_contabile)+'</span></td><td>'+esc(x.stato_gestionale||'—')+'</td></tr>').join(''):'<tr><td colspan="6">Nessun servizio.</td></tr>';
+ accRenderFiltered();
 }
+[['accFilterDue','due'],['accFilterDeferred','deferred'],['accFilterPaid','paid'],['accFilterHistory','history']].forEach(([id,key])=>$(id).onclick=()=>{accCurrentFilter=key;accRenderFiltered()});
 $('accSave').onclick=async()=>{if(!$('accService').value||$('accAmount').value==='')return msg('accMsg','Seleziona il servizio e inserisci l’importo.','warn');const r=await sb.from('pagamenti_servizi').insert({servizio_id:$('accService').value,importo:Number($('accAmount').value),modalita:$('accMode').value,riferimento:$('accRef').value.trim()||null});if(r.error)return msg('accMsg',r.error.message,'err');msg('accMsg','Pagamento registrato.','ok');loadAccounting()};
 
 
