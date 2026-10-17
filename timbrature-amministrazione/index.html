@@ -500,7 +500,7 @@ function dailyTargetMinutes(badge){
 // Prospetto automatico CCNL art.55/57: minuti effettivi, settimana lun-dom, fuso italiano.
 // Importi retributivi percentuali da valorizzare con paga oraria; indennita ordinarie in euro.
 function ccnlPremiumReport(badge,month){
- const n=String(person(badge)||'').toUpperCase(),mart=n.includes('MARTINOLI')&&n.includes('ANDREA'),brug=n.includes('BRUGHERA')&&n.includes('FRANCESCA'),greta=n.includes('FARINACCIO')&&n.includes('GRETA';
+ const n=String(person(badge)||'').toUpperCase(),mart=n.includes('MARTINOLI')&&n.includes('ANDREA'),brug=n.includes('BRUGHERA')&&n.includes('FRANCESCA'),greta=n.includes('FARINACCIO')&&n.includes('GRETA');
  if(!mart&&!brug&&!greta)return '';
  if(greta&&month<'2026-11')return '<p>Contratto Greta Farinaccio B1 in vigore dal 01/11/2026.</p>';
  const local=t=>new Date(t).toLocaleString('sv-SE',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
