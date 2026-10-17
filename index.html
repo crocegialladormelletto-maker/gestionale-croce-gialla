@@ -5931,7 +5931,7 @@ async function loadOperationalDashboard(){
  const adminDocsPromise=prof?.ruolo==='AMMINISTRATORE'
   ?sb.from('servizi_giornalieri').select('id,foglio_viaggio_id,data_servizio,mezzo,tipo_servizio,destinazione,ospedale_destinazione,intestatario_fatturazione,importo_previsto,importo_calcolato,importo_finale,documento_da_emettere,fattura_aruba_emessa,fattura_aruba_emessa_il').neq('stato_gestionale','ANNULLATO').order('data_servizio',{ascending:false}).limit(1000)
   :Promise.resolve({data:[],error:null});
- const [emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,hoursData,adminDocs,debitPayments,dimVehicles,emgVehicles]=await Promise.all([
+ const [emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,hoursData,adminDocs,debitPayments,vehicleShifts]=await Promise.all([
   sb.rpc('cge_emergenza_turni_v2',{p_dal:day,p_al:day}),
   sb.rpc('cge_dimissioni_turni',{p_dal:day,p_al:day}),
   sb.rpc('cge_assistenza_fasce_turni',{p_dal:day,p_al:day}),
@@ -5944,10 +5944,9 @@ async function loadOperationalDashboard(){
   hoursPromise,
   adminDocsPromise,
   debitPaymentsPromise,
-  sb.from('turni_dimissioni_fasce_mezzi').select('giorno,fascia,mezzo').eq('giorno',day),
-  sb.from('turni_emergenza_fasce_mezzi').select('giorno,fascia,mezzo').eq('giorno',day)
+  sb.rpc('cge_mezzi_turni_assegnati',{p_giorno:day})
  ]);
- const errors=[emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,adminDocs,debitPayments,dimVehicles,emgVehicles].filter(x=>x?.error).map(x=>x.error.message);
+ const errors=[emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,adminDocs,debitPayments,vehicleShifts].filter(x=>x?.error).map(x=>x.error.message);
  if(hoursData?.error)errors.push('Ore volontari: '+(hoursData.error.message||String(hoursData.error)));
  const emgRows=emg.data||[],dimRows=dim.data||[],assRows=ass.data||[],services=sv.data||[],fogli=fg.data||[],expRows=exp.data||[],mezzi=mz.data||[];
  // Il quadro operativo mostra solo servizi ancora da svolgere o in corso; quelli chiusi restano consultabili negli archivi.
@@ -5996,10 +5995,10 @@ async function loadOperationalDashboard(){
  // Un mezzo assegnato alla fascia attiva è occupato sia in emergenza sia nelle dimissioni.
  // La fascia NOTTE (00:00–07:00) viene valutata sulla data corrente dopo mezzanotte.
  const emergencyVehicles=new Set(
-  (emgVehicles.data||[]).filter(x=>x.fascia===activeEmergencyFascia&&x.mezzo).map(x=>String(x.mezzo).padStart(2,'0'))
+  (vehicleShifts.data||[]).filter(x=>x.tipo==='EMERGENZA'&&x.fascia===activeEmergencyFascia&&x.mezzo).map(x=>String(x.mezzo).padStart(2,'0'))
  );
  const dischargeVehicles=new Set(
-  (dimVehicles.data||[]).filter(x=>x.fascia===activeEmergencyFascia&&x.mezzo).map(x=>String(x.mezzo).padStart(2,'0'))
+  (vehicleShifts.data||[]).filter(x=>x.tipo==='DIMISSIONI'&&x.fascia===activeEmergencyFascia&&x.mezzo).map(x=>String(x.mezzo).padStart(2,'0'))
  );
  const assignedVehicles=new Set([...emergencyVehicles,...dischargeVehicles]);
 
