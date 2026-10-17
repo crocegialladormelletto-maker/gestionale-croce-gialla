@@ -3938,22 +3938,25 @@ function applyRoleUI(){
 // Carica le autorizzazioni tablet tramite il token appena rilasciato da Auth.
 // Evita una seconda richiesta gestita dal lock di supabase-js durante signInWithPassword.
 // La policy RLS del database valida comunque utente e accesso attivo.
-async function cgeFetchTabletAccess(user,accessToken){
- if(!user?.id||!accessToken)throw new Error('Sessione tablet incompleta. Riprova l’accesso.');
+async function cgeFetchActiveAccess(user,accessToken,tabletOnly=false){
+ if(!user?.id||!accessToken)throw new Error('Sessione di accesso incompleta. Riprova l’accesso.');
  const ctrl=new AbortController(), timer=setTimeout(()=>ctrl.abort(),12000);
  try{
   const url=SUPABASE_URL+'/rest/v1/accessi_app?select=user_id,nome,ruolo,attivo,badge_personale,mezzo&user_id=eq.'+encodeURIComponent(user.id);
   const response=await fetch(url,{headers:{apikey:KEY,Authorization:'Bearer '+accessToken,Accept:'application/json'},signal:ctrl.signal,cache:'no-store'});
   if(!response.ok)throw new Error('Il controllo delle autorizzazioni non risponde correttamente (HTTP '+response.status+').');
   const rows=await response.json();
-  if(!Array.isArray(rows)||rows.length!==1)throw new Error('Utenza tablet non autorizzata oppure non visibile nel database.');
+  if(!Array.isArray(rows)||rows.length!==1)throw new Error('Account non autorizzato o disattivato nel gestionale.');
   const row=rows[0];
-  if(row.user_id!==user.id||row.attivo!==true||row.ruolo!=='TABLET'||!/^0[6-9]$/.test(row.mezzo))throw new Error('Utenza non abilitata come tablet.');
-  const requested=tabletRequestedVehicle();
-  if(requested&&row.mezzo!==requested)throw new Error('Questa utenza è del tablet '+row.mezzo+', non del tablet '+requested+'.');
+  if(row.user_id!==user.id||row.attivo!==true)throw new Error('Account non autorizzato o disattivato.');
+  if(tabletOnly){
+   if(row.ruolo!=='TABLET'||!/^0[6-9]$/.test(row.mezzo))throw new Error('Utenza non abilitata come tablet.');
+   const requested=tabletRequestedVehicle();
+   if(requested&&row.mezzo!==requested)throw new Error('Questa utenza è del tablet '+row.mezzo+', non del tablet '+requested+'.');
+  }
   return {data:row,error:null};
  }catch(e){
-  if(e?.name==='AbortError')throw new Error('Verifica autorizzazioni troppo lenta. Controlla la rete e riprova.');
+  if(e?.name==='AbortError')throw new Error('Verifica dell’accesso troppo lenta. Controlla la rete e riprova.');
   throw e;
  }finally{clearTimeout(timer)}
 }
@@ -3972,8 +3975,8 @@ async function enter(authenticatedUser=null,tabletAccessToken=null){
  // Il ruolo non arriva mai dalla pagina: viene letto dal database con RLS.
  let r;
  try{
-  r=isTabletOnlyMode()&&tabletAccessToken
-   ?await cgeFetchTabletAccess(currentUser,tabletAccessToken)
+  r=tabletAccessToken
+   ?await cgeFetchActiveAccess(currentUser,tabletAccessToken,isTabletOnlyMode())
    :await sb.from('accessi_app').select('nome,ruolo,attivo,badge_personale,mezzo').single();
  }catch(err){
   msg(isTabletOnlyMode()?'tloginmsg':'lmsg','Impossibile verificare le autorizzazioni: '+(err?.message||String(err)),'err');
@@ -3985,6 +3988,15 @@ async function enter(authenticatedUser=null,tabletAccessToken=null){
  const textMsg=isTabletOnlyMode()||isVolunteerOnlyMode()?'Accesso non autorizzato o disattivato.':role==='CENTRALINO'?'Accesso Centralino non autorizzato o disattivato.':'Questo account non è autorizzato al Gestionale Croce Gialla. Verifica di non usare le credenziali del Magazzino Sanitario.';
  await sb.auth.signOut();return msg(target,textMsg,'err')
 }
+ // L'apertura del gestionale PRINCIPALE con una sessione tablet già presente
+ // deve mostrare il login amministrativo, non deviare alla pagina del mezzo.
+ if(!isTabletOnlyMode()&&!isVolunteerOnlyMode()&&!isCentralinoOnlyMode()&&r.data.ruolo==='TABLET'){
+  $('login').classList.remove('hidden');
+  $('tabletApp').classList.add('hidden');
+  applyVolunteerOnlyLogin();
+  msg('lmsg','In questo browser è rimasto l’accesso del tablet '+r.data.mezzo+'. Per entrare nel Gestionale principale usa qui le credenziali amministrative: la password del tablet non è valida per l’amministrazione.','warn');
+  return;
+ }
  if(isVolunteerOnlyMode()&&r.data.ruolo!=='VOLONTARIO'){await sb.auth.signOut();applyVolunteerOnlyLogin();return msg('vlmsg','Questa app è riservata ai volontari. Accedi con badge e PIN.','warn')}
  if(isTabletOnlyMode()&&r.data.ruolo!=='TABLET'){applyVolunteerOnlyLogin();return msg('tloginmsg','In questo browser è già attiva una sessione '+(r.data.ruolo||'di altro utente')+'. Per accedere al Tablet '+(tabletRequestedVehicle()||'richiesto')+' inserisci username e password del tablet nel modulo qui sopra.','warn')}
  if(isTabletOnlyMode()&&r.data.ruolo==='TABLET'&&tabletRequestedVehicle()&&r.data.mezzo!==tabletRequestedVehicle()){
@@ -4023,7 +4035,31 @@ async function enter(authenticatedUser=null,tabletAccessToken=null){
  }
  await sb.auth.signOut();msg('lmsg','Questo account non è abilitato a questa area.','err')
 }
-$('go').onclick=async()=>{msg('lmsg','Accesso in corso...');const r=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('pw').value});if(r.error)return msg('lmsg',r.error.message,'err');enter()};
+let adminLoginInProgress=false;
+$('go').onclick=async()=>{
+ if(adminLoginInProgress)return;
+ const email=$('email').value.trim(),password=$('pw').value;
+ if(!email||!password)return msg('lmsg','Inserisci email amministrativa e password.','warn');
+ adminLoginInProgress=true;
+ const button=$('go');button.disabled=true;
+ let timer=null;
+ const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Il server non risponde entro 20 secondi. Riprova senza cancellare dati o cache.')),20000)});
+ try{
+  msg('lmsg','Accesso in corso...');
+  const result=await Promise.race([sb.auth.signInWithPassword({email,password}),timeout]);
+  if(result.error)throw new Error('Accesso non riuscito: '+(result.error.message||'Credenziali non valide.'));
+  if(!result.data?.user||!result.data?.session?.access_token)throw new Error('Sessione amministrativa incompleta.');
+  msg('lmsg','Credenziali accettate. Verifica delle autorizzazioni...','ok');
+  await Promise.race([enter(result.data.user,result.data.session.access_token),timeout]);
+  if(!$('login').classList.contains('hidden')&&$('lmsg')?.innerText.includes('Credenziali accettate'))
+   msg('lmsg','Non è stato possibile completare l’accesso. Controlla il messaggio di verifica.','warn');
+ }catch(error){
+  msg('lmsg','Accesso amministrativo non completato: '+(error?.message||String(error)),'err');
+ }finally{
+  if(timer)clearTimeout(timer);
+  adminLoginInProgress=false;button.disabled=false;
+ }
+};
 $('pw').onkeydown=e=>{if(e.key==='Enter')$('go').click()};
 $('centralinoLoginForm').onsubmit=async e=>{e.preventDefault();const user=$('cuser').value.trim().toLowerCase(),password=$('cpw').value;if(user!=='centralino'||!password)return msg('cloginmsg','Inserisci username centralino e password.','warn');msg('cloginmsg','Accesso in corso...');const r=await sb.auth.signInWithPassword({email:centralinoLoginEmail(),password});if(r.error)return msg('cloginmsg','Credenziali centralino non valide.','err');enter()};
 
@@ -13360,7 +13396,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.55-tablet08-km-avvio-immediato';
+const CGE_APP_BUILD='14.56-login-gestionale-principale';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
@@ -13378,7 +13414,7 @@ try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&
 (async()=>{
  try{
   const session=(await sb.auth.getSession()).data?.session;
-  if(session)await enter(session.user,isTabletOnlyMode()?session.access_token:null);
+  if(session)await enter(session.user,session.access_token);
  }catch(e){
   msg(isTabletOnlyMode()?'tloginmsg':'lmsg','Impossibile riprendere la sessione: '+(e?.message||String(e)),'err');
  }
