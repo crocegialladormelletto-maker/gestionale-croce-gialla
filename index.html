@@ -38,6 +38,7 @@
   if(!panel)return;
   ev.preventDefault();ev.stopImmediatePropagation();
   const opening=panel.classList.contains('hidden');
+  if(opening&&typeof tabletPrepareNewImmediateForm==='function'&&!tabletPrepareNewImmediateForm())return;
   panel.classList.toggle('hidden',!opening);
   btn.textContent=opening?'✕ Chiudi nuovo servizio':'✚ Nuovo servizio non programmato';
   btn.setAttribute('aria-expanded',String(opening));
@@ -4014,7 +4015,7 @@ async function enter(authenticatedUser=null,tabletAccessToken=null){
  }
  if(r.data.ruolo==='TABLET'&&/^0[6-9]$/.test(r.data.mezzo||'')){
   $('app').classList.add('hidden');$('volApp').classList.add('hidden');$('monitorApp').classList.add('hidden');$('tabletApp').classList.remove('hidden');
-  tabletMezzo=r.data.mezzo;await startTabletArea();return;
+  tabletMezzo=r.data.mezzo;tabletSessionToken=tabletAccessToken||null;await startTabletArea();return;
  }
  if(r.data.ruolo==='VOLONTARIO'&&r.data.badge_personale){
   volunteerBadge=r.data.badge_personale;$('app').classList.add('hidden');$('monitorApp').classList.add('hidden');$('tabletApp').classList.add('hidden');$('volApp').classList.remove('hidden');$('vwho').textContent=(prof.nome||'Volontario')+' · badge '+volunteerBadge;
@@ -11538,7 +11539,7 @@ async function tabletRefreshList(){
   if(direct.error)return msg('tabletMsg','Fogli 118 diretti non disponibili: '+direct.error.message,'err');
   tabletDirect118=direct.data||[];
  }else tabletDirect118=[];
- $('tabletUpdated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · automaticamente ogni 20 secondi · versione tablet 14.53 (verifica accesso diretta)';
+ $('tabletUpdated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · automaticamente ogni 20 secondi · versione tablet 14.54 (KM ultimo foglio)';
  msg('tabletMsg','');renderTabletList();renderTabletDirect118();
  if(tabletCurrentService&&!document.getElementById('tabletDetail').classList.contains('hidden')){
   const newer=tabletServices.find(x=>x.id===tabletCurrentService.id);
@@ -11811,23 +11812,79 @@ function tabletUpdateImmediateQuote(){
  $('tabletAdQuote').textContent=x?'Importo previsto per il paziente: '+euro(night?x.importo_notturno:x.importo_diurno):
  manual!==''?'Importo concordato: '+euro(Number(manual)):'Nessuna tariffa impostata: da concordare con il Centralino.';
 }
-async function tabletPrefillImmediateKm(){
- if(!$('tabletAdKmStart')||$('tabletAdKmStart').value!=='')return;
- const r=await sb.from('fogli_viaggio')
-  .select('km_arrivo,data_servizio,progressivo,modificato_il')
-  .eq('mezzo',tabletMezzo)
-  .not('km_arrivo','is',null)
-  .order('modificato_il',{ascending:false,nullsFirst:false})
-  .order('data_servizio',{ascending:false})
-  .order('progressivo',{ascending:false})
-  .limit(1)
-  .maybeSingle();
- if(!r.error&&r.data?.km_arrivo!=null){
-  $('tabletAdKmStart').value=String(r.data.km_arrivo);
- }else{
-  const initialKm={ '06':137267,'07':13487,'08':8971,'09':16284 };
-  if(initialKm[String(tabletMezzo)]!=null)$('tabletAdKmStart').value=String(initialKm[String(tabletMezzo)]);
+// Valori automatici soltanto nella pagina: nessun dato di pazienti o bozze viene modificato.
+let tabletSessionToken=null,tabletImmediateAutoKm=null;
+async function tabletLastKnownKm(excludeSheetId=null){
+ if(!/^0[6-9]$/.test(String(tabletMezzo||'')))return null;
+ const cached=vehicles.find(v=>String(v.codice)===String(tabletMezzo));
+ const fallback=cached?.km_attuali==null?null:Number(cached.km_attuali);
+ if(!tabletSessionToken)return Number.isFinite(fallback)?fallback:null;
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),8000);
+ const headers={apikey:KEY,Authorization:'Bearer '+tabletSessionToken,Accept:'application/json'};
+ const url=SUPABASE_URL+'/rest/v1/';
+ const vehicleCode=encodeURIComponent(tabletMezzo);
+ const exclude=excludeSheetId?'&id=neq.'+encodeURIComponent(excludeSheetId):'';
+ async function read(path){
+  const response=await fetch(url+path,{headers,signal:controller.signal,cache:'no-store'});
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  return response.json();
  }
+ try{
+  const responses=await Promise.allSettled([
+   read('fogli_viaggio?select=km_arrivo,progressivo&mezzo=eq.'+vehicleCode+'&stato=eq.CHIUSO&km_arrivo=not.is.null'+exclude+'&order=progressivo.desc&limit=1'),
+   read('mezzi?select=km_attuali&codice=eq.'+vehicleCode+'&limit=1')
+  ]);
+  const last=responses[0].status==='fulfilled'?responses[0].value?.[0]:null;
+  const current=responses[1].status==='fulfilled'?responses[1].value?.[0]:null;
+  const fromLast=last?.km_arrivo==null?null:Number(last.km_arrivo);
+  const fromVehicle=current?.km_attuali==null?null:Number(current.km_attuali);
+  if(fromVehicle!=null&&Number.isFinite(fromVehicle)&&cached)cached.km_attuali=fromVehicle;
+  const candidates=[fromLast,fromVehicle,fallback].filter(v=>v!=null&&Number.isFinite(v)&&v>=0);
+  return candidates.length?Math.max(...candidates):null;
+ }catch(_){return Number.isFinite(fallback)?fallback:null}
+ finally{clearTimeout(timer)}
+}
+async function tabletPrefillImmediateKm(){
+ const field=$('tabletAdKmStart');
+ if(!field||!tabletMezzo)return;
+ const initial=field.value.trim();
+ // Un dato scritto da un operatore o una bozza ripresa non vanno mai sovrascritti.
+ if(initial!==''&&initial!==String(tabletImmediateAutoKm??''))return;
+ const vehicle=vehicles.find(v=>String(v.codice)===String(tabletMezzo));
+ const instant=vehicle?.km_attuali==null?null:Number(vehicle.km_attuali);
+ if(initial===''&&instant!=null&&Number.isFinite(instant)&&instant>=0){
+  field.value=String(instant);
+  tabletImmediateAutoKm=instant;
+ }
+ const latest=await tabletLastKnownKm();
+ if(latest==null){
+  if(field.value==='')msg('tabletAdMsg','Chilometraggio del mezzo non disponibile: verificare il contachilometri prima di creare il servizio.','warn');
+  return;
+ }
+ // Se l'utente ha corretto manualmente il campo mentre caricavamo, lasciarlo invariato.
+ const current=field.value.trim();
+ if(current!==''&&current!==initial&&current!==String(tabletImmediateAutoKm??''))return;
+ if(current!==''&&current!==String(tabletImmediateAutoKm??''))return;
+ field.value=String(latest);
+ tabletImmediateAutoKm=latest;
+}
+function tabletPrepareNewImmediateForm(){
+ const form=$('tabletImmediateForm');
+ if(!form)return false;
+ // «Nuovo» non è «Riprendi bozza»: vecchi pazienti, orari, importi e KM non si ereditano.
+ const edited=['tabletAdOrigin','tabletAdDestination','tabletAdFirst','tabletAdLast',
+  'tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail',
+  'tabletAdKmClose','tabletAdNotes','tabletAdAmount'].some(id=>$(id)?.value?.trim());
+ if(edited&&!confirm('Ci sono dati ancora nel modulo. Iniziare un servizio NUOVO e azzerare solo questi campi? Le bozze salvate resteranno disponibili.'))return false;
+ form.reset();
+ tabletImmediateRestoredDraft=false;
+ tabletImmediateAutoKm=null;
+ if($('tabletAdKmStart'))$('tabletAdKmStart').value='';
+ tabletUpdateImmediateTariff();
+ tabletApplyImmediateTypeRules();
+ tabletUpdateImmediateDraftButton();
+ return true;
 }
 let tabletImmediateRestoredDraft=false;
 function tabletImmediateDraftKey(){return 'cge_tablet_immediate_draft_'+String(tabletMezzo||'');}
@@ -11858,6 +11915,7 @@ function tabletRestoreImmediateDraft(){
  if(data.tabletAdTariffDest!=null&&$('tabletAdTariffDest'))$('tabletAdTariffDest').value=data.tabletAdTariffDest;
  ['tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond'].forEach(id=>{if($(id)&&data[id]!=null)$(id).value=data[id];});
  tabletApplyImmediateTypeRules();tabletUpdateImmediateQuote();
+ tabletImmediateAutoKm=null;
  tabletImmediateRestoredDraft=true;
  msg('tabletAdMsg','Bozza precedente ripristinata. Puoi completarla e creare il servizio quando vuoi.','ok');
  return true;
@@ -11888,6 +11946,14 @@ async function tabletCreateImmediate(){
  if(new Set(crewBadges).size!==crewBadges.length)return msg('tabletAdMsg','Lo stesso nominativo non può essere inserito in più ruoli.','warn');
  const minCrew=$('tabletAdType').value==='Servizio interno'?1:(tabletMezzo==='06'?1:2);
  if(crew.length<minCrew)return msg('tabletAdMsg',minCrew===1?'Inserisci almeno un operatore in equipaggio.':'Inserisci almeno due operatori in equipaggio.','warn');
+ const currentKmField=$('tabletAdKmStart');
+ const latestKm=await tabletLastKnownKm();
+ if(latestKm!=null&&currentKmField&&(
+    currentKmField.value.trim()===''||Number(currentKmField.value)<latestKm)){
+  currentKmField.value=String(latestKm);
+  tabletImmediateAutoKm=latestKm;
+  return msg('tabletAdMsg','KM partenza aggiornati a '+latestKm.toLocaleString('it-IT')+' dall’ultimo foglio chiuso. Controlla e premi nuovamente «Crea servizio e Foglio Viaggio».','warn');
+ }
  if(!confirm('Creare ORA un servizio non programmato per il mezzo '+tabletMezzo+' e il relativo Foglio Viaggio?'))return;
  tabletBusy=true;msg('tabletAdMsg','Creazione servizio e Foglio Viaggio...');
  let created=null;
@@ -11977,6 +12043,7 @@ $('tabletImmediateToggle').onclick=async e=>{
   return;
  }
  // Il modulo deve aprirsi IMMEDIATAMENTE, anche quando il tablet ha una connessione lenta.
+ if(!tabletPrepareNewImmediateForm())return;
  panel.classList.remove('hidden');
  button.textContent='✕ Chiudi nuovo servizio';
  button.setAttribute('aria-expanded','true');
@@ -12260,19 +12327,10 @@ async function loadTabletSheet(serviceId){
  }
  tabletCurrentSheet=r.data;let f=r.data,closed=f.stato==='CHIUSO';
  if(!closed&&f.km_partenza==null){
-  const lastKm=await sb.from('fogli_viaggio')
-   .select('km_arrivo,data_servizio,progressivo,modificato_il')
-   .eq('mezzo',tabletMezzo)
-   .neq('id',f.id)
-   .not('km_arrivo','is',null)
-   .order('modificato_il',{ascending:false,nullsFirst:false})
-   .order('data_servizio',{ascending:false})
-   .order('progressivo',{ascending:false})
-   .limit(1)
-   .maybeSingle();
-  if(!lastKm.error&&lastKm.data?.km_arrivo!=null){
-   const upd=await sb.from('fogli_viaggio').update({km_partenza:Number(lastKm.data.km_arrivo)}).eq('id',f.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('*').maybeSingle();
-   if(!upd.error&&upd.data){tabletCurrentSheet=upd.data;f=upd.data;}
+  const lastKm=await tabletLastKnownKm(f.id);
+  if(lastKm!=null){
+   // I KM sono proposti sul modulo, ma non salvati finché l'operatore non salva il foglio.
+   f={...f,km_partenza:lastKm};tabletCurrentSheet=f;
   }
  }
  const tabletSheetIs118=tabletIs118Type(tabletCurrentService?.tipo_servizio||f.tipo_servizio);
@@ -13275,7 +13333,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.53-tablet08-accesso-profilo';
+const CGE_APP_BUILD='14.54-tablet08-km-e-modulo-pulito';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
