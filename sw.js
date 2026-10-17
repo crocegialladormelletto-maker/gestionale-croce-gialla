@@ -35,8 +35,16 @@ self.addEventListener('fetch', event => {
   if (request.mode === 'navigate' && url.pathname.startsWith(APP_BASE)) {
     // Il gestionale non va mai sostituito con la vecchia pagina di installazione.
     // Mostra invece un errore di connessione e conserva i dati sul server.
+    // Tablet 08: mantieni ESATTAMENTE lo stesso collegamento del dispositivo,
+    // ma recupera il nuovo index.html anche quando il CDN ha una copia precedente.
+    // Nessun intervento sulle bozze locali o sulla sessione del tablet.
+    const isTablet08 = (url.pathname === APP_BASE || url.pathname === APP_BASE + 'index.html')
+      && url.searchParams.get('area') === 'tablet'
+      && url.searchParams.get('mezzo') === '08';
+    const freshUrl = isTablet08 ? new URL(request.url) : null;
+    if (freshUrl) freshUrl.searchParams.set('_cge_app_build', '14.51-tablet08');
     event.respondWith(
-      fetch(request, {cache:'no-store'}).catch(async () => {
+      fetch(freshUrl ? freshUrl.href : request, {cache:'no-store'}).catch(async () => {
         if (url.pathname === APP_BASE + 'app-volontari.html') {
           const cached = await caches.match(APP_BASE + 'app-volontari.html');
           if (cached) return cached;
