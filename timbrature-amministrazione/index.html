@@ -43,7 +43,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .menuBadge.dangerBadge{background:#d92d20;color:#fff}.menuBadge.okBadge{background:#20a35a;color:#fff}.menuBadge.neutralBadge{background:#dbe7f4;color:#173b72}
 .sideBtn:hover{filter:brightness(1.08)}.sideBtn.active{background:var(--y);color:#102f5a;box-shadow:0 0 0 2px rgba(255,223,0,.25)}
 .sideBtn[data-page="timbrature"]{background:#2e5f9a}.sideBtn[data-page="anomalie"]{background:#9b3138}.sideBtn[data-page="riepiloghi"]{background:#24705a}.sideBtn[data-page="chiusura"]{background:#7e4a12}.sideBtn[data-page="dipendenti"]{background:#5a4b91}.sideBtn[data-page="audit"]{background:#46576d}.sideBtn[data-page="stampe"]{background:#166d82}.sideBtn[data-page="causali"]{background:#8b5e12}.sideBtn[data-page="storico"]{background:#3f5f7f}
-.sideBtn.active[data-page]{background:var(--y);color:#102f5a}
+.sideBtn[data-page="ccnl"]{background:#087c84;color:#fff;border:2px solid #8ef0e6;box-shadow:0 3px 12px rgba(0,0,0,.22)}.sideBtn.active[data-page]{background:var(--y);color:#102f5a}
 .adminMain{min-width:0}.adminPage{display:none}.adminPage.active{display:block}
 .pageHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.pageHead h2{margin:0}
 .mobileMenuBtn{display:none;background:#102f5a;color:#fff}
@@ -95,6 +95,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button class="sideBtn" data-page="dipendenti">👥 Dipendenti / PIN</button>
 <button class="sideBtn" data-page="audit">🧾 Audit</button>
 <button class="sideBtn" data-page="stampe">🖨️ Stampe</button>
+<button class="sideBtn" data-page="ccnl">📘 <span class="sideLabel">CCNL ANPAS–Misericordie</span></button>
 </aside>
 <main class="adminMain">
 <div class="card noPrint"><div class="toolbar">
@@ -102,6 +103,27 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div><span id="monthState" class="monthState open">MESE APERTO</span> <button id="logoutBtn" class="secondary">ESCI</button></div>
 </div></div>
 
+<section id="page-ccnl" class="adminPage"><div class="pageHead"><div><h2>📘 Riferimenti CCNL ANPAS–Misericordie</h2><div class="muted">Scheda di consultazione amministrativa · livello C1</div></div></div>
+<div class="card"><h3>Contratti applicati</h3>
+<table><thead><tr><th>Dipendente</th><th>Livello</th><th>Orario ordinario</th><th>Riposo ordinario</th></tr></thead><tbody>
+<tr><td>Andrea Martinoli</td><td>C1</td><td>38 ore/settimana · 6 ore e 20 minuti lun–sab</td><td>Domenica</td></tr>
+<tr><td>Francesca Brughera</td><td>C1</td><td>30 ore/settimana · 5 ore lun–sab (part-time)</td><td>Domenica</td></tr></tbody></table>
+<h3>Articoli e disposizioni da consultare</h3>
+<ul>
+<li><b>Art. 53</b> – Riferimenti alla retribuzione oraria e alle basi di calcolo</li>
+<li><b>Art. 55</b> – Lavoro supplementare e straordinario e relative maggiorazioni</li>
+<li><b>Art. 57</b> – Indennità per lavoro notturno e festivo ordinario</li>
+<li><b>Riposi</b> – Verificare il riposo giornaliero di 11 ore e quello settimanale, anche nei turni notturni o domenicali</li>
+</ul>
+<h3>Prospetto di riferimento del calcolo</h3>
+<table><thead><tr><th>Tipologia</th><th>Parametro applicato nel riepilogo</th></tr></thead><tbody>
+<tr><td>Supplementare diurno (part-time)</td><td>+25%</td></tr><tr><td>Straordinario diurno</td><td>+20%</td></tr>
+<tr><td>Supplementare o straordinario notturno/festivo</td><td>+30%</td></tr><tr><td>Supplementare o straordinario notturno e festivo</td><td>+50%</td></tr>
+<tr><td>Indennità ordinaria notturna</td><td>€ 2,50/ora</td></tr><tr><td>Indennità ordinaria festiva</td><td>€ 2,00/ora</td></tr><tr><td>Indennità ordinaria festiva notturna</td><td>€ 4,50/ora</td></tr></tbody></table>
+<div class="notice">Questa scheda è un riferimento operativo, non sostituisce il testo contrattuale vigente o la verifica del consulente paghe. Le percentuali e la loro applicabilità devono essere verificate, incluse eventuali modifiche contrattuali e accordi individuali. I dati del gestionale non vengono modificati da questa pagina.</div>
+<p><a href="https://www.anpas.org/contratto-collettivo-nazionale-di-lavoro/" target="_blank" rel="noopener noreferrer">🌐 Pagina ufficiale ANPAS sul CCNL</a></p>
+<p><a href="https://www.anpas.org/Allegati/CCNL/2024_CCNL_20_22_sito.pdf" target="_blank" rel="noopener noreferrer">📄 Apri testo PDF del CCNL ANPAS–Misericordie</a></p>
+</div></section>
 <section id="page-dashboard" class="adminPage active"><div class="pageHead"><div><h2>Dashboard</h2><div class="muted">Situazione generale delle timbrature</div></div></div><div class="card noPrint">
 <div class="toolbar"><div><h3 style="margin:0">Dashboard controllo</h3><div class="muted">Controlli automatici sulle timbrature registrate. Le segnalazioni servono come supporto operativo e vanno verificate dall'amministrazione.</div></div><button id="refreshTop" class="secondary" type="button">↻ AGGIORNA</button></div>
 <div id="todayBanner" class="todayBanner"></div>
