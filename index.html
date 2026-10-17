@@ -1609,6 +1609,7 @@
     <button id="fvSave" class="btn secondary" type="submit">Salva Foglio Viaggio</button>
     <button id="fvSaveKmClosed" class="btn yellow hidden" type="button">💾 Salva KM</button>
     <button id="fvReopen118" class="btn secondary hidden" type="button" data-admin-only="true">🔓 Riapri foglio 118</button>
+    <button id="fvCorrectTimes" class="btn yellow hidden" type="button" data-admin-only="true">🕒 Correggi orari foglio chiuso</button>
     <button id="fvCorrectAccounting" class="btn yellow hidden" type="button">✎ Correggi dati contabili</button>
     <button id="fvClose" class="btn yellow" type="button">✓ Chiudi Foglio Viaggio</button>
     <button id="fvPrint" class="btn blue" type="button" onclick="return cgePrintTravelSheetClick(event)">🖨 Stampa / Salva PDF</button>
@@ -5042,6 +5043,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvSaveKmClosed').classList.toggle('hidden',!adminClosed118);
  $('fvReopen118').classList.toggle('hidden',!adminClosed118);
  $('fvCorrectAccounting').classList.toggle('hidden',!(prof?.ruolo==='AMMINISTRATORE'&&closed&&!is118));
+ $('fvCorrectTimes').classList.toggle('hidden',!(prof?.ruolo==='AMMINISTRATORE'&&closed&&!is118));
  $('fvClose').classList.toggle('hidden',closed);
  $('fvDelete').classList.toggle('hidden',closed||prof?.ruolo!=='AMMINISTRATORE'||!!f.pdf_path);
  fvPreview();
@@ -5186,6 +5188,34 @@ async function correctClosedSheetAccounting(){
  msg('fvDetailMsg','Dati contabili corretti con tracciamento amministrativo. Nessun nuovo incasso generato.','ok');
 }
 $('fvCorrectAccounting').onclick=correctClosedSheetAccounting;
+$('fvCorrectTimes').onclick=async()=>{
+ if(prof?.ruolo!=='AMMINISTRATORE'||!currentFoglioId||currentFoglio?.stato!=='CHIUSO'||String(currentFoglio?.tipo_servizio||'').trim()==='118')return;
+ const sheet=currentFoglio;
+ const fields=[['ora_partenza_servizio','Partenza'],['ora_carico_paziente','Carico paziente'],['ora_arrivo_destinazione','Arrivo destinazione'],['ora_operativita','Operatività'],['ora_arrivo_sede','Arrivo in sede']];
+ const values={};
+ for(const [field,label] of fields){
+  const old=sheet[field]?String(sheet[field]).slice(0,5):'';
+  const answer=prompt(label+' (HH:MM, lascia vuoto se non previsto):',old);
+  if(answer===null)return;
+  const v=answer.trim();
+  if(v&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(v))return msg('fvDetailMsg','Orario non valido per '+label+'.','warn');
+  values[field]=v||null;
+ }
+ if(!confirm('Correggere SOLO i cinque orari del foglio '+sheet.numero_foglio+'? Il foglio rimarrà chiuso.'))return;
+ $('fvCorrectTimes').disabled=true;
+ msg('fvDetailMsg','Salvataggio degli orari in corso...');
+ try{
+  const result=await sb.from('fogli_viaggio').update(values).eq('id',sheet.id).eq('stato','CHIUSO').select('id,ora_partenza_servizio,ora_carico_paziente,ora_arrivo_destinazione,ora_operativita,ora_arrivo_sede').maybeSingle();
+  if(result.error)throw result.error;
+  if(!result.data)throw new Error('Foglio non trovato oppure autorizzazione insufficiente.');
+  for(const [field] of fields){
+   if((result.data[field]?String(result.data[field]).slice(0,5):null)!==values[field])throw new Error('Verifica fallita sul campo '+field);
+  }
+  await loadTravelSheetDetail(sheet.id);
+  msg('fvDetailMsg','Orari corretti e verificati sul database. Il foglio rimane chiuso.','ok');
+ }catch(e){msg('fvDetailMsg','Correzione non riuscita: '+(e.message||String(e)),'err')}
+ finally{$('fvCorrectTimes').disabled=false}
+};
 
 if($('fvSaveKmClosed'))$('fvSaveKmClosed').onclick=saveClosed118Km;
 $('fvForm').onsubmit=async e=>{e.preventDefault();await saveTravelSheet(false)};
