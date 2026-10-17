@@ -107,7 +107,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="card"><h3>Contratti applicati</h3>
 <table><thead><tr><th>Dipendente</th><th>Livello</th><th>Orario ordinario</th><th>Riposo ordinario</th></tr></thead><tbody>
 <tr><td>Andrea Martinoli</td><td>C1</td><td>38 ore/settimana · 6 ore e 20 minuti lun–sab</td><td>Domenica</td></tr>
-<tr><td>Francesca Brughera</td><td>C1</td><td>30 ore/settimana · 5 ore lun–sab (part-time)</td><td>Domenica</td></tr></tbody></table>
+<tr><td>Francesca Brughera</td><td>C1</td><td>30 ore/settimana · 5 ore lun–sab (part-time)</td><td>Domenica</td></tr><tr><td>Greta Farinaccio (dal 01/11/2026)</td><td>B1 · Soccorritore</td><td>30 ore/settimana (distribuzione giornaliera da confermare)</td><td>Da confermare</td></tr></tbody></table>
 <h3>Articoli e disposizioni da consultare</h3>
 <ul>
 <li><b>Art. 53</b> – Riferimenti alla retribuzione oraria e alle basi di calcolo</li>
@@ -494,13 +494,15 @@ function dailyTargetMinutes(badge){
  // Riconoscimento robusto anche se l'anagrafica è salvata come "Andrea Martinoli" o "Francesca Brughera".
  if(n.includes('MARTINOLI')&&n.includes('ANDREA'))return 380; // 6 ore e 20 minuti
  if(n.includes('BRUGHERA')&&n.includes('FRANCESCA'))return 300; // 5 ore
+ if(n.includes('FARINACCIO')&&n.includes('GRETA'))return 300; // soglia di visualizzazione; articolazione giornaliera da confermare
  return null;
 }
 // Prospetto automatico CCNL art.55/57: minuti effettivi, settimana lun-dom, fuso italiano.
 // Importi retributivi percentuali da valorizzare con paga oraria; indennita ordinarie in euro.
 function ccnlPremiumReport(badge,month){
- const n=String(person(badge)||'').toUpperCase(),mart=n.includes('MARTINOLI')&&n.includes('ANDREA'),brug=n.includes('BRUGHERA')&&n.includes('FRANCESCA');
- if(!mart&&!brug)return '';
+ const n=String(person(badge)||'').toUpperCase(),mart=n.includes('MARTINOLI')&&n.includes('ANDREA'),brug=n.includes('BRUGHERA')&&n.includes('FRANCESCA'),greta=n.includes('FARINACCIO')&&n.includes('GRETA';
+ if(!mart&&!brug&&!greta)return '';
+ if(greta&&month<'2026-11')return '<p>Contratto Greta Farinaccio B1 in vigore dal 01/11/2026.</p>';
  const local=t=>new Date(t).toLocaleString('sv-SE',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
  const week=d=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()-(x.getDay()+6)%7);return x.toISOString().slice(0,10)};
  const easter=y=>{const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k+70)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=(h+l-7*m+114)%31+1;const t=new Date(Date.UTC(y,mo-1,da+1));return t.toISOString().slice(0,10)};
@@ -588,7 +590,7 @@ function printRows(selectedBadge='',selectedMonth=''){
  // Conteggia anche le giornate precedenti appartenenti alla stessa settimana a cavallo del mese.
  const weekKey=d=>{const x=new Date(d+'T12:00:00');const wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x.toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'})};
  const weeklyPrior={};
- if(selectedBadge&&(isMartinoliBadge(selectedBadge)||String(person(selectedBadge)||'').toUpperCase().includes('BRUGHERA'))){
+ if(selectedBadge&&(isMartinoliBadge(selectedBadge)||(/BRUGHERA|FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase())))){
   const ordered=context.filter(e=>!e.eliminato_at&&e.badge===selectedBadge).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
   let entry=null;
   for(const e of ordered){if(e.tipo==='ENTRATA')entry=e;else if(e.tipo==='USCITA'&&entry){const day=dayKey(entry.evento_at);if(day.slice(0,7)<selectedMonth){const w=weekKey(day);weeklyPrior[w]=(weeklyPrior[w]||0)+Math.max(0,(new Date(e.evento_at)-new Date(entry.evento_at))/60000)}entry=null}}
@@ -601,7 +603,7 @@ function printRows(selectedBadge='',selectedMonth=''){
   const sundayWork=(isMartinoliBadge(selectedBadge)||String(person(selectedBadge)||'').toUpperCase().includes('BRUGHERA'))&&new Date(d+'T12:00:00').getDay()===0&&v.totalMin>0;
   let overtime=0,supplementary=0,ordinary=v.totalMin;
   if(target!=null){
-   if(selectedBadge&&(isMartinoliBadge(selectedBadge)||String(person(selectedBadge)||'').toUpperCase().includes('BRUGHERA'))){
+   if(selectedBadge&&(isMartinoliBadge(selectedBadge)||(/BRUGHERA|FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase())))){
     const week=weekKey(d),before=weeklyRunning[week]||0,after=before+v.totalMin;
     if(isMartinoliBadge(selectedBadge)){
      overtime=Math.max(0,after-2280)-Math.max(0,before-2280);
@@ -632,7 +634,7 @@ function printRows(selectedBadge='',selectedMonth=''){
  h+='</tbody>';
  if(selectedBadge&&target!=null){
   h+='<tfoot><tr><th colspan="3">TOTALI MESE</th><th>'+fmtMin(totalWorked)+'</th><th>'+fmtMin(totalSupplementary)+'</th><th>'+fmtMin(totalOvertime)+'</th></tr>';
-  h+='<tr><td colspan="6"><b>Riferimento contrattuale:</b> '+(isMartinoliBadge(selectedBadge)?'38:00 settimanali (6:20 lun–sab; domenica riposo)':String(person(selectedBadge)||'').toUpperCase().includes('BRUGHERA')?'30:00 settimanali (5:00 lun–sab; domenica riposo)':'giornaliero '+fmtMin(target))+' · <b>Ore ordinarie lavorate:</b> '+fmtMin(totalOrdinary)+' · <b>Ore supplementari:</b> '+fmtMin(totalSupplementary)+' · <b>Ore straordinarie:</b> '+fmtMin(totalOvertime)+'</td></tr></tfoot>';
+  h+='<tr><td colspan="6"><b>Riferimento contrattuale:</b> '+(isMartinoliBadge(selectedBadge)?'38:00 settimanali (6:20 lun–sab; domenica riposo)':(/BRUGHERA|FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase()))?(/FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase())?'30:00 settimanali · B1 Soccorritore · dal 01/11/2026':'30:00 settimanali (5:00 lun–sab; domenica riposo)'):'giornaliero '+fmtMin(target))+' · <b>Ore ordinarie lavorate:</b> '+fmtMin(totalOrdinary)+' · <b>Ore supplementari:</b> '+fmtMin(totalSupplementary)+' · <b>Ore straordinarie:</b> '+fmtMin(totalOvertime)+'</td></tr></tfoot>';
  }
  return h+'</table>'+ccnlPremiumReport(selectedBadge,selectedMonth)
 }
