@@ -42,7 +42,7 @@ self.addEventListener('fetch', event => {
       && url.searchParams.get('area') === 'tablet'
       && url.searchParams.get('mezzo') === '08';
     const freshUrl = isTablet08 ? new URL(request.url) : null;
-    if (freshUrl) freshUrl.searchParams.set('_cge_app_build', '14.51-tablet08');
+    if (freshUrl) freshUrl.searchParams.set('_cge_app_build', '14.52-tablet08-login');
     event.respondWith(
       fetch(freshUrl ? freshUrl.href : request, {cache:'no-store'}).catch(async () => {
         if (url.pathname === APP_BASE + 'app-volontari.html') {
