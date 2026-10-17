@@ -5991,9 +5991,15 @@ async function loadOperationalDashboard(){
  if($('dashOpsUrgentExpiry'))$('dashOpsUrgentExpiry').textContent=String(expRows.length);
 
  const activeEmergencyFascia=dashOpsCurrentEmergencyFascia();
+ // Un mezzo assegnato alla fascia attiva è occupato sia in emergenza sia nelle dimissioni.
+ // La fascia NOTTE (00:00–07:00) viene valutata sulla data corrente dopo mezzanotte.
  const emergencyVehicles=new Set(
-  emgRows.filter(x=>x.fascia===activeEmergencyFascia&&x.mezzo).map(x=>String(x.mezzo))
+  emgRows.filter(x=>x.fascia===activeEmergencyFascia&&x.mezzo).map(x=>String(x.mezzo).padStart(2,'0'))
  );
+ const dischargeVehicles=new Set(
+  dimRows.filter(x=>x.fascia===activeEmergencyFascia&&x.mezzo).map(x=>String(x.mezzo).padStart(2,'0'))
+ );
+ const assignedVehicles=new Set([...emergencyVehicles,...dischargeVehicles]);
 
  const currentEmergency=emgRows.filter(x=>x.fascia===activeEmergencyFascia);
  const emergencyCovered=currentEmergency.some(x=>x.ruolo==='AUTISTA')&&currentEmergency.some(x=>x.ruolo==='CAPO_SERVIZIO')&&currentEmergency.some(x=>x.mezzo);
@@ -6012,7 +6018,7 @@ async function loadOperationalDashboard(){
    ?assistanceServices.map(x=>((x.ora_partenza_prevista||'').slice(0,5)||'—')+' · Mezzo '+(x.mezzo||'—')+' · '+(x.destinazione||x.ospedale_destinazione||'Assistenza')).join(' | ')
    :'Nessuna assistenza programmata oggi');
 
- const availableVehicles=mezzi.filter(m=>m.attivo&&['DISPONIBILE','OPERATIVO'].includes(String(m.stato_operativo||'DISPONIBILE').toUpperCase())&&!emergencyVehicles.has(String(m.codice))).length;
+ const availableVehicles=mezzi.filter(m=>m.attivo&&['DISPONIBILE','OPERATIVO'].includes(String(m.stato_operativo||'DISPONIBILE').toUpperCase())&&!assignedVehicles.has(String(m.codice).padStart(2,'0'))).length;
  const activeVehicles=mezzi.filter(m=>m.attivo).length;
  dashSetSmartCard('dashSmartVehicles',availableVehicles>0?'ok':'alert',availableVehicles+' / '+activeVehicles,
   availableVehicles===1?'1 mezzo immediatamente disponibile':availableVehicles+' mezzi immediatamente disponibili');
@@ -6034,13 +6040,15 @@ async function loadOperationalDashboard(){
   const openSheet=fogli.some(x=>x.mezzo===m.codice&&x.stato==='APERTO');
   const status=String(m.stato_operativo||'DISPONIBILE').toUpperCase();
   const alert=!m.attivo||!['DISPONIBILE','OPERATIVO'].includes(status);
-  const emergencyBusy=emergencyVehicles.has(String(m.codice));
+  const emergencyBusy=emergencyVehicles.has(String(m.codice).padStart(2,'0'));
+  const dischargeBusy=dischargeVehicles.has(String(m.codice).padStart(2,'0'));
   const serviceBusy=openSheet||todayServices.some(x=>['IN CORSO','PRESO IN CARICO'].includes(String(x.stato_gestionale||x.stato_operativo||'').toUpperCase()));
-  const busy=emergencyBusy||serviceBusy;
+  const busy=emergencyBusy||dischargeBusy||serviceBusy;
   const cls=alert?'ops-vehicle-alert':busy?'ops-vehicle-busy':'ops-vehicle-ok';
-  const badge=alert?(m.attivo?status:'NON ATTIVO'):emergencyBusy?'EMERGENZA 118':busy?'IMPEGNATO':'DISPONIBILE';
+  const badge=alert?(m.attivo?status:'NON ATTIVO'):emergencyBusy?'EMERGENZA 118':dischargeBusy?'DIMISSIONI':busy?'IMPEGNATO':'DISPONIBILE';
   const detail=emergencyBusy
    ?'In turno Emergenza 118 · '+activeEmergencyFascia+' '+volFasciaOrario(activeEmergencyFascia)
+   :dischargeBusy?'In turno Dimissioni · '+activeEmergencyFascia+' '+volFasciaOrario(activeEmergencyFascia)
    :todayServices.length+' servizio/i oggi'+(openSheet?' · foglio aperto':'');
   return '<div class="ops-vehicle-card '+cls+'"><strong>Mezzo '+esc(m.codice)+'</strong>'+
    '<small>'+esc(m.targa||'Targa —')+(m.km_attuali!==null&&m.km_attuali!==undefined?' · '+esc(m.km_attuali)+' km':'')+'</small>'+
