@@ -3904,7 +3904,11 @@ async function enter(){
  await sb.auth.signOut();return msg(target,textMsg,'err')
 }
  if(isVolunteerOnlyMode()&&r.data.ruolo!=='VOLONTARIO'){await sb.auth.signOut();applyVolunteerOnlyLogin();return msg('vlmsg','Questa app è riservata ai volontari. Accedi con badge e PIN.','warn')}
- if(isTabletOnlyMode()&&r.data.ruolo!=='TABLET'){await sb.auth.signOut();applyVolunteerOnlyLogin();return msg('tloginmsg','Questa pagina è riservata ai Tablet mezzi.','err')}
+ if(isTabletOnlyMode()&&r.data.ruolo!=='TABLET'){applyVolunteerOnlyLogin();return msg('tloginmsg','In questo browser è già attiva una sessione '+(r.data.ruolo||'di altro utente')+'. Per accedere al Tablet '+(tabletRequestedVehicle()||'richiesto')+' inserisci username e password del tablet nel modulo qui sopra.','warn')}
+ if(isTabletOnlyMode()&&r.data.ruolo==='TABLET'&&tabletRequestedVehicle()&&r.data.mezzo!==tabletRequestedVehicle()){
+  applyVolunteerOnlyLogin();
+  return msg('tloginmsg','La sessione corrente appartiene al tablet '+r.data.mezzo+'. Per aprire il tablet '+tabletRequestedVehicle()+' usa le credenziali di quel mezzo, senza cambiare password.','warn');
+ }
  if(isTabletOnlyMode()&&r.data.ruolo==='TABLET'&&/^0[6-9]$/.test(r.data.mezzo||'')){
   const fixedUrl=new URL(location.href);
   fixedUrl.searchParams.set('area','tablet');
