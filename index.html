@@ -4994,7 +4994,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvdService').dataset.serviceId=f.servizio_giornaliero_id||'';
 
  const closed=f.stato==='CHIUSO';
- const adminClosed118=closed&&is118&&prof?.ruolo==='AMMINISTRATORE';
+ const adminClosed118=closed&&prof?.ruolo==='AMMINISTRATORE';
  document.querySelectorAll('#fvForm input,#fvForm select,#fvForm textarea').forEach(x=>{if(x.dataset.fvEditable==='1')x.disabled=closed;});
  // Anagrafica paziente modificabile dagli amministratori sui fogli ancora aperti.
  ['fvdPn','fvdPc','fvdCf','fvdTel'].forEach(id=>{$(id).disabled=closed||prof?.ruolo!=='AMMINISTRATORE'||is118||isAssistanceManifestation(f.tipo_servizio);});
@@ -5102,33 +5102,18 @@ $('fvReopen118').onclick=async()=>{
  finally{$('fvReopen118').disabled=false}
 };
 async function saveClosed118Km(){
- if(prof?.ruolo!=='AMMINISTRATORE'||!currentFoglioId||String(currentFoglio?.tipo_servizio||'').trim()!=='118'||currentFoglio?.stato!=='CHIUSO')return;
+ if(prof?.ruolo!=='AMMINISTRATORE'||!currentFoglioId||currentFoglio?.stato!=='CHIUSO')return;
  const kmStart=$('fvKmStart').value===''?null:Number($('fvKmStart').value);
  const kmEnd=$('fvKmEnd').value===''?null:Number($('fvKmEnd').value);
- if(kmStart===null||kmEnd===null)return msg('fvDetailMsg','Inserisci sia KM partenza sia KM arrivo.','warn');
- if(kmEnd<kmStart)return msg('fvDetailMsg','I KM di arrivo non possono essere inferiori ai KM di partenza.','warn');
- if(!confirm('Confermi la modifica dei KM del Foglio Viaggio 118 '+(currentFoglio.numero_foglio||'')+'?'))return;
- msg('fvDetailMsg','Aggiornamento KM in corso...');
- const r=await sb.from('fogli_viaggio').update({km_partenza:kmStart,km_arrivo:kmEnd}).eq('id',currentFoglioId).eq('tipo_servizio','118').eq('stato','CHIUSO').select('id,km_partenza,km_arrivo,km_percorsi,mezzo,progressivo,numero_foglio').maybeSingle();
- if(r.error)return msg('fvDetailMsg','Modifica KM non riuscita: '+r.error.message,'err');
- if(!r.data)return msg('fvDetailMsg','Foglio 118 non trovato o non più modificabile.','warn');
-
- let nextInfo='';
- const nextQ=await sb.from('fogli_viaggio')
-  .select('id,numero_foglio,km_partenza,km_arrivo,km_percorsi,stato,progressivo')
-  .eq('mezzo',r.data.mezzo)
-  .gt('progressivo',r.data.progressivo)
-  .order('progressivo',{ascending:true})
-  .limit(1)
-  .maybeSingle();
- if(nextQ.error)return msg('fvDetailMsg','KM del foglio aggiornati, ma non è stato possibile verificare il foglio successivo: '+nextQ.error.message,'warn');
- if(nextQ.data){
-  const nextUpdate=await sb.from('fogli_viaggio').update({km_partenza:kmEnd}).eq('id',nextQ.data.id).select('id,numero_foglio,km_partenza,km_arrivo,km_percorsi').maybeSingle();
-  if(nextUpdate.error)return msg('fvDetailMsg','KM del foglio aggiornati, ma aggiornamento del foglio successivo non riuscito: '+nextUpdate.error.message,'warn');
-  if(nextUpdate.data)nextInfo=' · Foglio successivo '+nextUpdate.data.numero_foglio+': KM partenza aggiornati a '+kmEnd+'.';
- }
- msg('fvDetailMsg','KM aggiornati correttamente: '+r.data.km_partenza+' → '+r.data.km_arrivo+' ('+r.data.km_percorsi+' km).'+nextInfo,'ok');
- await loadTravelSheetDetail(currentFoglioId);
+ if(!Number.isInteger(kmStart)||!Number.isInteger(kmEnd)||kmStart<0||kmEnd<kmStart)return msg('fvDetailMsg','Inserisci KM partenza e arrivo validi.','warn');
+ const f=currentFoglio;
+ if(!confirm('Correggere i KM del foglio CHIUSO '+f.numero_foglio+' da '+f.km_partenza+' → '+f.km_arrivo+' a '+kmStart+' → '+kmEnd+'? Il foglio successivo non sarà modificato.'))return;
+ msg('fvDetailMsg','Salvataggio correzione amministrativa...');
+ const r=await sb.from('fogli_viaggio').update({km_partenza:kmStart,km_arrivo:kmEnd}).eq('id',f.id).eq('stato','CHIUSO').eq('km_partenza',f.km_partenza).eq('km_arrivo',f.km_arrivo).select('id,km_partenza,km_arrivo,km_percorsi').maybeSingle();
+ if(r.error)return msg('fvDetailMsg','Correzione non riuscita: '+r.error.message,'err');
+ if(!r.data)return msg('fvDetailMsg','Foglio modificato da un altro operatore: aggiorna e riprova.','warn');
+ await loadTravelSheetDetail(f.id);
+ msg('fvDetailMsg','KM corretti: '+r.data.km_partenza+' → '+r.data.km_arrivo+' ('+r.data.km_percorsi+' km). Gli altri fogli non sono stati modificati.','ok');
 }
 async function correctClosedSheetAccounting(){
  if(prof?.ruolo!=='AMMINISTRATORE'||!currentFoglioId||currentFoglio?.stato!=='CHIUSO'||String(currentFoglio.tipo_servizio||'').trim()==='118')return;
