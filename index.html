@@ -3934,8 +3934,20 @@ function applyRoleUI(){
  if($('servicePayHead'))$('servicePayHead').classList.toggle('hidden',isCentral);
  if($('fvTotalHead'))$('fvTotalHead').classList.toggle('hidden',isCentral);
 }
-async function enter(){
- const u=await sb.auth.getUser();if(!u.data.user)return;
+async function enter(authenticatedUser=null){
+ // Dopo signInWithPassword usare l'utente già autenticato: un secondo getUser()
+ // può bloccare la pagina su «Accesso in corso» se browser e sessione sono occupati.
+ let currentUser=authenticatedUser;
+ if(!currentUser){
+  const session=await sb.auth.getSession();
+  currentUser=session.data?.session?.user||null;
+ }
+ if(!currentUser){
+  msg(isTabletOnlyMode()?'tloginmsg':'lmsg','Sessione non disponibile. Accedi nuovamente.','warn');
+  return;
+ }
+ const u={data:{user:currentUser}};
+ // Il ruolo non arriva mai dalla pagina: viene letto dal database con RLS.
  const r=await sb.from('accessi_app').select('nome,ruolo,attivo,badge_personale,mezzo').single();
  if(r.error||!r.data?.attivo){
  const role=String(r.data?.ruolo||'').toUpperCase();
@@ -3987,12 +3999,40 @@ $('centralinoLoginForm').onsubmit=async e=>{e.preventDefault();const user=$('cus
 
 $('mgo').onclick=async()=>{const user=$('muser').value.trim().toLowerCase(),password=$('mpw').value;if(user!=='monitor'||!password)return msg('mloginmsg','Inserisci username monitor e password.','warn');msg('mloginmsg','Accesso in corso...');const r=await sb.auth.signInWithPassword({email:monitorLoginEmail(),password});if(r.error)return msg('mloginmsg','Credenziali monitor non valide.','err');enter()};
 $('mpw').onkeydown=e=>{if(e.key==='Enter')$('mgo').click()};
+let tabletLoginInProgress=false;
 $('tgo').onclick=async()=>{
+ if(tabletLoginInProgress)return;
  const user=$('tuser').value.trim().toLowerCase(),pass=$('tpw').value;
  if(!/^tablet0[6-9]$/.test(user)||!pass)return msg('tloginmsg','Inserisci username tablet06 / tablet07 / tablet08 / tablet09 e password.','warn');
- msg('tloginmsg','Accesso in corso...');
- const r=await sb.auth.signInWithPassword({email:user+'@crocegiallaemergenza.it',password:pass});
- if(r.error)return msg('tloginmsg','Credenziali del Tablet non valide.','err');enter();
+ if(tabletRequestedVehicle()&&user!=='tablet'+tabletRequestedVehicle())return msg('tloginmsg','Questo collegamento è riservato al mezzo '+tabletRequestedVehicle()+'. Usa username tablet'+tabletRequestedVehicle()+'.','warn');
+ tabletLoginInProgress=true;
+ const button=$('tgo');button.disabled=true;
+ let timer=null;
+ // Mai lasciare «Accesso in corso» sullo schermo a tempo indeterminato.
+ const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Tempo massimo di accesso superato. Controlla la connessione e riprova senza cancellare dati o cache.')),20000)});
+ try{
+  msg('tloginmsg','Accesso in corso...');
+  const r=await Promise.race([
+   sb.auth.signInWithPassword({email:user+'@crocegiallaemergenza.it',password:pass}),timeout
+  ]);
+  if(r.error)throw new Error('Credenziali non valide oppure accesso temporaneamente non disponibile.');
+  if(!r.data?.user)throw new Error('Risposta incompleta del servizio di autenticazione.');
+  msg('tloginmsg','Credenziali accettate. Caricamento del tablet '+(tabletRequestedVehicle()||user.slice(-2))+'...','ok');
+  await Promise.race([enter(r.data.user),timeout]);
+  if(!$('tabletApp').classList.contains('hidden'))msg('tloginmsg','');
+  else if($('tloginmsg').textContent.includes('Caricamento del tablet'))msg('tloginmsg','Verifica dell’accesso non completata. Controlla il messaggio visualizzato.','warn');
+ }catch(e){
+  const message=e?.message||String(e);
+  if(!$('tabletApp').classList.contains('hidden')){
+   msg('tabletMsg','Accesso effettuato, ma caricamento iniziale lento o interrotto: '+message+' Puoi riprovare ad aggiornare la schermata.','warn');
+  }else{
+   msg('tloginmsg','Accesso non completato: '+message,'err');
+  }
+ }finally{
+  if(timer)clearTimeout(timer);
+  tabletLoginInProgress=false;
+  button.disabled=false;
+ }
 };
 $('tpw').onkeydown=e=>{if(e.key==='Enter')$('tgo').click()};
 $('vpinToggle').onclick=()=>{const show=$('vpin').type==='password';$('vpin').type=show?'text':'password';$('vpinToggle').textContent=show?'Nascondi':'Mostra'};
@@ -11468,7 +11508,7 @@ async function tabletRefreshList(){
   if(direct.error)return msg('tabletMsg','Fogli 118 diretti non disponibili: '+direct.error.message,'err');
   tabletDirect118=direct.data||[];
  }else tabletDirect118=[];
- $('tabletUpdated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · automaticamente ogni 20 secondi · versione tablet 14.51 (collegamento esistente)';
+ $('tabletUpdated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · automaticamente ogni 20 secondi · versione tablet 14.52 (login senza blocco)';
  msg('tabletMsg','');renderTabletList();renderTabletDirect118();
  if(tabletCurrentService&&!document.getElementById('tabletDetail').classList.contains('hidden')){
   const newer=tabletServices.find(x=>x.id===tabletCurrentService.id);
@@ -13205,7 +13245,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.51-tablet08-collegamento-esistente';
+const CGE_APP_BUILD='14.52-tablet08-login-senza-blocco';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
