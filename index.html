@@ -12732,10 +12732,15 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
   else if(!tabletIsAssistance) return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
  }
+ // La data del pagamento indicata dall'equipaggio non deve essere sostituita.
+ if(!tabletSheetIs118&&['CONTANTI','POS'].includes(String(row.modalita_pagamento||'').toUpperCase())&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(row.data_pagamento||''))){
+  return msg('tabletSheetMsg','Inserisci la data effettiva di pagamento prima di salvare o chiudere il foglio.','warn'),false;
+ }
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
-  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id').maybeSingle();
+  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,modalita_pagamento,data_pagamento').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
+  if(!tabletSheetIs118&&(String(r.data.modalita_pagamento||'')!==String(row.modalita_pagamento||'')||String(r.data.data_pagamento||'')!==String(row.data_pagamento||'')))throw new Error('Pagamento non confermato: metodo o data risultano diversi da quelli inseriti. Non chiudere il foglio.');
   tabletCurrentSheet={...tabletCurrentSheet,...row};
   const syncWarnings=[];
 
