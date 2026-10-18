@@ -11485,7 +11485,7 @@ function showMonitorSlide(name){
  $('monitorWeekBtn').className='btn '+(name==='week'?'yellow':'secondary')
 }
 function renderMonitorToday(){
- const rows=(monitorSnapshot?.servizi_oggi||[]).filter(s=>!['DA CONTABILIZZARE','CONTABILIZZATO','CHIUSO','TERMINATO'].includes(String(s.stato||'').toUpperCase()));$('monitorTodaySummary').textContent=rows.length+' '+(rows.length===1?'servizio programmato':'servizi programmati');
+ const rows=(monitorSnapshot?.servizi_oggi||[]).filter(s=>!['DA CONTABILIZZARE','CONTABILIZZATO','CHIUSO','TERMINATO','COMPLETATO','ANNULLATO'].includes(String(s.stato||'').trim().toUpperCase()));$('monitorTodaySummary').textContent=rows.length+' '+(rows.length===1?'servizio programmato':'servizi programmati');
  if(!rows.length){$('monitorTodayList').innerHTML='<div class="monitor-empty"><div><b>Nessun servizio programmato per oggi</b><br>Il monitor si aggiorna automaticamente.</div></div>';return}
  $('monitorTodayList').innerHTML=rows.map(s=>{
   const crew=(s.equipaggio||[]).map(x=>esc(x.nome)+' <span class="muted">('+esc(x.ruolo)+')</span>').join('<br>')||'<span class="pill r">Equipaggio non assegnato</span>';
@@ -11535,7 +11535,7 @@ function renderMonitorShifts(){
  }).join('');
 }
 function renderMonitorWeek(){
- const start=new Date((monitorSnapshot?.data||todaySafe())+'T12:00:00'),services=(monitorSnapshot?.servizi_settimana||[]).filter(s=>!['DA CONTABILIZZARE','CONTABILIZZATO','CHIUSO','TERMINATO'].includes(String(s.stato||'').toUpperCase())),turns=monitorSnapshot?.turni_settimana||[];
+ const start=new Date((monitorSnapshot?.data||todaySafe())+'T12:00:00'),services=(monitorSnapshot?.servizi_settimana||[]).filter(s=>!['DA CONTABILIZZARE','CONTABILIZZATO','CHIUSO','TERMINATO','COMPLETATO','ANNULLATO'].includes(String(s.stato||'').trim().toUpperCase())),turns=monitorSnapshot?.turni_settimana||[];
  let html='';
  for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const y=calYmd(d),ss=services.filter(x=>x.data===y),tt=turns.filter(x=>x.data===y);
   html+='<div class="monitor-day '+(i===0?'today':'')+'"><div class="monitor-day-head">'+esc(d.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}).replace(/^./,c=>c.toUpperCase()))+'</div>'+
@@ -13401,7 +13401,7 @@ async function loadVolunteerArea(){
    sb.from('notifiche_volontari').select('id,badge_personale,servizio_id,tipo,titolo,messaggio,created_at,letta_il').eq('badge_personale',volunteerBadge).order('created_at',{ascending:false}).limit(30)
   ]);
   const err=[pr.error,qr.error,qd.error,hr.error,tpr.error,avr.error,srv.error,dr.error,nr.error].find(Boolean);if(err)throw err;
-  const person=pr.data||{},hours=hr.data||{},quals=qr.data||[],qdefs=qd.data||[],tp=tpr.data||[],availability=avr.data||[],services=srv.data||[],documents=dr.data||[];
+  const person=pr.data||{},hours=hr.data||{},quals=qr.data||[],qdefs=qd.data||[],tp=tpr.data||[],availability=avr.data||[],services=(srv.data||[]).filter(x=>!['COMPLETATO','CHIUSO','TERMINATO','CONTABILIZZATO','DA CONTABILIZZARE','ANNULLATO'].includes(String(x.stato||'').trim().toUpperCase())&&!['CHIUSO','TERMINATO','COMPLETATO','CONTABILIZZATO','DA CONTABILIZZARE','ANNULLATO'].includes(String(x.stato_gestionale||'').trim().toUpperCase())),documents=dr.data||[];
   volNotifications=nr.data||[];renderVolunteerNotifications();
    vfcalQualificationRows=quals;
   let turns=[];
