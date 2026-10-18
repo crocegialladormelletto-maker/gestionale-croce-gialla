@@ -5364,13 +5364,17 @@ async function loadOperationalCalendar(){
   msg('calMsg','Connessione temporaneamente instabile: nuovo tentativo di caricamento...');
   [sr,tr,ar]=await readCalendar();
  }
- if(sr.error||tr.error||ar.error){
-  msg('calMsg','Aggiornamento non riuscito: i dati già visualizzati sono stati conservati. Riprova con Calendario. '+[sr.error,tr.error,ar.error].filter(Boolean).map(e=>e.message).join(' | '),'err');
+ // Gli errori di una fonte non devono cancellare o bloccare le altre sezioni del calendario.
+ const failures=[['Servizi',sr.error],['Turni',tr.error],['Disponibilità',ar.error]].filter(x=>x[1]);
+ if(failures.length===3){
+  msg('calMsg','Caricamento non riuscito: dati precedenti conservati. '+failures.map(x=>x[0]+': '+x[1].message).join(' | '),'err');
   return;
  }
- const failures=[];
- const turns=tr.data||[],services=sr.data||[],avs=ar.data||[];let assignments=[];
- if(failures.length)msg('calMsg','Alcuni dati non sono stati caricati: '+failures.map(x=>x[0]+': '+x[1].message).join(' | '),'warn');
+ const turns=tr.error?opCalEvents.filter(e=>e.kind==='turn').map(e=>e.raw):tr.data||[];
+ const services=sr.error?opCalEvents.filter(e=>e.kind==='service').map(e=>e.raw):sr.data||[];
+ const avs=ar.error?[]:ar.data||[];
+ let assignments=[];
+ if(failures.length)msg('calMsg','Caricamento parziale: '+failures.map(x=>x[0]+': '+x[1].message).join(' | ')+' · Gli altri dati restano visibili.','warn');
  if(turns.length){const rr=await sb.from('turni_personale').select('turno_id,badge_personale,ruolo,risposta,confermato').in('turno_id',turns.map(x=>x.id));if(rr.error){msg('calMsg','Turni visualizzati senza nominativi: '+rr.error.message,'warn')}else assignments=rr.data||[]}
  let serviceAssignments=[];
  if(services.length){
@@ -5378,7 +5382,7 @@ async function loadOperationalCalendar(){
   if(srCrew.error){msg('calMsg','Servizi visualizzati senza equipaggio: '+srCrew.error.message,'warn')}
   else serviceAssignments=srCrew.data||[];
  }
- opCalEvents=[];
+ opCalEvents=ar.error?opCalEvents.filter(e=>['avail','unavail','pref'].includes(e.kind)):[];
  turns.forEach(t=>{const as=assignments.filter(x=>x.turno_id===t.id),cov=turnCoverage(t,as);opCalEvents.push({kind:'turn',date:t.data_turno,time:calTime(t.ora_inizio),vehicle:t.mezzo||'',coverage:cov,coverageClass:cov.cls,title:(t.tipo_turno||'Turno')+' · Mezzo '+(t.mezzo||'—'),subtitle:calTime(t.ora_inizio)+'–'+calTime(t.ora_fine)+' · '+cov.count+' operatori',raw:{...t,assignments:as}})});
  services.forEach(s=>{
  const assignments=serviceAssignments.filter(a=>a.servizio_id===s.id);
