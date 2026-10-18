@@ -11,13 +11,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.42-assistenze">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.58-pagamenti-tablet">
 <script>
 (function(){
  try{
   const p=new URLSearchParams(location.search);
   if(p.get('area')==='tablet' && p.get('mezzo')==='07'){
-   document.getElementById('cgeManifest').href='/gestionale-croce-gialla/tablet-07-manifest.json?v=1';
+   document.getElementById('cgeManifest').href='/gestionale-croce-gialla/tablet-07-manifest.json?v=14.58';
   }
  }catch(_){}
 })();
@@ -13549,7 +13549,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.57-versione-login-dinamica';
+const CGE_APP_BUILD='14.58-pagamenti-tablet-06-07-08-09';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
