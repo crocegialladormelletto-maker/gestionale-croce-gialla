@@ -449,11 +449,11 @@ async function renderNoteCanvas(n){
  const html=buildNotePrintableDocument(n,false);
  const doc=new DOMParser().parseFromString(html,'text/html');
  const host=document.createElement('div');
- host.style.cssText='position:fixed;left:-20000px;top:0;width:802px;background:#fff;z-index:-1;padding:4px;overflow:visible';
+ host.style.cssText='position:fixed;left:-20000px;top:0;width:794px;background:#fff;z-index:-1;padding:0;overflow:hidden;box-sizing:border-box';
  host.innerHTML=doc.body.innerHTML;
  const style=document.createElement('style');
  style.textContent=[...doc.querySelectorAll('style')].map(x=>x.textContent||'').join('\n')+
-  '\n.nd-print-page{margin:0!important;width:794px!important;min-height:auto!important;overflow:visible!important}';
+  '\n.nd-print-page{margin:0 auto!important;width:718px!important;max-width:718px!important;min-height:auto!important;overflow:visible!important;box-sizing:border-box!important}';
  host.prepend(style);
  document.body.appendChild(host);
  try{
