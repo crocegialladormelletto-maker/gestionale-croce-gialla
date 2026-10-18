@@ -415,10 +415,10 @@ function buildApprovedNoteBody(n){
     '<tr><td style="width:19%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Data servizio</td><td style="width:31%;background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+esc(nice(n.data_servizio))+'</td><td style="width:14%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Tipologia</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+esc(n.tipo_servizio||'Servizio sanitario')+'</td></tr>'+
     '<tr><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Partenza</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+esc(n.partenza||n.luogo_partenza||n.indirizzo_partenza||'')+'</td><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Destinazione</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+esc(n.destinazione||n.ospedale_destinazione||n.indirizzo_destinazione||'')+'</td></tr>'+
    '</tbody></table>'+
-   '<table style="width:100%;border-collapse:collapse;font-size:10.5px;margin-top:0"><thead><tr style="background:#2f628d;color:#fff"><th style="padding:6px;width:7%">Cod.</th><th style="padding:6px;text-align:left">Descrizione del servizio</th><th style="padding:6px;width:7%">Q.tà</th><th style="padding:6px;width:13%">Prezzo</th><th style="padding:6px;width:11%">Sconto</th><th style="padding:6px;width:14%">Importo</th></tr></thead><tbody>'+
+   '<table style="width:100%;max-width:100%;table-layout:fixed;overflow-wrap:anywhere;border-collapse:collapse;font-size:10.5px;margin-top:0"><thead><tr style="background:#2f628d;color:#fff"><th style="padding:6px;width:7%">Cod.</th><th style="padding:6px;text-align:left">Descrizione del servizio</th><th style="padding:6px;width:7%">Q.tà</th><th style="padding:6px;width:13%">Prezzo</th><th style="padding:6px;width:11%">Sconto</th><th style="padding:6px;width:14%">Importo</th></tr></thead><tbody>'+
     rows.map(r=>'<tr>'+cell(r.cod,'center')+cell(r.desc)+cell(r.qty,'center')+cell(r.price,'right')+cell(r.discount,'right')+cell(r.amount,'right')+'</tr>').join('')+
    '</tbody></table>'+
-   '<div style="display:grid;grid-template-columns:43% 57%;gap:14px;margin-top:10px">'+
+   '<div style="display:grid;grid-template-columns:minmax(0,43fr) minmax(0,57fr);gap:10px;margin-top:10px">'+
     '<div><div style="background:#eef3f7;padding:7px 10px;font-size:11px;font-weight:800">IMPOSTA DI BOLLO</div><div style="background:#fffcef;border:1px solid #d7c774;padding:9px;min-height:38px;font-size:10px">Imposta di bollo: esente ai sensi dell\'art. 82, comma 5, D.Lgs. 117/2017</div></div>'+
     '<div><div style="display:grid;grid-template-columns:58% 42%"><div style="background:#eef3f7;padding:7px 10px;font-size:11px;font-weight:800">IMPONIBILE</div><div style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px;text-align:right">'+euro(total)+'</div><div style="background:#eef3f7;padding:7px 10px;font-size:11px;font-weight:700">Bollo (esente)</div><div style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px;text-align:right">0,00</div><div style="background:#173a5e;color:#fff;padding:9px 10px;font-size:12px;font-weight:800">TOTALE DA CORRISPONDERE</div><div style="background:#fffcef;border:2px solid #173a5e;padding:8px 10px;text-align:right;font-size:15px;font-weight:800">'+euro(total)+'</div></div></div>'+
    '</div>'+
@@ -453,7 +453,7 @@ async function renderNoteCanvas(n){
  host.innerHTML=doc.body.innerHTML;
  const style=document.createElement('style');
  style.textContent=[...doc.querySelectorAll('style')].map(x=>x.textContent||'').join('\n')+
-  '\n.nd-print-page{margin:0 auto!important;width:718px!important;max-width:718px!important;min-height:auto!important;overflow:visible!important;box-sizing:border-box!important}';
+  '\n.nd-print-page{margin:0 auto!important;width:718px!important;max-width:718px!important;min-height:auto!important;overflow:visible!important;box-sizing:border-box!important}.nd-print-page table{max-width:100%!important}.nd-print-page td,.nd-print-page th{overflow-wrap:anywhere}.nd-print-page > div{max-width:100%}';
  host.prepend(style);
  document.body.appendChild(host);
  try{
