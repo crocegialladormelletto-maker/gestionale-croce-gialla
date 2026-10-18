@@ -372,7 +372,7 @@ $('sendPdfMail').onclick=async()=>{
   if(r.data?.error)throw new Error(r.data.error);
   const id=active.id;
   await loadAll();await openNote(id);
-  msg('detailMsg','Email inviata a '+(r.data?.destinatario||active.email)+' con PDF allegato.','ok');
+  msg('detailMsg','Email inviata a '+(r.data?.destinatario||active.email)+' con PDF allegato.'+(r.data?.warning?' '+r.data.warning:''),r.data?.warning&&r.data.warning.includes('non salvata')?'warn':'ok');
  }catch(e){
   msg('detailMsg','Invio non riuscito: '+(e.message||String(e)),'err');
  }finally{
