@@ -342,9 +342,9 @@ $('saveRecipientEmail').onclick=async()=>{
  if(!email||!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(email))return msg('detailMsg','Inserisci un indirizzo email valido.','err');
  const btn=$('saveRecipientEmail');btn.disabled=true;
  try{
-  const r=await sb.from('note_di_debito').update({email,updated_at:new Date().toISOString()}).eq('id',active.id).eq('stato','EMESSA').select('id,email').single();
+  const r=await sb.rpc('cge_aggiorna_email_nota_emessa',{p_nota:active.id,p_email:email});
   if(r.error)throw r.error;
-  active.email=r.data.email;
+  active.email=r.data;
   msg('detailMsg','Email destinatario salvata. Ora puoi inviare il PDF.','ok');
  }catch(e){msg('detailMsg','Impossibile salvare l’email: '+(e.message||String(e)),'err')}
  finally{btn.disabled=false}
