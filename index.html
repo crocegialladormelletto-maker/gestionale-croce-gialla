@@ -4345,7 +4345,7 @@ function fvUpdatePaymentDateVisibility(){
 }
 $('fvPayMode').onchange=()=>{
  const mode=$('fvPayMode').value;
- if(mode&&mode!=='BONIFICO DIFFERITO'&&!$('fvPayDate').value)$('fvPayDate').value=today();
+ if(mode&&mode!=='BONIFICO DIFFERITO'&&!$('fvPayDate').value)$('fvPayDate').value=todaySafe();
  if(!mode||mode==='BONIFICO DIFFERITO')$('fvPayDate').value='';
  fvUpdatePaymentDateVisibility();
 };
@@ -5117,9 +5117,12 @@ async function saveTravelSheet(silent=false){
   modalita_pagamento:$('fvPayMode').value||null,
   data_pagamento:$('fvPayMode').value==='BONIFICO DIFFERITO'?null:($('fvPayDate').value||null)
  });
- const r=await sb.from('fogli_viaggio').update(row).eq('id',currentFoglioId).select('id,paziente_nome,paziente_cognome').maybeSingle();
+ const r=await sb.from('fogli_viaggio').update(row).eq('id',currentFoglioId).select('id,paziente_nome,paziente_cognome,modalita_pagamento,data_pagamento').maybeSingle();
  if(r.error){msg('fvDetailMsg',r.error.message,'err');return false}
  if(!r.data){msg('fvDetailMsg','Nessuna modifica registrata: verifica permessi e stato del foglio.','err');return false}
+ if(Object.prototype.hasOwnProperty.call(row,'modalita_pagamento')&&(String(r.data.modalita_pagamento||'')!==String(row.modalita_pagamento||'')||String(r.data.data_pagamento||'')!==String(row.data_pagamento||''))){
+  msg('fvDetailMsg','Attenzione: metodo o data pagamento diversi da quelli inseriti. La modifica NON è confermata.','err');return false;
+ }
  if(Object.prototype.hasOwnProperty.call(row,'paziente_cognome')){
   if(String(r.data.paziente_cognome||'').trim()!==String(row.paziente_cognome||'').trim()){
    msg('fvDetailMsg','Il cognome non risulta salvato nel Foglio Viaggio.','err');return false;
