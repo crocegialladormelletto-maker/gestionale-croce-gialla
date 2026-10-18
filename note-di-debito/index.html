@@ -449,17 +449,23 @@ async function renderNoteCanvas(n){
  const html=buildNotePrintableDocument(n,false);
  const doc=new DOMParser().parseFromString(html,'text/html');
  const host=document.createElement('div');
- host.style.cssText='position:fixed;left:-20000px;top:0;width:794px;background:#fff;z-index:-1;padding:0;overflow:hidden;box-sizing:border-box';
+ host.style.cssText='position:fixed;left:-20000px;top:0;width:794px;background:#fff;z-index:-1;padding:0;overflow:visible;box-sizing:border-box';
  host.innerHTML=doc.body.innerHTML;
  const style=document.createElement('style');
  style.textContent=[...doc.querySelectorAll('style')].map(x=>x.textContent||'').join('\n')+
-  '\n.nd-print-page{margin:0 auto!important;width:718px!important;max-width:718px!important;min-height:auto!important;overflow:visible!important;box-sizing:border-box!important}.nd-print-page table{max-width:100%!important}.nd-print-page td,.nd-print-page th{overflow-wrap:anywhere}.nd-print-page > div{max-width:100%}';
+  '\n.nd-print-page{margin:0 auto!important;width:718px!important;max-width:718px!important;min-height:auto!important;overflow:visible!important;box-sizing:border-box!important}.nd-print-page table{width:100%!important;max-width:100%!important;table-layout:fixed!important}.nd-print-page td,.nd-print-page th{overflow-wrap:anywhere;word-break:break-word}.nd-print-page > div{max-width:100%}.nd-print-page [style*=display\\:grid]{min-width:0}';
  host.prepend(style);
  document.body.appendChild(host);
  try{
   await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  // Acquisisci anche eventuali colonne che superano la larghezza prevista: non ritagliare mai il PDF.
+  const page=host.querySelector('.nd-print-page');
+  const fullWidth=Math.ceil(Math.max(host.scrollWidth,page?.scrollWidth||0,794));
+  if(fullWidth>1400)throw new Error('Documento troppo largo: verifica l’impaginazione prima dell’invio.');
   return await html2canvas(host,{
    scale:2,
+   width:fullWidth,
+   windowWidth:Math.max(document.documentElement.clientWidth,fullWidth),
    backgroundColor:'#ffffff',
    useCORS:true,
    logging:false
