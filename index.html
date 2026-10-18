@@ -6022,7 +6022,24 @@ async function loadOperationalDashboard(){
    ?assistanceServices.map(x=>((x.ora_partenza_prevista||'').slice(0,5)||'—')+' · Mezzo '+(x.mezzo||'—')+' · '+(x.destinazione||x.ospedale_destinazione||'Assistenza')).join(' | ')
    :'Nessuna assistenza programmata oggi');
 
- const availableVehicles=mezzi.filter(m=>m.attivo&&['DISPONIBILE','OPERATIVO'].includes(String(m.stato_operativo||'DISPONIBILE').toUpperCase())&&!assignedVehicles.has(String(m.codice).padStart(2,'0'))).length;
+ // Disponibilità immediata: considera anche i servizi programmati nella fascia oraria corrente.
+ const romanClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Rome',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());
+ const clockMinutes=Number(romanClock.slice(0,2))*60+Number(romanClock.slice(3,5));
+ const clockValue=value=>{const match=String(value||'').match(/^(\\d{1,2}):(\\d{2})/);return match?Number(match[1])*60+Number(match[2]):null;};
+ const serviceActiveNow=x=>{
+  const start=clockValue(x.ora_partenza_prevista),end=clockValue(x.ora_rientro_previsto);
+  if(start===null)return false;
+  if(end===null)return clockMinutes>=start; // Rientro mancante: non dichiarare libero il mezzo.
+  return end>=start ? clockMinutes>=start&&clockMinutes<end : clockMinutes>=start||clockMinutes<end;
+ };
+ const busyServiceFor=code=>activeTodayServices.find(x=>String(x.mezzo||'').padStart(2,'0')===code&&(
+  ['IN CORSO','PRESO IN CARICO'].includes(String(x.stato_gestionale||x.stato_operativo||'').toUpperCase())||serviceActiveNow(x)
+ ));
+ const openSheetFor=code=>fogli.some(x=>String(x.mezzo||'').padStart(2,'0')===code&&x.stato==='APERTO');
+ const availableVehicles=mezzi.filter(m=>{
+  const code=String(m.codice).padStart(2,'0');
+  return m.attivo&&['DISPONIBILE','OPERATIVO'].includes(String(m.stato_operativo||'DISPONIBILE').toUpperCase())&&!assignedVehicles.has(code)&&!openSheetFor(code)&&!busyServiceFor(code);
+ }).length;
  const activeVehicles=mezzi.filter(m=>m.attivo).length;
  dashSetSmartCard('dashSmartVehicles',availableVehicles>0?'ok':'alert',availableVehicles+' / '+activeVehicles,
   availableVehicles===1?'1 mezzo immediatamente disponibile':availableVehicles+' mezzi immediatamente disponibili');
@@ -6041,18 +6058,20 @@ async function loadOperationalDashboard(){
  }
  $('dashVehicleStatus').innerHTML=mezzi.length?mezzi.map(m=>{
   const todayServices=activeTodayServices.filter(x=>x.mezzo===m.codice);
-  const openSheet=fogli.some(x=>x.mezzo===m.codice&&x.stato==='APERTO');
+  const openSheet=openSheetFor(String(m.codice).padStart(2,'0'));
+  const scheduledBusy=busyServiceFor(String(m.codice).padStart(2,'0'));
   const status=String(m.stato_operativo||'DISPONIBILE').toUpperCase();
   const alert=!m.attivo||!['DISPONIBILE','OPERATIVO'].includes(status);
   const emergencyBusy=emergencyVehicles.has(String(m.codice).padStart(2,'0'));
   const dischargeBusy=dischargeVehicles.has(String(m.codice).padStart(2,'0'));
-  const serviceBusy=openSheet||todayServices.some(x=>['IN CORSO','PRESO IN CARICO'].includes(String(x.stato_gestionale||x.stato_operativo||'').toUpperCase()));
+  const serviceBusy=openSheet||!!scheduledBusy;
   const busy=emergencyBusy||dischargeBusy||serviceBusy;
   const cls=alert?'ops-vehicle-alert':busy?'ops-vehicle-busy':'ops-vehicle-ok';
-  const badge=alert?(m.attivo?status:'NON ATTIVO'):emergencyBusy?'EMERGENZA 118':dischargeBusy?'DIMISSIONI':busy?'IMPEGNATO':'DISPONIBILE';
+  const badge=alert?(m.attivo?status:'NON ATTIVO'):emergencyBusy?'EMERGENZA 118':dischargeBusy?'DIMISSIONI':scheduledBusy&&isAssistanceManifestation(scheduledBusy.tipo_servizio)?'ASSISTENZA':busy?'IMPEGNATO':'DISPONIBILE';
   const detail=emergencyBusy
    ?'In turno Emergenza 118 · '+activeEmergencyFascia+' '+volFasciaOrario(activeEmergencyFascia)
    :dischargeBusy?'In turno Dimissioni · '+activeEmergencyFascia+' '+volFasciaOrario(activeEmergencyFascia)
+   :scheduledBusy?'Impegnato '+String(scheduledBusy.ora_partenza_prevista||'').slice(0,5)+'–'+(String(scheduledBusy.ora_rientro_previsto||'').slice(0,5)||'rientro da confermare')+(openSheet?' · foglio aperto':'')
    :todayServices.length+' servizio/i oggi'+(openSheet?' · foglio aperto':'');
   return '<div class="ops-vehicle-card '+cls+'"><strong>Mezzo '+esc(m.codice)+'</strong>'+
    '<small>'+esc(m.targa||'Targa —')+(m.km_attuali!==null&&m.km_attuali!==undefined?' · '+esc(m.km_attuali)+' km':'')+'</small>'+
