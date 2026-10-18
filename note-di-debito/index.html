@@ -108,6 +108,7 @@
       <button id="print" class="btn blue">🖨 Stampa</button>
       <button id="downloadPdf" class="btn green">⬇ Scarica PDF</button>
       <button id="sendPdfMail" class="btn yellow">📧 Invia con PDF allegato</button>
+       <button id="saveRecipientEmail" class="btn secondary hidden" type="button">💾 Salva email destinatario</button>
      </div>
     </div>
    </section>
@@ -251,7 +252,9 @@ function fill(){
  for(const [id,k] of Object.entries(map))$(id).value=n[k]??'';
  $('dEmailState').value=n.email_stato||'NON_INVIATA';calcTotal();
  const draft=n.stato==='BOZZA';
- ['dDate','dName','dCF','dAddress','dCap','dTown','dProvince','dEmail','dDescription','dAmount','dDiscount'].forEach(id=>$(id).disabled=!draft);
+ ['dDate','dName','dCF','dAddress','dCap','dTown','dProvince','dDescription','dAmount','dDiscount'].forEach(id=>$(id).disabled=!draft);
+ $('dEmail').disabled=false;
+ $('saveRecipientEmail').classList.toggle('hidden',draft);
  $('save').classList.toggle('hidden',!draft);$('issue').classList.toggle('hidden',!draft);
  $('savePayment').classList.toggle('hidden',draft);
  $('print').disabled=false;$('downloadPdf').disabled=false;
@@ -332,6 +335,19 @@ $('savePayment').onclick=async()=>{
  const r=await sb.rpc('cge_registra_pagamento_nota_debito',{p_nota_id:active.id,p_modalita:$('dPayment').value||null,p_data:$('dPayDate').value});
  if(r.error)return msg('detailMsg',r.error.message,'err');
  const id=active.id;await loadAll();await openNote(id);msg('detailMsg','Pagamento registrato.','ok');
+};
+$('saveRecipientEmail').onclick=async()=>{
+ if(!active||active.stato!=='EMESSA')return;
+ const email=$('dEmail').value.trim();
+ if(!email||!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(email))return msg('detailMsg','Inserisci un indirizzo email valido.','err');
+ const btn=$('saveRecipientEmail');btn.disabled=true;
+ try{
+  const r=await sb.from('note_di_debito').update({email,updated_at:new Date().toISOString()}).eq('id',active.id).eq('stato','EMESSA').select('id,email').single();
+  if(r.error)throw r.error;
+  active.email=r.data.email;
+  msg('detailMsg','Email destinatario salvata. Ora puoi inviare il PDF.','ok');
+ }catch(e){msg('detailMsg','Impossibile salvare l’email: '+(e.message||String(e)),'err')}
+ finally{btn.disabled=false}
 };
 $('sendPdfMail').onclick=async()=>{
  if(active?.stato!=='EMESSA')return msg('detailMsg','La Nota di Debito è ancora in BOZZA. Emettila prima dell’invio diretto.','err');
