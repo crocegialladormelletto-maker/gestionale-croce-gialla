@@ -435,13 +435,29 @@ function buildApprovedNoteBody(n){
    '<div style="background:#eef3f7;color:#173a5e;text-align:center;font-weight:700;padding:5px;font-size:10px">Nella dichiarazione dei redditi indica il nostro C.F. 91023880031</div>'+
   '</div>';
  }
+const NOTE_A4_LAYOUT_CSS = `
+@page{size:A4;margin:10mm}
+html,body{margin:0!important;padding:0!important;background:#fff!important}
+.nd-print-page{width:190mm!important;max-width:190mm!important;min-height:0!important;margin:0 auto!important;padding:0 2mm!important;box-sizing:border-box!important;overflow:visible!important}
+.nd-print-page *{box-sizing:border-box!important;min-width:0;overflow-wrap:anywhere}
+.nd-print-page > div{width:100%;max-width:100%!important}
+.nd-print-page > div[style*="display:grid"]{grid-template-columns:minmax(0,1fr)!important}
+.nd-print-page > div:first-child[style*="display:grid"]{grid-template-columns:92px minmax(0,1fr)!important}
+.nd-print-page > div:nth-child(4)[style*="display:grid"]{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:12px!important}
+.nd-print-page > div:nth-child(4) > div[style*="display:grid"]{min-width:0!important;grid-template-columns:85px minmax(0,1fr)!important}
+.nd-print-page > div[style*="grid-template-columns:minmax(0,43fr)"]{grid-template-columns:minmax(0,43fr) minmax(0,57fr)!important;gap:10px!important}
+.nd-print-page table{width:100%!important;max-width:100%!important;table-layout:fixed!important;border-collapse:collapse!important}
+.nd-print-page td,.nd-print-page th{overflow-wrap:anywhere!important;word-break:normal!important;white-space:normal!important}
+.nd-print-page table th,.nd-print-page table td{padding-left:5px!important;padding-right:5px!important}
+.nd-print-page > div[style*="display:grid"] > div{max-width:100%!important}
+`;
 function buildNotePrintableDocument(n,autoPrint){
  const body=buildApprovedNoteBody(n);
  const draft=String(n?.stato||'').toUpperCase()==='BOZZA';
  const watermark=draft?'<div style="position:fixed;left:0;right:0;top:44%;transform:rotate(-24deg);text-align:center;font:900 64px Arial,sans-serif;color:rgba(180,0,0,.14);z-index:9999;pointer-events:none">BOZZA · NON VALIDA</div>':'';
  const printScript=autoPrint?'<script>window.onload=function(){setTimeout(function(){window.focus();window.print()},350)}<\/script>':'';
  return '<!doctype html><html><head><meta charset="utf-8"><title>'+esc(n.numero||'Nota di Debito')+'</title>'+
-  '<style>@page{size:A4;margin:10mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}html,body{margin:0;padding:0;background:#fff!important}body{font-family:Arial,sans-serif;color:#0b1722!important}.nd-print-page{width:190mm;min-height:277mm;margin:0 auto;color:#0b1722!important}.nd-print-page [style*="background:#173a5e"]{background:#0f2f4f!important;color:#fff!important}.nd-print-page [style*="background:#2f628d"]{background:#1f527f!important;color:#fff!important}.nd-print-page [style*="background:#eef3f7"]{background:#dfe7ed!important;color:#0b1722!important}.nd-print-page [style*="background:#fffcef"]{background:#fff3bf!important;color:#0b1722!important}.nd-print-page [style*="background:#f0c438"]{background:#d9a900!important;color:#0b1722!important}.nd-print-page [style*="border:1px solid #d7c774"]{border-color:#a88612!important}.nd-print-page [style*="border:1px solid #dce4ea"]{border-color:#9eabb5!important}.nd-print-page [style*="border:2px solid #173a5e"]{border-color:#0f2f4f!important}.nd-print-page [style*="color:#607487"]{color:#2f4355!important}.nd-print-page [style*="color:#173a5e"]{color:#0f2f4f!important}.nd-print-page [style*="color:#285880"]{color:#123f66!important}</style>'+
+  '<style>'+NOTE_A4_LAYOUT_CSS+'*{box-sizing:border-box;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}html,body{margin:0;padding:0;background:#fff!important}body{font-family:Arial,sans-serif;color:#0b1722!important}.nd-print-page{width:190mm;min-height:277mm;margin:0 auto;color:#0b1722!important}.nd-print-page [style*="background:#173a5e"]{background:#0f2f4f!important;color:#fff!important}.nd-print-page [style*="background:#2f628d"]{background:#1f527f!important;color:#fff!important}.nd-print-page [style*="background:#eef3f7"]{background:#dfe7ed!important;color:#0b1722!important}.nd-print-page [style*="background:#fffcef"]{background:#fff3bf!important;color:#0b1722!important}.nd-print-page [style*="background:#f0c438"]{background:#d9a900!important;color:#0b1722!important}.nd-print-page [style*="border:1px solid #d7c774"]{border-color:#a88612!important}.nd-print-page [style*="border:1px solid #dce4ea"]{border-color:#9eabb5!important}.nd-print-page [style*="border:2px solid #173a5e"]{border-color:#0f2f4f!important}.nd-print-page [style*="color:#607487"]{color:#2f4355!important}.nd-print-page [style*="color:#173a5e"]{color:#0f2f4f!important}.nd-print-page [style*="color:#285880"]{color:#123f66!important}</style>'+
   '</head><body>'+body+watermark+printScript+'</body></html>';
 }
 async function renderNoteCanvas(n){
@@ -453,7 +469,7 @@ async function renderNoteCanvas(n){
  host.innerHTML=doc.body.innerHTML;
  const style=document.createElement('style');
  style.textContent=[...doc.querySelectorAll('style')].map(x=>x.textContent||'').join('\n')+
-  '\n.nd-print-page{margin:0 auto!important;width:718px!important;max-width:718px!important;min-height:auto!important;overflow:visible!important;box-sizing:border-box!important}.nd-print-page table{width:100%!important;max-width:100%!important;table-layout:fixed!important}.nd-print-page td,.nd-print-page th{overflow-wrap:anywhere;word-break:break-word}.nd-print-page > div{max-width:100%}.nd-print-page [style*=display\\:grid]{min-width:0}';
+  '\n.nd-print-page{width:718px!important;max-width:718px!important;min-height:0!important;margin:0 auto!important;overflow:visible!important}';
  host.prepend(style);
  document.body.appendChild(host);
  try{
@@ -462,26 +478,16 @@ async function renderNoteCanvas(n){
   // quando una tabella si estende oltre il bordo, senza ritagliare le colonne.
   const page=host.querySelector('.nd-print-page');
   if(!page)throw new Error('Contenuto nota non disponibile');
-  const printableWidth=718;
-  const extent=Math.max(page.scrollWidth,Math.ceil(page.getBoundingClientRect().width));
-  if(extent>1400)throw new Error('Impaginazione oltre i limiti A4: controllare la nota');
-  const factor=Math.min(1,printableWidth/extent);
+  const pageWidth=Math.ceil(page.getBoundingClientRect().width);
+  const extent=Math.max(page.scrollWidth,pageWidth);
+  if(extent>pageWidth+3)throw new Error('Nota di Debito oltre i margini A4: esportazione bloccata per prevenire tagli.');
   const originalHeight=page.scrollHeight;
-  if(factor<1){
-   page.style.transformOrigin='top left';
-   page.style.transform='scale('+factor+')';
-   page.style.marginLeft='38px';
-   page.style.marginRight='0';
-  }
-  host.style.height=Math.ceil(originalHeight*factor+16)+'px';
-  // Verifica che le estremità non escano dall'area fotografata.
+  host.style.height=Math.ceil(originalHeight+14)+'px';
   await new Promise(r=>requestAnimationFrame(r));
-  const right=page.getBoundingClientRect().left+extent*factor-host.getBoundingClientRect().left;
-  if(right>785)throw new Error('Nota troppo larga: generazione PDF bloccata per evitare tagli');
   return await html2canvas(host,{
    scale:2,
    width:794,
-   height:Math.ceil(originalHeight*factor+16),
+   height:Math.ceil(originalHeight+14),
    windowWidth:794,
    backgroundColor:'#ffffff',
    useCORS:true,
