@@ -458,14 +458,31 @@ async function renderNoteCanvas(n){
  document.body.appendChild(host);
  try{
   await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-  // Acquisisci anche eventuali colonne che superano la larghezza prevista: non ritagliare mai il PDF.
+  // Il formato finale ha 794 px di larghezza. Ridimensiona l'INTERA nota
+  // quando una tabella si estende oltre il bordo, senza ritagliare le colonne.
   const page=host.querySelector('.nd-print-page');
-  const fullWidth=Math.ceil(Math.max(host.scrollWidth,page?.scrollWidth||0,794));
-  if(fullWidth>1400)throw new Error('Documento troppo largo: verifica l’impaginazione prima dell’invio.');
+  if(!page)throw new Error('Contenuto nota non disponibile');
+  const printableWidth=718;
+  const extent=Math.max(page.scrollWidth,Math.ceil(page.getBoundingClientRect().width));
+  if(extent>1400)throw new Error('Impaginazione oltre i limiti A4: controllare la nota');
+  const factor=Math.min(1,printableWidth/extent);
+  const originalHeight=page.scrollHeight;
+  if(factor<1){
+   page.style.transformOrigin='top left';
+   page.style.transform='scale('+factor+')';
+   page.style.marginLeft='38px';
+   page.style.marginRight='0';
+  }
+  host.style.height=Math.ceil(originalHeight*factor+16)+'px';
+  // Verifica che le estremità non escano dall'area fotografata.
+  await new Promise(r=>requestAnimationFrame(r));
+  const right=page.getBoundingClientRect().left+extent*factor-host.getBoundingClientRect().left;
+  if(right>785)throw new Error('Nota troppo larga: generazione PDF bloccata per evitare tagli');
   return await html2canvas(host,{
    scale:2,
-   width:fullWidth,
-   windowWidth:Math.max(document.documentElement.clientWidth,fullWidth),
+   width:794,
+   height:Math.ceil(originalHeight*factor+16),
+   windowWidth:794,
    backgroundColor:'#ffffff',
    useCORS:true,
    logging:false
