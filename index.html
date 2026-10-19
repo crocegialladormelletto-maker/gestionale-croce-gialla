@@ -12730,7 +12730,7 @@ function tabletCalcSheet(){
  const get=k=>document.querySelector('#tabletSheetForm [data-ts-field="'+k+'"]');
  const n=k=>Number(get(k)?.value||0);
  const sum=n('importo_inserito')+(get('sedia_montascale')?.checked?n('supplemento_sedia'):0)+(get('barella_bariatrica')?.checked?n('supplemento_bariatrica'):0);
- $('tabletSheetTotal').value=sum.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+ if($('tabletSheetTotal'))$('tabletSheetTotal').value=sum.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(!tabletCurrentSheet||tabletCurrentSheet.stato==='CHIUSO'||tabletBusy)return false;
@@ -12800,7 +12800,11 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(!tabletSheetIs118&&row.importo_inserito===null){
   const savedBase=tabletCurrentSheet?.importo_inserito;
   if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
-  else if(!tabletIsAssistance) return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
+  else if(!tabletIsAssistance) {
+   const baseInput=document.querySelector('#tabletSheetForm [data-ts-field="importo_inserito"]');
+   if(baseInput)baseInput.focus();
+   return msg('tabletSheetMsg','Importo base non acquisito. Reinseriscilo nel campo Importo base € e verifica che Totale calcolato si aggiorni.','warn'),false;
+  }
  }
  // La data del pagamento indicata dall'equipaggio non deve essere sostituita.
  if(!tabletSheetIs118&&['CONTANTI','POS'].includes(String(row.modalita_pagamento||'').toUpperCase())&&!/^\d{4}-\d{2}-\d{2}$/.test(String(row.data_pagamento||''))){
@@ -12808,8 +12812,11 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  }
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
-  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,modalita_pagamento,data_pagamento').maybeSingle();
+  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio,modalita_pagamento,data_pagamento').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
+  if(!tabletSheetIs118 && row.importo_inserito!==null && row.importo_inserito!==undefined &&
+     Number(r.data.importo_inserito)!==Number(row.importo_inserito))
+   throw new Error('Importo base non confermato dal database. Il foglio rimane aperto.');
   // Salvataggio dedicato del metodo: scrittura e lettura confermata sul database.
   if(!tabletSheetIs118 && row.modalita_pagamento){
    const pg=await sb.rpc('cge_tablet_salva_pagamento_foglio',{
@@ -12987,8 +12994,10 @@ if($('tabletPrivacySignatureStatus'))$('tabletPrivacySignatureStatus').onchange=
 if($('tabletPrivacyClearSignature'))$('tabletPrivacyClearSignature').onclick=()=>{tabletPrivacyClearCanvas();if($('tabletPrivacySignatureWhen'))$('tabletPrivacySignatureWhen').textContent='Firma cancellata dal riquadro; firma nuovamente prima di salvare.';};
 if($('tabletPrivacyViewSignature'))$('tabletPrivacyViewSignature').onclick=tabletPrivacyShowSavedSignature;
 $('tabletCloseSheet').onclick=tabletCloseSheet;
+// Aggiorna in tempo reale il totale anche su tablet con tastiere numeriche mobili.
 $('tabletSheetForm').addEventListener('input',tabletCalcSheet);
 $('tabletSheetForm').addEventListener('change',e=>{
+ tabletCalcSheet();
  if(e.target?.matches('[data-ts-field="modalita_pagamento"]')){
   tabletUpdatePaymentDateVisibility();
   tabletToggleReceiptSection();
