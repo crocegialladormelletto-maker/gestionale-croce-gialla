@@ -9577,7 +9577,12 @@ async function routeCalcUpdateFuelPrice(force=false){
  }
  const btn=$('rcFuelRefresh');if(btn){btn.disabled=true;btn.textContent='Aggiorno…'}
  try{
-  const {data,error}=await sb.functions.invoke('fuel-price',{body:{}});
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),12000);
+  let result;
+  try{result=await sb.functions.invoke('fuel-price',{body:{},signal:controller.signal});}
+  finally{clearTimeout(timeout);}
+  const {data,error}=result;
   if(error)throw error;
   if(!data?.price)throw new Error(data?.error||'Prezzo non disponibile');
   $('rcFuelPrice').value=Number(data.price).toFixed(3);
@@ -9590,7 +9595,7 @@ async function routeCalcUpdateFuelPrice(force=false){
  }catch(e){
   $('rcFuelTrend').textContent='Manuale';
   $('rcFuelTrend').className='pill b';
-  $('rcFuelUpdated').textContent='Aggiornamento MIMIT non riuscito: '+(e?.message||String(e))+'. Verifica il valore manualmente.';
+  $('rcFuelUpdated').textContent='Aggiornamento non completato: '+(e?.name==='AbortError'?'il sito MIMIT non ha risposto entro 12 secondi':(e?.message||String(e)))+'. Prezzo corrente NON verificato; puoi indicarlo manualmente.';
  }finally{
   if(btn){btn.disabled=false;btn.textContent='↻ Aggiorna MIMIT'}
  }
