@@ -1,15 +1,64 @@
 <!doctype html>
 <html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Corsisti · Croce Gialla Emergenza ODV · Prova</title>
 <style>:root{font-family:system-ui,Arial;color:#12243a;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}header{background:#102b50;color:white;padding:25px 5%;border-bottom:7px solid #ffd724}main{max-width:1150px;margin:25px auto;padding:0 18px}.pill{display:inline-block;padding:5px 10px;border-radius:30px;background:#fff3bf;color:#725000;font-weight:700;font-size:12px}.card{background:white;border-radius:14px;padding:22px;margin:17px 0;box-shadow:0 2px 12px #102b5015}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:13px}label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}input,select{border:1px solid #afbdca;border-radius:8px;padding:11px;width:100%;font:inherit}button,.btn{border:0;border-radius:8px;padding:11px 16px;background:#ffd724;color:#102b50;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}button.secondary,.btn.secondary{background:#e9eff7}button:disabled{opacity:.5;cursor:not-allowed}table{border-collapse:collapse;width:100%;min-width:680px}th,td{padding:12px;border-bottom:1px solid #e5eaf0;text-align:left}th{background:#edf2f9}small,.muted{color:#66788a}.alert{border-left:5px solid #e3a000;background:#fff9e6;padding:12px;margin:15px 0}h1,h2{margin:5px 0 15px}nav{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.scroll{overflow-x:auto}@media print{button,nav,.alert{display:none}}</style></head>
-<body><header><nav><strong>CROCE GIALLA EMERGENZA ODV</strong><span class="pill">PROTOTIPO · NON OPERATIVO</span><a class="btn secondary" href="../index.html">← Gestionale</a></nav><h1>🎓 Corsisti</h1><div>Anagrafica di prova per chi deve ancora iniziare o completare il corso</div></header>
-<main><div class="alert"><strong>Modalità dimostrativa.</strong> I dati restano solo nella memoria temporanea di questa pagina e si perdono aggiornandola. Non inserire dati personali reali durante la prova. Nessun corsista viene abilitato ai servizi o scritto nel database del gestionale.</div>
-<div class="grid"><div class="card"><small>CORSISTI NELLA PROVA</small><h2 id="count">0</h2></div><div class="card"><small>CORSO PREVISTO</small><h2>10/11/2026</h2></div><div class="card"><small>ACCESSO AI SERVIZI</small><h2>🔒 Bloccato</h2></div></div>
-<section class="card"><h2>Nuovo corsista (prova)</h2><form id="f"><div class="grid"><div><label>Nome *</label><input id="nome" required placeholder="Mario"></div><div><label>Cognome *</label><input id="cognome" required placeholder="Rossi"></div><div><label>Email (facoltativa)</label><input id="email" type="email"></div><div><label>Telefono (facoltativo)</label><input id="telefono"></div><div><label>Inizio corso</label><input id="inizio" type="date" value="2026-11-10"></div><div><label>Stato formativo</label><select id="stato"><option>ISCRITTO</option><option>IN FORMAZIONE</option><option>ESAME SUPERATO</option><option>NON IDONEO</option></select></div></div><p><button type="submit">+ Inserisci nella prova</button></p></form></section>
-<section class="card"><h2>Elenco corsisti</h2><p class="muted">Il pulsante «Pronto per l'abilitazione» simula solo la verifica amministrativa, non cambia il ruolo né sblocca turni.</p><div class="scroll"><table><thead><tr><th>Nominativo</th><th>Corso</th><th>Stato</th><th>Servizi</th><th>Azioni di prova</th></tr></thead><tbody id="rows"><tr><td colspan="5">Inserisci un nominativo di esempio.</td></tr></tbody></table></div></section>
-</main><script>
-const items=[];const $=id=>document.getElementById(id);
-function render(){ $('count').textContent=items.length; $('rows').replaceChildren();if(!items.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.textContent='Inserisci un nominativo di esempio.';tr.append(td);$('rows').append(tr);return}
-items.forEach((p,i)=>{const tr=document.createElement('tr');[p.nome+' '+p.cognome,p.inizio,p.stato,'🔒 NON AUTORIZZATO'].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.append(td)});
-const td=document.createElement('td'),sel=document.createElement('select');['ISCRITTO','IN FORMAZIONE','ESAME SUPERATO','NON IDONEO'].forEach(v=>{let o=document.createElement('option');o.value=v;o.textContent=v;sel.append(o)});sel.value=p.stato;sel.addEventListener('change',()=>{p.stato=sel.value;render()});const note=document.createElement('div');note.style.fontSize='12px';note.textContent=p.stato==='ESAME SUPERATO'?'Verifica amministrativa necessaria':'Non abilitabile ai turni';const del=document.createElement('button');del.textContent='Rimuovi';del.className='secondary';del.style.marginTop='5px';del.addEventListener('click',()=>{items.splice(i,1);render()});td.append(sel,note,del);tr.append(td);$('rows').append(tr)})}
-$('f').addEventListener('submit',e=>{e.preventDefault();items.push({nome:$('nome').value.trim(),cognome:$('cognome').value.trim(),email:$('email').value.trim(),telefono:$('telefono').value.trim(),inizio:$('inizio').value,stato:$('stato').value});$('f').reset();$('inizio').value='2026-11-10';render()});render();
-</script></body></html>
+<body><header><nav><strong>CROCE GIALLA EMERGENZA ODV</strong><span class="pill">ARCHIVIO CORSISTI</span><a class="btn secondary" href="../index.html">← Gestionale</a></nav><h1>🎓 Corsisti</h1><div>Anagrafica corsisti con salvataggio protetto</div></header>
+<main><div class="alert" id="status">Verifica accesso in corso…</div>
+<div class="grid"><div class="card"><small>CORSISTI REGISTRATI</small><h2 id="count">0</h2></div><div class="card"><small>CORSO PREVISTO</small><h2>10/11/2026</h2></div><div class="card"><small>ACCESSO AI SERVIZI</small><h2>🔒 Bloccato</h2></div></div>
+<section class="card"><h2>Nuovo corsista</h2><form id="f"><div class="grid"><div><label>Nome *</label><input id="nome" required placeholder="Mario"></div><div><label>Cognome *</label><input id="cognome" required placeholder="Rossi"></div><div><label>Email (facoltativa)</label><input id="email" type="email"></div><div><label>Telefono (facoltativo)</label><input id="telefono"></div><div><label>Inizio corso</label><input id="inizio" type="date" value="2026-11-10"></div><div><label>Codice fiscale</label><input id="cf" maxlength="16"></div><div><label>Data esame</label><input id="esame" type="date"></div><div><label>Stato formativo</label><select id="stato"><option>ISCRITTO</option><option>IN FORMAZIONE</option><option>ESAME SUPERATO</option><option>NON IDONEO</option></select></div></div><p><button type="submit">+ Salva corsista</button></p></form></section>
+<section class="card"><h2>Elenco corsisti</h2><p class="muted">I corsisti non fanno parte dell'organico operativo e non possono essere inseriti nei turni.</p><div class="scroll"><table><thead><tr><th>Nominativo</th><th>Corso</th><th>Stato</th><th>Servizi</th><th>Gestione</th></tr></thead><tbody id="rows"><tr><td colspan="5">Inserisci un nominativo di esempio.</td></tr></tbody></table></div></section>
+</main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
+const db=supabase.createClient('https://ihottewckpwpwqzpxusl.supabase.co','sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+const $=id=>document.getElementById(id);
+let items=[],ready=false,editId=null;
+function status(t){$('status').textContent=t}
+async function load(){
+ const q=await db.from('corsisti').select('*').order('cognome');
+ if(q.error){status('Errore caricamento: '+q.error.message);return}
+ items=q.data||[];render();
+}
+function render(){
+ $('count').textContent=items.length;
+ const tbody=$('rows');tbody.replaceChildren();
+ if(!items.length){const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=5;td.textContent='Nessun corsista presente';tr.append(td);tbody.append(tr)}
+ items.forEach(p=>{
+ const tr=document.createElement('tr');
+ [p.nome+' '+p.cognome,p.data_inizio_corso||'—',p.stato,p.badge_volontario?'Volontario '+p.badge_volontario:'🔒 Bloccati'].forEach(t=>{const d=document.createElement('td');d.textContent=t;tr.append(d)});
+ const d=document.createElement('td');
+ const select=document.createElement('select');
+ ['ISCRITTO','IN FORMAZIONE','ESAME SUPERATO','NON IDONEO'].forEach(t=>{const o=document.createElement('option');o.textContent=t;select.append(o)});
+ select.value=p.stato==='ABILITATO'?'ESAME SUPERATO':p.stato;select.disabled=!!p.badge_volontario;
+ select.onchange=async()=>{const q=await db.from('corsisti').update({stato:select.value}).eq('id',p.id);if(q.error)alert(q.error.message);await load()};
+ d.append(select);
+ const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Modifica';
+ edit.onclick=()=>{editId=p.id;$('nome').value=p.nome;$('cognome').value=p.cognome;$('email').value=p.email||'';$('telefono').value=p.telefono||'';$('inizio').value=p.data_inizio_corso||'2026-11-10';$('stato').value=p.stato==='ABILITATO'?'ESAME SUPERATO':p.stato;$('cf').value=p.codice_fiscale||'';$('esame').value=p.data_esame||'';$('f').scrollIntoView()};d.append(edit);
+ if(p.stato==='ESAME SUPERATO'&&!p.badge_volontario){
+ const promote=document.createElement('button');promote.textContent='Promuovi';promote.type='button';promote.style.margin='5px';
+ promote.onclick=async()=>{
+ const badge=prompt('Numero badge libero da assegnare al volontario:');if(!badge)return;
+ if(!confirm('Hai verificato corso, esame e tutti i requisiti? Confermi il passaggio a volontario operativo con badge '+badge+'?'))return;
+ const check=await db.from('personale').select('badge').eq('badge',badge.trim()).maybeSingle();
+ if(check.error||check.data){alert('Badge occupato o verifica non riuscita');return}
+ const ins=await db.from('personale').insert({badge:badge.trim(),nome:p.nome,cognome:p.cognome,nome_completo:p.nome+' '+p.cognome,telefono:p.telefono,email:p.email,codice_fiscale:p.codice_fiscale,attivo:true,stato_anagrafico:'ATTIVO',dipendente:false,autista:false,capo_servizio:false,soccorritore:false,secondo_soccorritore:false,affiancato:false,ore_minime_mensili:28,ore_minime_trimestrali:84,data_ingresso:new Date().toISOString().slice(0,10)});
+ if(ins.error){alert('Errore creazione volontario: '+ins.error.message);return}
+ const u=await db.from('corsisti').update({stato:'ABILITATO',badge_volontario:badge.trim(),data_abilitazione:new Date().toISOString().slice(0,10)}).eq('id',p.id);
+ if(u.error){alert('Volontario creato, ma storico corsista non aggiornato: '+u.error.message);return}
+ alert('Volontario registrato. Completa le qualifiche nella sezione Volontari.');await load();
+ };d.append(promote)}
+ tr.append(d);tbody.append(tr)
+ });
+}
+$('f').onsubmit=async e=>{
+ e.preventDefault();if(!ready)return;
+ const row={nome:$('nome').value.trim(),cognome:$('cognome').value.trim(),email:$('email').value.trim()||null,telefono:$('telefono').value.trim()||null,codice_fiscale:$('cf').value.trim().toUpperCase()||null,data_inizio_corso:$('inizio').value||null,data_esame:$('esame').value||null,stato:$('stato').value};
+ const q=editId?await db.from('corsisti').update(row).eq('id',editId):await db.from('corsisti').insert(row);
+ if(q.error){status('Salvataggio fallito: '+q.error.message);return}
+ editId=null;$('f').reset();$('inizio').value='2026-11-10';status('Scheda salvata nel database.');await load();
+};
+async function init(){
+ const u=await db.auth.getUser();
+ if(!u.data.user){status('Accedi prima al gestionale come amministratore.');return}
+ const a=await db.from('accessi_app').select('ruolo,attivo').eq('user_id',u.data.user.id).maybeSingle();
+ if(a.error||!a.data||a.data.ruolo!=='AMMINISTRATORE'||!a.data.attivo){status('Accesso riservato agli amministratori.');return}
+ ready=true;status('Archivio operativo. I corsisti non figurano nei volontari attivi fino alla promozione.');await load();
+}
+init();</script></body></html>
