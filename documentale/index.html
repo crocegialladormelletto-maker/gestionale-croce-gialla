@@ -258,7 +258,7 @@
     <div class="hero"><h2 id="minutePageHeading">📚 Archivio verbali</h2><p id="minutePageDescription">Consulta, cerca e apri i verbali già salvati.</p></div>
     <div class="pad">
      <div class="section hidden" id="minuteEditorPanel">
-      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn violet" type="button">✚ Verbale Assemblea Soci</button><button id="vDuplicate" class="btn orange" type="button" disabled>⧉ Duplica verbale</button><button id="vPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="vNew" class="btn success" type="button">✚ Nuovo</button><button id="vExit" class="btn danger" type="button">← Esci / Elenco</button></div></div>
+      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn violet" type="button">✚ Verbale Assemblea Soci</button><button id="vNewMembers" class="btn orange" type="button">👥 Approvazione nuovi soci</button><button id="vDuplicate" class="btn orange" type="button" disabled>⧉ Duplica verbale</button><button id="vPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="vNew" class="btn success" type="button">✚ Nuovo</button><button id="vExit" class="btn danger" type="button">← Esci / Elenco</button></div></div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Tipo riunione *</label><select id="vType"><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea Soci</option><option value="RIUNIONE_OPERATIVA">Riunione operativa</option><option value="ALTRO">Altro</option></select></div>
        <div class="field"><label>Data riunione *</label><input id="vDate" type="date"></div>
@@ -1187,6 +1187,17 @@ function updateMinuteTypeUI(resetDefaults=false){
   }
  }
 }
+function newMemberApprovalMinute(){
+ newMinuteOfType('CONSIGLIO_DIRETTIVO');
+ $('vTitle').textContent='Nuovo verbale · Ammissione nuovi soci';
+ $('vHeading').value='Approvazione ingresso nuovi soci';
+ setMinuteAgenda('1. Esame delle domande di ammissione a socio\n2. Deliberazione sulle domande di ammissione');
+ $('vProceedings').value='Il Presidente illustra al Consiglio Direttivo le domande di ammissione pervenute, relative ai seguenti richiedenti:\n\n[INSERIRE NOMINATIVI DEI RICHIEDENTI]\n\nIl Consiglio esamina le singole domande e verifica la sussistenza dei requisiti previsti dallo Statuto.';
+ $('vDecisions').value='A seguito della discussione e della votazione, il Consiglio Direttivo delibera in merito alle domande di ammissione:\n\n[INDICARE PER CIASCUN NOMINATIVO L’ESITO: AMMESSO / NON AMMESSO E, SE NECESSARIO, LA MOTIVAZIONE]\n\nGli eventuali nuovi soci saranno iscritti nel libro soci secondo le procedure associative vigenti.';
+ $('vVote').value='[INDICARE ESITO DELLA VOTAZIONE: FAVOREVOLI, CONTRARI, ASTENUTI]';
+ $('vNotes').value='Modello precompilato: verificare nominativi, esito delle singole domande e votazione prima dell’approvazione.';
+ msg('vmsg','Modello caricato come nuova bozza. Completa i campi tra parentesi prima di salvare o approvare.','warn');
+}
 function newMinuteOfType(type){
  view('minuteNew');
  resetMinuteForm();
@@ -1500,6 +1511,7 @@ function printMinute(){
 $('vNew').onclick=()=>{view('minuteNew');resetMinuteForm();resetMinuteFilters()};
 $('vNewBoard').onclick=()=>newMinuteOfType('CONSIGLIO_DIRETTIVO');
 $('vNewAssembly').onclick=()=>newMinuteOfType('ASSEMBLEA_SOCI');
+$('vNewMembers').onclick=newMemberApprovalMinute;
 $('vExit').onclick=()=>{resetMinuteForm();resetMinuteFilters();view('minutes')};
 $('vAddAgenda').onclick=()=>addMinuteAgendaPoint();
 $('vAssemblyCall').onchange=applyAssemblyCallToMinute;
