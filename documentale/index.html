@@ -118,6 +118,7 @@
   margin:17mm 0 2mm;break-inside:avoid;page-break-inside:avoid
  }
  #verbPrint .vp-sign div{text-align:center;font-size:9pt;color:#12375d}
+ #verbPrint .vp-sign img.vp-ink{display:block;width:100%;height:19mm;object-fit:contain;margin:0 auto 2mm}
  #verbPrint .vp-sign .vp-sign-line{border-top:1px solid #738696;padding-top:2.5mm}
  #verbPrint .vp-sign b{display:block;font-size:9.6pt;margin-top:1mm;color:#253e52}
 }
@@ -260,7 +261,7 @@
     <div class="hero"><h2 id="minutePageHeading">📝 Bozze verbali</h2><p id="minutePageDescription">Riprendi i verbali ancora da completare.</p></div>
     <div class="pad">
      <div class="section hidden" id="minuteEditorPanel">
-      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn violet" type="button">✚ Verbale Assemblea Soci</button><button id="vNewMembers" class="btn orange" type="button">👥 Approvazione nuovi soci</button><button id="vDuplicate" class="btn orange" type="button" disabled>⧉ Duplica verbale</button><button id="vPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="vNew" class="btn success" type="button">✚ Nuovo</button><button id="vExit" class="btn danger" type="button">← Esci / Elenco</button></div></div>
+      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn violet" type="button">✚ Verbale Assemblea Soci</button><button id="vNewMembers" class="btn orange" type="button">👥 Approvazione nuovi soci</button><button id="vDuplicate" class="btn orange" type="button" disabled>⧉ Duplica verbale</button><button id="vPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="vPrintSigned" class="btn success" type="button">✍️ Apponi firme e stampa</button><button id="vNew" class="btn success" type="button">✚ Nuovo</button><button id="vExit" class="btn danger" type="button">← Esci / Elenco</button></div></div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Tipo riunione *</label><select id="vType"><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea Soci</option><option value="RIUNIONE_OPERATIVA">Riunione operativa</option><option value="ALTRO">Altro</option></select></div>
        <div class="field"><label>Data riunione *</label><input id="vDate" type="date"></div>
@@ -320,6 +321,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
        <div id="vSignedInfo"></div>
       </div>
       <div class="toolbar"><button id="vSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="vApprove" class="btn success" type="button">✅ Approva verbale</button><button id="vDeleteDraft" class="btn danger hidden" type="button">🗑️ Elimina bozza</button></div><div id="vmsg"></div>
+      <div class="box" style="margin-top:12px"><h3>🔒 Gestione firme riservate</h3><p class="muted">Carica le firme PNG del Presidente e del Segretario in archivio privato. La semplice stampa non le inserisce mai automaticamente. Uso consentito soltanto con autorizzazione dei firmatari.</p><div class="grid2"><div class="field"><label>Firma Presidente · Musso Paolo (PNG)</label><input id="vSignPresidentFile" type="file" accept="image/png"><button id="vSignPresidentUpload" class="btn secondary" type="button">Carica firma Presidente</button></div><div class="field"><label>Firma Segretario · Ronco Meri (PNG)</label><input id="vSignSecretaryFile" type="file" accept="image/png"><button id="vSignSecretaryUpload" class="btn secondary" type="button">Carica firma Segretario</button></div></div><div id="vSignatureMsg"></div></div>
      </div>
 
      <div class="section hidden" id="minuteArchivePanel">
@@ -1467,6 +1469,44 @@ async function openMinute(id,printAfter=false){
   msg('vListMsg',e.message||String(e),'err');
  }
 }
+const minuteSignatureBucket='documentale-firme';
+let temporaryMinuteSignatures=null;
+async function uploadMinuteSignature(role){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const file=$('vSign'+role+'File').files?.[0];
+ if(!file||file.type!=='image/png'||file.size>3145728)return msg('vSignatureMsg','Seleziona un file PNG valido, massimo 3 MB.','warn');
+ if(!confirm('Confermi di avere l’autorizzazione del firmatario a conservare e utilizzare questa immagine della firma nei documenti approvati?'))return;
+ const filename=role==='President'?'presidente.png':'segretario.png';
+ const button=$('vSign'+role+'Upload');button.disabled=true;
+ try{
+  const result=await sb.storage.from(minuteSignatureBucket).upload(filename,file,{contentType:'image/png',upsert:true,cacheControl:'0'});
+  if(result.error)throw result.error;
+  $('vSign'+role+'File').value='';
+  msg('vSignatureMsg','Firma caricata nell’archivio privato. Non sarà apposta automaticamente.','ok');
+ }catch(e){msg('vSignatureMsg',e.message||String(e),'err')}
+ finally{button.disabled=false}
+}
+async function printMinuteWithSignatures(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ if(!currentMinuteId||currentMinute?.stato!=='APPROVATO'||$('vStatus').value!=='APPROVATO'){
+  return msg('vmsg','Puoi apporre le firme soltanto a un verbale già approvato e salvato.','warn');
+ }
+ if(String($('vPresident').value).trim().toLowerCase()!=='musso paolo'||String($('vSecretary').value).trim().toLowerCase()!=='ronco meri'){
+  return msg('vmsg','Le firme memorizzate sono riferite esclusivamente a Musso Paolo e Ronco Meri.','warn');
+ }
+ if(!confirm('Confermi che entrambi i firmatari hanno autorizzato l’apposizione delle loro firme su QUESTO verbale approvato? Le immagini saranno incluse nel PDF/stampa, non nel documento modificabile.'))return;
+ const btn=$('vPrintSigned');btn.disabled=true;
+ let urls=[];
+ try{
+  const results=await Promise.all(['presidente.png','segretario.png'].map(name=>sb.storage.from(minuteSignatureBucket).download(name)));
+  for(const result of results)if(result.error)throw result.error;
+  urls=results.map(x=>URL.createObjectURL(x.data));
+  temporaryMinuteSignatures={presidente:urls[0],segretario:urls[1]};
+  printMinute();
+  setTimeout(()=>{urls.forEach(URL.revokeObjectURL);temporaryMinuteSignatures=null},60000);
+ }catch(e){urls.forEach(URL.revokeObjectURL);temporaryMinuteSignatures=null;msg('vmsg','Impossibile caricare le firme private: '+(e.message||String(e))+'. Carica entrambe le immagini nella sezione Gestione firme.','err')}
+ finally{btn.disabled=false}
+}
 function printMinute(){
  const p={
   verbale_codice:currentMinute?.verbale_codice||'BOZZA NON SALVATA',
@@ -1514,8 +1554,8 @@ function printMinute(){
   sec(p.tipo_riunione==='ASSEMBLEA_SOCI'?'Soci presenti':'Presenti',p.presenti)+sec(p.tipo_riunione==='ASSEMBLEA_SOCI'?'Soci assenti':'Assenti',p.assenti)+sec(p.tipo_riunione==='ASSEMBLEA_SOCI'?'Invitati / altri partecipanti':'Invitati / altri presenti',p.invitati)+agenda+
   sec('Svolgimento della seduta',p.svolgimento)+sec('Deliberazioni e decisioni assunte',p.deliberazioni)+
   sec('Esito della votazione',p.votazione)+sec('Note',p.note)+
-  '<div class="vp-sign"><div><div class="vp-sign-line">Il Presidente<b>'+esc(clean(p.presidente))+'</b></div></div>'+
-   '<div><div class="vp-sign-line">Il Segretario verbalizzante<b>'+esc(clean(p.segretario))+'</b></div></div></div>'+
+  '<div class="vp-sign"><div>'+(temporaryMinuteSignatures?.presidente?'<img class="vp-ink" src="'+temporaryMinuteSignatures.presidente+'" alt="Firma Presidente">':'')+'<div class="vp-sign-line">Il Presidente<b>'+esc(clean(p.presidente))+'</b></div></div>'+
+   '<div>'+(temporaryMinuteSignatures?.segretario?'<img class="vp-ink" src="'+temporaryMinuteSignatures.segretario+'" alt="Firma Segretario">':'')+'<div class="vp-sign-line">Il Segretario verbalizzante<b>'+esc(clean(p.segretario))+'</b></div></div></div>'+
   '</div>';
  const imgs=[...$('verbPrint').querySelectorAll('img')];
  Promise.race([
@@ -1536,7 +1576,8 @@ $('vAiGenerate').onclick=()=>useMinuteAI('genera');$('vAiImprove').onclick=()=>u
 $('vDate').addEventListener('change',updateNextMinuteCode);
 $('vStatus').onchange=()=>{if($('vStatus').value==='APPROVATO'&&!$('vApprovalDate').value)$('vApprovalDate').value=$('vDate').value;else if($('vStatus').value==='BOZZA')$('vApprovalDate').value='';updateMinuteStateUI()};
 $('vDate').addEventListener('change',()=>{if($('vStatus').value==='APPROVATO'&&currentMinute?.stato!=='APPROVATO')$('vApprovalDate').value=$('vDate').value});
-$('vSave').onclick=()=>saveMinute(false);$('vApprove').onclick=()=>saveMinute(true);$('vDeleteDraft').onclick=()=>currentMinuteId&&deleteDraftMinute(currentMinuteId);$('vDuplicate').onclick=()=>currentMinuteId&&duplicateMinute(currentMinuteId);$('vPrint').onclick=printMinute;$('vFind').onclick=loadMinutesList;
+$('vSave').onclick=()=>saveMinute(false);$('vApprove').onclick=()=>saveMinute(true);$('vDeleteDraft').onclick=()=>currentMinuteId&&deleteDraftMinute(currentMinuteId);$('vDuplicate').onclick=()=>currentMinuteId&&duplicateMinute(currentMinuteId);$('vPrint').onclick=printMinute;$('vPrintSigned').onclick=printMinuteWithSignatures;
+$('vSignPresidentUpload').onclick=()=>uploadMinuteSignature('President');$('vSignSecretaryUpload').onclick=()=>uploadMinuteSignature('Secretary');$('vFind').onclick=loadMinutesList;
 $('vSignedUpload').onclick=uploadSignedMinute;$('vSignedOpen').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,false);$('vSignedDownload').onclick=()=>currentMinuteId&&openSignedMinute(currentMinuteId,true);$('vSignedDelete').onclick=()=>currentMinuteId&&deleteSignedMinute(currentMinuteId);
 $('vSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadMinutesList()}};
 $('vClear').onclick=()=>{resetMinuteFilters();loadMinutesList()};
