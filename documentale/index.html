@@ -484,7 +484,21 @@ Consigliere: Ragazzini Luisa</textarea></div>
 <div class="pad">
 <div class="notice warn">Le bozze non protocollate restano in questo browser. Il numero ufficiale è assegnato dal server solo quando premi “Assegna protocollo”. Dopo la protocollazione non modificare il testo da firmare: per correzioni prepara un nuovo documento secondo le procedure interne.</div><div class="actions"><button id="ltAssignProtocol" class="btn orange" type="button">🔢 Assegna protocollo ufficiale</button><span id="ltProtocolState" class="pill b">Non protocollata</span></div>
 <div class="actions"><button id="ltNew" class="btn success" type="button">✚ Nuova lettera</button><button id="ltSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="ltFacsimile" class="btn teal" type="button">👁 Anteprima di stampa</button><button id="ltPrint" class="btn success" type="button">🖨️ Stampa lettera</button><button id="ltPreview" class="btn blue" type="button">📄 Prepara PDF per ArubaSign</button><button id="ltPrintSigned" class="btn violet" type="button">✍️ PDF con firma del Presidente</button><button id="ltRemove" class="btn danger" type="button">Elimina bozza</button></div>
-<div class="grid2 section"><div class="field"><label>Bozze salvate su questo dispositivo</label><select id="ltDrafts"><option value="">Nuova lettera</option></select></div><div class="field"><label>Tipo di documento</label><select id="ltType"><option>Lettera ufficiale</option><option>Comunicazione</option><option>PEC</option><option>Diffida</option><option>Richiesta</option><option>Altro</option></select></div></div>
+<div class="section" id="ltArchivePanel" style="margin:12px 0">
+ <div class="actions" style="justify-content:space-between;align-items:center;flex-wrap:wrap">
+  <div><h3 style="margin:0">📚 Archivio lettere</h3><div class="muted">Lettere già salvate su questo dispositivo, comprese quelle protocollate. I PDF firmati digitalmente allegati al protocollo restano nell'Archivio documenti.</div></div>
+  <button id="ltArchiveToggle" class="btn blue" type="button">📚 Apri archivio lettere</button>
+ </div>
+ <div id="ltArchiveContent" class="hidden" style="margin-top:12px">
+  <div class="grid3"><div class="field"><label>Cerca per oggetto, destinatario o protocollo</label><input id="ltArchiveSearch" placeholder="Cerca lettera…"></div>
+  <div class="field"><label>Stato</label><select id="ltArchiveFilter"><option value="all">Tutte</option><option value="bozza">Bozze</option><option value="protocollo">Protocollate</option><option value="firmato">PDF firmato archiviato</option></select></div>
+  <div class="field"><label>Anno</label><select id="ltArchiveYear"><option value="all">Tutti gli anni</option></select></div></div>
+  <div id="ltArchiveCount" class="muted" style="margin:10px 0"></div>
+  <div class="table" style="overflow-x:auto"><table><thead><tr><th>Data</th><th>Destinatario</th><th>Oggetto</th><th>Protocollo</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="ltArchiveRows"></tbody></table></div>
+  <div class="muted" style="margin-top:8px">Nota: l'archivio mostra le lettere salvate nel browser attuale. Non ricostruisce automaticamente lettere stampate senza salvataggio o bozze presenti su altri dispositivi.</div>
+ </div>
+ </div>
+ <div class="grid2 section"><div class="field"><label>Bozze salvate su questo dispositivo</label><select id="ltDrafts"><option value="">Nuova lettera</option></select></div><div class="field"><label>Tipo di documento</label><select id="ltType"><option>Lettera ufficiale</option><option>Comunicazione</option><option>PEC</option><option>Diffida</option><option>Richiesta</option><option>Altro</option></select></div></div>
 <div class="grid3"><div class="field"><label>Data</label><input id="ltDate" type="date"></div><div class="field"><label>Numero protocollo ufficiale</label><input id="ltProtocol" placeholder="Assegnato dal gestionale" readonly></div><div class="field"><label>Destinatario</label><input id="ltRecipient" placeholder="Ente, ufficio o nominativo"></div></div>
 <div class="grid2" style="margin-top:10px"><div class="field"><label>Indirizzo / recapito destinatario</label><textarea id="ltAddress" rows="2" placeholder="Indirizzo completo / PEC"></textarea></div><div class="field"><label>Oggetto</label><textarea id="ltSubject" rows="2" placeholder="Oggetto della comunicazione"></textarea></div></div>
 <div class="ai-box" style="margin-top:12px"><h3>✨ Assistente AI per lettere ufficiali</h3><p class="ai-help">Descrivi cosa vuoi comunicare. L'AI propone una bozza, che potrai correggere prima di protocollare.</p><div class="field"><label>Indicazioni per la lettera</label><textarea id="ltAiNotes" placeholder="Esempio: comunicare al Comune che il giorno 21 ottobre forniremo assistenza sanitaria alla manifestazione..." rows="4"></textarea></div><div class="field" style="margin-top:8px"><label>Stile</label><select id="ltAiTone"><option value="istituzionale">Istituzionale e formale</option><option value="cordiale">Cordiale e professionale</option><option value="fermo">Fermo e preciso</option><option value="sintetico">Sintetico</option></select></div><div class="actions" style="margin-top:10px"><button id="ltAiGenerate" type="button" class="btn ai-btn">✨ Genera testo con AI</button><button id="ltAiImprove" type="button" class="btn secondary">✨ Migliora testo esistente</button></div><div id="ltAiMsg"></div></div>
@@ -2282,7 +2296,43 @@ const ltKey=()=> 'cge-documentale-lettere-bozze-'+String(currentAuthUserId||'');
 const ltRead=()=>{try{return JSON.parse(localStorage.getItem(ltKey())||'[]')}catch{return []}};
 function ltCollect(){const a={};ltFields.forEach(k=>a[k]=$('lt'+k).value);a.Signature=$('ltSignature').checked;return a}
 function ltFill(a={}){ltFields.forEach(k=>$('lt'+k).value=a[k]??(k==='Role'?'Il Presidente':k==='Signer'?'Paolo Musso':k==='Date'?new Date().toLocaleDateString('en-CA'):''));$('ltSignature').checked=!!a.Signature}
-function ltList(){const rows=ltRead();$('ltDrafts').innerHTML='<option value="">Nuova lettera</option>'+rows.map(x=>'<option value="'+esc(x.id)+'">'+esc((x.Subject||'Senza oggetto').slice(0,90))+' · '+esc(x.Date||'')+'</option>').join('');$('ltDrafts').value=ltActive||''}
+function ltArchiveRefresh(){
+ const pane=$('ltArchiveRows');if(!pane)return;
+ const rows=ltRead().slice().sort((a,b)=>String(b.Date||b.savedAt||'').localeCompare(String(a.Date||a.savedAt||'')));
+ const year=$('ltArchiveYear'),current=year.value||'all';
+ const years=[...new Set(rows.map(x=>String(x.Date||x.savedAt||'').slice(0,4)).filter(x=>/^\\d{4}$/.test(x)))].sort().reverse();
+ year.innerHTML='<option value="all">Tutti gli anni</option>'+years.map(x=>'<option value="'+x+'">'+x+'</option>').join('');
+ year.value=years.includes(current)?current:'all';
+ const q=$('ltArchiveSearch').value.trim().toLocaleLowerCase('it-IT'),filter=$('ltArchiveFilter').value;
+ const found=rows.filter(x=>{
+  const signed=x.signatureStatus==='FIRMATO ARCHIVIATO';
+  const isProtocol=!!x.protocolId;
+  const st=filter==='all'||filter==='firmato'&&signed||filter==='protocollo'&&isProtocol||filter==='bozza'&&!isProtocol;
+  const txt=[x.Subject,x.Recipient,x.Protocol,x.Type].join(' ').toLocaleLowerCase('it-IT');
+  return st&&(year.value==='all'||String(x.Date||x.savedAt||'').slice(0,4)===year.value)&&(!q||txt.includes(q));
+ });
+ $('ltArchiveCount').textContent=found.length+' lettere trovate su questo dispositivo';
+ pane.innerHTML=found.length?found.map(x=>{
+  const status=x.signatureStatus==='FIRMATO ARCHIVIATO'?'PDF firmato archiviato':x.protocolId?'Protocollata':'Bozza';
+  return '<tr><td>'+esc(x.Date||'—')+'</td><td>'+esc(x.Recipient||'—')+'</td><td>'+esc(x.Subject||'Senza oggetto')+'</td><td>'+esc(x.Protocol||'—')+'</td><td>'+esc(status)+'</td><td><button type="button" class="btn secondary" data-lt-open="'+esc(x.id)+'">Apri</button></td></tr>';
+ }).join(''):'<tr><td colspan="6">Nessuna lettera trovata in questo browser con i filtri selezionati.</td></tr>';
+}
+$('ltArchiveToggle').onclick=()=>{
+ const content=$('ltArchiveContent'),open=content.classList.contains('hidden');content.classList.toggle('hidden',!open);
+ $('ltArchiveToggle').textContent=open?'Chiudi archivio lettere':'📚 Apri archivio lettere';if(open)ltArchiveRefresh();
+};
+$('ltArchiveSearch').oninput=ltArchiveRefresh;
+$('ltArchiveFilter').onchange=ltArchiveRefresh;
+$('ltArchiveYear').onchange=ltArchiveRefresh;
+$('ltArchiveRows').onclick=e=>{
+ const button=e.target.closest('[data-lt-open]');if(!button)return;
+ const rec=ltRead().find(x=>x.id===button.dataset.ltOpen);
+ if(!rec)return msg('ltMsg','Lettera non più disponibile su questo browser.','warn');
+ ltActive=rec.id;ltFill(rec);ltList();ltState();
+ msg('ltMsg','Lettera caricata dall’archivio. Puoi aprire anteprima o stampare con la firma del Presidente usando gli appositi pulsanti.','ok');
+ $('ltArchivePanel').scrollIntoView({block:'start',behavior:'smooth'});
+};
+function ltList(){const rows=ltRead();$('ltDrafts').innerHTML='<option value="">Nuova lettera</option>'+rows.map(x=>'<option value="'+esc(x.id)+'">'+esc((x.Subject||'Senza oggetto').slice(0,90))+' · '+esc(x.Date||'')+'</option>').join('');$('ltDrafts').value=ltActive||'';if(!$('ltArchiveContent').classList.contains('hidden'))ltArchiveRefresh()}
 $('ltNew').onclick=()=>{ltActive=null;ltFill();ltList();msg('ltMsg','Nuova lettera pronta.','ok')};
 $('ltDrafts').onchange=()=>{ltActive=$('ltDrafts').value||null;ltFill(ltRead().find(x=>x.id===ltActive)||{});ltState();msg('ltMsg','Bozza caricata.','ok')};
 $('ltSave').onclick=()=>{const a=ltCollect();if(ltCurrentRecord()?.protocolId)return msg('ltMsg','Documento protocollato: non è modificabile.','warn');if(!a.Subject.trim()&&!a.Body.trim())return msg('ltMsg','Inserisci almeno oggetto o testo.','warn');try{const rows=ltRead();if(!ltActive)ltActive='lettera-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);const index=rows.findIndex(x=>x.id===ltActive);const item={...a,id:ltActive,savedAt:new Date().toISOString()};if(index<0)rows.unshift(item);else rows[index]=item;localStorage.setItem(ltKey(),JSON.stringify(rows));ltList();ltState();msg('ltMsg','Bozza salvata in questo browser. Per archiviazione ufficiale registra il PDF nel protocollo.','ok')}catch(e){msg('ltMsg','Salvataggio non riuscito: '+e.message,'err')}};
