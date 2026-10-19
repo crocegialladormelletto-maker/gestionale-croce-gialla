@@ -2331,21 +2331,21 @@ function ltDocument(a,signatureUrl=null,facsimile=false){
 (function(){
  function alignFooter(){
   const foot=document.querySelector('.letter-footer'),sheet=document.querySelector('.sheet');
-  if(!foot||!sheet||!window.matchMedia('print').matches)return;
+  if(!foot||!sheet)return;
   const unit=document.createElement('div');
   unit.style.cssText='position:absolute;visibility:hidden;width:100mm;height:1px';
   document.body.append(unit);
   const mm=unit.getBoundingClientRect().width/100;
   unit.remove();
-  foot.style.marginTop='14mm';
+  foot.style.setProperty('margin-top','14mm','important');
   const pageHeight=264*mm; // A4 height minus 16mm top and 17mm bottom
   const bottom=foot.getBoundingClientRect().bottom-sheet.getBoundingClientRect().top;
   const remain=((bottom%pageHeight)+pageHeight)%pageHeight;
   const gap=(pageHeight-remain)%pageHeight;
-  if(gap>1)foot.style.marginTop=(14*mm+gap-2*mm)+'px';
+  if(gap>1)foot.style.setProperty('margin-top',(14*mm+gap-2*mm)+'px','important');
  }
  window.addEventListener('beforeprint',alignFooter);
- window.addEventListener('afterprint',()=>{const foot=document.querySelector('.letter-footer');if(foot)foot.style.marginTop=''});
+ window.addEventListener('afterprint',()=>{const foot=document.querySelector('.letter-footer');if(foot)foot.style.removeProperty('margin-top')});
 })();<\/script><script>window.addEventListener('load',()=>{const imgs=[...document.images];if(imgs.some(i=>!i.complete||!i.naturalWidth)){const note=document.createElement('aside');note.textContent='Attenzione: uno o più loghi non sono stati caricati. Non stampare finché non compaiono.';note.style='position:fixed;top:0;background:#b91c1c;color:white;padding:12px;z-index:9999';document.body.append(note)}})<\/script></body></html>`;
 }
 $('ltFacsimile').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila o genera prima il testo della lettera.','warn');a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup del browser per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a,null,true));w.document.close();msg('ltMsg','Anteprima fac-simile aperta, senza assegnazione di protocollo. Per stampare usa Ctrl+P e Salva come PDF.','ok')};
