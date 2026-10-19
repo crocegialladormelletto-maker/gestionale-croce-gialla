@@ -12950,8 +12950,8 @@ async function tabletCloseSheet(){
  if(!confirm(confirmText))return;
  tabletBusy=true;msg('tabletSheetMsg',standalone118?'Chiusura Foglio 118 in corso...':'Chiusura servizio in corso...');
  try{
-  const paymentMode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||null;
-  const paymentDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||null;
+  const paymentMode=tabletCurrentSheet?.modalita_pagamento||document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||null;
+  const paymentDate=tabletCurrentSheet?.data_pagamento||document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||null;
   const r=await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{
    p_foglio:tabletCurrentSheet.id,p_modalita:paymentMode,p_data:paymentDate
   });
@@ -13669,7 +13669,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.60-fix-contanti-tablet-06';
+const CGE_APP_BUILD='14.61-payment-date-06';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
