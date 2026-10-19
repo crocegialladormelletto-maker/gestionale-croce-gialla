@@ -178,6 +178,7 @@
       <div class="stat"><small>USCITA</small><b id="dOut">0</b></div>
       <div class="stat"><small>SCADENZE 30 GG</small><b id="dDue">0</b></div>
      </div>
+     <div id="dPendingSection" class="section hidden" data-admin-only="true"><h3>📝 Lavori da completare</h3><div class="stats"><div class="stat"><small>BOZZE VERBALI</small><b id="dMinuteDrafts">–</b></div><div class="stat"><small>BOZZE CONVOCAZIONI</small><b id="dCallDrafts">–</b></div></div><div class="actions"><button id="dGoMinutes" class="btn blue" type="button">Apri bozze verbali</button><button id="dGoCalls" class="btn secondary" type="button">Apri convocazioni</button></div><div id="dPendingMsg"></div></div>
      <div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">Documenti recenti</h3><div class="muted">Ultimi protocolli registrati.</div></div><button id="dRefresh" class="btn teal">↻ Aggiorna</button></div><div id="dmsg"></div><div id="dRecent"></div></div>
      <div class="section"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">Scadenze imminenti</h3><div class="muted">Documenti con una scadenza prossima.</div></div><button class="btn yellow jump" data-v="due">Apri scadenze</button></div><div id="dDueList"></div></div>
     </div>
@@ -261,7 +262,7 @@
     <div class="hero"><h2 id="minutePageHeading">📝 Bozze verbali</h2><p id="minutePageDescription">Riprendi i verbali ancora da completare.</p></div>
     <div class="pad">
      <div class="section hidden" id="minuteEditorPanel">
-      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn violet" type="button">✚ Verbale Assemblea Soci</button><button id="vNewMembers" class="btn orange" type="button">👥 Approvazione nuovi soci</button><button id="vDuplicate" class="btn orange" type="button" disabled>⧉ Duplica verbale</button><button id="vPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="vPrintSigned" class="btn success" type="button">✍️ Apponi firme e stampa</button><button id="vNew" class="btn success" type="button">✚ Nuovo</button><button id="vExit" class="btn danger" type="button">← Esci / Elenco</button></div></div>
+      <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn violet" type="button">✚ Verbale Assemblea Soci</button><button id="vNewMembers" class="btn orange" type="button">👥 Approvazione nuovi soci</button><select id="vQuickTemplate" class="btn secondary" aria-label="Modelli di verbale"><option value="">Altri modelli verbale…</option><option value="DIMISSIONI">Dimissioni volontario</option><option value="SPESE">Approvazione spesa</option><option value="MEZZI">Acquisto mezzo</option><option value="RESPONSABILI">Nomina responsabili</option></select><button id="vDuplicate" class="btn orange" type="button" disabled>⧉ Duplica verbale</button><button id="vPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="vPrintSigned" class="btn success" type="button">✍️ Apponi firme e stampa</button><button id="vNew" class="btn success" type="button">✚ Nuovo</button><button id="vExit" class="btn danger" type="button">← Esci / Elenco</button></div></div>
       <div class="grid4" style="margin-top:10px">
        <div class="field"><label>Tipo riunione *</label><select id="vType"><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea Soci</option><option value="RIUNIONE_OPERATIVA">Riunione operativa</option><option value="ALTRO">Altro</option></select></div>
        <div class="field"><label>Data riunione *</label><input id="vDate" type="date"></div>
@@ -650,6 +651,7 @@ function view(v){
  if(v==='dash')loadDashboard();if(v==='archive')loadArchive();if(v==='dossiers')loadDossiers();if(v==='accesses')loadAccesses();if(v==='activity')loadActivity();if(v==='due')loadDue();if(v==='protocol'&&!currentId)resetForm();if(v==='minutes')loadMinutes();if(v==='minuteNew'){resetMinuteForm();loadBoardMinuteCalls();}if(v==='calls')loadCalls();if(v==='callNew')resetCallForm();
 }
 document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>view(b.dataset.v));
+$('dGoMinutes').onclick=()=>view('minutes');$('dGoCalls').onclick=()=>view('calls');
 
 async function enter(){
  const u=await sb.auth.getUser();if(!u.data.user)return;
@@ -678,7 +680,17 @@ function bytes(n){n=Number(n||0);if(!n)return '—';if(n<1024)return n+' B';if(n
 function safeFile(name){return String(name||'file').normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g,'_').slice(-120)}
 function mime(file){const e=(file.name.split('.').pop()||'').toLowerCase();return file.type||({pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',odt:'application/vnd.oasis.opendocument.text',ods:'application/vnd.oasis.opendocument.spreadsheet',txt:'text/plain'}[e]||'application/pdf')}
 
-async function loadDashboard(){
+async async function loadPendingDocumentWork(){
+ const box=$('dPendingSection');if(!box)return;
+ box.classList.toggle('hidden',prof?.ruolo!=='AMMINISTRATORE');
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const [m,c]=await Promise.all([sb.rpc('cge_verbali_elenco',{p_search:null,p_tipo:null,p_stato:'BOZZA',p_anno:null}),sb.rpc('cge_convocazioni_elenco',{p_search:null,p_tipo:null,p_stato:'BOZZA',p_anno:null})]);
+ $('dMinuteDrafts').textContent=m.error?'!':String((m.data||[]).length);
+ $('dCallDrafts').textContent=c.error?'!':String((c.data||[]).length);
+ msg('dPendingMsg',m.error||c.error?'Impossibile aggiornare uno dei contatori.':'',m.error||c.error?'warn':'');
+}
+function loadDashboard(){
+ loadPendingDocumentWork();
  const [st,recent,due]=await Promise.all([
   sb.rpc('cge_protocollo_statistiche'),
   sb.rpc('cge_protocollo_elenco',{p_search:null,p_tipo:null,p_categoria:null,p_stato:null,p_dal:null,p_al:null,p_solo_scadenze:false}),
@@ -1204,6 +1216,33 @@ function updateMinuteTypeUI(resetDefaults=false){
   }
  }
 }
+function applyMinuteQuickTemplate(type){
+ if(!type)return;
+ const map={
+ DIMISSIONI:['Presa d’atto delle dimissioni','1. Esame della comunicazione di dimissioni\n2. Determinazioni conseguenti','Il Presidente informa il Consiglio della comunicazione di dimissioni presentata da [NOMINATIVO] in data [DATA].','Il Consiglio, verificata la documentazione, delibera [INSERIRE DECISIONE ED EVENTUALI ADEMPIMENTI].'],
+ SPESE:['Autorizzazione e approvazione della spesa','1. Esame della proposta di spesa\n2. Deliberazione','Il Presidente illustra la proposta relativa a [OGGETTO], importo [EURO], motivazione [MOTIVAZIONE].','Il Consiglio delibera [APPROVAZIONE O DINIEGO] della spesa di [IMPORTO] e indica [RESPONSABILE ED EVENTUALI CONDIZIONI].'],
+ MEZZI:['Valutazione acquisto mezzo associativo','1. Esame delle necessità operative\n2. Valutazione preventivi\n3. Deliberazione','Il Presidente espone le necessità relative al mezzo [TIPO] e presenta [PREVENTIVI E CARATTERISTICHE].','Il Consiglio delibera [ESITO], importo massimo [IMPORTO], modalità di finanziamento [FONTE] e soggetto incaricato [NOME].'],
+ RESPONSABILI:['Nomina responsabili associativi','1. Esame degli incarichi e delle candidature\n2. Deliberazione sulle nomine','Il Presidente propone la nomina di [NOMINATIVO] al ruolo di [INCARICO], con decorrenza [DATA].','Il Consiglio delibera [ESITO DELLA NOMINA], durata [DURATA] e compiti [DESCRIZIONE].']
+ };
+ const x=map[type];if(!x)return;
+ newMinuteOfType('CONSIGLIO_DIRETTIVO');
+ $('vHeading').value=x[0];setMinuteAgenda(x[1]);$('vProceedings').value=x[2];$('vDecisions').value=x[3];$('vVote').value='[INDICARE FAVOREVOLI, CONTRARI E ASTENUTI]';
+ msg('vmsg','Modello precompilato: sostituisci tutti i segnaposto prima di approvare.','warn');
+}
+function minuteApprovalProblems(){
+ const missing=[];
+ if(!$('vDate').value)missing.push('data riunione');
+ if(!$('vHeading').value.trim())missing.push('titolo');
+ if(!$('vStart').value)missing.push('ora inizio');
+ if(!$('vPlace').value.trim())missing.push('luogo');
+ if(!$('vPresent').value.trim())missing.push('presenti');
+ if(!minuteAgendaText())missing.push('ordine del giorno');
+ if(!$('vDecisions').value.trim())missing.push('deliberazioni');
+ if(!$('vVote').value.trim())missing.push('esito votazione');
+ const fields=[$('vHeading').value,$('vProceedings').value,$('vDecisions').value,$('vVote').value,$('vNotes').value,minuteAgendaText()];
+ if(fields.some(v=>/\[[^\]]+\]/.test(v)))missing.push('segnaposto [DA COMPILARE]');
+ return missing;
+}
 function newMemberApprovalMinute(){
  newMinuteOfType('CONSIGLIO_DIRETTIVO');
  $('vTitle').textContent='Nuovo verbale · Ammissione nuovi soci';
@@ -1297,6 +1336,7 @@ async function saveMinute(approve=false){
  const previousStatus=currentMinute?.stato||'BOZZA';
  const previousApproval=currentMinute?.data_approvazione||'';
  const wantsApproval=approve;
+ if(wantsApproval){const problems=minuteApprovalProblems();if(problems.length)return msg('vmsg','Prima dell’approvazione completa: '+problems.join(', ')+'.','warn')}
  if(wantsApproval&&previousStatus!=='APPROVATO'){
   if(!confirm('Confermi l’approvazione definitiva del verbale? La data di approvazione sarà quella del verbale ('+$('vDate').value+').'))return;
  }
@@ -1567,6 +1607,7 @@ $('vNew').onclick=()=>{view('minuteNew');resetMinuteForm();resetMinuteFilters()}
 $('vNewBoard').onclick=()=>newMinuteOfType('CONSIGLIO_DIRETTIVO');
 $('vNewAssembly').onclick=()=>newMinuteOfType('ASSEMBLEA_SOCI');
 $('vNewMembers').onclick=newMemberApprovalMinute;
+$('vQuickTemplate').onchange=()=>{const type=$('vQuickTemplate').value;$('vQuickTemplate').value='';applyMinuteQuickTemplate(type)};
 $('vExit').onclick=()=>{resetMinuteForm();resetMinuteFilters();view('minutes')};
 $('vAddAgenda').onclick=()=>addMinuteAgendaPoint();
 $('vAssemblyCall').onchange=applyAssemblyCallToMinute;
