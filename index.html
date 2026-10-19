@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.59-verifica-pagamenti">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.60-chiusura-pagamenti">
 <script>
 (function(){
  try{
@@ -12877,7 +12877,11 @@ async function tabletCloseSheet(){
  if(!confirm(confirmText))return;
  tabletBusy=true;msg('tabletSheetMsg',standalone118?'Chiusura Foglio 118 in corso...':'Chiusura servizio in corso...');
  try{
-  const r=await sb.rpc('cge_tablet_chiudi_foglio_viaggio',{p_foglio:tabletCurrentSheet.id});
+  const paymentMode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||null;
+  const paymentDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||null;
+  const r=await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{
+   p_foglio:tabletCurrentSheet.id,p_modalita:paymentMode,p_data:paymentDate
+  });
   if(r.error)throw r.error;
   if(standalone118){
    tabletCurrentSheet=r.data||tabletCurrentSheet;
