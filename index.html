@@ -11425,7 +11425,21 @@ async function loadAccounting(){
  accRenderFiltered();
 }
 [['accFilterDue','due'],['accFilterDeferred','deferred'],['accFilterPaid','paid'],['accFilterHistory','history']].forEach(([id,key])=>$(id).onclick=()=>{accCurrentFilter=key;accRenderFiltered()});
-$('accSave').onclick=async()=>{if(!$('accService').value||$('accAmount').value==='')return msg('accMsg','Seleziona il servizio e inserisci l’importo.','warn');const r=await sb.from('pagamenti_servizi').insert({servizio_id:$('accService').value,importo:Number($('accAmount').value),modalita:$('accMode').value,riferimento:$('accRef').value.trim()||null});if(r.error)return msg('accMsg',r.error.message,'err');msg('accMsg','Pagamento registrato.','ok');loadAccounting()};
+$('accSave').onclick=async()=>{
+ const servizio=$('accService').value;
+ const modo=$('accMode').value;
+ if(!servizio)return msg('accMsg','Seleziona il servizio.','warn');
+ if(modo==='BONIFICO DIFFERITO'){
+  const r=await sb.rpc('cge_amministrazione_imposta_bonifico_differito',{p_servizio:servizio});
+  if(r.error)return msg('accMsg','Impossibile registrare il bonifico differito: '+r.error.message,'err');
+  msg('accMsg','Bonifico differito salvato. Nessun incasso registrato: il servizio resta da incassare.','ok');
+  await loadAccounting();accCurrentFilter='deferred';accRenderFiltered();return;
+ }
+ if($('accAmount').value==='')return msg('accMsg','Inserisci l’importo effettivamente incassato.','warn');
+ const r=await sb.from('pagamenti_servizi').insert({servizio_id:servizio,importo:Number($('accAmount').value),modalita:modo,riferimento:$('accRef').value.trim()||null});
+ if(r.error)return msg('accMsg',r.error.message,'err');
+ msg('accMsg','Pagamento effettivo registrato.','ok');loadAccounting();
+};
 
 
 
