@@ -487,6 +487,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
 <div class="grid2 section"><div class="field"><label>Bozze salvate su questo dispositivo</label><select id="ltDrafts"><option value="">Nuova lettera</option></select></div><div class="field"><label>Tipo di documento</label><select id="ltType"><option>Lettera ufficiale</option><option>Comunicazione</option><option>PEC</option><option>Diffida</option><option>Richiesta</option><option>Altro</option></select></div></div>
 <div class="grid3"><div class="field"><label>Data</label><input id="ltDate" type="date"></div><div class="field"><label>Numero protocollo ufficiale</label><input id="ltProtocol" placeholder="Assegnato dal gestionale" readonly></div><div class="field"><label>Destinatario</label><input id="ltRecipient" placeholder="Ente, ufficio o nominativo"></div></div>
 <div class="grid2" style="margin-top:10px"><div class="field"><label>Indirizzo / recapito destinatario</label><textarea id="ltAddress" rows="2" placeholder="Indirizzo completo / PEC"></textarea></div><div class="field"><label>Oggetto</label><textarea id="ltSubject" rows="2" placeholder="Oggetto della comunicazione"></textarea></div></div>
+<div class="ai-box" style="margin-top:12px"><h3>✨ Assistente AI per lettere ufficiali</h3><p class="ai-help">Descrivi cosa vuoi comunicare. L'AI propone una bozza, che potrai correggere prima di protocollare.</p><div class="field"><label>Indicazioni per la lettera</label><textarea id="ltAiNotes" placeholder="Esempio: comunicare al Comune che il giorno 21 ottobre forniremo assistenza sanitaria alla manifestazione..." rows="4"></textarea></div><div class="field" style="margin-top:8px"><label>Stile</label><select id="ltAiTone"><option value="istituzionale">Istituzionale e formale</option><option value="cordiale">Cordiale e professionale</option><option value="fermo">Fermo e preciso</option><option value="sintetico">Sintetico</option></select></div><div class="actions" style="margin-top:10px"><button id="ltAiGenerate" type="button" class="btn ai-btn">✨ Genera testo con AI</button><button id="ltAiImprove" type="button" class="btn secondary">✨ Migliora testo esistente</button><button id="ltTestExample" type="button" class="btn teal">🧪 Compila lettera di prova</button></div><div id="ltAiMsg"></div></div>
 <div class="field" style="margin-top:10px"><label>Testo della lettera</label><textarea id="ltBody" rows="15" style="min-height:310px" placeholder="Scrivi qui il contenuto della lettera..."></textarea></div>
 <div class="grid2" style="margin-top:10px"><div class="field"><label>Qualifica firmatario</label><input id="ltRole" value="Il Presidente"></div><div class="field"><label>Nome firmatario</label><input id="ltSigner" value="Paolo Musso"></div></div>
 <div class="field" style="max-width:350px;margin-top:10px"><label><input type="checkbox" id="ltSignature" style="width:auto"> Mostra riga per firma autografa</label></div>
@@ -2309,6 +2310,29 @@ $('ltPrintSigned').onclick=async()=>{
   msg('ltMsg','Lettera con firma aperta. Usa Stampa → Salva come PDF. La firma riprodotta come immagine non equivale a una firma digitale qualificata.','ok');
  }catch(e){msg('ltMsg','Firma non disponibile: '+(e.message||String(e)),'err')}
  finally{btn.disabled=false}
+};
+async function ltUseAI(mode){
+ if(ltCurrentRecord()?.protocolId)return msg('ltAiMsg','Lettera già protocollata: il testo è bloccato.','warn');
+ const notes=$('ltAiNotes').value.trim(),current=$('ltBody').value.trim();
+ if(!notes&&!(mode==='migliora'&&current))return msg('ltAiMsg','Scrivi le indicazioni oppure un testo da migliorare.','warn');
+ const buttons=[$('ltAiGenerate'),$('ltAiImprove')];buttons.forEach(x=>x.disabled=true);msg('ltAiMsg','Elaborazione AI in corso...');
+ try{
+  const r=await sb.functions.invoke('assistente-lettere-ai',{body:{mode,tipo:$('ltType').value,destinatario:$('ltRecipient').value,oggetto:$('ltSubject').value,appunti:notes,testo:current,tono:$('ltAiTone').value}});
+  if(r.error){let detail=r.error.message||'Errore AI';try{const obj=await r.error.context?.json();if(obj?.error)detail=obj.error}catch{}throw new Error(detail)}
+  if(!r.data?.testo)throw new Error('Nessun testo restituito');
+  if(current&&!confirm('Sostituire il testo attuale con la bozza proposta dall’AI?'))return;
+  $('ltBody').value=r.data.testo;msg('ltAiMsg','Bozza AI inserita. Controlla il testo e salva prima di protocollare.','ok');
+ }catch(e){msg('ltAiMsg','AI non disponibile: '+(e.message||String(e)),'err')}finally{buttons.forEach(x=>x.disabled=false)}
+}
+$('ltAiGenerate').onclick=()=>ltUseAI('genera');$('ltAiImprove').onclick=()=>ltUseAI('migliora');
+$('ltTestExample').onclick=()=>{
+ if(ltCurrentRecord()?.protocolId)return msg('ltAiMsg','Il protocollo esistente è definitivo: crea una nuova bozza.','warn');
+ if(($('ltBody').value||$('ltSubject').value)&&!confirm('Sostituire i campi della bozza con una lettera di prova?'))return;
+ $('ltNew').click();$('ltType').value='Comunicazione';$('ltRecipient').value='Comune di Dormelletto';$('ltAddress').value='All’attenzione dell’Ufficio competente';
+ $('ltSubject').value='Comunicazione di prova del sistema documentale';
+ $('ltAiNotes').value='Scrivere una breve lettera istituzionale per comunicare che il documento serve esclusivamente alla verifica delle funzioni di compilazione, protocollazione e firma digitale del gestionale. Nessuna richiesta operativa.';
+ $('ltBody').value='Con la presente, Croce Gialla Emergenza ODV comunica che il presente documento è stato predisposto esclusivamente per verificare le funzioni di compilazione, protocollazione e firma digitale del Gestionale Documentale.\n\nLa comunicazione è una prova tecnica e non costituisce una richiesta o comunicazione operativa.\n\nCordiali saluti.';
+ msg('ltAiMsg','Lettera di prova compilata. NON premere Assegna protocollo ufficiale se vuoi soltanto testare la grafica: quella azione crea un numero reale.','warn');
 };
 function ltCurrentRecord(){return ltRead().find(x=>x.id===ltActive)||null}
 function ltState(){const x=ltCurrentRecord(),fixed=!!x?.protocolId;$('ltProtocol').value=x?.Protocol||'';$('ltProtocolState').textContent=fixed?'Protocollo '+x.Protocol+' · IN ATTESA FIRMA':'Non protocollata';$('ltAssignProtocol').disabled=fixed;const fields=['ltType','ltDate','ltRecipient','ltAddress','ltSubject','ltBody','ltRole','ltSigner'];fields.forEach(id=>$(id).readOnly=fixed);$('ltType').disabled=fixed;}
