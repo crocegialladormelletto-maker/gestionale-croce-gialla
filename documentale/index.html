@@ -341,7 +341,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
      <div class="section hidden" id="callEditorPanel">
       <div class="actions" style="justify-content:space-between">
        <div><h3 id="cvTitle" style="margin:0">Nuova convocazione</h3><div id="cvCode" class="muted">Numerazione automatica per anno.</div></div>
-       <div class="actions"><button id="cvDuplicate" class="btn orange" type="button" disabled>⧉ Duplica convocazione</button><button id="cvPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="cvNew" class="btn success" type="button">✚ Nuova</button><button id="cvExit" class="btn danger" type="button">← Esci / Elenco</button></div>
+       <div class="actions"><button id="cvDuplicate" class="btn orange" type="button" disabled>⧉ Duplica convocazione</button><button id="cvPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="cvNew" class="btn success" type="button">✚ Nuova</button><button id="cvNewAdmissions" class="btn orange" type="button">👥 Convocazione ammissione soci</button><button id="cvExit" class="btn danger" type="button">← Esci / Elenco</button></div>
       </div>
 
       <div class="grid4" style="margin-top:10px">
@@ -1740,6 +1740,18 @@ function updateCallStateUI(){
   $('cvFinalize').textContent=firstDesert?'✓ 1ª convocazione deserta':(final?'✅ Convocazione definitiva':'✅ Rendi definitiva');
  }
 }
+function newAdmissionsCall(){
+ view('callNew');
+ resetCallForm();
+ $('cvType').value='CONSIGLIO_DIRETTIVO';
+ $('cvHeading').value='Convocazione Consiglio Direttivo – Ammissione nuovi soci';
+ $('cvObject').value='Esame e deliberazione sulle domande di ammissione di nuovi soci';
+ setCallAgenda('1. Esame delle domande di ammissione pervenute\n2. Deliberazione sull’ammissione dei nuovi soci\n3. Varie ed eventuali');
+ $('cvText').value='Ai componenti del Consiglio Direttivo della Croce Gialla Emergenza ODV.\n\nÈ convocata una riunione del Consiglio Direttivo per il giorno [DATA], alle ore [ORA], presso [LUOGO], per discutere e deliberare sui punti riportati nell’ordine del giorno, con particolare riferimento all’esame delle domande di ammissione di nuovi soci.\n\nSi raccomandano puntualità e partecipazione.\n\nIl Presidente\nMusso Paolo';
+ $('cvSigner').value='Musso Paolo';
+ updateCallLayout(false);
+ msg('cvmsg','Modello di convocazione caricato come bozza. Completa data, ora, destinatari e luogo e sostituisci i segnaposto nel testo prima di salvarlo.','warn');
+}
 function resetCallForm(){
  currentCallId=null;currentCall=null;duplicateCallSource=null;$('cvDuplicate').disabled=true;$('cvTitle').textContent='Nuova convocazione';
  $('cvType').disabled=false;$('cvType').value='CONSIGLIO_DIRETTIVO';$('cvDate').value='';$('cvTime1').value='';$('cvDate2').value='';$('cvTime2').value='';
@@ -1965,6 +1977,7 @@ function printCall(){
  Promise.race([Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve}))),new Promise(resolve=>setTimeout(resolve,1800))]).then(()=>window.print());
 }
 $('cvNew').onclick=()=>{view('callNew');resetCallForm();resetCallFilters()};
+$('cvNewAdmissions').onclick=newAdmissionsCall;
 $('cvExit').onclick=()=>{resetCallForm();resetCallFilters();view('calls')};
 $('cvAddAgenda').onclick=()=>addCallAgendaPoint();
 $('cvGenerateText').onclick=generateCallText;
