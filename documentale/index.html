@@ -2318,6 +2318,24 @@ function ltDocument(a,signatureUrl=null,facsimile=false){
  .letter-watermark,.letter-side-accent{display:none!important}
  .sample-watermark{position:absolute!important;top:39mm!important;left:20mm!important;right:auto!important;display:block;margin:0;font-size:8pt}
 }
+/* Impaginazione effettiva in fogli A4 distinti. */
+@media screen,print{
+ body.letter-paginated{background:#e8edf2}
+ body.letter-paginated .sheet{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;padding:16mm 17mm 17mm 20mm!important;position:relative!important;overflow:hidden!important;margin:0 auto 8mm!important;break-after:page!important;box-shadow:0 2px 12px #0002}
+ body.letter-paginated .letter-header{position:relative!important;top:auto!important;left:auto!important;right:auto!important;height:29mm!important;margin-bottom:11mm!important}
+ body.letter-paginated .letter-text{position:relative!important;font-size:10.25pt!important;line-height:1.48!important}
+ body.letter-paginated .letter-footer{position:absolute!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;height:24mm!important;margin:0!important}
+ body.letter-paginated .letter-watermark,body.letter-paginated .letter-side-accent{display:none!important}
+ body.letter-paginated .letter-body p{margin:0 0 4mm}
+ body.letter-paginated .letter-body h3{margin:6mm 0 3mm}
+ body.letter-paginated .sample-watermark{position:absolute!important;top:44mm!important;left:20mm!important;margin:0!important}
+}
+@media print{
+ @page{size:A4 portrait;margin:0}
+ body.letter-paginated{background:white!important;margin:0!important}
+ body.letter-paginated .sheet{margin:0!important;box-shadow:none!important}
+ body.letter-paginated .sheet:last-child{break-after:auto!important}
+}
 </style></head><body><article class="sheet"><div class="letter-side-accent"></div>
  <header class="letter-header"><svg viewBox="0 0 840 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><rect width="840" height="109" fill="#12375d"/><rect y="109" width="840" height="11" fill="#ffdb17"/></svg><img class="letter-logo" src="${esc(logo)}" alt="Logo Croce Gialla Emergenza ODV"><div class="letter-org"><strong>CROCE GIALLA EMERGENZA ODV</strong><small>ORGANIZZAZIONE DI VOLONTARIATO</small></div></header>
  <img class="letter-watermark" src="${esc(logo)}" alt="" aria-hidden="true">
@@ -2329,24 +2347,37 @@ function ltDocument(a,signatureUrl=null,facsimile=false){
  ${facsimile?'<div class="sample-watermark">FAC-SIMILE – NON PROTOCOLLATO</div>':''}
  </article><script>
 (function(){
- function alignFooter(){
-  const foot=document.querySelector('.letter-footer'),sheet=document.querySelector('.sheet');
-  if(!foot||!sheet)return;
-  const unit=document.createElement('div');
-  unit.style.cssText='position:absolute;visibility:hidden;width:100mm;height:1px';
-  document.body.append(unit);
-  const mm=unit.getBoundingClientRect().width/100;
-  unit.remove();
-  foot.style.setProperty('margin-top','14mm','important');
-  const pageHeight=264*mm; // A4 height minus 16mm top and 17mm bottom
-  const bottom=foot.getBoundingClientRect().bottom-sheet.getBoundingClientRect().top;
-  const remain=((bottom%pageHeight)+pageHeight)%pageHeight;
-  const gap=(pageHeight-remain)%pageHeight;
-  if(gap>1)foot.style.setProperty('margin-top',(14*mm+gap-2*mm)+'px','important');
+ function paginate(){
+  if(document.body.classList.contains('letter-paginated'))return;
+  const first=document.querySelector('.sheet'), main=first?.querySelector('.letter-text'),body=main?.querySelector('.letter-body'),footer=first?.querySelector('.letter-footer');
+  if(!first||!main||!body||!footer)return;
+  const signature=main.querySelector('.letter-sign');
+  const blocks=[...body.children];if(signature)blocks.push(signature);
+  blocks.forEach(n=>n.remove());footer.remove();
+  const sample=first.querySelector('.sample-watermark');if(sample)sample.remove();
+  document.body.classList.add('letter-paginated');
+  let page=first,target=body;
+  const measure=document.createElement('div');measure.style.cssText='width:100mm;height:1px;position:absolute;visibility:hidden';document.body.append(measure);
+  const mm=measure.getBoundingClientRect().width/100;measure.remove();
+  // Riserviamo spazio per il piè di pagina in ogni foglio: impossibile sovrapporsi.
+  const safeBottom=297*mm-49*mm;
+  function addPage(){
+    page=document.createElement('article');page.className='sheet';
+    const m=document.createElement('main');m.className='letter-text';
+    target=document.createElement('div');target.className='letter-body';m.append(target);page.append(m);document.body.append(page);
+  }
+  blocks.forEach(node=>{
+    if(node.classList.contains('letter-sign'))target=page.querySelector('.letter-text');
+    target.append(node);
+    const bottom=node.getBoundingClientRect().bottom-page.getBoundingClientRect().top;
+    if(bottom>safeBottom&&target.children.length>1){node.remove();addPage();target.append(node)}
+  });
+  page.append(footer);
+  if(sample)first.append(sample);
+  // La prima pagina conserva intestazione e metadati; soltanto l'ultima mostra il fondo blu.
  }
- window.addEventListener('beforeprint',alignFooter);
- window.addEventListener('afterprint',()=>{const foot=document.querySelector('.letter-footer');if(foot)foot.style.removeProperty('margin-top')});
-})();<\/script><script>window.addEventListener('load',()=>{const imgs=[...document.images];if(imgs.some(i=>!i.complete||!i.naturalWidth)){const note=document.createElement('aside');note.textContent='Attenzione: uno o più loghi non sono stati caricati. Non stampare finché non compaiono.';note.style='position:fixed;top:0;background:#b91c1c;color:white;padding:12px;z-index:9999';document.body.append(note)}})<\/script></body></html>`;
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',paginate,{once:true});else paginate();
+})();<\/script></body></html>`;
 }
 $('ltFacsimile').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila o genera prima il testo della lettera.','warn');a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup del browser per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a,null,true));w.document.close();msg('ltMsg','Anteprima fac-simile aperta, senza assegnazione di protocollo. Per stampare usa Ctrl+P e Salva come PDF.','ok')};
 $('ltPrint').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila prima il testo della lettera.','warn');if(!ltCurrentRecord()?.protocolId)a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup per stampare la lettera.','warn');w.document.open();w.document.write(ltDocument(a,null,!ltCurrentRecord()?.protocolId));w.document.close();w.addEventListener('load',()=>{const images=[...w.document.images];Promise.all(images.map(im=>im.complete?Promise.resolve():new Promise(resolve=>{im.addEventListener('load',resolve,{once:true});im.addEventListener('error',resolve,{once:true})}))).then(()=>{w.focus();w.print()})},{once:true});msg('ltMsg','Stampa aperta. Seleziona A4 e scala 100%; verifica che la filigrana compaia anche nell’anteprima della stampante.','ok')};
