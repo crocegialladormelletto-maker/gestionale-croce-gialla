@@ -9560,7 +9560,7 @@ function routeCalcRecompute(){
 
 async function routeCalcUpdateFuelPrice(force=false){
  if(!$('rcFuelPrice'))return;
- const cacheKey='cge_fuel_price_mimit_v1';
+ const cacheKey='cge_fuel_price_mimit_piemonte_v2';
  if(!force){
   try{
    const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');
@@ -9589,7 +9589,7 @@ async function routeCalcUpdateFuelPrice(force=false){
  }catch(e){
   $('rcFuelTrend').textContent='Manuale';
   $('rcFuelTrend').className='pill b';
-  $('rcFuelUpdated').textContent='Aggiornamento automatico non disponibile: puoi modificare il prezzo manualmente.';
+  $('rcFuelUpdated').textContent='Aggiornamento MIMIT non riuscito: '+(e?.message||String(e))+'. Verifica il valore manualmente.';
  }finally{
   if(btn){btn.disabled=false;btn.textContent='↻ Aggiorna MIMIT'}
  }
@@ -9976,12 +9976,20 @@ function routeCalcForeignCosts(coords,route){
  let vignette=0, vignetteParts=[];
  const typedDest=String($('rcDest')?.value||'').toUpperCase();
  const swissCityHint=/ZURIGO|ZÜRICH|ZURICH|LUGANO|BELLINZONA|LOCARNO|BASILEA|BASEL|BERNA|BERN|GINEVRA|GENEVA|GENÈVE|LUCERNA|LUZERN|LOSANNA|LAUSANNE|SAN GALLO|ST\. ?GALLEN|COIRA|CHUR|MENDRISIO|CHIASSO/;
- const swissByText=/SVIZZERA|SUISSE|SCHWEIZ|SWITZERLAND/.test(labels+' '+typedDest)||swissCityHint.test(typedDest+' '+labels);
+ const swissCoordinates=Array.isArray(route?.geometry?.coordinates)?route.geometry.coordinates:[];
+ // Riconoscimento geometrico conservativo del corridoio autostradale svizzero.
+ // Evita di attribuire la vignetta alle destinazioni italiane vicine al confine.
+ const swissRouteConfirmed=swissCoordinates.some(p=>{
+  const lon=Number(p?.[0]),lat=Number(p?.[1]);
+  return (lat>=46.55&&lat<=47.65&&lon>=7.0&&lon<=9.55) ||
+   (lat>=46.15&&lat<=46.65&&lon>=8.4&&lon<=9.25);
+ });
+ const swissByText=/SVIZZERA|SUISSE|SCHWEIZ|SWITZERLAND/.test(labels+' '+typedDest)||swissCityHint.test(typedDest+' '+labels)||swissRouteConfirmed;
  // Non usare più un semplice rettangolo geografico: comprende anche Piemonte e Lombardia
  // e generava falsi positivi (es. Arona / Via Vignetta).
  if(swissByText){
    vignette+=42.42;
-   vignetteParts.push('Svizzera 2026: CHF 40 ≈ € 42,42');
+   vignetteParts.push('Svizzera: vignetta CHF 40, stima € 42,42 · verificare classe/peso del mezzo e cambio');
  }
  const routeClearlyItaly=/\bITALIA\b|\bITALY\b/.test(labels) && !/SVIZZERA|SUISSE|SCHWEIZ|SWITZERLAND|AUSTRIA|ÖSTERREICH|SLOVENIA|SLOVENIJA/.test(labels);
  const inAustria=!routeClearlyItaly&&(/AUSTRIA|ÖSTERREICH/.test(labels)||/INNSBRUCK|TIROL|AUSTRIA/.test(typedDest));
@@ -10133,7 +10141,7 @@ async function routeCalcAutomatic(){
     return;
   }
   const coordText=coords.map(x=>x.lon+','+x.lat).join(';');
-  const url='https://router.project-osrm.org/route/v1/driving/'+coordText+'?overview=false&steps=true';
+  const url='https://router.project-osrm.org/route/v1/driving/'+coordText+'?overview=full&geometries=geojson&steps=true';
   const rr=await fetch(url);
   if(!rr.ok)throw new Error('Servizio percorso non disponibile ('+rr.status+').');
   const data=await rr.json(),route=data?.routes?.[0];
