@@ -225,6 +225,15 @@
      <div class="actions" style="justify-content:space-between;margin:10px 0"><b>Registro protocollo</b><span id="aCount" class="pill b">0</span></div>
      <div class="table"><table><thead><tr><th>Protocollo</th><th>Tipo</th><th>Oggetto</th><th>Mittente / Destinatario</th><th>Categoria</th><th>Scadenza</th><th>Allegati</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="aBody"></tbody></table></div>
 
+     <div id="aNumberGaps" class="section" data-admin-only="true" style="margin-top:16px">
+      <h3>📋 Registro numerazioni verbali non più utilizzate</h3>
+      <p class="muted">Annotazione ricognitiva basata sul registro attività. Le numerazioni originariamente assegnate a bozze poi eliminate rimangono riservate e non vengono riattribuite. Questa sezione non sostituisce lo storico informatico né attesta la causa dell'eliminazione.</p>
+      <div class="table"><table><thead><tr><th>Numero</th><th>Documento originario</th><th>Stato attuale</th><th>Traccia delle operazioni</th></tr></thead><tbody>
+      <tr><td><b>VERB-2026-014</b></td><td>Assemblea dei Soci, 2ª convocazione · riunione 05/10/2026</td><td>Numero non riutilizzabile · bozza eliminata</td><td>Creato 28/09/2026; eliminato e ripristinato il 02/10/2026; nuovamente eliminato il 10/10/2026</td></tr>
+      <tr><td><b>VERB-2026-017</b></td><td>Assemblea dei Soci, 2ª convocazione · riunione 05/10/2026</td><td>Numero non riutilizzabile · documento eliminato</td><td>Creato 02/10/2026; registrata modifica allo stato APPROVATO il 02/10/2026; registrata eliminazione come bozza il 10/10/2026</td></tr>
+      </tbody></table></div>
+      <p class="muted">Riferimento: Registro attività → area Verbali. Per la medesima assemblea risulta presente il verbale VERB-2026-018.</p>
+     </div>
      <div id="aApprovedMinutes" class="section hidden" data-admin-only="true" style="margin-top:16px"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">✅ Verbali approvati</h3><div class="muted">Verbali definitivi, anche senza PDF firmato. Il PDF può essere aggiunto in seguito.</div></div><span id="aApprovedCount" class="pill g">0</span></div><div class="table" style="margin-top:10px"><table><thead><tr><th>Verbale</th><th>Data</th><th>Titolo</th><th>PDF firmato</th><th>Azioni</th></tr></thead><tbody id="aApprovedBody"></tbody></table></div></div>
 
      <div id="aSignedSection" class="section" data-admin-only="true" style="margin-top:16px">
