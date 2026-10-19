@@ -12754,28 +12754,20 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  try{
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,modalita_pagamento,data_pagamento').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
-  if(!tabletSheetIs118&&(String(r.data.modalita_pagamento||'')!==String(row.modalita_pagamento||'')||String(r.data.data_pagamento||'')!==String(row.data_pagamento||'')))throw new Error('Pagamento non confermato: metodo o data risultano diversi da quelli inseriti. Non chiudere il foglio.');
-  // Rilettura indipendente: il tablet non deve confermare il salvataggio
-  // usando soltanto il risultato dell'UPDATE o lo stato locale.
+  // Salvataggio dedicato del metodo: scrittura e lettura confermata sul database.
+  if(!tabletSheetIs118 && row.modalita_pagamento){
+   const pg=await sb.rpc('cge_tablet_salva_pagamento_foglio',{
+    p_foglio:tabletCurrentSheet.id,p_modalita:row.modalita_pagamento,p_data:row.data_pagamento||null
+   });
+   if(pg.error)throw new Error('Pagamento NON salvato: '+pg.error.message);
+   row.data_pagamento=pg.data?.data_pagamento||null;
+  }
   if(!tabletSheetIs118){
    const verifica=await sb.from('fogli_viaggio').select('modalita_pagamento,data_pagamento').eq('id',tabletCurrentSheet.id).single();
    if(verifica.error)throw new Error('Verifica pagamento non riuscita: '+verifica.error.message);
    if(String(verifica.data.modalita_pagamento||'').trim().toUpperCase()!==String(row.modalita_pagamento||'').trim().toUpperCase()
     || String(verifica.data.data_pagamento||'')!==String(row.data_pagamento||''))
-    throw new Error('Il metodo o la data del pagamento non sono stati memorizzati. Il foglio rimane aperto.');
-  }
-  // Salvataggio dedicato dei dati di pagamento con permessi del tablet.
-  // La chiusura può proseguire soltanto dopo la conferma dal database.
-  if(!tabletSheetIs118 && row.modalita_pagamento){
-   const pg=await sb.rpc('cge_tablet_salva_pagamento_foglio',{
-    p_foglio:tabletCurrentSheet.id,
-    p_modalita:row.modalita_pagamento,
-    p_data:row.data_pagamento||null
-   });
-   if(pg.error)throw new Error('Pagamento NON salvato: '+pg.error.message);
-   if(String(pg.data?.modalita_pagamento||'').toUpperCase()!==String(row.modalita_pagamento).toUpperCase())
-    throw new Error('Pagamento non confermato dal database. Il foglio rimane aperto.');
-   row.data_pagamento=pg.data.data_pagamento||null;
+    throw new Error('Metodo o data di pagamento non salvati: il foglio rimane aperto.');
   }
   tabletCurrentSheet={...tabletCurrentSheet,...row};
   const syncWarnings=[];
