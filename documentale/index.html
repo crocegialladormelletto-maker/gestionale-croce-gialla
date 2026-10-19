@@ -2287,6 +2287,51 @@ $('ltNew').onclick=()=>{ltActive=null;ltFill();ltList();msg('ltMsg','Nuova lette
 $('ltDrafts').onchange=()=>{ltActive=$('ltDrafts').value||null;ltFill(ltRead().find(x=>x.id===ltActive)||{});ltState();msg('ltMsg','Bozza caricata.','ok')};
 $('ltSave').onclick=()=>{const a=ltCollect();if(ltCurrentRecord()?.protocolId)return msg('ltMsg','Documento protocollato: non è modificabile.','warn');if(!a.Subject.trim()&&!a.Body.trim())return msg('ltMsg','Inserisci almeno oggetto o testo.','warn');try{const rows=ltRead();if(!ltActive)ltActive='lettera-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);const index=rows.findIndex(x=>x.id===ltActive);const item={...a,id:ltActive,savedAt:new Date().toISOString()};if(index<0)rows.unshift(item);else rows[index]=item;localStorage.setItem(ltKey(),JSON.stringify(rows));ltList();ltState();msg('ltMsg','Bozza salvata in questo browser. Per archiviazione ufficiale registra il PDF nel protocollo.','ok')}catch(e){msg('ltMsg','Salvataggio non riuscito: '+e.message,'err')}};
 $('ltRemove').onclick=()=>{if(ltCurrentRecord()?.protocolId)return msg('ltMsg','La lettera protocollata non può essere eliminata da questa sezione.','warn');if(!ltActive)return msg('ltMsg','Nessuna bozza selezionata.','warn');if(!confirm('Eliminare questa bozza locale?'))return;localStorage.setItem(ltKey(),JSON.stringify(ltRead().filter(x=>x.id!==ltActive)));ltActive=null;ltFill();ltList();msg('ltMsg','Bozza locale eliminata.','ok')};
+/* Impaginazione eseguita dalla finestra gestionale: non dipende dagli script nel popup. */
+function ltPaginatePopup(win){
+ const d=win.document, first=d.querySelector('article.sheet');
+ if(!first||d.body?.dataset.paginated==='yes')return false;
+ const main=first.querySelector('.letter-text'),body=first.querySelector('.letter-body'),footer=first.querySelector('.letter-footer');
+ if(!main||!body||!footer)return false;
+ const signature=main.querySelector('.letter-sign');
+ const sample=first.querySelector('.sample-watermark');
+ const blocks=[...body.children];if(signature)blocks.push(signature);
+ blocks.forEach(n=>n.remove());footer.remove();if(sample)sample.remove();
+ d.body.classList.add('letter-paginated');
+ const mm=96/25.4;
+ let page=first,target=body;
+ const newPage=()=>{
+   page=d.createElement('article');page.className='sheet';
+   const m=d.createElement('main');m.className='letter-text';
+   target=d.createElement('div');target.className='letter-body';
+   m.appendChild(target);page.appendChild(m);d.body.appendChild(page);
+ };
+ // Ogni foglio riserva 29 mm in fondo per la fascia e 16 mm per i margini.
+ for(const node of blocks){
+   if(node.classList.contains('letter-sign'))target=page.querySelector('.letter-text');
+   target.appendChild(node);
+   const rect=node.getBoundingClientRect(),base=page.getBoundingClientRect();
+   if(rect.bottom-base.top>267*mm){
+     node.remove();newPage();target.appendChild(node);
+   }
+ }
+ page.appendChild(footer);
+ if(sample)first.appendChild(sample);
+ d.body.dataset.paginated='yes';
+ win.__letterReady=true;
+ return d.querySelectorAll('article.sheet').length;
+}
+function ltReadyPopup(win,printNow=false){
+ const run=()=>{
+   try{
+     const n=ltPaginatePopup(win);
+     if(!n)throw Error('Non è stato possibile creare le pagine A4');
+     if(printNow){win.focus();win.print();}
+   }catch(e){alert('Impaginazione non riuscita: '+e.message+'. Non stampare il documento.');}
+ };
+ if(win.document.readyState==='loading')win.document.addEventListener('DOMContentLoaded',run,{once:true});
+ else win.setTimeout(run,0);
+}
 function ltDocument(a,signatureUrl=null,facsimile=false){
  const p=v=>esc(v||'').replace(/\n/g,'<br>');
  const letterBody=String(a.Body||'').replace(/\r\n?/g,'\n').trim().split(/\n\s*\n/).filter(Boolean).map(part=>{
@@ -2391,9 +2436,9 @@ function ltDocument(a,signatureUrl=null,facsimile=false){
  window.addEventListener('beforeprint',()=>{if(!window.__letterReady)paginate()});
 })();<\/script></body></html>`;
 }
-$('ltFacsimile').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila o genera prima il testo della lettera.','warn');a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup del browser per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a,null,true));w.document.close();msg('ltMsg','Anteprima fac-simile aperta, senza assegnazione di protocollo. Per stampare usa Ctrl+P e Salva come PDF.','ok')};
-$('ltPrint').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila prima il testo della lettera.','warn');if(!ltCurrentRecord()?.protocolId)a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup per stampare la lettera.','warn');w.document.open();w.document.write(ltDocument(a,null,!ltCurrentRecord()?.protocolId));w.document.close();w.addEventListener('load',()=>{const images=[...w.document.images];Promise.all(images.map(im=>im.complete?Promise.resolve():new Promise(resolve=>{im.addEventListener('load',resolve,{once:true});im.addEventListener('error',resolve,{once:true})}))).then(()=>{const wait=()=>{if(w.__letterReady){w.focus();w.print()}else w.setTimeout(wait,100)};wait()})},{once:true});msg('ltMsg','Stampa aperta. Seleziona A4 e scala 100%; verifica che la filigrana compaia anche nell’anteprima della stampante.','ok')};
-$('ltPreview').onclick=()=>{const a=ltCollect();if(!ltCurrentRecord()?.protocolId)return msg('ltMsg','Assegna prima il protocollo ufficiale per preparare il PDF da firmare.','warn');if(!a.Body.trim())return msg('ltMsg','Inserisci il testo prima della stampa.','warn');const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti le finestre popup per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a));w.document.close();msg('ltMsg','Anteprima aperta. Nel browser scegli Stampa → Salva come PDF.','ok')};
+$('ltFacsimile').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila o genera prima il testo della lettera.','warn');a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup del browser per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a,null,true));w.document.close();ltReadyPopup(w);msg('ltMsg','Anteprima fac-simile aperta, senza assegnazione di protocollo. Per stampare usa Ctrl+P e Salva come PDF.','ok')};
+$('ltPrint').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila prima il testo della lettera.','warn');if(!ltCurrentRecord()?.protocolId)a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup per stampare la lettera.','warn');w.document.open();w.document.write(ltDocument(a,null,!ltCurrentRecord()?.protocolId));w.document.close();ltReadyPopup(w,true);msg('ltMsg','Stampa aperta. Seleziona A4 e scala 100%; verifica che la filigrana compaia anche nell’anteprima della stampante.','ok')};
+$('ltPreview').onclick=()=>{const a=ltCollect();if(!ltCurrentRecord()?.protocolId)return msg('ltMsg','Assegna prima il protocollo ufficiale per preparare il PDF da firmare.','warn');if(!a.Body.trim())return msg('ltMsg','Inserisci il testo prima della stampa.','warn');const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti le finestre popup per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a));w.document.close();ltReadyPopup(w);msg('ltMsg','Anteprima aperta. Nel browser scegli Stampa → Salva come PDF.','ok')};
 $('ltPrintSigned').onclick=async()=>{
  if(prof?.ruolo!=='AMMINISTRATORE')return msg('ltMsg','Solo gli amministratori possono utilizzare la firma memorizzata.','warn');
  const a=ltCollect();
