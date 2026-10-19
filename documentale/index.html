@@ -1990,13 +1990,25 @@ async function duplicateCall(id){
   $('cvTitle').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){msg('cvListMsg',e.message||String(e),'err')}
 }
+async function createMinuteFromCall(id){
+ const call=callsRows.find(x=>String(x.id)===String(id));
+ if(!call||call.stato!=='DEFINITIVA')return;
+ const table=call.tipo_riunione==='CONSIGLIO_DIRETTIVO'?'verbali_consiglio_dettagli':'verbali_assemblea_dettagli';
+ const existing=await sb.from(table).select('verbale_id').eq('convocazione_id',id).limit(1);
+ if(!existing.error&&(existing.data||[]).length)return msg('cvListMsg','Esiste già un verbale collegato a questa convocazione. Aprilo dall’archivio per evitare duplicati.','warn');
+ newMinuteOfType(call.tipo_riunione);
+ if(call.tipo_riunione==='CONSIGLIO_DIRETTIVO')await loadBoardMinuteCalls(id,true);
+ else await loadAssemblyMinuteCalls(id,true);
+ msg('vmsg','Dati della convocazione importati. Completa il verbale e salva come bozza.','ok');
+}
 function renderCalls(){
  $('cvCount').textContent=callsRows.length;
  $('cvBody').innerHTML=callsRows.length?callsRows.map(v=>{
   const phase=v.fase_convocazione==='PRIMA'?'<span class="pill r">1ª CONVOCAZIONE</span>':v.fase_convocazione==='SECONDA'?'<span class="pill g">2ª CONVOCAZIONE</span>':'';
   const signed=signedCallFiles[String(v.id)];
-  return '<tr><td><b>'+esc(v.convocazione_codice)+'</b>'+(phase?'<br>'+phase:'')+(signed?'<br><span class="pill g">✍️ FIRMATA</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='DESERTA'||v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn secondary" type="button" data-cvdup="'+esc(v.id)+'">⧉ Duplica</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button></div></td></tr>';
+  return '<tr><td><b>'+esc(v.convocazione_codice)+'</b>'+(phase?'<br>'+phase:'')+(signed?'<br><span class="pill g">✍️ FIRMATA</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='DESERTA'||v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn secondary" type="button" data-cvdup="'+esc(v.id)+'">⧉ Duplica</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button>'+(v.stato==='DEFINITIVA'?'<button class="btn blue" type="button" data-cvminute="'+esc(v.id)+'">✚ Crea verbale</button>':'')+'</div></td></tr>';
  }).join(''):'<tr><td colspan="7">Nessuna convocazione trovata.</td></tr>';
+ $('cvBody').querySelectorAll('[data-cvminute]').forEach(b=>b.onclick=()=>createMinuteFromCall(b.dataset.cvminute));
  $('cvBody').querySelectorAll('[data-cvopen]').forEach(b=>b.onclick=()=>openCall(b.dataset.cvopen,false));
  $('cvBody').querySelectorAll('[data-cvdup]').forEach(b=>b.onclick=()=>duplicateCall(b.dataset.cvdup));
  $('cvBody').querySelectorAll('[data-cvprint]').forEach(b=>b.onclick=()=>openCall(b.dataset.cvprint,true));
