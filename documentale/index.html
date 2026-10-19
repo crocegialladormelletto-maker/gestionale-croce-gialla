@@ -482,15 +482,15 @@ Consigliere: Ragazzini Luisa</textarea></div>
 <section id="letters" class="surface hidden">
 <div class="hero"><h1>✉️ Lettere su carta intestata</h1><p>Compila la corrispondenza ufficiale, visualizza l'anteprima e stampa in PDF A4.</p></div>
 <div class="pad">
-<div class="notice warn">Le bozze di questa sezione vengono conservate soltanto in questo browser e su questo dispositivo. Per l'archivio ufficiale usa il protocollo documentale e allega il PDF prodotto.</div>
-<div class="actions"><button id="ltNew" class="btn success" type="button">✚ Nuova lettera</button><button id="ltSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="ltPreview" class="btn blue" type="button">👁 Anteprima / Stampa PDF</button><button id="ltPrintSigned" class="btn violet" type="button">✍️ PDF con firma del Presidente</button><button id="ltRemove" class="btn danger" type="button">Elimina bozza</button></div>
+<div class="notice warn">Le bozze non protocollate restano in questo browser. Il numero ufficiale è assegnato dal server solo quando premi “Assegna protocollo”. Dopo la protocollazione non modificare il testo da firmare: per correzioni prepara un nuovo documento secondo le procedure interne.</div><div class="actions"><button id="ltAssignProtocol" class="btn orange" type="button">🔢 Assegna protocollo ufficiale</button><span id="ltProtocolState" class="pill b">Non protocollata</span></div>
+<div class="actions"><button id="ltNew" class="btn success" type="button">✚ Nuova lettera</button><button id="ltSave" class="btn yellow" type="button">💾 Salva bozza</button><button id="ltPreview" class="btn blue" type="button">📄 Prepara PDF per ArubaSign</button><button id="ltPrintSigned" class="btn violet" type="button">✍️ PDF con firma del Presidente</button><button id="ltRemove" class="btn danger" type="button">Elimina bozza</button></div>
 <div class="grid2 section"><div class="field"><label>Bozze salvate su questo dispositivo</label><select id="ltDrafts"><option value="">Nuova lettera</option></select></div><div class="field"><label>Tipo di documento</label><select id="ltType"><option>Lettera ufficiale</option><option>Comunicazione</option><option>PEC</option><option>Diffida</option><option>Richiesta</option><option>Altro</option></select></div></div>
-<div class="grid3"><div class="field"><label>Data</label><input id="ltDate" type="date"></div><div class="field"><label>Protocollo (se già assegnato)</label><input id="ltProtocol" placeholder="Es. 123/2026"></div><div class="field"><label>Destinatario</label><input id="ltRecipient" placeholder="Ente, ufficio o nominativo"></div></div>
+<div class="grid3"><div class="field"><label>Data</label><input id="ltDate" type="date"></div><div class="field"><label>Numero protocollo ufficiale</label><input id="ltProtocol" placeholder="Assegnato dal gestionale" readonly></div><div class="field"><label>Destinatario</label><input id="ltRecipient" placeholder="Ente, ufficio o nominativo"></div></div>
 <div class="grid2" style="margin-top:10px"><div class="field"><label>Indirizzo / recapito destinatario</label><textarea id="ltAddress" rows="2" placeholder="Indirizzo completo / PEC"></textarea></div><div class="field"><label>Oggetto</label><textarea id="ltSubject" rows="2" placeholder="Oggetto della comunicazione"></textarea></div></div>
 <div class="field" style="margin-top:10px"><label>Testo della lettera</label><textarea id="ltBody" rows="15" style="min-height:310px" placeholder="Scrivi qui il contenuto della lettera..."></textarea></div>
 <div class="grid2" style="margin-top:10px"><div class="field"><label>Qualifica firmatario</label><input id="ltRole" value="Il Presidente"></div><div class="field"><label>Nome firmatario</label><input id="ltSigner" value="Paolo Musso"></div></div>
 <div class="field" style="max-width:350px;margin-top:10px"><label><input type="checkbox" id="ltSignature" style="width:auto"> Mostra riga per firma autografa</label></div>
-<div class="section"><h3>🔐 Firma digitale qualificata con Aruba</h3><p>1. Genera e salva il PDF della lettera. 2. Firmalo nell'app Aruba con modalità <b>PAdES</b> (PDF firmato), usando il tuo dispositivo di firma. 3. Importa il PDF firmato per predisporre la protocollazione.</p><div class="field"><label>Seleziona PDF firmato digitalmente (PAdES)</label><input type="file" id="ltSignedPdf" accept=".pdf,application/pdf"></div><div class="actions" style="margin-top:10px"><button class="btn teal" id="ltToProtocol" type="button">📥 Porta la lettera firmata al protocollo</button></div><div class="muted">La firma digitale viene eseguita da Aruba, non dal browser. Il gestionale non certifica né verifica automaticamente la validità crittografica della firma: esegui la verifica con Aruba prima dell'archiviazione. Il protocollo salva il file solo dopo aver premuto “Salva / protocolla”.</div></div><div id="ltMsg" class="notice">Compila i campi, poi premi Anteprima / Stampa PDF.</div>
+<div class="section"><h3>🔐 Firma digitale qualificata con Aruba</h3><p>1. Genera e salva il PDF della lettera. 2. Firmalo nell'app Aruba con modalità <b>PAdES</b> (PDF firmato), usando il tuo dispositivo di firma. 3. Importa il PDF firmato per allegarlo al protocollo già assegnato.</p><div class="field"><label>Seleziona PDF firmato digitalmente (PAdES)</label><input type="file" id="ltSignedPdf" accept=".pdf,application/pdf"></div><div class="actions" style="margin-top:10px"><button class="btn teal" id="ltToProtocol" type="button">📥 Archivia PDF firmato nel protocollo</button></div><div class="muted">La firma digitale viene eseguita da Aruba, non dal browser. Il gestionale non certifica né verifica automaticamente la validità crittografica della firma: esegui la verifica con Aruba prima dell'archiviazione. Il caricamento viene eseguito sul protocollo ufficiale già creato, senza assegnare un secondo numero.</div></div><div id="ltMsg" class="notice">Compila i campi, poi premi Anteprima / Stampa PDF.</div>
 </div></section>
   </main>
  </div>
@@ -692,7 +692,7 @@ async function enter(){
  $('login').classList.add('hidden');$('app').classList.remove('hidden');$('who').textContent=(prof.nome||prof.ruolo)+' · '+u.data.user.email;
  $('pReservedWrap').classList.toggle('hidden',prof.ruolo!=='AMMINISTRATORE');
  document.querySelectorAll('[data-admin-only="true"]').forEach(el=>el.classList.toggle('hidden',prof.ruolo!=='AMMINISTRATORE'));
- view('dash');ltActive=null;ltFill();ltList();
+ view('dash');ltActive=null;ltFill();ltList();ltState();
 }
 $('go').onclick=async()=>{msg('lmsg','Accesso in corso...');const r=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('pw').value});if(r.error)return msg('lmsg',r.error.message,'err');enter()};
 $('pw').onkeydown=e=>{if(e.key==='Enter')$('go').click()};
@@ -2282,16 +2282,16 @@ function ltCollect(){const a={};ltFields.forEach(k=>a[k]=$('lt'+k).value);a.Sign
 function ltFill(a={}){ltFields.forEach(k=>$('lt'+k).value=a[k]??(k==='Role'?'Il Presidente':k==='Signer'?'Paolo Musso':k==='Date'?new Date().toLocaleDateString('en-CA'):''));$('ltSignature').checked=!!a.Signature}
 function ltList(){const rows=ltRead();$('ltDrafts').innerHTML='<option value="">Nuova lettera</option>'+rows.map(x=>'<option value="'+esc(x.id)+'">'+esc((x.Subject||'Senza oggetto').slice(0,90))+' · '+esc(x.Date||'')+'</option>').join('');$('ltDrafts').value=ltActive||''}
 $('ltNew').onclick=()=>{ltActive=null;ltFill();ltList();msg('ltMsg','Nuova lettera pronta.','ok')};
-$('ltDrafts').onchange=()=>{ltActive=$('ltDrafts').value||null;ltFill(ltRead().find(x=>x.id===ltActive)||{});msg('ltMsg','Bozza caricata.','ok')};
-$('ltSave').onclick=()=>{const a=ltCollect();if(!a.Subject.trim()&&!a.Body.trim())return msg('ltMsg','Inserisci almeno oggetto o testo.','warn');try{const rows=ltRead();if(!ltActive)ltActive='lettera-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);const index=rows.findIndex(x=>x.id===ltActive);const item={...a,id:ltActive,savedAt:new Date().toISOString()};if(index<0)rows.unshift(item);else rows[index]=item;localStorage.setItem(ltKey(),JSON.stringify(rows));ltList();msg('ltMsg','Bozza salvata in questo browser. Per archiviazione ufficiale registra il PDF nel protocollo.','ok')}catch(e){msg('ltMsg','Salvataggio non riuscito: '+e.message,'err')}};
-$('ltRemove').onclick=()=>{if(!ltActive)return msg('ltMsg','Nessuna bozza selezionata.','warn');if(!confirm('Eliminare questa bozza locale?'))return;localStorage.setItem(ltKey(),JSON.stringify(ltRead().filter(x=>x.id!==ltActive)));ltActive=null;ltFill();ltList();msg('ltMsg','Bozza locale eliminata.','ok')};
+$('ltDrafts').onchange=()=>{ltActive=$('ltDrafts').value||null;ltFill(ltRead().find(x=>x.id===ltActive)||{});ltState();msg('ltMsg','Bozza caricata.','ok')};
+$('ltSave').onclick=()=>{const a=ltCollect();if(ltCurrentRecord()?.protocolId)return msg('ltMsg','Documento protocollato: non è modificabile.','warn');if(!a.Subject.trim()&&!a.Body.trim())return msg('ltMsg','Inserisci almeno oggetto o testo.','warn');try{const rows=ltRead();if(!ltActive)ltActive='lettera-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);const index=rows.findIndex(x=>x.id===ltActive);const item={...a,id:ltActive,savedAt:new Date().toISOString()};if(index<0)rows.unshift(item);else rows[index]=item;localStorage.setItem(ltKey(),JSON.stringify(rows));ltList();ltState();msg('ltMsg','Bozza salvata in questo browser. Per archiviazione ufficiale registra il PDF nel protocollo.','ok')}catch(e){msg('ltMsg','Salvataggio non riuscito: '+e.message,'err')}};
+$('ltRemove').onclick=()=>{if(ltCurrentRecord()?.protocolId)return msg('ltMsg','La lettera protocollata non può essere eliminata da questa sezione.','warn');if(!ltActive)return msg('ltMsg','Nessuna bozza selezionata.','warn');if(!confirm('Eliminare questa bozza locale?'))return;localStorage.setItem(ltKey(),JSON.stringify(ltRead().filter(x=>x.id!==ltActive)));ltActive=null;ltFill();ltList();msg('ltMsg','Bozza locale eliminata.','ok')};
 function ltDocument(a,signatureUrl=null){
  const p=v=>esc(v||'').replace(/\n/g,'<br>');
  const logo=orgLogo;
  return '<!doctype html><html lang="it"><head><meta charset="utf-8"><title>'+esc(a.Subject||'Lettera')+'</title>'+
  '<style>@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#18334d;-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{min-height:297mm;position:relative;padding:47mm 20mm 27mm;background:white}.head{position:fixed;top:12mm;left:0;right:0;height:26mm;background:#12375d;border-bottom:2mm solid #ffdb17;display:flex;align-items:center;padding-left:24mm;gap:6mm;color:white}.head img{width:28mm;height:28mm;object-fit:contain;border-radius:50%;background:white}.head strong{font-size:17pt;display:block}.head small{font-size:9pt;letter-spacing:1.4px}.foot{position:fixed;bottom:0;left:0;right:0;height:18mm;background:#12375d;border-top:2mm solid #ffdb17;color:white;font-size:8pt;display:flex;align-items:center;justify-content:center;padding:3mm 8mm;text-align:center}.watermark{position:fixed;right:-35mm;top:125mm;width:130mm;opacity:.045;z-index:0}.content{position:relative;z-index:1;font-size:11pt;line-height:1.52}.meta{text-align:right;font-size:9pt;color:#40576c;margin-bottom:14mm}.to{text-align:right;margin:0 0 12mm auto;max-width:90mm;white-space:normal}.subject{font-weight:bold;margin-bottom:8mm}.body{white-space:normal;overflow-wrap:anywhere}.signature{margin-top:22mm;margin-left:auto;text-align:center;width:75mm;break-inside:avoid}.signline{margin-top:17mm;border-top:1px solid #789}h1{font-size:12pt;margin:0 0 5mm}@media screen{body{background:#e7ebf0}.page{width:210mm;margin:10px auto;box-shadow:0 2px 18px #0003}}@media print{.page{margin:0;box-shadow:none}.print-ui{display:none}}</style></head><body><header class="head"><img src="'+esc(logo)+'"><div><strong>CROCE GIALLA EMERGENZA ODV</strong><small>ORGANIZZAZIONE DI VOLONTARIATO</small></div></header><img class="watermark" src="'+esc(logo)+'"><footer class="foot">Via I° Maggio 1, 28040 Dormelletto (NO)　|　Tel. 0322 282730　|　crocegialladormelletto@crocegiallaemergenza.it</footer><div class="page"><main class="content"><div class="meta">Dormelletto, '+p(a.Date?new Date(a.Date+'T12:00:00').toLocaleDateString('it-IT'):'__________')+(a.Protocol?'<br>Prot. n. '+p(a.Protocol):'')+'</div><div class="to"><b>Spett.le '+p(a.Recipient)+'</b>'+(a.Address?'<br>'+p(a.Address):'')+'</div><div class="subject">Oggetto: '+p(a.Subject)+'</div><div class="body">'+p(a.Body)+'</div><div class="signature">'+p(a.Role)+'<br><b>'+p(a.Signer)+'</b>'+(signatureUrl?'<img src="'+esc(signatureUrl)+'" alt="Firma del Presidente" style="height:20mm;max-width:70mm;object-fit:contain;display:block;margin:3mm auto">':a.Signature?'<div class="signline">Firma</div>':'')+'</div></main></div></body></html>';
 }
-$('ltPreview').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Inserisci il testo prima della stampa.','warn');const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti le finestre popup per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a));w.document.close();msg('ltMsg','Anteprima aperta. Nel browser scegli Stampa → Salva come PDF.','ok')};
+$('ltPreview').onclick=()=>{const a=ltCollect();if(!ltCurrentRecord()?.protocolId)return msg('ltMsg','Assegna prima il protocollo ufficiale per preparare il PDF da firmare.','warn');if(!a.Body.trim())return msg('ltMsg','Inserisci il testo prima della stampa.','warn');const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti le finestre popup per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a));w.document.close();msg('ltMsg','Anteprima aperta. Nel browser scegli Stampa → Salva come PDF.','ok')};
 $('ltPrintSigned').onclick=async()=>{
  if(prof?.ruolo!=='AMMINISTRATORE')return msg('ltMsg','Solo gli amministratori possono utilizzare la firma memorizzata.','warn');
  const a=ltCollect();
@@ -2310,17 +2310,42 @@ $('ltPrintSigned').onclick=async()=>{
  }catch(e){msg('ltMsg','Firma non disponibile: '+(e.message||String(e)),'err')}
  finally{btn.disabled=false}
 };
-$('ltToProtocol').onclick=()=>{
- const a=ltCollect(),f=$('ltSignedPdf').files?.[0];
- if(!f)return msg('ltMsg','Seleziona prima il PDF firmato digitalmente con Aruba.','warn');
- if(!/\\.pdf$/i.test(f.name)||f.size>20*1024*1024)return msg('ltMsg','Il file deve essere un PDF firmato in modalità PAdES e non superare 20 MB.','warn');
- view('protocol');
- $('pType').value='USCITA';$('pDocDate').value=a.Date||today();$('pCategory').value='ISTITUZIONALE';$('pSender').value='Croce Gialla Emergenza ODV';$('pRecipient').value=a.Recipient||'';$('pObject').value=a.Subject||'Lettera su carta intestata';
- $('pNotes').value='Lettera predisposta su carta intestata; PDF sottoscritto esternamente con Aruba. Verificare firma digitale prima dell’archiviazione.';
- try{const d=new DataTransfer();d.items.add(f);$('pFiles').files=d.files;msg('pmsg','PDF selezionato: '+f.name+'. Verifica i dati e premi “Salva / protocolla” per archiviarlo.','ok')}
- catch(e){msg('pmsg','Compila il protocollo e seleziona nuovamente il file '+f.name+' nel campo Allegati, poi salva.','warn')}
+function ltCurrentRecord(){return ltRead().find(x=>x.id===ltActive)||null}
+function ltState(){const x=ltCurrentRecord(),fixed=!!x?.protocolId;$('ltProtocol').value=x?.Protocol||'';$('ltProtocolState').textContent=fixed?'Protocollo '+x.Protocol+' · IN ATTESA FIRMA':'Non protocollata';$('ltAssignProtocol').disabled=fixed;const fields=['ltType','ltDate','ltRecipient','ltAddress','ltSubject','ltBody','ltRole','ltSigner'];fields.forEach(id=>$(id).readOnly=fixed);$('ltType').disabled=fixed;}
+async function ltStoreRecord(data){const rows=ltRead();if(!ltActive)ltActive='lettera-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);const i=rows.findIndex(x=>x.id===ltActive),v={...data,id:ltActive,savedAt:new Date().toISOString()};if(i<0)rows.unshift(v);else rows[i]=v;localStorage.setItem(ltKey(),JSON.stringify(rows));ltList();ltState();return v}
+$('ltAssignProtocol').onclick=async()=>{
+ if(prof?.ruolo!=='AMMINISTRATORE')return msg('ltMsg','Accesso amministrativo necessario.','warn');
+ if(ltCurrentRecord()?.protocolId)return msg('ltMsg','Protocollo già assegnato. Non sarà duplicato.','warn');
+ const a=ltCollect();if(!a.Subject.trim()||!a.Body.trim()||!a.Recipient.trim())return msg('ltMsg','Compila destinatario, oggetto e testo prima di protocollare.','warn');
+ if(!confirm('Confermi la protocollazione ufficiale di questa lettera IN USCITA? Il numero sarà definitivo e verrà stampato nel PDF da firmare.'))return;
+ const btn=$('ltAssignProtocol');btn.disabled=true;
+ try{
+  const v=await sb.rpc('cge_protocollo_crea',{p_tipo:'USCITA',p_data_documento:a.Date||today(),p_oggetto:a.Subject.trim(),p_mittente:'Croce Gialla Emergenza ODV',p_destinatario:a.Recipient.trim(),p_categoria:'ISTITUZIONALE',p_scadenza:null,p_note:'Lettera su carta intestata. In attesa di firma digitale PAdES ArubaSign e allegazione del PDF firmato.',p_riservato:false});
+  if(v.error)throw v.error;
+  const id=v.data?.[0]?.id,code=v.data?.[0]?.protocollo_codice;
+  if(!id||!code)throw new Error('Protocollo creato ma numero non restituito: verifica l’archivio prima di riprovare.');
+  await ltStoreRecord({...a,Protocol:code,protocolId:id,signatureStatus:'IN ATTESA FIRMA'});
+  msg('ltMsg','Protocollo ufficiale '+code+' assegnato. Prepara il PDF e firmalo con ArubaSign; poi carica il PDF PAdES.','ok');loadDashboard();
+ }catch(e){msg('ltMsg','Protocollazione non completata o da verificare: '+(e.message||String(e))+'. Se ci sono dubbi verifica Archivio documenti prima di riprovare.','err')}
+ finally{ltState()}
 };
-ltFill();
+$('ltToProtocol').onclick=async()=>{
+ const rec=ltCurrentRecord(),f=$('ltSignedPdf').files?.[0];
+ if(!rec?.protocolId)return msg('ltMsg','Prima assegna un numero di protocollo ufficiale alla lettera.','warn');
+ if(rec.signatureStatus==='FIRMATO ARCHIVIATO')return msg('ltMsg','PDF firmato già archiviato per questo protocollo. Apri l’archivio documenti per consultarlo.','warn');
+ if(!f)return msg('ltMsg','Seleziona il PDF firmato digitalmente con ArubaSign.','warn');
+ if(!/\\.pdf$/i.test(f.name)||f.size>20971520)return msg('ltMsg','Seleziona un PDF PAdES non superiore a 20 MB.','warn');
+ if(!confirm('Hai verificato con ArubaSign la validità della firma PAdES? Il file sarà collegato al protocollo '+rec.Protocol+'.'))return;
+ const btn=$('ltToProtocol');btn.disabled=true;
+ try{
+  const errors=await uploadFiles(rec.protocolId,[f]);
+  if(errors.length)throw new Error(errors.join('; '));
+  await ltStoreRecord({...rec,signatureStatus:'FIRMATO ARCHIVIATO',signedFileName:f.name});
+  $('ltSignedPdf').value='';msg('ltMsg','Documento firmato allegato al protocollo '+rec.Protocol+'. Puoi consultarlo nell’Archivio documenti.','ok');loadDashboard();
+ }catch(e){msg('ltMsg','Caricamento non confermato: '+(e.message||String(e))+'. Verifica gli allegati del protocollo prima di riprovare.','err')}
+ finally{btn.disabled=false}
+};
+ltFill();ltState();
 
 (async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
 </script>
