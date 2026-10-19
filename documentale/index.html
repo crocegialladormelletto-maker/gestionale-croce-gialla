@@ -490,7 +490,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
 <div class="field" style="margin-top:10px"><label>Testo della lettera</label><textarea id="ltBody" rows="15" style="min-height:310px" placeholder="Scrivi qui il contenuto della lettera..."></textarea></div>
 <div class="grid2" style="margin-top:10px"><div class="field"><label>Qualifica firmatario</label><input id="ltRole" value="Il Presidente"></div><div class="field"><label>Nome firmatario</label><input id="ltSigner" value="Paolo Musso"></div></div>
 <div class="field" style="max-width:350px;margin-top:10px"><label><input type="checkbox" id="ltSignature" style="width:auto"> Mostra riga per firma autografa</label></div>
-<div id="ltMsg" class="notice">Compila i campi, poi premi Anteprima / Stampa PDF.</div>
+<div class="section"><h3>🔐 Firma digitale qualificata con Aruba</h3><p>1. Genera e salva il PDF della lettera. 2. Firmalo nell'app Aruba con modalità <b>PAdES</b> (PDF firmato), usando il tuo dispositivo di firma. 3. Importa il PDF firmato per predisporre la protocollazione.</p><div class="field"><label>Seleziona PDF firmato digitalmente (PAdES)</label><input type="file" id="ltSignedPdf" accept=".pdf,application/pdf"></div><div class="actions" style="margin-top:10px"><button class="btn teal" id="ltToProtocol" type="button">📥 Porta la lettera firmata al protocollo</button></div><div class="muted">La firma digitale viene eseguita da Aruba, non dal browser. Il gestionale non certifica né verifica automaticamente la validità crittografica della firma: esegui la verifica con Aruba prima dell'archiviazione. Il protocollo salva il file solo dopo aver premuto “Salva / protocolla”.</div></div><div id="ltMsg" class="notice">Compila i campi, poi premi Anteprima / Stampa PDF.</div>
 </div></section>
   </main>
  </div>
@@ -2309,6 +2309,16 @@ $('ltPrintSigned').onclick=async()=>{
   msg('ltMsg','Lettera con firma aperta. Usa Stampa → Salva come PDF. La firma riprodotta come immagine non equivale a una firma digitale qualificata.','ok');
  }catch(e){msg('ltMsg','Firma non disponibile: '+(e.message||String(e)),'err')}
  finally{btn.disabled=false}
+};
+$('ltToProtocol').onclick=()=>{
+ const a=ltCollect(),f=$('ltSignedPdf').files?.[0];
+ if(!f)return msg('ltMsg','Seleziona prima il PDF firmato digitalmente con Aruba.','warn');
+ if(!/\\.pdf$/i.test(f.name)||f.size>20*1024*1024)return msg('ltMsg','Il file deve essere un PDF firmato in modalità PAdES e non superare 20 MB.','warn');
+ view('protocol');
+ $('pType').value='USCITA';$('pDocDate').value=a.Date||today();$('pCategory').value='ISTITUZIONALE';$('pSender').value='Croce Gialla Emergenza ODV';$('pRecipient').value=a.Recipient||'';$('pObject').value=a.Subject||'Lettera su carta intestata';
+ $('pNotes').value='Lettera predisposta su carta intestata; PDF sottoscritto esternamente con Aruba. Verificare firma digitale prima dell’archiviazione.';
+ try{const d=new DataTransfer();d.items.add(f);$('pFiles').files=d.files;msg('pmsg','PDF selezionato: '+f.name+'. Verifica i dati e premi “Salva / protocolla” per archiviarlo.','ok')}
+ catch(e){msg('pmsg','Compila il protocollo e seleziona nuovamente il file '+f.name+' nel campo Allegati, poi salva.','warn')}
 };
 ltFill();
 
