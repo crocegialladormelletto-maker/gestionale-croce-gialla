@@ -2300,7 +2300,7 @@ function ltArchiveRefresh(){
  const pane=$('ltArchiveRows');if(!pane)return;
  const rows=ltRead().slice().sort((a,b)=>String(b.Date||b.savedAt||'').localeCompare(String(a.Date||a.savedAt||'')));
  const year=$('ltArchiveYear'),current=year.value||'all';
- const years=[...new Set(rows.map(x=>String(x.Date||x.savedAt||'').slice(0,4)).filter(x=>/^\\d{4}$/.test(x)))].sort().reverse();
+ const years=[...new Set(rows.map(x=>String(x.Date||x.savedAt||'').slice(0,4)).filter(x=>/^[0-9]{4}$/.test(x)))].sort().reverse();
  year.innerHTML='<option value="all">Tutti gli anni</option>'+years.map(x=>'<option value="'+x+'">'+x+'</option>').join('');
  year.value=years.includes(current)?current:'all';
  const q=$('ltArchiveSearch').value.trim().toLocaleLowerCase('it-IT'),filter=$('ltArchiveFilter').value;
