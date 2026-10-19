@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Croce Gialla">
 <meta name="format-detection" content="telephone=no">
-<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.58-pagamenti-tablet">
+<link id="cgeManifest" rel="manifest" href="/gestionale-croce-gialla/manifest.json?v=14.59-verifica-pagamenti">
 <script>
 (function(){
  try{
@@ -12808,6 +12808,19 @@ async function tabletCloseSheet(){
  if(Number(kmClose)<Number(kmStart))return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
  const saved=await saveTabletSheet(true,false);if(!saved)return;
  const closeType=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase();
+ // Verifica il salvataggio reale in banca dati prima di chiudere (anche bonifico differito).
+ if(!standalone118&&!tabletIs118Type(closeType)&&!closeType.includes('SERVIZIO INTERNO')){
+  const expectedMode=String(document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'').trim().toUpperCase();
+  const check=await sb.from('fogli_viaggio').select('modalita_pagamento,data_pagamento,totale_servizio,stato').eq('id',tabletCurrentSheet.id).single();
+  if(check.error)return msg('tabletSheetMsg','Non posso verificare il pagamento salvato: '+check.error.message,'err');
+  const actualMode=String(check.data?.modalita_pagamento||'').trim().toUpperCase();
+  const amount=Number(check.data?.totale_servizio||0);
+  if(amount>0&&!expectedMode)return msg('tabletSheetMsg','Scegli e salva il metodo di pagamento prima di chiudere.','warn');
+  if(expectedMode!==actualMode)return msg('tabletSheetMsg','ERRORE: il metodo di pagamento non risulta salvato nel database. Riprova con Salva dati. Il foglio rimane aperto.','err');
+  if(amount>0&&['POS','CONTANTI'].includes(actualMode)&&!check.data?.data_pagamento)
+   return msg('tabletSheetMsg','ERRORE: manca la data del pagamento in banca dati. Il foglio rimane aperto.','err');
+  if(check.data?.stato!=='APERTO')return msg('tabletSheetMsg','Il foglio non è più aperto: aggiorna la schermata.','warn');
+ }
  const privacyRequired=closeType!=='118'&&!closeType.includes('EMERGENZA')&&!closeType.includes('SERVIZIO INTERNO')&&closeType!=='INTERNO'&&!isAssistanceManifestation(closeType);
  if(privacyRequired){
   const signatureStatus=String(tabletCurrentSheet?.privacy_firma_stato||'NON_FIRMATO').toUpperCase();
