@@ -10036,10 +10036,20 @@ function routeCalcForeignCosts(coords,route){
  }
 
  const mult=round?2:1;
- if(/BRENNER|BRENNERO|A13/.test(road)){const v=12.50*mult;tunnel+=v;tunnelParts.push('Brennero '+euro(v))}
- if(/TAUERN|KATSCHBERG|A10/.test(road)){const v=15*mult;tunnel+=v;tunnelParts.push('Tauern/Katschberg '+euro(v))}
- if(/KARAWANKEN|KARAVANKE|A11/.test(road)){const v=9*mult;tunnel+=v;tunnelParts.push('Karawanken '+euro(v))}
- if(/ARLBERG|S16/.test(road)){const v=13*mult;tunnel+=v;tunnelParts.push('Arlberg '+euro(v))}
+ // Le sigle A10/A11/A13/S16 esistono anche fuori dall'Austria:
+ // un pedaggio speciale va applicato SOLO sulla tratta geografica pertinente.
+ const passesNear=(minLon,maxLon,minLat,maxLat)=>swissCoordinates.some(p=>{
+  const x=Number(p?.[0]),y=Number(p?.[1]);
+  return Number.isFinite(x)&&Number.isFinite(y)&&x>=minLon&&x<=maxLon&&y>=minLat&&y<=maxLat;
+ });
+ const nearBrenner=passesNear(10.95,11.65,46.95,47.35);
+ const nearTauern=passesNear(12.85,13.85,47.05,47.45);
+ const nearKarawanken=passesNear(13.75,14.25,46.40,46.70);
+ const nearArlberg=passesNear(9.85,10.45,47.05,47.25);
+ if(nearBrenner&&/BRENNER|BRENNERO|\\bA13\\b/.test(road)){const v=12.50*mult;tunnel+=v;tunnelParts.push('Brennero '+euro(v))}
+ if(nearTauern&&/TAUERN|KATSCHBERG|\\bA10\\b/.test(road)){const v=15*mult;tunnel+=v;tunnelParts.push('Tauern/Katschberg '+euro(v))}
+ if(nearKarawanken&&/KARAWANKEN|KARAVANKE|\\bA11\\b/.test(road)){const v=9*mult;tunnel+=v;tunnelParts.push('Karawanken '+euro(v))}
+ if(nearArlberg&&/ARLBERG|\\bS16\\b/.test(road)){const v=13*mult;tunnel+=v;tunnelParts.push('Arlberg '+euro(v))}
  if(/BOSRUCK/.test(road)){const v=7*mult;tunnel+=v;tunnelParts.push('Bosruck '+euro(v))}
  if(/GLEINALM/.test(road)){const v=12*mult;tunnel+=v;tunnelParts.push('Gleinalm '+euro(v))}
 
