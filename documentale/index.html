@@ -2390,51 +2390,7 @@ function ltDocument(a,signatureUrl=null,facsimile=false){
  <div class="letter-sign">${p(a.Role)}<br><b>${p(a.Signer)}</b>${signatureUrl?'<img src="'+esc(signatureUrl)+'" style="height:20mm;max-width:70mm;object-fit:contain;display:block;margin:3mm auto" alt="Firma del Presidente">':a.Signature?'<div class="signline">Firma</div>':''}</div></main>
  <footer class="letter-footer"><svg viewBox="0 0 840 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><rect width="840" height="80" fill="#12375d"/><rect width="840" height="8" fill="#ffdb17"/></svg><div class="contacts">Via I° Maggio 1 · 28040 Dormelletto (NO)　|　Tel. 0322 282730<br>C.F. 91023880031　|　P.IVA 02809130038<br>E-mail: crocegialladormelletto@crocegiallaemergenza.it<br>PEC: crocegiallaemergenza@pec.it</div></footer>
  ${facsimile?'<div class="sample-watermark">FAC-SIMILE – NON PROTOCOLLATO</div>':''}
- </article><script>
-(function(){
- function paginate(){
-  if(document.body.dataset.paginated==='yes')return;
-  const first=document.querySelector('article.sheet');
-  const main=first&&first.querySelector('.letter-text');
-  const body=main&&main.querySelector('.letter-body');
-  const footer=first&&first.querySelector('.letter-footer');
-  if(!first||!main||!body||!footer)return;
-  const sign=main.querySelector('.letter-sign');
-  const elements=Array.from(body.children);
-  if(sign)elements.push(sign);
-  const sample=first.querySelector('.sample-watermark');
-  elements.forEach(e=>e.remove());
-  footer.remove();if(sample)sample.remove();
-  document.body.classList.add('letter-paginated');
-  let current=first,wrapper=body;
-  const pxmm=96/25.4;
-  function next(){
-   current=document.createElement('article');current.className='sheet';
-   const m=document.createElement('main');m.className='letter-text';
-   wrapper=document.createElement('div');wrapper.className='letter-body';
-   m.appendChild(wrapper);current.appendChild(m);document.body.appendChild(current);
-  }
-  elements.forEach(el=>{
-   if(el.classList.contains('letter-sign'))wrapper=current.querySelector('.letter-text');
-   wrapper.appendChild(el);
-   const rect=el.getBoundingClientRect(),pr=current.getBoundingClientRect();
-   // 268mm from top: 24mm footer + 5mm breathing room
-   if(rect.bottom-pr.top>268*pxmm){
-    el.remove();next();wrapper.appendChild(el);
-   }
-  });
-  current.appendChild(footer);
-  if(sample)first.appendChild(sample);
-  document.body.dataset.paginated='yes';
-  window.__letterReady=true;
-  window.__letterPages=document.querySelectorAll('article.sheet').length;
- }
- window.__letterReady=false;
- if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',()=>requestAnimationFrame(()=>paginate()),{once:true});
- }else requestAnimationFrame(()=>paginate());
- window.addEventListener('beforeprint',()=>{if(!window.__letterReady)paginate()});
-})();<\/script></body></html>`;
+ </article></body></html>`;
 }
 $('ltFacsimile').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila o genera prima il testo della lettera.','warn');a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup del browser per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a,null,true));w.document.close();ltReadyPopup(w);msg('ltMsg','Anteprima fac-simile aperta, senza assegnazione di protocollo. Per stampare usa Ctrl+P e Salva come PDF.','ok')};
 $('ltPrint').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila prima il testo della lettera.','warn');if(!ltCurrentRecord()?.protocolId)a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup per stampare la lettera.','warn');w.document.open();w.document.write(ltDocument(a,null,!ltCurrentRecord()?.protocolId));w.document.close();ltReadyPopup(w,true);msg('ltMsg','Stampa aperta. Seleziona A4 e scala 100%; verifica che la filigrana compaia anche nell’anteprima della stampante.','ok')};
