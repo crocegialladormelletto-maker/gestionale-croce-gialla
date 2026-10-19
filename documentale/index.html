@@ -2316,7 +2316,7 @@ function ltDocument(a,signatureUrl=null,facsimile=false){
  .letter-sign{break-inside:avoid!important;page-break-inside:avoid!important;margin-top:13mm}
  .letter-footer{position:relative!important;top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;height:24mm!important;margin-top:14mm!important;break-inside:avoid!important;page-break-inside:avoid!important}
  .letter-watermark,.letter-side-accent{display:none!important}
- .sample-watermark{position:static!important;display:block;margin:5mm 0;font-size:8pt}
+ .sample-watermark{position:absolute!important;top:39mm!important;left:20mm!important;right:auto!important;display:block;margin:0;font-size:8pt}
 }
 </style></head><body><article class="sheet"><div class="letter-side-accent"></div>
  <header class="letter-header"><svg viewBox="0 0 840 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><rect width="840" height="109" fill="#12375d"/><rect y="109" width="840" height="11" fill="#ffdb17"/></svg><img class="letter-logo" src="${esc(logo)}" alt="Logo Croce Gialla Emergenza ODV"><div class="letter-org"><strong>CROCE GIALLA EMERGENZA ODV</strong><small>ORGANIZZAZIONE DI VOLONTARIATO</small></div></header>
@@ -2327,7 +2327,26 @@ function ltDocument(a,signatureUrl=null,facsimile=false){
  <div class="letter-sign">${p(a.Role)}<br><b>${p(a.Signer)}</b>${signatureUrl?'<img src="'+esc(signatureUrl)+'" style="height:20mm;max-width:70mm;object-fit:contain;display:block;margin:3mm auto" alt="Firma del Presidente">':a.Signature?'<div class="signline">Firma</div>':''}</div></main>
  <footer class="letter-footer"><svg viewBox="0 0 840 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><rect width="840" height="80" fill="#12375d"/><rect width="840" height="8" fill="#ffdb17"/></svg><div class="contacts">Via I° Maggio 1 · 28040 Dormelletto (NO)　|　Tel. 0322 282730<br>C.F. 91023880031　|　P.IVA 02809130038<br>E-mail: crocegialladormelletto@crocegiallaemergenza.it<br>PEC: crocegiallaemergenza@pec.it</div></footer>
  ${facsimile?'<div class="sample-watermark">FAC-SIMILE – NON PROTOCOLLATO</div>':''}
- </article><script>window.addEventListener('load',()=>{const imgs=[...document.images];if(imgs.some(i=>!i.complete||!i.naturalWidth)){const note=document.createElement('aside');note.textContent='Attenzione: uno o più loghi non sono stati caricati. Non stampare finché non compaiono.';note.style='position:fixed;top:0;background:#b91c1c;color:white;padding:12px;z-index:9999';document.body.append(note)}})<\/script></body></html>`;
+ </article><script>
+(function(){
+ function alignFooter(){
+  const foot=document.querySelector('.letter-footer'),sheet=document.querySelector('.sheet');
+  if(!foot||!sheet||!window.matchMedia('print').matches)return;
+  const unit=document.createElement('div');
+  unit.style.cssText='position:absolute;visibility:hidden;width:100mm;height:1px';
+  document.body.append(unit);
+  const mm=unit.getBoundingClientRect().width/100;
+  unit.remove();
+  foot.style.marginTop='14mm';
+  const pageHeight=264*mm; // A4 height minus 16mm top and 17mm bottom
+  const bottom=foot.getBoundingClientRect().bottom-sheet.getBoundingClientRect().top;
+  const remain=((bottom%pageHeight)+pageHeight)%pageHeight;
+  const gap=(pageHeight-remain)%pageHeight;
+  if(gap>1)foot.style.marginTop=(14*mm+gap-2*mm)+'px';
+ }
+ window.addEventListener('beforeprint',alignFooter);
+ window.addEventListener('afterprint',()=>{const foot=document.querySelector('.letter-footer');if(foot)foot.style.marginTop=''});
+})();<\/script><script>window.addEventListener('load',()=>{const imgs=[...document.images];if(imgs.some(i=>!i.complete||!i.naturalWidth)){const note=document.createElement('aside');note.textContent='Attenzione: uno o più loghi non sono stati caricati. Non stampare finché non compaiono.';note.style='position:fixed;top:0;background:#b91c1c;color:white;padding:12px;z-index:9999';document.body.append(note)}})<\/script></body></html>`;
 }
 $('ltFacsimile').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila o genera prima il testo della lettera.','warn');a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup del browser per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a,null,true));w.document.close();msg('ltMsg','Anteprima fac-simile aperta, senza assegnazione di protocollo. Per stampare usa Ctrl+P e Salva come PDF.','ok')};
 $('ltPrint').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila prima il testo della lettera.','warn');if(!ltCurrentRecord()?.protocolId)a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup per stampare la lettera.','warn');w.document.open();w.document.write(ltDocument(a,null,!ltCurrentRecord()?.protocolId));w.document.close();w.addEventListener('load',()=>{const images=[...w.document.images];Promise.all(images.map(im=>im.complete?Promise.resolve():new Promise(resolve=>{im.addEventListener('load',resolve,{once:true});im.addEventListener('error',resolve,{once:true})}))).then(()=>{w.focus();w.print()})},{once:true});msg('ltMsg','Stampa aperta. Seleziona A4 e scala 100%; verifica che la filigrana compaia anche nell’anteprima della stampante.','ok')};
