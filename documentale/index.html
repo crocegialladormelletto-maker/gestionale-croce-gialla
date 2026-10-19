@@ -346,7 +346,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
      <div class="section hidden" id="callEditorPanel">
       <div class="actions" style="justify-content:space-between">
        <div><h3 id="cvTitle" style="margin:0">Nuova convocazione</h3><div id="cvCode" class="muted">Numerazione automatica per anno.</div></div>
-       <div class="actions"><button id="cvDuplicate" class="btn orange" type="button" disabled>⧉ Duplica convocazione</button><button id="cvPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="cvNew" class="btn success" type="button">✚ Nuova</button><button id="cvNewAdmissions" class="btn orange" type="button">👥 Convocazione ammissione soci</button><button id="cvExit" class="btn danger" type="button">← Esci / Elenco</button></div>
+       <div class="actions"><button id="cvDuplicate" class="btn orange" type="button" disabled>⧉ Duplica convocazione</button><button id="cvPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="cvPrintSigned" class="btn success" type="button">✍️ Firma Presidente e stampa</button><button id="cvNew" class="btn success" type="button">✚ Nuova</button><button id="cvNewAdmissions" class="btn orange" type="button">👥 Convocazione ammissione soci</button><button id="cvExit" class="btn danger" type="button">← Esci / Elenco</button></div>
       </div>
 
       <div class="grid4" style="margin-top:10px">
@@ -2054,6 +2054,23 @@ async function openCall(id,printAfter=false){
   if(printAfter)setTimeout(()=>printCall(),120);else $('cvTitle').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){msg('cvListMsg',e.message||String(e),'err')}
 }
+let temporaryCallPresidentSignature=null;
+async function printCallWithPresidentSignature(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ if(!currentCallId||currentCall?.stato!=='DEFINITIVA'||$('cvStatus').value!=='DEFINITIVA')return msg('cvmsg','La firma può essere inserita solo in una convocazione definitiva già salvata.','warn');
+ if(String($('cvSigner').value).trim().toLowerCase()!=='musso paolo')return msg('cvmsg','La firma disponibile appartiene a Musso Paolo; verifica il firmatario.','warn');
+ if(!confirm('Confermi l’autorizzazione del Presidente Musso Paolo a riprodurre la sua firma su QUESTA convocazione definitiva?'))return;
+ const button=$('cvPrintSigned');button.disabled=true;
+ try{
+  const result=await sb.storage.from(minuteSignatureBucket).download('presidente.png');
+  if(result.error)throw result.error;
+  temporaryCallPresidentSignature=URL.createObjectURL(result.data);
+  printCall();
+  const url=temporaryCallPresidentSignature;
+  setTimeout(()=>{URL.revokeObjectURL(url);if(temporaryCallPresidentSignature===url)temporaryCallPresidentSignature=null},60000);
+ }catch(e){temporaryCallPresidentSignature=null;msg('cvmsg','Firma Presidente non disponibile: '+(e.message||String(e))+'. Caricala nella Gestione firme dei verbali.','err')}
+ finally{button.disabled=false}
+}
 function printCall(){
  const v={
   codice:currentCall?.convocazione_codice||'BOZZA NON SALVATA',tipo:$('cvType').value,data:$('cvDate').value,
@@ -2082,7 +2099,7 @@ function printCall(){
   '<section class="vp-section"><h3>Oggetto</h3><div class="vp-text">'+esc(clean(v.oggetto))+'</div></section>'+
   '<div class="vp-meta">'+info('Data',italianDate(v.data))+info('Ora',shortTime(v.ora))+info('Luogo',v.luogo)+info('Firmatario',v.firmatario)+'</div>'+
   (clean(v.testo)?'<section class="vp-section"><div class="vp-text">'+esc(clean(v.testo))+'</div></section>':'')+agenda+
-  '<div class="vp-sign"><div></div><div><div class="vp-sign-line">Il Presidente<b>'+esc(clean(v.firmatario))+'</b></div></div></div></div>';
+  '<div class="vp-sign"><div></div><div>'+(temporaryCallPresidentSignature?'<img class="vp-ink" src="'+temporaryCallPresidentSignature+'" alt="Firma del Presidente">':'')+'<div class="vp-sign-line">Il Presidente<b>'+esc(clean(v.firmatario))+'</b></div></div></div></div>';
  const imgs=[...$('verbPrint').querySelectorAll('img')];
  Promise.race([Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve}))),new Promise(resolve=>setTimeout(resolve,1800))]).then(()=>window.print());
 }
@@ -2094,7 +2111,7 @@ $('cvGenerateText').onclick=generateCallText;
 $('cvDate').addEventListener('change',updateNextCallCode);
 $('cvType').onchange=()=>{if(!currentCallId)updateCallLayout(true)};
 $('cvStatus').onchange=updateCallStateUI;
-$('cvSave').onclick=()=>saveCall(false);$('cvFinalize').onclick=()=>saveCall(true);$('cvDuplicate').onclick=()=>currentCallId&&duplicateCall(currentCallId);$('cvPrint').onclick=printCall;$('cvFind').onclick=loadCallsList;
+$('cvSave').onclick=()=>saveCall(false);$('cvFinalize').onclick=()=>saveCall(true);$('cvDuplicate').onclick=()=>currentCallId&&duplicateCall(currentCallId);$('cvPrint').onclick=printCall;$('cvPrintSigned').onclick=printCallWithPresidentSignature;$('cvFind').onclick=loadCallsList;
 $('cvSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadCallsList()}};
 $('cvClear').onclick=()=>{resetCallFilters();loadCallsList()};
 
