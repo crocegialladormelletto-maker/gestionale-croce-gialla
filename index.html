@@ -2112,7 +2112,8 @@
  </div>
  <div class="toolbar">
   <button id="rcCalculateRoute" type="button" class="btn yellow">🧭 Calcola percorso</button>
-  <button id="rcOpenMaps" type="button" class="btn secondary">🗺 Apri percorso in Google Maps</button>
+  <button id="rcOpenMaps" type="button" class="btn secondary">🗺 Visualizza percorso</button>
+  <button id="rcPrintCrewRoute" type="button" class="btn secondary">🖨 Stampa percorso equipaggio</button>
   <button id="rcReset" type="button" class="btn secondary">Azzera</button>
  </div>
  <div id="rcMsg"></div>
@@ -10197,6 +10198,21 @@ function routeCalcGoogleMaps(){
  if(waypoints.length)url+='&waypoints='+encodeURIComponent(waypoints.join('|'));
  window.open(url,'_blank','noopener');
 }
+function routeCalcPrintCrewRoute(){
+ const points=routeCalcPoints();
+ if(points.length<2)return msg('rcMsg','Inserisci partenza e destinazione prima di stampare il percorso.','warn');
+ const stops=[...points];if($('rcReturn')?.checked)stops.push(points[0]);
+ const escapeHtml=x=>String(x||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+ const choice=$('rcRouteChoice')?.value==='breve'?'Percorso più breve (fra le alternative disponibili)':'Percorso più rapido';
+ const rows=stops.map((p,i)=>'<tr><td style="padding:9px;border-bottom:1px solid #ddd">'+(i+1)+'</td><td style="padding:9px;border-bottom:1px solid #ddd">'+escapeHtml(p)+'</td></tr>').join('');
+ const km=$('rcKm')?.value||'Da calcolare';
+ const linkSequence=[...stops],origin=linkSequence.shift(),destination=linkSequence.pop();
+ const url='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+'&destination='+encodeURIComponent(destination)+'&travelmode=driving'+(linkSequence.length?'&waypoints='+encodeURIComponent(linkSequence.join('|')):'');
+ const page='<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Itinerario equipaggio - Croce Gialla Emergenza ODV</title><style>body{font-family:Arial,sans-serif;color:#153552;margin:30px}h1{font-size:22px;border-bottom:3px solid #f5cd00;padding-bottom:12px}table{width:100%;border-collapse:collapse;margin-top:15px}p{line-height:1.45}.small{font-size:12px;color:#555}@media print{a{color:#153552}}</style></head><body><h1>CROCE GIALLA EMERGENZA ODV<br>Itinerario per equipaggio</h1><p><strong>Data stampa:</strong> '+escapeHtml(new Date().toLocaleString('it-IT'))+'<br><strong>Tipo percorso:</strong> '+escapeHtml(choice)+'<br><strong>Chilometri stimati:</strong> '+escapeHtml(km)+' km</p><table><thead><tr><th align="left">Tappa</th><th align="left">Luogo</th></tr></thead><tbody>'+rows+'</tbody></table><p><strong>Apri navigazione:</strong> <a href="'+escapeHtml(url)+'">Google Maps</a></p><p class="small">Itinerario indicativo. Il navigatore può proporre strade diverse rispetto al calcolo del preventivo; verificare viabilità, limiti del mezzo, pedaggi e condizioni del traffico prima della partenza.</p></body></html>';
+ const w=window.open('','_blank');
+ if(!w)return msg('rcMsg','Il browser ha bloccato la finestra di stampa. Consenti i popup per il gestionale.','warn');
+ w.document.open();w.document.write(page);w.document.close();w.focus();setTimeout(()=>w.print(),350);
+}
 function routeCalcReset(){
  if($('rcRouteChoice'))$('rcRouteChoice').value='automatico';
  if($('rcVia'))$('rcVia').value='';
@@ -10590,6 +10606,7 @@ function routeCalcUseInService(){
 if($('rcCalculateRoute'))$('rcCalculateRoute').onclick=routeCalcAutomatic;
 if($('rcOpenMaps'))$('rcOpenMaps').onclick=routeCalcGoogleMaps;
 if($('rcReset'))$('rcReset').onclick=routeCalcReset;
+if($('rcPrintCrewRoute'))$('rcPrintCrewRoute').onclick=routeCalcPrintCrewRoute;
 if($('rcFuelRefresh'))$('rcFuelRefresh').onclick=()=>routeCalcUpdateFuelPrice(true);
 if($('rcSaveToll'))$('rcSaveToll').onclick=routeCalcSaveToll;
 if($('rcLoadSavedQuote'))$('rcLoadSavedQuote').onclick=()=>routeCalcLoadSavedQuote(true);
