@@ -12763,6 +12763,13 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  }
  const tabletSheetType=tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'';
  const tabletSheetIs118=tabletIs118Type(tabletSheetType);
+ // Non azzerare un pagamento gia registrato se il select del tablet e momentaneamente vuoto.
+ if(!tabletSheetIs118 && !row.modalita_pagamento && tabletCurrentSheet?.modalita_pagamento){
+  row.modalita_pagamento=tabletCurrentSheet.modalita_pagamento;
+  row.data_pagamento=row.data_pagamento||tabletCurrentSheet.data_pagamento||null;
+  const modeField=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
+  if(modeField)modeField.value=row.modalita_pagamento;
+ }
  delete row.percorso_tappe;
  if(tabletSheetIs118){
   row.ora_carico_paziente=null;
@@ -12909,8 +12916,8 @@ async function tabletCloseSheet(){
   if(check.error)return msg('tabletSheetMsg','Non posso verificare il pagamento salvato: '+check.error.message,'err');
   const actualMode=String(check.data?.modalita_pagamento||'').trim().toUpperCase();
   const amount=Number(check.data?.totale_servizio||0);
-  if(amount>0&&!expectedMode)return msg('tabletSheetMsg','Scegli e salva il metodo di pagamento prima di chiudere.','warn');
-  if(expectedMode!==actualMode)return msg('tabletSheetMsg','ERRORE: il metodo di pagamento non risulta salvato nel database. Riprova con Salva dati. Il foglio rimane aperto.','err');
+  if(amount>0&&!expectedMode&&!actualMode)return msg('tabletSheetMsg','Scegli e salva il metodo di pagamento prima di chiudere.','warn');
+  if(expectedMode&&expectedMode!==actualMode)return msg('tabletSheetMsg','ERRORE: il metodo di pagamento non risulta salvato nel database. Riprova con Salva dati. Il foglio rimane aperto.','err');
   if(amount>0&&['POS','CONTANTI'].includes(actualMode)&&!check.data?.data_pagamento)
    return msg('tabletSheetMsg','ERRORE: manca la data del pagamento in banca dati. Il foglio rimane aperto.','err');
   if(check.data?.stato!=='APERTO')return msg('tabletSheetMsg','Il foglio non è più aperto: aggiorna la schermata.','warn');
@@ -13662,7 +13669,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.59-fix-totale-tablet-06';
+const CGE_APP_BUILD='14.60-fix-contanti-tablet-06';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
