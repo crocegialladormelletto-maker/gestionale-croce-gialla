@@ -20,6 +20,7 @@
 .nav[data-v="accesses"]{background:#168b8b;color:#fff;border-color:#0f6e6e}
 .nav[data-v="activity"]{background:#7153b6;color:#fff;border-color:#5d4397}
 .nav[data-v="minutes"]{background:#8d5cc7;color:#fff;border-color:#7245a8}
+.nav[data-v="archiveMinutes"]{background:#245e99;color:#fff;border-color:#194875}
 .nav[data-v="minuteNew"]{background:#198754;color:#fff;border-color:#146c43}
 .nav[data-v="calls"]{background:#2d9b67;color:#fff;border-color:#237c52}
 .nav[data-v="callNew"]{background:#198754;color:#fff;border-color:#146c43}
@@ -164,6 +165,7 @@
    <button class="nav" data-v="activity" data-admin-only="true">📜 Registro attività</button>
    <button class="nav" data-v="minuteNew" data-admin-only="true">✚ Nuovo verbale</button>
    <button class="nav" data-v="minutes" data-admin-only="true">📝 Bozze verbali</button>
+   <button class="nav" data-v="archiveMinutes" data-admin-only="true">📚 Archivio verbali</button>
    <button class="nav" data-v="callNew" data-admin-only="true">✚ Nuova convocazione</button>
    <button class="nav" data-v="calls" data-admin-only="true">📨 Archivio convocazioni</button>
    <button class="nav" data-v="due">⏰ Scadenze</button>
@@ -650,14 +652,17 @@ function showCallPanel(editor){
  $('callPageDescription').textContent=editor?'Compila e salva una convocazione.':'Consulta, cerca e apri le convocazioni già salvate.';
 }
 function view(v){
- if((v==='minutes'||v==='minuteNew'||v==='calls'||v==='callNew'||v==='dossiers'||v==='accesses'||v==='activity')&&prof?.ruolo!=='AMMINISTRATORE')v='dash';
+ if(v==='archiveMinutes'&&prof?.ruolo==='AMMINISTRATORE'){
+  $('aCategory').value='VERBALI';$('aSearch').value='';$('aFrom').value='';$('aTo').value='';
+ }
+ if((v==='archiveMinutes'||v==='minutes'||v==='minuteNew'||v==='calls'||v==='callNew'||v==='dossiers'||v==='accesses'||v==='activity')&&prof?.ruolo!=='AMMINISTRATORE')v='dash';
  if(v!=='minutes'&&v!=='minuteNew'&&!$('minutes').classList.contains('hidden')){resetMinuteForm();resetMinuteFilters();}
  if(v!=='calls'&&v!=='callNew'&&!$('calls').classList.contains('hidden'))resetCallFilters();
- document.querySelectorAll('main>section').forEach(x=>x.classList.toggle('hidden',x.id!==(v==='minuteNew'?'minutes':v==='callNew'?'calls':v)));
+ document.querySelectorAll('main>section').forEach(x=>x.classList.toggle('hidden',x.id!==(v==='minuteNew'?'minutes':v==='callNew'?'calls':v==='archiveMinutes'?'archive':v)));
  if(v==='minutes'||v==='minuteNew')showMinutePanel(v==='minuteNew');
  if(v==='calls'||v==='callNew')showCallPanel(v==='callNew');
  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
- if(v==='dash')loadDashboard();if(v==='archive')loadArchive();if(v==='dossiers')loadDossiers();if(v==='accesses')loadAccesses();if(v==='activity')loadActivity();if(v==='due')loadDue();if(v==='protocol'&&!currentId)resetForm();if(v==='minutes')loadMinutes();if(v==='minuteNew'){resetMinuteForm();loadBoardMinuteCalls();}if(v==='calls')loadCalls();if(v==='callNew')resetCallForm();
+ if(v==='dash')loadDashboard();if(v==='archive'||v==='archiveMinutes')loadArchive();if(v==='dossiers')loadDossiers();if(v==='accesses')loadAccesses();if(v==='activity')loadActivity();if(v==='due')loadDue();if(v==='protocol'&&!currentId)resetForm();if(v==='minutes')loadMinutes();if(v==='minuteNew'){resetMinuteForm();loadBoardMinuteCalls();}if(v==='calls')loadCalls();if(v==='callNew')resetCallForm();
 }
 document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>view(b.dataset.v));
 $('dGoMinutes').onclick=()=>view('minutes');$('dGoCalls').onclick=()=>view('calls');
