@@ -12764,6 +12764,19 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
     || String(verifica.data.data_pagamento||'')!==String(row.data_pagamento||''))
     throw new Error('Il metodo o la data del pagamento non sono stati memorizzati. Il foglio rimane aperto.');
   }
+  // Salvataggio dedicato dei dati di pagamento con permessi del tablet.
+  // La chiusura può proseguire soltanto dopo la conferma dal database.
+  if(!tabletSheetIs118 && row.modalita_pagamento){
+   const pg=await sb.rpc('cge_tablet_salva_pagamento_foglio',{
+    p_foglio:tabletCurrentSheet.id,
+    p_modalita:row.modalita_pagamento,
+    p_data:row.data_pagamento||null
+   });
+   if(pg.error)throw new Error('Pagamento NON salvato: '+pg.error.message);
+   if(String(pg.data?.modalita_pagamento||'').toUpperCase()!==String(row.modalita_pagamento).toUpperCase())
+    throw new Error('Pagamento non confermato dal database. Il foglio rimane aperto.');
+   row.data_pagamento=pg.data.data_pagamento||null;
+  }
   tabletCurrentSheet={...tabletCurrentSheet,...row};
   const syncWarnings=[];
 
