@@ -2104,6 +2104,7 @@
   <div class="field"><label>Carico paziente (facoltativo)</label><input id="rcLoad" placeholder="Es. Oleggio Castello NO"></div>
   <div class="field"><label>Destinazione *</label><input id="rcDest" placeholder="Via, Comune, Ospedale, RSA, Clinica o struttura sanitaria"></div>
  </div>
+ <div class="field" style="margin-top:10px;max-width:440px"><label>Percorso da utilizzare</label><select id="rcRouteChoice"><option value="automatico">Automatico (più rapido disponibile)</option><option value="chiasso">Passa da Chiasso (Svizzera)</option></select><div class="muted">Se scegli Chiasso, il calcolo include il passaggio dal confine svizzero. KM e costi vengono ricalcolati; il rientro segue il percorso automatico.</div></div>
  <div class="inline-checks" style="margin-top:10px">
   <label class="check"><input id="rcReturn" type="checkbox" checked> Rientro al punto di partenza</label>
   <label class="check"><input id="rcChair" type="checkbox"> Sedia cingolata / motorizzata (+ € 15)</label>
@@ -9595,7 +9596,11 @@ async function routeCalcUpdateFuelPrice(force=false){
  }
 }
 function routeCalcPoints(){
- return [$('rcStart')?.value.trim(),$('rcLoad')?.value.trim(),$('rcDest')?.value.trim()].filter(Boolean);
+ const start=$('rcStart')?.value.trim(),load=$('rcLoad')?.value.trim(),dest=$('rcDest')?.value.trim();
+ const stops=[start,load].filter(Boolean);
+ if($('rcRouteChoice')?.value==='chiasso'&&start&&dest)stops.push('Chiasso, Ticino, Svizzera');
+ if(dest)stops.push(dest);
+ return stops;
 }
 async function routeCalcLookupFacility(q){
  const raw=String(q||'').trim();
@@ -9957,7 +9962,7 @@ function routeCalcRouteKey(){
  const pts=routeCalcPoints();
  return {
   origine:routeCalcNormalizePlace(pts[0]||''),
-  via:routeCalcNormalizePlace(pts.length>2?pts[1]:''),
+  via:routeCalcNormalizePlace([$('rcLoad')?.value.trim(),$('rcRouteChoice')?.value==='chiasso'?'VIA CHIASSO':''].filter(Boolean).join(' | ')),
   destinazione:routeCalcNormalizePlace(pts[pts.length-1]||''),
   andata_ritorno:!!$('rcReturn')?.checked
  };
@@ -10145,7 +10150,7 @@ async function routeCalcAutomatic(){
    if(i<points.length-1)await routeCalcSleep(350);
   }
   if($('rcReturn').checked)coords.push(coords[0]);
-  const saved=await routeCalcLoadSavedQuote(false);
+  const saved=$('rcRouteChoice')?.value==='chiasso'?false:await routeCalcLoadSavedQuote(false);
   if(saved){
     msg('rcMsg','Preventivo verificato trovato e caricato automaticamente.','ok');
     return;
@@ -10180,6 +10185,7 @@ function routeCalcGoogleMaps(){
  window.open(url,'_blank','noopener');
 }
 function routeCalcReset(){
+ if($('rcRouteChoice'))$('rcRouteChoice').value='automatico';
  ['rcLoad','rcDest','rcKm'].forEach(id=>{if($(id))$(id).value=''});
  if($('rcMotorwayKm'))$('rcMotorwayKm').value='0';
  if($('rcVignetteCost'))$('rcVignetteCost').value='0';
