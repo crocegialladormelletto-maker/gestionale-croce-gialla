@@ -2057,9 +2057,9 @@ async function openCall(id,printAfter=false){
 let temporaryCallPresidentSignature=null;
 async function printCallWithPresidentSignature(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
- if(!currentCallId||currentCall?.stato!=='DEFINITIVA'||$('cvStatus').value!=='DEFINITIVA')return msg('cvmsg','La firma può essere inserita solo in una convocazione definitiva già salvata.','warn');
+ if(!currentCallId||!['DEFINITIVA','DESERTA'].includes(currentCall?.stato)||$('cvStatus').value!==currentCall.stato)return msg('cvmsg','La firma può essere inserita solo in una convocazione già salvata con stato DEFINITIVA o DESERTA.','warn');
  if(String($('cvSigner').value).trim().toLowerCase()!=='musso paolo')return msg('cvmsg','La firma disponibile appartiene a Musso Paolo; verifica il firmatario.','warn');
- if(!confirm('Confermi l’autorizzazione del Presidente Musso Paolo a riprodurre la sua firma su QUESTA convocazione definitiva?'))return;
+ if(!confirm('Confermi l’autorizzazione del Presidente Musso Paolo a riprodurre la sua firma su QUESTA convocazione (anche se DESERTA)?'))return;
  const button=$('cvPrintSigned');button.disabled=true;
  try{
   const result=await sb.storage.from(minuteSignatureBucket).download('presidente.png');
