@@ -162,7 +162,7 @@
    <button class="nav" data-v="accesses" data-admin-only="true">👥 Gestione Accessi</button>
    <button class="nav" data-v="activity" data-admin-only="true">📜 Registro attività</button>
    <button class="nav" data-v="minuteNew" data-admin-only="true">✚ Nuovo verbale</button>
-   <button class="nav" data-v="minutes" data-admin-only="true">📚 Archivio verbali</button>
+   <button class="nav" data-v="minutes" data-admin-only="true">📝 Bozze verbali</button>
    <button class="nav" data-v="callNew" data-admin-only="true">✚ Nuova convocazione</button>
    <button class="nav" data-v="calls" data-admin-only="true">📨 Archivio convocazioni</button>
    <button class="nav" data-v="due">⏰ Scadenze</button>
@@ -223,6 +223,8 @@
      <div class="actions" style="justify-content:space-between;margin:10px 0"><b>Registro protocollo</b><span id="aCount" class="pill b">0</span></div>
      <div class="table"><table><thead><tr><th>Protocollo</th><th>Tipo</th><th>Oggetto</th><th>Mittente / Destinatario</th><th>Categoria</th><th>Scadenza</th><th>Allegati</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="aBody"></tbody></table></div>
 
+     <div id="aApprovedMinutes" class="section hidden" data-admin-only="true" style="margin-top:16px"><div class="actions" style="justify-content:space-between"><div><h3 style="margin:0">✅ Verbali approvati</h3><div class="muted">Verbali definitivi, anche senza PDF firmato. Il PDF può essere aggiunto in seguito.</div></div><span id="aApprovedCount" class="pill g">0</span></div><div class="table" style="margin-top:10px"><table><thead><tr><th>Verbale</th><th>Data</th><th>Titolo</th><th>PDF firmato</th><th>Azioni</th></tr></thead><tbody id="aApprovedBody"></tbody></table></div></div>
+
      <div id="aSignedSection" class="section" data-admin-only="true" style="margin-top:16px">
       <div class="actions" style="justify-content:space-between">
        <div><h3 style="margin:0">📑 Documenti firmati</h3><div class="muted">Verbali e convocazioni firmati archiviati automaticamente, senza numero di protocollo.</div></div>
@@ -255,7 +257,7 @@
    </section>
 
    <section id="minutes" class="surface hidden" data-admin-only="true">
-    <div class="hero"><h2 id="minutePageHeading">📚 Archivio verbali</h2><p id="minutePageDescription">Consulta, cerca e apri i verbali già salvati.</p></div>
+    <div class="hero"><h2 id="minutePageHeading">📝 Bozze verbali</h2><p id="minutePageDescription">Riprendi i verbali ancora da completare.</p></div>
     <div class="pad">
      <div class="section hidden" id="minuteEditorPanel">
       <div class="actions" style="justify-content:space-between"><div><h3 id="vTitle" style="margin:0">Nuovo verbale</h3><div id="vCode" class="muted">Numerazione automatica per anno.</div></div><div class="actions"><button id="vNewBoard" class="btn blue" type="button">✚ Verbale Consiglio Direttivo</button><button id="vNewAssembly" class="btn violet" type="button">✚ Verbale Assemblea Soci</button><button id="vNewMembers" class="btn orange" type="button">👥 Approvazione nuovi soci</button><button id="vDuplicate" class="btn orange" type="button" disabled>⧉ Duplica verbale</button><button id="vPrint" class="btn teal" type="button">🖨️ Stampa / Salva PDF</button><button id="vNew" class="btn success" type="button">✚ Nuovo</button><button id="vExit" class="btn danger" type="button">← Esci / Elenco</button></div></div>
@@ -321,15 +323,15 @@ Consigliere: Ragazzini Luisa</textarea></div>
      </div>
 
      <div class="section hidden" id="minuteArchivePanel">
-      <h3>📚 Archivio verbali</h3>
+      <h3>📝 Bozze verbali</h3>
       <div class="grid4">
        <div class="field"><label>Ricerca</label><input id="vSearch" placeholder="Numero, titolo, ODG, nominativo…"></div>
        <div class="field"><label>Anno</label><input id="vYear" type="number" min="2020" max="2100"></div>
        <div class="field"><label>Tipo</label><select id="vFilterType"><option value="">Tutti</option><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea Soci</option><option value="RIUNIONE_OPERATIVA">Riunione operativa</option><option value="ALTRO">Altro</option></select></div>
-       <div class="field"><label>Stato</label><select id="vFilterStatus"><option value="">Tutti</option><option>BOZZA</option><option>APPROVATO</option><option>ANNULLATO</option></select></div>
+       <div class="field"><label>Stato</label><select id="vFilterStatus"><option value="BOZZA">BOZZA</option></select></div>
       </div>
       <div class="toolbar"><button id="vFind" class="btn yellow" type="button">🔎 Cerca</button><button id="vClear" class="btn secondary" type="button">Cancella filtri</button></div><div id="vListMsg"></div>
-      <div class="actions" style="justify-content:space-between;margin:10px 0"><b>Verbali salvati</b><span id="vCount" class="pill b">0</span></div>
+      <div class="actions" style="justify-content:space-between;margin:10px 0"><b>Bozze da completare</b><span id="vCount" class="pill b">0</span></div>
       <div class="table"><table><thead><tr><th>Verbale</th><th>Data</th><th>Tipo</th><th>Titolo</th><th>Stato</th><th>Presidente / Segretario</th><th>Azioni</th></tr></thead><tbody id="vBody"></tbody></table></div>
      </div>
     </div>
@@ -585,7 +587,7 @@ async function deleteSignedMinute(id=currentMinuteId){
 }
 function resetMinuteFilters(){
  $('vSearch').value='';$('vYear').value=new Date().getFullYear();
- $('vFilterType').value='';$('vFilterStatus').value='';
+ $('vFilterType').value='';$('vFilterStatus').value='BOZZA';
 }
 function nextMinuteCode(){
  const year=Number(($('vDate').value||today()).slice(0,4));
@@ -625,8 +627,8 @@ function centralinoEmail(){return 'centralino@access.crocegiallaemergenza.it'}
 function showMinutePanel(editor){
  $('minuteEditorPanel').classList.toggle('hidden',!editor);
  $('minuteArchivePanel').classList.toggle('hidden',editor);
- $('minutePageHeading').textContent=editor?'✚ Nuovo verbale':'📚 Archivio verbali';
- $('minutePageDescription').textContent=editor?'Compila e salva un verbale.':'Consulta, cerca e apri i verbali già salvati.';
+ $('minutePageHeading').textContent=editor?'✚ Nuovo verbale':'📝 Bozze verbali';
+ $('minutePageDescription').textContent=editor?'Compila e salva un verbale.':'Riprendi i verbali ancora da completare.';
  document.querySelectorAll('.nav').forEach(b=>{if(b.dataset.v==='minutes'||b.dataset.v==='minuteNew')b.classList.toggle('active',b.dataset.v===(editor?'minuteNew':'minutes'))});
 }
 function showCallPanel(editor){
@@ -978,6 +980,17 @@ async function openArchiveOrigin(id){
  if(x.tipo_documento==='VERBALE'){view('minutes');await openMinute(id,false)}
  else{view('calls');await openCall(id,false)}
 }
+function renderApprovedMinutes(list,error=''){
+ const section=$('aApprovedMinutes');
+ section.classList.toggle('hidden',prof?.ruolo!=='AMMINISTRATORE'||($('aCategory').value&&$('aCategory').value!=='VERBALI'));
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const q=$('aSearch').value.trim().toLowerCase(),from=$('aFrom').value,to=$('aTo').value;
+ const signedIds=new Set(signedArchiveRows.filter(x=>x.tipo_documento==='VERBALE').map(x=>String(x.documento_id)));
+ const filtered=list.filter(v=>(!q||[v.verbale_codice,v.titolo,v.luogo,v.presidente,v.segretario].some(x=>String(x||'').toLowerCase().includes(q)))&&(!from||v.data_riunione>=from)&&(!to||v.data_riunione<=to));
+ $('aApprovedCount').textContent=String(filtered.length);
+ $('aApprovedBody').innerHTML=error?'<tr><td colspan="5">'+esc(error)+'</td></tr>':filtered.length?filtered.map(v=>'<tr><td><b>'+esc(v.verbale_codice)+'</b></td><td>'+esc(v.data_riunione||'—')+'</td><td>'+esc(v.titolo||'')+'</td><td>'+(signedIds.has(String(v.id))?'✍️ Firmato':'In attesa del PDF firmato')+'</td><td><button class="btn secondary" type="button" data-approved-open="'+esc(v.id)+'">Apri verbale</button></td></tr>').join(''):'<tr><td colspan="5">Nessun verbale approvato trovato.</td></tr>';
+ $('aApprovedBody').querySelectorAll('[data-approved-open]').forEach(b=>b.onclick=()=>openMinute(b.dataset.approvedOpen,false));
+}
 async function loadArchive(){
  const seq=++loadSeq;msg('amsg','Caricamento archivio...');
  const cat=$('aCategory').value||null;
@@ -986,11 +999,13 @@ async function loadArchive(){
  const rs=prof?.ruolo==='AMMINISTRATORE'
   ?sb.rpc('cge_archivio_firmati',{p_search:$('aSearch').value.trim()||null,p_categoria:cat,p_dal:$('aFrom').value||null,p_al:$('aTo').value||null})
   :Promise.resolve({data:[],error:null});
- const [r,s]=await Promise.all([rp,rs]);
+ const ra=prof?.ruolo==='AMMINISTRATORE'?sb.rpc('cge_verbali_elenco',{p_search:null,p_tipo:null,p_stato:'APPROVATO',p_anno:null}):Promise.resolve({data:[],error:null});
+ const [r,s,a]=await Promise.all([rp,rs,ra]);
  if(seq!==loadSeq)return;
  if(r.error){rows=[];renderArchive([]);msg('amsg',r.error.message,'err')}else{rows=r.data||[];renderArchive(rows)}
- if(s.error){signedArchiveRows=[];renderSignedArchive([]);return msg('amsg','Archivio firmati: '+s.error.message,'err')}
+ if(s.error){signedArchiveRows=[];renderSignedArchive([]);renderApprovedMinutes(a.error?[]:(a.data||[]),a.error?.message||'');return msg('amsg','Archivio firmati: '+s.error.message,'err')}
  signedArchiveRows=s.data||[];renderSignedArchive(signedArchiveRows);
+ renderApprovedMinutes(a.error?[]:(a.data||[]),a.error?.message||'');
  if(!r.error)msg('amsg',rows.length===500||signedArchiveRows.length===500?'Mostrati i 500 documenti più recenti. Restringi i filtri.':'');
 }
 $('aFind').onclick=loadArchive;$('aSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadArchive()}};$('aClear').onclick=()=>{['aSearch','aType','aCategory','aStatus','aFrom','aTo'].forEach(id=>$(id).value='');loadArchive()};
@@ -1398,7 +1413,7 @@ async function loadMinutesList(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
  msg('vListMsg','Caricamento verbali...');
  const year=$('vYear').value?Number($('vYear').value):null;
- const r=await sb.rpc('cge_verbali_elenco',{p_search:$('vSearch').value.trim()||null,p_tipo:$('vFilterType').value||null,p_stato:$('vFilterStatus').value||null,p_anno:year});
+ const r=await sb.rpc('cge_verbali_elenco',{p_search:$('vSearch').value.trim()||null,p_tipo:$('vFilterType').value||null,p_stato:'BOZZA',p_anno:year});
  if(r.error){minutesRows=[];signedMinuteFiles={};renderMinutes();return msg('vListMsg',r.error.message,'err')}
  minutesRows=r.data||[];
  signedMinuteFiles={};
