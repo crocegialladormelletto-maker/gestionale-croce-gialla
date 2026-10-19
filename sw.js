@@ -38,11 +38,11 @@ self.addEventListener('fetch', event => {
     // Tablet 08: mantieni ESATTAMENTE lo stesso collegamento del dispositivo,
     // ma recupera il nuovo index.html anche quando il CDN ha una copia precedente.
     // Nessun intervento sulle bozze locali o sulla sessione del tablet.
-    const isTablet08 = (url.pathname === APP_BASE || url.pathname === APP_BASE + 'index.html')
+    const isTablet = (url.pathname === APP_BASE || url.pathname === APP_BASE + 'index.html')
       && url.searchParams.get('area') === 'tablet'
-      && url.searchParams.get('mezzo') === '08';
-    const freshUrl = isTablet08 ? new URL(request.url) : null;
-    if (freshUrl) freshUrl.searchParams.set('_cge_app_build', '14.55-tablet08-km');
+      && /^0[6-9]$/.test(url.searchParams.get('mezzo') || '');
+    const freshUrl = isTablet ? new URL(request.url) : null;
+    if (freshUrl) freshUrl.searchParams.set('_cge_app_build', '14.59-fix-totale-tablet');
     event.respondWith(
       fetch(freshUrl ? freshUrl.href : request, {cache:'no-store'}).catch(async () => {
         if (url.pathname === APP_BASE + 'app-volontari.html') {
