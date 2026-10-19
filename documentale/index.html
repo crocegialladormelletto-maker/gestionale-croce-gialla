@@ -680,7 +680,7 @@ function bytes(n){n=Number(n||0);if(!n)return '—';if(n<1024)return n+' B';if(n
 function safeFile(name){return String(name||'file').normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g,'_').slice(-120)}
 function mime(file){const e=(file.name.split('.').pop()||'').toLowerCase();return file.type||({pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',odt:'application/vnd.oasis.opendocument.text',ods:'application/vnd.oasis.opendocument.spreadsheet',txt:'text/plain'}[e]||'application/pdf')}
 
-async async function loadPendingDocumentWork(){
+async function loadPendingDocumentWork(){
  const box=$('dPendingSection');if(!box)return;
  box.classList.toggle('hidden',prof?.ruolo!=='AMMINISTRATORE');
  if(prof?.ruolo!=='AMMINISTRATORE')return;
@@ -689,7 +689,7 @@ async async function loadPendingDocumentWork(){
  $('dCallDrafts').textContent=c.error?'!':String((c.data||[]).length);
  msg('dPendingMsg',m.error||c.error?'Impossibile aggiornare uno dei contatori.':'',m.error||c.error?'warn':'');
 }
-function loadDashboard(){
+async function loadDashboard(){
  loadPendingDocumentWork();
  const [st,recent,due]=await Promise.all([
   sb.rpc('cge_protocollo_statistiche'),
