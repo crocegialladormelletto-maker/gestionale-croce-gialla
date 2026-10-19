@@ -282,7 +282,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
       </div>
       <div id="vBoardBox" class="box hidden" style="margin-top:12px">
        <div class="actions" style="justify-content:space-between"><div><b>📋 Dati Consiglio Direttivo</b><div class="muted">Collega il verbale alla convocazione: data, ora, luogo e ordine del giorno vengono importati automaticamente.</div></div><span class="pill b">CONSIGLIO</span></div>
-       <div class="field" style="margin-top:9px"><label>Convocazione di riferimento</label><select id="vBoardCall"><option value="">— Seleziona una convocazione —</option></select></div>
+       <div class="field" style="margin-top:9px"><label>Convocazione di riferimento</label><select id="vBoardCall"><option value="">— Seleziona una convocazione —</option></select><button id="vBoardRefresh" class="btn secondary" type="button" style="margin-top:8px">↻ Aggiorna convocazioni</button></div>
        <div id="vBoardInfo" class="muted" style="margin-top:7px"></div>
       </div>
       <div id="vAssemblyBox" class="box hidden" style="margin-top:12px">
@@ -643,7 +643,7 @@ function view(v){
  if(v==='minutes'||v==='minuteNew')showMinutePanel(v==='minuteNew');
  if(v==='calls'||v==='callNew')showCallPanel(v==='callNew');
  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
- if(v==='dash')loadDashboard();if(v==='archive')loadArchive();if(v==='dossiers')loadDossiers();if(v==='accesses')loadAccesses();if(v==='activity')loadActivity();if(v==='due')loadDue();if(v==='protocol'&&!currentId)resetForm();if(v==='minutes')loadMinutes();if(v==='minuteNew'){resetMinuteForm();}if(v==='calls')loadCalls();if(v==='callNew')resetCallForm();
+ if(v==='dash')loadDashboard();if(v==='archive')loadArchive();if(v==='dossiers')loadDossiers();if(v==='accesses')loadAccesses();if(v==='activity')loadActivity();if(v==='due')loadDue();if(v==='protocol'&&!currentId)resetForm();if(v==='minutes')loadMinutes();if(v==='minuteNew'){resetMinuteForm();loadBoardMinuteCalls();}if(v==='calls')loadCalls();if(v==='callNew')resetCallForm();
 }
 document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>view(b.dataset.v));
 
@@ -1516,6 +1516,7 @@ $('vExit').onclick=()=>{resetMinuteForm();resetMinuteFilters();view('minutes')};
 $('vAddAgenda').onclick=()=>addMinuteAgendaPoint();
 $('vAssemblyCall').onchange=applyAssemblyCallToMinute;
 $('vBoardCall').onchange=applyBoardCallToMinute;
+$('vBoardRefresh').onclick=()=>loadBoardMinuteCalls($('vBoardCall').value,false);
 $('vAiGenerate').onclick=()=>useMinuteAI('genera');$('vAiImprove').onclick=()=>useMinuteAI('migliora');
 $('vDate').addEventListener('change',updateNextMinuteCode);
 $('vStatus').onchange=()=>{if($('vStatus').value==='APPROVATO'&&!$('vApprovalDate').value)$('vApprovalDate').value=$('vDate').value;else if($('vStatus').value==='BOZZA')$('vApprovalDate').value='';updateMinuteStateUI()};
