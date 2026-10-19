@@ -2104,7 +2104,7 @@
   <div class="field"><label>Carico paziente (facoltativo)</label><input id="rcLoad" placeholder="Es. Oleggio Castello NO"></div>
   <div class="field"><label>Destinazione *</label><input id="rcDest" placeholder="Via, Comune, Ospedale, RSA, Clinica o struttura sanitaria"></div>
  </div>
- <div class="field" style="margin-top:10px;max-width:440px"><label>Percorso da utilizzare</label><select id="rcRouteChoice"><option value="automatico">Automatico (più rapido disponibile)</option><option value="chiasso">Passa da Chiasso (Svizzera)</option></select><div class="muted">Se scegli Chiasso, il calcolo include il passaggio dal confine svizzero. KM e costi vengono ricalcolati; il rientro segue il percorso automatico.</div></div>
+ <div class="field" style="margin-top:10px;max-width:440px"><label>Percorso da utilizzare</label><select id="rcRouteChoice"><option value="automatico">Più rapido (tempo minore)</option><option value="breve">Più breve (meno km)</option><option value="chiasso">Passa da Chiasso (Svizzera)</option></select><div class="muted">Scegli il percorso più rapido o quello con meno chilometri tra le alternative disponibili. Via Chiasso forza la tappa svizzera. Distanze e costi sono stime e restano verificabili.</div></div>
  <div class="inline-checks" style="margin-top:10px">
   <label class="check"><input id="rcReturn" type="checkbox" checked> Rientro al punto di partenza</label>
   <label class="check"><input id="rcChair" type="checkbox"> Sedia cingolata / motorizzata (+ € 15)</label>
@@ -10150,17 +10150,24 @@ async function routeCalcAutomatic(){
    if(i<points.length-1)await routeCalcSleep(350);
   }
   if($('rcReturn').checked)coords.push(coords[0]);
-  const saved=$('rcRouteChoice')?.value==='chiasso'?false:await routeCalcLoadSavedQuote(false);
+  const saved=false; // Non riutilizzare un vecchio preventivo se l'utente chiede un nuovo percorso
   if(saved){
     msg('rcMsg','Preventivo verificato trovato e caricato automaticamente.','ok');
     return;
   }
   const coordText=coords.map(x=>x.lon+','+x.lat).join(';');
-  const url='https://router.project-osrm.org/route/v1/driving/'+coordText+'?overview=full&geometries=geojson&steps=true';
+  const url='https://router.project-osrm.org/route/v1/driving/'+coordText+'?overview=full&geometries=geojson&steps=true&alternatives=true';
   const rr=await fetch(url);
   if(!rr.ok)throw new Error('Servizio percorso non disponibile ('+rr.status+').');
-  const data=await rr.json(),route=data?.routes?.[0];
+  const data=await rr.json();
+  const alternatives=Array.isArray(data?.routes)?data.routes:[];
+  const choice=$('rcRouteChoice')?.value||'automatico';
+  const route=choice==='breve'
+   ?[...alternatives].sort((a,b)=>Number(a.distance||Infinity)-Number(b.distance||Infinity))[0]
+   :alternatives[0];
   if(!route)throw new Error('Nessun percorso stradale trovato.');
+  const shortestKm=Math.min(...alternatives.map(x=>Number(x.distance||Infinity)))/1000;
+  const fastestKm=Number(alternatives[0]?.distance||0)/1000;
   $('rcKm').value=(Number(route.distance||0)/1000).toFixed(1);
   const motorwayKm=routeCalcMotorwayKm(route);
   $('rcMotorwayKm').value=motorwayKm.toFixed(1);
@@ -10168,7 +10175,7 @@ async function routeCalcAutomatic(){
   await routeCalcResolveToll(motorwayKm);
   routeCalcForeignCosts(coords,route);
   routeCalcRecompute();
-  msg('rcMsg','Percorso calcolato: '+$('rcKm').value+' km · autostrada rilevata '+motorwayKm.toFixed(1)+' km. Indirizzi riconosciuti correttamente.','ok');
+  msg('rcMsg','Percorso '+(choice==='breve'?'più breve':choice==='chiasso'?'via Chiasso':'più rapido')+': '+$('rcKm').value+' km · autostrada '+motorwayKm.toFixed(1)+' km. '+(alternatives.length>1?'Confronto: più rapido '+fastestKm.toFixed(1)+' km, più breve '+shortestKm.toFixed(1)+' km.':'Unica alternativa restituita dal servizio stradale: il percorso più breve assoluto non è garantito.'),'ok');
  }catch(e){
   msg('rcMsg','Calcolo automatico non riuscito: '+(e?.message||e)+'. Puoi aprire Google Maps e inserire i km manualmente.','warn');
  }finally{
