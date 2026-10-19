@@ -2348,39 +2348,51 @@ function ltDocument(a,signatureUrl=null,facsimile=false){
  </article><script>
 (function(){
  function paginate(){
-  if(document.body.classList.contains('letter-paginated'))return;
-  const first=document.querySelector('.sheet'), main=first?.querySelector('.letter-text'),body=main?.querySelector('.letter-body'),footer=first?.querySelector('.letter-footer');
+  if(document.body.dataset.paginated==='yes')return;
+  const first=document.querySelector('article.sheet');
+  const main=first&&first.querySelector('.letter-text');
+  const body=main&&main.querySelector('.letter-body');
+  const footer=first&&first.querySelector('.letter-footer');
   if(!first||!main||!body||!footer)return;
-  const signature=main.querySelector('.letter-sign');
-  const blocks=[...body.children];if(signature)blocks.push(signature);
-  blocks.forEach(n=>n.remove());footer.remove();
-  const sample=first.querySelector('.sample-watermark');if(sample)sample.remove();
+  const sign=main.querySelector('.letter-sign');
+  const elements=Array.from(body.children);
+  if(sign)elements.push(sign);
+  const sample=first.querySelector('.sample-watermark');
+  elements.forEach(e=>e.remove());
+  footer.remove();if(sample)sample.remove();
   document.body.classList.add('letter-paginated');
-  let page=first,target=body;
-  const measure=document.createElement('div');measure.style.cssText='width:100mm;height:1px;position:absolute;visibility:hidden';document.body.append(measure);
-  const mm=measure.getBoundingClientRect().width/100;measure.remove();
-  // Riserviamo spazio per il piè di pagina in ogni foglio: impossibile sovrapporsi.
-  const safeBottom=297*mm-49*mm;
-  function addPage(){
-    page=document.createElement('article');page.className='sheet';
-    const m=document.createElement('main');m.className='letter-text';
-    target=document.createElement('div');target.className='letter-body';m.append(target);page.append(m);document.body.append(page);
+  let current=first,wrapper=body;
+  const pxmm=96/25.4;
+  function next(){
+   current=document.createElement('article');current.className='sheet';
+   const m=document.createElement('main');m.className='letter-text';
+   wrapper=document.createElement('div');wrapper.className='letter-body';
+   m.appendChild(wrapper);current.appendChild(m);document.body.appendChild(current);
   }
-  blocks.forEach(node=>{
-    if(node.classList.contains('letter-sign'))target=page.querySelector('.letter-text');
-    target.append(node);
-    const bottom=node.getBoundingClientRect().bottom-page.getBoundingClientRect().top;
-    if(bottom>safeBottom&&target.children.length>1){node.remove();addPage();target.append(node)}
+  elements.forEach(el=>{
+   if(el.classList.contains('letter-sign'))wrapper=current.querySelector('.letter-text');
+   wrapper.appendChild(el);
+   const rect=el.getBoundingClientRect(),pr=current.getBoundingClientRect();
+   // 268mm from top: 24mm footer + 5mm breathing room
+   if(rect.bottom-pr.top>268*pxmm){
+    el.remove();next();wrapper.appendChild(el);
+   }
   });
-  page.append(footer);
-  if(sample)first.append(sample);
-  // La prima pagina conserva intestazione e metadati; soltanto l'ultima mostra il fondo blu.
+  current.appendChild(footer);
+  if(sample)first.appendChild(sample);
+  document.body.dataset.paginated='yes';
+  window.__letterReady=true;
+  window.__letterPages=document.querySelectorAll('article.sheet').length;
  }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',paginate,{once:true});else paginate();
+ window.__letterReady=false;
+ if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>requestAnimationFrame(()=>paginate()),{once:true});
+ }else requestAnimationFrame(()=>paginate());
+ window.addEventListener('beforeprint',()=>{if(!window.__letterReady)paginate()});
 })();<\/script></body></html>`;
 }
 $('ltFacsimile').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila o genera prima il testo della lettera.','warn');a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup del browser per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a,null,true));w.document.close();msg('ltMsg','Anteprima fac-simile aperta, senza assegnazione di protocollo. Per stampare usa Ctrl+P e Salva come PDF.','ok')};
-$('ltPrint').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila prima il testo della lettera.','warn');if(!ltCurrentRecord()?.protocolId)a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup per stampare la lettera.','warn');w.document.open();w.document.write(ltDocument(a,null,!ltCurrentRecord()?.protocolId));w.document.close();w.addEventListener('load',()=>{const images=[...w.document.images];Promise.all(images.map(im=>im.complete?Promise.resolve():new Promise(resolve=>{im.addEventListener('load',resolve,{once:true});im.addEventListener('error',resolve,{once:true})}))).then(()=>{w.focus();w.print()})},{once:true});msg('ltMsg','Stampa aperta. Seleziona A4 e scala 100%; verifica che la filigrana compaia anche nell’anteprima della stampante.','ok')};
+$('ltPrint').onclick=()=>{const a=ltCollect();if(!a.Body.trim())return msg('ltMsg','Compila prima il testo della lettera.','warn');if(!ltCurrentRecord()?.protocolId)a.Protocol='';const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti i popup per stampare la lettera.','warn');w.document.open();w.document.write(ltDocument(a,null,!ltCurrentRecord()?.protocolId));w.document.close();w.addEventListener('load',()=>{const images=[...w.document.images];Promise.all(images.map(im=>im.complete?Promise.resolve():new Promise(resolve=>{im.addEventListener('load',resolve,{once:true});im.addEventListener('error',resolve,{once:true})}))).then(()=>{const wait=()=>{if(w.__letterReady){w.focus();w.print()}else w.setTimeout(wait,100)};wait()})},{once:true});msg('ltMsg','Stampa aperta. Seleziona A4 e scala 100%; verifica che la filigrana compaia anche nell’anteprima della stampante.','ok')};
 $('ltPreview').onclick=()=>{const a=ltCollect();if(!ltCurrentRecord()?.protocolId)return msg('ltMsg','Assegna prima il protocollo ufficiale per preparare il PDF da firmare.','warn');if(!a.Body.trim())return msg('ltMsg','Inserisci il testo prima della stampa.','warn');const w=window.open('','_blank');if(!w)return msg('ltMsg','Consenti le finestre popup per aprire l’anteprima.','warn');w.document.open();w.document.write(ltDocument(a));w.document.close();msg('ltMsg','Anteprima aperta. Nel browser scegli Stampa → Salva come PDF.','ok')};
 $('ltPrintSigned').onclick=async()=>{
  if(prof?.ruolo!=='AMMINISTRATORE')return msg('ltMsg','Solo gli amministratori possono utilizzare la firma memorizzata.','warn');
