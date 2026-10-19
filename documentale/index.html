@@ -671,6 +671,7 @@ function view(v){
   $('aCategory').value='VERBALI';$('aSearch').value='';$('aFrom').value='';$('aTo').value='';
  }
  if((v==='archiveMinutes'||v==='minutes'||v==='minuteNew'||v==='calls'||v==='callNew'||v==='dossiers'||v==='accesses'||v==='activity'||v==='letters')&&prof?.ruolo!=='AMMINISTRATORE')v='dash';
+ if((v==='letters'&&$('letters').classList.contains('hidden'))||(v!=='letters'&&!$('letters').classList.contains('hidden'))){ltActive=null;ltFill();ltList();ltState();$('ltAiNotes').value='';$('ltAiTone').value='istituzionale';$('ltSignedPdf').value='';msg('ltAiMsg','');msg('ltMsg','Compila una nuova lettera o seleziona una bozza salvata.');}
  if(v!=='minutes'&&v!=='minuteNew'&&!$('minutes').classList.contains('hidden')){resetMinuteForm();resetMinuteFilters();}
  if(v!=='calls'&&v!=='callNew'&&!$('calls').classList.contains('hidden'))resetCallFilters();
  document.querySelectorAll('main>section').forEach(x=>x.classList.toggle('hidden',x.id!==(v==='minuteNew'?'minutes':v==='callNew'?'calls':v==='archiveMinutes'?'archive':v)));
