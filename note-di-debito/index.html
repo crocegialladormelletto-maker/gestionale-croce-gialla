@@ -157,8 +157,7 @@ async function loadAll(){
  if(fs.error)return msg('listMsg','Errore Fogli Viaggio: '+fs.error.message,'err');
  if(ns.error)return msg('listMsg','Errore Note di Debito: '+ns.error.message,'err');
  if(ds.error)return msg('listMsg','Errore classificazione documenti: '+ds.error.message,'err');
- if(ls.error)return msg('listMsg','Errore collegamenti note multiple: '+ls.error.message,'err');
- noteLinks=ls.data||[];
+ if(ls.error){console.warn('Collegamenti note multiple temporaneamente non disponibili:',ls.error.message);noteLinks=[];}else noteLinks=ls.data||[];
  const docByService=new Map((ds.data||[]).map(x=>[x.id,x]));
  sheets=(fs.data||[]).map(f=>{const service=docByService.get(f.servizio_giornaliero_id);return {...f,luogo_carico_descrizione:f.luogo_carico||[service?.luogo_carico_paziente,service?.indirizzo_carico_paziente].filter(Boolean).join(' ')||'luogo di carico non indicato'};}).filter(f=>{
   const t=String(f.tipo_servizio||'').trim().toUpperCase();
