@@ -8,7 +8,7 @@
 :root{--navy:#16324a;--navy2:#0f263a;--yellow:#f3c400;--bg:#edf2f6;--line:#d9e2ea;--muted:#667788;--green:#177552;--red:#a8323c;--blue:#2369a7}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#172533}
 .hidden{display:none!important}.top{background:var(--navy);color:#fff;box-shadow:0 2px 10px #0002}.head{max-width:1500px;margin:auto;padding:14px 20px;display:flex;align-items:center;gap:14px}.brand{flex:1}.brand small{display:block;color:var(--yellow);font-weight:900}.brand strong{font-size:23px}.stripe{height:5px;background:var(--yellow)}
-.btn{border:0;border-radius:9px;padding:9px 13px;font-weight:850;cursor:pointer}.yellow{background:var(--yellow);color:var(--navy2)}.blue{background:var(--navy);color:#fff}.secondary{background:#eef2f6;color:var(--navy)}.green{background:#e5f6ee;color:var(--green)}.danger{background:#fdebec;color:var(--red)}
+.multi-action{background:#f3c400;color:#102a40;border:3px solid #16324a;border-radius:12px;padding:15px 24px;font-size:17px;font-weight:950;box-shadow:0 4px 0 #a18400;cursor:pointer}.multi-action:hover{background:#ffdf36}.multi-action:disabled{opacity:.55;cursor:not-allowed}.multi-panel{padding:14px;border:2px solid #f3c400;border-radius:12px;background:#fff9d8;margin-bottom:13px}.multi-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.multi-row input[type=checkbox]{width:19px;height:19px;cursor:pointer}.btn{border:0;border-radius:9px;padding:9px 13px;font-weight:850;cursor:pointer}.yellow{background:var(--yellow);color:var(--navy2)}.blue{background:var(--navy);color:#fff}.secondary{background:#eef2f6;color:var(--navy)}.green{background:#e5f6ee;color:var(--green)}.danger{background:#fdebec;color:var(--red)}
 .shell{max-width:1500px;margin:18px auto;padding:0 16px}.layout{display:grid;grid-template-columns:235px minmax(0,1fr);gap:16px}.side{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;height:max-content;position:sticky;top:14px}.nav{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:9px;padding:11px 12px;font-weight:850;color:var(--navy);cursor:pointer;margin:3px 0}.nav.active{background:var(--navy);color:#fff}.nav .count{float:right;background:#eef2f6;color:var(--navy);border-radius:999px;padding:2px 7px;font-size:11px}.nav.active .count{background:#fff;color:var(--navy)}
 .surface{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden;box-shadow:0 2px 10px #0000000b}.hero{padding:18px 20px;background:#f8fafc;border-bottom:1px solid var(--line)}.hero h1,.hero h2{margin:0;color:var(--navy)}.hero p{margin:5px 0 0;color:var(--muted)}.pad{padding:18px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.stat{border:1px solid var(--line);border-radius:11px;padding:12px;background:#fff}.stat small{display:block;color:var(--muted);font-weight:800}.stat b{display:block;font-size:25px;color:var(--navy);margin-top:4px}
@@ -51,7 +51,7 @@
       <div class="stat"><small>EMESSE DA INCASSARE</small><b id="sIssued">0</b></div>
       <div class="stat"><small>PAGATE</small><b id="sPaid">0</b></div>
      </div>
-     <div class="toolbar no-print">
+     <div id="multiBox" class="multi-panel no-print"><div class="multi-row"><button id="createMulti" type="button" class="multi-action">🧾 CREA NOTA UNICA DA PIÙ FOGLI VIAGGIO</button><strong id="multiSelection">Seleziona almeno due fogli</strong></div><div class="muted" style="margin-top:7px">Riservato ad Amministrazione · Una sola nota progressiva · Pagamenti già registrati conservati</div></div><div class="toolbar no-print">
       <input id="search" placeholder="Cerca numero, paziente, intestatario, destinazione..." style="max-width:430px">
       <button id="refresh" class="btn secondary">↻ Aggiorna</button>
      </div>
@@ -128,7 +128,7 @@ const NOTE_LOGO='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAQDAwMD
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>Number(n||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'});
 const nice=x=>x?String(x).slice(0,10).split('-').reverse().join('/'):'—';
-let prof=null, view='queue', sheets=[], notes=[], active=null;
+let prof=null, view='queue', sheets=[], notes=[], active=null, noteLinks=[], multiSelected=new Set();
 
 function msg(id,t,k=''){const e=$(id);e.innerHTML=t?'<div class="notice '+k+'">'+esc(t)+'</div>':''}
 function showApp(ok){$('login').classList.toggle('hidden',ok);$('app').classList.toggle('hidden',!ok)}
@@ -148,14 +148,17 @@ $('backMain').onclick=()=>location.href='../';
 
 async function loadAll(){
  msg('listMsg','Aggiornamento dati...');
- const [fs,ns,ds]=await Promise.all([
+ const [fs,ns,ds,ls]=await Promise.all([
   sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,codice_fiscale,intestatario_nota_debito,cf_piva_intestatario,indirizzo_fatturazione,cap_fatturazione,comune_fatturazione,provincia_fatturazione,email_fatturazione,email,residenza,via,civico,cap,provincia,luogo_partenza,luogo_carico,indirizzo_partenza,destinazione,indirizzo_destinazione,ospedale_destinazione,totale_servizio,stato,modalita_pagamento,data_pagamento,servizio_giornaliero_id').eq('stato','CHIUSO').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).limit(1000),
   sb.from('note_di_debito').select('*').order('created_at',{ascending:false}).limit(1000),
-  sb.from('servizi_giornalieri').select('id,documento_da_emettere,fattura_aruba_emessa,luogo_carico_paziente,indirizzo_carico_paziente').limit(3000)
+  sb.from('servizi_giornalieri').select('id,documento_da_emettere,fattura_aruba_emessa,luogo_carico_paziente,indirizzo_carico_paziente').limit(3000),
+  sb.from('note_debito_fogli').select('nota_id,foglio_id').limit(5000)
  ]);
  if(fs.error)return msg('listMsg','Errore Fogli Viaggio: '+fs.error.message,'err');
  if(ns.error)return msg('listMsg','Errore Note di Debito: '+ns.error.message,'err');
  if(ds.error)return msg('listMsg','Errore classificazione documenti: '+ds.error.message,'err');
+ if(ls.error)return msg('listMsg','Errore collegamenti note multiple: '+ls.error.message,'err');
+ noteLinks=ls.data||[];
  const docByService=new Map((ds.data||[]).map(x=>[x.id,x]));
  sheets=(fs.data||[]).map(f=>{const service=docByService.get(f.servizio_giornaliero_id);return {...f,luogo_carico_descrizione:f.luogo_carico||[service?.luogo_carico_paziente,service?.indirizzo_carico_paziente].filter(Boolean).join(' ')||'luogo di carico non indicato'};}).filter(f=>{
   const t=String(f.tipo_servizio||'').trim().toUpperCase();
@@ -165,7 +168,7 @@ async function loadAll(){
  });notes=ns.data||[];updateCounts();render();msg('listMsg','');
 }
 function groups(){
- const ids=new Set(notes.map(n=>n.foglio_viaggio_id));
+ const ids=new Set([...notes.map(n=>n.foglio_viaggio_id),...noteLinks.map(x=>x.foglio_id)]);
  const queue=sheets.filter(f=>!ids.has(f.id));
  const drafts=notes.filter(n=>n.stato==='BOZZA');
  const issued=notes.filter(n=>n.stato==='EMESSA'&&!n.data_pagamento);
@@ -185,6 +188,7 @@ function searchable(x){return JSON.stringify(x).toLowerCase()}
 function render(){
  $('listView').classList.remove('hidden');$('detailView').classList.add('hidden');
  const q=$('search').value.trim().toLowerCase(),g=groups();
+ $('multiBox').classList.toggle('hidden',view!=='queue');
  const titles={
   queue:['Fogli Viaggio da elaborare','Fogli Viaggio chiusi che non hanno ancora una Nota di Debito.'],
   drafts:['Bozze','Note di Debito create ma non ancora emesse.'],
@@ -198,9 +202,11 @@ function render(){
   $('thead').innerHTML='<tr><th>Foglio</th><th>Data</th><th>Paziente / intestatario</th><th>Servizio</th><th>Destinazione</th><th>Totale</th><th></th></tr>';
   $('rows').innerHTML=arr.length?arr.map(f=>{
    const name=f.intestatario_nota_debito||[f.paziente_nome,f.paziente_cognome].filter(Boolean).join(' ')||'—';
-   return '<tr><td><b>'+esc(f.numero_foglio)+'</b><br><span class="muted">Mezzo '+esc(f.mezzo||'—')+'</span></td><td>'+nice(f.data_servizio)+'</td><td>'+esc(name)+'</td><td>'+esc(f.tipo_servizio||'—')+'</td><td>'+esc(f.destinazione||'—')+'</td><td><b>'+money(f.totale_servizio)+'</b></td><td><button class="btn yellow" data-create="'+esc(f.id)+'">Crea bozza</button></td></tr>';
+   return '<tr><td><label class="multi-row"><input type="checkbox" data-multi="'+esc(f.id)+'" '+(multiSelected.has(f.id)?'checked':'')+' aria-label="Seleziona '+esc(f.numero_foglio)+'"><b>'+esc(f.numero_foglio)+'</b></label><span class="muted">Mezzo '+esc(f.mezzo||'—')+'</span></td><td>'+nice(f.data_servizio)+'</td><td>'+esc(name)+'</td><td>'+esc(f.tipo_servizio||'—')+'</td><td>'+esc(f.destinazione||'—')+'</td><td><b>'+money(f.totale_servizio)+'</b></td><td><button class="btn yellow" data-create="'+esc(f.id)+'">Crea bozza</button></td></tr>';
   }).join(''):'<tr><td colspan="7">Nessun Foglio Viaggio da elaborare.</td></tr>';
   document.querySelectorAll('[data-create]').forEach(b=>b.onclick=()=>createNote(b.dataset.create));
+  document.querySelectorAll('[data-multi]').forEach(b=>b.onchange=()=>{if(b.checked)multiSelected.add(b.dataset.multi);else multiSelected.delete(b.dataset.multi);updateMultiStatus()});
+  updateMultiStatus();
  }else{
   $('thead').innerHTML='<tr><th>Numero</th><th>Data</th><th>Intestatario</th><th>Foglio Viaggio</th><th>Totale</th><th>Stato</th><th>Pagamento</th><th></th></tr>';
   $('rows').innerHTML=arr.length?arr.map(n=>{
@@ -210,6 +216,8 @@ function render(){
   document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openNote(b.dataset.open));
  }
 }
+function updateMultiStatus(){const ids=[...multiSelected].filter(id=>groups().queue.some(f=>f.id===id));multiSelected=new Set(ids);$('multiSelection').textContent=ids.length?ids.length+' fogli selezionati':'Seleziona almeno due fogli';$('createMulti').disabled=ids.length<2;}
+$('createMulti').onclick=async()=>{const chosen=groups().queue.filter(f=>multiSelected.has(f.id));if(chosen.length<2)return msg('listMsg','Seleziona almeno due fogli.','err');const names=new Set(chosen.map(f=>(f.intestatario_nota_debito||[f.paziente_nome,f.paziente_cognome].filter(Boolean).join(' ')).trim().toLowerCase()));if(names.size!==1)return msg('listMsg','Seleziona fogli con lo stesso intestatario.','err');const amount=chosen.reduce((a,f)=>a+Number(f.totale_servizio||0),0);if(!confirm('Creare UNA SOLA nota in BOZZA per '+chosen.length+' fogli, importo totale '+money(amount)+'? Gli incassi esistenti non saranno duplicati.'))return;const b=$('createMulti');b.disabled=true;msg('listMsg','Creazione nota unica in corso...');try{const r=await sb.rpc('cge_crea_nota_debito_multipla',{p_fogli:chosen.map(f=>f.id)});if(r.error)throw r.error;multiSelected.clear();await loadAll();await openNote(r.data)}catch(e){msg('listMsg',e.message||String(e),'err');updateMultiStatus()}finally{b.disabled=false}};
 function testNoteFromSheet(f){
  const name=f.intestatario_nota_debito||[f.paziente_nome,f.paziente_cognome].filter(Boolean).join(' ')||'TEST';
  const desc=(String(f.tipo_servizio||'').toUpperCase().includes('ASSISTENZA')||String(f.tipo_servizio||'').toUpperCase().includes('MANIFESTAZIONE'))
@@ -242,6 +250,8 @@ async function openNote(id){
  if(r.error)return msg('listMsg',r.error.message,'err');
  active=r.data;
  const linked=sheets.find(f=>f.id===active.foglio_viaggio_id);
+ const allLinks=noteLinks.filter(x=>x.nota_id===active.id).map(x=>sheets.find(f=>f.id===x.foglio_id)).filter(Boolean);
+ if(allLinks.length>1)active.numero_foglio=allLinks.map(f=>f.numero_foglio).join(' / ');
  if(linked)active={...active,tipo_servizio:linked.tipo_servizio,luogo_partenza:linked.luogo_partenza,indirizzo_partenza:linked.indirizzo_partenza,destinazione:linked.destinazione,indirizzo_destinazione:linked.indirizzo_destinazione,ospedale_destinazione:linked.ospedale_destinazione};
  fill();$('listView').classList.add('hidden');$('detailView').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});
 }
