@@ -18,7 +18,14 @@
  #finalPrint .printLesson{break-inside:avoid;page-break-inside:avoid;margin-bottom:12px}
  #finalPrint table{min-width:0;width:100%;font-size:10px}
  #finalPrint th,#finalPrint td{padding:5px;border:1px solid #c7cfd7}
- #finalPrint .printSummary{break-before:page}
+ #finalPrint .presenceMatrix{table-layout:fixed;width:100%;font-size:8px}
+ #finalPrint .presenceMatrix th,#finalPrint .presenceMatrix td{padding:3px 1px;text-align:center;overflow-wrap:anywhere;white-space:pre-line}
+ #finalPrint .presenceMatrix th:first-child,#finalPrint .presenceMatrix td:first-child{width:128px;text-align:left}
+ #finalPrint .presenceMatrix th:last-child,#finalPrint .presenceMatrix td:last-child{width:47px;font-weight:bold}
+ #finalPrint .presenceMatrix thead{display:table-header-group}
+ #finalPrint .presenceMatrix tr{break-inside:avoid}
+ #finalPrint .lessonLegend{break-before:page}
+ #finalPrint .lessonLegend p{margin:6px 0;font-size:10px;break-inside:avoid}
 }</style></head><body><header><a class="btn" href="../corsisti-prova/index.html">← Anagrafica Corsisti</a><h1>🎓 Formazione corsisti</h1><div>Lezioni · Presenze · Monte ore · Documenti</div></header><main><div id="msg" class="status">Verifica amministratore…</div><section><h2>Calendario lezioni</h2><form id="lesson" class="lesson-form"><label>Data<input type="date" id="date" required></label><label>Inizio<input type="time" id="start"></label><label>Fine<input type="time" id="end"></label><label>Ore previste<input type="number" id="hours" min="0" max="24" step=".25" required></label><label>Argomento<input id="subject" required></label><label>Formatore<input id="teacher"></label><div class="lesson-actions"><button id="saveLesson">Aggiungi lezione</button><button id="cancelLesson" type="button" style="display:none;background:#e9eef4">Annulla modifica</button></div></form><div class="status" style="margin:14px 0"><strong>Totale ore lezioni inserite: <span id="totalLessonHours">0</span> / 50 ore</strong><div id="totalLessonStatus" class="muted">Nessuna lezione inserita.</div></div><div class="scroll"><table><thead><tr><th>Data</th><th>Orario</th><th>Ore</th><th>Argomento</th><th>Formatore</th><th></th></tr></thead><tbody id="lessonrows"></tbody></table></div></section><section><h2>Registro presenze e ore</h2><div class="flex"><label>Lezione<select id="lessonpick"></select></label><button type="button" id="loadatt">Apri registro</button></div><div class="scroll"><table><thead><tr><th>Corsista</th><th>Stato</th><th>Ore riconosciute</th><th>Note</th><th></th></tr></thead><tbody id="attrows"></tbody></table></div><button type="button" id="summary">Aggiorna riepilogo ore</button><div class="scroll"><table><thead><tr><th>Corsista</th><th>Ore frequentate</th><th>Ore previste (corso)</th></tr></thead><tbody id="summaryrows"></tbody></table></div></section><section><h2>Registro finale del corso</h2><p class="muted">Stampa unica al termine del corso: tutte le lezioni, presenze, assenze, giustificazioni e riepilogo ore per corsista.</p><button id="printFinal" type="button">🖨️ Stampa registro presenze finale</button></section><section id="finalPrint"></section><section><h2>Archivio documenti</h2><p class="muted">File PDF, JPEG o PNG; massimo 10 MB. Accesso riservato all'amministrazione.</p><form id="upload" class="flex"><label>Corsista<select id="personpick" required></select></label><label>Titolo<input id="title" required placeholder="Modulo iscrizione"></label><label>File<input type="file" id="file" accept=".pdf,.jpg,.jpeg,.png" required></label><button>Carica documento</button></form><div class="scroll"><table><thead><tr><th>Corsista</th><th>Documento</th><th>Data</th><th></th></tr></thead><tbody id="docrows"></tbody></table></div></section><section><h2>Esami e stato formativo</h2><p>Le date d'esame e gli esiti si gestiscono dalla scheda anagrafica Corsisti. La promozione al personale operativo richiede un'azione amministrativa separata.</p><a class="btn" href="../corsisti-prova/index.html">Gestisci anagrafiche ed esiti</a></section><section><h2>Comunicazioni e area personale</h2><p>Le comunicazioni automatiche e l'area corsista non sono ancora attive. Occorrono una configurazione del servizio email e una procedura di accesso individuale con autorizzazioni specifiche. Nessuna email viene inviata da questa pagina.</p></section></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
 const db=supabase.createClient('https://ihottewckpwpwqzpxusl.supabase.co','sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 const $=id=>document.getElementById(id);let people=[],lessons=[],docs=[],ready=false,editingLessonId=null;const msg=t=>$('msg').textContent=t;
@@ -41,23 +48,26 @@ $('printFinal').onclick=async()=>{
  const r=await db.from('corsisti_presenze').select('corsista_id,lezione_id,stato,ore_riconosciute').limit(10000);
  if(r.error){msg('Impossibile preparare il registro finale: '+r.error.message);return}
  const rec=r.data||[];
- const missing=lessons.reduce((n,l)=>n+people.filter(p=>!rec.some(x=>x.lezione_id===l.id&&x.corsista_id===p.id)).length,0);
- if(missing&&!confirm('Attenzione: mancano '+missing+' registrazioni di presenza. Stampare comunque il registro con le voci «Non registrato»?'))return;
+ const byKey=new Map(rec.map(x=>[x.lezione_id+'|'+x.corsista_id,x]));
+ const missing=lessons.reduce((n,l)=>n+people.filter(p=>!byKey.has(l.id+'|'+p.id)).length,0);
+ if(missing&&!confirm('Attenzione: mancano '+missing+' registrazioni di presenza. Stampare comunque il registro con le voci non registrate?'))return;
  const root=$('finalPrint');root.replaceChildren();
  root.append(node('h2','CROCE GIALLA EMERGENZA ODV · REGISTRO PRESENZE FINALE'));
- root.append(node('p','Corso Allegato A · Totale ore programmate: '+lessons.reduce((t,l)=>t+Number(l.ore||0),0).toLocaleString('it-IT',{maximumFractionDigits:2})+' · Stampa: '+new Date().toLocaleDateString('it-IT')));
- const makeTable=(headers,rows)=>{const table=node('table'),thead=node('thead'),tr=node('tr');headers.forEach(h=>{const th=node('th',h);tr.append(th)});thead.append(tr);table.append(thead);const tbody=node('tbody');rows.forEach(vals=>{const row=node('tr');vals.forEach(v=>td(row,String(v)));tbody.append(row)});table.append(tbody);return table};
- lessons.forEach((l,i)=>{
- const wrap=node('div');wrap.className='printLesson';
- wrap.append(node('h3',(i+1)+'. '+formatDateIT(l.data)+' · '+l.argomento+' · '+(l.ora_inizio||'').slice(0,5)+'–'+(l.ora_fine||'').slice(0,5)+' · '+l.ore+' ore · Formatore: '+(l.formatore||'—')));
- const rows=people.map(p=>{const x=rec.find(y=>y.lezione_id===l.id&&y.corsista_id===p.id);return [p.cognome+' '+p.nome,x?.stato||'NON REGISTRATO',x?Number(x.ore_riconosciute||0).toLocaleString('it-IT',{maximumFractionDigits:2}):'—']});
- wrap.append(makeTable(['Corsista','Presenza','Ore frequentate'],rows));root.append(wrap);
- });
- const summary=node('div');summary.className='printSummary';summary.append(node('h2','Riepilogo complessivo corsisti'));
- summary.append(makeTable(['Corsista','Presente','Assente','Giustificato','Non registrato','Ore frequentate'],people.map(p=>{
- const rr=lessons.map(l=>rec.find(x=>x.lezione_id===l.id&&x.corsista_id===p.id));
- return [p.cognome+' '+p.nome,rr.filter(x=>x?.stato==='PRESENTE').length,rr.filter(x=>x?.stato==='ASSENTE').length,rr.filter(x=>x?.stato==='GIUSTIFICATO').length,rr.filter(x=>!x).length,rr.reduce((n,x)=>n+Number(x?.ore_riconosciute||0),0).toLocaleString('it-IT',{maximumFractionDigits:2})];
- })));root.append(summary);
+ const fmt=n=>Number(n||0).toLocaleString('it-IT',{maximumFractionDigits:2});
+ root.append(node('p','Corso Allegato A · '+lessons.length+' lezioni · '+fmt(lessons.reduce((t,l)=>t+Number(l.ore||0),0))+' ore programmate · Stampa del '+new Date().toLocaleDateString('it-IT')));
+ root.append(node('p','LEGENDA: P = Presente · A = Assente · G = Giustificato · — = Non registrato. Il totale ore considera esclusivamente le ore effettivamente riconosciute.'));
+ const table=node('table');table.className='presenceMatrix';const thead=node('thead'),head=node('tr');let th=node('th','Cognome e nome');head.append(th);
+ lessons.forEach((l,i)=>{const h=node('th',(i+1)+'\n'+formatDateIT(l.data));h.title=l.argomento;head.append(h)});
+ head.append(node('th','Ore totali'));thead.append(head);table.append(thead);
+ const tbody=node('tbody');
+ people.forEach(p=>{
+ const tr=node('tr');tr.append(node('td',p.cognome+' '+p.nome));let total=0;
+ lessons.forEach(l=>{const x=byKey.get(l.id+'|'+p.id);total+=Number(x?.ore_riconosciute||0);const label=x?.stato==='PRESENTE'?'P':x?.stato==='ASSENTE'?'A':x?.stato==='GIUSTIFICATO'?'G':'—';const cell=node('td',label);cell.title=x?.stato==='PRESENTE'?'Ore riconosciute: '+fmt(x.ore_riconosciute):x?.stato||'Non registrato';tr.append(cell)});
+ tr.append(node('td',fmt(total)));tbody.append(tr);
+ });table.append(tbody);root.append(table);
+ const detail=node('div');detail.className='lessonLegend';detail.append(node('h3','Dettaglio lezioni'));
+ lessons.forEach((l,i)=>detail.append(node('p',(i+1)+'. '+formatDateIT(l.data)+' · '+(l.ora_inizio||'').slice(0,5)+'–'+(l.ora_fine||'').slice(0,5)+' · '+fmt(l.ore)+' ore · '+l.argomento+' · Formatore: '+(l.formatore||'—'))));
+ root.append(detail);
  window.print();
 };
 $('upload').onsubmit=async e=>{e.preventDefault();if(!ready)return;const f=$('file').files[0],id=$('personpick').value;if(!f||!id)return;if(f.size>10485760||!['application/pdf','image/jpeg','image/png'].includes(f.type)){msg('File non valido (PDF/JPEG/PNG, massimo 10 MB).');return}const path=id+'/'+crypto.randomUUID()+'-'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');const up=await db.storage.from('corsisti-documenti').upload(path,f,{upsert:false});if(up.error){msg(up.error.message);return}const row=await db.from('corsisti_documenti').insert({corsista_id:id,titolo:$('title').value.trim(),percorso:path});if(row.error){await db.storage.from('corsisti-documenti').remove([path]);msg(row.error.message);return}$('upload').reset();msg('Documento caricato.');await refresh()};
