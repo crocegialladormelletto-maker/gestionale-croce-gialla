@@ -3,6 +3,7 @@
 <title>Rimborso Accise · Croce Gialla Emergenza ODV</title>
 <style>
 :root{--n:#12375d;--y:#ffdb17;--b:#f2f5f8}*{box-sizing:border-box}body{font:14px/1.5 system-ui,Segoe UI,Arial;margin:0;background:var(--b);color:#1c3347}header{background:var(--n);color:#fff;padding:20px 5%;border-bottom:7px solid var(--y)}header h1{margin:0;font-size:25px}header small{color:var(--y);font-weight:800}main{max-width:1250px;margin:18px auto;padding:0 14px 70px}.card{background:#fff;border:1px solid #d9e2ea;border-radius:14px;padding:17px;margin:13px 0}h2{color:var(--n);margin:0 0 12px;font-size:19px}button,.button{border:0;border-radius:9px;background:var(--n);color:white;font-weight:800;padding:11px 15px;cursor:pointer;text-decoration:none;display:inline-block}button.secondary{background:#e9eff7;color:var(--n)}button:disabled{opacity:.55;cursor:wait}input,select{border:1px solid #bccad5;padding:10px;border-radius:8px;max-width:100%;font:inherit}input[type=file]{background:#f5f8fc}label{font-weight:650;display:block;margin:6px 0}.flex{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.flex>*{min-width:150px}.notice{padding:11px;background:#fff4ca;border-left:5px solid #e1ab00;border-radius:7px;margin:12px 0}.ok{background:#e7f8ed;border-color:#208252}.bad{background:#fde8e9;border-color:#b92d40}.muted{color:#60768a}.stat{padding:12px 18px;background:#ecf3fa;border-radius:10px}.stat b{font-size:20px;color:var(--n);display:block}table{border-collapse:collapse;width:100%}th,td{text-align:left;border-bottom:1px solid #e0e7ee;padding:9px 7px;font-size:13px}th{background:#e8eef5;color:var(--n)}.tablewrap{overflow:auto}.tag{border-radius:7px;background:#e3edf8;padding:3px 7px;font-weight:700}.excluded{color:#b33440}.good{color:#18744d}#app{display:none}
+@media print{@page{size:A4 landscape;margin:10mm}header,#msg,main>a,.card:not(:has(#statRows)),#statPrint,#statAnno,#statMese{display:none!important}#app{display:block!important}body{background:white}main{max-width:none}.card:has(#statRows){border:0;padding:0}.tablewrap{overflow:visible}th,td{font-size:10px;padding:5px}}
 </style></head><body>
 <header><small>CROCE GIALLA EMERGENZA ODV · AMMINISTRAZIONE</small><h1>Rimborso accise carburanti</h1><div>Documentazione dal 1° gennaio 2026 · Pratica in attesa di autorizzazione Dogane</div></header>
 <main><a href="../index.html" class="button" style="margin:5px 0 15px">← Torna al gestionale</a>
@@ -13,7 +14,8 @@
 <div style="flex:2"><label for="files">Seleziona uno o più file</label><input id="files" type="file" accept=".xml,.zip,.pdf,.jpg,.jpeg,.png" multiple></div><button id="upload">Carica e analizza</button></div>
 <p class="muted" style="margin-bottom:0">Gli ZIP UTA vengono letti senza estrarre i file sul computer. Le fatture originali XML vengono conservate singolarmente. Per Vega e i fogli marcia viene archiviato il documento, in attesa di verifica/associazione.</p></div>
 <div class="card"><h2>Riepilogo preliminare per trimestre</h2><div class="flex" id="stats"></div><div class="notice">I litri sono <b>da verificare</b> e non rappresentano automaticamente un rimborso riconosciuto. I rifornimenti con targa «CROCE GIALLA E» e tutti i carburanti diversi dal gasolio sono esclusi. Le targhe diverse da quelle censite sono sospese dal conteggio.</div></div>
-<div class="card"><h2>Rifornimenti UTA rilevati</h2><div class="tablewrap"><table><thead><tr><th>Data</th><th>Fattura</th><th>Targa</th><th>Prodotto</th><th>Litri</th><th>Esito</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+<div class="card"><h2>📊 Statistiche carburante per mezzo</h2><p class="muted">Tutti i rifornimenti archiviati (UTA e Vega), compresi quelli esclusi dal rimborso. I mezzi storici venduti sono identificati separatamente. I totali rappresentano la spesa dei rifornimenti, non il rimborso delle accise.</p><div class="flex"><div><label for="statAnno">Anno</label><select id="statAnno"><option value="TUTTI">Tutti gli anni</option></select></div><div><label for="statMese">Mese</label><select id="statMese"><option value="TUTTI">Tutti i mesi</option></select></div><button id="statPrint" class="secondary" type="button">🖨️ Stampa statistiche</button></div><div class="flex" id="statTotal" style="margin-top:12px"></div><div class="tablewrap"><table><thead><tr><th>Mezzo / targa</th><th>Gasolio (L)</th><th>Gasolio (€)</th><th>Benzina (L)</th><th>Benzina (€)</th><th>AdBlue (L)</th><th>AdBlue (€)</th><th>Spesa totale (€)</th><th>Rifornimenti</th></tr></thead><tbody id="statRows"></tbody></table></div><p class="muted">«CROCE GIALLA E» è una dicitura generica non attribuita a un singolo mezzo; resta separata e non entra nel rimborso.</p></div>
+<div class="card"><h2>Rifornimenti UTA e Vega rilevati</h2><div class="tablewrap"><table><thead><tr><th>Data</th><th>Fattura</th><th>Targa</th><th>Prodotto</th><th>Litri</th><th>Esito</th></tr></thead><tbody id="rows"></tbody></table></div></div>
 <div class="card"><h2>Archivio fatture e fogli marcia</h2><div class="tablewrap"><table><thead><tr><th>Caricato il</th><th>Tipo</th><th>Documento</th><th>Fattura</th><th>Stato</th><th>Originale</th></tr></thead><tbody id="docs"></tbody></table></div></div>
 </div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
@@ -118,11 +120,41 @@ $('upload').addEventListener('click',async()=>{
 });
 async function openDoc(path){const r=await sb.storage.from('accise-documenti').createSignedUrl(path,90);if(r.error)throw Error(r.error.message);window.open(r.data.signedUrl,'_blank','noopener')}
 window.openAcciseDocument=async id=>{try{const x=window.acciseDocs.find(x=>x.id===id);if(x)await openDoc(x.storage_path)}catch(e){message(e.message,'notice bad')}};
+let statRecords=[];
+function renderCarburanteStats(){
+ const year=$('statAnno').value,month=$('statMese').value;
+ const data=statRecords.filter(r=>(year==='TUTTI'||r.data_rifornimento?.slice(0,4)===year)&&(month==='TUTTI'||r.data_rifornimento?.slice(5,7)===month));
+ const groups=new Map();
+ for(const r of data){
+  const plate=(r.targa||'SENZA TARGA').trim().toUpperCase();
+  if(!groups.has(plate))groups.set(plate,{plate,count:0,GASOLIO:[0,0],BENZINA:[0,0],ADBLUE:[0,0],ALTRO:[0,0]});
+  const g=groups.get(plate),fuel=['GASOLIO','BENZINA','ADBLUE'].includes(r.carburante)?r.carburante:'ALTRO';
+  g.count++;g[fuel][0]+=Number(r.litri)||0;g[fuel][1]+=Number(r.importo)||0;
+ }
+ const money=x=>Number(x).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const liters=x=>Number(x).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:3});
+ const vehicles=[...groups.values()].sort((a,b)=>a.plate.localeCompare(b.plate));
+ const totals={count:0,GASOLIO:[0,0],BENZINA:[0,0],ADBLUE:[0,0],ALTRO:[0,0]};
+ for(const g of vehicles){totals.count+=g.count;for(const k of ['GASOLIO','BENZINA','ADBLUE','ALTRO']){totals[k][0]+=g[k][0];totals[k][1]+=g[k][1]}}
+ const cost=g=>['GASOLIO','BENZINA','ADBLUE','ALTRO'].reduce((v,k)=>v+g[k][1],0);
+ const tr=g=>'<tr><td><b>'+esc(g.plate)+'</b>'+( ['GA063XY','FZ626CT'].includes(g.plate)?'<br><small>Mezzo storico venduto</small>':'')+'</td>'+['GASOLIO','BENZINA','ADBLUE'].map(k=>'<td>'+liters(g[k][0])+'</td><td>'+money(g[k][1])+'</td>').join('')+'<td><b>'+money(cost(g))+'</b></td><td>'+g.count+'</td></tr>';
+ $('statRows').innerHTML=vehicles.map(tr).join('')+('<tr style="background:#fff3c4;font-weight:800"><td>TOTALE</td>'+['GASOLIO','BENZINA','ADBLUE'].map(k=>'<td>'+liters(totals[k][0])+'</td><td>'+money(totals[k][1])+'</td>').join('')+'<td>'+money(cost(totals))+'</td><td>'+totals.count+'</td></tr>');
+ $('statTotal').innerHTML='<div class="stat">Rifornimenti<b>'+totals.count+'</b></div><div class="stat">Litri gasolio<b>'+liters(totals.GASOLIO[0])+' L</b></div><div class="stat">Spesa gasolio<b>'+money(totals.GASOLIO[1])+' €</b></div><div class="stat">Spesa carburanti e AdBlue<b>'+money(cost(totals))+' €</b></div>';
+}
+$('statAnno').onchange=renderCarburanteStats;$('statMese').onchange=renderCarburanteStats;
+$('statPrint').onclick=()=>window.print();
 async function refresh(){
  const dr=await sb.from('accise_documenti').select('*').order('created_at',{ascending:false}).limit(700);
  const rr=await sb.from('accise_rifornimenti').select('*,accise_documenti(numero_fattura)').order('data_rifornimento',{ascending:false}).limit(4000);
  if(dr.error||rr.error){message('Errore lettura archivio: '+(dr.error||rr.error).message,'notice bad');return}
  const docs=dr.data||[],rows=rr.data||[];window.acciseDocs=docs;
+ statRecords=rows;
+ const yearSel=$('statAnno'),currentYear=yearSel.value,years=[...new Set(rows.map(r=>r.data_rifornimento?.slice(0,4)).filter(Boolean))].sort().reverse();
+ yearSel.innerHTML='<option value="TUTTI">Tutti gli anni</option>'+years.map(y=>'<option value="'+esc(y)+'">'+esc(y)+'</option>').join('');
+ yearSel.value=years.includes(currentYear)?currentYear:'TUTTI';
+ const monthSel=$('statMese'),currentMonth=monthSel.value;
+ monthSel.innerHTML='<option value="TUTTI">Tutti i mesi</option>'+Array.from({length:12},(_,i)=>{const v=String(i+1).padStart(2,'0');return '<option value="'+v+'">'+new Date(2026,i,1).toLocaleDateString('it-IT',{month:'long'})+'</option>'}).join('');
+ monthSel.value=currentMonth;renderCarburanteStats();
  $('docs').innerHTML=docs.map(d=>'<tr><td>'+esc(d.created_at.slice(0,10))+'</td><td>'+esc(d.fornitore)+'</td><td>'+esc(d.nome_file)+'</td><td>'+esc(d.numero_fattura||'—')+'</td><td>'+esc(d.stato)+'</td><td><button class="secondary" onclick="openAcciseDocument(\''+d.id+'\')">Apri</button></td></tr>').join('')||'<tr><td colspan=6>Nessun documento caricato</td></tr>';
  $('rows').innerHTML=rows.map(x=>'<tr><td>'+esc(x.data_rifornimento)+'</td><td>'+esc(x.accise_documenti?.numero_fattura||'—')+'</td><td>'+esc(x.targa||'—')+'</td><td>'+esc(x.carburante)+'</td><td>'+Number(x.litri).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:3})+'</td><td class="'+(x.escluso?'excluded':'good')+'">'+esc(x.escluso?'ESCLUSO · '+(x.motivo_esclusione||''): 'Da verificare')+'</td></tr>').join('')||'<tr><td colspan=6>Nessun rifornimento UTA ancora analizzato</td></tr>';
  const total=rows.filter(x=>!x.escluso&&x.carburante==='GASOLIO').reduce((s,x)=>s+Number(x.litri),0);
