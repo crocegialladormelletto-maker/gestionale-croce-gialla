@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rimborso Accise · Croce Gialla Emergenza ODV</title>
+<style>
+:root{--n:#12375d;--y:#ffdb17;--b:#f2f5f8}*{box-sizing:border-box}body{font:14px/1.5 system-ui,Segoe UI,Arial;margin:0;background:var(--b);color:#1c3347}header{background:var(--n);color:#fff;padding:20px 5%;border-bottom:7px solid var(--y)}header h1{margin:0;font-size:25px}header small{color:var(--y);font-weight:800}main{max-width:1250px;margin:18px auto;padding:0 14px 70px}.card{background:#fff;border:1px solid #d9e2ea;border-radius:14px;padding:17px;margin:13px 0}h2{color:var(--n);margin:0 0 12px;font-size:19px}button,.button{border:0;border-radius:9px;background:var(--n);color:white;font-weight:800;padding:11px 15px;cursor:pointer;text-decoration:none;display:inline-block}button.secondary{background:#e9eff7;color:var(--n)}button:disabled{opacity:.55;cursor:wait}input,select{border:1px solid #bccad5;padding:10px;border-radius:8px;max-width:100%;font:inherit}input[type=file]{background:#f5f8fc}label{font-weight:650;display:block;margin:6px 0}.flex{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.flex>*{min-width:150px}.notice{padding:11px;background:#fff4ca;border-left:5px solid #e1ab00;border-radius:7px;margin:12px 0}.ok{background:#e7f8ed;border-color:#208252}.bad{background:#fde8e9;border-color:#b92d40}.muted{color:#60768a}.stat{padding:12px 18px;background:#ecf3fa;border-radius:10px}.stat b{font-size:20px;color:var(--n);display:block}table{border-collapse:collapse;width:100%}th,td{text-align:left;border-bottom:1px solid #e0e7ee;padding:9px 7px;font-size:13px}th{background:#e8eef5;color:var(--n)}.tablewrap{overflow:auto}.tag{border-radius:7px;background:#e3edf8;padding:3px 7px;font-weight:700}.excluded{color:#b33440}.good{color:#18744d}#app{display:none}
+</style></head><body>
+<header><small>CROCE GIALLA EMERGENZA ODV · AMMINISTRAZIONE</small><h1>Rimborso accise carburanti</h1><div>Documentazione dal 1° gennaio 2026 · Pratica in attesa di autorizzazione Dogane</div></header>
+<main><a href="../index.html" class="button" style="margin:5px 0 15px">← Torna al gestionale</a>
+<div id="msg" class="notice">Verifica accesso amministratore in corso…</div>
+<div id="app">
+<div class="card"><h2>Importa documenti</h2><p class="muted">Le fatture vengono archiviate nel database protetto. Nessuna operazione viene effettuata sui tablet. Gli importi di rimborso saranno calcolati solo dopo aver ricevuto le tabelle ufficiali.</p>
+<div class="flex"><div><label for="tipo">Tipo documento</label><select id="tipo"><option value="UTA">UTA · XML o ZIP contenente XML</option><option value="VEGA">Vega · PDF</option><option value="ALTRO">Fogli marcia cartacei · PDF / foto</option></select></div>
+<div style="flex:2"><label for="files">Seleziona uno o più file</label><input id="files" type="file" accept=".xml,.zip,.pdf,.jpg,.jpeg,.png" multiple></div><button id="upload">Carica e analizza</button></div>
+<p class="muted" style="margin-bottom:0">Gli ZIP UTA vengono letti senza estrarre i file sul computer. Le fatture originali XML vengono conservate singolarmente. Per Vega e i fogli marcia viene archiviato il documento, in attesa di verifica/associazione.</p></div>
+<div class="card"><h2>Riepilogo preliminare per trimestre</h2><div class="flex" id="stats"></div><div class="notice">I litri sono <b>da verificare</b> e non rappresentano automaticamente un rimborso riconosciuto. I rifornimenti con targa «CROCE GIALLA E» e tutti i carburanti diversi dal gasolio sono esclusi. Le targhe diverse da quelle censite sono sospese dal conteggio.</div></div>
+<div class="card"><h2>Rifornimenti UTA rilevati</h2><div class="tablewrap"><table><thead><tr><th>Data</th><th>Fattura</th><th>Targa</th><th>Prodotto</th><th>Litri</th><th>Esito</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+<div class="card"><h2>Archivio fatture e fogli marcia</h2><div class="tablewrap"><table><thead><tr><th>Caricato il</th><th>Tipo</th><th>Documento</th><th>Fattura</th><th>Stato</th><th>Originale</th></tr></thead><tbody id="docs"></tbody></table></div></div>
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+const sb=supabase.createClient('https://ihottewckpwpwqzpxusl.supabase.co','sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4');
+const $=id=>document.getElementById(id);
+const validTarghe=new Set(['EW048NX','HB021TN','HB022TN','HD918LC']);
+const n=v=>{const f=Number(String(v||'0').replace(',','.'));return Number.isFinite(f)?f:0};
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function message(text,cls='notice'){$('msg').className=cls;$('msg').textContent=text}
+function leaf(node,name){return [...node.getElementsByTagName('*')].find(x=>x.localName===name)}
+function val(node,name){return leaf(node,name)?.textContent?.trim()||''}
+function direct(node,name){return [...node.children].find(x=>x.localName===name)}
+function parseUTA(text){
+ const dom=new DOMParser().parseFromString(text,'application/xml');
+ if(dom.getElementsByTagName('parsererror').length)throw Error('XML non valido');
+ const root=dom.documentElement;
+ if(!root || root.localName!=='FatturaElettronica')throw Error('Non è una fattura elettronica');
+ const seller=val(leaf(root,'CedentePrestatore'),'Denominazione').toUpperCase();
+ if(!seller.includes('UTA'))throw Error('Il fornitore XML non è UTA');
+ const invoice=leaf(root,'DatiGeneraliDocumento');
+ const numero=val(invoice,'Numero'),data=val(invoice,'Data');
+ if(!numero||!data)throw Error('Numero o data della fattura mancanti');
+ const lines=[...root.getElementsByTagName('*')].filter(x=>x.localName==='DettaglioLinee');
+ const rif=[];
+ for(const line of lines){
+  const desc=val(line,'Descrizione');
+  const qty=val(line,'Quantita'),unit=val(line,'UnitaMisura').toLowerCase();
+  if(!unit.startsWith('lt')||!qty)continue;
+  const match=desc.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if(!match)continue;
+  const date=match[3]+'-'+match[2]+'-'+match[1];
+  if(date<'2026-01-01')continue;
+  const dati=[...line.getElementsByTagName('*')].filter(x=>x.localName==='AltriDatiGestionali');
+  const td=dati.find(x=>val(x,'TipoDato').toUpperCase()==='TARGA');
+  const targa=(td?val(td,'RiferimentoTesto'):'').toUpperCase().trim();
+  const product=/\b(DIESEL|GASOLIO)\b/i.test(desc)?'GASOLIO':/\bADBLUE\b/i.test(desc)?'ADBLUE':/\bBENZINA\b|\bSUPER\b|\bPETROL\b/i.test(desc)?'BENZINA':'NON IDENTIFICATO';
+  const motivo=targa==='CROCE GIALLA E'?'Targa CROCE GIALLA E esclusa':product!=='GASOLIO'?'Carburante diverso dal gasolio':!validTarghe.has(targa)?'Targa non censita: verifica manuale':null;
+  const km=desc.match(/\bKm\s*:\s*([\d.,]+)/i);
+  rif.push({data_rifornimento:date,targa,carburante:product,litri:n(qty),importo:Math.round(n(val(line,'PrezzoTotale'))*1.22*100)/100,km:km?.[1]||'',distributore:desc.slice(0,220),escluso:!!motivo,motivo_esclusione:motivo});
+ }
+ return {numero,data,rif};
+}
+async function readFile(file,tipo){
+ if(tipo==='UTA' && /\.xml$/i.test(file.name))return [file];
+ if(tipo==='UTA' && /\.zip$/i.test(file.name)){
+  if(typeof JSZip==='undefined')throw Error('Libreria ZIP non disponibile. Riprova oppure carica gli XML singoli.');
+  const archive=await JSZip.loadAsync(file);
+  const entries=Object.values(archive.files).filter(x=>!x.dir && /\.xml$/i.test(x.name) && !x.name.split('/').some(p=>p.startsWith('__MACOSX')));
+  if(entries.length>500)throw Error('Archivio troppo grande: massimo 500 fatture per volta');
+  const unpacked=[];
+  for(const item of entries){
+   const bytes=await item.async('uint8array');
+   if(bytes.byteLength>15*1024*1024)throw Error('XML supera 15 MB');
+   unpacked.push(new File([bytes],item.name.split('/').pop(),{type:'application/xml'}));
+  }
+  if(!unpacked.length)throw Error('Lo ZIP non contiene XML');
+  return unpacked;
+ }
+ if(tipo==='VEGA' && /\.pdf$/i.test(file.name))return [file];
+ if(tipo==='ALTRO' && /\.(pdf|jpg|jpeg|png)$/i.test(file.name))return [file];
+ throw Error('Formato non previsto per '+tipo+': '+file.name);
+}
+async function saveDocument(file,tipo){
+ if(file.size>15*1024*1024)throw Error('File oltre 15 MB: '+file.name);
+ const xml=tipo==='UTA'?parseUTA(await file.text()):null;
+ if(xml){
+  const {data,error}=await sb.from('accise_documenti').select('id').eq('fornitore','UTA').eq('numero_fattura',xml.numero).eq('data_fattura',xml.data).limit(1);
+  if(error)throw Error(error.message);
+  if(data?.length)return 'Duplicata già in archivio: '+xml.numero;
+ }
+ const clean=file.name.replace(/[^a-zA-Z0-9_.-]/g,'_');
+ const path=new Date().toISOString().slice(0,10)+'/'+crypto.randomUUID()+'_'+clean;
+ const mime= file.name.toLowerCase().endsWith('.xml')?'application/xml':file.name.toLowerCase().endsWith('.pdf')?'application/pdf':file.name.toLowerCase().endsWith('.png')?'image/png':'image/jpeg';
+ const upload=await sb.storage.from('accise-documenti').upload(path,file,{contentType:mime,upsert:false});
+ if(upload.error)throw Error(file.name+': '+upload.error.message);
+ const entry={fornitore:tipo,nome_file:file.name,formato:file.name.split('.').pop().toUpperCase(),storage_path:path,numero_fattura:xml?.numero||null,data_fattura:xml?.data||null,stato:tipo==='UTA'?'DA_VERIFICARE':tipo==='VEGA'?'PDF_DA_ANALIZZARE':'FOGLIO_MARCIA'};
+ const insert=await sb.from('accise_documenti').insert(entry).select('id').single();
+ if(insert.error){await sb.storage.from('accise-documenti').remove([path]);throw Error(insert.error.message)}
+ if(xml?.rif?.length){
+  const rows=xml.rif.map(x=>({...x,documento_id:insert.data.id}));
+  const r=await sb.from('accise_rifornimenti').insert(rows);
+  if(r.error)throw Error('Fattura archiviata ma righe carburante non inserite: '+r.error.message);
+ }
+ return (xml?.numero||file.name)+' · '+(xml?.rif?.length||0)+' righe gasolio/prodotti';
+}
+$('upload').addEventListener('click',async()=>{
+ const type=$('tipo').value,files=[...$('files').files];
+ if(!files.length)return message('Seleziona almeno un file.','notice bad');
+ $('upload').disabled=true;let ok=0,errors=[];
+ try{
+ let prepared=[];
+ for(const file of files){try{prepared.push(...await readFile(file,type))}catch(e){errors.push(file.name+': '+e.message)}}
+ for(const [i,file] of prepared.entries()){
+  message('Importazione '+(i+1)+' di '+prepared.length+': '+file.name);
+  try{await saveDocument(file,type);ok++}catch(e){errors.push(file.name+': '+e.message)}
+ }
+ message('File elaborati: '+ok+'. '+(errors.length?'Problemi: '+errors.slice(0,5).join(' | '):'Documenti archiviati correttamente.'),errors.length?'notice bad':'notice ok');
+ await refresh();
+ }finally{$('upload').disabled=false;$('files').value=''}
+});
+async function openDoc(path){const r=await sb.storage.from('accise-documenti').createSignedUrl(path,90);if(r.error)throw Error(r.error.message);window.open(r.data.signedUrl,'_blank','noopener')}
+window.openAcciseDocument=async id=>{try{const x=window.acciseDocs.find(x=>x.id===id);if(x)await openDoc(x.storage_path)}catch(e){message(e.message,'notice bad')}};
+async function refresh(){
+ const dr=await sb.from('accise_documenti').select('*').order('created_at',{ascending:false}).limit(700);
+ const rr=await sb.from('accise_rifornimenti').select('*,accise_documenti(numero_fattura)').order('data_rifornimento',{ascending:false}).limit(4000);
+ if(dr.error||rr.error){message('Errore lettura archivio: '+(dr.error||rr.error).message,'notice bad');return}
+ const docs=dr.data||[],rows=rr.data||[];window.acciseDocs=docs;
+ $('docs').innerHTML=docs.map(d=>'<tr><td>'+esc(d.created_at.slice(0,10))+'</td><td>'+esc(d.fornitore)+'</td><td>'+esc(d.nome_file)+'</td><td>'+esc(d.numero_fattura||'—')+'</td><td>'+esc(d.stato)+'</td><td><button class="secondary" onclick="openAcciseDocument(\''+d.id+'\')">Apri</button></td></tr>').join('')||'<tr><td colspan=6>Nessun documento caricato</td></tr>';
+ $('rows').innerHTML=rows.map(x=>'<tr><td>'+esc(x.data_rifornimento)+'</td><td>'+esc(x.accise_documenti?.numero_fattura||'—')+'</td><td>'+esc(x.targa||'—')+'</td><td>'+esc(x.carburante)+'</td><td>'+Number(x.litri).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:3})+'</td><td class="'+(x.escluso?'excluded':'good')+'">'+esc(x.escluso?'ESCLUSO · '+(x.motivo_esclusione||''): 'Da verificare')+'</td></tr>').join('')||'<tr><td colspan=6>Nessun rifornimento UTA ancora analizzato</td></tr>';
+ const total=rows.filter(x=>!x.escluso&&x.carburante==='GASOLIO').reduce((s,x)=>s+Number(x.litri),0);
+ const quarters=new Set(rows.filter(x=>!x.escluso&&x.carburante==='GASOLIO').map(x=>x.data_rifornimento.slice(0,4)+' · T'+(Math.floor((Number(x.data_rifornimento.slice(5,7))-1)/3)+1)));
+ $('stats').innerHTML='<div class="stat">Documenti caricati<b>'+docs.length+'</b></div><div class="stat">Rifornimenti rilevati<b>'+rows.length+'</b></div><div class="stat">Gasolio conteggiabile (da verificare)<b>'+total.toLocaleString('it-IT',{maximumFractionDigits:3})+' L</b></div><div class="stat">Trimestri con rifornimenti<b>'+quarters.size+'</b></div>';
+}
+(async()=>{
+ try{
+ const {data:{user},error}=await sb.auth.getUser();
+ if(error||!user)throw Error('Accesso non disponibile. Accedi prima dal gestionale.');
+ const result=await sb.from('accessi_app').select('ruolo,attivo').eq('user_id',user.id).maybeSingle();
+ if(result.error||!result.data?.attivo||result.data.ruolo!=='AMMINISTRATORE')throw Error('Questa sezione è riservata agli amministratori.');
+ $('app').style.display='block'; message('Archivio pronto. Puoi importare fatture UTA in XML o ZIP e fatture Vega in PDF.','notice ok');await refresh();
+ }catch(e){message(e.message,'notice bad')}
+})();
+</script></body></html>
