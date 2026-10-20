@@ -143,6 +143,18 @@ function renderCarburanteStats(){
 }
 $('statAnno').onchange=renderCarburanteStats;$('statMese').onchange=renderCarburanteStats;
 $('statPrint').onclick=()=>window.print();
+window.cambiaStatoAccise=async(id,select)=>{
+ const d=(window.acciseDocs||[]).find(x=>x.id===id);if(!d)return;
+ const next=select.value,previous=d.stato;
+ if(!['DA_VERIFICARE','VERIFICATO'].includes(next)){select.value=previous;return}
+ if(next===previous)return;
+ if(next==='VERIFICATO'&&!confirm('Confermi di aver controllato la fattura '+(d.numero_fattura||d.nome_file)+'? Lo stato sarà VERIFICATO.')){select.value=previous;return}
+ select.disabled=true;
+ const result=await sb.from('accise_documenti').update({stato:next}).eq('id',id).select('id,stato').single();
+ if(result.error||result.data?.stato!==next){select.value=previous;message('Modifica stato non riuscita: '+(result.error?.message||'salvataggio non confermato'),'notice bad')}
+ else{d.stato=next;message('Stato della fattura '+(d.numero_fattura||d.nome_file)+' aggiornato: '+(next==='VERIFICATO'?'Verificato':'Da verificare'),'notice ok')}
+ select.disabled=false;
+};
 async function refresh(){
  const dr=await sb.from('accise_documenti').select('*').order('created_at',{ascending:false}).limit(700);
  const rr=await sb.from('accise_rifornimenti').select('*,accise_documenti(numero_fattura)').order('data_rifornimento',{ascending:false}).limit(4000);
@@ -155,7 +167,7 @@ async function refresh(){
  const monthSel=$('statMese'),currentMonth=monthSel.value;
  monthSel.innerHTML='<option value="TUTTI">Tutti i mesi</option>'+Array.from({length:12},(_,i)=>{const v=String(i+1).padStart(2,'0');return '<option value="'+v+'">'+new Date(2026,i,1).toLocaleDateString('it-IT',{month:'long'})+'</option>'}).join('');
  monthSel.value=currentMonth;renderCarburanteStats();
- $('docs').innerHTML=docs.map(d=>'<tr><td>'+esc(d.created_at.slice(0,10))+'</td><td>'+esc(d.fornitore)+'</td><td>'+esc(d.nome_file)+'</td><td>'+esc(d.numero_fattura||'—')+'</td><td>'+esc(d.stato)+'</td><td><button class="secondary" onclick="openAcciseDocument(\''+d.id+'\')">Apri</button></td></tr>').join('')||'<tr><td colspan=6>Nessun documento caricato</td></tr>';
+ $('docs').innerHTML=docs.map(d=>'<tr><td>'+esc(d.created_at.slice(0,10))+'</td><td>'+esc(d.fornitore)+'</td><td>'+esc(d.nome_file)+'</td><td>'+esc(d.numero_fattura||'—')+'</td><td>'+(d.stato==='DA_VERIFICARE'||d.stato==='VERIFICATO'?'<select aria-label="Stato fattura" onchange="cambiaStatoAccise(\''+d.id+'\',this)"><option value="DA_VERIFICARE"'+(d.stato==='DA_VERIFICARE'?' selected':'')+'>Da verificare</option><option value="VERIFICATO"'+(d.stato==='VERIFICATO'?' selected':'')+'>Verificato</option></select>':'<span class="tag">'+esc(d.stato)+'</span>')+'</td><td><button class="secondary" onclick="openAcciseDocument(\''+d.id+'\')">Apri</button></td></tr>').join('')||'<tr><td colspan=6>Nessun documento caricato</td></tr>';
  $('rows').innerHTML=rows.map(x=>'<tr><td>'+esc(x.data_rifornimento)+'</td><td>'+esc(x.accise_documenti?.numero_fattura||'—')+'</td><td>'+esc(x.targa||'—')+'</td><td>'+esc(x.carburante)+'</td><td>'+Number(x.litri).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:3})+'</td><td class="'+(x.escluso?'excluded':'good')+'">'+esc(x.escluso?'ESCLUSO · '+(x.motivo_esclusione||''): 'Da verificare')+'</td></tr>').join('')||'<tr><td colspan=6>Nessun rifornimento UTA ancora analizzato</td></tr>';
  const total=rows.filter(x=>!x.escluso&&x.carburante==='GASOLIO').reduce((s,x)=>s+Number(x.litri),0);
  const quarters=new Set(rows.filter(x=>!x.escluso&&x.carburante==='GASOLIO').map(x=>x.data_rifornimento.slice(0,4)+' · T'+(Math.floor((Number(x.data_rifornimento.slice(5,7))-1)/3)+1)));
