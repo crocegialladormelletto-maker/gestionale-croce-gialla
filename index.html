@@ -12303,13 +12303,22 @@ async function tabletCreateImmediate(){
   const payDate=(immediateInternal||payMode==='BONIFICO DIFFERITO')?null:($('tabletAdPaymentDate')?.value||null);
   kmUpdate.modalita_pagamento=payMode;
   kmUpdate.data_pagamento=payDate;
-  const ku=await sb.from('fogli_viaggio').update(kmUpdate).eq('id',created.foglio_id).eq('mezzo',tabletMezzo).eq('stato','APERTO');
-  if(ku.error)throw ku.error;
-  const su=await sb.from('servizi_giornalieri').update({
-   modalita_pagamento_prevista:payMode
-  }).eq('id',created.servizio_id);
-  if(su.error)throw su.error;
-  msg('tabletAdMsg','Servizio creato. Foglio Viaggio '+created.numero_foglio+' collegato.','ok');
+  if(tabletMezzo==='08'){
+   // PROVA 08: creazione atomica confermata prima di qualsiasi dato accessorio.
+   // Importi, KM e metodo pagamento vengono completati nel foglio, non in scritture separate qui.
+   const check=await sb.from('fogli_viaggio').select('id,numero_foglio,servizio_giornaliero_id,stato').eq('id',created.foglio_id).eq('mezzo','08').single();
+   if(check.error||!check.data||check.data.servizio_giornaliero_id!==created.servizio_id)
+    throw new Error('Servizio creato: verifica collegamento foglio non riuscita. NON premere di nuovo Crea; aggiorna elenco.');
+   msg('tabletAdMsg','Servizio '+created.numero_foglio+' creato e verificato. Completa KM, importo e pagamento nel Foglio Viaggio.','ok');
+  }else{
+   const ku=await sb.from('fogli_viaggio').update(kmUpdate).eq('id',created.foglio_id).eq('mezzo',tabletMezzo).eq('stato','APERTO');
+   if(ku.error)throw ku.error;
+   const su=await sb.from('servizi_giornalieri').update({
+    modalita_pagamento_prevista:payMode
+   }).eq('id',created.servizio_id);
+   if(su.error)throw su.error;
+   msg('tabletAdMsg','Servizio creato. Foglio Viaggio '+created.numero_foglio+' collegato.','ok');
+  }
   // Non cancellare una bozza precedente se è stato creato un nuovo servizio vuoto.
   if(tabletImmediateRestoredDraft||$('tabletResumeDraft')?.dataset.hasDraft!=='yes')tabletClearImmediateDraft();
   tabletImmediateRestoredDraft=false;
@@ -12320,7 +12329,7 @@ async function tabletCreateImmediate(){
  if(created){
   $('tabletImmediatePanel').classList.add('hidden');
   tabletSetListMode('today');
-  await tabletRefreshList();
+  try{await tabletRefreshList()}catch(e){msg('tabletMsg','Servizio creato, ma elenco non aggiornato. Premi Aggiorna: '+(e.message||String(e)),'warn')}
   if(tabletServices.some(x=>x.id===created.servizio_id)){
    await openTabletService(created.servizio_id);
    if(['POS','CONTANTI'].includes(createdPayMode)){
