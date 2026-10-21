@@ -149,7 +149,7 @@ $('backMain').onclick=()=>location.href='../';
 async function loadAll(){
  msg('listMsg','Aggiornamento dati...');
  const [fs,ns,ds,ls]=await Promise.all([
-  sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,codice_fiscale,intestatario_nota_debito,cf_piva_intestatario,indirizzo_fatturazione,cap_fatturazione,comune_fatturazione,provincia_fatturazione,email_fatturazione,email,residenza,via,civico,cap,provincia,luogo_partenza,luogo_carico,indirizzo_partenza,destinazione,indirizzo_destinazione,ospedale_destinazione,totale_servizio,stato,modalita_pagamento,data_pagamento,servizio_giornaliero_id').eq('stato','CHIUSO').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).limit(1000),
+  sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,codice_fiscale,intestatario_nota_debito,cf_piva_intestatario,indirizzo_fatturazione,cap_fatturazione,comune_fatturazione,provincia_fatturazione,email_fatturazione,email,residenza,via,civico,cap,provincia,luogo_partenza,luogo_carico,indirizzo_partenza,destinazione,indirizzo_destinazione,ospedale_destinazione,totale_servizio,stato,modalita_pagamento,data_pagamento,servizio_giornaliero_id,creato_il').eq('stato','CHIUSO').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).order('creato_il',{ascending:false}).limit(1000),
   sb.from('note_di_debito').select('*').order('created_at',{ascending:false}).limit(1000),
   sb.from('servizi_giornalieri').select('id,documento_da_emettere,fattura_aruba_emessa,luogo_carico_paziente,indirizzo_carico_paziente').limit(3000),
   sb.from('note_debito_fogli').select('nota_id,foglio_id').limit(5000)
@@ -168,7 +168,7 @@ async function loadAll(){
 }
 function groups(){
  const ids=new Set([...notes.map(n=>n.foglio_viaggio_id),...noteLinks.map(x=>x.foglio_id)]);
- const queue=sheets.filter(f=>!ids.has(f.id));
+ const queue=sheets.filter(f=>!ids.has(f.id)).sort((a,b)=>String(b.data_servizio||'').localeCompare(String(a.data_servizio||''))||String(b.creato_il||'').localeCompare(String(a.creato_il||''))||String(b.numero_foglio||'').localeCompare(String(a.numero_foglio||'')));
  const drafts=notes.filter(n=>n.stato==='BOZZA');
  const issued=notes.filter(n=>n.stato==='EMESSA'&&!n.data_pagamento);
  const paid=notes.filter(n=>n.stato==='EMESSA'&&!!n.data_pagamento);
