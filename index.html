@@ -12451,6 +12451,11 @@ $('tabletImmediateToggle').onclick=async e=>{
 if($('tabletReceiptUpload'))$('tabletReceiptUpload').onclick=()=>uploadPaymentReceipt(tabletCurrentSheet,'tabletReceiptFile','tablet');
 const tabletPayModeField=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
 if(tabletPayModeField)tabletPayModeField.onchange=()=>{
+ // Memorizza esplicitamente la scelta per il foglio corrente, anche se la UI viene ridisegnata.
+ if(tabletCurrentSheet?.id&&tabletPayModeField.value) {
+  tabletPayModeField.dataset.cgeSelectedSheet=String(tabletCurrentSheet.id);
+  tabletPayModeField.dataset.cgeSelectedMode=tabletPayModeField.value;
+ }
  const dateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
  if(tabletPayModeField.value&&tabletPayModeField.value!=='BONIFICO DIFFERITO'){
   if(dateField&&!dateField.value&&['CONTANTI','POS'].includes(tabletPayModeField.value))dateField.value=todaySafe();
@@ -12890,6 +12895,17 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  }
  const tabletSheetType=tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'';
  const tabletSheetIs118=tabletIs118Type(tabletSheetType);
+ // Recupera solo la scelta esplicita eseguita per QUESTO foglio, mai da altri servizi.
+ if(!tabletSheetIs118&&!row.modalita_pagamento){
+  const select=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
+  if(select?.dataset.cgeSelectedSheet===String(tabletCurrentSheet.id)&&select.dataset.cgeSelectedMode){
+   row.modalita_pagamento=select.dataset.cgeSelectedMode;
+   select.value=row.modalita_pagamento;
+  }
+ }
+ if(!tabletSheetIs118&&Number(row.importo_inserito??tabletCurrentSheet?.totale_servizio??0)>0&&!row.modalita_pagamento&&!tabletCurrentSheet?.modalita_pagamento){
+  return msg('tabletSheetMsg','Pagamento non selezionato nel modulo. Scegli il metodo e salva: nessun pagamento è stato modificato.','err'),false;
+ }
  // Non azzerare un pagamento gia registrato se il select del tablet e momentaneamente vuoto.
  if(!tabletSheetIs118 && !row.modalita_pagamento && tabletCurrentSheet?.modalita_pagamento){
   row.modalita_pagamento=tabletCurrentSheet.modalita_pagamento;
@@ -13042,6 +13058,8 @@ async function tabletCloseSheet(){
  if(refreshed.error||!refreshed.data)return msg('tabletSheetMsg','Impossibile rileggere il foglio salvato: '+(refreshed.error?.message||'foglio non trovato')+'. Riprova dopo Aggiorna, senza crearne un altro.','err');
  tabletCurrentSheet={...tabletCurrentSheet,...refreshed.data};
  const closeType=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase();
+ // Per il mezzo 08, non iniziare la chiusura senza conferma di salvataggio del metodo.
+ // La funzione di salvataggio precedente deve registrare POS/contanti nel registro pagamenti.
  // Verifica il salvataggio reale in banca dati prima di chiudere (anche bonifico differito).
  if(!standalone118&&!tabletIs118Type(closeType)&&!closeType.includes('SERVIZIO INTERNO')){
   const expectedMode=String(document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'').trim().toUpperCase();
