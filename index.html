@@ -13001,7 +13001,7 @@ async function tabletCloseSheet(){
   if(check.error)return msg('tabletSheetMsg','Non posso verificare il pagamento salvato: '+check.error.message,'err');
   const actualMode=String(check.data?.modalita_pagamento||'').trim().toUpperCase();
   const amount=Number(check.data?.totale_servizio||0);
-  if(amount>0&&!expectedMode&&!actualMode)return msg('tabletSheetMsg','Scegli e salva il metodo di pagamento prima di chiudere.','warn');
+  if((tabletMezzo==='08'||amount>0)&&!actualMode)return msg('tabletSheetMsg','Metodo di pagamento non registrato. Seleziona Contanti, POS, Bonifico, Bonifico differito o Non dovuto e premi Salva dati prima di chiudere.','warn');
   if(expectedMode&&expectedMode!==actualMode)return msg('tabletSheetMsg','ERRORE: il metodo di pagamento non risulta salvato nel database. Riprova con Salva dati. Il foglio rimane aperto.','err');
   if(amount>0&&['POS','CONTANTI'].includes(actualMode)&&!check.data?.data_pagamento)
    return msg('tabletSheetMsg','ERRORE: manca la data del pagamento in banca dati. Il foglio rimane aperto.','err');
