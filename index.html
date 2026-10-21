@@ -40,7 +40,7 @@
   const opening=panel.classList.contains('hidden');
   if(opening&&typeof tabletPrepareNewImmediateForm==='function'&&!tabletPrepareNewImmediateForm())return;
   panel.classList.toggle('hidden',!opening);
-  btn.textContent=opening?'✕ Chiudi nuovo servizio':'✚ Nuovo servizio non programmato';
+  btn.textContent=opening?'✕ Chiudi nuovo servizio':'✚ Servizio non programmato';
   btn.setAttribute('aria-expanded',String(opening));
   if(!opening)return;
   const notice=document.getElementById('tabletAdMsg');
@@ -2696,7 +2696,7 @@ Causale: numero preventivo</textarea>
   <button id="tabletChecklist07" class="btn yellow" type="button" style="background:#0077ff;color:#fff;border-color:#005fd1;font-weight:900">✅ Checklist Ambulanza</button>
   <span class="muted" id="tabletUpdated">Aggiornamento automatico ogni 20 secondi</span>
   <button id="tabletTariffToggle" type="button" class="btn secondary">€ Consulta tariffari</button>
-  <button id="tabletImmediateToggle" type="button" class="btn yellow">✚ Nuovo servizio non programmato</button>
+  <button id="tabletImmediateToggle" type="button" class="btn yellow">✚ Servizio non programmato</button>
   <button id="tabletResumeDraft" type="button" class="btn blue">📝 Riprendi bozza salvata</button>
   <button id="tabletArchiveToggle" type="button" class="btn secondary">📚 Storico fogli</button>
  </div>
@@ -2710,7 +2710,7 @@ Causale: numero preventivo</textarea>
   </table></div><p class="muted">Se una destinazione o una tariffa notturna non sono previste, richiedi al Centralino l'importo concordato.</p></div>
  </div>
  <div id="tabletImmediatePanel" class="surface hidden" style="margin:12px 0">
-  <div class="hero"><h2>Nuovo servizio non programmato · mezzo <span id="tabletImmediateVehicle"></span></h2><p>Per una dimissione o un trasporto deciso al momento. Il servizio e il Foglio Viaggio saranno creati e collegati automaticamente.</p></div>
+  <div class="hero"><h2>Servizio non programmato · mezzo <span id="tabletImmediateVehicle"></span></h2><p>Per una dimissione o un trasporto deciso al momento. Il servizio e il Foglio Viaggio saranno creati e collegati automaticamente.</p></div>
   <div class="pad"><div class="notice warn">Seleziona i nominativi degli operatori presenti sul mezzo. I nominativi sono filtrati automaticamente in base alla qualifica del ruolo. Prima di creare il servizio verifica che partenza, destinazione e importo siano corretti.</div>
    <form id="tabletImmediateForm" novalidate>
    <div class="grid2">
@@ -12371,7 +12371,7 @@ $('tabletImmediateToggle').onclick=async e=>{
  if(!panel)return msg('tabletMsg','Modulo del nuovo servizio non disponibile. Ricarica la pagina.','err');
  if(!panel.classList.contains('hidden')){
   panel.classList.add('hidden');
-  button.textContent='✚ Nuovo servizio non programmato';
+  button.textContent='✚ Servizio non programmato';
   button.setAttribute('aria-expanded','false');
   return;
  }
@@ -12446,7 +12446,7 @@ async function startTabletArea(){
  $('tabletPricePanel').classList.add('hidden');
  $('tabletImmediatePanel').classList.add('hidden');
  if($('tabletImmediateToggle')){
-  $('tabletImmediateToggle').textContent='✚ Nuovo servizio non programmato';
+  $('tabletImmediateToggle').textContent='✚ Servizio non programmato';
   $('tabletImmediateToggle').setAttribute('aria-expanded','false');
  }
  tabletUpdateImmediateDraftButton();
