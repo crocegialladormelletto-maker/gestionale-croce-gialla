@@ -12110,7 +12110,7 @@ function tabletApplyImmediateTypeRules(){
 function tabletUpdateImmediateQuote(){
  const code=$('tabletAdTariffGroup').value;
  const x=tabletTariffRows.find(r=>r.tariffa_destinazione_id===$('tabletAdTariffDest').value&&r.tariffario_codice===code);
- const night=$('tabletAdNight').value==='true',manual=$('tabletAdAmount').value;
+ const night=$('tabletAdNight').value==='true',manual=tabletMezzo==='08'?'':$('tabletAdAmount').value;
  const internal=$('tabletAdType').value==='Servizio interno';
  if(!internal){
   if(!$('tabletAdFirst').value.trim()||!$('tabletAdLast').value.trim())return msg('tabletAdMsg','Inserisci nome e cognome del paziente.','warn');
@@ -12237,16 +12237,24 @@ function tabletRestoreImmediateDraft(){
  return true;
 }
 function tabletClearImmediateDraft(){try{localStorage.removeItem(tabletImmediateDraftKey())}catch(_){}tabletUpdateImmediateDraftButton();}
+function tabletPilot08Prepare(){
+ if(tabletMezzo!=='08')return;
+ const ids=['tabletAdKmStart','tabletAdKmClose','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdPayment','tabletAdPaymentDate'];
+ ids.forEach(id=>{const el=$(id);if(el){const field=el.closest('.field');if(field)field.classList.add('hidden');}});
+ const form=$('tabletImmediateForm');
+ if(form&&!$('tabletPilot08Notice'))form.insertAdjacentHTML('afterbegin','<div id="tabletPilot08Notice" class="notice"><b>PROVA MEZZO 08:</b> prima vengono creati e verificati il servizio e il foglio viaggio. KM, prezzo e pagamento si inseriscono <b>solo nel foglio</b>, dopo l’apertura. Se la creazione segnala un errore, controlla l’elenco prima di riprovare.</div>');
+}
+tabletPilot08Prepare();
 async function tabletCreateImmediate(){
  if(tabletBusy)return;
  if(!$('tabletAdType').value)return msg('tabletAdMsg','Seleziona il tipo di servizio.','warn');
  if(!$('tabletAdOrigin').value.trim())return msg('tabletAdMsg','Inserisci il luogo di partenza.','warn');
  if(!$('tabletAdDestination').value.trim())return msg('tabletAdMsg','Inserisci la destinazione.','warn');
- const code=$('tabletAdTariffGroup').value;
+ const code=tabletMezzo==='08'?'':$('tabletAdTariffGroup').value;
  const tariff=tabletTariffRows.find(r=>r.tariffa_destinazione_id===$('tabletAdTariffDest').value&&r.tariffario_codice===code);
  const night=$('tabletAdNight').value==='true',manual=$('tabletAdAmount').value;
- const immediateKmStart=$('tabletAdKmStart')?.value??'';
- const immediateKmClose=$('tabletAdKmClose')?.value??'';
+ const immediateKmStart=tabletMezzo==='08'?'':($('tabletAdKmStart')?.value??'');
+ const immediateKmClose=tabletMezzo==='08'?'':($('tabletAdKmClose')?.value??'');
  if(immediateKmStart!==''&&immediateKmClose!==''&&Number(immediateKmClose)<Number(immediateKmStart))
   return msg('tabletAdMsg','I KM chiusura non possono essere inferiori ai KM partenza.','warn');
  if(code&&!tariff)return msg('tabletAdMsg','Seleziona la destinazione del tariffario, oppure imposta Nessuno / importo concordato.','warn');
