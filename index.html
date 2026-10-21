@@ -11478,12 +11478,12 @@ async function loadCollectionSummary(){
  else msg('accCollectionMsg','');
  const payments=(r.data||[]).filter(x=>Number(x.importo)>0 && ['POS','CONTANTI','BONIFICO','BONIFICO A VISTA'].includes(String(x.modalita||'').trim().toUpperCase()));
  const build=rows=>{const by={CONTANTI:0,POS:0,BONIFICO:0,ALTRO:0};for(const p of rows){const m=String(p.modalita||'').toUpperCase();by[m==='CONTANTI'?'CONTANTI':m==='POS'?'POS':'BONIFICO']+=Number(p.importo)}return {total:rows.reduce((v,p)=>v+Number(p.importo),0),count:rows.length,by}};
- const m=build(payments.filter(x=>String(x.data_pagamento).slice(0,7)===month)),y=build(payments);
+ const m=build(payments.filter(x=>String(x.data_pagamento).slice(0,7)===month)),y=build(payments.filter(x=>String(x.data_pagamento).slice(0,4)===year));
  $('accMonthCollected').textContent=euro(m.total);$('accYearCollected').textContent=euro(y.total);$('accMonthOperations').textContent=m.count;$('accYearOperations').textContent=y.count;
  const breakdown=x=>'<div>💵 Contanti: <strong>'+euro(x.by.CONTANTI)+'</strong></div><div>💳 POS: <strong>'+euro(x.by.POS)+'</strong></div><div>🏦 Bonifici accreditati: <strong>'+euro(x.by.BONIFICO)+'</strong></div>';
  $('accMonthBreakdown').innerHTML=breakdown(m);$('accYearBreakdown').innerHTML=breakdown(y);
  const monthly=new Map();
- for(const p of payments){const key=String(p.data_pagamento||'').slice(0,7);if(!/^\\d{4}-\\d{2}$/.test(key))continue;if(!monthly.has(key))monthly.set(key,[]);monthly.get(key).push(p);}
+ for(const p of payments){const key=String(p.data_pagamento||'').slice(0,7);if(!/^[0-9]{4}-[0-9]{2}$/.test(key))continue;if(!monthly.has(key))monthly.set(key,[]);monthly.get(key).push(p);}
  $('accMonthlyRows').innerHTML=[...monthly.keys()].sort().reverse().map(key=>{
   const x=build(monthly.get(key));
   const name=new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric'}).format(new Date(key+'-01T12:00:00'));
