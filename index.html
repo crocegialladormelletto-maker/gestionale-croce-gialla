@@ -92,6 +92,15 @@ document.addEventListener('DOMContentLoaded',()=>{
    if(active&&!transformed){el.type='text';el.inputMode='numeric';el.placeholder=isDate?'GG/MM/AAAA':'HH:MM';transformed=true}
    else if(!active&&transformed){const v=normalize(el.value);el.type=kind;el.value=v||'';transformed=false}
   };
+  el.addEventListener('input',()=>{
+   if(!transformed)return;
+   const raw=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').get.call(el);
+   const digits=raw.replace(/\D/g,'').slice(0,isDate?8:4);
+   let formatted;
+   if(isDate)formatted=digits.slice(0,2)+(digits.length>2?'/'+digits.slice(2,4):'')+(digits.length>4?'/'+digits.slice(4):'');
+   else formatted=digits.slice(0,2)+(digits.length>2?':'+digits.slice(2,4):'');
+   if(raw!==formatted){Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,formatted)}
+  });
   el.addEventListener('change',()=>{if(!transformed)return;const v=normalize(el.value.trim());if(el.value.trim()&&!v){el.setCustomValidity(isDate?'Inserisci una data valida GG/MM/AAAA':'Inserisci un orario HH:MM');el.reportValidity();return}el.setCustomValidity('');if(v)el.value=isDate?v.slice(8,10)+'/'+v.slice(5,7)+'/'+v.slice(0,4):v;});
   // I valori letti e scritti dal gestionale restano in formato ISO/HH:MM.
   const originalDescriptor=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
