@@ -181,7 +181,8 @@ function updateCounts(){
  }
  $('sQueue').textContent=g.queue.length;$('sDrafts').textContent=g.drafts.length;$('sIssued').textContent=g.issued.length;$('sPaid').textContent=g.paid.length;
 }
-document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x===b));render()});
+document.querySelectorAll('.nav').forEach(b=>b.onclick=async()=>{view=b.dataset.view;document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x===b));await loadAll()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadAll()});
 $('refresh').onclick=loadAll;$('search').oninput=render;
 function searchable(x){return JSON.stringify(x).toLowerCase()}
 function render(){
