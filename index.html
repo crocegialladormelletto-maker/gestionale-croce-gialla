@@ -12895,16 +12895,15 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  }
  const tabletSheetType=tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'';
  const tabletSheetIs118=tabletIs118Type(tabletSheetType);
- // Recupera solo la scelta esplicita eseguita per QUESTO foglio, mai da altri servizi.
- if(!tabletSheetIs118&&!row.modalita_pagamento){
-  const select=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
-  if(select?.dataset.cgeSelectedSheet===String(tabletCurrentSheet.id)&&select.dataset.cgeSelectedMode){
-   row.modalita_pagamento=select.dataset.cgeSelectedMode;
-   select.value=row.modalita_pagamento;
-  }
- }
- if(!tabletSheetIs118&&Number(row.importo_inserito??tabletCurrentSheet?.totale_servizio??0)>0&&!row.modalita_pagamento&&!tabletCurrentSheet?.modalita_pagamento){
-  return msg('tabletSheetMsg','Pagamento non selezionato nel modulo. Scegli il metodo e salva: nessun pagamento è stato modificato.','err'),false;
+ // Leggi il valore effettivo dalla tendina del Foglio Viaggio, senza affidarti
+ // a eventi onchange o a dati temporanei che potrebbero essere persi.
+ if(!tabletSheetIs118){
+  const paySelect=document.querySelector('#tabletSheetForm select[data-ts-field="modalita_pagamento"]');
+  const selected=String(paySelect?.value||'').trim().toUpperCase();
+  if(selected)row.modalita_pagamento=selected;
+  else if(!row.modalita_pagamento&&tabletCurrentSheet?.modalita_pagamento)row.modalita_pagamento=tabletCurrentSheet.modalita_pagamento;
+  const dateInput=document.querySelector('#tabletSheetForm input[data-ts-field="data_pagamento"]');
+  if(dateInput?.value)row.data_pagamento=dateInput.value;
  }
  // Non azzerare un pagamento gia registrato se il select del tablet e momentaneamente vuoto.
  if(!tabletSheetIs118 && !row.modalita_pagamento && tabletCurrentSheet?.modalita_pagamento){
