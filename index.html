@@ -12829,6 +12829,10 @@ function tabletIsImmediateService(id){
  try{return JSON.parse(localStorage.getItem(tabletImmediateIdsKey())||'[]').map(String).includes(String(id))}
  catch(_){return false}
 }
+function tabletIsNonProgrammedPayment(){
+ return /^NON PROGRAMMATO · tablet mezzo (06|07|08|09)(?:\\s|$)/.test(String(tabletCurrentService?.note||''))
+  ||tabletIsImmediateService(tabletCurrentService?.id);
+}
 function tabletIs118Type(value){
  const s=String(value||'').trim().toUpperCase();
  return s==='118'||s.includes('118')||s.includes('EMERGENZA');
@@ -12972,7 +12976,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
      Number(r.data.importo_inserito)!==Number(row.importo_inserito))
    throw new Error('Importo base non confermato dal database. Il foglio rimane aperto.');
   // Salvataggio dedicato del metodo: scrittura e lettura confermata sul database.
-  if(!tabletSheetIs118 && row.modalita_pagamento){
+  if(!tabletSheetIs118 && row.modalita_pagamento && !tabletIsNonProgrammedPayment()){
    const pg=await sb.rpc('cge_tablet_salva_pagamento_foglio',{
     p_foglio:tabletCurrentSheet.id,p_modalita:row.modalita_pagamento,p_data:row.data_pagamento||null
    });
@@ -13102,9 +13106,11 @@ async function tabletCloseSheet(){
  try{
   const paymentMode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||tabletCurrentSheet?.modalita_pagamento||null;
   const paymentDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||tabletCurrentSheet?.data_pagamento||(['CONTANTI','POS'].includes(String(paymentMode).toUpperCase())?todaySafe():null);
-  const r=await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{
-   p_foglio:tabletCurrentSheet.id,p_modalita:paymentMode,p_data:paymentDate
-  });
+  const r=tabletIsNonProgrammedPayment()
+   ? await sb.rpc('cge_tablet_chiudi_foglio_viaggio',{p_foglio:tabletCurrentSheet.id})
+   : await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{
+      p_foglio:tabletCurrentSheet.id,p_modalita:paymentMode,p_data:paymentDate
+     });
   if(r.error)throw r.error;
   tabletCurrentSheet={...tabletCurrentSheet,...(r.data||{}),stato:'CHIUSO'};
   msg('tabletSheetMsg','Foglio Viaggio chiuso correttamente e registrato nel database.','ok');
