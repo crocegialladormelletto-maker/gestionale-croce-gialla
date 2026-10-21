@@ -11995,7 +11995,15 @@ async function tabletCloseSheet(){
  if(kmClose==='')return msg('tabletSheetMsg','Inserisci i KM di chiusura / rientro prima di chiudere il Foglio Viaggio.','warn');
  if(Number(kmClose)<Number(kmStart))return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
  const saved=await saveTabletSheet(true,false);if(!saved)return;
+ const refreshed=await sb.from('fogli_viaggio').select('id,stato,modalita_pagamento,data_pagamento,totale_servizio,privacy_firma_stato,privacy_firma_path,privacy_firma_motivo').eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).maybeSingle();
+ if(refreshed.error||!refreshed.data)return msg('tabletSheetMsg','Impossibile verificare il foglio salvato: '+(refreshed.error?.message||'foglio non trovato'),'err');
+ tabletCurrentSheet={...tabletCurrentSheet,...refreshed.data};
  const closeType=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase();
+ if(!standalone118&&!tabletIs118Type(closeType)&&!closeType.includes('SERVIZIO INTERNO')){
+  const chosen=String(document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||tabletCurrentSheet.modalita_pagamento||'').trim().toUpperCase();
+  if(Number(tabletCurrentSheet.totale_servizio||0)>0&&!chosen)return msg('tabletSheetMsg','Seleziona il metodo di pagamento prima di chiudere.','warn');
+  if(chosen&&chosen!==String(tabletCurrentSheet.modalita_pagamento||'').trim().toUpperCase())return msg('tabletSheetMsg','Il metodo di pagamento non è stato salvato: usa Salva dati e riprova.','err');
+ }
  const privacyRequired=closeType!=='118'&&!closeType.includes('EMERGENZA')&&!closeType.includes('SERVIZIO INTERNO')&&closeType!=='INTERNO'&&!isAssistanceManifestation(closeType);
  if(privacyRequired){
   const signatureStatus=String(tabletCurrentSheet?.privacy_firma_stato||'NON_FIRMATO').toUpperCase();
@@ -12024,15 +12032,17 @@ async function tabletCloseSheet(){
  if(!confirm(confirmText))return;
  tabletBusy=true;msg('tabletSheetMsg',standalone118?'Chiusura Foglio 118 in corso...':'Chiusura servizio in corso...');
  try{
-  const r=await sb.rpc('cge_tablet_chiudi_foglio_viaggio',{p_foglio:tabletCurrentSheet.id});
+  const paymentMode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||tabletCurrentSheet.modalita_pagamento||null;
+  const paymentDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||tabletCurrentSheet.data_pagamento||(['CONTANTI','POS'].includes(String(paymentMode).toUpperCase())?todaySafe():null);
+  const r=await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{p_foglio:tabletCurrentSheet.id,p_modalita:paymentMode,p_data:paymentDate});
   if(r.error)throw r.error;
-  if(standalone118){
-   tabletCurrentSheet=r.data||tabletCurrentSheet;
-   await openTabletDirect118(tabletCurrentSheet);
-   msg('tabletSheetMsg','Foglio Viaggio 118 chiuso correttamente. I KM rientro hanno aggiornato i KM attuali della '+tabletCurrentSheet.mezzo+'.','ok');
-  }else{
-   tabletBusy=false;await tabletRefreshListAfterAct(tabletCurrentService.id);
-   msg('tabletSheetMsg','Servizio chiuso. Il Foglio Viaggio è disponibile nel gestionale principale per la gestione amministrativa.','ok');
+  tabletCurrentSheet={...tabletCurrentSheet,...(r.data||{}),stato:'CHIUSO'};
+  msg('tabletSheetMsg','Foglio chiuso correttamente nel database.','ok');
+  try{
+   if(standalone118)await openTabletDirect118(tabletCurrentSheet);
+   else await tabletRefreshListAfterAct(tabletCurrentService?.id||null);
+   msg('tabletSheetMsg','Foglio Viaggio chiuso correttamente.','ok');
+  }catch(refreshError){msg('tabletSheetMsg','Foglio CHIUSO nel database; aggiornamento della schermata non riuscito. Premi Aggiorna. '+(refreshError.message||String(refreshError)),'warn');
   }
  }catch(e){msg('tabletSheetMsg',e.message||String(e),'err')}
  finally{tabletBusy=false}
