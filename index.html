@@ -64,50 +64,42 @@
 })();
 </script>
 <script>
-// Tablet 08: scrittura manuale alternativa al selettore nativo data/ora.
-// Il controllo originale rimane invariato per salvataggio, validazione e calendario.
+// Tablet 08: un solo campo visibile, modificabile con tastiera e selettore nativo.
 document.addEventListener('DOMContentLoaded',()=>{
- const root=document.getElementById('tabletApp');
- if(!root)return;
+ const root=document.getElementById('tabletApp');if(!root)return;
  const fields=[...root.querySelectorAll('input[type="time"],#tabletPatientDob,#tabletAdDob')];
- const dateToText=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'')?v.slice(8,10)+'/'+v.slice(5,7)+'/'+v.slice(0,4):(v||'');
- fields.forEach(original=>{
-  const isDate=original.type==='date';
-  const manual=document.createElement('input');
-  manual.type='text';manual.inputMode='numeric';manual.autocomplete='off';
-  manual.placeholder=isDate?'GG/MM/AAAA':'HH:MM';
-  manual.setAttribute('aria-label','Inserimento manuale '+(isDate?'data':'ora'));
-  manual.title='Scrivi direttamente '+(isDate?'la data GG/MM/AAAA':'l’orario HH:MM');
-  manual.style.marginTop='6px';
-  manual.style.width='100%';
-  manual.dataset.cgeManualEntry='1';
-  original.insertAdjacentElement('afterend',manual);
-  const sync=()=>{if(document.activeElement!==manual)manual.value=isDate?dateToText(original.value):(original.value||'')};
-  original.addEventListener('change',sync);
-  manual.addEventListener('focus',()=>{manual.value=isDate?dateToText(original.value):(original.value||'')});
-  manual.addEventListener('change',()=>{
-   const raw=manual.value.trim();
-   if(!raw){original.value='';original.dispatchEvent(new Event('change',{bubbles:true}));return}
-   let converted='';
+ const is08=()=>new URLSearchParams(location.search).get('mezzo')==='08'||/mezzo\s*08/i.test(document.getElementById('tabletTitle')?.textContent||'');
+ fields.forEach(el=>{
+  const kind=el.type;const isDate=kind==='date';
+  const picker=document.createElement('input');picker.type=kind;picker.tabIndex=-1;picker.setAttribute('aria-hidden','true');
+  picker.style.cssText='position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
+  const button=document.createElement('button');button.type='button';button.textContent=isDate?'📅':'🕒';button.title=isDate?'Apri calendario':'Apri selettore orario';
+  button.setAttribute('aria-label',button.title);button.className='btn';button.style.cssText='margin-left:6px;padding:6px 9px;display:none';
+  el.insertAdjacentElement('afterend',button);button.insertAdjacentElement('afterend',picker);
+  const normalize=v=>{
+   if(!v)return '';
    if(isDate){
-    const m=raw.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/);
-    if(m){const d=+m[1],mo=+m[2],y=+m[3];const dt=new Date(Date.UTC(y,mo-1,d));if(dt.getUTCFullYear()===y&&dt.getUTCMonth()===mo-1&&dt.getUTCDate()===d)converted=String(y).padStart(4,'0')+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
-    else if(/^\d{4}-\d{2}-\d{2}$/.test(raw))converted=raw;
-   }else{
-    const m=raw.match(/^(\d{1,2})[:.](\d{2})$/);
-    if(m&&+m[1]<24&&+m[2]<60)converted=m[1].padStart(2,'0')+':'+m[2];
+    const m=v.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/);
+    if(m){const d=+m[1],mo=+m[2],y=+m[3],dt=new Date(Date.UTC(y,mo-1,d));if(dt.getUTCFullYear()===y&&dt.getUTCMonth()===mo-1&&dt.getUTCDate()===d)return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
+    return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;
    }
-   if(!converted){manual.setCustomValidity(isDate?'Inserisci una data valida GG/MM/AAAA':'Inserisci un orario valido HH:MM');manual.reportValidity();return}
-   manual.setCustomValidity('');original.value=converted;
-   original.dispatchEvent(new Event('input',{bubbles:true}));original.dispatchEvent(new Event('change',{bubbles:true}));
-   sync();
-  });
-  manual.addEventListener('input',()=>manual.setCustomValidity(''));
-  original.addEventListener('focus',sync);
+   const m=v.match(/^(\d{1,2})[:.](\d{2})$/);
+   return m&&+m[1]<24&&+m[2]<60?m[1].padStart(2,'0')+':'+m[2]:null;
+  };
+  let transformed=false;
+  const toggle=()=>{
+   const active=is08();button.style.display=active?'inline-flex':'none';
+   if(active&&!transformed){el.type='text';el.inputMode='numeric';el.placeholder=isDate?'GG/MM/AAAA':'HH:MM';transformed=true}
+   else if(!active&&transformed){const v=normalize(el.value);el.type=kind;el.value=v||'';transformed=false}
+  };
+  el.addEventListener('change',()=>{if(!transformed)return;const v=normalize(el.value.trim());if(el.value.trim()&&!v){el.setCustomValidity(isDate?'Inserisci una data valida GG/MM/AAAA':'Inserisci un orario HH:MM');el.reportValidity();return}el.setCustomValidity('');if(v)el.value=isDate?v.slice(8,10)+'/'+v.slice(5,7)+'/'+v.slice(0,4):v;});
+  // I valori letti e scritti dal gestionale restano in formato ISO/HH:MM.
+  const originalDescriptor=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+  Object.defineProperty(el,'value',{configurable:true,get(){const raw=originalDescriptor.get.call(this);return transformed?(normalize(raw)||raw):raw},set(v){const val=String(v??'');originalDescriptor.set.call(this,transformed&&isDate&&/^\d{4}-\d{2}-\d{2}$/.test(val)?val.slice(8,10)+'/'+val.slice(5,7)+'/'+val.slice(0,4):val)}});
+  button.addEventListener('click',()=>{picker.value=normalize(el.value)||'';try{picker.showPicker()}catch(_){picker.focus();picker.click()}});
+  picker.addEventListener('change',()=>{el.value=picker.value;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))});
+  toggle();new MutationObserver(toggle).observe(document.getElementById('tabletTitle')||root,{childList:true,subtree:true});
  });
- // Non intervenire negli altri mezzi: le caselle sono utilizzabili solo sul tablet 08.
- const toggle=()=>{const active=new URLSearchParams(location.search).get('mezzo')==='08'||/mezzo\s*08/i.test(document.getElementById('tabletTitle')?.textContent||'');fields.forEach(f=>{if(f.nextElementSibling?.dataset.cgeManualEntry)f.nextElementSibling.style.display=active?'':'none'})};
- toggle();new MutationObserver(toggle).observe(document.getElementById('tabletTitle')||root,{childList:true,subtree:true});
 });
 </script>
 <link rel="icon" type="image/png" sizes="192x192" href="/gestionale-croce-gialla/icons/icon-192-v6.png">
