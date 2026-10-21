@@ -5034,7 +5034,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvdService').dataset.serviceId=f.servizio_giornaliero_id||'';
 
  const closed=f.stato==='CHIUSO';
- const adminClosed118=closed&&prof?.ruolo==='AMMINISTRATORE';
+ const adminClosed118=closed&&is118&&prof?.ruolo==='AMMINISTRATORE';
  document.querySelectorAll('#fvForm input,#fvForm select,#fvForm textarea').forEach(x=>{if(x.dataset.fvEditable==='1')x.disabled=closed;});
  // Anagrafica paziente modificabile dagli amministratori sui fogli ancora aperti.
  ['fvdPn','fvdPc','fvdCf','fvdTel'].forEach(id=>{$(id).disabled=closed||prof?.ruolo!=='AMMINISTRATORE'||is118||isAssistanceManifestation(f.tipo_servizio);});
