@@ -13064,7 +13064,7 @@ async function tabletCloseSheet(){
  // Per il mezzo 08, non iniziare la chiusura senza conferma di salvataggio del metodo.
  // La funzione di salvataggio precedente deve registrare POS/contanti nel registro pagamenti.
  // Verifica il salvataggio reale in banca dati prima di chiudere (anche bonifico differito).
- if(!standalone118&&!tabletIs118Type(closeType)&&!closeType.includes('SERVIZIO INTERNO')){
+ if(!standalone118&&!tabletIsNonProgrammedPayment()&&!tabletIs118Type(closeType)&&!closeType.includes('SERVIZIO INTERNO')){
   const expectedMode=String(document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'').trim().toUpperCase();
   const check=await sb.from('fogli_viaggio').select('modalita_pagamento,data_pagamento,totale_servizio,stato').eq('id',tabletCurrentSheet.id).single();
   if(check.error)return msg('tabletSheetMsg','Non posso verificare il pagamento salvato: '+check.error.message,'err');
