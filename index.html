@@ -2524,7 +2524,7 @@ Causale: numero preventivo</textarea>
 <div class="section" data-admin-only="true"><h3>Verifica invio email Note di Debito</h3><p class="muted">Invia una sola email di prova dalla tesoreria ad amministrazione@crocegiallaemergenza.it. Nessun documento o cliente viene coinvolto.</p><button type="button" id="accTestEmail" class="btn blue">✉ Invia email di prova</button><div id="accTestEmailMsg" style="margin-top:9px"></div></div>
 <div class="stats"><div class="stat"><small>TOTALE DA INCASSARE</small><b id="accDue">€ 0</b></div><div class="stat"><small>PAGATI</small><b id="accPaid">0</b></div><div class="stat"><small>PARZIALI</small><b id="accPart">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="accCount">0</b></div></div>
 <div class="section" data-admin-only="true"><h3>💰 Riepilogo incassi registrati</h3><p class="muted">Incassi effettivamente registrati nel registro pagamenti servizi. I bonifici differiti ancora da ricevere non sono conteggiati. Le Note di Debito hanno un riepilogo separato.</p><div class="stats"><div class="stat"><small>INCASSATO NEL MESE</small><b id="accMonthCollected">€ 0</b></div><div class="stat"><small>INCASSATO NELL'ANNO</small><b id="accYearCollected">€ 0</b></div><div class="stat"><small>OPERAZIONI NEL MESE</small><b id="accMonthOperations">0</b></div><div class="stat"><small>OPERAZIONI NELL'ANNO</small><b id="accYearOperations">0</b></div></div><div class="grid2"><div class="section" style="margin:0"><h3>Questo mese</h3><div id="accMonthBreakdown" class="muted">Caricamento...</div></div><div class="section" style="margin:0"><h3>Da inizio anno</h3><div id="accYearBreakdown" class="muted">Caricamento...</div></div></div><div class="section" style="margin-top:14px"><h3>📅 Incassi mese per mese</h3><p class="muted">Storico per data di pagamento registrata. Ogni mese distingue contanti, POS e bonifici accreditati; i bonifici differiti non incassati sono esclusi.</p><div class="table"><table><thead><tr><th>Mese</th><th>Contanti</th><th>POS</th><th>Bonifici</th><th>Totale incassato</th><th>Operazioni</th></tr></thead><tbody id="accMonthlyRows"><tr><td colspan="6">Caricamento...</td></tr></tbody></table></div></div><div id="accCollectionMsg"></div></div>
-<div class="section"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="1"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
+<div class="section" data-admin-only="true"><h3>🏦 Registra incasso fattura Aruba</h3><p class="muted">Seleziona un servizio con fattura Aruba già emessa, registra soltanto il pagamento effettivamente ricevuto. Il riepilogo mensile si aggiorna automaticamente; non inserire lo stesso incasso anche in «Registra pagamento».</p><div class="grid4"><div class="field"><label>Servizio fatturato Aruba</label><select id="accArubaService"><option value="">Caricamento...</option></select></div><div class="field"><label>Importo incassato €</label><input id="accArubaAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label>Metodo</label><select id="accArubaMode"><option value="BONIFICO">Bonifico accreditato</option><option value="POS">POS</option><option value="CONTANTI">Contanti</option></select></div><div class="field"><label>Data effettiva incasso</label><input id="accArubaDate" type="date"></div></div><div class="toolbar"><button type="button" id="accArubaSave" class="btn yellow">💰 Registra incasso Aruba</button></div><div id="accArubaMsg"></div></div><div class="section"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="1"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
 <div class="section"><h3>Servizi contabili</h3><p class="muted">I servizi futuri e quelli non ancora svolti restano nei calendari. Lo storico dei servizi effettuati rimane disponibile.</p><div class="actions"><button id="accFilterDue" class="btn yellow" type="button">Da incassare</button><button id="accFilterDeferred" class="btn secondary" type="button">Bonifici differiti</button><button id="accFilterPaid" class="btn secondary" type="button">Incassati</button><button id="accFilterHistory" class="btn secondary" type="button">Storico completo</button></div><div id="accFilterInfo" class="muted"></div></div><div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto</th><th>Pagamento</th><th>Stato gestionale</th></tr></thead><tbody id="accBody"></tbody></table></div></div></section>
 
 <section id="communications" class="surface hidden">
@@ -11502,9 +11502,39 @@ async function loadAccounting(){
  $('accCount').textContent=a.filter(x=>x.stato_gestionale==='DA CONTABILIZZARE'&&Number(x.importo_dovuto||0)>0).length;
  $('accService').innerHTML=opts(due,'servizio_id',x=>x.data_servizio+' · '+x.mezzo+' · '+x.tipo_servizio+' · '+([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||x.destinazione||''));
  accRenderFiltered();
+ const ar=await sb.from('servizi_giornalieri').select('id,fattura_aruba_emessa,documento_da_emettere').eq('documento_da_emettere','FATTURA_ARUBA').eq('fattura_aruba_emessa',true).limit(2000);
+ if(ar.error)msg('accArubaMsg','Impossibile caricare servizi Aruba: '+ar.error.message,'err');
+ else {
+  const ids=new Set((ar.data||[]).map(x=>x.id));
+  const dueAruba=a.filter(x=>ids.has(x.servizio_id)&&Number(x.residuo)>0);
+  $('accArubaService').innerHTML='<option value="">Seleziona fattura Aruba da incassare</option>'+opts(dueAruba,'servizio_id',x=>x.data_servizio+' · '+x.tipo_servizio+' · '+x.mezzo+' · Residuo '+euro(x.residuo));
+ }
+ if(!$('accArubaDate').value)$('accArubaDate').value=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  await loadCollectionSummary();
 }
 [['accFilterDue','due'],['accFilterDeferred','deferred'],['accFilterPaid','paid'],['accFilterHistory','history']].forEach(([id,key])=>$(id).onclick=()=>{accCurrentFilter=key;accRenderFiltered()});
+$('accArubaService').onchange=()=>{
+ const x=accAccountingRows.find(x=>x.servizio_id===$('accArubaService').value);
+ $('accArubaAmount').value=x?Number(x.residuo||0).toFixed(2):'';
+};
+$('accArubaSave').onclick=async()=>{
+ const id=$('accArubaService').value,amount=Number($('accArubaAmount').value),date=$('accArubaDate').value,mode=$('accArubaMode').value;
+ if(!id||!Number.isFinite(amount)||amount<=0||!date)return msg('accArubaMsg','Seleziona un servizio, l’importo positivo e la data di incasso.','warn');
+ const x=accAccountingRows.find(x=>x.servizio_id===id);
+ if(!x||amount>Number(x.residuo||0)+0.001)return msg('accArubaMsg','Importo superiore al residuo: aggiorna la contabilità e verifica.','err');
+ if(!confirm('Registrare '+euro(amount)+' con '+mode+' incassati il '+date+' per questo servizio Aruba? Non registrare due volte lo stesso pagamento.'))return;
+ const b=$('accArubaSave');b.disabled=true;
+ try{
+  const verify=await sb.from('servizi_giornalieri').select('id,documento_da_emettere,fattura_aruba_emessa').eq('id',id).single();
+  if(verify.error||verify.data?.documento_da_emettere!=='FATTURA_ARUBA'||!verify.data?.fattura_aruba_emessa)throw new Error('La fattura Aruba non risulta emessa.');
+  const check=await sb.from('v_contabilita_servizi').select('residuo').eq('servizio_id',id).single();
+  if(check.error||amount>Number(check.data?.residuo||0)+0.001)throw new Error('Residuo modificato: ricarica e verifica prima di registrare.');
+  const ins=await sb.from('pagamenti_servizi').insert({servizio_id:id,data_pagamento:date,importo:amount,modalita:mode,stato:'REGISTRATO',note:'Incasso fattura Aruba registrato da Contabilità'});
+  if(ins.error)throw ins.error;
+  await loadAccounting();msg('accArubaMsg','Incasso Aruba registrato. Riepilogo mensile aggiornato.','ok');
+ }catch(e){msg('accArubaMsg','Incasso NON registrato: '+(e.message||String(e)),'err')}
+ finally{b.disabled=false}
+};
 $('accSave').onclick=async()=>{
  const servizio=$('accService').value;
  const modo=$('accMode').value;
