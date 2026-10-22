@@ -13108,11 +13108,10 @@ async function tabletCloseSheet(){
  try{
   const paymentMode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||tabletCurrentSheet?.modalita_pagamento||null;
   const paymentDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||tabletCurrentSheet?.data_pagamento||(['CONTANTI','POS','BONIFICO'].includes(String(paymentMode).toUpperCase())?todaySafe():null);
-  const r=tabletIsNonProgrammedPayment()
-   ? await sb.rpc('cge_tablet_chiudi_foglio_viaggio',{p_foglio:tabletCurrentSheet.id})
-   : await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{
-      p_foglio:tabletCurrentSheet.id,p_modalita:paymentMode,p_data:paymentDate
-     });
+  // Tutti i servizi, anche quelli non programmati, usano la stessa chiusura con pagamento.
+  const r=await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{
+   p_foglio:tabletCurrentSheet.id,p_modalita:paymentMode,p_data:paymentDate
+  });
   if(r.error)throw r.error;
   tabletCurrentSheet={...tabletCurrentSheet,...(r.data||{}),stato:'CHIUSO'};
   msg('tabletSheetMsg','Foglio Viaggio chiuso correttamente e registrato nel database.','ok');
@@ -13829,7 +13828,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.64-bonifico-istantaneo-tutti';
+const CGE_APP_BUILD='14.65-unified-tablet-payments';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
