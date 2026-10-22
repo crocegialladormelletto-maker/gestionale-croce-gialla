@@ -1638,7 +1638,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
    <div class="section" id="fvPaymentSection"><h3>Pagamento</h3>
     <div class="grid3">
-     <div class="field"><label>Modalità</label><select id="fvPayMode"><option value="">Non registrato</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select></div>
+     <div class="field"><label>Modalità</label><select id="fvPayMode"><option value="">Non registrato</option><option>CONTANTI</option><option>POS</option><option value="BONIFICO">BONIFICO ISTANTANEO / GIÀ RICEVUTO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select></div>
      <div class="field" id="fvPayDateBox"><label>Data pagamento</label><input id="fvPayDate" type="date"></div>
      <div class="field"><label>Stato contabile collegato</label><input id="fvAccountingState" disabled></div>
     </div>
@@ -2999,7 +2999,7 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Barella bariatrica</label><label class="check"><input type="checkbox" data-ts-field="barella_bariatrica"> Utilizzata</label></div>
      <div class="field"><label>Supplemento bariatrica €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_bariatrica"></div>
      <div class="field"><label>Totale calcolato €</label><input id="tabletSheetTotal" disabled value="—"></div>
-     <div class="field"><label>Modalità pagamento</label><select data-ts-field="modalita_pagamento"><option value="">Non indicata</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="NON DOVUTO">Non dovuto</option><option value="ALTRO">Altro</option></select></div>
+     <div class="field"><label>Modalità pagamento</label><select data-ts-field="modalita_pagamento"><option value="">Non indicata</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico istantaneo / già ricevuto</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="NON DOVUTO">Non dovuto</option><option value="ALTRO">Altro</option></select></div>
      <div class="field" id="tabletSheetPayDateBox"><label>Data pagamento</label><input type="date" data-ts-field="data_pagamento"></div>
     </div>
     <div id="tabletReceiptSection" class="section hidden" style="margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
@@ -13829,7 +13829,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.63-bonifico-istantaneo-data';
+const CGE_APP_BUILD='14.64-bonifico-istantaneo-tutti';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
