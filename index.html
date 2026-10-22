@@ -2795,7 +2795,7 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Destinazione tariffaria</label><select id="tabletAdTariffDest"><option value="">—</option></select></div>
     <div class="field"><label>Fascia</label><select id="tabletAdNight"><option value="false">Diurno</option><option value="true">Notturno</option></select></div>
     <div class="field"><label>Importo concordato € (solo senza tariffario)</label><input id="tabletAdAmount" type="number" step="0.01" min="0" max="10000" placeholder="Vuoto = da concordare"></div>
-    <div class="field" id="tabletAdPaymentBox"><label>Modalità pagamento</label><select id="tabletAdPayment"><option value="">Da indicare</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="ALTRO">Altro</option></select></div>
+    <div class="field" id="tabletAdPaymentBox"><label>Modalità pagamento</label><select id="tabletAdPayment"><option value="">Da indicare</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico istantaneo / già ricevuto</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="ALTRO">Altro</option></select></div>
     <div class="field" id="tabletAdPaymentDateBox"><label>Data pagamento</label><input id="tabletAdPaymentDate" type="date"></div>
     <div class="field"><label>Note operative</label><textarea id="tabletAdNotes" maxlength="2000"></textarea></div>
    </div>
@@ -12460,7 +12460,7 @@ if(tabletPayModeField)tabletPayModeField.onchange=()=>{
  }
  const dateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
  if(tabletPayModeField.value&&tabletPayModeField.value!=='BONIFICO DIFFERITO'){
-  if(dateField&&!dateField.value&&['CONTANTI','POS'].includes(tabletPayModeField.value))dateField.value=todaySafe();
+  if(dateField&&!dateField.value&&['CONTANTI','POS','BONIFICO'].includes(tabletPayModeField.value))dateField.value=todaySafe();
  }
  if(!tabletPayModeField.value||tabletPayModeField.value==='BONIFICO DIFFERITO'){
   if(dateField)dateField.value='';
@@ -12965,7 +12965,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   }
  }
  // Per incassi immediati, proponi automaticamente oggi, senza sovrascrivere una data esplicita.
- if(!tabletSheetIs118&&['CONTANTI','POS'].includes(String(row.modalita_pagamento||'').toUpperCase())&&!row.data_pagamento){
+ if(!tabletSheetIs118&&['CONTANTI','POS','BONIFICO'].includes(String(row.modalita_pagamento||'').toUpperCase())&&!row.data_pagamento){
   row.data_pagamento=tabletCurrentSheet?.data_pagamento||todaySafe();
   const paymentDateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
   if(paymentDateField)paymentDateField.value=row.data_pagamento;
@@ -13107,7 +13107,7 @@ async function tabletCloseSheet(){
  tabletBusy=true;msg('tabletSheetMsg',standalone118?'Chiusura Foglio 118 in corso...':'Chiusura servizio in corso...');
  try{
   const paymentMode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||tabletCurrentSheet?.modalita_pagamento||null;
-  const paymentDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||tabletCurrentSheet?.data_pagamento||(['CONTANTI','POS'].includes(String(paymentMode).toUpperCase())?todaySafe():null);
+  const paymentDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||tabletCurrentSheet?.data_pagamento||(['CONTANTI','POS','BONIFICO'].includes(String(paymentMode).toUpperCase())?todaySafe():null);
   const r=tabletIsNonProgrammedPayment()
    ? await sb.rpc('cge_tablet_chiudi_foglio_viaggio',{p_foglio:tabletCurrentSheet.id})
    : await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{
@@ -13829,7 +13829,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.62-auto-data-incasso';
+const CGE_APP_BUILD='14.63-bonifico-istantaneo-data';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
