@@ -12988,7 +12988,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   }
  }
  // Per incassi immediati, proponi automaticamente oggi, senza sovrascrivere una data esplicita.
- if(!tabletSheetIs118&&['CONTANTI','POS','BONIFICO'].includes(String(row.modalita_pagamento||'').toUpperCase())&&!row.data_pagamento){
+ if(!tabletSheetIs118&&['CONTANTI','POS','BONIFICO','BONIFICO ISTANTANEO'].includes(String(row.modalita_pagamento||'').toUpperCase())&&!row.data_pagamento){
   row.data_pagamento=tabletCurrentSheet?.data_pagamento||todaySafe();
   const paymentDateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
   if(paymentDateField)paymentDateField.value=row.data_pagamento;
