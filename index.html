@@ -12971,6 +12971,13 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
    row.importo_inserito=amount;
   }
  }
+ // Il valore digitato va letto prima di qualsiasi salvataggio/chiusura.
+ // Un foglio ordinario senza importo valido non deve essere salvato con NULL.
+ if(!tabletSheetIs118&&!tabletIsAssistance&&row.importo_inserito==null){
+  const field=document.querySelector('#tabletSheetForm input[data-ts-field="importo_inserito"]');
+  const draft=String(field?.value??'').trim().replace(',','.');
+  if(draft!==''&&Number.isFinite(Number(draft))&&Number(draft)>=0)row.importo_inserito=Number(draft);
+ }
  if(!tabletSheetIs118&&row.importo_inserito===null){
   const savedBase=tabletCurrentSheet?.importo_inserito;
   if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
@@ -12990,6 +12997,8 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  try{
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio,modalita_pagamento,data_pagamento').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
+  if(!tabletSheetIs118&&!tabletIsAssistance&&(r.data.importo_inserito==null||r.data.importo_inserito===''))
+   throw new Error('Importo base non memorizzato sul server. Il foglio resta aperto; non tentare la chiusura prima della conferma.');
   if(!tabletSheetIs118 && row.importo_inserito!==null && row.importo_inserito!==undefined &&
      Number(r.data.importo_inserito)!==Number(row.importo_inserito))
    throw new Error('Importo base non confermato dal database. Il foglio rimane aperto.');
