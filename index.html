@@ -2995,6 +2995,16 @@ Causale: numero preventivo</textarea>
     <div class="tablet-fields">
      <div class="field"><label>Importo servizio € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito"></div>
     </div>
+    <div id="tabletReceiptSection" class="section" style="margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
+     <h3 style="margin-top:0">🧾 Ricevuta o attestazione di pagamento</h3>
+     <p class="muted">Carica una foto o un PDF della ricevuta, se disponibile. La data di caricamento sarà visibile nell'archivio; la data effettiva del pagamento va verificata sul documento. Il caricamento non registra un incasso in contabilità e non è obbligatorio per chiudere il foglio.</p>
+     <div class="actions" style="align-items:end">
+      <div class="field" style="flex:1;min-width:240px"><label>Foto / PDF ricevuta</label><input id="tabletReceiptFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment"></div>
+      <button id="tabletReceiptUpload" class="btn yellow" type="button">📤 Carica ricevuta</button>
+     </div>
+     <div id="tabletReceiptMsg"></div>
+     <div id="tabletReceiptList" style="margin-top:8px"></div>
+    </div>
     </div>
     <div class="tablet-sheet-bar">
      <div class="actions"><button id="tabletSaveSheet" class="btn yellow" type="submit">💾 Salva dati</button>
@@ -3378,7 +3388,6 @@ function tabletUpdatePaymentDateVisibility(){
 }
 function tabletToggleReceiptSection(){
  const sec=$('tabletReceiptSection');if(!sec)return;
- const mode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'';
  const show=!!tabletCurrentSheet&&!tabletIs118Type(tabletCurrentSheet.tipo_servizio||tabletCurrentService?.tipo_servizio||'');
  sec.classList.toggle('hidden',!show);
  if(!show){if($('tabletReceiptFile'))$('tabletReceiptFile').value='';msg('tabletReceiptMsg','')}
@@ -13785,7 +13794,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.79-tablet-only-trip-data';
+const CGE_APP_BUILD='14.80-receipt-upload-only';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
