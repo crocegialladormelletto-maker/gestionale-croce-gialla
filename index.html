@@ -13002,6 +13002,16 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
    row.data_pagamento=pg.data?.data_pagamento||null;
   }
   if(!tabletSheetIs118){
+   // Il campo del tablet 06 può perdere la selezione nel salvataggio generale.
+   // Per un bonifico differito salvare attraverso la RPC dedicata e leggere il risultato reale.
+   if(String(row.modalita_pagamento||'').trim().toUpperCase()==='BONIFICO DIFFERITO'){
+    const pay=await sb.rpc('cge_tablet_salva_pagamento_foglio',{
+     p_foglio:tabletCurrentSheet.id,p_modalita:'BONIFICO DIFFERITO',p_data:null
+    });
+    if(pay.error)throw new Error('Bonifico differito non salvato: '+pay.error.message);
+    row.modalita_pagamento=pay.data?.modalita_pagamento||'BONIFICO DIFFERITO';
+    row.data_pagamento=null;
+   }
    if(Number(r.data?.totale_servizio||0)>0&&!row.modalita_pagamento){
     const modeEl=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
     if(modeEl)modeEl.focus();
@@ -13855,7 +13865,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.71-preserve-payment-choice';
+const CGE_APP_BUILD='14.73-tablet06-deferred-rpc';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
