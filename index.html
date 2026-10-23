@@ -12910,6 +12910,11 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   else if(!row.modalita_pagamento&&tabletCurrentSheet?.modalita_pagamento)row.modalita_pagamento=tabletCurrentSheet.modalita_pagamento;
   const dateInput=document.querySelector('#tabletSheetForm input[data-ts-field="data_pagamento"]');
   if(dateInput?.value)row.data_pagamento=dateInput.value;
+  if(selected==='BONIFICO DIFFERITO'){
+   row.modalita_pagamento=selected;
+   row.data_pagamento=null;
+   if(dateInput)dateInput.value='';
+  }
  }
  // Non azzerare un pagamento gia registrato se il select del tablet e momentaneamente vuoto.
  if(!tabletSheetIs118 && !row.modalita_pagamento && tabletCurrentSheet?.modalita_pagamento){
@@ -13841,7 +13846,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.69-payment-verify-06';
+const CGE_APP_BUILD='14.70-deferred-bank-transfer';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
