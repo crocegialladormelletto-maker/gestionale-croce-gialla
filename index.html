@@ -13012,30 +13012,28 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   if(!tabletSheetIs118 && row.importo_inserito!==null && row.importo_inserito!==undefined &&
      Number(r.data.importo_inserito)!==Number(row.importo_inserito))
    throw new Error('Importo base non confermato dal database. Il foglio rimane aperto.');
-  // Un solo percorso di salvataggio per tutti i tablet.
-  // La selezione descrive la modalita prevista: NON registra un incasso.
+  // Il tablet memorizza soltanto il metodo previsto; NON registra incassi.
+  // Salvataggio dedicato e verifica: non usare la RPC di contabilizzazione.
   if(!tabletSheetIs118){
-   const chosen=String(row.modalita_pagamento||'').trim().toUpperCase();
+   const payField=document.querySelector('#tabletSheetForm select[data-ts-field="modalita_pagamento"]');
+   const chosen=String(payField?.value||row.modalita_pagamento||'').trim().toUpperCase();
+   if(Number(r.data?.totale_servizio||0)>0&&!chosen){
+    if(payField)payField.focus();
+    throw new Error('Seleziona un metodo di pagamento e premi Salva dati.');
+   }
    if(chosen){
-    const pg=await sb.rpc('cge_tablet_salva_pagamento_foglio',{
-     p_foglio:tabletCurrentSheet.id,p_modalita:chosen,
-     p_data:chosen==='BONIFICO DIFFERITO'?null:(row.data_pagamento||null)
-    });
-    if(pg.error)throw new Error('Modalita di pagamento non salvata: '+pg.error.message);
-    // Non fidarsi del risultato della RPC: verificare sempre il valore persistito.
-    row.modalita_pagamento=chosen;
-    if(chosen==='BONIFICO DIFFERITO')row.data_pagamento=null;
+    const paymentDate=chosen==='BONIFICO DIFFERITO'?null:(row.data_pagamento||null);
+    const paymentSave=await sb.from('fogli_viaggio')
+     .update({modalita_pagamento:chosen,data_pagamento:paymentDate})
+     .eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO')
+     .select('id,modalita_pagamento,data_pagamento').maybeSingle();
+    if(paymentSave.error)throw new Error('Salvataggio modalità: '+paymentSave.error.message);
+    if(!paymentSave.data)throw new Error('Il server non consente di aggiornare la modalità sul foglio aperto.');
+    const actual=String(paymentSave.data.modalita_pagamento||'').trim().toUpperCase();
+    if(actual!==chosen)throw new Error('Metodo pagamento non memorizzato: il server ha restituito '+(actual||'nessuna modalità')+'.');
+    row.modalita_pagamento=actual;
+    row.data_pagamento=paymentSave.data.data_pagamento||null;
    }
-   if(Number(r.data?.totale_servizio||0)>0&&!row.modalita_pagamento){
-    const modeEl=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
-    if(modeEl)modeEl.focus();
-    throw new Error('Metodo di pagamento non acquisito dal tablet: selezionalo nuovamente e premi Salva dati.');
-   }
-   const verifica=await sb.from('fogli_viaggio').select('modalita_pagamento,data_pagamento').eq('id',tabletCurrentSheet.id).single();
-   if(verifica.error)throw new Error('Verifica pagamento non riuscita: '+verifica.error.message);
-   if(String(verifica.data.modalita_pagamento||'').trim().toUpperCase()!==String(row.modalita_pagamento||'').trim().toUpperCase()
-    || String(verifica.data.data_pagamento||'')!==String(row.data_pagamento||''))
-    throw new Error('Metodo o data di pagamento non salvati: il foglio rimane aperto.');
   }
   tabletCurrentSheet={...tabletCurrentSheet,...row};
   const syncWarnings=[];
@@ -13889,7 +13887,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.77-isolated-amount-save';
+const CGE_APP_BUILD='14.78-payment-method-only-save';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
