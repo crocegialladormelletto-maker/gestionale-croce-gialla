@@ -1,5 +1,5 @@
 // Service Worker App Volontari - configurazione stabile
-const CACHE_NAME = 'cge-volontari-static-v50';
+const CACHE_NAME = 'cge-volontari-static-v51';
 const APP_BASE = '/gestionale-croce-gialla/';
 const STATIC_ASSETS = [
   APP_BASE + 'app-volontari.html',
@@ -42,7 +42,7 @@ self.addEventListener('fetch', event => {
       && url.searchParams.get('area') === 'tablet'
       && /^0[6-9]$/.test(url.searchParams.get('mezzo') || '');
     const freshUrl = isTablet ? new URL(request.url) : null;
-    if (freshUrl) freshUrl.searchParams.set('_cge_app_build', '14.80-receipt-upload-only');
+    if (freshUrl) freshUrl.searchParams.set('_cge_app_build', '14.81-service-amount-all-tablets');
     event.respondWith(
       fetch(freshUrl ? freshUrl.href : request, {cache:'no-store'}).catch(async () => {
         if (url.pathname === APP_BASE + 'app-volontari.html') {
