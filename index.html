@@ -13057,6 +13057,14 @@ async function tabletCloseSheet(){
  if(kmStart==='')return msg('tabletSheetMsg','Inserisci i KM di partenza prima di chiudere il Foglio Viaggio.','warn');
  if(kmClose==='')return msg('tabletSheetMsg','Inserisci i KM di chiusura / rientro prima di chiudere il Foglio Viaggio.','warn');
  if(Number(kmClose)<Number(kmStart))return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
+ // Sincronizza il pagamento dal database prima della chiusura: il tablet può avere un vecchio POS in memoria.
+ const freshPayment=await sb.from('fogli_viaggio').select('modalita_pagamento,data_pagamento').eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).maybeSingle();
+ if(freshPayment.error)return msg('tabletSheetMsg','Verifica pagamento non riuscita: '+freshPayment.error.message,'err');
+ if(freshPayment.data?.modalita_pagamento && freshPayment.data.modalita_pagamento!==tabletCurrentSheet.modalita_pagamento){
+  tabletCurrentSheet={...tabletCurrentSheet,...freshPayment.data};
+  const modeEl=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
+  if(modeEl)modeEl.value=freshPayment.data.modalita_pagamento;
+ }
  const saved=await saveTabletSheet(true,false);if(!saved)return;
  // Allinea la scheda locale con la copia effettiva salvata, inclusa la firma privacy.
  const refreshed=await sb.from('fogli_viaggio').select('id,stato,modalita_pagamento,data_pagamento,totale_servizio,privacy_firma_stato,privacy_firma_path,privacy_firma_motivo').eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).maybeSingle();
@@ -13828,7 +13836,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.67-fix-receipt-check';
+const CGE_APP_BUILD='14.68-tablet08-payment-sync';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
