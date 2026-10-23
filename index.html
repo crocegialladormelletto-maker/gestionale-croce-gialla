@@ -13147,15 +13147,24 @@ async function tabletCloseSheet(){
  if(!confirm(confirmText))return;
  tabletBusy=true;msg('tabletSheetMsg',standalone118?'Chiusura Foglio 118 in corso...':'Chiusura servizio in corso...');
  try{
-  const paymentMode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||tabletCurrentSheet?.modalita_pagamento||null;
-  const paymentDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||tabletCurrentSheet?.data_pagamento||(['CONTANTI','POS','BONIFICO'].includes(String(paymentMode).toUpperCase())?todaySafe():null);
-  // La chiusura non deve creare movimenti di incasso: il pagamento effettivo
-  // rimane esclusivamente di competenza Amministrazione/Centralino.
+  const paymentMode=String(document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||tabletCurrentSheet?.modalita_pagamento||'').trim().toUpperCase()||null;
+  const immediatePaid=['CONTANTI','POS','BONIFICO ISTANTANEO'].includes(paymentMode);
+  const paymentDate=paymentMode==='BONIFICO DIFFERITO'?null:
+   (document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||
+    (immediatePaid?todaySafe():(tabletCurrentSheet?.data_pagamento||null)));
+  // La RPC di chiusura registra la modalita di pagamento insieme al foglio.
+  // I pagamenti differiti non devono essere segnati come gia incassati.
   const r=await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{
    p_foglio:tabletCurrentSheet.id,p_modalita:paymentMode,p_data:paymentDate
   });
   if(r.error)throw r.error;
-  tabletCurrentSheet={...tabletCurrentSheet,...(r.data||{}),stato:'CHIUSO'};
+  // Conferma dal database, non soltanto dalla risposta della RPC.
+  const verified=await sb.from('fogli_viaggio').select('stato,modalita_pagamento,data_pagamento').eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).single();
+  if(verified.error)throw new Error('Chiusura eseguita: verifica pagamento non disponibile. Aggiorna prima di riprovare: '+verified.error.message);
+  if(verified.data?.stato!=='CHIUSO')throw new Error('Il server non ha confermato la chiusura del foglio.');
+  if(!standalone118&&paymentMode&&String(verified.data?.modalita_pagamento||'').trim().toUpperCase()!==paymentMode)
+   throw new Error('Foglio chiuso, ma il metodo di pagamento non risulta registrato correttamente. Verificare dal gestionale senza chiuderlo una seconda volta.');
+  tabletCurrentSheet={...tabletCurrentSheet,...(r.data||{}),...verified.data,stato:'CHIUSO'};
   msg('tabletSheetMsg','Foglio Viaggio chiuso correttamente e registrato nel database.','ok');
   // Un problema nel refresh dell'interfaccia NON annulla la chiusura già confermata.
   try{
