@@ -2994,6 +2994,16 @@ Causale: numero preventivo</textarea>
     <h3 class="tablet-section-title" style="margin-top:20px">Importo servizio</h3>
     <div class="tablet-fields">
      <div class="field"><label>Importo servizio € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito"></div>
+     <div class="field"><label>Modalità indicata sul Foglio Viaggio (non contabilizzata)</label>
+      <select data-ts-field="modalita_pagamento">
+       <option value="">Non indicata</option>
+       <option value="CONTANTI">Contanti</option>
+       <option value="POS">POS</option>
+       <option value="BONIFICO">Bonifico istantaneo</option>
+       <option value="BONIFICO DIFFERITO">Bonifico differito</option>
+       <option value="NON DOVUTO">Non dovuto</option>
+      </select>
+     </div>
     </div>
     <div id="tabletReceiptSection" class="section" style="margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
      <h3 style="margin-top:0">🧾 Ricevuta o attestazione di pagamento</h3>
@@ -12898,7 +12908,8 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  const tabletSheetIs118=tabletIs118Type(tabletSheetType);
  // Le operazioni contabili sono riservate ad Amministrazione/Centralino.
  // Escludere i campi di pagamento anche se una vecchia cache li invia.
- delete row.modalita_pagamento;
+ // La modalita resta soltanto nel Foglio Viaggio.
+ // Nessuna data di incasso e nessuna scrittura su pagamenti_servizi.
  delete row.data_pagamento;
  delete row.percorso_tappe;
  if(tabletSheetIs118){
@@ -12977,6 +12988,11 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
     throw new Error('Importo servizio non acquisito dal database (scrittura separata).');
   }
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio,modalita_pagamento,data_pagamento').maybeSingle();
+  // La modalita e solo informativa; eventuali trigger non devono cambiarla
+  // senza segnalare la mancata acquisizione.
+  if(!r.error&&r.data&&row.modalita_pagamento&&
+     String(r.data.modalita_pagamento||'').trim().toUpperCase()!==String(row.modalita_pagamento).trim().toUpperCase())
+    throw new Error('Modalità indicata non salvata sul Foglio Viaggio. Nessun pagamento registrato.');
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
   // Controllo finale per tutti i tablet 06/07/08/09: l'importo e un dato
   // del servizio, non un pagamento. In caso di mancata persistenza ripeti
@@ -13805,7 +13821,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.81-service-amount-all-tablets';
+const CGE_APP_BUILD='14.82-payment-method-sheet-only';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
