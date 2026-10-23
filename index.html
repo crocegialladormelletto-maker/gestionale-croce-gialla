@@ -12986,6 +12986,11 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
    row.data_pagamento=pg.data?.data_pagamento||null;
   }
   if(!tabletSheetIs118){
+   if(Number(r.data?.totale_servizio||0)>0&&!row.modalita_pagamento){
+    const modeEl=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
+    if(modeEl)modeEl.focus();
+    throw new Error('Metodo di pagamento non acquisito dal tablet: selezionalo nuovamente e premi Salva dati.');
+   }
    const verifica=await sb.from('fogli_viaggio').select('modalita_pagamento,data_pagamento').eq('id',tabletCurrentSheet.id).single();
    if(verifica.error)throw new Error('Verifica pagamento non riuscita: '+verifica.error.message);
    if(String(verifica.data.modalita_pagamento||'').trim().toUpperCase()!==String(row.modalita_pagamento||'').trim().toUpperCase()
@@ -13836,7 +13841,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.68-tablet08-payment-sync';
+const CGE_APP_BUILD='14.69-payment-verify-06';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
