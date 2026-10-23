@@ -12960,6 +12960,17 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  // L'importo delle assistenze fatturate con Aruba viene gestito in amministrazione.
  // Non inventare 0 euro sul foglio se il prezzo non è stato ancora concordato.
  const tabletIsAssistance=isAssistanceManifestation(tabletSheetType);
+ // Acquisizione esplicita dell'importo visibile anche durante la chiusura del foglio.
+ // Non interpretare mai un campo vuoto come zero e non inventare importi.
+ if(!tabletSheetIs118){
+  const baseInput=document.querySelector('#tabletSheetForm input[data-ts-field="importo_inserito"]');
+  const baseText=String(baseInput?.value??'').trim().replace(',','.');
+  if(baseText!==''){
+   const amount=Number(baseText);
+   if(!Number.isFinite(amount)||amount<0)return msg('tabletSheetMsg','Importo base non valido: controlla il valore inserito.','warn'),false;
+   row.importo_inserito=amount;
+  }
+ }
  if(!tabletSheetIs118&&row.importo_inserito===null){
   const savedBase=tabletCurrentSheet?.importo_inserito;
   if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
