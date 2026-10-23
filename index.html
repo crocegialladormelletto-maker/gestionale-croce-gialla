@@ -12978,11 +12978,22 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   }
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio,modalita_pagamento,data_pagamento').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
-  if(!tabletSheetIs118&&!tabletIsAssistance&&(r.data.importo_inserito==null||r.data.importo_inserito===''))
-   throw new Error('Importo servizio non memorizzato sul server. Il foglio resta aperto; non tentare la chiusura prima della conferma.');
-  if(!tabletSheetIs118 && row.importo_inserito!==null && row.importo_inserito!==undefined &&
-     Number(r.data.importo_inserito)!==Number(row.importo_inserito))
-   throw new Error('Importo base non confermato dal database. Il foglio rimane aperto.');
+  // Controllo finale per tutti i tablet 06/07/08/09: l'importo e un dato
+  // del servizio, non un pagamento. In caso di mancata persistenza ripeti
+  // solo l'aggiornamento di importo_inserito, senza creare incassi o note.
+  if(!tabletSheetIs118&&!tabletIsAssistance&&row.importo_inserito!=null &&
+     (r.data.importo_inserito==null||Number(r.data.importo_inserito)!==Number(row.importo_inserito))){
+   const retry=await sb.from('fogli_viaggio')
+    .update({importo_inserito:row.importo_inserito})
+    .eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO')
+    .select('id,importo_inserito').maybeSingle();
+   if(retry.error||!retry.data||retry.data.importo_inserito==null||
+      Number(retry.data.importo_inserito)!==Number(row.importo_inserito))
+    throw new Error('Importo servizio non memorizzato sul server: '+(retry.error?.message||'verifica salvataggio non riuscita'));
+   r.data.importo_inserito=retry.data.importo_inserito;
+  }
+  if(!tabletSheetIs118&&!tabletIsAssistance&&r.data.importo_inserito==null)
+   throw new Error('Importo servizio mancante: inserisci l’importo reale prima di chiudere il foglio.');
   tabletCurrentSheet={...tabletCurrentSheet,...row};
   const syncWarnings=[];
 
@@ -13794,7 +13805,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.80-receipt-upload-only';
+const CGE_APP_BUILD='14.81-service-amount-all-tablets';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
