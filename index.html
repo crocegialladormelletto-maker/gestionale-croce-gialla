@@ -13089,7 +13089,7 @@ async function tabletCloseSheet(){
    return msg('tabletSheetMsg','Firma privacy obbligatoria: fai firmare il paziente oppure seleziona “Impossibilitato a firmare” e indica la motivazione prima di chiudere il Foglio Viaggio.','warn');
   }
  }
- const payMode=String(tabletCurrentSheet?.modalita_pagamento||document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'').toUpperCase();
+ const payMode=String(document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||tabletCurrentSheet?.modalita_pagamento||'').trim().toUpperCase();
  if(!standalone118&&['CONTANTI','POS'].includes(payMode)){
   let receiptCount=0;
   try{receiptCount=await paymentReceiptCount(tabletCurrentSheet.id)}
@@ -13828,7 +13828,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.66-visible-instant-transfer-all-tablets';
+const CGE_APP_BUILD='14.67-fix-receipt-check';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
