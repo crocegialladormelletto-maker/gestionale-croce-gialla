@@ -13002,24 +13002,19 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   if(!tabletSheetIs118 && row.importo_inserito!==null && row.importo_inserito!==undefined &&
      Number(r.data.importo_inserito)!==Number(row.importo_inserito))
    throw new Error('Importo base non confermato dal database. Il foglio rimane aperto.');
-  // Salvataggio dedicato del metodo: scrittura e lettura confermata sul database.
-  if(!tabletSheetIs118 && row.modalita_pagamento && !tabletIsNonProgrammedPayment()){
-   const pg=await sb.rpc('cge_tablet_salva_pagamento_foglio',{
-    p_foglio:tabletCurrentSheet.id,p_modalita:row.modalita_pagamento,p_data:row.data_pagamento||null
-   });
-   if(pg.error)throw new Error('Pagamento NON salvato: '+pg.error.message);
-   row.data_pagamento=pg.data?.data_pagamento||null;
-  }
+  // Un solo percorso di salvataggio per tutti i tablet.
+  // La selezione descrive la modalita prevista: NON registra un incasso.
   if(!tabletSheetIs118){
-   // Il campo del tablet 06 può perdere la selezione nel salvataggio generale.
-   // Per un bonifico differito salvare attraverso la RPC dedicata e leggere il risultato reale.
-   if(String(row.modalita_pagamento||'').trim().toUpperCase()==='BONIFICO DIFFERITO'){
-    const pay=await sb.rpc('cge_tablet_salva_pagamento_foglio',{
-     p_foglio:tabletCurrentSheet.id,p_modalita:'BONIFICO DIFFERITO',p_data:null
+   const chosen=String(row.modalita_pagamento||'').trim().toUpperCase();
+   if(chosen){
+    const pg=await sb.rpc('cge_tablet_salva_pagamento_foglio',{
+     p_foglio:tabletCurrentSheet.id,p_modalita:chosen,
+     p_data:chosen==='BONIFICO DIFFERITO'?null:(row.data_pagamento||null)
     });
-    if(pay.error)throw new Error('Bonifico differito non salvato: '+pay.error.message);
-    row.modalita_pagamento=pay.data?.modalita_pagamento||'BONIFICO DIFFERITO';
-    row.data_pagamento=null;
+    if(pg.error)throw new Error('Modalita di pagamento non salvata: '+pg.error.message);
+    // Non fidarsi del risultato della RPC: verificare sempre il valore persistito.
+    row.modalita_pagamento=chosen;
+    if(chosen==='BONIFICO DIFFERITO')row.data_pagamento=null;
    }
    if(Number(r.data?.totale_servizio||0)>0&&!row.modalita_pagamento){
     const modeEl=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
@@ -13154,7 +13149,8 @@ async function tabletCloseSheet(){
  try{
   const paymentMode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||tabletCurrentSheet?.modalita_pagamento||null;
   const paymentDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||tabletCurrentSheet?.data_pagamento||(['CONTANTI','POS','BONIFICO'].includes(String(paymentMode).toUpperCase())?todaySafe():null);
-  // Tutti i servizi, anche quelli non programmati, usano la stessa chiusura con pagamento.
+  // La chiusura non deve creare movimenti di incasso: il pagamento effettivo
+  // rimane esclusivamente di competenza Amministrazione/Centralino.
   const r=await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{
    p_foglio:tabletCurrentSheet.id,p_modalita:paymentMode,p_data:paymentDate
   });
