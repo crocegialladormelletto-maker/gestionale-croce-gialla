@@ -12993,6 +12993,18 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  }
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
+  // Prima persisti l'importo da solo, poi salva gli altri dati.
+  // Questo distingue un errore di scrittura del campo da una modifica successiva.
+  if(!tabletSheetIs118 && !tabletIsAssistance && row.importo_inserito!=null){
+   const baseResult=await sb.from('fogli_viaggio')
+    .update({importo_inserito:row.importo_inserito})
+    .eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO')
+    .select('id,importo_inserito').maybeSingle();
+   if(baseResult.error)throw new Error('Salvataggio importo servizio: '+baseResult.error.message);
+   if(!baseResult.data)throw new Error('Salvataggio importo servizio non autorizzato o foglio non disponibile.');
+   if(baseResult.data.importo_inserito==null || Number(baseResult.data.importo_inserito)!==Number(row.importo_inserito))
+    throw new Error('Importo servizio non acquisito dal database (scrittura separata).');
+  }
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio,modalita_pagamento,data_pagamento').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
   if(!tabletSheetIs118&&!tabletIsAssistance&&(r.data.importo_inserito==null||r.data.importo_inserito===''))
@@ -13877,7 +13889,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.76-single-service-amount';
+const CGE_APP_BUILD='14.77-isolated-amount-save';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
