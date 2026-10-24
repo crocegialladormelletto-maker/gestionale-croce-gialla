@@ -5150,7 +5150,7 @@ async function saveTravelSheet(silent=false){
   if(prof?.ruolo==='AMMINISTRATORE'){
    row.luogo_carico=$('fvd118Load').value.trim()||null;
    row.destinazione=$('fvd118To').value.trim()||null;
-   if(!row.destinazione)return msg('fvDetailMsg','Inserisci la destinazione del 118 prima di salvare.','warn'),false;
+   // Per i servizi 118 la destinazione è facoltativa, anche se il paziente non è trasportato.
   }
   row.trasportato_da_msa=!!$('fvTransportedMsa')?.checked;
   row.trasportato_da_elisoccorso=!!$('fvTransportedHeli')?.checked;
