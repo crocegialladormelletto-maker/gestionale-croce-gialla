@@ -12926,7 +12926,8 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   row.barella_bariatrica=false;
   row.luogo_partenza=$('tablet118From')?.value.trim()||null;
   row.luogo_carico=$('tablet118Load')?.value.trim()||null;
-  row.destinazione=$('tablet118Dest')?.value.trim()||null;
+  row.destinazione=$('tablet118Dest')?.value.trim()||tabletCurrentSheet?.destinazione||null;
+  if(!row.destinazione)return msg('tabletSheetMsg','Inserisci la destinazione del servizio 118 prima di salvare o chiudere il foglio.','warn'),false;
   row.luogo_rientro=$('tablet118Return')?.value.trim()||'SEDE CROCE GIALLA DORMELLETTO';
   row.autista=$('tablet118Driver')?.value||null;
   row.capo_servizio=$('tablet118Leader')?.value||null;
@@ -12999,6 +13000,11 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
      String(r.data.modalita_pagamento||'').trim().toUpperCase()!==String(row.modalita_pagamento).trim().toUpperCase())
     throw new Error('Modalità indicata non salvata sul Foglio Viaggio. Nessun pagamento registrato.');
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
+  if(tabletSheetIs118){
+   const destinationCheck=await sb.from('fogli_viaggio').select('destinazione').eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).maybeSingle();
+   if(destinationCheck.error||!destinationCheck.data||String(destinationCheck.data.destinazione||'').trim()!==String(row.destinazione||'').trim())
+    throw new Error('Destinazione 118 non memorizzata sul server. Il foglio resta aperto: riprova senza crearne un altro.');
+  }
   // Controllo finale per tutti i tablet 06/07/08/09: l'importo e un dato
   // del servizio, non un pagamento. In caso di mancata persistenza ripeti
   // solo l'aggiornamento di importo_inserito, senza creare incassi o note.
