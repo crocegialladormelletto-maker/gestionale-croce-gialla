@@ -12686,7 +12686,7 @@ async function openTabletDirect118(foglio){
  $('tabletCloseSheet').classList.toggle('hidden',closed);
  $('tabletCloseSheet').disabled=false;
  msg('tabletDetailMsg','');
- msg('tabletSheetMsg',closed?'Foglio Viaggio chiuso: è disponibile in sola lettura.':'Foglio 118 pronto. Completa numero scheda, destinazione, equipaggio e KM rientro prima della chiusura.','ok');
+ msg('tabletSheetMsg',closed?'Foglio Viaggio chiuso: è disponibile in sola lettura.':'Foglio 118 pronto. Completa numero scheda, equipaggio e KM rientro. La destinazione è facoltativa.','ok');
  tabletCalcSheet();
  $('tabletDetail').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -12941,7 +12941,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   row.barella_bariatrica=false;
   row.luogo_partenza=$('tablet118From')?.value.trim()||null;
   row.luogo_carico=$('tablet118Load')?.value.trim()||null;
-  row.destinazione=$('tablet118Dest')?.value.trim()||tabletCurrentSheet?.destinazione||null;
+  row.destinazione=$('tablet118Dest')?.value.trim()||null;
   // Nei servizi 118 la destinazione è facoltativa (es. trasporto non effettuato).
   row.luogo_rientro=$('tablet118Return')?.value.trim()||'SEDE CROCE GIALLA DORMELLETTO';
   row.autista=$('tablet118Driver')?.value||null;
@@ -13119,7 +13119,7 @@ async function tabletCloseSheet(){
   }
  }
  const confirmText=standalone118
-  ?'Chiudere definitivamente il Foglio Viaggio 118? Verifica numero scheda 118, destinazione, equipaggio e KM rientro.'
+  ?'Chiudere definitivamente il Foglio Viaggio 118? Verifica numero scheda 118, equipaggio e KM rientro. La destinazione è facoltativa.'
   :'Chiudere il servizio? I dati del Foglio Viaggio verranno chiusi e il servizio passerà al gestionale per la gestione amministrativa.';
  if(!confirm(confirmText))return;
  tabletBusy=true;msg('tabletSheetMsg',standalone118?'Chiusura Foglio 118 in corso...':'Chiusura servizio in corso...');
