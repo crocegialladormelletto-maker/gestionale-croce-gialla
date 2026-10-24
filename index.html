@@ -11580,7 +11580,7 @@ async function loadAccounting(){
  if(ar.error)msg('accArubaMsg','Impossibile caricare servizi Aruba: '+ar.error.message,'err');
  else {
   const arubaById=new Map((ar.data||[]).map(x=>[x.id,x]));
-  const dueAruba=a.filter(x=>arubaById.has(x.servizio_id)&&Number(x.residuo)>0);
+  const dueAruba=a.filter(x=>arubaById.has(x.servizio_id)&&Number(x.residuo)>0 && !(String(x.ospedale_destinazione||'').trim().toUpperCase()==='DORMELLETTO CALCIO' && /^2026-(10|11)-/.test(String(x.data_servizio||''))));
   $('accArubaService').innerHTML='<option value="">Seleziona servizio Aruba da incassare</option>'+opts(dueAruba,'servizio_id',x=>(arubaById.get(x.servizio_id)?.fattura_aruba_emessa?'FATTURA EMESSA':'DA FATTURARE')+' · '+x.data_servizio+' · '+x.tipo_servizio+' · '+x.mezzo+' · Residuo '+euro(x.residuo));
  }
  if(!$('accArubaDate').value)$('accArubaDate').value=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
