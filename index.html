@@ -12942,7 +12942,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   row.luogo_partenza=$('tablet118From')?.value.trim()||null;
   row.luogo_carico=$('tablet118Load')?.value.trim()||null;
   row.destinazione=$('tablet118Dest')?.value.trim()||tabletCurrentSheet?.destinazione||null;
-  if(!row.destinazione)return msg('tabletSheetMsg','Inserisci la destinazione del servizio 118 prima di salvare o chiudere il foglio.','warn'),false;
+  // Nei servizi 118 la destinazione è facoltativa (es. trasporto non effettuato).
   row.luogo_rientro=$('tablet118Return')?.value.trim()||'SEDE CROCE GIALLA DORMELLETTO';
   row.autista=$('tablet118Driver')?.value||null;
   row.capo_servizio=$('tablet118Leader')?.value||null;
