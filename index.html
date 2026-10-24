@@ -5017,7 +5017,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvdTo').value=[f.destinazione,f.indirizzo_destinazione,f.ospedale_destinazione].filter(Boolean).join(' · ');
  $('fvd118From').value=f.luogo_partenza||'—';
  $('fvd118Load').value=f.luogo_carico||'—';
- $('fvd118To').value=f.destinazione||f.ospedale_destinazione||'—';
+ $('fvd118To').value=f.destinazione||f.ospedale_destinazione||'';
  $('fvd118Return').value=f.luogo_rientro||'SEDE CROCE GIALLA DORMELLETTO';
  if($('fvTransportedMsa'))$('fvTransportedMsa').checked=!!f.trasportato_da_msa;
  if($('fvTransportedHeli'))$('fvTransportedHeli').checked=!!f.trasportato_da_elisoccorso;
@@ -5097,6 +5097,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  document.querySelectorAll('#fvForm input,#fvForm select,#fvForm textarea').forEach(x=>{if(x.dataset.fvEditable==='1')x.disabled=closed;});
  // Anagrafica paziente modificabile dagli amministratori sui fogli ancora aperti.
  ['fvdPn','fvdPc','fvdCf','fvdTel'].forEach(id=>{$(id).disabled=closed||prof?.ruolo!=='AMMINISTRATORE'||is118||isAssistanceManifestation(f.tipo_servizio);});
+ if(is118)$('fvd118To').disabled=closed||prof?.ruolo!=='AMMINISTRATORE';
  // Equipaggio: the original markup starts disabled, but admins may edit it on open sheets.
  ['fvDriver','fvLeader','fvRescuer','fvSecond','fvCompanion','fvTrainee'].forEach(id=>{$(id).disabled=closed||prof?.ruolo!=='AMMINISTRATORE';});
  if(adminClosed118){
@@ -5143,6 +5144,10 @@ async function saveTravelSheet(silent=false){
   versione_app:'V13.41'
  };
  if(String(currentFoglio?.tipo_servizio||'').trim()==='118'){
+  if(prof?.ruolo==='AMMINISTRATORE'){
+   row.destinazione=$('fvd118To').value.trim()||null;
+   if(!row.destinazione)return msg('fvDetailMsg','Inserisci la destinazione del 118 prima di salvare.','warn'),false;
+  }
   row.trasportato_da_msa=!!$('fvTransportedMsa')?.checked;
   row.trasportato_da_elisoccorso=!!$('fvTransportedHeli')?.checked;
   row.codice_invio_colore=$('fvInvioColore')?.value||null;
@@ -5180,11 +5185,14 @@ async function saveTravelSheet(silent=false){
   modalita_pagamento:$('fvPayMode').value||null,
   data_pagamento:$('fvPayMode').value==='BONIFICO DIFFERITO'?null:($('fvPayDate').value||null)
  });
- const r=await sb.from('fogli_viaggio').update(row).eq('id',currentFoglioId).select('id,paziente_nome,paziente_cognome,modalita_pagamento,data_pagamento').maybeSingle();
+ const r=await sb.from('fogli_viaggio').update(row).eq('id',currentFoglioId).select('id,paziente_nome,paziente_cognome,modalita_pagamento,data_pagamento,destinazione').maybeSingle();
  if(r.error){msg('fvDetailMsg',r.error.message,'err');return false}
  if(!r.data){msg('fvDetailMsg','Nessuna modifica registrata: verifica permessi e stato del foglio.','err');return false}
  if(Object.prototype.hasOwnProperty.call(row,'modalita_pagamento')&&(String(r.data.modalita_pagamento||'')!==String(row.modalita_pagamento||'')||String(r.data.data_pagamento||'')!==String(row.data_pagamento||''))){
   msg('fvDetailMsg','Attenzione: metodo o data pagamento diversi da quelli inseriti. La modifica NON è confermata.','err');return false;
+ }
+ if(Object.prototype.hasOwnProperty.call(row,'destinazione')&&String(r.data.destinazione||'').trim()!==String(row.destinazione||'').trim()){
+  msg('fvDetailMsg','La destinazione 118 non risulta salvata nel database.','err');return false;
  }
  if(Object.prototype.hasOwnProperty.call(row,'paziente_cognome')){
   if(String(r.data.paziente_cognome||'').trim()!==String(row.paziente_cognome||'').trim()){
