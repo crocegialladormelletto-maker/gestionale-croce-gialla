@@ -5097,7 +5097,10 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  document.querySelectorAll('#fvForm input,#fvForm select,#fvForm textarea').forEach(x=>{if(x.dataset.fvEditable==='1')x.disabled=closed;});
  // Anagrafica paziente modificabile dagli amministratori sui fogli ancora aperti.
  ['fvdPn','fvdPc','fvdCf','fvdTel'].forEach(id=>{$(id).disabled=closed||prof?.ruolo!=='AMMINISTRATORE'||is118||isAssistanceManifestation(f.tipo_servizio);});
- if(is118)$('fvd118To').disabled=closed||prof?.ruolo!=='AMMINISTRATORE';
+ if(is118){
+  $('fvd118To').disabled=closed||prof?.ruolo!=='AMMINISTRATORE';
+  $('fvd118Load').disabled=closed||prof?.ruolo!=='AMMINISTRATORE';
+ }
  // Equipaggio: the original markup starts disabled, but admins may edit it on open sheets.
  ['fvDriver','fvLeader','fvRescuer','fvSecond','fvCompanion','fvTrainee'].forEach(id=>{$(id).disabled=closed||prof?.ruolo!=='AMMINISTRATORE';});
  if(adminClosed118){
@@ -5145,6 +5148,7 @@ async function saveTravelSheet(silent=false){
  };
  if(String(currentFoglio?.tipo_servizio||'').trim()==='118'){
   if(prof?.ruolo==='AMMINISTRATORE'){
+   row.luogo_carico=$('fvd118Load').value.trim()||null;
    row.destinazione=$('fvd118To').value.trim()||null;
    if(!row.destinazione)return msg('fvDetailMsg','Inserisci la destinazione del 118 prima di salvare.','warn'),false;
   }
@@ -5185,11 +5189,14 @@ async function saveTravelSheet(silent=false){
   modalita_pagamento:$('fvPayMode').value||null,
   data_pagamento:$('fvPayMode').value==='BONIFICO DIFFERITO'?null:($('fvPayDate').value||null)
  });
- const r=await sb.from('fogli_viaggio').update(row).eq('id',currentFoglioId).select('id,paziente_nome,paziente_cognome,modalita_pagamento,data_pagamento,destinazione').maybeSingle();
+ const r=await sb.from('fogli_viaggio').update(row).eq('id',currentFoglioId).select('id,paziente_nome,paziente_cognome,modalita_pagamento,data_pagamento,destinazione,luogo_carico').maybeSingle();
  if(r.error){msg('fvDetailMsg',r.error.message,'err');return false}
  if(!r.data){msg('fvDetailMsg','Nessuna modifica registrata: verifica permessi e stato del foglio.','err');return false}
  if(Object.prototype.hasOwnProperty.call(row,'modalita_pagamento')&&(String(r.data.modalita_pagamento||'')!==String(row.modalita_pagamento||'')||String(r.data.data_pagamento||'')!==String(row.data_pagamento||''))){
   msg('fvDetailMsg','Attenzione: metodo o data pagamento diversi da quelli inseriti. La modifica NON è confermata.','err');return false;
+ }
+ if(Object.prototype.hasOwnProperty.call(row,'luogo_carico')&&String(r.data.luogo_carico||'').trim()!==String(row.luogo_carico||'').trim()){
+  msg('fvDetailMsg','Il Target 118 non risulta salvato nel database.','err');return false;
  }
  if(Object.prototype.hasOwnProperty.call(row,'destinazione')&&String(r.data.destinazione||'').trim()!==String(row.destinazione||'').trim()){
   msg('fvDetailMsg','La destinazione 118 non risulta salvata nel database.','err');return false;
