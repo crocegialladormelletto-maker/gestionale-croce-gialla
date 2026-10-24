@@ -11561,12 +11561,12 @@ async function loadAccounting(){
  $('accCount').textContent=a.filter(x=>x.stato_gestionale==='DA CONTABILIZZARE'&&Number(x.importo_dovuto||0)>0).length;
  $('accService').innerHTML=opts(due,'servizio_id',x=>x.data_servizio+' · '+x.mezzo+' · '+x.tipo_servizio+' · '+([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||x.destinazione||''));
  accRenderFiltered();
- const ar=await sb.from('servizi_giornalieri').select('id,fattura_aruba_emessa,documento_da_emettere').eq('documento_da_emettere','FATTURA_ARUBA').eq('fattura_aruba_emessa',true).limit(2000);
+ const ar=await sb.from('servizi_giornalieri').select('id,fattura_aruba_emessa,documento_da_emettere').eq('documento_da_emettere','FATTURA_ARUBA').limit(2000);
  if(ar.error)msg('accArubaMsg','Impossibile caricare servizi Aruba: '+ar.error.message,'err');
  else {
-  const ids=new Set((ar.data||[]).map(x=>x.id));
-  const dueAruba=a.filter(x=>ids.has(x.servizio_id)&&Number(x.residuo)>0);
-  $('accArubaService').innerHTML='<option value="">Seleziona fattura Aruba da incassare</option>'+opts(dueAruba,'servizio_id',x=>x.data_servizio+' · '+x.tipo_servizio+' · '+x.mezzo+' · Residuo '+euro(x.residuo));
+  const arubaById=new Map((ar.data||[]).map(x=>[x.id,x]));
+  const dueAruba=a.filter(x=>arubaById.has(x.servizio_id)&&Number(x.residuo)>0);
+  $('accArubaService').innerHTML='<option value="">Seleziona servizio Aruba da incassare</option>'+opts(dueAruba,'servizio_id',x=>(arubaById.get(x.servizio_id)?.fattura_aruba_emessa?'FATTURA EMESSA':'DA FATTURARE')+' · '+x.data_servizio+' · '+x.tipo_servizio+' · '+x.mezzo+' · Residuo '+euro(x.residuo));
  }
  if(!$('accArubaDate').value)$('accArubaDate').value=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  await loadCollectionSummary();
@@ -11585,7 +11585,12 @@ $('accArubaSave').onclick=async()=>{
  const b=$('accArubaSave');b.disabled=true;
  try{
   const verify=await sb.from('servizi_giornalieri').select('id,documento_da_emettere,fattura_aruba_emessa').eq('id',id).single();
-  if(verify.error||verify.data?.documento_da_emettere!=='FATTURA_ARUBA'||!verify.data?.fattura_aruba_emessa)throw new Error('La fattura Aruba non risulta emessa.');
+  if(verify.error||verify.data?.documento_da_emettere!=='FATTURA_ARUBA')throw new Error('Servizio non associato a fattura Aruba.');
+  if(!verify.data.fattura_aruba_emessa){
+   if(!confirm('Questo servizio risulta DA FATTURARE. Confermi che la fattura è stata effettivamente emessa su Aruba? Il servizio verrà contrassegnato come FATTURA EMESSA prima della registrazione dell’incasso.'))return;
+   const issued=await sb.from('servizi_giornalieri').update({fattura_aruba_emessa:true,fattura_aruba_emessa_il:new Date().toISOString()}).eq('id',id).eq('documento_da_emettere','FATTURA_ARUBA').select('id').single();
+   if(issued.error)throw issued.error;
+  }
   const check=await sb.from('v_contabilita_servizi').select('residuo').eq('servizio_id',id).single();
   if(check.error||amount>Number(check.data?.residuo||0)+0.001)throw new Error('Residuo modificato: ricarica e verifica prima di registrare.');
   const ins=await sb.from('pagamenti_servizi').insert({servizio_id:id,data_pagamento:date,importo:amount,modalita:mode,stato:'REGISTRATO',note:'Incasso fattura Aruba registrato da Contabilità'});
