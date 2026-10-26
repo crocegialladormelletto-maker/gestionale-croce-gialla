@@ -388,8 +388,8 @@ Consigliere: Ragazzini Luisa</textarea></div>
 
       <div class="field" style="margin-top:10px"><label>Destinatari</label><textarea id="cvRecipients" style="min-height:90px"></textarea></div>
       <div class="field" style="margin-top:10px"><label>Oggetto</label><input id="cvObject"></div>
-      <div class="field" style="margin-top:10px"><label>Ordine del giorno</label><div id="cvAgendaPoints" class="agenda-points"></div><div class="toolbar"><button id="cvAddAgenda" class="btn secondary" type="button">＋ Aggiungi punto</button></div><small class="muted">L’ordine del giorno viene riportato su entrambe le convocazioni dell’Assemblea.</small></div>
-      <div class="toolbar"><button id="cvGenerateText" class="btn secondary" type="button">✨ Genera testo base</button></div>
+      <div class="field" style="margin-top:10px"><label>Ordine del giorno</label><div id="cvAgendaPoints" class="agenda-points"></div><div class="toolbar"><button id="cvAddAgenda" class="btn secondary" type="button">＋ Aggiungi punto</button></div><small class="muted">I punti sono inseriti una sola volta e riportati automaticamente nel PDF, senza copiarli nel testo introduttivo.</small></div>
+      <div class="toolbar"><button id="cvGenerateText" class="btn secondary" type="button">✨ Genera introduzione</button></div>
       <div class="field" style="margin-top:10px;max-width:500px"><label>Firmatario</label><input id="cvSigner" value="Musso Paolo"></div>
 
       <div class="box" style="margin-top:12px">
@@ -1917,16 +1917,14 @@ function generateCallText(){
  if(assembly&&!currentCallId&&(!$('cvDate2').value||!$('cvTime2').value))
   return msg('cvmsg','Inserisci anche data e ora della seconda convocazione.','warn');
  const existing=$('cvText').value.trim()||(assembly?$('cvText2').value.trim():'');
- if(existing&&!confirm('Generare nuovamente il testo? Il testo della convocazione già presente verrà sostituito.'))return;
+ if(existing&&!confirm('Sostituire il testo introduttivo già presente? I punti dell’ordine del giorno resteranno invariati.'))return;
  const d1=fmtCallDate($('cvDate').value),t1=$('cvTime1').value||'orario da definire';
  const place=$('cvPlace').value.trim()||'Sede Croce Gialla Emergenza ODV';
- const agenda=callAgendaText();
- const agendaBlock=agenda?'\n\nORDINE DEL GIORNO\n'+agenda:'\n\nOrdine del giorno da definire.';
- const closing='\n\nSi raccomandano puntualità e partecipazione.\n\nIl Presidente\n'+($('cvSigner').value.trim()||'Musso Paolo');
+ const closing='\\n\\nSi raccomandano puntualità e partecipazione.';
  if(assembly&&!currentCallId){
   const d2=fmtCallDate($('cvDate2').value),t2=$('cvTime2').value;
-  $('cvText').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in prima convocazione il giorno '+d1+' alle ore '+t1+' e, occorrendo, in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+'.'+agendaBlock+closing;
-  $('cvText2').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+'.'+agendaBlock+closing;
+  $('cvText').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in prima convocazione il giorno '+d1+' alle ore '+t1+' e, occorrendo, in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+', per discutere i punti indicati nell’ordine del giorno riportato di seguito.'+closing;
+  $('cvText2').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+', per discutere i punti indicati nell’ordine del giorno riportato di seguito.'+closing;
  }else{
   const label=assembly?(currentCall?.fase_convocazione==='PRIMA'?'prima':'seconda'):'';
   const intro=assembly
@@ -1934,9 +1932,9 @@ function generateCallText(){
    :$('cvType').value==='RIUNIONE_VOLONTARI'
     ?'Tutti i volontari della Croce Gialla Emergenza ODV sono convocati alla riunione dei volontari il giorno '+d1+' alle ore '+t1+', presso '+place+'.'
     :'I componenti del Consiglio Direttivo della Croce Gialla Emergenza ODV sono convocati per il giorno '+d1+' alle ore '+t1+', presso '+place+'.';
-  $('cvText').value=intro+agendaBlock+closing;
+  $('cvText').value=intro+'\\n\\nDurante la riunione saranno trattati i punti dell’ordine del giorno riportato di seguito.'+closing;
  }
- msg('cvmsg','Testo completo generato con ordine del giorno. Controllalo e salvalo.','ok');
+ msg('cvmsg','Testo introduttivo generato. I punti dell’ordine del giorno verranno inseriti una sola volta nella stampa PDF.','ok');
 }
 function callParams(){
  return {
