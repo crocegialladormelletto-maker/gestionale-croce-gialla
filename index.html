@@ -888,6 +888,16 @@ document.addEventListener('DOMContentLoaded',()=>{
 <section id="agendaPres" class="surface hidden" data-admin-only="true" style="padding:22px"><h2>Appuntamenti Presidente</h2><div id="agendaPresMsg"></div></section>
 <section id="agendaEvents" class="surface hidden" style="padding:22px"><h2>Eventi e manifestazioni</h2><div id="agendaEventsMsg"></div></section>
 <section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button><button class="btn secondary jump" data-v="servicesOrd">🚐 Servizi ordinari</button><button class="btn secondary jump" data-v="communications">📣 Scrivi ai volontari</button></div></div><div class="pad">
+<div id="cgeDashboardAgendas" class="grid2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:16px">
+ <div id="cgeDashPresidentBox" data-admin-only="true" class="card" style="padding:16px;border-top:5px solid #ffdb17">
+  <h3>📅 Appuntamenti Presidente</h3><div id="cgeDashPresidentList">Caricamento appuntamenti...</div>
+  <button class="btn secondary" type="button" id="cgeDashPresidentOpen">Apri calendario Presidente</button>
+ </div>
+ <div id="cgeDashEventsBox" class="card" style="padding:16px;border-top:5px solid #1d4ed8">
+  <h3>🎄 Calendario Eventi</h3><div id="cgeDashEventsList">Caricamento eventi...</div>
+  <button class="btn secondary" type="button" id="cgeDashEventsOpen">Apri Calendario Eventi</button>
+ </div>
+</div>
 <div id="pn2027Reminder" class="notice warn" data-admin-only="true"><b>Prima Nota 2027:</b> prima dell'avvio del 1° gennaio 2027 inserire i saldi iniziali reali di Cassa e Banca e completare il controllo di avvio.</div>
 <div id="dashPersonnelExpiryAlert" class="dash-expiry-alert hidden">
  <div class="title">⚠️ SCADENZE PERSONALE DA CONTROLLARE <span id="dashPersonnelExpiryCount" class="count">0</span></div>
@@ -3883,7 +3893,7 @@ async function view(v,options={}){
   if(options.patient)usePatientForService(options.patient);
  }
  selectView(v);
- const loader=({agendaPres:()=>window.cgeAgendaOpen('pres'),agendaEvents:()=>window.cgeAgendaOpen('events'),dash:async()=>{await Promise.all([refreshDashboardPersonnelExpiryAlert(),refreshDashboardEmployeeCommitments()]);return dashboard();},statistics:loadStatistics,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,paymentReceipts:loadPaymentReceiptsView,travelSheets118:loadTravelSheets118,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,personnelExpiries:loadPersonnelExpiries,tariffs:loadTariffsView,accounting:loadAccounting,primaNota:loadPrimaNota,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
+ const loader=({agendaPres:()=>window.cgeAgendaOpen('pres'),agendaEvents:()=>window.cgeAgendaOpen('events'),dash:async()=>{await Promise.all([refreshDashboardPersonnelExpiryAlert(),refreshDashboardEmployeeCommitments()]);await dashboard();if(window.cgeDashboardAgendas)await window.cgeDashboardAgendas();},statistics:loadStatistics,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,paymentReceipts:loadPaymentReceiptsView,travelSheets118:loadTravelSheets118,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,personnelExpiries:loadPersonnelExpiries,tariffs:loadTariffsView,accounting:loadAccounting,primaNota:loadPrimaNota,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
  const result=await loader();
  selectView(v);
  return result;
@@ -13877,7 +13887,7 @@ try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&
   msg(isTabletOnlyMode()?'tloginmsg':'lmsg','Impossibile riprendere la sessione: '+(e?.message||String(e)),'err');
  }
 })();
-</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20261003c"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script><script src="agenda.js?v=3"></script>
+</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20261003c"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script><script src="agenda.js?v=4"></script>
 </body></html>
 <style>.nav[data-v="training"]{background:#65a30d;border-color:#4d7c0f;color:#fff}
 /* Dashboard: colori forzati pulsanti rapidi */
