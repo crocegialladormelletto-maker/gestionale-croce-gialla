@@ -1920,7 +1920,7 @@ function generateCallText(){
  if(existing&&!confirm('Sostituire il testo introduttivo già presente? I punti dell’ordine del giorno resteranno invariati.'))return;
  const d1=fmtCallDate($('cvDate').value),t1=$('cvTime1').value||'orario da definire';
  const place=$('cvPlace').value.trim()||'Sede Croce Gialla Emergenza ODV';
- const closing='\\n\\nSi raccomandano puntualità e partecipazione.';
+ const closing='\n\nSi raccomandano puntualità e partecipazione.';
  if(assembly&&!currentCallId){
   const d2=fmtCallDate($('cvDate2').value),t2=$('cvTime2').value;
   $('cvText').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in prima convocazione il giorno '+d1+' alle ore '+t1+' e, occorrendo, in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+', per discutere i punti indicati nell’ordine del giorno riportato di seguito.'+closing;
@@ -1932,7 +1932,7 @@ function generateCallText(){
    :$('cvType').value==='RIUNIONE_VOLONTARI'
     ?'Tutti i volontari della Croce Gialla Emergenza ODV sono convocati alla riunione dei volontari il giorno '+d1+' alle ore '+t1+', presso '+place+'.'
     :'I componenti del Consiglio Direttivo della Croce Gialla Emergenza ODV sono convocati per il giorno '+d1+' alle ore '+t1+', presso '+place+'.';
-  $('cvText').value=intro+'\\n\\nDurante la riunione saranno trattati i punti dell’ordine del giorno riportato di seguito.'+closing;
+  $('cvText').value=intro+'\n\nDurante la riunione saranno trattati i punti dell’ordine del giorno riportato di seguito.'+closing;
  }
  msg('cvmsg','Testo introduttivo generato. I punti dell’ordine del giorno verranno inseriti una sola volta nella stampa PDF.','ok');
 }
