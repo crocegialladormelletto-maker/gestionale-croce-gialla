@@ -2572,7 +2572,7 @@ $('ltPrintSigned').onclick=async()=>{
   const blob=result.data;const reader=new FileReader();
   const dataUrl=await new Promise((resolve,reject)=>{reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Impossibile leggere la firma'));reader.readAsDataURL(blob)});
   const w=window.open('','_blank');if(!w)throw new Error('Consenti le finestre popup, poi riprova.');
-  w.document.open();w.document.write(ltDocument(a,dataUrl));w.document.close();
+  w.document.open();w.document.write(ltDocument(a,dataUrl));w.document.close();ltReadyPopup(w);
   msg('ltMsg','Lettera con firma aperta. Usa Stampa → Salva come PDF. La firma riprodotta come immagine non equivale a una firma digitale qualificata.','ok');
  }catch(e){msg('ltMsg','Firma non disponibile: '+(e.message||String(e)),'err')}
  finally{btn.disabled=false}
