@@ -362,7 +362,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
       </div>
 
       <div class="grid4" style="margin-top:10px">
-       <div class="field"><label>Tipo convocazione *</label><select id="cvType"><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea dei Soci</option></select></div>
+       <div class="field"><label>Tipo convocazione *</label><select id="cvType"><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea dei Soci</option><option value="RIUNIONE_VOLONTARI">Riunione Volontari</option></select></div>
        <div class="field"><label id="cvStatusLabel">Stato</label><select id="cvStatus"><option>BOZZA</option><option>DEFINITIVA</option><option>DESERTA</option><option>ANNULLATA</option></select></div>
        <div class="field" style="grid-column:span 2"><label>Titolo</label><input id="cvHeading"></div>
       </div>
@@ -407,7 +407,7 @@ Consigliere: Ragazzini Luisa</textarea></div>
       <div class="grid4">
        <div class="field"><label>Ricerca</label><input id="cvSearch" placeholder="Numero, oggetto, ODG, destinatari…"></div>
        <div class="field"><label>Anno</label><input id="cvYear" type="number" min="2020" max="2100"></div>
-       <div class="field"><label>Tipo</label><select id="cvFilterType"><option value="">Tutte</option><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea dei Soci</option></select></div>
+       <div class="field"><label>Tipo</label><select id="cvFilterType"><option value="">Tutte</option><option value="CONSIGLIO_DIRETTIVO">Consiglio Direttivo</option><option value="ASSEMBLEA_SOCI">Assemblea dei Soci</option><option value="RIUNIONE_VOLONTARI">Riunione Volontari</option></select></div>
        <div class="field"><label>Stato</label><select id="cvFilterStatus"><option value="">Tutti</option><option>BOZZA</option><option>DEFINITIVA</option><option>DESERTA</option><option>ANNULLATA</option></select></div>
       </div>
       <div class="toolbar"><button id="cvFind" class="btn yellow" type="button">🔎 Cerca</button><button id="cvClear" class="btn secondary" type="button">Cancella filtri</button></div><div id="cvListMsg"></div>
@@ -1785,7 +1785,7 @@ async function deleteSignedCall(id){
   msg('cvSignedMsg','PDF firmato eliminato. La convocazione resta salvata nel gestionale.','ok');
  }catch(e){msg('cvSignedMsg',e.message||String(e),'err')}
 }
-function callTypeLabel(v){return v==='ASSEMBLEA_SOCI'?'Assemblea dei Soci':'Consiglio Direttivo'}
+function callTypeLabel(v){return ({ASSEMBLEA_SOCI:'Assemblea dei Soci',CONSIGLIO_DIRETTIVO:'Consiglio Direttivo',RIUNIONE_VOLONTARI:'Riunione Volontari'})[v]||v||'—'}
 function callPhaseLabel(v){return v==='PRIMA'?'1ª convocazione':v==='SECONDA'?'2ª convocazione':'Convocazione'}
 function resetCallFilters(){
  $('cvSearch').value='';$('cvYear').value=new Date().getFullYear();$('cvFilterType').value='';$('cvFilterStatus').value='';
@@ -1852,7 +1852,7 @@ function updateCallLayout(forceDefaults=false){
   $('cvTime1Label').textContent='Ora prima convocazione *';
   $('cvTextLabel').textContent='Testo della prima convocazione';
  }else{
-  $('cvFirstTitle').textContent='Convocazione Consiglio Direttivo';
+  $('cvFirstTitle').textContent=$('cvType').value==='RIUNIONE_VOLONTARI'?'Convocazione Riunione Volontari':'Convocazione Consiglio Direttivo';
   $('cvFirstBadge').textContent='UNICA';
   $('cvFirstBadge').className='pill b';
   $('cvDateLabel').textContent='Data riunione *';
@@ -1860,8 +1860,9 @@ function updateCallLayout(forceDefaults=false){
   $('cvTextLabel').textContent='Testo della convocazione';
  }
  if(!currentCallId){
-  const title=assembly?'Convocazione Assemblea dei Soci':'Convocazione Consiglio Direttivo';
-  const recipients=assembly?'Ai Soci della Croce Gialla Emergenza ODV':'Ai componenti del Consiglio Direttivo';
+  const volunteers=$('cvType').value==='RIUNIONE_VOLONTARI';
+  const title=assembly?'Convocazione Assemblea dei Soci':volunteers?'Convocazione Riunione Volontari':'Convocazione Consiglio Direttivo';
+  const recipients=assembly?'Ai Soci della Croce Gialla Emergenza ODV':volunteers?'A tutti i volontari della Croce Gialla Emergenza ODV':'Ai componenti del Consiglio Direttivo';
   if(forceDefaults||!$('cvHeading').value.trim())$('cvHeading').value=title;
   if(forceDefaults||!$('cvRecipients').value.trim())$('cvRecipients').value=recipients;
   if(forceDefaults||!$('cvObject').value.trim())$('cvObject').value=title;
@@ -1924,7 +1925,7 @@ function generateCallText(){
   const label=assembly?(currentCall?.fase_convocazione==='PRIMA'?'prima':'seconda'):'';
   $('cvText').value=assembly
    ?'I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in '+label+' convocazione il giorno '+d1+' alle ore '+t1+', presso '+place+'.'
-   :'I componenti del Consiglio Direttivo della Croce Gialla Emergenza ODV sono convocati per il giorno '+d1+' alle ore '+t1+', presso '+place+', per discutere i punti indicati nell’ordine del giorno.\n\nSi raccomanda la puntualità e la partecipazione.';
+   :($('cvType').value==='RIUNIONE_VOLONTARI'?'Tutti i volontari':'I componenti del Consiglio Direttivo')+' della Croce Gialla Emergenza ODV sono convocati per il giorno '+d1+' alle ore '+t1+', presso '+place+', per discutere i punti indicati nell’ordine del giorno.\n\nSi raccomanda la puntualità e la partecipazione.';
  }
  msg('cvmsg','Testo base inserito. Puoi modificarlo liberamente prima del salvataggio.','ok');
 }
