@@ -1,0 +1,25 @@
+/* Calendari Croce Gialla — stili isolati, nessuna modifica al login */
+#agendaPres,#agendaEvents,#volAgenda{--cal-blue:#12375d;--cal-yellow:#ffdb17;--cal-border:#d7e2ee}
+#agendaPres .agenda-month,#agendaEvents .agenda-month,#volAgenda .agenda-month{width:100%;overflow:hidden;border:1px solid var(--cal-border);border-radius:14px;background:#fff;margin:16px 0}
+#agendaPres .agenda-month-head,#agendaEvents .agenda-month-head,#volAgenda .agenda-month-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:var(--cal-blue);color:#fff;text-align:center;font-size:19px}
+#agendaEvents .agenda-month-head,#volAgenda .agenda-month-head{background:#ffdb17;color:#12375d}
+#agendaPres .agenda-month-head .agenda-move,#agendaEvents .agenda-month-head .agenda-move,#volAgenda .agenda-month-head .agenda-move{background:white!important;color:#12375d!important;border:1px solid #c5d3e3!important;border-radius:8px;padding:7px 14px;cursor:pointer}
+#agendaPres .agenda-days,#agendaEvents .agenda-days,#volAgenda .agenda-days{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:0!important;width:100%!important;align-items:stretch!important}
+#agendaPres .agenda-weekday,#agendaEvents .agenda-weekday,#volAgenda .agenda-weekday{padding:10px 2px;text-align:center;background:#edf3fa;color:#12375d;font-weight:800;border-bottom:1px solid #d7e2ee}
+#agendaPres .agenda-empty,#agendaEvents .agenda-empty,#volAgenda .agenda-empty{min-width:0;border-bottom:1px solid #e2e9f0;background:#fafbfd}
+#agendaPres .agenda-day,#agendaEvents .agenda-day,#volAgenda .agenda-day{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;min-width:0!important;width:100%!important;min-height:99px!important;padding:8px!important;border:0!important;border-right:1px solid #e2e9f0!important;border-bottom:1px solid #e2e9f0!important;background:white!important;color:#12375d!important;text-align:left!important;cursor:pointer;white-space:normal!important;overflow:hidden}
+#agendaPres .agenda-day b,#agendaEvents .agenda-day b,#volAgenda .agenda-day b{font-size:15px}
+#agendaPres .agenda-day small,#agendaEvents .agenda-day small,#volAgenda .agenda-day small{display:block!important;background:#fff1a5!important;color:#12375d!important;padding:3px 5px!important;margin-top:5px!important;border-radius:5px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:11px!important}
+#agendaPres .agenda-day.has-items,#agendaEvents .agenda-day.has-items,#volAgenda .agenda-day.has-items{background:#fffcf0!important}
+#agendaPres .agenda-day.today,#agendaEvents .agenda-day.today,#volAgenda .agenda-day.today{outline:3px solid #2563eb!important;outline-offset:-3px}
+#agendaPres .agenda-day:hover,#agendaEvents .agenda-day:hover,#volAgenda .agenda-day:hover{background:#e7f2ff!important}
+#agendaPres .agenda-day-info,#agendaEvents .agenda-day-info,#volAgenda .agenda-day-info{border-radius:10px;padding:13px;background:#eff5fb;color:#12375d;margin:12px 0}
+#agendaPres .agenda-new,#agendaEvents .agenda-new{background:#ffdb17!important;color:#12375d!important;border:1px solid #e3bb00!important;font-weight:900!important}
+#agendaPres .agenda-edit,#agendaEvents .agenda-edit{background:#15558e!important;color:white!important;border:1px solid #124673!important}
+#agendaPres .agenda-delete,#agendaEvents .agenda-delete{background:#bb2525!important;color:white!important;border:1px solid #a91d1d!important}
+#agendaPres .agenda-cancel,#agendaEvents .agenda-cancel{background:#eaf0f7!important;color:#12375d!important}
+.nav[data-v="agendaPres"]{background:#12375d!important;color:white!important;border-color:#0b2947!important}
+.nav[data-v="agendaEvents"]{background:#ffdb17!important;color:#12375d!important;border-color:#deb900!important}
+#cgeDashPresidentOpen{background:#12375d!important;color:white!important;border-color:#12375d!important}
+#cgeDashEventsOpen{background:#ffdb17!important;color:#12375d!important;border-color:#deb900!important}
+@media(max-width:720px){#agendaPres .agenda-day,#agendaEvents .agenda-day,#volAgenda .agenda-day{min-height:67px!important;padding:4px!important}#agendaPres .agenda-day small,#agendaEvents .agenda-day small,#volAgenda .agenda-day small{font-size:9px!important;padding:2px!important}#agendaPres .agenda-month-head,#agendaEvents .agenda-month-head,#volAgenda .agenda-month-head{font-size:16px}}
