@@ -692,7 +692,7 @@ function view(v){
  if(v==='minutes'||v==='minuteNew')showMinutePanel(v==='minuteNew');
  if(v==='calls'||v==='callNew')showCallPanel(v==='callNew');
  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
- if(v==='dash')loadDashboard();if(v==='archive'||v==='archiveMinutes')loadArchive();if(v==='dossiers')loadDossiers();if(v==='accesses')loadAccesses();if(v==='activity')loadActivity();if(v==='due')loadDue();if(v==='protocol'&&!currentId)resetForm();if(v==='minutes')loadMinutes();if(v==='minuteNew'){resetMinuteForm();loadBoardMinuteCalls();}if(v==='calls')loadCalls();if(v==='callNew')resetCallForm();
+ if(v==='dash')loadDashboard();if(v==='archive'||v==='archiveMinutes')loadArchive();if(v==='dossiers')loadDossiers();if(v==='accesses')loadAccesses();if(v==='activity')loadActivity();if(v==='due')loadDue();if(v==='protocol'&&!currentId)resetForm();if(v==='minutes')loadMinutes();if(v==='minuteNew'){resetMinuteForm();loadBoardMinuteCalls();}if(v==='calls')loadCalls();if(v==='callNew'){resetCallForm();recoverUnsavedCallDraft();}
 }
 document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>view(b.dataset.v));
 $('dGoMinutes').onclick=()=>view('minutes');$('dGoCalls').onclick=()=>view('calls');
@@ -2051,6 +2051,7 @@ async function saveCall(finalize=false){
    }
   }
   resetCallFilters();$('cvYear').value=Number(String(params.p_data_riunione).slice(0,4));
+  clearUnsavedCallDraft();
   await loadCallsList();await openCall(id,false);
   msg('cvmsg',finalize?'Convocazione '+(currentCall?.convocazione_codice||code)+' resa definitiva.':(currentCallId?'Convocazione aggiornata.':'Bozza '+code+' salvata.'),'ok');
  }catch(e){msg('cvmsg',e.message||String(e),'err')}
