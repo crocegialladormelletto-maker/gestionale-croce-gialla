@@ -20,7 +20,7 @@ function recordForm(type,r={}){
  '<label>Note '+(hasEvent?'organizzative':'riservate')+'<textarea name="note">'+safe(r.note||'')+'</textarea></label>'+
  '<div class="actions"><button class="btn yellow" type="submit">💾 Salva</button><button type="button" class="btn secondary agenda-cancel">Annulla</button></div></form>';
 }
-let records={pres:[],events:[]},adhesions=[];
+let records={pres:[],events:[]},adhesions=[];const calendarCursor={pres:new Date(),events:new Date()};
 async function load(type,forVolunteer=false){
  const id=forVolunteer?'volAgenda':type==='pres'?'agendaPres':'agendaEvents';
  if(!$(id))return;
@@ -40,6 +40,20 @@ function render(type,forVolunteer=false){
  const edit=isAdmin()&&!forVolunteer;
  let html='<h2>'+safe(types[type].title)+'</h2><p class="muted">Calendario condiviso · appuntamenti ordinati per data</p>';
  if(edit)html+='<button type="button" class="btn yellow agenda-new">✚ Nuovo '+(type==='pres'?'appuntamento':'evento')+'</button><div class="agenda-editor"></div>';
+ const now=new Date();
+ const cursor=calendarCursor[type]||new Date(now.getFullYear(),now.getMonth(),1);
+ const year=cursor.getFullYear(),month=cursor.getMonth();
+ const prefix=year+'-'+String(month+1).padStart(2,'0')+'-';
+ const byDay=new Map();
+ for(const r of records[type]){if(!r.data_evento.startsWith(prefix))continue;const day=Number(r.data_evento.slice(8));if(!byDay.has(day))byDay.set(day,[]);byDay.get(day).push(r)}
+ const first=(new Date(year,month,1).getDay()+6)%7;
+ const length=new Date(year,month+1,0).getDate();
+ const title=new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric'}).format(cursor);
+ html+='<div class="agenda-month"><div class="agenda-month-head"><button type="button" class="agenda-move" data-move="-1" aria-label="Mese precedente">◀</button><strong>'+safe(title.charAt(0).toUpperCase()+title.slice(1))+'</strong><button type="button" class="agenda-move" data-move="1" aria-label="Mese successivo">▶</button></div><div class="agenda-days">';
+ for(const label of ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'])html+='<div class="agenda-weekday">'+label+'</div>';
+ for(let i=0;i<first;i++)html+='<div class="agenda-empty"></div>';
+ for(let day=1;day<=length;day++){const entries=byDay.get(day)||[];const iso=prefix+String(day).padStart(2,'0'); const current=iso===new Date().toLocaleDateString('sv-SE');html+='<button type="button" class="agenda-day'+(entries.length?' has-items':'')+(current?' today':'')+'" data-day="'+day+'"><b>'+day+'</b>'+entries.slice(0,2).map(x=>'<small>'+safe((x.ora_inizio||'').slice(0,5))+' '+safe(x.titolo)+'</small>').join('')+(entries.length>2?'<small>+'+(entries.length-2)+' altri</small>':'')+'</button>';}
+ html+='</div></div><div class="agenda-day-info" aria-live="polite"></div>';
  html+='<div class="agenda-list" style="margin-top:14px">';
  html+=records[type].length?records[type].map(r=>{
  const date=new Date(r.data_evento+'T12:00:00').toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
@@ -53,6 +67,8 @@ function render(type,forVolunteer=false){
  }).join(''):'<div class="notice">Nessun appuntamento registrato.</div>';
  html+='</div>';
  root.innerHTML=html;
+ root.querySelectorAll('.agenda-move').forEach(b=>b.onclick=()=>{const d=calendarCursor[type];calendarCursor[type]=new Date(d.getFullYear(),d.getMonth()+Number(b.dataset.move),1);render(type,forVolunteer)});
+ root.querySelectorAll('.agenda-day').forEach(b=>b.onclick=()=>{const d=calendarCursor[type],iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(b.dataset.day).padStart(2,'0');const entries=records[type].filter(r=>r.data_evento===iso);const target=root.querySelector('.agenda-day-info');target.innerHTML='<b>'+safe(new Date(iso+'T12:00:00').toLocaleDateString('it-IT',{dateStyle:'full'}))+'</b><div>'+ (entries.length?entries.map(r=>'<p>'+safe((r.ora_inizio||'').slice(0,5))+' — '+safe(r.titolo)+'</p>').join(''):'Nessun impegno previsto')+'</div>';});
  root.querySelector('.agenda-new')?.addEventListener('click',()=>showForm(type,id));
  root.querySelectorAll('.agenda-edit').forEach(b=>b.onclick=()=>showForm(type,id,records[type].find(x=>x.id===b.dataset.id)));
  root.querySelectorAll('.agenda-delete').forEach(b=>b.onclick=()=>remove(type,b.dataset.id));
