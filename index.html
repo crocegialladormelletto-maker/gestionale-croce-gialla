@@ -790,29 +790,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   50%{transform:scale(1.06);box-shadow:0 0 0 9px rgba(220,38,38,0);filter:brightness(1.2)}
 }
 .tablet-118-blink{animation:tablet118Pulse 1.15s ease-in-out infinite}
-</style><style>
-/* Calendari presidenza ed eventi */
-.nav[data-v="agendaPres"]{background:#12375d!important;color:#fff!important;border-color:#0a2949!important}
-.nav[data-v="agendaEvents"]{background:#eab308!important;color:#12375d!important;border-color:#ca9800!important}
-.agenda-month{border:1px solid #d6e1eb;border-radius:14px;margin:18px 0;background:#fff;overflow:hidden}
-.agenda-month-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px;background:#12375d;color:white;font-size:19px}
-.agenda-month-head .agenda-move{background:#ffdb17;color:#12375d;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;font-weight:900}
-.agenda-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
-.agenda-weekday{text-align:center;background:#eaf0f8;color:#12375d;font-weight:800;padding:10px 3px;border-bottom:1px solid #cedbe6}
-.agenda-empty,.agenda-day{min-height:94px;border:0;border-right:1px solid #e0e7ee;border-bottom:1px solid #e0e7ee;background:#fff;padding:7px;text-align:left;color:#12375d;min-width:0}
-.agenda-day{cursor:pointer}
-.agenda-day:hover,.agenda-day:focus{background:#e3f1ff;outline:2px solid #2563eb;outline-offset:-2px}
-.agenda-day b{font-size:16px;display:block}
-.agenda-day small{display:block;font-size:11px;line-height:1.3;margin-top:5px;padding:3px 4px;background:#ffe875;border-radius:5px;overflow-wrap:anywhere;color:#12375d}
-.agenda-day.has-items{background:#fffbee}
-.agenda-day.today{box-shadow:inset 0 0 0 3px #2463d8}
-.agenda-day-info{padding:12px;border-radius:9px;background:#f2f6fd;color:#12375d}
-.agenda-form .btn.yellow,.agenda-new{background:#ffdb17!important;color:#12375d!important;border:1px solid #dfb800!important;font-weight:900!important}
-.agenda-edit,.agenda-cancel{background:#164d80!important;color:white!important;border:1px solid #12375d!important}
-.agenda-delete{background:#c62828!important;color:#fff!important;border:1px solid #b71c1c!important}
-@media(max-width:700px){.agenda-empty,.agenda-day{min-height:72px;padding:4px}.agenda-day small{font-size:9px}.agenda-weekday{font-size:11px}}
-</style>
-</head><body>
+</style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.57</div></div><div class="loginbody">
 <div id="staffLoginBlock">
@@ -11417,8 +11395,7 @@ function pnPrintMonth(){
  const w=window.open('','_blank');
  if(!w)return msg('pnClosureMsg','Il browser ha bloccato la finestra di stampa.','warn');
  const tr=rows.length?rows.map(x=>'<tr><td>'+esc(x.numero_movimento||'—')+'</td><td>'+esc(x.data||'')+'</td><td>'+esc(x.tipo||'')+'</td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.causale||'')+'</td><td>'+esc(x.soggetto||'—')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num">'+euro(x.importo)+'</td></tr>').join(''):'<tr><td colspan="8">Nessun movimento registrato.</td></tr>';
- w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Prima Nota '+esc(title)+'</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Arial,sans-serif;color:#183247;font-size:11px}header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #ffdb17;padding-bottom:8px;margin-bottom:12px}header img{width:72px;height:72px;object-fit:contain}h1{font-size:20px;margin:0;color:#12375d}h2{font-size:13px;margin:4px 0 0}.meta{margin-left:auto;text-align:right}.summary{display:flex;gap:10px;margin:10px 0}.box{border:1px solid #dbe5ed;border-radius:8px;padding:8px 10px;min-width:150px}.box b{font-size:15px}.green{color:#12805a}.red{color:#b83b43}table{width:100%;border-collapse:collapse}th,td{border:1px solid #dbe5ed;padding:5px;vertical-align:top}th{background:#eef3f7;text-align:left;font-size:9px;text-transform:uppercase}.num{text-align:right;white-space:nowrap}footer{margin-top:10px;font-size:9px;color:#6d8292;text-align:right}</style>
-</head><body><header><img src="'+PN_PRINT_LOGO+'"><div><h1>Croce Gialla Emergenza ODV</h1><h2>Prima Nota · '+esc(title)+'</h2></div><div class="meta"><b>Stato mese: '+(pnIsMonthClosed(ym)?'CHIUSO':'APERTO')+'</b><br>Stampa: '+new Date().toLocaleString('it-IT')+'</div></header><div class="summary"><div class="box">Entrate<br><b class="green">'+euro(en)+'</b></div><div class="box">Uscite<br><b class="red">'+euro(us)+'</b></div><div class="box">Saldo mese<br><b>'+euro(en-us)+'</b></div><div class="box">Movimenti<br><b>'+rows.length+'</b></div></div><table><thead><tr><th>N°</th><th>Data</th><th>Tipo</th><th>Categoria</th><th>Causale</th><th>Soggetto</th><th>Conto</th><th>Importo</th></tr></thead><tbody>'+tr+'</tbody></table><footer>Documento gestionale · Prima Nota Croce Gialla Emergenza ODV</footer><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>');
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Prima Nota '+esc(title)+'</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Arial,sans-serif;color:#183247;font-size:11px}header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #ffdb17;padding-bottom:8px;margin-bottom:12px}header img{width:72px;height:72px;object-fit:contain}h1{font-size:20px;margin:0;color:#12375d}h2{font-size:13px;margin:4px 0 0}.meta{margin-left:auto;text-align:right}.summary{display:flex;gap:10px;margin:10px 0}.box{border:1px solid #dbe5ed;border-radius:8px;padding:8px 10px;min-width:150px}.box b{font-size:15px}.green{color:#12805a}.red{color:#b83b43}table{width:100%;border-collapse:collapse}th,td{border:1px solid #dbe5ed;padding:5px;vertical-align:top}th{background:#eef3f7;text-align:left;font-size:9px;text-transform:uppercase}.num{text-align:right;white-space:nowrap}footer{margin-top:10px;font-size:9px;color:#6d8292;text-align:right}</style></head><body><header><img src="'+PN_PRINT_LOGO+'"><div><h1>Croce Gialla Emergenza ODV</h1><h2>Prima Nota · '+esc(title)+'</h2></div><div class="meta"><b>Stato mese: '+(pnIsMonthClosed(ym)?'CHIUSO':'APERTO')+'</b><br>Stampa: '+new Date().toLocaleString('it-IT')+'</div></header><div class="summary"><div class="box">Entrate<br><b class="green">'+euro(en)+'</b></div><div class="box">Uscite<br><b class="red">'+euro(us)+'</b></div><div class="box">Saldo mese<br><b>'+euro(en-us)+'</b></div><div class="box">Movimenti<br><b>'+rows.length+'</b></div></div><table><thead><tr><th>N°</th><th>Data</th><th>Tipo</th><th>Categoria</th><th>Causale</th><th>Soggetto</th><th>Conto</th><th>Importo</th></tr></thead><tbody>'+tr+'</tbody></table><footer>Documento gestionale · Prima Nota Croce Gialla Emergenza ODV</footer><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>');
  w.document.close();
 }
 function pnAttachmentSafeName(name){
@@ -13910,7 +13887,7 @@ try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&
   msg(isTabletOnlyMode()?'tloginmsg':'lmsg','Impossibile riprendere la sessione: '+(e?.message||String(e)),'err');
  }
 })();
-</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20261003c"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script><script src="agenda.js?v=5"></script>
+</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20261003c"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script><script src="agenda.js?v=4"></script>
 </body></html>
 <style>.nav[data-v="training"]{background:#65a30d;border-color:#4d7c0f;color:#fff}
 /* Dashboard: colori forzati pulsanti rapidi */
