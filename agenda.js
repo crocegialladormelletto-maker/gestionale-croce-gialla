@@ -60,13 +60,38 @@ function render(type,forVolunteer=false){
 }
 function showForm(type,id,row){const target=$(id)?.querySelector('.agenda-editor');if(!target)return;target.innerHTML=recordForm(type,row);target.querySelector('.agenda-cancel').onclick=()=>target.replaceChildren();target.querySelector('form').onsubmit=async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.target).entries());const key=data.id;delete data.id;data.ora_inizio||=null;data.ora_fine||=null; if(type==='events')data.volontari_richiesti=Number(data.volontari_richiesti)||0;
  const q=key?sb.from(types[type].table).update(data).eq('id',key):sb.from(types[type].table).insert(data);
- const res=await q;if(res.error)return status(id,res.error.message,true);await load(type);status(id,'Salvato correttamente.');
+ const res=await q;if(res.error)return status(id,res.error.message,true);await load(type);if(window.cgeDashboardAgendas)await window.cgeDashboardAgendas();status(id,'Salvato correttamente.');
 };}
-async function remove(type,id){if(!isAdmin()||!confirm('Eliminare definitivamente?'))return;const x=await sb.from(types[type].table).delete().eq('id',id);if(x.error)return alert(x.error.message);await load(type)}
+async function remove(type,id){if(!isAdmin()||!confirm('Eliminare definitivamente?'))return;const x=await sb.from(types[type].table).delete().eq('id',id);if(x.error)return alert(x.error.message);await load(type);if(window.cgeDashboardAgendas)await window.cgeDashboardAgendas()}
 async function rsvp(evento_id){if(prof?.ruolo!=='VOLONTARIO')return;const old=adhesions.find(x=>x.evento_id===evento_id&&x.utente_id===prof.user_id);
  const x=old?await sb.from('agenda_adesioni').delete().eq('id',old.id):await sb.from('agenda_adesioni').insert({evento_id,utente_id:prof.user_id,badge_personale:prof.badge_personale});
  if(x.error)return status('volAgenda',x.error.message,true);await load('events',true);
 }
+
+function dashList(rows,id,type){
+ const el=$(id);if(!el)return;
+ const today=new Date();today.setHours(0,0,0,0);
+ const upcoming=(rows||[]).filter(r=>new Date(r.data_evento+'T12:00:00')>=today && (type==='pres'||r.stato!=='ANNULLATO')).slice(0,6);
+ el.innerHTML=upcoming.length?'<div style="display:grid;gap:8px;margin:10px 0">'+upcoming.map(r=>'<div style="padding:8px 0;border-bottom:1px solid #d9e2ea"><b>'+safe(new Date(r.data_evento+'T12:00:00').toLocaleDateString('it-IT'))+' · '+safe((r.ora_inizio||'').slice(0,5)||'Orario da definire')+'</b><div>'+safe(r.titolo)+'</div><small>'+safe(r.luogo||'')+'</small></div>').join('')+'</div>':'<p class="muted">Nessun appuntamento futuro programmato.</p>';
+}
+window.cgeDashboardAgendas=async function(){
+ const auth=typeof prof!=='undefined'&&['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo);
+ if(!auth)return;
+ const pBox=$('cgeDashPresidentBox');
+ if(pBox)pBox.classList.toggle('hidden',!isAdmin());
+ const eBox=$('cgeDashEventsBox');
+ if(eBox)eBox.classList.remove('hidden');
+ const tasks=[sb.from('agenda_eventi').select('titolo,data_evento,ora_inizio,luogo,stato').gte('data_evento',new Date().toLocaleDateString('en-CA')).order('data_evento',{ascending:true}).limit(6)];
+ if(isAdmin())tasks.push(sb.from('agenda_presidenza').select('titolo,data_evento,ora_inizio,luogo').gte('data_evento',new Date().toLocaleDateString('en-CA')).order('data_evento',{ascending:true}).limit(6));
+ const responses=await Promise.all(tasks);
+ const e=responses[0];if(e.error){$('cgeDashEventsList').textContent='Errore caricamento eventi';}else dashList(e.data,'cgeDashEventsList','events');
+ if(isAdmin()){const p=responses[1];if(p.error){$('cgeDashPresidentList').textContent='Errore caricamento appuntamenti';}else dashList(p.data,'cgeDashPresidentList','pres');}
+};
+document.addEventListener('click',e=>{
+ if(e.target.closest('#cgeDashPresidentOpen')&&isAdmin())view('agendaPres');
+ if(e.target.closest('#cgeDashEventsOpen')&&['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))view('agendaEvents');
+});
+
 window.cgeAgendaOpen=async function(type){if(type==='pres'&&!isAdmin())return;if(type==='events'&&!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;await load(type);};
 window.cgeVolunteerAgendaOpen=async function(){if(prof?.ruolo==='VOLONTARIO')await load('events',true);};
 document.addEventListener('click',e=>{
