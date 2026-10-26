@@ -5454,7 +5454,7 @@ async function loadOperationalCalendar(){
  msg('calMsg','Caricamento calendario...');
  const range=calVisibleRange(opCalCursor,opCalMode),startIso=range.startYmd+'T00:00:00',endIso=range.endYmd+'T23:59:59';
  const readCalendar=()=>Promise.all([
-  sb.from('servizi_giornalieri').select('id,data_servizio,ora_partenza_prevista,ora_carico_paziente_prevista,ora_rientro_previsto,mezzo,tipo_servizio,tipo_servizio_altro,luogo_partenza,indirizzo_partenza,destinazione,indirizzo_destinazione,ospedale_destinazione,stato_gestionale,priorita').gte('data_servizio',range.startYmd).lte('data_servizio',range.endYmd).neq('stato_gestionale','ANNULLATO').order('data_servizio').order('ora_partenza_prevista'),
+  sb.from('servizi_giornalieri').select('id,data_servizio,ora_partenza_prevista,ora_carico_paziente_prevista,ora_rientro_previsto,mezzo,tipo_servizio,tipo_servizio_altro,luogo_partenza,indirizzo_partenza,luogo_carico_paziente,indirizzo_carico_paziente,destinazione,indirizzo_destinazione,ospedale_destinazione,stato_gestionale,priorita').gte('data_servizio',range.startYmd).lte('data_servizio',range.endYmd).neq('stato_gestionale','ANNULLATO').order('data_servizio').order('ora_partenza_prevista'),
   sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note').gte('data_turno',range.startYmd).lte('data_turno',range.endYmd).order('data_turno').order('ora_inizio'),
   sb.from('disponibilita_personale').select('id,badge_personale,inizio,fine,tipo,preferenza_mezzo,note').lte('inizio',endIso).gte('fine',startIso).order('inizio')
  ]);
@@ -5490,7 +5490,8 @@ async function loadOperationalCalendar(){
   ?([s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · ')||'—')
   :([s.ospedale_destinazione||s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · ')||'—');
  const title=(isAssistanceManifestation(s.tipo_servizio)?asServiceName(s):(s.tipo_servizio_altro||s.tipo_servizio||'Servizio'))+' · M'+(s.mezzo||'—');
- const subtitle=from+' → '+to+' · Equipaggio '+assignments.length;
+ const pickup=[s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · ');
+ const subtitle='Partenza: '+from+(pickup?' → Carico paziente: '+pickup:'')+' → Destinazione: '+to+' · Equipaggio '+assignments.length;
  const donePast=s.data_servizio<todaySafe()&&['TERMINATO','DA CONTABILIZZARE','CHIUSO'].includes(String(s.stato_gestionale||'').toUpperCase());
  opCalEvents.push({kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),vehicle:s.mezzo||'',coverageClass:donePast?'service-done':'',title,subtitle,raw:{...s,assignments}});
 });
