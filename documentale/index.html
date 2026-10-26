@@ -1959,21 +1959,26 @@ function validCallDate(v){
  return y>=2020&&y<=2100;
 }
 function stripRepeatedCallAgenda(text,agenda){
- let value=String(text||'');
- const entries=String(agenda||'').split(/\r?\n/).map(x=>x.replace(/^\s*\d+[.)]\s*/, '').trim()).filter(Boolean);
- if(!entries.length)return value;
- const lines=value.split(/\r?\n/);
- let index=lines.findIndex(x=>/^\s*(?:ORDINE DEL GIORNO|Ordine del giorno)\s*:?\s*$/i.test(x));
- if(index<0)return value;
- let after=index+1,matched=0;
- while(after<lines.length&&matched<entries.length){
-  const line=lines[after].replace(/^\s*\d+[.)]\s*/, '').trim();
-  if(!line){after++;continue}
-  if(line!==entries[matched])break;
-  matched++;after++;
+ const lines=String(text||'').split(/\r?\n/);
+ const entries=String(agenda||'').split(/\r?\n/).map(x=>x.replace(/^\s*\d+[.)]\s*/,'').trim()).filter(Boolean);
+ if(!entries.length)return String(text||'');
+ const norm=x=>String(x||'').replace(/^\s*\d+[.)]\s*/,'').replace(/\s+/g,' ').trim().toLowerCase();
+ const target=entries.map(norm),removed=new Set();
+ for(let i=0;i<lines.length;i++){
+  if(norm(lines[i])!==target[0])continue;
+  let j=i,k=0,matched=[];
+  while(j<lines.length&&k<target.length){
+   if(!lines[j].trim()){j++;continue}
+   if(norm(lines[j])!==target[k])break;
+   matched.push(j);j++;k++;
+  }
+  if(k===target.length){
+   matched.forEach(n=>removed.add(n));
+   if(i>0&&/^\s*ordine del giorno\s*:?\s*$/i.test(lines[i-1]))removed.add(i-1);
+   break;
+  }
  }
- if(matched!==entries.length)return value;
- return [...lines.slice(0,index),...lines.slice(after)].join('\n').replace(/\n{3,}/g,'\n\n').trim();
+ return lines.filter((_,i)=>!removed.has(i)).join('\n').replace(/\n{3,}/g,'\n\n').trim();
 }
 function generateCallText(){
  if(!$('cvDate').value)return msg('cvmsg','Inserisci prima la data della convocazione.','warn');
@@ -2118,13 +2123,25 @@ async function createMinuteFromCall(id){
  else await loadAssemblyMinuteCalls(id,true);
  msg('vmsg','Dati della convocazione importati. Completa il verbale e salva come bozza.','ok');
 }
+async function deleteCallDraft(id){
+ const call=callsRows.find(x=>String(x.id)===String(id));
+ if(!call||call.stato!=='BOZZA')return msg('cvListMsg','Solo le bozze possono essere eliminate.','warn');
+ if(!confirm('Eliminare definitivamente la bozza '+call.convocazione_codice+'? Questa operazione non può essere annullata.'))return;
+ const result=await sb.rpc('cge_convocazione_elimina_bozza',{p_id:id});
+ if(result.error)return msg('cvListMsg','Eliminazione non riuscita: '+result.error.message,'err');
+ clearExistingCallDraft(id);
+ if(String(currentCallId)===String(id)){currentCallId=null;currentCall=null}
+ await loadCallsList();
+ msg('cvListMsg','Bozza '+call.convocazione_codice+' eliminata.','ok');
+}
 function renderCalls(){
  $('cvCount').textContent=callsRows.length;
  $('cvBody').innerHTML=callsRows.length?callsRows.map(v=>{
   const phase=v.fase_convocazione==='PRIMA'?'<span class="pill r">1ª CONVOCAZIONE</span>':v.fase_convocazione==='SECONDA'?'<span class="pill g">2ª CONVOCAZIONE</span>':'';
   const signed=signedCallFiles[String(v.id)];
-  return '<tr><td><b>'+esc(v.convocazione_codice)+'</b>'+(phase?'<br>'+phase:'')+(signed?'<br><span class="pill g">✍️ FIRMATA</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='DESERTA'||v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn secondary" type="button" data-cvdup="'+esc(v.id)+'">⧉ Duplica</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button>'+(v.stato==='DEFINITIVA'?'<button class="btn blue" type="button" data-cvminute="'+esc(v.id)+'">✚ Crea verbale</button>':'')+'</div></td></tr>';
+  return '<tr><td><b>'+esc(v.convocazione_codice)+'</b>'+(phase?'<br>'+phase:'')+(signed?'<br><span class="pill g">✍️ FIRMATA</span>':'')+'</td><td>'+esc(v.data_riunione||'—')+(v.ora_prima?'<br><span class="muted">'+esc(String(v.ora_prima).slice(0,5))+'</span>':'')+'</td><td>'+esc(callTypeLabel(v.tipo_riunione))+'</td><td><b>'+esc(v.oggetto||v.titolo||'')+'</b><br><span class="muted">'+esc(v.luogo||'')+'</span></td><td><span class="pill '+(v.stato==='DEFINITIVA'?'g':v.stato==='DESERTA'||v.stato==='ANNULLATA'?'r':'b')+'">'+esc(v.stato)+'</span></td><td>'+esc(v.firmatario||'—')+'</td><td><div class="actions"><button class="btn secondary" type="button" data-cvopen="'+esc(v.id)+'">Apri</button><button class="btn secondary" type="button" data-cvdup="'+esc(v.id)+'">⧉ Duplica</button><button class="btn yellow" type="button" data-cvprint="'+esc(v.id)+'">🖨️ Stampa PDF</button>'+(v.stato==='BOZZA'?'<button class="btn danger" type="button" data-cvdelete="'+esc(v.id)+'">🗑 Elimina bozza</button>':'')+(v.stato==='DEFINITIVA'?'<button class="btn blue" type="button" data-cvminute="'+esc(v.id)+'">✚ Crea verbale</button>':'')+'</div></td></tr>';
  }).join(''):'<tr><td colspan="7">Nessuna convocazione trovata.</td></tr>';
+ $('cvBody').querySelectorAll('[data-cvdelete]').forEach(b=>b.onclick=()=>deleteCallDraft(b.dataset.cvdelete));
  $('cvBody').querySelectorAll('[data-cvminute]').forEach(b=>b.onclick=()=>createMinuteFromCall(b.dataset.cvminute));
  $('cvBody').querySelectorAll('[data-cvopen]').forEach(b=>b.onclick=()=>openCall(b.dataset.cvopen,false));
  $('cvBody').querySelectorAll('[data-cvdup]').forEach(b=>b.onclick=()=>duplicateCall(b.dataset.cvdup));
