@@ -391,6 +391,11 @@ Consigliere: Ragazzini Luisa</textarea></div>
       <div class="field" style="margin-top:10px"><label>Ordine del giorno</label><div id="cvAgendaPoints" class="agenda-points"></div><div class="toolbar"><button id="cvAddAgenda" class="btn secondary" type="button">＋ Aggiungi punto</button></div><small class="muted">I punti sono inseriti una sola volta e riportati automaticamente nel PDF, senza copiarli nel testo introduttivo.</small></div>
       <div class="toolbar"><button id="cvGenerateText" class="btn secondary" type="button">✨ Genera introduzione</button></div>
       <div class="field" style="margin-top:10px;max-width:500px"><label>Firmatario</label><input id="cvSigner" value="Musso Paolo"></div>
+      <div class="box" style="margin-top:12px"><h3>✍️ Firma del Presidente</h3>
+       <p class="muted">Puoi caricare la tua firma PNG (massimo 3 MB). La firma resta nell’archivio privato e viene inserita soltanto scegliendo «Firma Presidente e stampa» su una convocazione definitiva salvata.</p>
+       <div class="toolbar"><input id="cvSignPresidentFile" type="file" accept="image/png"><button id="cvSignPresidentUpload" class="btn secondary" type="button">Carica / sostituisci mia firma</button></div>
+       <div id="cvSignatureMsg"></div>
+      </div>
 
       <div class="box" style="margin-top:12px">
        <div class="actions" style="justify-content:space-between"><div><b>✍️ Convocazioni firmate</b><div class="muted">Per l’Assemblea dei Soci vengono gestiti separatamente il PDF firmato della 1ª e della 2ª convocazione.</div></div><span class="pill g">PDF</span></div>
@@ -2190,6 +2195,20 @@ async function openCall(id,printAfter=false){
  }catch(e){msg('cvListMsg',e.message||String(e),'err')}
 }
 let temporaryCallPresidentSignature=null;
+async function uploadCallPresidentSignature(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const file=$('cvSignPresidentFile').files?.[0];
+ if(!file||file.type!=='image/png'||file.size>3145728)return msg('cvSignatureMsg','Seleziona un’immagine PNG valida, massimo 3 MB.','warn');
+ if(!confirm('Confermi di voler archiviare questa immagine della tua firma per l’uso nelle convocazioni che autorizzerai esplicitamente?'))return;
+ const button=$('cvSignPresidentUpload');button.disabled=true;
+ try{
+  const result=await sb.storage.from(minuteSignatureBucket).upload('presidente.png',file,{contentType:'image/png',upsert:true,cacheControl:'0'});
+  if(result.error)throw result.error;
+  $('cvSignPresidentFile').value='';
+  msg('cvSignatureMsg','Firma salvata nell’archivio privato. Ora puoi usare «Firma Presidente e stampa» sulle convocazioni definitive.','ok');
+ }catch(e){msg('cvSignatureMsg',e.message||String(e),'err')}
+ finally{button.disabled=false}
+}
 async function printCallWithPresidentSignature(){
  if(prof?.ruolo!=='AMMINISTRATORE')return;
  if(!currentCallId||!['DEFINITIVA','DESERTA'].includes(currentCall?.stato)||$('cvStatus').value!==currentCall.stato)return msg('cvmsg','La firma può essere inserita solo in una convocazione già salvata con stato DEFINITIVA o DESERTA.','warn');
@@ -2249,7 +2268,7 @@ $('callEditorPanel').addEventListener('change',event=>{if(event.target.matches('
 $('cvDate').addEventListener('change',updateNextCallCode);
 $('cvType').onchange=()=>{if(!currentCallId)updateCallLayout(true)};
 $('cvStatus').onchange=updateCallStateUI;
-$('cvSave').onclick=()=>saveCall(false);$('cvFinalize').onclick=()=>saveCall(true);$('cvDuplicate').onclick=()=>currentCallId&&duplicateCall(currentCallId);$('cvPrint').onclick=printCall;$('cvPrintSigned').onclick=printCallWithPresidentSignature;$('cvFind').onclick=loadCallsList;
+$('cvSave').onclick=()=>saveCall(false);$('cvFinalize').onclick=()=>saveCall(true);$('cvDuplicate').onclick=()=>currentCallId&&duplicateCall(currentCallId);$('cvPrint').onclick=printCall;$('cvPrintSigned').onclick=printCallWithPresidentSignature;$('cvSignPresidentUpload').onclick=uploadCallPresidentSignature;$('cvFind').onclick=loadCallsList;
 $('cvSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadCallsList()}};
 $('cvClear').onclick=()=>{resetCallFilters();loadCallsList()};
 
