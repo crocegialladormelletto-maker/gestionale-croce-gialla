@@ -1,7 +1,7 @@
 /* Agenda Croce Gialla — accesso regolato dalle policy RLS Supabase. */
 (function(){
 const $=id=>document.getElementById(id);
-const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;':'&quot;',"'":'&#39;'}[c]));
+const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fields=['titolo','data_evento','ora_inizio','ora_fine','luogo','referente','note'];
 const types={pres:{table:'agenda_presidenza',title:'Appuntamenti Presidente'},events:{table:'agenda_eventi',title:'Eventi e manifestazioni'}};
 function isAdmin(){return typeof prof!=='undefined'&&prof?.ruolo==='AMMINISTRATORE'}
