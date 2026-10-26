@@ -1911,6 +1911,23 @@ function validCallDate(v){
  const y=Number(m[1]);
  return y>=2020&&y<=2100;
 }
+function stripRepeatedCallAgenda(text,agenda){
+ let value=String(text||'');
+ const entries=String(agenda||'').split(/\r?\n/).map(x=>x.replace(/^\s*\d+[.)]\s*/, '').trim()).filter(Boolean);
+ if(!entries.length)return value;
+ const lines=value.split(/\r?\n/);
+ let index=lines.findIndex(x=>/^\s*(?:ORDINE DEL GIORNO|Ordine del giorno)\s*:?\s*$/i.test(x));
+ if(index<0)return value;
+ let after=index+1,matched=0;
+ while(after<lines.length&&matched<entries.length){
+  const line=lines[after].replace(/^\s*\d+[.)]\s*/, '').trim();
+  if(!line){after++;continue}
+  if(line!==entries[matched])break;
+  matched++;after++;
+ }
+ if(matched!==entries.length)return value;
+ return [...lines.slice(0,index),...lines.slice(after)].join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
 function generateCallText(){
  if(!$('cvDate').value)return msg('cvmsg','Inserisci prima la data della convocazione.','warn');
  const assembly=$('cvType').value==='ASSEMBLEA_SOCI';
@@ -1940,7 +1957,7 @@ function callParams(){
  return {
   p_tipo_riunione:$('cvType').value,p_data_riunione:$('cvDate').value||null,p_ora_prima:$('cvTime1').value||null,p_ora_seconda:null,
   p_luogo:$('cvPlace').value.trim()||null,p_titolo:$('cvHeading').value.trim()||null,p_destinatari:$('cvRecipients').value.trim()||null,
-  p_oggetto:$('cvObject').value.trim()||null,p_ordine_giorno:callAgendaText()||null,p_testo:$('cvText').value.trim()||null,
+  p_oggetto:$('cvObject').value.trim()||null,p_ordine_giorno:callAgendaText()||null,p_testo:stripRepeatedCallAgenda($('cvText').value,callAgendaText())||null,
   p_firmatario:$('cvSigner').value.trim()||null,p_stato:$('cvStatus').value
  };
 }
@@ -2100,7 +2117,7 @@ async function openCall(id,printAfter=false){
   $('cvType').value=v.tipo_riunione||'CONSIGLIO_DIRETTIVO';$('cvDate').value=v.data_riunione||'';$('cvTime1').value=v.ora_prima?String(v.ora_prima).slice(0,5):'';
   $('cvDate2').value='';$('cvTime2').value='';$('cvPlace').value=v.luogo||'';$('cvStatus').value=v.stato||'BOZZA';$('cvHeading').value=v.titolo||'';
   $('cvRecipients').value=v.destinatari||'';$('cvObject').value=v.oggetto||'';setCallAgenda(v.ordine_giorno||'');
-  $('cvText').value=v.testo||'';$('cvText2').value='';$('cvSigner').value=v.firmatario||'Musso Paolo';updateCallLayout(false);
+  $('cvText').value=stripRepeatedCallAgenda(v.testo||'',v.ordine_giorno||'');$('cvText2').value='';$('cvSigner').value=v.firmatario||'Musso Paolo';updateCallLayout(false);
   await loadSignedCallsForCurrent();
   msg('cvListMsg','');msg('cvmsg','Convocazione '+v.convocazione_codice+' aperta.','ok');
   if(printAfter)setTimeout(()=>printCall(),120);else $('cvTitle').scrollIntoView({behavior:'smooth',block:'start'});
@@ -2127,7 +2144,7 @@ function printCall(){
  const v={
   codice:currentCall?.convocazione_codice||'BOZZA NON SALVATA',tipo:$('cvType').value,data:$('cvDate').value,
   ora:$('cvTime1').value,luogo:$('cvPlace').value,titolo:$('cvHeading').value,destinatari:$('cvRecipients').value,
-  oggetto:$('cvObject').value,testo:$('cvText').value,firmatario:$('cvSigner').value,stato:$('cvStatus').value,
+  oggetto:$('cvObject').value,testo:stripRepeatedCallAgenda($('cvText').value,callAgendaText()),firmatario:$('cvSigner').value,stato:$('cvStatus').value,
   fase:currentCall?.fase_convocazione||($('cvType').value==='ASSEMBLEA_SOCI'?'PRIMA':'UNICA')
  };
  const clean=x=>String(x||'').trim(),shortTime=x=>x?String(x).slice(0,5):'';
