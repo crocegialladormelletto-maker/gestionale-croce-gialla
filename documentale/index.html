@@ -1914,20 +1914,29 @@ function validCallDate(v){
 function generateCallText(){
  if(!$('cvDate').value)return msg('cvmsg','Inserisci prima la data della convocazione.','warn');
  const assembly=$('cvType').value==='ASSEMBLEA_SOCI';
+ if(assembly&&!currentCallId&&(!$('cvDate2').value||!$('cvTime2').value))
+  return msg('cvmsg','Inserisci anche data e ora della seconda convocazione.','warn');
+ const existing=$('cvText').value.trim()||(assembly?$('cvText2').value.trim():'');
+ if(existing&&!confirm('Generare nuovamente il testo? Il testo della convocazione già presente verrà sostituito.'))return;
  const d1=fmtCallDate($('cvDate').value),t1=$('cvTime1').value||'orario da definire';
  const place=$('cvPlace').value.trim()||'Sede Croce Gialla Emergenza ODV';
+ const agenda=callAgendaText();
+ const agendaBlock=agenda?'\n\nORDINE DEL GIORNO\n'+agenda:'\n\nOrdine del giorno da definire.';
+ const closing='\n\nSi raccomandano puntualità e partecipazione.\n\nIl Presidente\n'+($('cvSigner').value.trim()||'Musso Paolo');
  if(assembly&&!currentCallId){
-  if(!$('cvDate2').value||!$('cvTime2').value)return msg('cvmsg','Inserisci anche data e ora della seconda convocazione.','warn');
   const d2=fmtCallDate($('cvDate2').value),t2=$('cvTime2').value;
-  $('cvText').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in prima convocazione il giorno '+d1+' alle ore '+t1+' e, occorrendo, in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+', per discutere e deliberare sui punti indicati nell’ordine del giorno.\n\nSi raccomanda la partecipazione.';
-  $('cvText2').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+', per discutere e deliberare sui punti indicati nell’ordine del giorno.\n\nSi raccomanda la partecipazione.';
+  $('cvText').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in prima convocazione il giorno '+d1+' alle ore '+t1+' e, occorrendo, in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+'.'+agendaBlock+closing;
+  $('cvText2').value='I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in seconda convocazione il giorno '+d2+' alle ore '+t2+', presso '+place+'.'+agendaBlock+closing;
  }else{
   const label=assembly?(currentCall?.fase_convocazione==='PRIMA'?'prima':'seconda'):'';
-  $('cvText').value=assembly
+  const intro=assembly
    ?'I Soci della Croce Gialla Emergenza ODV sono convocati in Assemblea in '+label+' convocazione il giorno '+d1+' alle ore '+t1+', presso '+place+'.'
-   :($('cvType').value==='RIUNIONE_VOLONTARI'?'Tutti i volontari':'I componenti del Consiglio Direttivo')+' della Croce Gialla Emergenza ODV sono convocati per il giorno '+d1+' alle ore '+t1+', presso '+place+', per discutere i punti indicati nell’ordine del giorno.\n\nSi raccomanda la puntualità e la partecipazione.';
+   :$('cvType').value==='RIUNIONE_VOLONTARI'
+    ?'Tutti i volontari della Croce Gialla Emergenza ODV sono convocati alla riunione dei volontari il giorno '+d1+' alle ore '+t1+', presso '+place+'.'
+    :'I componenti del Consiglio Direttivo della Croce Gialla Emergenza ODV sono convocati per il giorno '+d1+' alle ore '+t1+', presso '+place+'.';
+  $('cvText').value=intro+agendaBlock+closing;
  }
- msg('cvmsg','Testo base inserito. Puoi modificarlo liberamente prima del salvataggio.','ok');
+ msg('cvmsg','Testo completo generato con ordine del giorno. Controllalo e salvalo.','ok');
 }
 function callParams(){
  return {
