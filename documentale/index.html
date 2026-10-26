@@ -1825,6 +1825,29 @@ function recoverUnsavedCallDraft(){
   msg('cvmsg','Bozza locale recuperata. Salva la convocazione per archiviarla definitivamente.','ok');
  }catch(e){console.warn('Impossibile recuperare la bozza locale',e)}
 }
+function callEditDraftKey(id){return 'cge_documentale_convocazione_modifiche_'+String(id)}
+function storeExistingCallDraft(){
+ if(!currentCallId)return;
+ try{
+  const fields=['cvType','cvDate','cvTime1','cvPlace','cvStatus','cvHeading','cvRecipients','cvObject','cvText','cvSigner'];
+  const data={fields:Object.fromEntries(fields.map(id=>[id,$(id).value])),agenda:[...$('cvAgendaPoints').querySelectorAll('textarea')].map(e=>e.value),savedAt:Date.now()};
+  localStorage.setItem(callEditDraftKey(currentCallId),JSON.stringify(data));
+ }catch(e){console.warn('Bozza modifiche non salvata localmente',e)}
+}
+function recoverExistingCallDraft(id){
+ try{
+  const raw=localStorage.getItem(callEditDraftKey(id));if(!raw)return;
+  const data=JSON.parse(raw);if(!data?.fields)return;
+  if(!confirm('Sono presenti modifiche locali non salvate a questa convocazione. Vuoi recuperarle?'))return;
+  Object.entries(data.fields).forEach(([k,v])=>{if($(k))$(k).value=v});
+  $('cvAgendaPoints').innerHTML='';
+  (data.agenda||[]).forEach(x=>addCallAgendaPoint(x));
+  if(!$('cvAgendaPoints').children.length)setCallAgenda();
+  updateCallLayout(false);
+  msg('cvmsg','Modifiche locali recuperate. Premi Salva modifiche per registrarle sul server.','warn');
+ }catch(e){console.warn('Impossibile recuperare modifiche locali',e)}
+}
+function clearExistingCallDraft(id){try{localStorage.removeItem(callEditDraftKey(id))}catch(e){}}
 function clearUnsavedCallDraft(){try{localStorage.removeItem(callDraftStorageKey)}catch(e){}}
 function addCallAgendaPoint(value=''){
  const container=$('cvAgendaPoints'),number=container.children.length+1,row=document.createElement('div');
@@ -2051,7 +2074,7 @@ async function saveCall(finalize=false){
    }
   }
   resetCallFilters();$('cvYear').value=Number(String(params.p_data_riunione).slice(0,4));
-  clearUnsavedCallDraft();
+  clearUnsavedCallDraft();clearExistingCallDraft(id);
   await loadCallsList();await openCall(id,false);
   msg('cvmsg',finalize?'Convocazione '+(currentCall?.convocazione_codice||code)+' resa definitiva.':(currentCallId?'Convocazione aggiornata.':'Bozza '+code+' salvata.'),'ok');
  }catch(e){msg('cvmsg',e.message||String(e),'err')}
@@ -2144,6 +2167,7 @@ async function openCall(id,printAfter=false){
   $('cvRecipients').value=v.destinatari||'';$('cvObject').value=v.oggetto||'';setCallAgenda(v.ordine_giorno||'');
   $('cvText').value=stripRepeatedCallAgenda(v.testo||'',v.ordine_giorno||'');$('cvText2').value='';$('cvSigner').value=v.firmatario||'Musso Paolo';updateCallLayout(false);
   await loadSignedCallsForCurrent();
+  recoverExistingCallDraft(id);
   msg('cvListMsg','');msg('cvmsg','Convocazione '+v.convocazione_codice+' aperta.','ok');
   if(printAfter)setTimeout(()=>printCall(),120);else $('cvTitle').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){msg('cvListMsg',e.message||String(e),'err')}
@@ -2202,7 +2226,7 @@ $('cvNewAdmissions').onclick=newAdmissionsCall;
 $('cvExit').onclick=()=>{resetCallForm();resetCallFilters();view('calls')};
 $('cvAddAgenda').onclick=()=>addCallAgendaPoint();
 $('cvGenerateText').onclick=generateCallText;
-$('callEditorPanel').addEventListener('input',event=>{if(event.target.matches('input,textarea,select'))storeUnsavedCallDraft()});
+$('callEditorPanel').addEventListener('input',event=>{if(event.target.matches('input,textarea,select')){storeUnsavedCallDraft();storeExistingCallDraft()}});
 $('callEditorPanel').addEventListener('change',event=>{if(event.target.matches('input,textarea,select'))storeUnsavedCallDraft()});
 
 $('cvDate').addEventListener('change',updateNextCallCode);
