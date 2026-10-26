@@ -6477,7 +6477,7 @@ function statsInterval(start,end){
 }
 function statsBandInterval(fascia){
  const x=String(fascia||'').toUpperCase();
- return ({MATTINO:[420,840],POMERIGGIO:[780,1140],SERA:[1140,1440],NOTTE:[0,420]})[x]||null;
+ return ({MATTINO:[420,840],POMERIGGIO:[840,1140],SERA:[1140,1440],NOTTE:[0,420]})[x]||null;
 }
 function statsRomeNow(){
  const parts=new Intl.DateTimeFormat('en-CA',{
@@ -8809,7 +8809,7 @@ function emgRenderDay(kind){
   covered=emgSlotCovered(slot),mine=slot.some(x=>x.badge_personale===volunteerBadge),
   mezzo=emgAssignedMezzo(slot),
   peopleHtml=slot.map(row=>{
-   const standard=({MATTINO:['07:00','14:00'],POMERIGGIO:['13:00','19:00'],SERA:['19:00','00:00'],NOTTE:['00:00','07:00']})[fascia]||['00:00','00:00'];
+   const standard=({MATTINO:['07:00','14:00'],POMERIGGIO:['14:00','19:00'],SERA:['19:00','00:00'],NOTTE:['00:00','07:00']})[fascia]||['00:00','00:00'];
    const start=calTime(row.ora_inizio_personale)||standard[0],end=calTime(row.ora_fine_personale)||standard[1];
    const canEdit=day>=todayY&&(admin||row.badge_personale===volunteerBadge);
    return '<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
