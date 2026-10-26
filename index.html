@@ -856,7 +856,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <button class="nav" data-v="emergency">🚨 Emergenza 118</button>
 <button class="nav" data-v="assistance">🎪 Assistenze manifestazioni</button>
 <button class="nav" type="button" data-v="agendaPres" data-admin-only="true">📅 Appuntamenti Presidente</button>
-<button class="nav" type="button" data-v="agendaEvents">🎄 Calendario Eventi e Manifestazioni</button>
+<button class="nav" type="button" data-v="agendaEvents">🎄 Calendario Eventi</button>
 <button class="nav" type="button" data-href="assistenze-manifestazioni/">📑 Gestionale manifestazioni</button>
 <button class="nav" data-v="travelSheets118">🚨 Fogli Viaggio 118</button>
 <button class="nav" data-v="travelSheets">📄 Fogli Viaggio</button>
@@ -3883,13 +3883,14 @@ async function view(v,options={}){
   if(options.patient)usePatientForService(options.patient);
  }
  selectView(v);
- const loader=({dash:async()=>{await Promise.all([refreshDashboardPersonnelExpiryAlert(),refreshDashboardEmployeeCommitments()]);return dashboard();},statistics:loadStatistics,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,paymentReceipts:loadPaymentReceiptsView,travelSheets118:loadTravelSheets118,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,personnelExpiries:loadPersonnelExpiries,tariffs:loadTariffsView,accounting:loadAccounting,primaNota:loadPrimaNota,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
+ const loader=({agendaPres:()=>window.cgeAgendaOpen('pres'),agendaEvents:()=>window.cgeAgendaOpen('events'),dash:async()=>{await Promise.all([refreshDashboardPersonnelExpiryAlert(),refreshDashboardEmployeeCommitments()]);return dashboard();},statistics:loadStatistics,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,paymentReceipts:loadPaymentReceiptsView,travelSheets118:loadTravelSheets118,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,personnelExpiries:loadPersonnelExpiries,tariffs:loadTariffsView,accounting:loadAccounting,primaNota:loadPrimaNota,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
  const result=await loader();
  selectView(v);
  return result;
 }
 document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>{if(b.dataset.href){if(editingPersonBadge)resetPerson();location.href=b.dataset.href;return}if(b.dataset.v==='people'&&b.dataset.peopleFilter){peopleCategoryFilter=b.dataset.peopleFilter;peopleAppFilter='ALL';}view(b.dataset.v)});
 function volunteerGoTo(target){
+ if(target==='volAgenda'&&window.cgeVolunteerAgendaOpen)window.cgeVolunteerAgendaOpen();
  const el=$(target);if(!el)return;
  $('volApp').querySelector('.vol-layout')?.classList.remove('vol-menu-open');
  $('volMenuToggle')?.setAttribute('aria-expanded','false');
@@ -13876,7 +13877,7 @@ try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&
   msg(isTabletOnlyMode()?'tloginmsg':'lmsg','Impossibile riprendere la sessione: '+(e?.message||String(e)),'err');
  }
 })();
-</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20261003c"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script><script src="agenda.js?v=2"></script>
+</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20261003c"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script><script src="agenda.js?v=3"></script>
 </body></html>
 <style>.nav[data-v="training"]{background:#65a30d;border-color:#4d7c0f;color:#fff}
 /* Dashboard: colori forzati pulsanti rapidi */
