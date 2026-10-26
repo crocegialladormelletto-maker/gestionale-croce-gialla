@@ -855,6 +855,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <button class="nav" data-v="patients">🪪 Anagrafica pazienti</button>
 <button class="nav" data-v="emergency">🚨 Emergenza 118</button>
 <button class="nav" data-v="assistance">🎪 Assistenze manifestazioni</button>
+<button class="nav" type="button" data-v="agendaPres" data-admin-only="true">📅 Appuntamenti Presidente</button>
+<button class="nav" type="button" data-v="agendaEvents">🎄 Calendario Eventi e Manifestazioni</button>
 <button class="nav" type="button" data-href="assistenze-manifestazioni/">📑 Gestionale manifestazioni</button>
 <button class="nav" data-v="travelSheets118">🚨 Fogli Viaggio 118</button>
 <button class="nav" data-v="travelSheets">📄 Fogli Viaggio</button>
@@ -883,6 +885,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <button class="nav" data-v="accessi" data-admin-only="true">🔐 Accessi</button>
 </aside><main>
 
+<section id="agendaPres" class="surface hidden" data-admin-only="true" style="padding:22px"><h2>Appuntamenti Presidente</h2><div id="agendaPresMsg"></div></section>
+<section id="agendaEvents" class="surface hidden" style="padding:22px"><h2>Eventi e manifestazioni</h2><div id="agendaEventsMsg"></div></section>
 <section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button><button class="btn secondary jump" data-v="servicesOrd">🚐 Servizi ordinari</button><button class="btn secondary jump" data-v="communications">📣 Scrivi ai volontari</button></div></div><div class="pad">
 <div id="pn2027Reminder" class="notice warn" data-admin-only="true"><b>Prima Nota 2027:</b> prima dell'avvio del 1° gennaio 2027 inserire i saldi iniziali reali di Cassa e Banca e completare il controllo di avvio.</div>
 <div id="dashPersonnelExpiryAlert" class="dash-expiry-alert hidden">
@@ -3042,6 +3046,7 @@ Causale: numero preventivo</textarea>
       <button type="button" class="vol-nav" data-vol-target="volDimSection">🚑 Turni dimissioni</button>
    <button type="button" class="vol-nav" data-vol-target="volEmgSection">🚨 Emergenza 118</button>
    <button type="button" class="vol-nav" data-vol-target="volRosterSection">🎪 Assistenze manifestazioni</button>
+<button type="button" class="vol-nav" data-vol-target="volAgenda">🎄 Eventi e manifestazioni</button>
    <button type="button" class="vol-nav" data-vol-target="volOrdSection">🚐 Servizi ordinari</button>
    <button type="button" class="vol-nav" data-vol-target="volShiftsSection">🕒 I miei turni</button>
    <button type="button" class="vol-nav" data-vol-target="volAvailabilitySection">✅ Disponibilità</button>
@@ -3054,6 +3059,7 @@ Causale: numero preventivo</textarea>
   </aside>
 
   <main class="vol-main">
+<section id="volAgenda" class="surface vol-panel hidden" style="padding:22px"><h2>Eventi e manifestazioni</h2><div id="volAgendaMsg"></div></section>
 <section id="volHomeSection" class="surface vol-panel vol-panel-home">
  <div class="vol-home-head"><h1>CROCE GIALLA EMERGENZA ODV</h1><p>La tua area volontario · v13.49</p></div>
  <div class="vol-home-pad">
@@ -13942,3 +13948,4 @@ try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&
 [data-tariff-pane] tbody tr:not(.tariff-province-row):nth-child(even) td{background:#dfeafb}
 [data-tariff-pane] tbody tr:not(.tariff-province-row):hover td{background:#cfe0f7}
 </style>
+<script src="agenda.js?v=1"></script>
