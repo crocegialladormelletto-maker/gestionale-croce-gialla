@@ -3,7 +3,7 @@
 const $=id=>document.getElementById(id);
 const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fields=['titolo','data_evento','ora_inizio','ora_fine','luogo','referente','note'];
-const types={pres:{table:'agenda_presidenza',title:'Appuntamenti Presidente'},events:{table:'agenda_eventi',title:'Eventi e manifestazioni'}};
+const types={pres:{table:'agenda_presidenza',title:'Appuntamenti Presidente'},events:{table:'agenda_eventi',title:'Calendario Eventi'}};
 function isAdmin(){return typeof prof!=='undefined'&&prof?.ruolo==='AMMINISTRATORE'}
 function kind(id){return id==='agendaPres'?'pres':'events'}
 function panel(id){return $(id==='volAgenda'?'volAgenda':id)}
@@ -25,7 +25,7 @@ async function load(type,forVolunteer=false){
  const id=forVolunteer?'volAgenda':type==='pres'?'agendaPres':'agendaEvents';
  if(!$(id))return;
  const {data,error}=await sb.from(types[type].table).select('*').order('data_evento',{ascending:true}).order('ora_inizio',{ascending:true});
- if(error)return status(id,'Errore lettura calendario: '+error.message,true);
+ if(error){const el=$(id);if(el)el.innerHTML='<h2>Calendario</h2><div class="notice warn">Impossibile caricare: '+safe(error.message)+'</div>';return;}
  records[type]=data||[];
  if(type==='events'){
    const ids=records.events.map(x=>x.id);
@@ -67,6 +67,8 @@ async function rsvp(evento_id){if(prof?.ruolo!=='VOLONTARIO')return;const old=ad
  const x=old?await sb.from('agenda_adesioni').delete().eq('id',old.id):await sb.from('agenda_adesioni').insert({evento_id,utente_id:prof.user_id,badge_personale:prof.badge_personale});
  if(x.error)return status('volAgenda',x.error.message,true);await load('events',true);
 }
+window.cgeAgendaOpen=async function(type){if(type==='pres'&&!isAdmin())return;if(type==='events'&&!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;await load(type);};
+window.cgeVolunteerAgendaOpen=async function(){if(prof?.ruolo==='VOLONTARIO')await load('events',true);};
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
  if(b.dataset.v==='agendaPres'&&isAdmin())setTimeout(()=>load('pres'),0);
