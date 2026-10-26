@@ -4049,7 +4049,7 @@ async function enter(authenticatedUser=null,tabletAccessToken=null){
  try{
   r=tabletAccessToken
    ?await cgeFetchActiveAccess(currentUser,tabletAccessToken,isTabletOnlyMode())
-   :await sb.from('accessi_app').select('nome,ruolo,attivo,badge_personale,mezzo').single();
+   :await sb.from('accessi_app').select('user_id,nome,ruolo,attivo,badge_personale,mezzo').single();
  }catch(err){
   msg(isTabletOnlyMode()?'tloginmsg':'lmsg','Impossibile verificare le autorizzazioni: '+(err?.message||String(err)),'err');
   return;
