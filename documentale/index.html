@@ -1802,6 +1802,30 @@ function updateNextCallCode(){
   $('cvCode').textContent='Assemblea: saranno creati due documenti distinti. Primo numero previsto: '+first+'.';
  }else $('cvCode').textContent='Prossima convocazione: '+nextCallCode()+' · numero assegnato al salvataggio.';
 }
+const callDraftStorageKey='cge_documentale_convocazione_bozza_v1';
+function storeUnsavedCallDraft(){
+ if(currentCallId)return;
+ try{
+  const fields=['cvType','cvDate','cvTime1','cvDate2','cvTime2','cvPlace','cvStatus','cvHeading','cvRecipients','cvObject','cvText','cvText2','cvSigner'];
+  const draft={fields:Object.fromEntries(fields.map(id=>[id,$(id).value])),agenda:[...$('cvAgendaPoints').querySelectorAll('textarea')].map(e=>e.value),updatedAt:Date.now()};
+  localStorage.setItem(callDraftStorageKey,JSON.stringify(draft));
+ }catch(e){console.warn('Impossibile salvare la bozza locale',e)}
+}
+function recoverUnsavedCallDraft(){
+ if(currentCallId)return;
+ try{
+  const raw=localStorage.getItem(callDraftStorageKey);if(!raw)return;
+  const draft=JSON.parse(raw);if(!draft||!draft.fields)return;
+  if(!confirm('È presente una bozza di convocazione non salvata. Vuoi recuperarla?'))return;
+  Object.entries(draft.fields).forEach(([id,value])=>{if($(id))$(id).value=value});
+  $('cvAgendaPoints').innerHTML='';
+  (draft.agenda||[]).forEach(v=>addCallAgendaPoint(v));
+  if(!$('cvAgendaPoints').children.length)setCallAgenda();
+  updateCallLayout(false);
+  msg('cvmsg','Bozza locale recuperata. Salva la convocazione per archiviarla definitivamente.','ok');
+ }catch(e){console.warn('Impossibile recuperare la bozza locale',e)}
+}
+function clearUnsavedCallDraft(){try{localStorage.removeItem(callDraftStorageKey)}catch(e){}}
 function addCallAgendaPoint(value=''){
  const container=$('cvAgendaPoints'),number=container.children.length+1,row=document.createElement('div');
  row.className='agenda-item';
@@ -2172,11 +2196,14 @@ function printCall(){
  const imgs=[...$('verbPrint').querySelectorAll('img')];
  Promise.race([Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve}))),new Promise(resolve=>setTimeout(resolve,1800))]).then(()=>window.print());
 }
-$('cvNew').onclick=()=>{view('callNew');resetCallForm();resetCallFilters()};
+$('cvNew').onclick=()=>{view('callNew');resetCallForm();resetCallFilters();recoverUnsavedCallDraft()};
 $('cvNewAdmissions').onclick=newAdmissionsCall;
 $('cvExit').onclick=()=>{resetCallForm();resetCallFilters();view('calls')};
 $('cvAddAgenda').onclick=()=>addCallAgendaPoint();
 $('cvGenerateText').onclick=generateCallText;
+$('callEditorPanel').addEventListener('input',event=>{if(event.target.matches('input,textarea,select'))storeUnsavedCallDraft()});
+$('callEditorPanel').addEventListener('change',event=>{if(event.target.matches('input,textarea,select'))storeUnsavedCallDraft()});
+
 $('cvDate').addEventListener('change',updateNextCallCode);
 $('cvType').onchange=()=>{if(!currentCallId)updateCallLayout(true)};
 $('cvStatus').onchange=updateCallStateUI;
