@@ -2458,34 +2458,28 @@ function ltPaginatePopup(win){
  const main=first.querySelector('.letter-text'),body=first.querySelector('.letter-body'),footer=first.querySelector('.letter-footer');
  if(!main||!body||!footer)return false;
  const signature=main.querySelector('.letter-sign'),sample=first.querySelector('.sample-watermark');
- const blocks=[...body.children];
- blocks.forEach(n=>n.remove());
+ const blocks=[...body.children];blocks.forEach(n=>n.remove());
  if(signature){
    signature.remove();
-   // La firma e la formula di chiusura diventano un solo blocco indivisibile.
-   const closing=d.createElement('div');
-   closing.className='letter-closing-group';
-   if(blocks.length)closing.appendChild(blocks.pop());
-   closing.appendChild(signature);
-   blocks.push(closing);
+   const closing=d.createElement('div');closing.className='letter-closing-group';
+   const last=blocks[blocks.length-1];
+   if(last&&last.textContent.trim().length<100)closing.appendChild(blocks.pop());
+   closing.appendChild(signature);blocks.push(closing);
  }
  footer.remove();if(sample)sample.remove();
  d.body.classList.add('letter-paginated');
- const mm=96/25.4,limit=263*mm;
+ const mm=96/25.4,limit=267*mm;
  let page=first,target=body;
- const overflows=node=>{
-   const rect=node.getBoundingClientRect(),base=page.getBoundingClientRect();
-   return rect.bottom-base.top>limit;
- };
  const newPage=()=>{
    page=d.createElement('article');page.className='sheet';
    const m=d.createElement('main');m.className='letter-text';
    target=d.createElement('div');target.className='letter-body';
    m.appendChild(target);page.appendChild(m);d.body.appendChild(page);
  };
+ const exceeds=node=>node.getBoundingClientRect().bottom-page.getBoundingClientRect().top>limit;
  for(const node of blocks){
    target.appendChild(node);
-   if(overflows(node)){
+   if(exceeds(node)){
      node.remove();newPage();target.appendChild(node);
    }
  }
@@ -2559,6 +2553,19 @@ function ltDocument(a,signatureUrl=null,facsimile=false){
  body.letter-paginated .sheet{margin:0!important;box-shadow:none!important}
  body.letter-paginated .sheet:last-child{break-after:auto!important}
 }
+
+/* Carta intestata compatta: margini e interlinea per due pagine equilibrate. */
+body.letter-paginated .sheet{padding:13mm 17mm 17mm 20mm!important}
+body.letter-paginated .letter-header{height:26mm!important;margin-bottom:7mm!important}
+body.letter-paginated .letter-text{font-size:9.5pt!important;line-height:1.36!important}
+body.letter-paginated .letter-meta{margin-bottom:6mm!important}
+body.letter-paginated .letter-to{margin-bottom:6mm!important}
+body.letter-paginated .letter-object{margin-bottom:5mm!important;padding:3mm 4mm!important}
+body.letter-paginated .letter-body p{margin-bottom:2.5mm!important;line-height:1.36!important}
+body.letter-paginated .letter-closing-group{display:flow-root;break-inside:avoid!important}
+body.letter-paginated .letter-closing-group .letter-sign{margin:5mm 0 0 auto!important}
+body.letter-paginated .letter-closing-group .letter-sign img{height:15mm!important;margin:2mm auto!important}
+@media print{body.letter-paginated .sheet{padding:13mm 17mm 17mm 20mm!important}}
 </style></head><body><article class="sheet"><div class="letter-side-accent"></div>
  <header class="letter-header"><svg viewBox="0 0 840 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><rect width="840" height="109" fill="#12375d"/><rect y="109" width="840" height="11" fill="#ffdb17"/></svg><img class="letter-logo" src="${esc(logo)}" alt="Logo Croce Gialla Emergenza ODV"><div class="letter-org"><strong>CROCE GIALLA EMERGENZA ODV</strong><small>ORGANIZZAZIONE DI VOLONTARIATO</small></div></header>
  <img class="letter-watermark" src="${esc(logo)}" alt="" aria-hidden="true">
