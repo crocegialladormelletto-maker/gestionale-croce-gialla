@@ -2466,15 +2466,17 @@ function ltPaginatePopup(win){
    if(last&&last.textContent.trim().length<100)closing.appendChild(blocks.pop());
    closing.appendChild(signature);blocks.push(closing);
  }
- footer.remove();if(sample)sample.remove();
+ const footerTemplate=footer.cloneNode(true);footer.remove();if(sample)sample.remove();
  d.body.classList.add('letter-paginated');
  const mm=96/25.4,limit=267*mm;
  let page=first,target=body;
+ const addFooter=sheet=>sheet.appendChild(footerTemplate.cloneNode(true));
+ addFooter(first);
  const newPage=()=>{
    page=d.createElement('article');page.className='sheet';
    const m=d.createElement('main');m.className='letter-text';
    target=d.createElement('div');target.className='letter-body';
-   m.appendChild(target);page.appendChild(m);d.body.appendChild(page);
+   m.appendChild(target);page.appendChild(m);addFooter(page);d.body.appendChild(page);
  };
  const exceeds=node=>node.getBoundingClientRect().bottom-page.getBoundingClientRect().top>limit;
  for(const node of blocks){
@@ -2483,7 +2485,7 @@ function ltPaginatePopup(win){
      node.remove();newPage();target.appendChild(node);
    }
  }
- page.appendChild(footer);if(sample)first.appendChild(sample);
+ if(sample)first.appendChild(sample);
  d.body.dataset.paginated='yes';win.__letterReady=true;
  return d.querySelectorAll('article.sheet').length;
 }
