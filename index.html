@@ -5491,7 +5491,7 @@ async function loadOperationalCalendar(){
   :([s.ospedale_destinazione||s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · ')||'—');
  const title=(isAssistanceManifestation(s.tipo_servizio)?asServiceName(s):(s.tipo_servizio_altro||s.tipo_servizio||'Servizio'))+' · M'+(s.mezzo||'—');
  const pickup=[s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · ');
- const subtitle='Partenza: '+from+(pickup?' → Carico paziente: '+pickup:'')+' → Destinazione: '+to+' · Equipaggio '+assignments.length;
+ const subtitle='Partenza: '+from+' → Carico paziente: '+(pickup||'Da indicare')+' → Destinazione: '+to+' · Equipaggio '+assignments.length;
  const donePast=s.data_servizio<todaySafe()&&['TERMINATO','DA CONTABILIZZARE','CHIUSO'].includes(String(s.stato_gestionale||'').toUpperCase());
  opCalEvents.push({kind:'service',date:s.data_servizio,time:calTime(s.ora_partenza_prevista),vehicle:s.mezzo||'',coverageClass:donePast?'service-done':'',title,subtitle,raw:{...s,assignments}});
 });
