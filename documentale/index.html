@@ -2479,6 +2479,27 @@ function ltPaginatePopup(win){
      node.remove();newPage();target.appendChild(node);
    }
  }
+ // Evita l'ultima pagina contenente soltanto la firma: sposta anche la chiusura.
+ const pages=[...d.querySelectorAll('article.sheet')];
+ if(pages.length>1&&signature){
+   const last=pages[pages.length-1],previous=pages[pages.length-2];
+   const lastBody=last.querySelector('.letter-body'),previousBody=previous.querySelector('.letter-body');
+   const onLast=last.contains(signature);
+   const limit=()=>last.getBoundingClientRect().top+267*mm;
+   if(onLast&&lastBody&&previousBody&&!lastBody.children.length){
+     // Mantieni la firma insieme a "Cordiali saluti" e al paragrafo conclusivo.
+     const moved=[];
+     for(let i=0;i<2;i++){
+       const node=previousBody.lastElementChild;
+       if(!node)break;
+       lastBody.prepend(node);moved.unshift(node);
+       if(signature.getBoundingClientRect().bottom>limit()){
+         previousBody.appendChild(node);moved.shift();break;
+       }
+     }
+     // Se non entra nemmeno una riga, lascia la firma leggibile senza tagliarla.
+   }
+ }
  page.appendChild(footer);
  if(sample)first.appendChild(sample);
  d.body.dataset.paginated='yes';
@@ -2486,7 +2507,10 @@ function ltPaginatePopup(win){
  return d.querySelectorAll('article.sheet').length;
 }
 function ltReadyPopup(win,printNow=false){
- const run=()=>{
+ const run=async()=>{
+   // Misura le pagine solo dopo il caricamento di logo e firma.
+   await Promise.all([...win.document.images].map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.addEventListener('load',resolve,{once:true});img.addEventListener('error',resolve,{once:true});})));
+   if(win.document.fonts?.ready)await win.document.fonts.ready;
    try{
      const n=ltPaginatePopup(win);
      if(!n)throw Error('Non è stato possibile creare le pagine A4');
