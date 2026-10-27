@@ -2453,57 +2453,44 @@ $('ltSave').onclick=()=>{const a=ltCollect();if(ltCurrentRecord()?.protocolId)re
 $('ltRemove').onclick=()=>{if(ltCurrentRecord()?.protocolId)return msg('ltMsg','La lettera protocollata non può essere eliminata da questa sezione.','warn');if(!ltActive)return msg('ltMsg','Nessuna bozza selezionata.','warn');if(!confirm('Eliminare questa bozza locale?'))return;localStorage.setItem(ltKey(),JSON.stringify(ltRead().filter(x=>x.id!==ltActive)));ltActive=null;ltFill();ltList();msg('ltMsg','Bozza locale eliminata.','ok')};
 /* Impaginazione eseguita dalla finestra gestionale: non dipende dagli script nel popup. */
 function ltPaginatePopup(win){
- const d=win.document, first=d.querySelector('article.sheet');
+ const d=win.document,first=d.querySelector('article.sheet');
  if(!first||d.body?.dataset.paginated==='yes')return false;
  const main=first.querySelector('.letter-text'),body=first.querySelector('.letter-body'),footer=first.querySelector('.letter-footer');
  if(!main||!body||!footer)return false;
- const signature=main.querySelector('.letter-sign');
- const sample=first.querySelector('.sample-watermark');
- const blocks=[...body.children];if(signature)blocks.push(signature);
- blocks.forEach(n=>n.remove());footer.remove();if(sample)sample.remove();
+ const signature=main.querySelector('.letter-sign'),sample=first.querySelector('.sample-watermark');
+ const blocks=[...body.children];
+ blocks.forEach(n=>n.remove());
+ if(signature){
+   signature.remove();
+   // La firma e la formula di chiusura diventano un solo blocco indivisibile.
+   const closing=d.createElement('div');
+   closing.className='letter-closing-group';
+   if(blocks.length)closing.appendChild(blocks.pop());
+   closing.appendChild(signature);
+   blocks.push(closing);
+ }
+ footer.remove();if(sample)sample.remove();
  d.body.classList.add('letter-paginated');
- const mm=96/25.4;
+ const mm=96/25.4,limit=263*mm;
  let page=first,target=body;
+ const overflows=node=>{
+   const rect=node.getBoundingClientRect(),base=page.getBoundingClientRect();
+   return rect.bottom-base.top>limit;
+ };
  const newPage=()=>{
    page=d.createElement('article');page.className='sheet';
    const m=d.createElement('main');m.className='letter-text';
    target=d.createElement('div');target.className='letter-body';
    m.appendChild(target);page.appendChild(m);d.body.appendChild(page);
  };
- // Ogni foglio riserva 29 mm in fondo per la fascia e 16 mm per i margini.
  for(const node of blocks){
-   if(node.classList.contains('letter-sign'))target=page.querySelector('.letter-text');
    target.appendChild(node);
-   const rect=node.getBoundingClientRect(),base=page.getBoundingClientRect();
-   if(rect.bottom-base.top>267*mm){
+   if(overflows(node)){
      node.remove();newPage();target.appendChild(node);
    }
  }
- // Evita l'ultima pagina contenente soltanto la firma: sposta anche la chiusura.
- const pages=[...d.querySelectorAll('article.sheet')];
- if(pages.length>1&&signature){
-   const last=pages[pages.length-1],previous=pages[pages.length-2];
-   const lastBody=last.querySelector('.letter-body'),previousBody=previous.querySelector('.letter-body');
-   const onLast=last.contains(signature);
-   const limit=()=>last.getBoundingClientRect().top+267*mm;
-   if(onLast&&lastBody&&previousBody&&!lastBody.children.length){
-     // Mantieni la firma insieme a "Cordiali saluti" e al paragrafo conclusivo.
-     const moved=[];
-     for(let i=0;i<2;i++){
-       const node=previousBody.lastElementChild;
-       if(!node)break;
-       lastBody.prepend(node);moved.unshift(node);
-       if(signature.getBoundingClientRect().bottom>limit()){
-         previousBody.appendChild(node);moved.shift();break;
-       }
-     }
-     // Se non entra nemmeno una riga, lascia la firma leggibile senza tagliarla.
-   }
- }
- page.appendChild(footer);
- if(sample)first.appendChild(sample);
- d.body.dataset.paginated='yes';
- win.__letterReady=true;
+ page.appendChild(footer);if(sample)first.appendChild(sample);
+ d.body.dataset.paginated='yes';win.__letterReady=true;
  return d.querySelectorAll('article.sheet').length;
 }
 function ltReadyPopup(win,printNow=false){
@@ -2561,6 +2548,9 @@ function ltDocument(a,signatureUrl=null,facsimile=false){
  body.letter-paginated .letter-watermark,body.letter-paginated .letter-side-accent{display:none!important}
  body.letter-paginated .letter-body p{margin:0 0 4mm}
  body.letter-paginated .letter-body h3{margin:6mm 0 3mm}
+ body.letter-paginated .letter-closing-group{break-inside:avoid!important;page-break-inside:avoid!important;display:flow-root}
+ body.letter-paginated .letter-closing-group .letter-sign{margin:8mm 0 0 auto!important;break-inside:avoid!important}
+ body.letter-paginated .letter-closing-group>p{margin-bottom:3mm!important}
  body.letter-paginated .sample-watermark{position:absolute!important;top:44mm!important;left:20mm!important;margin:0!important}
 }
 @media print{
