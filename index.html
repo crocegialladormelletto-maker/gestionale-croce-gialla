@@ -11559,7 +11559,28 @@ function accRenderFiltered(){
   $(id).className='btn '+(accCurrentFilter===key?'yellow':'secondary');
  }
  $('accFilterInfo').textContent=rows.length+' servizi visualizzati · solo servizi effettuati';
- $('accBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.tipo_servizio)+' · mezzo '+esc(x.mezzo)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>Servizio '+euro(x.importo_dovuto)+'<br><strong>Incassato '+euro(x.importo_incassato)+'</strong><br><span class="muted">Residuo '+euro(x.residuo)+'</span></td><td><span class="pill b">'+esc(x.stato_contabile)+'</span></td><td>'+esc(x.stato_gestionale||'—')+'</td></tr>').join(''):'<tr><td colspan="6">Nessun servizio per questo filtro.</td></tr>';
+ $('accBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.tipo_servizio)+' · mezzo '+esc(x.mezzo)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>Servizio '+euro(x.importo_dovuto)+(prof?.ruolo==='AMMINISTRATORE'?'<br><button type="button" class="btn secondary" style="padding:3px 7px;margin-top:4px" data-acc-edit-amount="'+esc(x.servizio_id)+'">Modifica importo</button>':'')+'<br><strong>Incassato '+euro(x.importo_incassato)+'</strong><br><span class="muted">Residuo '+euro(x.residuo)+'</span></td><td><span class="pill b">'+esc(x.stato_contabile)+'</span></td><td>'+esc(x.stato_gestionale||'—')+'</td></tr>').join(''):'<tr><td colspan="6">Nessun servizio per questo filtro.</td></tr>';
+ $('accBody').querySelectorAll('[data-acc-edit-amount]').forEach(button=>button.onclick=async()=>{
+  if(prof?.ruolo!=='AMMINISTRATORE')return;
+  const id=button.dataset.accEditAmount;
+  const x=accAccountingRows.find(v=>v.servizio_id===id);
+  if(!x)return;
+  const raw=prompt('Nuovo importo totale dovuto per il servizio (non modifica gli incassi già registrati):',Number(x.importo_dovuto||0).toFixed(2).replace('.',','));
+  if(raw===null)return;
+  const amount=Number(String(raw).trim().replace(',','.'));
+  if(!Number.isFinite(amount)||amount<0||Math.round(amount*100)!==amount*100)return msg('accMsg','Inserisci un importo valido con massimo due decimali.','warn');
+  if(!confirm('Modificare l’importo dovuto da '+euro(x.importo_dovuto)+' a '+euro(amount)+'? Gli incassi registrati non verranno modificati.'))return;
+  button.disabled=true;
+  try{
+   const sr=await sb.from('servizi_giornalieri').select('id,importo_previsto,importo_finale').eq('id',id).single();
+   if(sr.error)throw sr.error;
+   const update=await sb.from('servizi_giornalieri').update({importo_previsto:amount,importo_finale:amount}).eq('id',id).select('id,importo_finale').single();
+   if(update.error)throw update.error;
+   if(Number(update.data.importo_finale)!==amount)throw new Error('Importo non confermato dal server.');
+   await loadAccounting();
+   msg('accMsg','Importo del servizio aggiornato. Incassi invariati.','ok');
+  }catch(e){msg('accMsg','Modifica non riuscita: '+(e.message||String(e)),'err');button.disabled=false}
+ });
 }
 async function loadCollectionSummary(){
  const dateParts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
