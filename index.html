@@ -13208,7 +13208,18 @@ $('tabletNew118').onclick=async(e)=>{
  finally{tabletBusy=false}
 };
 $('tabletHideDetail').onclick=()=>{$('tabletDetail').classList.add('hidden');tabletCurrentService=null;tabletCurrentSheet=null;window.scrollTo({top:0,behavior:'smooth'})};
-$('tabletSheetForm').onsubmit=async(e)=>{e.preventDefault();await saveTabletSheet()};
+// Il pulsante Salva dati deve funzionare anche per bozze incomplete: niente validazione HTML implicita.
+$('tabletSaveSheet').type='button';
+$('tabletSaveSheet').onclick=async(e)=>{
+ e.preventDefault();
+ if(!tabletCurrentSheet){msg('tabletSheetMsg','Apri un Foglio Viaggio prima di salvare.','warn');return;}
+ if(tabletBusy){msg('tabletSheetMsg','Salvataggio già in corso: attendi la conferma.','warn');return;}
+ if(tabletCurrentSheet.stato==='CHIUSO'){msg('tabletSheetMsg','Foglio Viaggio già chiuso: non modificabile dal tablet.','warn');return;}
+ msg('tabletSheetMsg','Salvataggio dei dati in corso...');
+ try{await saveTabletSheet(false,false)}
+ catch(err){msg('tabletSheetMsg','Errore salvataggio: '+(err?.message||String(err)),'err')}
+};
+$('tabletSheetForm').onsubmit=async(e)=>{e.preventDefault();$('tabletSaveSheet').click()};
 if($('tabletPrivacyToggle'))$('tabletPrivacyToggle').onclick=()=>{
  if($('tabletPrivacyPanel'))$('tabletPrivacyPanel').classList.toggle('hidden');
 };
