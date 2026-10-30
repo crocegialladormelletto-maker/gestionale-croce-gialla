@@ -1,36 +1,37 @@
-<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Turni Dipendenti - Croce Gialla</title><style>
-*{box-sizing:border-box}body{font-family:Arial,sans-serif;background:#f2f6fb;color:#173b72;margin:0}header{background:#ffdf00;padding:20px;border-bottom:4px solid #173b72}main{max-width:1150px;margin:24px auto;background:#fff;padding:20px;border-radius:14px}button,input,select{font-size:15px;padding:9px;border-radius:7px;border:1px solid #cad4df}button{background:#173b72;color:white;cursor:pointer;margin:4px}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}table{border-collapse:collapse;width:100%;margin:16px 0}th,td{border:1px solid #bccada;padding:8px;text-align:center}th{background:#fff3a1}td input{width:90px}td label{font-size:13px}#notice{padding:12px;background:#e9f0fa;margin-top:10px}.hidden{display:none}@media print{.noprint{display:none!important}body{background:white}main{margin:0;max-width:none;padding:0}header{padding:10px}td input{border:0;padding:0;width:75px}th,td{font-size:11px;padding:5px}}
-#printSheet{display:none}
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Turni Dipendenti - Croce Gialla</title><style>*{box-sizing:border-box}body{margin:0;background:#edf2f8;font-family:Arial,sans-serif;color:#0b2954}button,input{font:inherit}button{cursor:pointer;border:0;border-radius:9px;background:#102f5a;color:white;padding:11px 15px;font-weight:800}button:hover{filter:brightness(1.12)}.hidden{display:none!important}
+.hero{background:linear-gradient(115deg,#ffdc2e 0%,#fff 25%,#fff 80%,#ffe353 100%);border-bottom:5px solid #ffdb00;padding:18px max(24px,calc((100% - 1370px)/2));display:flex;align-items:center;gap:24px}
+.heroLogo{width:112px;height:112px;object-fit:contain;flex-shrink:0}.heroText{flex:1}.heroName{margin:0;font-size:clamp(22px,3vw,42px);font-weight:900;line-height:1.07;letter-spacing:.3px;color:#092750}.heroTown{font-size:14px;font-weight:800;letter-spacing:7px;margin-top:8px}.heroTitle{background:#ffda16;border-radius:12px 12px 0 0;padding:10px 20px;font-size:clamp(20px,2.4vw,32px);font-weight:900;text-align:center;letter-spacing:.7px}.heroSubtitle{text-align:center;font-weight:800;font-size:15px}.heroRight{font-size:64px;opacity:.17;line-height:1}
+main{max-width:1370px;margin:20px auto;background:#fff;padding:22px;border-radius:15px;box-shadow:0 8px 25px #082c5910}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-bottom:18px;padding:13px;background:#f1f5fb;border-radius:10px}
+.toolbar label{font-weight:800}.toolbar input{padding:9px;border:1px solid #a8bdd6;border-radius:8px;background:white}.toolbar .accent{background:#ffdf00;color:#092750}.toolbar .save{background:#14834a}
+#subtitle{font-size:17px;font-weight:800;margin:12px 0;color:#173b72}
+#table{overflow-x:auto}.editGrid{border-collapse:separate;border-spacing:0;table-layout:fixed;width:100%;min-width:940px;border:1px solid #8eaccb;border-radius:10px;overflow:hidden;margin:0 0 14px}
+.editGrid th,.editGrid td{border-bottom:1px solid #8eaccb;border-right:1px solid #8eaccb;text-align:center;vertical-align:middle}
+.editGrid tr>:last-child{border-right:0}.editGrid tbody tr:last-child>*{border-bottom:0}
+.editGrid thead th{background:#092c59;color:#fff;font-size:18px;font-weight:900;padding:18px 8px}
+.editGrid thead th:first-child{width:21%}.editGrid tbody th{background:#dcedff;color:#082c59;text-align:left;padding:17px 18px;font-size:15px;font-weight:900}
+.editGrid tbody td{height:79px;padding:10px 8px}.editGrid tbody td:nth-child(2){background:#fff3c8}.editGrid tbody td:nth-child(3){background:#dfefff}.editGrid tbody td:nth-child(4){background:#def7df}
+.editGrid .hoursInputs{display:flex;justify-content:center;align-items:center;gap:5px}.editGrid .hoursInputs span{font-size:20px;font-weight:800}.editGrid .hoursInputs input{width:106px;min-width:0;height:38px;border:1px solid #b6c7db;border-radius:7px;padding:3px;font-size:16px;font-weight:800;color:#082c59;background:#fff;text-align:center}
+.editGrid .restLabel{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;font-size:12px;font-weight:800;color:#496184}.editGrid .restLabel input{width:16px;height:16px;accent-color:#173b72}
+.editGrid .totalRow th,.editGrid .totalRow td{height:70px;background:#ffdc24!important;color:#082c59;font-size:22px;font-weight:900}
+#notice{margin:10px 0;padding:12px;background:#eef4ff;border:1px solid #c7d6e9;border-radius:9px;font-weight:700}#printSheet{display:none}
+@media(max-width:760px){.hero{padding:12px;gap:10px}.heroLogo{width:65px;height:65px}.heroTown{letter-spacing:3px}.heroRight{display:none}main{margin:10px;padding:10px}.toolbar{gap:6px}.toolbar button{font-size:12px;padding:9px}}
 @page{size:A4 landscape;margin:6mm}
 @media print{
-html,body{width:100%!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important}
-header{display:none!important}
-main{display:block!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important}
-#work,#notice{display:none!important}
-#printSheet{display:block!important;margin:0!important;padding:0!important;break-inside:avoid!important;page-break-inside:avoid!important}
-#printSheet:before{content:"CROCE GIALLA EMERGENZA ODV";display:block;font-size:17pt;font-weight:900;color:#173b72;border-bottom:3px solid #173b72;padding:0 0 7px;margin:0 0 8px}
-#printSheet h3{font-size:11pt!important;margin:0 0 8px!important}
-#printSheet table{width:100%!important;margin:0!important;border-collapse:collapse!important;table-layout:fixed!important;font-size:9pt!important;break-inside:avoid!important}
-#printSheet th,#printSheet td{border:1px solid #b9c8df!important;padding:5px 4px!important;height:37px!important;white-space:nowrap!important;vertical-align:middle!important}
-#printSheet thead th{background:#173b72!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-#printSheet tbody th{background:#fff3bd!important;color:#173b72!important;text-align:left!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-#printSheet tbody tr{height:38px!important;break-inside:avoid!important}
-#printSheet tbody tr:last-child th,#printSheet tbody tr:last-child td{background:#ffdf00!important;color:#173b72!important;font-weight:800!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-#printSheet .foot{display:none!important}
-}.editGrid{table-layout:fixed;margin:18px 0 8px;border-collapse:collapse;width:100%}
-.editGrid th,.editGrid td{border:1px solid #b7c9df;padding:10px 7px;text-align:center;vertical-align:middle}
-.editGrid thead th{background:#102f5a;color:white;font-size:14px}
-.editGrid thead th:first-child{width:24%}
-.editGrid tbody th{background:#dceeff;color:#102f5a;text-align:left;font-size:13px}
-.editGrid tbody td:nth-child(2){background:#fff6cf}
-.editGrid tbody td:nth-child(3){background:#e7f3ff}
-.editGrid tbody td:nth-child(4){background:#e6f8e7}
-.editGrid .hoursInputs{display:flex;align-items:center;justify-content:center;gap:5px}
-.editGrid .hoursInputs input{width:110px;min-width:0;font-size:14px;font-weight:700;padding:7px 3px}
-.editGrid .restLabel{display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;margin:7px 0 0}
-.editGrid .restLabel input{width:16px;height:16px}
-.editGrid .totalRow th,.editGrid .totalRow td{background:#ffdf00!important;font-size:17px;font-weight:800;color:#102f5a}
-@media(max-width:850px){#table{overflow-x:auto}.editGrid{min-width:850px}}</style></head><body><header style="display:flex;justify-content:space-between;align-items:center"><div><div style="display:flex;align-items:center;gap:10px"><img alt="Logo Croce Gialla" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?height=70" style="height:38px;width:38px;object-fit:contain"><h2 style="margin:0">Croce Gialla Emergenza ODV</h2></div><b>Programmazione turni dipendenti</b></div></header><main><section id="work" class="hidden"><div class="row noprint"><label>Settimana dal <input id="week" type="date"></label><button id="load">Carica turni salvati</button><button id="newWeek">Nuova settimana vuota</button><button id="save">Salva turni</button><button id="print">Stampa / PDF</button><button id="back">Torna ad Amministrazione Timbrature</button></div><p id="subtitle"></p><div id="table"></div><p>Nota: turni programmati, non timbrature effettive. Eventuali cambi devono essere approvati dall'amministrazione.</p></section><div id="printSheet" aria-hidden="true"></div><div id="notice" role="status" class="noprint">Verifica accesso amministrativo…</div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
+ html,body{width:100%!important;height:auto!important;padding:0!important;margin:0!important;background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .hero,.toolbar,#work,#notice{display:none!important}
+ main{max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important}
+ #printSheet{display:block!important;break-inside:avoid!important}
+ #printSheet:before{content:"CROCE GIALLA EMERGENZA ODV";display:block;font-size:18pt;font-weight:900;color:#092c59;padding:0 0 5px;border-bottom:3px solid #ffdb00}
+ #printSheet h3{margin:8px 0;font-size:12pt;color:#092c59}
+ #printSheet table{width:100%;table-layout:fixed;border-collapse:collapse;margin:0;font-size:10pt;break-inside:avoid}
+ #printSheet th,#printSheet td{border:1px solid #8eaac6;padding:8px 5px;text-align:center;white-space:nowrap;height:36px}
+ #printSheet thead th{background:#092c59!important;color:white!important}
+ #printSheet tbody th{background:#dcedff!important;text-align:left;color:#082c59!important}
+ #printSheet tbody tr:nth-child(odd) td{background:#fff7d8!important}
+ #printSheet tbody tr:last-child th,#printSheet tbody tr:last-child td{background:#ffdb16!important;font-weight:900!important}
+ #printSheet .foot{display:none!important}
+}</style></head><body><header class="hero"><img class="heroLogo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?height=70" alt="Logo Croce Gialla Emergenza ODV"><div class="heroText"><h1 class="heroName">CROCE GIALLA EMERGENZA ODV</h1><div class="heroTown">DORMELLETTO (NO)</div><div class="heroTitle">GRIGLIA TURNI DIPENDENTI</div><div class="heroSubtitle">Programmazione settimanale</div></div><div class="heroRight" aria-hidden="true">✚</div></header><main><section id="work" class="hidden"><div class="toolbar noprint"><label>Settimana dal <input id="week" type="date"></label><button id="load">Carica turni salvati</button><button id="newWeek" class="accent">Nuova settimana vuota</button><button id="save" class="save">Salva turni</button><button id="print">Stampa / PDF</button><button id="back">Torna ad Amministrazione Timbrature</button></div><p id="subtitle"></p><div id="table"></div><p>Nota: turni programmati, non timbrature effettive. Eventuali cambi devono essere approvati dall'amministrazione.</p></section><div id="printSheet" aria-hidden="true"></div><div id="notice" role="status" class="noprint">Verifica accesso amministrativo…</div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
 const SB=supabase.createClient("https://ihottewckpwpwqzpxusl.supabase.co","sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 const API='https://ihottewckpwpwqzpxusl.supabase.co/functions/v1/timbrature-turni-sessione',people=[{badge:'19',name:'Martinoli Andrea'},{badge:'37',name:'Brughera Francesca'},{badge:'39',name:'Farinaccio Greta'}];let cached=[];const $=id=>document.getElementById(id);const dayString=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const startWeek=d=>{d=new Date(d.getTime());d.setDate(d.getDate()-((d.getDay()+6)%7));return d};const note=s=>$('notice').textContent=s;
 async function api(body){const {data:{session}}=await SB.auth.getSession();if(!session)throw Error("Sessione non attiva");const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw Error(j.error||"Errore server");return j}
