@@ -70,7 +70,7 @@ async function load(){
     out+='<div class="actions"><button data-save="'+safe(l.id)+'">Salva tratta '+l.ordine+'</button></div></div>';
    }
    out+='<p class="large">Totale percorsi registrati: '+sum+' km</p><p class="muted">'+done+' tratte su '+legs.length+' con chilometri completi. Non sommare i chilometri dei singoli pazienti.</p>';
-   out+='<div class="actions"><button class="secondary" data-complete="'+safe(trip.id)+'">Segna trasporto completato</button></div></section>';
+   out+='<div class="actions"><button class="secondary" data-add-leg="'+safe(trip.id)+'" data-leg-count="'+legs.length+'">+ Aggiungi tratta</button><button class="secondary" data-complete="'+safe(trip.id)+'">Segna trasporto completato</button></div></section>';
   }
   $('trips').innerHTML=out;report('Dati aggiornati.');
  }catch(e){report('Impossibile caricare: '+(e.message||String(e)),true)}
@@ -82,6 +82,12 @@ async function saveLeg(id){
  if((payload.km_iniziali===null)!==(payload.km_finali===null))return report('Inserire entrambi i chilometri oppure lasciarli entrambi vuoti.',true);
  if(payload.km_finali!==null&&payload.km_finali<payload.km_iniziali)return report('Km finali inferiori ai chilometri iniziali.',true);
  try{await db('trasporti_multipaziente_tratte',t=>t.update(payload).eq('id',id).select());await load()}catch(e){report('Salvataggio non riuscito: '+e.message,true)}
+}
+async function addLeg(id,count){
+ try{
+  await db('trasporti_multipaziente_tratte',t=>t.insert({trasporto_id:id,ordine:Number(count)+1,fase:'ALTRO',descrizione:'Nuova tratta: compilare partenza, destinazione e orari'}).select('id'));
+  await load();
+ }catch(e){report('Impossibile aggiungere la tratta: '+e.message,true)}
 }
 async function markCompleted(id){
  try{const legs=await db('trasporti_multipaziente_tratte',t=>t.select('km_iniziali,km_finali').eq('trasporto_id',id));if(legs.some(x=>x.km_iniziali===null||x.km_finali===null))return report('Per completare inserisci i chilometri di tutte le tratte.',true);await db('trasporti_multipaziente',t=>t.update({stato:'COMPLETATO',aggiornato_il:new Date().toISOString()}).eq('id',id).select());await load()}catch(e){report(e.message,true)}
@@ -107,6 +113,6 @@ async function createTrip(){
  }catch(e){report('Creazione interrotta: '+e.message+'. Controlla il trasporto prima di riprovare.',true)}
 }
 $('load').onclick=load;$('refresh').onclick=load;$('new').onclick=showCreation;$('cancel').onclick=()=>$('creation').classList.add('hidden');$('create').onclick=createTrip;
-document.addEventListener('click',e=>{let b=e.target.closest('[data-save]');if(b)saveLeg(b.dataset.save);b=e.target.closest('[data-complete]');if(b)markCompleted(b.dataset.complete)});
+document.addEventListener('click',e=>{let b=e.target.closest('[data-save]');if(b)saveLeg(b.dataset.save);b=e.target.closest('[data-add-leg]');if(b)addLeg(b.dataset.addLeg,b.dataset.legCount);b=e.target.closest('[data-complete]');if(b)markCompleted(b.dataset.complete)});
 init();
 </script></body></html>
