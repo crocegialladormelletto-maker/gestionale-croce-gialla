@@ -1,40 +1,23 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Turni Dipendenti - Croce Gialla</title><style>
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;background:#f2f6fb;color:#173b72;margin:0}header{background:#ffdf00;padding:20px;border-bottom:4px solid #173b72}main{max-width:1150px;margin:24px auto;background:#fff;padding:20px;border-radius:14px}button,input,select{font-size:15px;padding:9px;border-radius:7px;border:1px solid #cad4df}button{background:#173b72;color:white;cursor:pointer;margin:4px}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}table{border-collapse:collapse;width:100%;margin:16px 0}th,td{border:1px solid #bccada;padding:8px;text-align:center}th{background:#fff3a1}td input{width:90px}td label{font-size:13px}#notice{padding:12px;background:#e9f0fa;margin-top:10px}.hidden{display:none}@media print{.noprint{display:none!important}body{background:white}main{margin:0;max-width:none;padding:0}header{padding:10px}td input{border:0;padding:0;width:75px}th,td{font-size:11px;padding:5px}}
 #printSheet{display:none}
-@page{size:A4 landscape;margin:12mm}
+@page{size:A4 landscape;margin:6mm}
 @media print{
- body{background:white!important;color:#173b72!important}
- header{background:white!important;border-bottom:3px solid #173b72!important;padding:4px 0 12px!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
- header h2{font-size:19pt;margin:0 0 6px}header b{font-size:11pt}header img{height:66px!important;width:66px!important}
- main{margin:0!important;padding:0!important;max-width:none!important;background:white!important}
- #work,#notice{display:none!important}
- #printSheet{display:block!important;margin-top:12px}
- #printSheet h3{font-size:13pt;margin:0 0 14px;color:#173b72}
- #printSheet table{width:100%;border-collapse:collapse;table-layout:fixed;margin:0;font-size:10pt}
- #printSheet th,#printSheet td{border:1px solid #b9c8df;padding:12px 6px;text-align:center;vertical-align:middle;white-space:nowrap}
- #printSheet thead th{background:#173b72!important;color:white!important;font-weight:700;print-color-adjust:exact;-webkit-print-color-adjust:exact}
- #printSheet tbody th{background:#fff3bd!important;color:#173b72!important;text-align:left;padding-left:12px;print-color-adjust:exact;-webkit-print-color-adjust:exact}
- #printSheet tbody tr{height:62px;break-inside:avoid}
- #printSheet tbody tr:nth-child(even) td{background:#f4f7fb!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}#printSheet tbody tr:last-child th,#printSheet tbody tr:last-child td{background:#ffdf00!important;color:#173b72!important;font-weight:800;-webkit-print-color-adjust:exact;print-color-adjust:exact}
- #printSheet .tot{font-weight:700;background:#e7edf7!important}
- #printSheet .rip{color:#64748b;font-style:italic}
- #printSheet .foot{margin-top:17px;border-top:1px solid #cbd5e1;padding-top:9px;font-size:9pt;color:#475569}
-}@page{size:A4 landscape;margin:8mm}
-@media print{
-html,body{margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
-header{padding:0 0 6px!important;margin:0 0 5px!important;break-after:avoid!important}
-header h2{margin:0 0 2px!important;font-size:16pt!important}
-header b{font-size:10pt!important}
-header img{height:55px!important;width:55px!important}
-main{margin:0!important;padding:0!important;max-width:none!important}
+html,body{width:100%!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important}
+header{display:none!important}
+main{display:block!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important}
 #work,#notice{display:none!important}
-#printSheet{display:block!important;margin:6px 0 0!important;break-inside:avoid!important}
-#printSheet h3{margin:0 0 7px!important;font-size:11pt!important}
-#printSheet table{margin:0!important;font-size:9pt!important;break-inside:avoid!important}
-#printSheet th,#printSheet td{padding:6px 5px!important;height:38px!important}
-#printSheet tbody tr{height:39px!important;break-inside:avoid!important}
-#printSheet .foot{margin-top:5px!important;padding-top:3px!important;font-size:7pt!important;line-height:1.1!important;break-inside:avoid!important}
-}</style></head><body><header style="display:flex;justify-content:space-between;align-items:center"><div><div style="display:flex;align-items:center;gap:10px"><img alt="Logo Croce Gialla" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?height=70" style="height:38px;width:38px;object-fit:contain"><h2 style="margin:0">Croce Gialla Emergenza ODV</h2></div><b>Programmazione turni dipendenti</b></div><img alt="Logo Croce Gialla Emergenza ODV" style="height:85px;width:85px;object-fit:contain" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?height=70"></header><main><section id="work" class="hidden"><div class="row noprint"><label>Settimana dal <input id="week" type="date"></label><button id="load">Carica turni salvati</button><button id="newWeek">Nuova settimana vuota</button><button id="save">Salva turni</button><button id="print">Stampa / PDF</button><button id="back">Torna ad Amministrazione Timbrature</button></div><p id="subtitle"></p><div id="table"></div><p>Nota: turni programmati, non timbrature effettive. Eventuali cambi devono essere approvati dall'amministrazione.</p></section><div id="printSheet" aria-hidden="true"></div><div id="notice" role="status" class="noprint">Verifica accesso amministrativo…</div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
+#printSheet{display:block!important;margin:0!important;padding:0!important;break-inside:avoid!important;page-break-inside:avoid!important}
+#printSheet:before{content:"CROCE GIALLA EMERGENZA ODV";display:block;font-size:17pt;font-weight:900;color:#173b72;border-bottom:3px solid #173b72;padding:0 0 7px;margin:0 0 8px}
+#printSheet h3{font-size:11pt!important;margin:0 0 8px!important}
+#printSheet table{width:100%!important;margin:0!important;border-collapse:collapse!important;table-layout:fixed!important;font-size:9pt!important;break-inside:avoid!important}
+#printSheet th,#printSheet td{border:1px solid #b9c8df!important;padding:5px 4px!important;height:37px!important;white-space:nowrap!important;vertical-align:middle!important}
+#printSheet thead th{background:#173b72!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#printSheet tbody th{background:#fff3bd!important;color:#173b72!important;text-align:left!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#printSheet tbody tr{height:38px!important;break-inside:avoid!important}
+#printSheet tbody tr:last-child th,#printSheet tbody tr:last-child td{background:#ffdf00!important;color:#173b72!important;font-weight:800!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#printSheet .foot{display:none!important}
+}</style></head><body><header style="display:flex;justify-content:space-between;align-items:center"><div><div style="display:flex;align-items:center;gap:10px"><img alt="Logo Croce Gialla" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?height=70" style="height:38px;width:38px;object-fit:contain"><h2 style="margin:0">Croce Gialla Emergenza ODV</h2></div><b>Programmazione turni dipendenti</b></div></header><main><section id="work" class="hidden"><div class="row noprint"><label>Settimana dal <input id="week" type="date"></label><button id="load">Carica turni salvati</button><button id="newWeek">Nuova settimana vuota</button><button id="save">Salva turni</button><button id="print">Stampa / PDF</button><button id="back">Torna ad Amministrazione Timbrature</button></div><p id="subtitle"></p><div id="table"></div><p>Nota: turni programmati, non timbrature effettive. Eventuali cambi devono essere approvati dall'amministrazione.</p></section><div id="printSheet" aria-hidden="true"></div><div id="notice" role="status" class="noprint">Verifica accesso amministrativo…</div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
 const SB=supabase.createClient("https://ihottewckpwpwqzpxusl.supabase.co","sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 const API='https://ihottewckpwpwqzpxusl.supabase.co/functions/v1/timbrature-turni-sessione',people=[{badge:'19',name:'Martinoli Andrea'},{badge:'37',name:'Brughera Francesca'},{badge:'39',name:'Farinaccio Greta'}];let cached=[];const $=id=>document.getElementById(id);const dayString=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const startWeek=d=>{d=new Date(d.getTime());d.setDate(d.getDate()-((d.getDay()+6)%7));return d};const note=s=>$('notice').textContent=s;
 async function api(body){const {data:{session}}=await SB.auth.getSession();if(!session)throw Error("Sessione non attiva");const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw Error(j.error||"Errore server");return j}
