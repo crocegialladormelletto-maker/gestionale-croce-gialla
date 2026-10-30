@@ -89,6 +89,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button class="sideBtn" data-page="storico">📚 <span class="sideLabel">Registro storico</span></button>
 <button class="sideBtn" data-page="anomalie">⚠️ <span class="sideLabel">Anomalie</span><span id="anomalyBadge" class="menuBadge okBadge">0</span></button>
 <button class="sideBtn" data-page="riepiloghi">📊 Riepiloghi mensili</button>
+<button class="sideBtn" type="button" id="openEmployeeShifts">📅 <span class="sideLabel">Turni Dipendenti</span></button>
 <button class="sideBtn" data-page="impegni">📌 <span class="sideLabel">Impegni / Assenze programmati</span></button>
 <button class="sideBtn" data-page="causali">📅 Causali / Assenze</button>
 <button class="sideBtn" data-page="chiusura">🔒 Chiusura mese</button>
@@ -266,6 +267,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
+document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('openEmployeeShifts');if(b)b.addEventListener('click',()=>{window.location.href='../timbrature/turni.html'});});
+
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co',KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4',ADMIN_API=SUPABASE_URL+'/functions/v1/timbrature-admin-api';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 let people=[],events=[],context=[],auditRows=[],months=[],absences=[],commitments=[],monthClosed=false;const $=x=>document.getElementById(x);
