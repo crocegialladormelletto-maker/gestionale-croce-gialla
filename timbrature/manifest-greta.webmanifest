@@ -1,0 +1,16 @@
+{
+  "name": "Croce Gialla - Pause Greta Farinaccio",
+  "short_name": "Pause Greta",
+  "start_url": "./pausa-greta.html",
+  "scope": "./",
+  "display": "standalone",
+  "theme_color": "#173b72",
+  "background_color": "#f4f7fb",
+  "icons": [
+    {
+      "src": "./icon-pausa.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
