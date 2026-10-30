@@ -1,5 +1,21 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173b72"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Pause greta"><link rel="manifest" href="./manifest-greta.webmanifest"><link rel="apple-touch-icon" href="./icon-pausa.svg"><title>Pause Greta Farinaccio - Croce Gialla</title><style>
-*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#17304c;font-family:Arial,sans-serif}header{background:#ffdf00;padding:22px;text-align:center;border-bottom:4px solid #173b72}h1{font-size:23px;margin:5px}.card{background:white;max-width:470px;margin:26px auto;padding:24px;border-radius:18px;box-shadow:0 8px 30px #14243a1a}label{display:block;font-weight:bold;margin:15px 0 7px}select,input,button{width:100%;padding:16px;font-size:18px;border-radius:12px}select,input{border:1px solid #b8c4d3}button{cursor:pointer;border:0;background:#173b72;color:white;font-weight:bold;margin-top:16px}button:disabled{opacity:.35;cursor:not-allowed}.start{background:#eabf30;color:#322500}.end{background:#21704b}#status,#notice{background:#edf2fa;border-radius:10px;padding:13px;margin-top:15px}.hidden{display:none}small{color:#53667c}h2{margin:5px 0 18px}@media(max-width:550px){.card{margin:14px;padding:18px}}</style></head><body><header><h1>🟡 Croce Gialla Emergenza ODV</h1><div>PAUSE DIPENDENTI · SMARTPHONE</div></header><main class="card"><div id="login"><h2>Accesso dipendente</h2><p><strong>Greta Farinaccio</strong></p><label>PIN personale</label><input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"><button id="enter">ACCEDI</button></div><div id="work" class="hidden"><h2 id="name"></h2><div id="status"></div><button id="start" class="start">☕ INIZIO PAUSA</button><button id="end" class="end">▶ FINE PAUSA</button><section style="margin-top:20px"><h3>Turni di tutti i dipendenti</h3><div id="calendar">Caricamento...</div><button id="reloadShifts" type="button">Aggiorna turni</button></section><button id="exit">ESCI DALL'APP</button></div><div id="notice" role="status">Nessuna geolocalizzazione richiesta o registrata.</div><p><small>Le pause sono collegate al gestionale timbrature. Entrata e uscita dal lavoro si timbrano in sede.</small></p></main><script>
+*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#17304c;font-family:Arial,sans-serif}header{background:#ffdf00;padding:22px;text-align:center;border-bottom:4px solid #173b72}h1{font-size:23px;margin:5px}.card{background:white;max-width:470px;margin:26px auto;padding:24px;border-radius:18px;box-shadow:0 8px 30px #14243a1a}label{display:block;font-weight:bold;margin:15px 0 7px}select,input,button{width:100%;padding:16px;font-size:18px;border-radius:12px}select,input{border:1px solid #b8c4d3}button{cursor:pointer;border:0;background:#173b72;color:white;font-weight:bold;margin-top:16px}button:disabled{opacity:.35;cursor:not-allowed}.start{background:#eabf30;color:#322500}.end{background:#21704b}#status,#notice{background:#edf2fa;border-radius:10px;padding:13px;margin-top:15px}.hidden{display:none}small{color:#53667c}h2{margin:5px 0 18px}@media(max-width:550px){.card{margin:14px;padding:18px}}
+/* Calendario turni leggibile su smartphone */
+#calendar{display:grid;gap:14px;margin-top:12px}
+.shiftDay{border:1px solid #d8e2ee;border-radius:14px;overflow:hidden;background:white;box-shadow:0 3px 12px #173b7210}
+.shiftDate{padding:12px 14px;background:#173b72;color:#fff;font-size:16px;font-weight:800;text-transform:capitalize}
+.shiftPeople{display:grid;gap:7px;padding:10px}
+.shiftPerson{display:flex;align-items:center;justify-content:space-between;gap:9px;border-radius:11px;padding:12px 10px;min-width:0}
+.shiftPerson.shift39{background:#fff0b8;border-left:5px solid #e3b817}
+.shiftPerson.shift19{background:#dcecff;border-left:5px solid #3d82c9}
+.shiftPerson.shift37{background:#dcf4e4;border-left:5px solid #3a9964}
+.shiftPerson.off{background:#e9edf2;border-left:5px solid #9aa5b3}
+.shiftPerson .shiftName{font-weight:750;font-size:14px;line-height:1.22;min-width:0}
+.shiftPerson .shiftTime{font-size:15px;font-weight:900;white-space:nowrap;color:#102b50;flex-shrink:0}
+.shiftPerson.off .shiftTime{color:#5b6571;font-size:13px}
+#work section>h3{margin-bottom:5px;color:#102e59;font-size:20px}
+@media(max-width:380px){.shiftPerson{padding:10px 8px}.shiftPerson .shiftName{font-size:12.5px}.shiftPerson .shiftTime{font-size:13.5px}}
+</style></head><body><header><h1>🟡 Croce Gialla Emergenza ODV</h1><div>PAUSE DIPENDENTI · SMARTPHONE</div></header><main class="card"><div id="login"><h2>Accesso dipendente</h2><p><strong>Greta Farinaccio</strong></p><label>PIN personale</label><input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"><button id="enter">ACCEDI</button></div><div id="work" class="hidden"><h2 id="name"></h2><div id="status"></div><button id="start" class="start">☕ INIZIO PAUSA</button><button id="end" class="end">▶ FINE PAUSA</button><section style="margin-top:20px"><h3>Turni di tutti i dipendenti</h3><div id="calendar">Caricamento...</div><button id="reloadShifts" type="button">Aggiorna turni</button></section><button id="exit">ESCI DALL'APP</button></div><div id="notice" role="status">Nessuna geolocalizzazione richiesta o registrata.</div><p><small>Le pause sono collegate al gestionale timbrature. Entrata e uscita dal lavoro si timbrano in sede.</small></p></main><script>
 const API='https://ihottewckpwpwqzpxusl.supabase.co/functions/v1/timbrature-api';let token='';const $=id=>document.getElementById(id);
 async function api(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',...(token?{'x-clock-token':token}:{})},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw Error(j.error||'Errore di comunicazione');return j}
 function notice(t){$('notice').textContent=t}
@@ -10,13 +26,37 @@ async function pause(tipo){try{const r=await api({action:'pause_clock',tipo});no
 
 async function loadShifts(){
  try{
- const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));
- const from=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
- const r=await api({action:'my_shifts',from});
- const names=Object.fromEntries((r.persone||[]).map(p=>[p.badge,p.nome_completo]));
- const entries=(r.turni||[]).map(t=>{const tr=document.createElement('tr');[t.giorno, names[t.badge]||'Dipendente',t.riposo?'RIPOSO':(t.inizio||'').slice(0,5)+' - '+(t.fine||'').slice(0,5)].forEach(value=>{const td=document.createElement('td');td.textContent=value;td.style.padding='7px';tr.appendChild(td)});return tr});
- const table=document.createElement('table');table.style.width='100%';const body=document.createElement('tbody');entries.forEach(tr=>body.appendChild(tr));table.appendChild(body);
- $('calendar').replaceChildren(entries.length?table:document.createTextNode('Nessun turno ancora pubblicato.'));
+  const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));
+  const from=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const r=await api({action:'my_shifts',from});
+  const names=Object.fromEntries((r.persone||[]).map(p=>[String(p.badge),p.nome_completo]));
+  const fallback={'39':'Greta Farinaccio','19':'Andrea Martinoli','37':'Francesca Brughera'};
+  const byDate=new Map();
+  for(const t of r.turni||[]){
+   const key=String(t.giorno).slice(0,10);
+   if(!byDate.has(key))byDate.set(key,new Map());
+   byDate.get(key).set(String(t.badge),t);
+  }
+  const calendar=$('calendar');calendar.replaceChildren();
+  if(!byDate.size){calendar.textContent='Nessun turno ancora pubblicato.';return}
+  for(const giorno of [...byDate.keys()].sort()){
+   const day=new Date(giorno+'T12:00:00');
+   const card=document.createElement('article');card.className='shiftDay';
+   const heading=document.createElement('div');heading.className='shiftDate';
+   heading.textContent=day.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+   card.appendChild(heading);
+   const people=document.createElement('div');people.className='shiftPeople';
+   const entries=byDate.get(giorno);
+   for(const badge of ['39','19','37']){
+    const t=entries.get(badge);if(!t)continue;
+    const row=document.createElement('div');row.className='shiftPerson shift'+badge+(t.riposo?' off':'');
+    const name=document.createElement('span');name.className='shiftName';name.textContent=names[badge]||fallback[badge];
+    const hours=document.createElement('strong');hours.className='shiftTime';
+    hours.textContent=t.riposo?'RIPOSO':(t.inizio||'').slice(0,5)+' – '+(t.fine||'').slice(0,5);
+    row.append(name,hours);people.appendChild(row);
+   }
+   card.appendChild(people);calendar.appendChild(card);
+  }
  }catch(e){$('calendar').textContent='Turni non disponibili: '+e.message}
 }
 async function logout(){try{if(token)await api({action:'logout'})}catch{}token='';$('work').classList.add('hidden');$('login').classList.remove('hidden')}
