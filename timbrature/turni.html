@@ -19,6 +19,21 @@
  #printSheet .tot{font-weight:700;background:#e7edf7!important}
  #printSheet .rip{color:#64748b;font-style:italic}
  #printSheet .foot{margin-top:17px;border-top:1px solid #cbd5e1;padding-top:9px;font-size:9pt;color:#475569}
+}@page{size:A4 landscape;margin:8mm}
+@media print{
+html,body{margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
+header{padding:0 0 6px!important;margin:0 0 5px!important;break-after:avoid!important}
+header h2{margin:0 0 2px!important;font-size:16pt!important}
+header b{font-size:10pt!important}
+header img{height:55px!important;width:55px!important}
+main{margin:0!important;padding:0!important;max-width:none!important}
+#work,#notice{display:none!important}
+#printSheet{display:block!important;margin:6px 0 0!important;break-inside:avoid!important}
+#printSheet h3{margin:0 0 7px!important;font-size:11pt!important}
+#printSheet table{margin:0!important;font-size:9pt!important;break-inside:avoid!important}
+#printSheet th,#printSheet td{padding:6px 5px!important;height:38px!important}
+#printSheet tbody tr{height:39px!important;break-inside:avoid!important}
+#printSheet .foot{margin-top:5px!important;padding-top:3px!important;font-size:7pt!important;line-height:1.1!important;break-inside:avoid!important}
 }</style></head><body><header style="display:flex;justify-content:space-between;align-items:center"><div><h2>🟡 Croce Gialla Emergenza ODV</h2><b>Programmazione turni dipendenti</b></div><img alt="Logo Croce Gialla Emergenza ODV" style="height:85px;width:85px;object-fit:contain" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?height=70"></header><main><section id="work" class="hidden"><div class="row noprint"><label>Settimana dal <input id="week" type="date"></label><button id="load">Carica turni salvati</button><button id="newWeek">Nuova settimana vuota</button><button id="save">Salva turni</button><button id="print">Stampa / PDF</button><button id="back">Torna ad Amministrazione Timbrature</button></div><p id="subtitle"></p><div id="table"></div><p>Nota: turni programmati, non timbrature effettive. Eventuali cambi devono essere approvati dall'amministrazione.</p></section><div id="printSheet" aria-hidden="true"></div><div id="notice" role="status" class="noprint">Verifica accesso amministrativo…</div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
 const SB=supabase.createClient("https://ihottewckpwpwqzpxusl.supabase.co","sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 const API='https://ihottewckpwpwqzpxusl.supabase.co/functions/v1/timbrature-turni-sessione',people=[{badge:'19',name:'Martinoli Andrea'},{badge:'37',name:'Brughera Francesca'},{badge:'39',name:'Farinaccio Greta'}];let cached=[];const $=id=>document.getElementById(id);const dayString=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const startWeek=d=>{d=new Date(d.getTime());d.setDate(d.getDate()-((d.getDay()+6)%7));return d};const note=s=>$('notice').textContent=s;
@@ -47,5 +62,5 @@ function clearWeek(){cached=[];render();note('Griglia vuota pronta per inserire 
 function nextWeek(){const d=new Date($('week').value+'T12:00:00');d.setDate(d.getDate()+7);$('week').value=dayString(d);clearWeek()}
 async function load(){try{const r=await api({action:'load',from:$('week').value});cached=r.turni||[];render();note('Turni caricati.')}catch(e){note(e.message)}}
 async function save(){try{const turni=[];for(const td of document.querySelectorAll('td[data-giorno]')){const inputs=td.querySelectorAll('input');const a=inputs[0].value,b=inputs[1].value,r=inputs[2].checked;if(!r&&!a&&!b)continue;if(!r&&(!a||!b))throw Error('Inserire entrambi gli orari per '+td.dataset.giorno);turni.push({badge:td.dataset.badge,giorno:td.dataset.giorno,inizio:a,fine:b,riposo:r})}const r=await api({action:'save',turni});note('Salvati '+r.salvati+' turni. Ora sono disponibili nelle app.');await load()}catch(e){note(e.message)}}
-$('week').value=dayString(startWeek(new Date()));$('week').onchange=clearWeek;$('newWeek').onclick=nextWeek;$('load').onclick=load;$('save').onclick=save;$('print').onclick=()=>{buildPrintSheet();window.print()};$('back').onclick=()=>location.href='../timbrature-amministrazione/';(async()=>{try{const {data:{session}}=await SB.auth.getSession();if(!session)throw Error("Login necessario");await api({action:'load',from:$('week').value});$('work').classList.remove('hidden');await load()}catch(e){note("Accesso amministrativo richiesto: torna ad Amministrazione Timbrature ed entra con la password abituale.");const b=document.createElement('button');b.textContent="Torna ad Amministrazione Timbrature";b.onclick=()=>location.href='../timbrature-amministrazione/';$('notice').appendChild(b)}})();
+$('week').value=dayString(startWeek(new Date()));$('week').onchange=clearWeek;$('newWeek').onclick=nextWeek;$('load').onclick=load;$('save').onclick=save;$('print').onclick=()=>{buildPrintSheet();window.print()};$('back').onclick=()=>location.href='../timbrature-amministrazione/';(async()=>{try{const {data:{session}}=await SB.auth.getSession();if(!session)throw Error("Login necessario");await api({action:'load',from:$('week').value});$('work').classList.remove('hidden');clearWeek()}catch(e){note("Accesso amministrativo richiesto: torna ad Amministrazione Timbrature ed entra con la password abituale.");const b=document.createElement('button');b.textContent="Torna ad Amministrazione Timbrature";b.onclick=()=>location.href='../timbrature-amministrazione/';$('notice').appendChild(b)}})();
 </script></body></html>
