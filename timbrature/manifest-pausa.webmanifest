@@ -1,0 +1,18 @@
+{
+  "name": "Croce Gialla - Pause Dipendenti",
+  "short_name": "Pause CGE",
+  "description": "Registrazione pause dipendenti Croce Gialla Emergenza ODV",
+  "start_url": "./pausa.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#173b72",
+  "icons": [
+    {
+      "src": "./icon-pausa.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
