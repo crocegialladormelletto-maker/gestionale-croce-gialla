@@ -17,7 +17,20 @@ main{display:block!important;max-width:none!important;margin:0!important;padding
 #printSheet tbody tr{height:38px!important;break-inside:avoid!important}
 #printSheet tbody tr:last-child th,#printSheet tbody tr:last-child td{background:#ffdf00!important;color:#173b72!important;font-weight:800!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 #printSheet .foot{display:none!important}
-}</style></head><body><header style="display:flex;justify-content:space-between;align-items:center"><div><div style="display:flex;align-items:center;gap:10px"><img alt="Logo Croce Gialla" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?height=70" style="height:38px;width:38px;object-fit:contain"><h2 style="margin:0">Croce Gialla Emergenza ODV</h2></div><b>Programmazione turni dipendenti</b></div></header><main><section id="work" class="hidden"><div class="row noprint"><label>Settimana dal <input id="week" type="date"></label><button id="load">Carica turni salvati</button><button id="newWeek">Nuova settimana vuota</button><button id="save">Salva turni</button><button id="print">Stampa / PDF</button><button id="back">Torna ad Amministrazione Timbrature</button></div><p id="subtitle"></p><div id="table"></div><p>Nota: turni programmati, non timbrature effettive. Eventuali cambi devono essere approvati dall'amministrazione.</p></section><div id="printSheet" aria-hidden="true"></div><div id="notice" role="status" class="noprint">Verifica accesso amministrativo…</div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
+}.editGrid{table-layout:fixed;margin:18px 0 8px;border-collapse:collapse;width:100%}
+.editGrid th,.editGrid td{border:1px solid #b7c9df;padding:10px 7px;text-align:center;vertical-align:middle}
+.editGrid thead th{background:#102f5a;color:white;font-size:14px}
+.editGrid thead th:first-child{width:24%}
+.editGrid tbody th{background:#dceeff;color:#102f5a;text-align:left;font-size:13px}
+.editGrid tbody td:nth-child(2){background:#fff6cf}
+.editGrid tbody td:nth-child(3){background:#e7f3ff}
+.editGrid tbody td:nth-child(4){background:#e6f8e7}
+.editGrid .hoursInputs{display:flex;align-items:center;justify-content:center;gap:5px}
+.editGrid .hoursInputs input{width:110px;min-width:0;font-size:14px;font-weight:700;padding:7px 3px}
+.editGrid .restLabel{display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;margin:7px 0 0}
+.editGrid .restLabel input{width:16px;height:16px}
+.editGrid .totalRow th,.editGrid .totalRow td{background:#ffdf00!important;font-size:17px;font-weight:800;color:#102f5a}
+@media(max-width:850px){#table{overflow-x:auto}.editGrid{min-width:850px}}</style></head><body><header style="display:flex;justify-content:space-between;align-items:center"><div><div style="display:flex;align-items:center;gap:10px"><img alt="Logo Croce Gialla" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?height=70" style="height:38px;width:38px;object-fit:contain"><h2 style="margin:0">Croce Gialla Emergenza ODV</h2></div><b>Programmazione turni dipendenti</b></div></header><main><section id="work" class="hidden"><div class="row noprint"><label>Settimana dal <input id="week" type="date"></label><button id="load">Carica turni salvati</button><button id="newWeek">Nuova settimana vuota</button><button id="save">Salva turni</button><button id="print">Stampa / PDF</button><button id="back">Torna ad Amministrazione Timbrature</button></div><p id="subtitle"></p><div id="table"></div><p>Nota: turni programmati, non timbrature effettive. Eventuali cambi devono essere approvati dall'amministrazione.</p></section><div id="printSheet" aria-hidden="true"></div><div id="notice" role="status" class="noprint">Verifica accesso amministrativo…</div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
 const SB=supabase.createClient("https://ihottewckpwpwqzpxusl.supabase.co","sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 const API='https://ihottewckpwpwqzpxusl.supabase.co/functions/v1/timbrature-turni-sessione',people=[{badge:'19',name:'Martinoli Andrea'},{badge:'37',name:'Brughera Francesca'},{badge:'39',name:'Farinaccio Greta'}];let cached=[];const $=id=>document.getElementById(id);const dayString=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const startWeek=d=>{d=new Date(d.getTime());d.setDate(d.getDate()-((d.getDay()+6)%7));return d};const note=s=>$('notice').textContent=s;
 async function api(body){const {data:{session}}=await SB.auth.getSession();if(!session)throw Error("Sessione non attiva");const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw Error(j.error||"Errore server");return j}
@@ -40,7 +53,43 @@ function buildPrintSheet(){
  tbody.appendChild(totalRow);table.appendChild(tbody);holder.appendChild(table);
  const footer=document.createElement('div');footer.className='foot';footer.textContent='Croce Gialla Emergenza ODV · Orari programmati, soggetti a variazioni autorizzate dall’amministrazione.';holder.appendChild(footer);
 }
-function render(){const begin=new Date($('week').value+'T12:00:00');$('subtitle').textContent='Settimana '+begin.toLocaleDateString('it-IT')+' – '+new Date(begin.getTime()+6*86400000).toLocaleDateString('it-IT');const table=document.createElement('table');const thead=document.createElement('thead');thead.innerHTML='<tr><th>Dipendente</th>'+Array.from({length:7},(_,i)=>{const d=new Date(begin);d.setDate(d.getDate()+i);return '<th>'+d.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'})+'</th>'}).join('')+'</tr>';table.append(thead);const tbody=document.createElement('tbody');for(const p of people){const tr=document.createElement('tr');const title=document.createElement('th');title.textContent=p.name;tr.append(title);for(let i=0;i<7;i++){const d=new Date(begin);d.setDate(d.getDate()+i);const giorno=dayString(d),item=cached.find(t=>t.badge===p.badge&&t.giorno===giorno);const td=document.createElement('td');td.dataset.badge=p.badge;td.dataset.giorno=giorno;const from=document.createElement('input'),to=document.createElement('input'),check=document.createElement('input');from.type='time';to.type='time';check.type='checkbox';from.value=item?.inizio?.slice(0,5)||'';to.value=item?.fine?.slice(0,5)||'';check.checked=!!item?.riposo;const lab=document.createElement('label');lab.textContent='Riposo';lab.prepend(check);td.append(from,to,lab);tr.append(td)}tbody.append(tr)}table.append(tbody);$('table').replaceChildren(table)}
+function render(){
+ const begin=new Date($('week').value+'T12:00:00');
+ $('subtitle').textContent='Settimana '+begin.toLocaleDateString('it-IT')+' – '+new Date(begin.getTime()+6*86400000).toLocaleDateString('it-IT');
+ const order=[people[2],people[0],people[1]],table=document.createElement('table');table.className='editGrid';
+ const thead=document.createElement('thead'),head=document.createElement('tr');
+ for(const label of ['GIORNO',...order.map(p=>p.name.toUpperCase())]){const th=document.createElement('th');th.textContent=label;head.append(th)}thead.append(head);table.append(thead);
+ const tbody=document.createElement('tbody');
+ for(let i=0;i<7;i++){
+  const d=new Date(begin);d.setDate(d.getDate()+i);const giorno=dayString(d),tr=document.createElement('tr'),th=document.createElement('th');
+  th.textContent=d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'}).toUpperCase();tr.append(th);
+  for(const p of order){
+   const item=cached.find(t=>t.badge===p.badge&&t.giorno===giorno),td=document.createElement('td');
+   td.dataset.badge=p.badge;td.dataset.giorno=giorno;
+   const inputs=document.createElement('div');inputs.className='hoursInputs';
+   const from=document.createElement('input'),to=document.createElement('input'),check=document.createElement('input');
+   from.type='time';to.type='time';check.type='checkbox';from.value=item?.inizio?.slice(0,5)||'';to.value=item?.fine?.slice(0,5)||'';check.checked=!!item?.riposo;
+   const dash=document.createElement('span');dash.textContent='–';inputs.append(from,dash,to);
+   const lab=document.createElement('label');lab.className='restLabel';lab.append(check,document.createTextNode(' Riposo'));
+   td.append(inputs,lab);tr.append(td);
+  }tbody.append(tr);
+ }
+ const totalRow=document.createElement('tr');totalRow.className='totalRow';const totalHead=document.createElement('th');totalHead.textContent='TOTALE ORE';totalRow.append(totalHead);
+ for(const p of order){const cell=document.createElement('td');cell.dataset.total=p.badge;totalRow.append(cell)}
+ tbody.append(totalRow);table.append(tbody);$('table').replaceChildren(table);updateTotals();
+}
+function updateTotals(){
+ const totals={'19':0,'37':0,'39':0};
+ for(const td of document.querySelectorAll('.editGrid td[data-giorno]')){
+  const inputs=td.querySelectorAll('input'),a=inputs[0].value,b=inputs[1].value,rest=inputs[2].checked;
+  if(rest||!a||!b)continue;
+  const st=a.split(':').map(Number),en=b.split(':').map(Number);let mins=en[0]*60+en[1]-st[0]*60-st[1];if(mins<0)mins+=1440;
+  totals[td.dataset.badge]+=mins;
+ }
+ for(const [badge,minutes] of Object.entries(totals)){const el=document.querySelector('[data-total="'+badge+'"]');if(el)el.textContent=minutes?Math.floor(minutes/60)+' ore'+(minutes%60?' '+minutes%60+' min':''):'—'}
+}
+document.addEventListener('input',e=>{if(e.target.closest('.editGrid'))updateTotals()});
+document.addEventListener('change',e=>{if(e.target.closest('.editGrid'))updateTotals()});
 function clearWeek(){cached=[];render();note('Griglia vuota pronta per inserire nuovi turni. Nessun turno archiviato è stato cancellato.')}
 function nextWeek(){const d=new Date($('week').value+'T12:00:00');d.setDate(d.getDate()+7);$('week').value=dayString(d);clearWeek()}
 async function load(){try{const r=await api({action:'load',from:$('week').value});cached=r.turni||[];render();note('Turni caricati.')}catch(e){note(e.message)}}
