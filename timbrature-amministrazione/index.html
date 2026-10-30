@@ -42,8 +42,20 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .sideLabel{flex:1}.menuBadge{min-width:26px;height:26px;padding:0 7px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;background:#fff;color:#102f5a;box-shadow:0 1px 5px rgba(0,0,0,.18)}
 .menuBadge.dangerBadge{background:#d92d20;color:#fff}.menuBadge.okBadge{background:#20a35a;color:#fff}.menuBadge.neutralBadge{background:#dbe7f4;color:#173b72}
 .sideBtn:hover{filter:brightness(1.08)}.sideBtn.active{background:var(--y);color:#102f5a;box-shadow:0 0 0 2px rgba(255,223,0,.25)}
-.sideBtn[data-page="timbrature"]{background:#2e5f9a}.sideBtn[data-page="anomalie"]{background:#9b3138}.sideBtn[data-page="riepiloghi"]{background:#24705a}.sideBtn[data-page="chiusura"]{background:#7e4a12}.sideBtn[data-page="dipendenti"]{background:#5a4b91}.sideBtn[data-page="audit"]{background:#46576d}.sideBtn[data-page="stampe"]{background:#166d82}.sideBtn[data-page="causali"]{background:#8b5e12}.sideBtn[data-page="storico"]{background:#3f5f7f}
-.sideBtn[data-page="ccnl"]{background:#087c84;color:#fff;border:2px solid #8ef0e6;box-shadow:0 3px 12px rgba(0,0,0,.22)}.sideBtn.active[data-page]{background:var(--y);color:#102f5a}
+/* Tavolozza differenziata per facilitare il riconoscimento delle sezioni */
+.sideBtn[data-page="timbrature"]{background:#2866af}
+.sideBtn[data-page="storico"]{background:#56657e}
+.sideBtn[data-page="anomalie"]{background:#af3746}
+.sideBtn[data-page="riepiloghi"]{background:#19866e}
+.sideBtn#openEmployeeShifts{background:#6650ad}
+.sideBtn[data-page="impegni"]{background:#a14b86}
+.sideBtn[data-page="causali"]{background:#96601b}
+.sideBtn[data-page="chiusura"]{background:#b05228}
+.sideBtn[data-page="dipendenti"]{background:#426d93}
+.sideBtn[data-page="audit"]{background:#526173}
+.sideBtn[data-page="stampe"]{background:#087f9e}
+.sideBtn[data-page="ccnl"]{background:#087974;color:#fff;border:2px solid #8ef0e6;box-shadow:0 3px 12px rgba(0,0,0,.22)}
+.sideBtn.active[data-page]{background:var(--y);color:#102f5a}
 .adminMain{min-width:0}.adminPage{display:none}.adminPage.active{display:block}
 .pageHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.pageHead h2{margin:0}
 .mobileMenuBtn{display:none;background:#102f5a;color:#fff}
