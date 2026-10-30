@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trasporti multipaziente · Croce Gialla</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#16334b;background:#f1f5f9}*{box-sizing:border-box}body{margin:0}header{background:#12375d;color:#fff;padding:17px max(16px,calc((100vw - 1050px)/2));border-bottom:5px solid #f7bc20}header strong{font-size:20px}main{max-width:1050px;margin:24px auto;padding:0 16px}.card{background:#fff;border:1px solid #d8e2ec;border-radius:14px;margin:16px 0;padding:20px;box-shadow:0 2px 9px #122b4210}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;font-weight:650;font-size:13px;margin-bottom:5px}input,select,textarea{width:100%;padding:11px;border:1px solid #b9cbdc;border-radius:8px;font:inherit;background:white}textarea{min-height:65px}button,a.btn{display:inline-block;border:0;background:#135a95;color:white;border-radius:9px;padding:11px 16px;font-weight:700;cursor:pointer;text-decoration:none}button:disabled{opacity:.55;cursor:not-allowed}button.secondary,a.btn.secondary{background:#e7eef5;color:#153a56}button.danger{background:#9d2b2b}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.muted{color:#587087}.info{background:#fff8e6;padding:12px;border-radius:8px;border-left:4px solid #e5a800}.error{color:#a02525;font-weight:bold}.ok{color:#116747;font-weight:bold}.leg{border-top:1px solid #dde6ef;padding:15px 0}.pill{font-size:12px;font-weight:700;background:#e6f3ff;border-radius:15px;padding:5px 9px}.patient{padding:12px;border:1px solid #dbe4ec;background:#f7fafc;border-radius:9px;margin:7px 0}.large{font-size:22px;font-weight:800}h1{font-size:25px;margin:0 0 6px}h2{font-size:19px;margin:0 0 12px}h3{margin:0 0 10px}small{color:#587087} .hidden{display:none!important}@media(max-width:650px){.two{grid-template-columns:1fr}.card{padding:14px}header{padding:16px}}</style>
+</head><body>
+<header><strong>🚑 Croce Gialla Emergenza ODV</strong><div>Trasporti multipaziente · programmazione e percorrenze</div></header>
+<main>
+<div class="actions"><a class="btn secondary" href="../index.html">← Torna al gestionale</a><button id="refresh" class="secondary">Aggiorna</button></div>
+<h1>Trasporti multipaziente</h1><p class="muted">Più pazienti nello stesso viaggio, fogli individuali, tratte del mezzo registrate una sola volta.</p>
+<div id="status" aria-live="polite"></div><div id="auth" class="card">Verifica accesso in corso…</div>
+<div id="content" class="hidden">
+<section class="card">
+<h2>Cerca i trasporti</h2>
+<div class="grid"><div><label for="date">Data del servizio</label><input id="date" type="date" value="2026-11-02"></div><div><label for="vehicle">Mezzo</label><select id="vehicle"><option>06</option><option>07</option><option>08</option><option>09</option></select></div></div>
+<div class="actions"><button id="load">Mostra trasporti</button><button id="new" class="secondary">+ Crea trasporto</button></div>
+</section>
+<section id="creation" class="card hidden">
+<h2>Nuovo trasporto multipaziente</h2>
+<label for="description">Descrizione</label><input id="description" value="Trasporto sanitario condiviso">
+<p class="muted">Seleziona almeno due servizi già programmati per lo stesso giorno e mezzo. Ognuno manterrà il proprio foglio viaggio e pagamento.</p>
+<div id="candidates"></div>
+<div class="actions"><button id="create">Crea e collega i servizi</button><button id="cancel" class="secondary">Annulla</button></div>
+</section>
+<div id="trips"></div>
+<section class="card info"><strong>Come funzionano i chilometri</strong><p>Ogni tratta corrisponde a un percorso reale del mezzo, dal chilometro iniziale al finale. I chilometri sono rilevati una sola volta per tratta anche se a bordo ci sono due pazienti. Non copiare gli stessi chilometri in entrambi i fogli viaggio. Le tratte di questa schermata non aggiornano automaticamente il contachilometri ufficiale del mezzo o il foglio viaggio: il coordinamento va fatto in chiusura per evitare doppi conteggi.</p></section>
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+<script>
+const sb=supabase.createClient('https://ihottewckpwpwqzpxusl.supabase.co','sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+const $=id=>document.getElementById(id);
+const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const human=t=>t?String(t).slice(0,5):'—';
+function report(t,err=false){$('status').innerHTML='<p class="'+(err?'error':'ok')+'">'+safe(t)+'</p>'}
+async function db(table,query){const r=await query(sb.from(table));if(r.error)throw r.error;return r.data}
+let role='',selected=[];
+async function init(){
+ try{
+  const session=(await sb.auth.getSession()).data.session;
+  if(!session)throw Error('Accedi prima al gestionale con il tuo account.');
+  const a=await db('accessi_app',t=>t.select('ruolo,attivo').eq('user_id',session.user.id).single());
+  if(!a?.attivo||!['AMMINISTRATORE','CENTRALINO'].includes(a.ruolo))throw Error('Funzione riservata ad amministrazione e centralino.');
+  role=a.ruolo;$('auth').classList.add('hidden');$('content').classList.remove('hidden');
+  await load();
+ }catch(e){$('auth').textContent=e.message||String(e);report(e.message||String(e),true)}
+}
+async function load(){
+ try{
+  report('Caricamento…');
+  const date=$('date').value,mezzo=$('vehicle').value;
+  const rows=await db('trasporti_multipaziente',t=>t.select('*').eq('data_servizio',date).eq('mezzo',mezzo).order('creato_il',{ascending:false}));
+  if(!rows.length){$('trips').innerHTML='<div class="card">Nessun trasporto multipaziente per questa data e questo mezzo.</div>';report('Ricerca completata.');return}
+  let out='';
+  for(const trip of rows){
+   const participants=await db('trasporti_multipaziente_pazienti',t=>t.select('servizio_id,ordine_carico,fascia_rientro,servizi_giornalieri(paziente_nome,paziente_cognome,ora_prevista,luogo_carico_paziente,indirizzo_carico_paziente,numero_foglio,stato)').eq('trasporto_id',trip.id).order('ordine_carico'));
+   const legs=await db('trasporti_multipaziente_tratte',t=>t.select('*').eq('trasporto_id',trip.id).order('ordine'));
+   const sum=legs.reduce((a,b)=>a+(b.km_percorsi??0),0),done=legs.filter(x=>x.km_percorsi!==null).length;
+   out+='<section class="card"><h2>'+safe(trip.descrizione)+'</h2><p><span class="pill">Mezzo '+safe(trip.mezzo)+'</span> <span class="pill">'+safe(trip.stato)+'</span> <span class="pill">'+safe(trip.data_servizio)+'</span></p>';
+   out+='<h3>Pazienti e fogli individuali</h3>';
+   for(const p of participants){const s=p.servizi_giornalieri||{};out+='<div class="patient"><strong>'+safe(s.paziente_nome)+' '+safe(s.paziente_cognome)+'</strong> · Carico '+p.ordine_carico+' · Rientro '+safe(p.fascia_rientro)+'<div><small>'+human(s.ora_prevista)+' · '+safe(s.luogo_carico_paziente||'Luogo da verificare')+' '+safe(s.indirizzo_carico_paziente||'')+' · Foglio: '+safe(s.numero_foglio||'da generare')+'</small></div></div>'}
+   out+='<h3>Tratte effettive del mezzo</h3>';
+   for(const l of legs){
+    out+='<div class="leg" data-leg="'+safe(l.id)+'"><p><strong>'+l.ordine+'. '+safe(l.fase.replaceAll('_',' '))+'</strong> <span class="pill">'+(l.km_percorsi==null?'Km da inserire':l.km_percorsi+' km')+'</span></p>';
+    out+='<div class="grid"><div style="grid-column:1/-1"><label>Descrizione del percorso</label><textarea data-field="descrizione">'+safe(l.descrizione)+'</textarea></div>';
+    out+='<div><label>Ora prevista</label><input type="time" data-field="ora_prevista" value="'+humanInput(l.ora_prevista)+'"></div>';
+    out+='<div><label>Partenza effettiva</label><input type="time" data-field="ora_partenza" value="'+humanInput(l.ora_partenza)+'"></div>';
+    out+='<div><label>Arrivo effettivo</label><input type="time" data-field="ora_arrivo" value="'+humanInput(l.ora_arrivo)+'"></div>';
+    out+='<div><label>Km iniziali</label><input type="number" min="0" step="1" data-field="km_iniziali" value="'+(l.km_iniziali??'')+'"></div>';
+    out+='<div><label>Km finali</label><input type="number" min="0" step="1" data-field="km_finali" value="'+(l.km_finali??'')+'"></div></div>';
+    out+='<div class="actions"><button data-save="'+safe(l.id)+'">Salva tratta '+l.ordine+'</button></div></div>';
+   }
+   out+='<p class="large">Totale percorsi registrati: '+sum+' km</p><p class="muted">'+done+' tratte su '+legs.length+' con chilometri completi. Non sommare i chilometri dei singoli pazienti.</p>';
+   out+='<div class="actions"><button class="secondary" data-complete="'+safe(trip.id)+'">Segna trasporto completato</button></div></section>';
+  }
+  $('trips').innerHTML=out;report('Dati aggiornati.');
+ }catch(e){report('Impossibile caricare: '+(e.message||String(e)),true)}
+}
+function humanInput(t){return t?String(t).slice(0,5):''}
+async function saveLeg(id){
+ const box=[...document.querySelectorAll('[data-leg]')].find(el=>el.dataset.leg===id);
+ const payload={};box.querySelectorAll('[data-field]').forEach(el=>{let v=el.value.trim();if(el.type==='number')v=v===''?null:Number(v);payload[el.dataset.field]=v===''?null:v});
+ if((payload.km_iniziali===null)!==(payload.km_finali===null))return report('Inserire entrambi i chilometri oppure lasciarli entrambi vuoti.',true);
+ if(payload.km_finali!==null&&payload.km_finali<payload.km_iniziali)return report('Km finali inferiori ai chilometri iniziali.',true);
+ try{await db('trasporti_multipaziente_tratte',t=>t.update(payload).eq('id',id).select());await load()}catch(e){report('Salvataggio non riuscito: '+e.message,true)}
+}
+async function markCompleted(id){
+ try{const legs=await db('trasporti_multipaziente_tratte',t=>t.select('km_iniziali,km_finali').eq('trasporto_id',id));if(legs.some(x=>x.km_iniziali===null||x.km_finali===null))return report('Per completare inserisci i chilometri di tutte le tratte.',true);await db('trasporti_multipaziente',t=>t.update({stato:'COMPLETATO',aggiornato_il:new Date().toISOString()}).eq('id',id).select());await load()}catch(e){report(e.message,true)}
+}
+async function showCreation(){
+ $('creation').classList.remove('hidden');$('candidates').textContent='Caricamento servizi…';selected=[];
+ try{
+  const rows=await db('servizi_giornalieri',t=>t.select('id,paziente_nome,paziente_cognome,ora_prevista,luogo_carico_paziente,stato').eq('data_servizio',$('date').value).eq('mezzo',$('vehicle').value).order('ora_prevista'));
+  const linked=await db('trasporti_multipaziente_pazienti',t=>t.select('servizio_id'));
+  const ids=new Set(linked.map(x=>x.servizio_id));
+  $('candidates').innerHTML=rows.filter(x=>!ids.has(x.id)&&x.stato!=='ANNULLATO').map(x=>'<label class="patient"><input type="checkbox" style="width:auto" data-candidate="'+safe(x.id)+'"> '+safe(x.paziente_nome)+' '+safe(x.paziente_cognome)+' · '+human(x.ora_prevista)+' · '+safe(x.luogo_carico_paziente||'')+'</label>').join('')||'Non ci sono servizi disponibili da collegare.';
+ }catch(e){report(e.message,true)}
+}
+async function createTrip(){
+ const ids=[...document.querySelectorAll('[data-candidate]:checked')].map(x=>x.dataset.candidate);
+ if(ids.length<2)return report('Seleziona almeno due pazienti.',true);
+ let created;
+ try{
+  created=(await db('trasporti_multipaziente',t=>t.insert({data_servizio:$('date').value,mezzo:$('vehicle').value,descrizione:$('description').value.trim()||'Trasporto multipaziente'}).select('id').single())).id;
+  await db('trasporti_multipaziente_pazienti',t=>t.insert(ids.map((id,i)=>({trasporto_id:created,servizio_id:id,ordine_carico:i+1,fascia_rientro:'ALTRO'}))).select('servizio_id'));
+  await db('trasporti_multipaziente_tratte',t=>t.insert([{trasporto_id:created,ordine:1,fase:'ANDATA_CONDIVISA',descrizione:'Sede → punti di carico → destinazione'}]).select('id'));
+  $('creation').classList.add('hidden');await load();
+ }catch(e){report('Creazione interrotta: '+e.message+'. Controlla il trasporto prima di riprovare.',true)}
+}
+$('load').onclick=load;$('refresh').onclick=load;$('new').onclick=showCreation;$('cancel').onclick=()=>$('creation').classList.add('hidden');$('create').onclick=createTrip;
+document.addEventListener('click',e=>{let b=e.target.closest('[data-save]');if(b)saveLeg(b.dataset.save);b=e.target.closest('[data-complete]');if(b)markCompleted(b.dataset.complete)});
+init();
+</script></body></html>
