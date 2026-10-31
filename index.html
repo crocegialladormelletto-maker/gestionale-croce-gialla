@@ -6080,7 +6080,7 @@ async function loadOperationalDashboard(){
  });
  const arubaPending=docsRows.filter(x=>x.documento_da_emettere==='FATTURA_ARUBA'&&!x.fattura_aruba_emessa);
  const dormellettoPending=arubaPending.filter(isDormellettoCalcioAruba);
- const arubaQueue=arubaPending.filter(x=>!isDormellettoCalcioAruba(x)&&x.foglio_viaggio_id);
+ const arubaQueue=arubaPending.filter(x=>!isDormellettoCalcioAruba(x));
  const arubaBimestreMap=new Map();
  dormellettoPending.forEach(x=>{
   const p=dormellettoCalcioBimestre(x.data_servizio);if(!p)return;
@@ -7118,7 +7118,7 @@ async function dashboard(){
 }
 $('dashOpsRefresh').onclick=loadOperationalDashboard;
 if($('dashOpenDebitNotes'))$('dashOpenDebitNotes').onclick=()=>location.href='note-di-debito/';
-if($('navArubaInvoices'))$('navArubaInvoices').onclick=()=>{view('dash');setTimeout(()=>{const el=$('dashArubaQueue')?.closest('section');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},120)};
+if($('navArubaInvoices'))$('navArubaInvoices').onclick=async()=>{view('dash');await loadOperationalDashboard();const el=$('dashArubaQueue')?.closest('section');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
 $('dashOpenCandidates').onclick=()=>openPendingAssistance();
 $('dashCriticalAssistanceOpen').onclick=()=>view('assistance');
 
