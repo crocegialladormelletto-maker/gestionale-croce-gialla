@@ -6038,7 +6038,7 @@ async function loadOperationalDashboard(){
   :Promise.resolve({data:[],error:null});
  const hoursPromise=prof?.ruolo==='AMMINISTRATORE'?dashMonthlyHours(day).catch(error=>({error})):Promise.resolve(null);
  const adminDocsPromise=prof?.ruolo==='AMMINISTRATORE'
-  ?sb.from('servizi_giornalieri').select('id,foglio_viaggio_id,data_servizio,mezzo,tipo_servizio,destinazione,ospedale_destinazione,intestatario_fatturazione,importo_previsto,importo_calcolato,importo_finale,documento_da_emettere,fattura_aruba_emessa,fattura_aruba_emessa_il').neq('stato_gestionale','ANNULLATO').order('data_servizio',{ascending:false}).limit(1000)
+  ?sb.from('servizi_giornalieri').select('id,foglio_viaggio_id,numero_foglio,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,destinazione,ospedale_destinazione,intestatario_fatturazione,importo_previsto,importo_calcolato,importo_finale,documento_da_emettere,fattura_aruba_emessa,fattura_aruba_emessa_il').neq('stato_gestionale','ANNULLATO').order('data_servizio',{ascending:false}).limit(1000)
   :Promise.resolve({data:[],error:null});
  const [emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,hoursData,adminDocs,debitPayments,vehicleShifts]=await Promise.all([
   sb.rpc('cge_emergenza_turni_v2',{p_dal:day,p_al:day}),
@@ -6248,7 +6248,7 @@ async function loadOperationalDashboard(){
   }).join('');
   const singleHtml=arubaQueue.slice(0,10).map(x=>
     '<div class="ops-row ops-row-warn"><div class="ops-crew-line"><strong>'+esc(x.data_servizio||'')+' · Mezzo '+esc(x.mezzo||'—')+'</strong><span class="pill b">ARUBA</span></div>'+
-    '<div class="muted">'+esc(x.intestatario_fatturazione||x.tipo_servizio||'Servizio')+(x.destinazione?' · '+esc(x.destinazione):'')+'</div>'+
+    '<div class="muted"><strong>'+esc(x.tipo_servizio_altro||x.tipo_servizio||'Servizio')+'</strong>'+(x.intestatario_fatturazione?' · '+esc(x.intestatario_fatturazione):'')+(x.numero_foglio?' · Foglio '+esc(x.numero_foglio):'')+' · '+euro(arubaServiceAmount(x)||0)+(x.destinazione?' · '+esc(x.destinazione):'')+'</div>'+
     '<div class="actions" style="margin-top:6px"><button type="button" class="btn secondary" data-aruba-open="'+esc(x.id)+'">Apri servizio</button><button type="button" class="btn yellow" data-aruba-done="'+esc(x.id)+'">✓ Fattura emessa</button></div></div>'
    ).join('');
   $('dashArubaQueue').innerHTML=prof?.ruolo!=='AMMINISTRATORE'
