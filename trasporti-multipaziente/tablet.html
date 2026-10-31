@@ -1,7 +1,7 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tablet 06 · Trasporto multipaziente</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#edf3f9;color:#173a56;font:16px system-ui,-apple-system,Segoe UI,sans-serif}header{background:#12375d;color:white;padding:18px 15px;border-bottom:6px solid #f8be27}header strong{font-size:22px}main{max-width:820px;margin:0 auto;padding:14px}h1{font-size:23px}h2{font-size:19px}.card{background:white;border:1px solid #d8e3ef;box-shadow:0 2px 8px #153c5112;border-radius:13px;padding:18px;margin:14px 0}.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.pill{background:#eaf2fb;border-radius:20px;padding:5px 11px;font-size:13px;font-weight:700}.muted{color:#58718a}.warning{background:#fff7df;border-left:5px solid #dca600;border-radius:8px;padding:13px}.good{background:#e6f6ed;border-left:5px solid #198754;padding:13px;border-radius:8px}.error{background:#fff0ef;border-left:5px solid #ba2828;border-radius:8px;padding:13px}button,a.btn{background:#165e99;color:white;border:0;border-radius:9px;padding:12px 16px;font:inherit;font-weight:750;text-decoration:none;display:inline-block;cursor:pointer}a.btn.secondary,button.secondary{background:#dfeaf5;color:#163d60}button:disabled{opacity:.6;cursor:not-allowed}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}input{font:inherit;border:1px solid #b7cadb;padding:12px;width:100%;border-radius:8px;min-width:0}.step{border-left:5px solid #f2b900;padding-left:13px}.big{font-size:23px;font-weight:850}.person{background:#f6faff;padding:12px;border-radius:8px;margin:10px 0}.line{border-top:1px solid #dce7f1;margin:13px 0}.hidden{display:none!important}@media(max-width:540px){.grid{grid-template-columns:1fr}main{padding:9px}.card{padding:14px}}
+*{box-sizing:border-box}body{margin:0;background:#edf3f9;color:#173a56;font:16px system-ui,-apple-system,Segoe UI,sans-serif}header{background:#12375d;color:white;padding:18px 15px;border-bottom:6px solid #f8be27}header strong{font-size:22px}main{max-width:820px;margin:0 auto;padding:14px}h1{font-size:23px}h2{font-size:19px}.card{background:white;border:1px solid #d8e3ef;box-shadow:0 2px 8px #153c5112;border-radius:13px;padding:18px;margin:14px 0}.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.pill{background:#eaf2fb;border-radius:20px;padding:5px 11px;font-size:13px;font-weight:700}.muted{color:#58718a}.warning{background:#fff7df;border-left:5px solid #dca600;border-radius:8px;padding:13px}.good{background:#e6f6ed;border-left:5px solid #198754;padding:13px;border-radius:8px}.error{background:#fff0ef;border-left:5px solid #ba2828;border-radius:8px;padding:13px}button,a.btn{background:#165e99;color:white;border:0;border-radius:9px;padding:12px 16px;font:inherit;font-weight:750;text-decoration:none;display:inline-block;cursor:pointer}a.btn.secondary,button.secondary{background:#dfeaf5;color:#163d60}button:disabled{opacity:.6;cursor:not-allowed}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}input,select{font:inherit;border:1px solid #b7cadb;padding:12px;width:100%;border-radius:8px;min-width:0;background:white}.step{border-left:5px solid #f2b900;padding-left:13px}.big{font-size:23px;font-weight:850}.person{background:#f6faff;padding:12px;border-radius:8px;margin:10px 0}.line{border-top:1px solid #dce7f1;margin:13px 0}.hidden{display:none!important}@media(max-width:540px){.grid{grid-template-columns:1fr}main{padding:9px}.card{padding:14px}}
 </style></head><body>
 <header><strong>🚑 CROCE GIALLA EMERGENZA ODV</strong><div>Tablet mezzo 06 · Trasporto multipaziente</div></header>
 <main>
@@ -61,7 +61,22 @@ async function load(){
     html+='<div class="row" style="margin-top:12px"><button type="button" data-save="'+esc(l.id)+'" '+(locked||completed?'disabled':'')+'>💾 Salva tratta '+l.ordine+'</button></div></section><div class="line"></div>';
    }
    const counted=legs.filter(x=>x.km_percorsi!==null);const total=counted.reduce((a,x)=>a+x.km_percorsi,0);
-   html+='<div class="big">Totale registrato: '+total+' km</div><p class="muted">'+counted.length+' tratte su '+legs.length+' completate. Il totale non somma due volte i pazienti.</p></section>';
+   html+='<div class="big">Totale registrato: '+total+' km</div><p class="muted">'+counted.length+' tratte su '+legs.length+' completate. Il totale non somma due volte i pazienti.</p>';
+   const allDone=legs.length===3&&legs.every(l=>l.km_percorsi!==null&&l.ora_partenza&&l.ora_arrivo);
+   if(t.stato==='COMPLETATO'){
+    html+='<div class="good"><strong>✅ Trasporto e fogli viaggio chiusi.</strong><div>I due documenti individuali sono conservati nell’archivio. Controlla le note di debito dall’amministrazione.</div></div>';
+   }else{
+    html+='<div class="card" data-close-trip="'+esc(t.id)+'" style="border:2px solid #e4b62f;background:#fffdf3"><h3>🧾 Chiusura automatica dei due fogli viaggio</h3>';
+    html+='<p class="muted">Disponibile dopo la terza tratta. Ogni foglio mantiene il suo paziente e il suo importo. I chilometri vengono ripartiti senza sovrapposizioni; il percorso effettivo resta documentato nelle tre tratte.</p>';
+    for(const p of ps){
+     const sp=p.servizi_giornalieri||{};
+     html+='<div class="person"><label>Metodo di pagamento effettivo · '+esc(sp.paziente_nome)+' '+esc(sp.paziente_cognome)+'</label><select data-pay="'+esc(p.servizio_id)+'"><option value="">— Conferma il metodo effettivo —</option><option value="POS">POS</option><option value="CONTANTI">Contanti</option><option value="BONIFICO">Bonifico ricevuto</option><option value="BONIFICO ISTANTANEO">Bonifico istantaneo ricevuto</option><option value="BONIFICO DIFFERITO">Bonifico differito / da incassare</option><option value="NON DOVUTO">Non dovuto</option></select></div>';
+    }
+    html+='<button type="button" data-close="'+esc(t.id)+'" '+(allDone?'':'disabled')+'>✅ Chiudi entrambi i fogli viaggio</button>';
+    if(!allDone)html+='<p class="warning">Completa e salva prima tutti gli orari e i chilometri delle tre tratte.</p>';
+    html+='<p><small>La chiusura salva il metodo di pagamento, ma non registra automaticamente l’incasso in contabilità. L’operazione è unica: se un foglio non supera i controlli, non si chiude nessuno dei due.</small></p></div>';
+   }
+   html+='</section>';
   }
   $('trips').innerHTML=html||'<div class="card">Nessun trasporto multipaziente programmato per il mezzo 06 in questa data.</div>';
   message('Dati aggiornati.');
@@ -82,7 +97,25 @@ async function save(id){
   busy=false;await load();message('Tratta salvata. I chilometri finali sono stati riportati alla tratta successiva, se ancora vuota.');
  }catch(e){message('Salvataggio non riuscito: '+(e.message||String(e)),'error')}finally{busy=false}
 }
+async function closeTrip(id){
+ if(busy)return;
+ const box=[...document.querySelectorAll('[data-close-trip]')].find(e=>e.dataset.closeTrip===id);
+ if(!box)return message('Ricarica il trasporto e riprova.','error');
+ const payment={};
+ for(const field of box.querySelectorAll('[data-pay]')){
+  if(!field.value)return message('Conferma il metodo di pagamento di entrambi i pazienti prima di chiudere.','error');
+  payment[field.dataset.pay]=field.value;
+ }
+ if(!confirm('Confermi la CHIUSURA DEFINITIVA di entrambi i fogli viaggio? Verifica che tratte, orari e pagamenti siano corretti.'))return;
+ busy=true;box.querySelector('[data-close]').disabled=true;
+ try{
+  const result=raise(await sb.rpc('cge_mp_tablet_chiudi_fogli',{p_trasporto:id,p_pagamenti:payment}));
+  busy=false;await load();
+  const sheets=Array.isArray(result.fogli)?result.fogli.map(f=>typeof f==='string'?f:f.foglio).join(' e '):'';
+  message('Chiusura completata: '+sheets+'. Km effettivi mezzo: '+result.km_totali+'. I metodi di pagamento sono salvati sui fogli; gli incassi restano da verificare in amministrazione.');
+ }catch(e){busy=false;box.querySelector('[data-close]').disabled=false;message('Nessun foglio chiuso: '+(e.message||String(e)),'error')}
+}
 $('refresh').onclick=load;$('search').onclick=load;
-document.addEventListener('click',e=>{const b=e.target.closest('[data-save]');if(b)save(b.dataset.save)});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-save]');if(b)save(b.dataset.save);const c=e.target.closest('[data-close]');if(c)closeTrip(c.dataset.close)});
 check();
 </script></body></html>
