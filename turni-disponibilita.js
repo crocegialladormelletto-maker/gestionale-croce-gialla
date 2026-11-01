@@ -16,6 +16,22 @@ const intersect=(a,b)=>a&&b&&a.start<b.end&&a.end>b.start;
 const keyDate=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
 const getName=badge=>(people||[]).find(p=>String(p.badge)===String(badge))?.nome_completo||badge;
 let tab='riepilogo',busy=false;
+let currentPersonnel=[];
+async function tdLoadPersonnel(){
+ const r=await sb.from('personale').select('badge,nome_completo,attivo,stato_anagrafico,data_uscita,dipendente').order('nome_completo');
+ if(r.error)throw r.error;
+ currentPersonnel=r.data||[];
+ return currentPersonnel;
+}
+const tdIsActive=p=>p?.attivo===true&&String(p?.stato_anagrafico||'').trim().toUpperCase()==='ATTIVO'&&!p?.data_uscita;
+async function tdFilterAssignmentChoices(){
+ const rows=await tdLoadPersonnel(),allowed=new Set(rows.filter(tdIsActive).map(p=>String(p.badge)));
+ for(const id of ['shiftPerson','avp']){
+  const sel=$id(id);if(!sel)continue;
+  [...sel.options].forEach(opt=>{if(opt.value&&!allowed.has(String(opt.value)))opt.remove()});
+ }
+}
+
 const shift=$id('shifts'),availability=$id('availability');
 if(!shift||!availability)return;
 const content=shift.querySelector(':scope > .pad');
@@ -46,8 +62,8 @@ async function open(tabName){
  availabilityPanel.classList.toggle('hidden',tab!=='disponibilita');
  document.querySelectorAll('#tdTabs [data-td-tab]').forEach(b=>b.className='btn '+(b.dataset.tdTab===tab?'yellow':'secondary'));
  if(tab==='riepilogo')await loadDay();
- if(tab==='turni'&&typeof loadShifts==='function')await loadShifts();
- if(tab==='disponibilita'&&typeof loadAvailability==='function')await loadAvailability();
+ if(tab==='turni'&&typeof loadShifts==='function'){await loadShifts();try{await tdFilterAssignmentChoices()}catch(e){console.warn('Filtro personale:',e.message)}}
+ if(tab==='disponibilita'&&typeof loadAvailability==='function'){await loadAvailability();try{await tdFilterAssignmentChoices()}catch(e){console.warn('Filtro personale:',e.message)}}
 }
 const existingView=typeof oldView==='function'?oldView:null;
 if(existingView){
@@ -71,11 +87,13 @@ async function loadDay(){
  const day=$id('tdDate').value;if(!day)return;
  $id('tdMsg').textContent='Caricamento…';
  const start=new Date(day+'T00:00:00'),end=new Date(start);end.setDate(end.getDate()+1);
- const [turns,allAvail]=await Promise.all([
+ const [turns,allAvail,personnel]=await Promise.all([
   sb.from('v_turni_gestionale').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,equipaggio').eq('data_turno',day).order('ora_inizio'),
-  sb.from('disponibilita_personale').select('badge_personale,tipo,inizio,fine').lt('inizio',end.toISOString()).gt('fine',start.toISOString())
+  sb.from('disponibilita_personale').select('badge_personale,tipo,inizio,fine').lt('inizio',end.toISOString()).gt('fine',start.toISOString()),
+  sb.from('personale').select('badge,nome_completo,attivo,stato_anagrafico,data_uscita,dipendente').order('nome_completo')
  ]);
- if(turns.error||allAvail.error){$id('tdMsg').textContent='Errore lettura: '+escapeHtml((turns.error||allAvail.error).message);return}
+ if(turns.error||allAvail.error||personnel.error){$id('tdMsg').textContent='Errore lettura: '+escapeHtml((turns.error||allAvail.error||personnel.error).message);return}
+ currentPersonnel=personnel.data||[];
  const list=turns.data||[],avail=allAvail.data||[];
  const shiftsHtml=list.map(t=>{
   const members=Array.isArray(t.equipaggio)?t.equipaggio:[];
@@ -85,12 +103,15 @@ async function loadDay(){
   const names=members.map(m=>escapeHtml(m.nome||m.badge||m.badge_personale)+' ('+escapeHtml(m.ruolo||'—')+')').join(', ');
   return '<div class="section" style="padding:12px;margin:7px 0"><b>'+escapeHtml(short(t.ora_inizio))+'–'+escapeHtml(short(t.ora_fine))+' · '+escapeHtml(t.tipo_turno||'Turno')+' · M'+escapeHtml(t.mezzo||'—')+'</b> <span class="pill '+(full?'g':'r')+'">'+(full?'Copertura base':'Da completare/verificare')+'</span><div class="muted">'+(names||'Nessun operatore assegnato')+'</div></div>';
  }).join('')||'<div class="notice">Nessun turno generale registrato per questo giorno.</div>';
- const peopleList=(typeof people!=='undefined'?people:[]).filter(p=>String(p.stato||'ATTIVO').toUpperCase()!=='CESSATO').map(p=>{
+ const activeRows=currentPersonnel.filter(p=>tdIsActive(p)&&p.dipendente!==true);
+ const ceasedRows=currentPersonnel.filter(p=>!tdIsActive(p)&&p.dipendente!==true);
+ const peopleList=activeRows.map(p=>{
   const rows=avail.filter(a=>String(a.badge_personale)===String(p.badge)),no=rows.some(a=>String(a.tipo).toUpperCase()==='INDISPONIBILE'),yes=rows.some(a=>String(a.tipo).toUpperCase()==='DISPONIBILE');
   return {name:p.nome_completo||p.badge,state:no?'Non disponibile':yes?'Disponibile':'Da verificare',cls:no?'r':yes?'g':''};
  }).sort((a,b)=>a.name.localeCompare(b.name,'it'));
+ const ceasedHtml=ceasedRows.map(p=>'<div style="padding:7px;border-bottom:1px solid #dae3ec">'+escapeHtml(p.nome_completo||p.badge)+' <span class="pill r">CESSATO</span> <small>'+escapeHtml(p.data_uscita||'')+'</small></div>').join('');
  const peopleHtml=peopleList.map(p=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:8px;border-bottom:1px solid #dae3ec"><span>'+escapeHtml(p.name)+'</span><span class="pill '+p.cls+'">'+p.state+'</span></div>').join('')||'<div class="notice">Elenco personale non caricato.</div>';
- $id('tdResult').innerHTML='<div class="section"><h3>🕒 Turni generali · '+list.length+'</h3>'+shiftsHtml+'</div><div class="section"><h3>👥 Disponibilità registrate</h3><div class="muted">Non considerare disponibile chi non ha comunicato alcuna disponibilità.</div><div style="max-height:420px;overflow:auto">'+peopleHtml+'</div></div>';
+ $id('tdResult').innerHTML='<div class="section"><h3>🕒 Turni generali · '+list.length+'</h3>'+shiftsHtml+'</div><div class="section"><h3>👥 Volontari attivi · '+activeRows.length+'</h3><div class="muted">Solo volontari attivi. Senza dichiarazione: da verificare.</div><div style="max-height:420px;overflow:auto">'+peopleHtml+'</div><details style="margin-top:12px"><summary>📁 Volontari cessati · '+ceasedRows.length+' (solo consultazione)</summary><div>'+ (ceasedHtml||'Nessuno') +'</div></details></div>';
  $id('tdMsg').textContent='';
 }
 // Pre-verifica dell'assegnazione ai turni generali, senza aggirare i permessi del backend.
@@ -102,12 +123,14 @@ if(assignBtn)assignBtn.onclick=async()=>{
  if(!shiftId||!badge)return;
  busy=true;assignBtn.disabled=true;
  try{
-  const [sr,own,others]=await Promise.all([
+  const [sr,own,others,personCheck]=await Promise.all([
    sb.from('turni').select('id,data_turno,ora_inizio,ora_fine').eq('id',shiftId).single(),
    sb.from('turni_personale').select('turno_id,ruolo').eq('badge_personale',badge).limit(1000),
-   sb.from('disponibilita_personale').select('inizio,fine,tipo').eq('badge_personale',badge).limit(2000)
+   sb.from('disponibilita_personale').select('inizio,fine,tipo').eq('badge_personale',badge).limit(2000),
+   sb.from('personale').select('badge,attivo,stato_anagrafico,data_uscita').eq('badge',badge).single()
   ]);
-  if(sr.error||own.error||others.error)throw sr.error||own.error||others.error;
+  if(sr.error||own.error||others.error||personCheck.error)throw sr.error||own.error||others.error||personCheck.error;
+  if(!tdIsActive(personCheck.data)){alert('Assegnazione bloccata: operatore cessato o non attivo.');return}
   const t=sr.data,slot=range(t.data_turno,t.ora_inizio,t.ora_fine);
   if(!slot)throw new Error('Orari del turno non validi.');
   if((own.data||[]).some(x=>String(x.turno_id)===String(shiftId))){alert('Questo operatore è già assegnato al turno.');return}
