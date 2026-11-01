@@ -222,7 +222,7 @@ function render(){
   $('thead').innerHTML='<tr><th>Numero</th><th>Data</th><th>Intestatario</th><th>Foglio Viaggio</th><th>Totale</th><th>Stato</th><th>Pagamento</th><th></th></tr>';
   $('rows').innerHTML=arr.length?arr.map(n=>{
    const pay=n.data_pagamento?'<span class="pill p-green">Pagata '+nice(n.data_pagamento)+'</span>':'<span class="pill p-warn">Da incassare</span>';
-   return '<tr><td><b>'+esc(n.numero)+'</b></td><td>'+nice(n.data_documento)+'</td><td>'+esc(n.intestatario||'—')+'</td><td>'+esc(n.numero_foglio||'—')+'</td><td><b>'+money(n.totale)+'</b></td><td><span class="pill '+(n.stato==='BOZZA'?'p-warn':'p-blue')+'">'+esc(n.stato)+'</span></td><td>'+(n.stato==='BOZZA'?'—':pay)+'</td><td><button class="btn secondary" data-open="'+esc(n.id)+'">Apri</button></td></tr>';
+   return '<tr><td><b>'+esc(n.numero)+'</b></td><td>'+(n.stato==='BOZZA'?'<span class="muted">Da confermare all’emissione</span>':nice(n.data_documento))+'</td><td>'+esc(n.intestatario||'—')+'</td><td>'+esc(n.numero_foglio||'—')+'</td><td><b>'+money(n.totale)+'</b></td><td><span class="pill '+(n.stato==='BOZZA'?'p-warn':'p-blue')+'">'+esc(n.stato)+'</span></td><td>'+(n.stato==='BOZZA'?'—':pay)+'</td><td><button class="btn secondary" data-open="'+esc(n.id)+'">Apri</button></td></tr>';
   }).join(''):'<tr><td colspan="8">Nessun documento in questa sezione.</td></tr>';
   document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openNote(b.dataset.open));
  }
