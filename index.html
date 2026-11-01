@@ -4842,19 +4842,21 @@ $('fvArchiveToggle').onclick=async()=>{
  const visible=!panel.classList.contains('hidden');
  $('fvArchiveToggle').setAttribute('aria-expanded',String(visible));
  $('fvArchiveToggle').textContent=visible?'✕ Chiudi archivio':'📚 Archivio fogli viaggio';
- if(visible){await fvOrdLoadArchiveMonths();await fvOrdLoadArchive();}
+ if(visible){
+  $('fvArchiveVehicle').innerHTML=$('fvVehicle').innerHTML;
+  await fvOrdLoadArchiveMonths();
+  await fvOrdLoadArchive();
+ }
 };
 $('fvArchiveMonth').onchange=fvOrdLoadArchive;
 $('fvArchiveVehicle').onchange=fvOrdLoadArchive;
 $('fvArchiveRefresh').onclick=async()=>{await fvOrdLoadArchiveMonths();await fvOrdLoadArchive();};
 $('fvArchiveSearch').oninput=()=>{clearTimeout(window.fvOrdArchiveT);window.fvOrdArchiveT=setTimeout(fvOrdLoadArchive,250);};
 async function loadTravelSheets(){
- if(['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)){
-  $('fvMonth').value=fvOrdMonth();
-  $('fvCurrentMonthLabel').textContent=fv118MonthName(fvOrdMonth());
-  $('fvListMonthLabel').textContent=fv118MonthName(fvOrdMonth());
-  await loadTravelSheetsMonthlySummary();
- }
+ $('fvMonth').value=fvOrdMonth();
+ $('fvCurrentMonthLabel').textContent=fv118MonthName(fvOrdMonth());
+ $('fvListMonthLabel').textContent=fv118MonthName(fvOrdMonth());
+ if(['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))await loadTravelSheetsMonthlySummary();
  msg('fvMsg','Caricamento...');
  const z=$('fvSearch').value.toLowerCase().trim();
  const exactNumberSearch=/^(?:fv[- ]?(?:20[0-9]{2})?[- ]?(?:0[6789])?[- ]?)?[0-9]{1,6}$/i.test(z)&&z.length>0;
