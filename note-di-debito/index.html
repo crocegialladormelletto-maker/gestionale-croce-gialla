@@ -264,7 +264,10 @@ async function openNote(id){
  const allLinks=noteLinks.filter(x=>x.nota_id===active.id).map(x=>sheets.find(f=>f.id===x.foglio_id)).filter(Boolean);
  if(allLinks.length>1)active.numero_foglio=allLinks.map(f=>f.numero_foglio).join(' / ');
  if(linked)active={...active,tipo_servizio:linked.tipo_servizio,luogo_partenza:linked.luogo_partenza,indirizzo_partenza:linked.indirizzo_partenza,destinazione:linked.destinazione,indirizzo_destinazione:linked.indirizzo_destinazione,ospedale_destinazione:linked.ospedale_destinazione};
- fill();$('listView').classList.add('hidden');$('detailView').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});
+ fill();
+ // Nelle bozze proponi la data di oggi in Italia; il campo resta modificabile.
+ if(active.stato==='BOZZA')$('dDate').value=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
+ $('listView').classList.add('hidden');$('detailView').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});
 }
 $('backList').onclick=render;
 function fill(){
