@@ -282,8 +282,10 @@ function fill(){
  $('save').classList.toggle('hidden',!draft);$('issue').classList.toggle('hidden',!draft);
  $('savePayment').classList.toggle('hidden',draft);
  $('print').disabled=false;$('downloadPdf').disabled=false;
- $('sendPdfMail').disabled=draft;
- $('sendPdfMail').title=draft?'Disponibile dopo l’emissione definitiva':'Invia direttamente la Nota di Debito con PDF allegato';
+ const alreadySent=n.email_stato==='INVIATA';
+ $('sendPdfMail').disabled=draft||alreadySent;
+ $('sendPdfMail').textContent=alreadySent?'✓ Email già inviata':'📧 Invia con PDF allegato';
+ $('sendPdfMail').title=draft?'Disponibile dopo l’emissione definitiva':alreadySent?'Email già inviata: controlla lo storico prima di un eventuale reinvio':'Invia direttamente la Nota di Debito con PDF allegato';
  $('dPayment').disabled=false;$('dPayDate').disabled=false;
  $('draftNotice').classList.toggle('hidden',!draft);
  $('draftNotice').textContent=draft?'BOZZA MODIFICABILE: controlla e completa tutti i dati. Il documento diventerà definitivo solo premendo “Emetti Nota di Debito”.':'';
@@ -375,34 +377,89 @@ $('saveRecipientEmail').onclick=async()=>{
  }catch(e){msg('detailMsg','Impossibile salvare l’email: '+(e.message||String(e)),'err')}
  finally{btn.disabled=false}
 };
+async function cgeNotaEmailStatus(notaId){
+ const result=await sb.from('note_di_debito')
+  .select('email_stato,email_inviata_il,email_destinatario,email_message_id')
+  .eq('id',notaId).single();
+ if(result.error)throw new Error('Impossibile verificare lo stato email: '+result.error.message);
+ return result.data;
+}
+function cgeInvioTimeout(label,ms){
+ return new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' non completato entro '+Math.round(ms/1000)+' secondi')),ms));
+}
 $('sendPdfMail').onclick=async()=>{
- if(active?.stato!=='EMESSA')return msg('detailMsg','La Nota di Debito è ancora in BOZZA. Emettila prima dell’invio diretto.','err');
- if(!active?.email)return msg('detailMsg','Email destinatario non presente.','err');
- if(!confirm('Inviare la Nota di Debito '+active.numero+' a '+active.email+' con il PDF allegato?'))return;
+ const nota=active;
+ if(nota?.stato!=='EMESSA')return msg('detailMsg','La Nota di Debito è ancora in BOZZA. Emettila prima dell’invio diretto.','err');
+ if(!nota.email)return msg('detailMsg','Email destinatario non presente.','err');
  const btn=$('sendPdfMail'),old=btn.textContent;
- btn.disabled=true;btn.textContent='Invio in corso…';
+ if(btn.disabled)return;
+ btn.disabled=true;
  try{
-  const canvas=await renderNoteCanvas(active);
+  btn.textContent='Verifica invii precedenti…';
+  msg('detailMsg','Controllo se la nota è già stata inviata…');
+  const prior=await Promise.race([cgeNotaEmailStatus(nota.id),cgeInvioTimeout('Verifica email',12000)]);
+  if(prior?.email_stato==='INVIATA'){
+   msg('detailMsg','Nota '+nota.numero+' già inviata il '+nice(prior.email_inviata_il)+'. Nessun nuovo invio effettuato.','ok');
+   btn.textContent='✓ Email già inviata';
+   return;
+  }
+  if(!confirm('Inviare la Nota di Debito '+nota.numero+' a '+nota.email+' con il PDF allegato?'))return;
+  btn.textContent='Preparazione PDF…';
+  msg('detailMsg','Preparazione del PDF in corso. La velocità dipende dal computer…');
+  const canvas=await Promise.race([renderNoteCanvas(nota),cgeInvioTimeout('Preparazione PDF',35000)]);
   const page_jpeg_base64=canvasJpegBase64(canvas);
-  const r=await sb.functions.invoke('invia-nota-debito-email',{
-   body:{nota_id:active.id,page_jpeg_base64}
-  });
-  if(r.error){
-   let detail=r.error.message||String(r.error);
+  btn.textContent='Invio email…';
+  msg('detailMsg','PDF pronto. Invio al server email in corso…');
+  const abort=new AbortController();
+  let response;
+  try{
+   response=await Promise.race([
+    sb.functions.invoke('invia-nota-debito-email',{
+     body:{nota_id:nota.id,page_jpeg_base64},
+     signal:abort.signal
+    }),
+    cgeInvioTimeout('Server email',45000)
+   ]);
+  }catch(error){
+   abort.abort();
+   throw error;
+  }
+  if(response.error){
+   let detail=response.error.message||String(response.error);
    try{
-    const ctx=await r.error.context?.json?.();
-    if(ctx?.error)detail=ctx.error;
+    const context=await Promise.race([response.error.context?.json?.(),cgeInvioTimeout('Lettura errore',3000)]);
+    if(context?.error)detail=context.error;
    }catch(_){}
    throw new Error(detail);
   }
-  if(r.data?.error)throw new Error(r.data.error);
-  const id=active.id;
-  await loadAll();await openNote(id);
-  msg('detailMsg','Email inviata a '+(r.data?.destinatario||active.email)+' con PDF allegato.'+(r.data?.warning?' '+r.data.warning:''),r.data?.warning&&r.data.warning.includes('non salvata')?'warn':'ok');
- }catch(e){
-  msg('detailMsg','Invio non riuscito: '+(e.message||String(e)),'err');
+  if(response.data?.error)throw new Error(response.data.error);
+  btn.textContent='Verifica conferma…';
+  msg('detailMsg','Il server ha risposto. Verifica finale dell’invio…');
+  let status;
+  try{status=await Promise.race([cgeNotaEmailStatus(nota.id),cgeInvioTimeout('Verifica conferma',10000)]);}
+  catch(_){}
+  if(status?.email_stato==='INVIATA'){
+   msg('detailMsg','Email della Nota '+nota.numero+' accettata per l’invio a '+(status.email_destinatario||nota.email)+'. La consegna finale dipende dal servizio di posta.','ok');
+  }else{
+   msg('detailMsg','Il server email ha confermato l’operazione, ma lo stato nel registro non è ancora verificabile. Controlla prima di reinviare.','warn');
+  }
+  await Promise.race([loadAll().then(()=>openNote(nota.id)),cgeInvioTimeout('Aggiornamento schermata',12000)]).catch(()=>{});
+ }catch(error){
+  btn.textContent='Controllo esito…';
+  msg('detailMsg','Operazione non completata nella schermata. Verifica dell’eventuale invio già avvenuto…');
+  try{
+   const status=await Promise.race([cgeNotaEmailStatus(nota.id),cgeInvioTimeout('Verifica stato',10000)]);
+   if(status?.email_stato==='INVIATA'){
+    msg('detailMsg','Nota '+nota.numero+': il sistema conferma che l’email è stata inviata. Non ripetere l’invio.','ok');
+   }else{
+    msg('detailMsg','Invio non confermato: '+(error.message||String(error))+'. Il tentativo potrebbe essere ancora in elaborazione: verifica lo stato email prima di riprovare, per evitare duplicati.','err');
+   }
+  }catch(checkError){
+   msg('detailMsg','Invio non verificabile: '+(error.message||String(error))+'. Verifica la Posta inviata e lo storico prima di effettuare un nuovo tentativo.','err');
+  }
  }finally{
-  btn.disabled=false;btn.textContent=old;
+  btn.disabled=false;
+  btn.textContent=old;
  }
 };
 
