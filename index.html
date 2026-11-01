@@ -1479,7 +1479,7 @@ document.addEventListener('DOMContentLoaded',()=>{
      <div class="stat"><small>KM TOTALI DEL MESE</small><b id="fvArchiveKm">0 km</b></div>
     </div>
     <p class="muted" style="margin:8px 0">I totali sono calcolati sui fogli chiusi di tutto il mese, indipendentemente dai filtri dell'elenco.</p>
-    <div class="toolbar"><button id="fvArchiveRefresh" class="btn secondary" type="button">↻ Aggiorna archivio</button></div>
+    <div class="toolbar"><button id="fvArchiveRefresh" class="btn secondary" type="button">↻ Aggiorna archivio</button><button id="fvArchivePrint" class="btn blue" type="button">🖨 Stampa riepilogo mese / Salva PDF</button></div>
     <div id="fvArchiveMsg"></div>
     <div class="table"><table>
      <thead><tr><th>Numero</th><th>Data</th><th>Mezzo</th><th>Servizio</th><th>Paziente</th><th>Percorso</th><th>Stato</th><th>Totale</th><th></th></tr></thead>
@@ -4799,6 +4799,7 @@ function displayFoglioNumero(f){
  return 'FV-'+year+'-'+mezzo+'-'+raw.padStart(6,'0');
 }
 function fvOrdMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+let fvOrdArchiveMonthlyRows=[],fvOrdArchiveLoadedMonth='';
 function fvOrdRenderArchive(rows){
  $('fvArchiveBody').innerHTML=rows.length?rows.map(x=>'<tr>'+
  '<td><b>'+esc(displayFoglioNumero(x))+'</b></td><td>'+esc(x.data_servizio)+'</td>'+
@@ -4824,7 +4825,7 @@ async function fvOrdLoadArchiveMonths(){
 async function fvOrdLoadArchive(){
  if($('fvArchivePanel').classList.contains('hidden'))return;
  const month=$('fvArchiveMonth').value;
- if(!month){$('fvArchiveCount').textContent='0';$('fvArchiveKm').textContent='0 km';fvOrdRenderArchive([]);return;}
+ if(!month){fvOrdArchiveMonthlyRows=[];fvOrdArchiveLoadedMonth='';$('fvArchiveCount').textContent='0';$('fvArchiveKm').textContent='0 km';fvOrdRenderArchive([]);return;}
  if(month>=fvOrdMonth())return msg('fvArchiveMsg','Seleziona un mese precedente.','warn');
  msg('fvArchiveMsg','Caricamento archivio...');
  const b=fv118MonthBounds(month),all=[];
@@ -4836,6 +4837,8 @@ async function fvOrdLoadArchive(){
   if(r.error)return msg('fvArchiveMsg',r.error.message,'err');
   all.push(...(r.data||[]));if((r.data||[]).length<1000)break;
  }
+ fvOrdArchiveMonthlyRows=all;
+ fvOrdArchiveLoadedMonth=month;
  const performed=all.filter(x=>x.stato==='CHIUSO');
  const km=performed.reduce((sum,x)=>sum+Number(x.km_percorsi??(x.km_arrivo!=null&&x.km_partenza!=null?Math.max(0,x.km_arrivo-x.km_partenza):0)),0);
  $('fvArchiveCount').textContent=performed.length.toLocaleString('it-IT');
@@ -4857,6 +4860,34 @@ $('fvArchiveToggle').onclick=async()=>{
   await fvOrdLoadArchive();
  }
 };
+function fvOrdPrintArchiveMonth(){
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ const month=$('fvArchiveMonth').value;
+ if(!month||fvOrdArchiveLoadedMonth!==month)return msg('fvArchiveMsg','Seleziona il mese e attendi il caricamento dell’archivio prima di stampare.','warn');
+ const all=fvOrdArchiveMonthlyRows;
+ if(!all.length)return msg('fvArchiveMsg','Nessun foglio viaggio da stampare nel mese selezionato.','warn');
+ const completed=all.filter(x=>x.stato==='CHIUSO');
+ const kmOf=x=>Number(x.km_percorsi??((x.km_arrivo!=null&&x.km_partenza!=null)?Math.max(0,x.km_arrivo-x.km_partenza):0));
+ const totalKm=completed.reduce((sum,x)=>sum+kmOf(x),0);
+ const name=fv118MonthName(month),vehiclesUsed=[...new Set(completed.map(x=>String(x.mezzo||'').trim()).filter(Boolean))].sort().join(', ')||'—';
+ const numbers=all.length,closed=completed.length,remaining=numbers-closed;
+ const printedAt=new Date().toLocaleString('it-IT');
+ const detail=all.slice().sort((a,b)=>String(a.data_servizio).localeCompare(String(b.data_servizio))||String(a.progressivo||0).localeCompare(String(b.progressivo||0),'it',{numeric:true})).map(x=>
+  '<tr><td>'+esc(fvItalianDate(x.data_servizio))+'</td><td><b>'+esc(displayFoglioNumero(x))+'</b></td><td>'+esc(x.mezzo||'—')+'</td><td>'+esc(x.tipo_servizio||'—')+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+esc((x.luogo_partenza||'—')+' → '+(x.destinazione||'—'))+'</td><td>'+esc(x.stato||'—')+'</td><td class="num">'+esc(x.km_partenza??'—')+'</td><td class="num">'+esc(x.km_arrivo??'—')+'</td><td class="num">'+esc(x.km_percorsi??((x.km_partenza!=null&&x.km_arrivo!=null)?kmOf(x):'—'))+'</td></tr>'
+ ).join('');
+ const html='<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Riepilogo fogli viaggio '+esc(name)+'</title><style>'+
+ '@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#162f43;margin:0;font-size:9px}.head{display:flex;align-items:center;gap:14px;border-bottom:4px solid #12375d;padding-bottom:9px}.head img{width:68px;height:68px;object-fit:contain}.org{flex:1}.org h1{font-size:18px;margin:0;color:#12375d}.org p{margin:3px 0;color:#4b6478}.title{text-align:right}.title h2{font-size:15px;margin:0;color:#b91c1c}.title strong{display:block;margin-top:4px;font-size:12px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.card{border:1px solid #b9c8d2;padding:8px;border-radius:5px}.card small{display:block;color:#526979;font-weight:bold;text-transform:uppercase;font-size:8px}.card b{font-size:16px;display:block;margin-top:3px;color:#12375d}.meta{font-size:8px;color:#576d7b;margin-bottom:8px}.section{border-left:5px solid #f4c400;background:#edf3f8;padding:6px;font-weight:bold;font-size:11px}table{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:7px}th,td{border:1px solid #b6c2cd;padding:4px;vertical-align:top;overflow-wrap:anywhere}th{background:#12375d;color:#fff;text-align:left;font-size:8px}td{font-size:8px;line-height:1.3}tbody tr:nth-child(even){background:#f5f8fb}tr{break-inside:avoid}.num{text-align:right}footer{margin-top:9px;border-top:1px solid #cbd5de;padding-top:6px;font-size:8px;color:#526979}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}thead{display:table-header-group}}'+
+ '</style></head><body><div class="head"><img src="'+LOGO_URL+'" alt="Logo Croce Gialla"><div class="org"><h1>CROCE GIALLA EMERGENZA ODV</h1><p>Dormelletto (NO) · Registro fogli viaggio ordinari</p></div><div class="title"><h2>RIEPILOGO MENSILE</h2><strong>'+esc(name.toUpperCase())+'</strong></div></div>'+
+ '<div class="cards"><div class="card"><small>Servizi effettuati (fogli chiusi)</small><b>'+closed+'</b></div><div class="card"><small>Km dei servizi effettuati</small><b>'+totalKm.toLocaleString('it-IT')+' km</b></div><div class="card"><small>Fogli ancora aperti</small><b>'+remaining+'</b></div><div class="card"><small>Mezzi utilizzati</small><b>'+esc(vehiclesUsed)+'</b></div></div>'+
+ '<div class="meta">Periodo: '+esc(name)+' · Generato il '+esc(printedAt)+' · Totali sull’intero mese senza filtri di ricerca. Importi non riportati.</div><div class="section">Dettaglio fogli viaggio del mese</div>'+
+ '<table><thead><tr><th>Data</th><th>Foglio</th><th>Mezzo</th><th>Tipo servizio</th><th>Paziente</th><th>Percorso</th><th>Stato</th><th>Km part.</th><th>Km arr.</th><th>Km effettuati</th></tr></thead><tbody>'+detail+'</tbody></table>'+
+ '<footer>Croce Gialla Emergenza ODV · Archivio fogli viaggio · '+esc(name)+' · '+closed+' servizi effettuati · '+totalKm.toLocaleString('it-IT')+' km</footer>'+
+ '<script>window.onload=function(){setTimeout(function(){window.focus();window.print()},300)};<\\/script></body></html>';
+ const w=window.open('','_blank');
+ if(!w)return msg('fvArchiveMsg','Il browser ha bloccato la finestra di stampa. Consenti i popup per questo sito.','warn');
+ w.document.open();w.document.write(html);w.document.close();
+}
+$('fvArchivePrint').onclick=fvOrdPrintArchiveMonth;
 $('fvArchiveMonth').onchange=fvOrdLoadArchive;
 $('fvArchiveVehicle').onchange=fvOrdLoadArchive;
 $('fvArchiveRefresh').onclick=async()=>{await fvOrdLoadArchiveMonths();await fvOrdLoadArchive();};
@@ -4976,7 +5007,7 @@ async function load118MonthlySummary(){
  msg('fv118MonthMsg','');
 }
 function print118MonthlySummary(){
- if(prof?.ruolo!=='AMMINISTRATORE')return;
+ if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  if(!fv118MonthlyRows.length)return msg('fv118MonthMsg','Nessun dato da stampare per il mese selezionato.','warn');
  const month=$('fv118Month').value||new Date().toISOString().slice(0,7),b=fv118MonthBounds(month);
  const totalKm=fv118MonthlyRows.reduce((s,x)=>s+Number(x.km_percorsi||((x.km_arrivo!=null&&x.km_partenza!=null)?Math.max(0,x.km_arrivo-x.km_partenza):0)),0);
