@@ -57,7 +57,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <button class="navbtn" style="background:#53657d" data-view="impostazioni">⚙ Impostazioni</button>
 </aside>
 <main class="main">
-  <div class="topbar"><div><h1>Registro Servizi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione Stabile 2.18</div></div></div>
+  <div class="topbar"><div><h1>Registro Servizi – Croce Gialla Emergenza</h1><p>Registro condiviso, protetto e sincronizzato</p></div><div class="userline"><small id="who"></small><button id="logoutBtn" class="btn light" style="display:none">Esci</button><div class="badge">Versione 2.19 · Registro mensile</div></div></div>
 
   <section id="dashboard" class="view">
     <div class="notice"><b>REGISTRO OPERATIVO:</b> i dati sono salvati nel database condiviso e protetti da accesso autenticato.</div>
@@ -67,6 +67,17 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
       <div class="card"><div class="lab">KM NEL MESE</div><div id="kKm" class="val">0</div><div class="sub">chilometri registrati</div></div>
       <div class="card"><div class="lab">IMPORTI NEL MESE</div><div id="kImporti" class="val">€ 0</div><div class="sub">totale importi</div></div>
       <div class="card"><div class="lab">MEZZO PIÙ USATO</div><div id="kMezzo" class="val">–</div><div class="sub">numero viaggi nel mese</div></div>
+    </div>
+    <div class="panel">
+      <div class="section-title"><div><h2 style="margin-bottom:5px">📅 Registro del mese corrente</h2><div class="lab" id="dashboardMonthLabel">Mese corrente · tutti i mezzi</div></div><div class="actions" style="margin:0"><button class="btn secondary" type="button" onclick="showView('archivio')">Apri registro e archivio</button><button class="btn light" type="button" onclick="showView('controlli')">Controlli</button></div></div>
+      <div class="cards" style="margin:14px 0 0">
+       <div class="card"><div class="lab">INTERVENTI 118</div><div id="dashboard118" class="val">0</div></div>
+       <div class="card"><div class="lab">SERVIZI ORDINARI</div><div id="dashboardOrdinary" class="val">0</div></div>
+       <div class="card"><div class="lab">ASSISTENZE</div><div id="dashboardAssistance" class="val">0</div></div>
+       <div class="card"><div class="lab">SERVIZI INTERNI</div><div id="dashboardInternal" class="val">0</div></div>
+      </div>
+      <div id="dashboardOpenSheets" class="notice" style="margin-top:12px">Controllo fogli aperti…</div>
+      <div id="dashboardVehicles" class="vehiclegrid" style="margin-top:12px"></div>
     </div>
     <div class="grid2">
       <div class="panel"><h2>Ultimi viaggi</h2><div id="ultimi"></div></div>
@@ -118,13 +129,27 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 
   <section id="archivio" class="view">
     <div class="panel">
-      <div class="section-title"><div><h2 style="margin-bottom:6px">Archivio viaggi</h2><div id="statoMeseArchivio" style="font-size:12px;font-weight:800;color:#526077"></div></div><div class="actions" style="margin:0"><input id="meseArchivio" type="month" onchange="renderArchivio()" style="padding:10px;border:1px solid #ccd5e2;border-radius:9px"><button class="btn secondary" onclick="exportXLSX()">Esporta Excel</button><button class="btn light" onclick="printMonth()">Stampa / PDF</button></div></div>
+      <div class="section-title"><div><h2 style="margin-bottom:6px">📚 Registro servizi · mese corrente e archivio</h2><div id="statoMeseArchivio" style="font-size:12px;font-weight:800;color:#526077"></div></div><div class="actions" style="margin:0"><button class="btn secondary" onclick="exportXLSX()">Esporta Excel</button><button class="btn light" onclick="printMonth()">Stampa / PDF</button></div></div>
+      <div class="formgrid" style="margin:12px 0">
+       <div class="field"><label>Anno</label><select id="annoArchivio" onchange="registryArchiveYearChanged()"></select></div>
+       <div class="field"><label>Mese</label><select id="meseArchivioScelta" onchange="registryArchiveMonthChanged()"></select></div>
+       <div class="field"><label>Periodo visualizzato</label><input id="meseArchivio" type="month" readonly></div>
+       <div class="field"><label>Stato</label><div id="archivePeriodInfo" class="badge">Mese corrente</div></div>
+      </div>
+      <div class="cards" style="margin:0 0 14px">
+       <div class="card"><div class="lab">SERVIZI EFFETTUATI</div><div class="val" id="registryArchiveTotal">0</div></div>
+       <div class="card"><div class="lab">KM TOTALI</div><div class="val" id="registryArchiveKm">0</div></div>
+       <div class="card"><div class="lab">INTERVENTI 118</div><div class="val" id="registryArchive118">0</div></div>
+       <div class="card"><div class="lab">ASSISTENZE</div><div class="val" id="registryArchiveAssistance">0</div></div>
+      </div>
+      <div id="registryArchiveVehicleSummary" class="vehiclegrid" style="margin-bottom:14px"></div>
       <div class="actions" style="margin:12px 0 14px">
-        <button class="btn secondary rv-vehicle active" data-rv-vehicle="06">🚑 06</button>
+        <button class="btn secondary rv-vehicle active" data-rv-vehicle="">🚑 Tutti i mezzi</button>
+        <button class="btn secondary rv-vehicle" data-rv-vehicle="06">🚑 06</button>
         <button class="btn secondary rv-vehicle" data-rv-vehicle="07">🚑 07</button>
         <button class="btn secondary rv-vehicle" data-rv-vehicle="08">🚑 08</button>
         <button class="btn secondary rv-vehicle" data-rv-vehicle="09">🚑 09</button>
-        <span id="rvVehicleInfo" class="badge">Mezzo 06</span>
+        <span id="rvVehicleInfo" class="badge">Tutti i mezzi · solo servizi chiusi</span>
       </div>
       <div class="filters">
         <input id="fSearch" placeholder="Cerca viaggio, luogo, equipaggio..." oninput="renderArchivio()">
@@ -182,6 +207,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
   <section id="controlli" class="view">
     <div class="panel">
       <div class="section-title"><div><h2 style="margin-bottom:5px">Controlli automatici</h2><div id="controlliSummary" style="font-size:13px;color:#68758a"></div></div><input id="meseControlli" type="month" style="padding:10px;border:1px solid #ccd5e2;border-radius:9px"></div>
+      <div class="notice" id="monthlyOpenSheetsWarning" style="margin-top:14px">Verifica dei fogli viaggio aperti del mese selezionato…</div>
       <div class="notice" style="margin-top:14px"><b>Riposo dipendenti:</b> il controllo delle 11 ore è un avviso gestionale basato sugli orari registrati nei fogli viaggio. Non blocca il salvataggio.</div>
     </div>
     <div id="controlliBody"></div>
@@ -201,6 +227,6 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="app.js?v=20261021-ordine-recenti"></script>
+<script src="app.js?v=20261101-registro-mensile-219"></script>
 </body>
 </html>
