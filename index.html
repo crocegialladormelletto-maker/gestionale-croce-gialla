@@ -856,10 +856,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 <button class="nav" data-v="calendar">📅 Calendario servizi</button>
 <button class="nav" data-v="patients">🪪 Anagrafica pazienti</button>
 <button class="nav" data-v="emergency">🚨 Emergenza 118</button>
-<button class="nav" data-v="assistance">🎪 Assistenze manifestazioni</button>
+<button class="nav" data-v="assistance">🎪 Manifestazioni e assistenze</button>
 <button class="nav" type="button" data-v="agendaPres" data-admin-only="true">📅 Appuntamenti Presidente</button>
 <button class="nav" type="button" data-v="agendaEvents">🎄 Calendario Eventi</button>
-<button class="nav" type="button" data-href="assistenze-manifestazioni/">📑 Gestionale manifestazioni</button>
+<!-- Gestionale manifestazioni accessibile dalla sezione Manifestazioni e assistenze -->
 <button class="nav" data-v="travelSheets118">🚨 Fogli Viaggio 118</button>
 <button class="nav" data-v="travelSheets">📄 Fogli Viaggio</button>
 <button class="nav" type="button" data-href="registro-viaggi/?v=1.21" title="Registro ufficiale, report mensili, stampa e controlli">📊 Registro servizi</button>
@@ -867,14 +867,14 @@ document.addEventListener('DOMContentLoaded',()=>{
 <button class="nav" data-v="paymentReceipts" data-admin-only="true">🧾 Archivio ricevute</button>
 <button class="nav" type="button" data-admin-only="true" data-href="note-di-debito/">🧾 Note di Debito</button>
 <button class="nav" type="button" id="navArubaInvoices" data-admin-only="true">🧮 Fatture Aruba da emettere</button>
-<button class="nav" data-v="crew">👥 Equipaggi</button>
+<button class="nav" data-v="crew" title="Gestione avanzata degli equipaggi dei servizi">👥 Gestione equipaggi</button>
 <button class="nav sep" data-v="people" data-people-filter="ACTIVE_VOL" data-admin-only="true">🪪 Volontari</button>
 <button class="nav" data-v="people" data-people-filter="ACTIVE_DEP" data-admin-only="true">👔 Dipendenti</button>
 <button class="nav" type="button" data-admin-only="true" data-href="corsisti-prova/index.html">🎓 Corsisti</button>
 <button class="nav" data-v="communications">📣 Comunicazioni volontari</button>
 <button class="nav" type="button" data-admin-only="true" data-href="personale-formazione/">🎓 Personale e formazione</button>
-<button class="nav" data-v="shifts">🕒 Turni</button>
-<button class="nav" data-v="availability">📅 Disponibilità</button>
+<button class="nav" data-v="shifts">🕒 Gestione turni</button>
+<button class="nav" data-v="availability">📅 Disponibilità volontari</button>
 <button class="nav sep" data-v="vehicles">🚐 Mezzi e scadenze</button><button class="nav" data-v="personnelExpiries">⏰ Scadenze personale <span id="personnelExpiryNavCount" class="expiry-mini-badge hidden">0</span></button>
 <button class="nav" type="button" data-href="checklist-ambulanze/">✅ Archivio checklist ambulanze</button>
 <button class="nav" data-v="tariffs">€ Tariffari</button>
@@ -1343,6 +1343,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   </div>
  </div>
  <div class="pad">
+ <div class="section" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between"><div><b>Gestione manifestazioni</b><div class="muted">Apri il gestionale dedicato per le funzioni amministrative e operative dell’evento.</div></div><button type="button" class="btn blue jump" data-href="assistenze-manifestazioni/">📑 Apri Gestionale manifestazioni</button></div>
  <div class="section as-month-panel">
   <h3 style="margin:0">🎪 Calendario manifestazioni programmate</h3>
   <p class="muted">Seleziona il giorno e la manifestazione specifica per vedere e completare il suo equipaggio. Nessuna fascia generica.</p>
@@ -2040,7 +2041,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  </div>
 </section>
 
-<section id="crew" class="surface hidden"><div class="hero"><h2>Equipaggi</h2><p>Seleziona un servizio per vedere esclusivamente il suo equipaggio. Gli operatori disponibili sono filtrati per qualifica.</p></div><div class="pad">
+<section id="crew" class="surface hidden"><div class="hero"><h2>Gestione equipaggi</h2><p>Seleziona un servizio per vedere esclusivamente il suo equipaggio. Gli operatori disponibili sono filtrati per qualifica.</p><div class="actions"><button type="button" class="btn secondary jump" data-v="calendar">📅 Vai al Calendario servizi</button></div></div><div class="pad">
 <div class="section"><div class="grid3"><div class="field"><label>Servizio</label><select id="cs"></select></div><div class="field"><label>Ruolo</label><select id="cr"><option>AUTISTA</option><option>CAPO_SERVIZIO</option><option>SOCCORRITORE</option><option>SECONDO_SOCCORRITORE</option><option>ACCOMPAGNATORE</option><option>AFFIANCATO</option></select></div><div class="field"><label>Operatore abilitato</label><select id="cp"></select></div></div><div class="toolbar"><button id="add" class="btn yellow">Assegna</button></div><div id="cmsg"></div></div><div id="clist"></div></div></section>
 
 <section id="people" class="surface hidden"><div class="hero"><h2>Volontari e personale</h2><p>Anagrafica e qualifiche gestite separatamente.</p></div><div class="pad"><div class="section"><h3>Cessazione rapporto associativo</h3><p class="muted">Per dimissioni o espulsioni: verbale di restituzione divisa, tesserino, badge e chiavi. La compilazione del verbale non disattiva automaticamente gli accessi: verificare separatamente la revoca delle credenziali.</p><a class="btn blue" href="cessazione-volontari/" target="_blank" rel="noopener">Apri verbale di cessazione e restituzione</a></div>
@@ -2108,12 +2109,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Inquadramento</th><th>Stato</th><th>Qualifiche</th><th>Ore mese</th><th>Ore trimestre</th><th>Telefono</th><th>Stato APP</th><th></th></tr></thead><tbody id="ptbody"></tbody></table></div></div></section>
 
-<section id="shifts" class="surface hidden"><div class="hero"><h2>Turni</h2></div><div class="pad">
+<section id="shifts" class="surface hidden"><div class="hero"><h2>Gestione turni</h2><div class="actions"><button type="button" class="btn secondary jump" data-v="availability">📅 Consulta disponibilità volontari</button></div></div><div class="pad">
 <div class="section"><h3>Nuovo turno</h3><div class="grid4"><div class="field"><label>Data *</label><input id="sd" type="date"></div><div class="field"><label>Inizio *</label><input id="ssi" type="time"></div><div class="field"><label>Fine *</label><input id="sse" type="time"></div><div class="field"><label>Mezzo</label><select id="sm"></select></div><div class="field"><label>Tipo</label><select id="stype"><option>EMERGENZA</option><option>ORDINARIO</option><option>DIMISSIONI</option><option>ASSISTENZA</option></select></div><div class="field"><label>Note</label><input id="snote"></div></div><div class="toolbar"><button id="ssave" class="btn yellow">Crea turno</button></div><div id="shiftmsg"></div></div>
 <div class="section"><h3>Assegna operatore al turno</h3><div class="grid3"><div class="field"><label>Turno</label><select id="shiftSel"></select></div><div class="field"><label>Operatore</label><select id="shiftPerson"></select></div><div class="field"><label>Ruolo</label><select id="shiftRole"><option>AUTISTA</option><option>CAPO_SERVIZIO</option><option>SOCCORRITORE</option><option>SECONDO_SOCCORRITORE</option><option>ACCOMPAGNATORE</option><option value="AFFIANCATO">TIROCINANTE / AFFIANCATO</option></select></div></div><div class="toolbar"><button id="shiftAdd" class="btn secondary">Assegna</button></div></div>
 <div id="shiftList"></div></div></section>
 
-<section id="availability" class="surface hidden"><div class="hero"><h2>Disponibilità volontari</h2></div><div class="pad">
+<section id="availability" class="surface hidden"><div class="hero"><h2>Disponibilità volontari</h2><div class="actions"><button type="button" class="btn secondary jump" data-v="shifts">🕒 Vai a Gestione turni</button></div></div><div class="pad">
 <div class="section"><div class="grid4"><div class="field"><label>Operatore *</label><select id="avp"></select></div><div class="field"><label>Da *</label><input id="avfrom" type="datetime-local"></div><div class="field"><label>A *</label><input id="avto" type="datetime-local"></div><div class="field"><label>Tipo</label><select id="avtype"><option>DISPONIBILE</option><option>INDISPONIBILE</option><option>PREFERENZA</option></select></div><div class="field"><label>Mezzo preferito</label><select id="avm"></select></div><div class="field"><label>Note</label><input id="avnote"></div></div><div class="toolbar"><button id="avsave" class="btn yellow">Salva disponibilità</button></div><div id="avmsg"></div></div>
 <div class="table"><table><thead><tr><th>Operatore</th><th>Da</th><th>A</th><th>Tipo</th><th>Mezzo</th><th>Note</th></tr></thead><tbody id="avbody"></tbody></table></div></div></section>
 
