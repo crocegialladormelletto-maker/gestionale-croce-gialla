@@ -868,8 +868,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <button class="nav" type="button" data-admin-only="true" data-href="note-di-debito/">🧾 Note di Debito</button>
 <button class="nav" type="button" id="navArubaInvoices" data-admin-only="true">🧮 Fatture Aruba da emettere</button>
 <button class="nav" data-v="crew" title="Gestione avanzata degli equipaggi dei servizi">👥 Gestione equipaggi</button>
-<button class="nav sep" data-v="people" data-people-filter="ACTIVE_VOL" data-admin-only="true">🪪 Volontari</button>
-<button class="nav" data-v="people" data-people-filter="ACTIVE_DEP" data-admin-only="true">👔 Dipendenti</button>
+<button class="nav sep" data-v="people" data-people-filter="ACTIVE_VOL" data-admin-only="true">👥 Gestione personale</button>
 <button class="nav" type="button" data-admin-only="true" data-href="corsisti-prova/index.html">🎓 Corsisti</button>
 <button class="nav" data-v="communications">📣 Comunicazioni volontari</button>
 <button class="nav" type="button" data-admin-only="true" data-href="personale-formazione/">🎓 Personale e formazione</button>
@@ -2044,7 +2043,14 @@ document.addEventListener('DOMContentLoaded',()=>{
 <section id="crew" class="surface hidden"><div class="hero"><h2>Gestione equipaggi</h2><p>Seleziona un servizio per vedere esclusivamente il suo equipaggio. Gli operatori disponibili sono filtrati per qualifica.</p><div class="actions"><button type="button" class="btn secondary jump" data-v="calendar">📅 Vai al Calendario servizi</button></div></div><div class="pad">
 <div class="section"><div class="grid3"><div class="field"><label>Servizio</label><select id="cs"></select></div><div class="field"><label>Ruolo</label><select id="cr"><option>AUTISTA</option><option>CAPO_SERVIZIO</option><option>SOCCORRITORE</option><option>SECONDO_SOCCORRITORE</option><option>ACCOMPAGNATORE</option><option>AFFIANCATO</option></select></div><div class="field"><label>Operatore abilitato</label><select id="cp"></select></div></div><div class="toolbar"><button id="add" class="btn yellow">Assegna</button></div><div id="cmsg"></div></div><div id="clist"></div></div></section>
 
-<section id="people" class="surface hidden"><div class="hero"><h2>Volontari e personale</h2><p>Anagrafica e qualifiche gestite separatamente.</p></div><div class="pad"><div class="section"><h3>Cessazione rapporto associativo</h3><p class="muted">Per dimissioni o espulsioni: verbale di restituzione divisa, tesserino, badge e chiavi. La compilazione del verbale non disattiva automaticamente gli accessi: verificare separatamente la revoca delle credenziali.</p><a class="btn blue" href="cessazione-volontari/" target="_blank" rel="noopener">Apri verbale di cessazione e restituzione</a></div>
+<section id="people" class="surface hidden"><div class="hero"><h2>👥 Gestione personale</h2><p>Anagrafiche, qualifiche, documenti e storico del personale. Seleziona la categoria da consultare.</p>
+<div class="actions" id="peopleCategoryTabs" style="margin-top:12px;align-items:center;flex-wrap:wrap">
+ <button id="pPeopleActiveVol" type="button" class="btn yellow">🪪 Volontari attivi</button>
+ <button id="pPeopleActiveDep" type="button" class="btn secondary">👔 Dipendenti</button>
+ <button id="pPeopleCessati" type="button" class="btn secondary">📁 Personale cessato</button>
+ <button id="pPeopleAll" type="button" class="btn secondary" style="font-size:12px">Tutte le anagrafiche</button>
+</div><p class="muted" style="margin-top:7px">Le persone cessate restano nello storico e sono escluse dagli elenchi attivi.</p>
+</div><div class="pad"><div class="section"><h3>Cessazione rapporto associativo</h3><p class="muted">Per dimissioni o espulsioni: verbale di restituzione divisa, tesserino, badge e chiavi. La compilazione del verbale non disattiva automaticamente gli accessi: verificare separatamente la revoca delle credenziali.</p><a class="btn blue" href="cessazione-volontari/" target="_blank" rel="noopener">Apri verbale di cessazione e restituzione</a></div>
 <div class="section"><h3>Scheda personale · dati modificabili</h3><p class="muted">Apri una persona dall’elenco, modifica i campi necessari e premi «Salva modifiche». È possibile modificare anche il numero badge: il gestionale aggiorna automaticamente i collegamenti della persona e, se presente, anche il login dell’app volontari.</p><div class="grid4"><div class="field"><label>Badge *</label><input id="pb"></div><div class="field"><label>Nome *</label><input id="pname"></div><div class="field"><label>Cognome *</label><input id="psurname"></div><div class="field"><label>Stato</label><select id="pstate"><option>ATTIVO</option><option>ASPETTATIVA</option><option>SOSPESO</option><option>CESSATO</option></select></div><div class="field"><label>Telefono</label><input id="pphone"></div><div class="field"><label>Email</label><input id="pemail" type="email"></div><div class="field"><label>Data di nascita</label><input id="pbirth" type="date"></div><div class="field"><label>Data ingresso</label><input id="pentry" type="date"></div><div class="field"><label>Data uscita</label><input id="pexit" type="date"></div><div class="field"><label>Codice fiscale</label><input id="pcf" maxlength="16" style="text-transform:uppercase"></div><div class="field"><label>Indirizzo di residenza</label><input id="paddress"></div><div class="field"><label>Comune</label><input id="pcity"></div><div class="field"><label>Provincia</label><input id="pprovince" maxlength="2" style="text-transform:uppercase"></div><div class="field"><label>CAP</label><input id="pcap" inputmode="numeric" maxlength="5"></div><div class="field"><label>Dipendente</label><select id="pdep"><option value="false">No</option><option value="true">Sì</option></select></div><div class="field" id="pminmField"><label>Ore minime mensili</label><input id="pminm" type="number" min="0" step="1" value="28"></div><div class="field" id="pmintField"><label>Ore minime trimestrali</label><input id="pmint" type="number" min="0" step="1" value="84"></div></div>
 <div class="field" style="margin-top:10px"><label>Qualifiche</label><div id="pquals" class="inline-checks"></div></div>
 <div class="toolbar"><button id="pnew" class="btn secondary">Nuova scheda</button><button id="psave" class="btn yellow">Salva modifiche</button></div><div id="pmsg"></div>
@@ -2090,14 +2096,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   <div class="stat"><small>✓ APP OK</small><b id="pAppOkCount">0</b></div>
   <div class="stat"><small>APP NON ATTIVA</small><b id="pAppMissingCount">0</b></div>
  </div>
- <div class="actions" style="margin-top:12px;align-items:center;flex-wrap:wrap">
-  <b>Elenco personale:</b>
-  <button id="pPeopleActiveVol" type="button" class="btn yellow">Volontari attivi</button>
-  <button id="pPeopleActiveDep" type="button" class="btn secondary">Dipendenti attivi</button>
-  <button id="pPeopleCessati" type="button" class="btn secondary">Archivio cessati</button>
-  <button id="pPeopleAll" type="button" class="btn secondary">Tutti</button>
-  <span class="muted">Le schede cessate restano conservate con il relativo storico.</span>
- </div>
+ 
  <div class="actions" style="margin-top:8px;align-items:center;flex-wrap:wrap">
   <b>Filtro APP:</b>
   <button id="pAppFilterAll" type="button" class="btn yellow">Tutti</button>
@@ -8297,9 +8296,14 @@ function renderPeopleTable(){
  if(!$('ptbody'))return;
  let list=[...people].sort((a,b)=>String(a.badge||'').localeCompare(String(b.badge||''),'it',{numeric:true,sensitivity:'base'}));
  const isCessato=p=>String(p.stato_anagrafico||'').trim().toUpperCase()==='CESSATO';
- if(peopleCategoryFilter==='ACTIVE_VOL')list=list.filter(p=>!p.dipendente&&!isCessato(p));
- if(peopleCategoryFilter==='ACTIVE_DEP')list=list.filter(p=>!!p.dipendente&&!isCessato(p));
- if(peopleCategoryFilter==='CESSATI')list=list.filter(isCessato);
+ if(peopleCategoryFilter==='ACTIVE_VOL')list=list.filter(p=>!p.dipendente&&volunteerIsActive(p)&&!isCessato(p));
+ if(peopleCategoryFilter==='ACTIVE_DEP')list=list.filter(p=>!!p.dipendente&&volunteerIsActive(p)&&!isCessato(p));
+ if(peopleCategoryFilter==='CESSATI')list=list.filter(p=>isCessato(p)||p.attivo===false||!!p.data_uscita);
+ document.querySelectorAll('#peopleCategoryTabs button').forEach(button=>{
+  const byId={pPeopleActiveVol:'ACTIVE_VOL',pPeopleActiveDep:'ACTIVE_DEP',pPeopleCessati:'CESSATI',pPeopleAll:'ALL'};
+  button.classList.toggle('yellow',byId[button.id]===peopleCategoryFilter);
+  button.classList.toggle('secondary',byId[button.id]!==peopleCategoryFilter);
+ });
  if(peopleAppFilter==='OK')list=list.filter(p=>volunteerIsActive(p)&&volunteerAppOk(p));
  if(peopleAppFilter==='MISSING')list=list.filter(p=>volunteerIsActive(p)&&!volunteerAppOk(p));
 
