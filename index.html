@@ -1604,7 +1604,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  <div class="hero">
   <div class="actions" style="justify-content:space-between">
    <div><h2 id="fvdTitle">Foglio Viaggio</h2><p id="fvdSubtitle">Compilazione elettronica del documento di viaggio.</p></div>
-   <div class="actions"><button id="fvdService" class="btn secondary hidden">Apri servizio collegato</button><button id="fvdBack" class="btn secondary">← Elenco fogli</button></div>
+   <div class="actions"><button id="fvdService" class="btn secondary hidden">Apri servizio collegato</button><button id="fvCorrect118Number" type="button" class="btn secondary hidden">✏️ Rettifica numero scheda 118</button><button id="fvdBack" class="btn secondary">← Elenco fogli</button></div>
   </div>
  </div>
  <div class="pad">
@@ -5340,6 +5340,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvSave').classList.toggle('hidden',closed);
  $('fvSaveKmClosed').classList.toggle('hidden',!adminClosed118);
  $('fvReopen118').classList.toggle('hidden',!adminClosed118);
+ $('fvCorrect118Number').classList.toggle('hidden',!adminClosed118);
  $('fvCorrectAccounting').classList.toggle('hidden',!(prof?.ruolo==='AMMINISTRATORE'&&closed&&!is118));
  $('fvCorrectTimes').classList.toggle('hidden',!(prof?.ruolo==='AMMINISTRATORE'&&closed&&!is118));
  $('fvClose').classList.toggle('hidden',closed);
@@ -5351,6 +5352,24 @@ async function loadTravelSheetDetail(id=currentFoglioId){
 
 $('fvdBack').onclick=()=>view(String(currentFoglio?.tipo_servizio||'').trim()==='118'?'travelSheets118':'travelSheets');
 $('fvdService').onclick=()=>{const id=$('fvdService').dataset.serviceId;if(id)openService(id)};
+$('fvCorrect118Number').onclick=async()=>{
+ const f=currentFoglio;
+ if(prof?.ruolo!=='AMMINISTRATORE'||f?.tipo_servizio!=='118'||f?.stato!=='CHIUSO')return;
+ const before=f.numero_scheda_118||'';
+ const numero=window.prompt('Numero corretto della scheda 118 (attuale: '+(before||'—')+'):',before);
+ if(numero===null)return;
+ const nuovo=numero.trim().toUpperCase();
+ if(!nuovo||nuovo===before)return msg('fvDetailMsg','Inserisci un numero diverso da quello attuale.','warn');
+ const motivo=window.prompt('Motivazione obbligatoria della rettifica (sarà conservata nel registro attività):','Correzione da scheda cartacea 118');
+ if(motivo===null)return;
+ if(motivo.trim().length<8)return msg('fvDetailMsg','Motivazione troppo breve (minimo 8 caratteri).','warn');
+ if(!window.confirm('Confermi la rettifica del foglio '+f.numero_foglio+'?\\nNumero precedente: '+(before||'—')+'\\nNumero corretto: '+nuovo+'\\nIl foglio resterà CHIUSO.'))return;
+ const {data,error}=await sb.rpc('cge_amministratore_rettifica_numero_scheda_118',{p_foglio:f.id,p_numero:nuovo,p_motivo:motivo.trim(),p_precedente:before});
+ if(error)return msg('fvDetailMsg','Rettifica non riuscita: '+error.message,'err');
+ await loadTravelSheetDetail(f.id);
+ msg('fvDetailMsg','Rettifica registrata: scheda 118 '+data.numero+'. Foglio rimasto chiuso.','ok');
+};
+
 
 async function saveTravelSheet(silent=false){
  if(!currentFoglioId)return false;
