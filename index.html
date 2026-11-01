@@ -4917,8 +4917,8 @@ function fv118MonthBounds(value){
  const v=value||new Date().toISOString().slice(0,7);
  const [y,m]=v.split('-').map(Number);
  const start=v+'-01';
- const d=new Date(y,m,1);
- const end=d.toISOString().slice(0,10);
+ // Usa UTC per il limite esclusivo del mese successivo: non escludere il 31 ottobre in Europe/Rome.
+ const end=new Date(Date.UTC(y,m,1)).toISOString().slice(0,10);
  return {start,end,label:new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric'}).format(new Date(y,m-1,1))};
 }
 function fv118RouteText(x){
