@@ -174,3 +174,69 @@ function ordMove(n){
 $('ordPrev').onclick=()=>ordMove(-1);$('ordNext').onclick=()=>ordMove(1);
 $('ordToday').onclick=()=>ordMove(0);$('ordRefresh').onclick=loadOrdinaryCalendar;
 $('ordTypeFilter').onchange=ordDraw;
+
+
+// Gestione degli equipaggi ordinari direttamente nel Calendario servizi.
+// Riutilizza le RPC di verifica qualifiche e assegnazione del modulo ordinari.
+let calOrdBusy=false;
+function calOrdService(id){
+ return opCalEvents.find(e=>e.kind==='service'&&String(e.raw.id)===String(id))?.raw||null;
+}
+async function calOrdOpen(id){
+ const service=calOrdService(id),box=$('calOrdEditor-'+id);
+ if(!service||!box||calOrdBusy||!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ if(box.dataset.open==='true'){box.innerHTML='';box.dataset.open='false';return}
+ box.dataset.open='true';
+ box.innerHTML='<div class="muted">Verifica qualifiche disponibili...</div>';
+ const r=await sb.rpc('cge_ordinari_abilitati',{p_giorno:service.data_servizio});
+ if(!box.isConnected||box.dataset.open!=='true')return;
+ if(r.error){box.innerHTML='<div class="notice err">'+esc(r.error.message)+'</div>';return}
+ const eligible=r.data||[],crew=service.assignments||[];
+ const roles=ordRoles.filter(([role])=>eligible.some(p=>p.ruolo===role)&&!crew.some(p=>p.ruolo===role));
+ if(!roles.length){box.innerHTML='<div class="notice warn">Nessun ruolo disponibile con operatori qualificati.</div>';return}
+ box.innerHTML='<div class="ord-editor-inner"><div class="field"><label>Ruolo</label><select data-cal-ord-role>'+
+  roles.map(([role,name])=>'<option value="'+esc(role)+'">'+esc(name)+'</option>').join('')+
+  '</select></div><div class="field"><label>Operatore qualificato</label><select data-cal-ord-person></select></div>'+
+  '<div class="actions"><button type="button" class="btn yellow" data-cal-ord-confirm>Assegna definitivamente</button>'+
+  '<button type="button" class="btn secondary" data-cal-ord-close>Chiudi</button></div><div data-cal-ord-msg></div></div>';
+ const roleSelect=box.querySelector('[data-cal-ord-role]'),personSelect=box.querySelector('[data-cal-ord-person]');
+ const choices=()=>{
+  const taken=new Set(crew.map(x=>x.badge_personale));
+  const selected=eligible.filter(p=>p.ruolo===roleSelect.value&&!taken.has(p.badge));
+  personSelect.innerHTML=selected.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo||p.badge)+'</option>').join('');
+  box.querySelector('[data-cal-ord-confirm]').disabled=!selected.length;
+ };
+ roleSelect.onchange=choices;choices();
+ box.querySelector('[data-cal-ord-close]').onclick=()=>{box.innerHTML='';box.dataset.open='false'};
+ box.querySelector('[data-cal-ord-confirm]').onclick=async()=>{
+  const role=roleSelect.value,badge=personSelect.value;
+  const member=eligible.find(p=>p.ruolo===role&&p.badge===badge);
+  if(!member||calOrdBusy)return;
+  if(!confirm('Assegnare definitivamente '+member.nome_completo+' come '+(ordRoles.find(x=>x[0]===role)?.[1]||role)+' al servizio del '+service.data_servizio+'?'))return;
+  calOrdBusy=true;box.querySelector('[data-cal-ord-confirm]').disabled=true;
+  try{
+   const result=await sb.rpc('cge_ordinari_assegna',{p_servizio:service.id,p_badge:badge,p_ruolo:role});
+   if(result.error)throw result.error;
+   await loadOperationalCalendar();
+   msg('calMsg','Operatore assegnato al servizio.','ok');
+  }catch(error){
+   const dest=box.querySelector('[data-cal-ord-msg]');
+   if(dest)dest.innerHTML='<div class="notice err">'+esc(error.message||String(error))+'</div>';
+   else msg('calMsg',error.message||String(error),'err');
+  }finally{calOrdBusy=false;const button=box.querySelector('[data-cal-ord-confirm]');if(button)button.disabled=false}
+ };
+}
+async function calOrdRemove(assignmentId,serviceId){
+ const service=calOrdService(serviceId);
+ const member=service?.assignments?.find(x=>String(x.id)===String(assignmentId));
+ if(!member||calOrdBusy||!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+ if(!confirm('Rimuovere '+(people.find(p=>p.badge===member.badge_personale)?.nome_completo||member.badge_personale)+' dall’equipaggio del servizio del '+service.data_servizio+'?'))return;
+ calOrdBusy=true;
+ try{
+  const r=await sb.from('servizi_equipaggio').delete().eq('id',assignmentId).eq('servizio_id',serviceId);
+  if(r.error)throw r.error;
+  await loadOperationalCalendar();
+  msg('calMsg','Componente rimosso dall’equipaggio.','ok');
+ }catch(e){msg('calMsg','Rimozione non riuscita: '+(e.message||String(e)),'err')}
+ finally{calOrdBusy=false}
+}
