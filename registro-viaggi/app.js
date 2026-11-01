@@ -44,6 +44,13 @@ async function loadResources(){
     sb.from('mezzi').select('codice,tipologia,targa,attivo').eq('attivo',true).order('codice')
   ]);if(p.error)throw p.error;if(v.error)throw v.error;personale=p.data||[];vehicles=v.data||[]
 }
+let registryRefreshRunning=false;
+document.addEventListener('visibilitychange',async()=>{
+ if(document.hidden||!currentAccess||registryRefreshRunning)return;
+ registryRefreshRunning=true;
+ try{await loadData()}catch(e){console.warn('Aggiornamento Registro servizi non riuscito',e)}
+ finally{registryRefreshRunning=false}
+});
 async function loadData(){
   const [t,m]=await Promise.all([sb.from('registro_viaggi').select('*').order('data',{ascending:false}).order('numero',{ascending:false}),sb.from('registro_viaggi_mesi').select('*').order('mese',{ascending:false})]);
   if(t.error)throw t.error;if(m.error)throw m.error;trips=t.data||[];months=m.data||[];registryInitArchivePeriods();renderAll();setRegistroVehicle(rvSelectedVehicle);loadOpenSheetsAlert(ymNow())
