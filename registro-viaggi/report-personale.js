@@ -47,6 +47,17 @@ async function printStaffMonthlyReport(origin){
   const carBars=cars.map(c=>bar('Mezzo '+c.code,c.n,Math.max(...cars.map(v=>v.n),1),fmt(c.km)+' km',false)).join('');
   const typeBars=types.map(t=>bar(t.label,t.n,Math.max(...types.map(v=>v.n),1),'',true)).join('');
   const logo='https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=320';
+  const svgIcon=(kind,size=42)=>{
+   const icons={
+    ambulance:'<path d="M3 11V6a2 2 0 0 1 2-2h10v13H3z"/><path d="M15 9h4l3 4v4h-7"/><path d="M8 8h4M10 6v4"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',
+    road:'<path d="M8 2 3 22M16 2l5 20M12 3v4M12 11v3M12 18v3"/>',
+    phone:'<path d="M6 3h4l1 5-3 2c2 4 4 6 7 7l2-3 4 2v5c-10 2-20-8-18-18z"/><path d="M14 4h8v7h-8z"/><text x="15" y="9" font-size="5" font-weight="900" fill="currentColor" stroke="none">118</text>',
+    vehicle:'<rect x="4" y="5" width="16" height="16" rx="3"/><path d="M4 13h16M8 9h2M14 9h2"/><circle cx="8" cy="18" r="1"/><circle cx="16" cy="18" r="1"/><path d="M9 3V1M15 3V1"/>',
+    chart:'<rect x="3" y="13" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="13" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/>',
+    heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/>'
+   };
+   return '<svg class="report-icon" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[kind]||icons.chart)+'</svg>';
+  };
   const css=[
    '@page{size:A4 portrait;margin:10mm}*{box-sizing:border-box}body{margin:0;background:#eaf0f7;font-family:Arial,Helvetica,sans-serif;color:#12355e}',
    '.tools{text-align:center;padding:10px;background:#fff;border-bottom:1px solid #d9e2ed}.tools button{background:#14376a;color:white;border:0;border-radius:8px;padding:12px 18px;font-weight:bold;cursor:pointer;margin:0 4px}',
@@ -63,23 +74,26 @@ async function printStaffMonthlyReport(origin){
    '.thanks{margin-top:18px;background:linear-gradient(110deg,#fff4bd,#fffaf0);border:2px solid #f0c600;border-radius:11px;padding:18px 14px;display:flex;align-items:center;gap:14px}.thanks b{font-size:15px;line-height:1.4;font-style:italic}.thanks .icon{font-size:30px}',
    '.note{font-size:9px;line-height:1.35;color:#64758b;margin:12px 0 8px}.footer{margin-top:8px;padding:11px 0;border-top:2px solid #ffce00;text-align:center;font-size:9px;color:#607087}',
    '@media print{body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.tools{display:none}.page{max-width:none;min-height:0;margin:0;box-shadow:none;padding:0}.top{margin:0 0 8px}.cards,.cols,.panel,.thanks{break-inside:avoid}}',
-   '@media screen and (max-width:690px){.page{width:100%;min-height:0;padding:0 12px 15px}.top{margin:0 -12px 12px}.cols{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}}'
+   '.page{background:#fff}.page:before,.page:after{z-index:0}.top{position:relative;z-index:1}header img{width:194px;height:194px;margin-bottom:5px}h1{font-size:29px;letter-spacing:-.45px}.subtitle{font-size:15px}.month{font-size:23px;margin:3px auto 19px;padding:10px 31px}',
+   '.card{border-radius:11px}.card-top{height:125px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:9px 5px 8px}.card .label{display:block;font-size:14px;line-height:1.15;min-height:0;padding:0 2px;font-weight:900}.card .value{font-size:28px;line-height:1.1;padding:12px 2px}.report-icon{color:#0f3265;flex-shrink:0}.panel h2{display:flex;align-items:center;gap:8px;font-size:18px;padding:10px 12px}.panel h2 .report-icon{color:#fff}.panel{min-height:250px}.panel main{padding:12px 11px}.bar-row{font-size:12px;grid-template-columns:100px 1fr 52px;margin:12px 0 15px}.bar-row strong{font-size:12px}.bar-track{height:14px}.bar-row small{font-size:10px}.thanks{padding:17px 16px;gap:15px}.thanks .icon{border-right:3px solid #efc100;padding-right:15px}.thanks .report-icon{color:#12376e}.thanks b{font-size:15px}.footer{font-size:10px}',
+   '@media print{header img{width:194px;height:194px}.page:after,.page:before{print-color-adjust:exact}.card,.panel,.thanks{break-inside:avoid}}',
+   '@media screen and (max-width:690px){.page{width:100%;min-height:0;padding:0 12px 15px}.top{margin:0 -12px 12px}.cols{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}h1{font-size:clamp(18px,4.1vw,29px);white-space:normal}.card-top{height:118px}}'
   ].join('');
   const stats=[
-   ['Servizi effettuati',fmt(all.length)],
-   ['Chilometri percorsi',fmt(totalKm)+' km'],
-   ['Interventi 118',fmt(types[0].n)],
-   ['Mezzi operativi',fmt(cars.filter(x=>x.n>0).length)]
-  ].map(x=>'<div class="card"><span class="label">'+safe(x[0])+'</span><b class="value">'+safe(x[1])+'</b></div>').join('');
+   ['ambulance','Servizi effettuati',fmt(all.length)],
+   ['road','Chilometri percorsi',fmt(totalKm)+' km'],
+   ['phone','Interventi 118',fmt(types[0].n)],
+   ['vehicle','Mezzi operativi',fmt(cars.filter(x=>x.n>0).length)]
+  ].map(x=>'<div class="card"><div class="card-top">'+svgIcon(x[0],44)+'<span class="label">'+safe(x[1])+'</span></div><b class="value">'+safe(x[2])+'</b></div>').join('');
   const html=[
    '<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Report attività '+safe(label)+'</title><style>',css,'</style></head><body>',
    '<div class="tools"><button onclick="window.print()">Stampa / Salva PDF</button><button onclick="window.close()">Chiudi</button></div>',
    '<div class="page"><div class="top"></div><header><img src="'+safe(logo)+'" alt="Logo Croce Gialla Emergenza ODV"><h1>REPORT MENSILE DELLE ATTIVITÀ</h1><div class="accent"></div>',
    '<p class="subtitle">Croce Gialla Emergenza ODV · Dormelletto (NO)</p><div class="month">'+safe(label)+'</div></header>',
    '<section class="cards">',stats,'</section>',
-   '<section class="cols"><div class="panel"><h2>Attività per mezzo</h2><main>',carBars,'</main></div>',
-   '<div class="panel"><h2>Suddivisione attività</h2><main>',typeBars,'</main></div></section>',
-   '<div class="thanks"><span class="icon">🤝</span><b>Grazie a tutti i volontari e dipendenti per l’impegno, la disponibilità e il servizio svolto a favore della comunità.</b></div>',
+   '<section class="cols"><div class="panel"><h2>'+svgIcon('ambulance',27)+' Attività per mezzo</h2><main>',carBars,'</main></div>',
+   '<div class="panel"><h2>'+svgIcon('chart',27)+' Suddivisione attività</h2><main>',typeBars,'</main></div></section>',
+   '<div class="thanks"><span class="icon">'+svgIcon('heart',55)+'</span><b>Grazie a tutti i volontari e dipendenti per l’impegno, la disponibilità e il servizio svolto a favore della comunità.</b></div>',
    '<p class="note">Riepilogo dei servizi chiusi registrati nel periodo. Le categorie sono aggregate per tipologia e possono variare in seguito a rettifiche autorizzate.</p>',
    '<footer class="footer">Documento informativo per il personale · Nessun dato sanitario o personale riportato · Generato il '+safe(new Date().toLocaleString('it-IT'))+'</footer>',
    '</div></body></html>'
