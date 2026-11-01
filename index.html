@@ -1507,13 +1507,13 @@ document.addEventListener('DOMContentLoaded',()=>{
 </section>
 
 <section id="travelSheets118" class="surface hidden">
- <div class="hero"><h2>🚨 Fogli Viaggio 118</h2><p>Archivio separato dei Fogli Viaggio di Emergenza/Urgenza 118. Questi documenti non entrano nel flusso Note di Debito/fatturazione.</p></div>
+ <div class="hero"><h2>🚨 Fogli Viaggio 118</h2><p>In primo piano i fogli del mese corrente. I mesi precedenti sono consultabili nell'Archivio fogli viaggio.</p></div>
  <div class="pad">
   <div class="section">
-   <h3>📊 Riepilogo 118 mensile</h3>
-   <p class="muted">Seleziona il mese per ottenere il prospetto da usare a fine mese per la fatturazione su Aruba.</p>
+   <h3>📊 Riepilogo 118 · <span id="fv118CurrentMonthLabel">Mese corrente</span></h3>
+   <p class="muted">Prospetto del mese corrente, con stampa e PDF. I riepiloghi dei mesi precedenti sono disponibili nell'archivio.</p>
    <div class="grid4">
-    <div class="field"><label>Mese</label><input id="fv118Month" type="month"></div>
+    <div class="field"><label>Mese in visualizzazione</label><input id="fv118Month" type="month" readonly></div>
     <div class="stat"><small>SERVIZI 118</small><b id="fv118MonthlyCount">0</b></div>
     <div class="stat"><small>KM TOTALI</small><b id="fv118MonthlyKm">0</b></div>
     <div class="stat"><small>FOGLI CHIUSI</small><b id="fv118MonthlyClosed">0</b></div>
@@ -1530,7 +1530,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   </div>
 
   <div class="section">
-   <h3>Archivio Fogli Viaggio 118</h3>
+   <h3>📄 Fogli viaggio 118 · <span id="fv118ListMonthLabel">Mese corrente</span></h3>
+   <p class="muted">Sono mostrati soltanto i fogli del mese in corso. Ricerca e filtri agiscono su questo mese.</p>
    <div class="grid4">
     <div class="field"><label>Data</label><input id="fv118Date" type="date"></div>
     <div class="field"><label>Stato</label><select id="fv118State"><option value="">Tutti</option><option>APERTO</option><option>CHIUSO</option></select></div>
@@ -1543,6 +1544,25 @@ document.addEventListener('DOMContentLoaded',()=>{
     <thead><tr><th>Numero</th><th>Data</th><th>Mezzo</th><th>N. scheda 118</th><th>Destinazione</th><th>Arrivo in DEA</th><th>Stato</th><th></th></tr></thead>
     <tbody id="fv118Body"></tbody>
    </table></div>
+  </div>
+  <div class="section">
+   <div class="actions" style="justify-content:space-between">
+    <div><h3 style="margin:0">📚 Archivio fogli viaggio</h3><p class="muted" style="margin:5px 0 0">Consulta i mesi precedenti, senza perdere lo storico dei fogli 118.</p></div>
+    <button id="fv118ArchiveToggle" type="button" class="btn blue" aria-expanded="false">📚 Archivio fogli viaggio</button>
+   </div>
+   <div id="fv118ArchivePanel" class="hidden" style="margin-top:14px">
+    <div class="grid3">
+     <div class="field"><label>Seleziona mese archiviato</label><select id="fv118ArchiveMonth"><option value="">Seleziona un mese</option></select></div>
+     <div class="field"><label>Mezzo</label><select id="fv118ArchiveVehicle"><option value="">Tutti</option></select></div>
+     <div class="field"><label>Ricerca nell'archivio</label><input id="fv118ArchiveSearch" placeholder="Numero, scheda 118, destinazione..."></div>
+    </div>
+    <div class="toolbar"><button id="fv118ArchiveRefresh" type="button" class="btn secondary">↻ Aggiorna archivio</button><button id="fv118ArchivePrint" type="button" class="btn blue">🖨 Stampa riepilogo mese</button></div>
+    <div id="fv118ArchiveMsg"></div>
+    <div class="table"><table>
+     <thead><tr><th>Numero</th><th>Data</th><th>Mezzo</th><th>N. scheda 118</th><th>Destinazione</th><th>Arrivo in DEA</th><th>Stato</th><th></th></tr></thead>
+     <tbody id="fv118ArchiveBody"><tr><td colspan="8">Seleziona un mese per consultare i fogli archiviati.</td></tr></tbody>
+    </table></div>
+   </div>
   </div>
  </div>
 </section>
@@ -4891,22 +4911,16 @@ $('fv118MonthRefresh').onclick=load118MonthlySummary;
 $('fv118MonthPrint').onclick=print118MonthlySummary;
 $('fv118Month').onchange=load118MonthlySummary;
 
-async function loadTravelSheets118(){
- if(['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)){
-  if(!$('fv118Month').value)$('fv118Month').value=new Date().toISOString().slice(0,7);
-  await load118MonthlySummary();
- }
- msg('fv118Msg','Caricamento...');
- let q=sb.from('fogli_viaggio').select('*').eq('tipo_servizio','118').order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
- if($('fv118Date').value)q=q.eq('data_servizio',$('fv118Date').value);
- if($('fv118State').value)q=q.eq('stato',$('fv118State').value);
- if($('fv118Vehicle').value)q=q.eq('mezzo',$('fv118Vehicle').value);
- const r=await q.limit(1000);
- if(r.error)return msg('fv118Msg',r.error.message,'err');
- let rows=r.data||[];
- const z=$('fv118Search').value.toLowerCase().trim();
- if(z)rows=rows.filter(x=>JSON.stringify(x).toLowerCase().includes(z));
- $('fv118Body').innerHTML=rows.length?rows.map(x=>
+function fv118LocalMonth(){
+ const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function fv118MonthName(value){
+ if(!/^\\d{4}-\\d{2}$/.test(value||''))return 'Mese corrente';
+ const [y,m]=value.split('-').map(Number);
+ return new Date(y,m-1,1).toLocaleDateString('it-IT',{month:'long',year:'numeric'});
+}
+function fv118RenderRows(rows,bodyId){
+ $(bodyId).innerHTML=rows.length?rows.map(x=>
   '<tr><td><b>'+esc(x.numero_foglio||'—')+'</b></td>'+
   '<td>'+esc(x.data_servizio||'—')+'</td>'+
   '<td>'+esc(x.mezzo||'—')+'</td>'+
@@ -4915,15 +4929,84 @@ async function loadTravelSheets118(){
   '<td><b>'+esc(fvTime(x.ora_arrivo_dea)||'—')+'</b></td>'+
   '<td><span class="pill '+(x.stato==='CHIUSO'?'g':'')+'">'+esc(x.stato||'—')+'</span></td>'+
   '<td><button class="btn secondary" data-open-fv118="'+esc(x.id)+'">Apri</button></td></tr>'
- ).join(''):'<tr><td colspan="8">Nessun Foglio Viaggio 118.</td></tr>';
- $('fv118Body').querySelectorAll('[data-open-fv118]').forEach(b=>b.onclick=()=>openTravelSheet(b.dataset.openFv118));
+ ).join(''):'<tr><td colspan="8">Nessun Foglio Viaggio 118 nel mese selezionato.</td></tr>';
+ $(bodyId).querySelectorAll('[data-open-fv118]').forEach(b=>b.onclick=()=>openTravelSheet(b.dataset.openFv118));
+}
+async function loadTravelSheets118(){
+ const month=fv118LocalMonth(),bounds=fv118MonthBounds(month);
+ $('fv118Month').value=month;
+ $('fv118CurrentMonthLabel').textContent=fv118MonthName(month);
+ $('fv118ListMonthLabel').textContent=fv118MonthName(month);
+ if(['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))await load118MonthlySummary();
+ msg('fv118Msg','Caricamento...');
+ let q=sb.from('fogli_viaggio').select('*').eq('tipo_servizio','118')
+  .gte('data_servizio',bounds.start).lt('data_servizio',bounds.end)
+  .order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
+ if($('fv118Date').value)q=q.eq('data_servizio',$('fv118Date').value);
+ if($('fv118State').value)q=q.eq('stato',$('fv118State').value);
+ if($('fv118Vehicle').value)q=q.eq('mezzo',$('fv118Vehicle').value);
+ const r=await q.limit(1000);
+ if(r.error)return msg('fv118Msg',r.error.message,'err');
+ let rows=r.data||[];
+ const z=$('fv118Search').value.toLowerCase().trim();
+ if(z)rows=rows.filter(x=>JSON.stringify(x).toLowerCase().includes(z));
+ fv118RenderRows(rows,'fv118Body');
  msg('fv118Msg','');
 }
+async function fv118LoadArchiveMonths(){
+ const sel=$('fv118ArchiveMonth'),chosen=sel.value;
+ const r=await sb.from('fogli_viaggio').select('data_servizio')
+  .eq('tipo_servizio','118').lt('data_servizio',fv118MonthBounds(fv118LocalMonth()).start)
+  .order('data_servizio',{ascending:false}).limit(5000);
+ if(r.error)return msg('fv118ArchiveMsg','Impossibile leggere i mesi: '+r.error.message,'err');
+ const months=[...new Set((r.data||[]).map(x=>(x.data_servizio||'').slice(0,7)).filter(Boolean))].sort().reverse();
+ sel.innerHTML='<option value="">Seleziona un mese</option>'+months.map(m=>'<option value="'+esc(m)+'">'+esc(fv118MonthName(m))+'</option>').join('');
+ sel.value=months.includes(chosen)?chosen:(months[0]||'');
+}
+async function fv118LoadArchive(){
+ if($('fv118ArchivePanel').classList.contains('hidden'))return;
+ const month=$('fv118ArchiveMonth').value;
+ if(!month){$('fv118ArchiveBody').innerHTML='<tr><td colspan="8">Nessun mese archiviato disponibile.</td></tr>';return;}
+ if(month>=fv118LocalMonth())return msg('fv118ArchiveMsg','Seleziona un mese precedente a quello corrente.','warn');
+ msg('fv118ArchiveMsg','Caricamento archivio...');
+ const b=fv118MonthBounds(month);
+ let q=sb.from('fogli_viaggio').select('*').eq('tipo_servizio','118')
+  .gte('data_servizio',b.start).lt('data_servizio',b.end)
+  .order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
+ if($('fv118ArchiveVehicle').value)q=q.eq('mezzo',$('fv118ArchiveVehicle').value);
+ const r=await q.limit(1000);
+ if(r.error)return msg('fv118ArchiveMsg',r.error.message,'err');
+ const search=$('fv118ArchiveSearch').value.toLowerCase().trim();
+ let rows=r.data||[];if(search)rows=rows.filter(x=>JSON.stringify(x).toLowerCase().includes(search));
+ fv118RenderRows(rows,'fv118ArchiveBody');
+ msg('fv118ArchiveMsg',rows.length+' fogli visualizzati · '+fv118MonthName(month));
+}
+$('fv118ArchiveToggle').onclick=async()=>{
+ const panel=$('fv118ArchivePanel');panel.classList.toggle('hidden');
+ const visible=!panel.classList.contains('hidden');
+ $('fv118ArchiveToggle').setAttribute('aria-expanded',String(visible));
+ $('fv118ArchiveToggle').textContent=visible?'✕ Chiudi archivio':'📚 Archivio fogli viaggio';
+ if(visible){await fv118LoadArchiveMonths();await fv118LoadArchive();}
+};
+$('fv118ArchiveMonth').onchange=fv118LoadArchive;
+$('fv118ArchiveVehicle').onchange=fv118LoadArchive;
+$('fv118ArchiveRefresh').onclick=async()=>{await fv118LoadArchiveMonths();await fv118LoadArchive();};
+$('fv118ArchiveSearch').oninput=()=>{clearTimeout(window.fv118ArchiveTimer);window.fv118ArchiveTimer=setTimeout(fv118LoadArchive,250);};
+$('fv118ArchivePrint').onclick=async()=>{
+ const month=$('fv118ArchiveMonth').value;
+ if(!month)return msg('fv118ArchiveMsg','Seleziona un mese da stampare.','warn');
+ const current=$('fv118Month').value;
+ $('fv118Month').value=month;
+ await load118MonthlySummary();
+ print118MonthlySummary();
+ $('fv118Month').value=current||fv118LocalMonth();
+ await load118MonthlySummary();
+};
 $('fv118Refresh').onclick=loadTravelSheets118;
 $('fv118Date').onchange=loadTravelSheets118;
 $('fv118State').onchange=loadTravelSheets118;
 $('fv118Vehicle').onchange=loadTravelSheets118;
-$('fv118Search').oninput=()=>{clearTimeout(window.fv118q);window.fv118q=setTimeout(loadTravelSheets118,250)};
+$('fv118Search').oninput=()=>{clearTimeout(window.fv118q);window.fv118q=setTimeout(loadTravelSheets118,250);};
 setInterval(()=>{
  if(!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo))return;
  const section=$('travelSheets118');
