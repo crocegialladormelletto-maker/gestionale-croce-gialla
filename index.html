@@ -5740,7 +5740,7 @@ $('calPrev').onclick=()=>moveOperationalCalendar(-1);$('calNext').onclick=()=>mo
 $('calToday').onclick=()=>{opCalCursor=new Date();opCalSelected=todaySafe();loadOperationalCalendar()};
 $('calMonth').onclick=()=>{opCalMode='month';opCalCursor=new Date(opCalSelected+'T12:00:00');loadOperationalCalendar()};
 $('calWeek').onclick=()=>{opCalMode='week';opCalCursor=new Date(opCalSelected+'T12:00:00');loadOperationalCalendar()};
-['calShowTurns','calShowServices','calShowAvailability'].forEach(id=>$(id).onchange=refreshOperationalCalendarView);
+['calShowTurns','calShowServices','calShowAvailability','calServiceTypeFilter'].forEach(id=>$(id).onchange=refreshOperationalCalendarView);
 document.querySelectorAll('.cal-vehicle').forEach(b=>b.onclick=()=>{opCalVehicle=b.dataset.calVehicle||'';document.querySelectorAll('.cal-vehicle').forEach(x=>x.className='btn '+((x.dataset.calVehicle||'')===opCalVehicle?'blue':'secondary')+' cal-vehicle');refreshOperationalCalendarView()});
 $('calNewService').onclick=()=>view('new',{date:opCalSelected});$('calNewShift').onclick=()=>{if($('sd'))$('sd').value=opCalSelected;view('shifts')};
 
@@ -14162,7 +14162,7 @@ try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&
   msg(isTabletOnlyMode()?'tloginmsg':'lmsg','Impossibile riprendere la sessione: '+(e?.message||String(e)),'err');
  }
 })();
-</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20261003c"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script><script src="agenda.js?v=6"></script>
+</script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20261101-unificato1"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script><script src="agenda.js?v=6"></script>
 </body></html>
 <style>.nav[data-v="training"]{background:#65a30d;border-color:#4d7c0f;color:#fff}
 /* Dashboard: colori forzati pulsanti rapidi */
