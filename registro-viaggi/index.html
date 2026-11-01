@@ -69,7 +69,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
       <div class="card"><div class="lab">MEZZO PIÙ USATO</div><div id="kMezzo" class="val">–</div><div class="sub">numero viaggi nel mese</div></div>
     </div>
     <div class="panel">
-      <div class="section-title"><div><h2 style="margin-bottom:5px">📅 Registro del mese corrente</h2><div class="lab" id="dashboardMonthLabel">Mese corrente · tutti i mezzi</div></div><div class="actions" style="margin:0"><button class="btn secondary" type="button" onclick="showView('archivio')">Apri registro e archivio</button><button class="btn light" type="button" onclick="showView('controlli')">Controlli</button></div></div>
+      <div class="section-title"><div><h2 style="margin-bottom:5px">📅 Registro del mese corrente</h2><div class="lab" id="dashboardMonthLabel">Mese corrente · tutti i mezzi</div></div><div class="actions" style="margin:0"><button class="btn secondary" type="button" onclick="showView('archivio')">Apri registro e archivio</button><button class="btn primary" onclick="printStaffMonthlyReport('current')">Report per il personale</button><button class="btn light" type="button" onclick="showView('controlli')">Controlli</button></div></div>
       <div class="cards" style="margin:14px 0 0">
        <div class="card"><div class="lab">INTERVENTI 118</div><div id="dashboard118" class="val">0</div></div>
        <div class="card"><div class="lab">SERVIZI ORDINARI</div><div id="dashboardOrdinary" class="val">0</div></div>
@@ -129,7 +129,7 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 
   <section id="archivio" class="view">
     <div class="panel">
-      <div class="section-title"><div><h2 style="margin-bottom:6px">📚 Registro servizi · mese corrente e archivio</h2><div id="statoMeseArchivio" style="font-size:12px;font-weight:800;color:#526077"></div></div><div class="actions" style="margin:0"><button class="btn secondary" onclick="exportXLSX()">Esporta Excel</button><button class="btn light" onclick="printMonth()">Stampa / PDF</button></div></div>
+      <div class="section-title"><div><h2 style="margin-bottom:6px">📚 Registro servizi · mese corrente e archivio</h2><div id="statoMeseArchivio" style="font-size:12px;font-weight:800;color:#526077"></div></div><div class="actions" style="margin:0"><button class="btn primary" onclick="printStaffMonthlyReport('archive')">Report mensile personale</button><button class="btn secondary" onclick="exportXLSX()">Esporta Excel</button><button class="btn light" onclick="printMonth()">Stampa / PDF</button></div></div>
       <div class="formgrid" style="margin:12px 0">
        <div class="field"><label>Anno</label><select id="annoArchivio" onchange="registryArchiveYearChanged()"></select></div>
        <div class="field"><label>Mese</label><select id="meseArchivioScelta" onchange="registryArchiveMonthChanged()"></select></div>
@@ -227,6 +227,6 @@ h1{font-size:25px;margin:0}.topbar p{margin:5px 0 0;color:var(--muted)}.badge{ba
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="app.js?v=20261101-registro-mensile-219"></script>
+<script src="app.js?v=20261101-report-personale-220"></script>
 </body>
 </html>
