@@ -37,7 +37,7 @@ function writeReport(win,{type,month,rows,columns,printedCount,printedKm,vehicle
 async function loadOrd(month){
  const [y,m]=month.split('-').map(Number);
  if(!y||!m||m<1||m>12)throw Error('Seleziona un mese valido.');
- const start=month+'-01',end=new Date(y,m,1).toISOString().slice(0,10);
+ const start=month+'-01',end=new Date(Date.UTC(y,m,1)).toISOString().slice(0,10);
  const all=[];
  for(let offset=0;offset<10000;offset+=1000){
   const q=await sb.from('fogli_viaggio').select('id,numero_foglio,progressivo,data_servizio,mezzo,tipo_servizio,paziente_cognome,paziente_nome,luogo_partenza,destinazione,stato,km_partenza,km_arrivo,km_percorsi')
@@ -74,7 +74,7 @@ async function printOrdMonth(){
  }catch(e){showError('fvArchiveMsg',e);win.document.body.innerHTML='<h2>Impossibile preparare il riepilogo</h2><p>'+safe(e.message||e)+'</p>'}
 }
 async function load118(month){
- const [y,m]=month.split('-').map(Number),start=month+'-01',end=new Date(y,m,1).toISOString().slice(0,10);
+ const [y,m]=month.split('-').map(Number),start=month+'-01',end=new Date(Date.UTC(y,m,1)).toISOString().slice(0,10);
  const all=[];
  for(let offset=0;offset<10000;offset+=1000){
   const q=await sb.from('fogli_viaggio').select('id,numero_foglio,progressivo,data_servizio,mezzo,numero_scheda_118,luogo_partenza,luogo_carico,destinazione,ospedale_destinazione,luogo_rientro,ora_arrivo_dea,stato,km_partenza,km_arrivo,km_percorsi')
