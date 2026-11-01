@@ -272,7 +272,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <section id="page-stampe" class="adminPage"><div class="pageHead"><div><h2>Stampe</h2><div class="muted">Registro mensile per dipendente</div></div></div>
 <div class="card noPrint">
 <div class="grid"><div><label>Dipendente</label><select id="printEmp"></select></div><div><label>Mese</label><input id="printMonth" type="month" min="2026-09"></div><div style="display:flex;align-items:end"><button id="printMonthlyBtn" class="primary" style="width:100%">🖨️ STAMPA REGISTRO</button></div></div>
-<div class="notice">La stampa contiene Data, Entrata, Uscita, Totale ore giornaliere, Straordinari e le eventuali causali del mese.</div>
+<div class="notice">La stampa contiene Data, Entrata, Uscita, Pause registrate dall’app (inizio, fine e durata), Totale ore giornaliere, Supplementari, Straordinari ed eventuali causali. La pausa è indicata separatamente e non viene detratta automaticamente dalle ore.</div>
 </div></section>
 </main></div>
 </div>
@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementByI
 
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co',KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4',ADMIN_API=SUPABASE_URL+'/functions/v1/timbrature-admin-api';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-let people=[],events=[],context=[],auditRows=[],months=[],absences=[],commitments=[],monthClosed=false;const $=x=>document.getElementById(x);
+let people=[],events=[],context=[],pauseEvents=[],auditRows=[],months=[],absences=[],commitments=[],monthClosed=false;const $=x=>document.getElementById(x);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
 function msg(id,t,k=''){const e=$(id);e.textContent=t;e.className='notice '+k}
@@ -315,7 +315,7 @@ function showPanel(name){$('loginBox').classList.add('hidden');$('panel').classL
 async function logout(){await sb.auth.signOut();location.reload()}
 async function loadData(){try{
  const r=await api({action:'data',badge:$('filterEmp').value||null,month:$('month').value||null});
- people=r.people||[];events=r.events||[];context=r.context||[];auditRows=r.audit||[];months=r.months||[];absences=r.absences||[];
+ people=r.people||[];events=r.events||[];context=r.context||[];pauseEvents=r.pauseEvents||[];auditRows=r.audit||[];months=r.months||[];absences=r.absences||[];
  const cr=await sb.from('impegni_dipendenti').select('*').order('data',{ascending:true}).order('ora_inizio',{ascending:true});
  if(cr.error)throw cr.error;commitments=cr.data||[];
  fillPeople();renderAll();
@@ -545,13 +545,20 @@ function ccnlPremiumReport(badge,month){
  '<tr><td><b>Totale indennità ordinarie art.57 (lordo)</b></td><td><b>€ '+euros.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+'</b></td></tr></tbody></table>'+
  '<p><small>Le percentuali art.55 richiedono la retribuzione oraria art.53 per il calcolo in euro. Festività patronale, eventuale riposo settimanale spostato, autorizzazione ore aggiuntive e banca ore richiedono conferma amministrativa. Giorni domenicali lavorati: '+Object.keys(byDay).sort().join(', ').replace(/^$/,'nessuno')+'. Verificare riposo compensativo. Minuti ripartiti sulla data effettiva, anche a cavallo di mezzanotte. Prospetto da verificare prima delle paghe.</small></p></div>';
 }
+function pauseLabel(pauses){
+ if(!pauses||!pauses.length)return '—';
+ return pauses.map(p=>{
+  const a=p.start?time(p.start.evento_at):'—',b=p.end?time(p.end.evento_at):'—';
+  return esc(a+'–'+b+(p.minutes===null?' · incompleta':' · '+fmtMin(p.minutes)));
+ }).join('<br>');
+}
 function printRows(selectedBadge='',selectedMonth=''){
  selectedBadge=selectedBadge||$('filterEmp').value||'';
  selectedMonth=selectedMonth||$('month').value||currentMonth;
  const alive=context.filter(e=>!e.eliminato_at&&(!selectedBadge||e.badge===selectedBadge)&&monthKey(e.evento_at)<=selectedMonth).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
  const by={},openByBadge={};
  const dayKey=s=>new Date(s).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
- const ensure=d=>by[d]??={pairs:[],totalMin:0,abs:[]};
+ const ensure=d=>by[d]??={pairs:[],totalMin:0,abs:[],pause:[]};
 
  // Abbina ogni USCITA alla sua ENTRATA anche se il turno termina il giorno successivo.
  // Il turno viene contabilizzato nel giorno in cui è iniziato.
@@ -583,6 +590,29 @@ function printRows(selectedBadge='',selectedMonth=''){
   ensure(d).pairs.push({i:open,o:null});
  });
 
+ // Le pause registrate dall'app vengono abbinate per dipendente e per giorno.
+ // Restano distinte dai movimenti ENTRATA/USCITA e non cambiano i conteggi retributivi.
+ const openPause={};
+ const eligiblePauses=pauseEvents.filter(p=>(!selectedBadge||String(p.badge)===String(selectedBadge))&&dayKey(p.evento_at).slice(0,7)<=selectedMonth).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+ for(const p of eligiblePauses){
+  const badge=String(p.badge||'');
+  if(p.tipo==='INIZIO_PAUSA'){openPause[badge]=p;continue}
+  if(p.tipo==='FINE_PAUSA'){
+   const start=openPause[badge];
+   if(start){
+    const date=dayKey(start.evento_at);
+    const minutes=Math.max(0,(new Date(p.evento_at)-new Date(start.evento_at))/60000);
+    if(date.slice(0,7)===selectedMonth)ensure(date).pause.push({start,end:p,minutes});
+    delete openPause[badge];
+   }else{
+    const date=dayKey(p.evento_at);if(date.slice(0,7)===selectedMonth)ensure(date).pause.push({start:null,end:p,minutes:null});
+   }
+  }
+ }
+ for(const start of Object.values(openPause)){
+  const date=dayKey(start.evento_at);if(date.slice(0,7)===selectedMonth)ensure(date).pause.push({start,end:null,minutes:null});
+ }
+
  // Inserisce anche le causali senza trasformarle in ore lavorate/straordinarie.
  for(const a of absences){
   if(!a.data_dal||!a.data_al)continue;
@@ -612,7 +642,7 @@ function printRows(selectedBadge='',selectedMonth=''){
  }
  const weeklyRunning={...weeklyPrior};
  let totalWorked=0,totalOvertime=0,totalOrdinary=0,totalSupplementary=0;
- let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th><th>Totale ore giornaliere</th><th>Supplementari</th><th>Straordinari</th></tr></thead><tbody>';
+ let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th><th>Pausa registrata</th><th>Totale ore giornaliere</th><th>Supplementari</th><th>Straordinari</th></tr></thead><tbody>';
  for(const d of Object.keys(by).sort()){
   const v=by[d],dateLabel=new Date(d+'T12:00:00').toLocaleDateString('it-IT');
   const sundayWork=(isMartinoliBadge(selectedBadge)||String(person(selectedBadge)||'').toUpperCase().includes('BRUGHERA'))&&new Date(d+'T12:00:00').getDay()===0&&v.totalMin>0;
@@ -636,20 +666,21 @@ function printRows(selectedBadge='',selectedMonth=''){
 
   if(v.pairs.length){
    v.pairs.forEach((p,j)=>{
-    h+='<tr><td>'+(j===0?(dateLabel+(sundayWork?' · DOMENICA LAVORATA':'')):'')+'</td><td>'+(p.i?time(p.i.evento_at):'')+'</td><td>'+(p.o?time(p.o.evento_at)+(p.smonto?' · SMONTO NOTTE':''):'')+'</td><td>'+(j===0?fmtMin(v.totalMin):'')+'</td><td>'+(j===0?(target==null?'—':fmtMin(supplementary)):'')+'</td><td>'+(j===0?(target==null?'—':fmtMin(overtime)):'')+'</td></tr>';
+    h+='<tr><td>'+(j===0?(dateLabel+(sundayWork?' · DOMENICA LAVORATA':'')):'')+'</td><td>'+(p.i?time(p.i.evento_at):'')+'</td><td>'+(p.o?time(p.o.evento_at)+(p.smonto?' · SMONTO NOTTE':''):'')+'</td><td>'+(j===0?pauseLabel(v.pause):'')+'</td><td>'+(j===0?fmtMin(v.totalMin):'')+'</td><td>'+(j===0?(target==null?'—':fmtMin(supplementary)):'')+'</td><td>'+(j===0?(target==null?'—':fmtMin(overtime)):'')+'</td></tr>';
    });
   }
-  if(sundayWork)h+='<tr><td colspan="6"><b>⚠ Domenica lavorata:</b> verificare il riposo compensativo e le maggiorazioni contrattuali. Nessun riposo viene inserito automaticamente.</td></tr>';
+  if(!v.pairs.length&&v.pause.length)h+='<tr><td>'+dateLabel+'</td><td>—</td><td>—</td><td>'+pauseLabel(v.pause)+'</td><td>0:00</td><td>0:00</td><td>0:00</td></tr>';
+  if(sundayWork)h+='<tr><td colspan="7"><b>⚠ Domenica lavorata:</b> verificare il riposo compensativo e le maggiorazioni contrattuali. Nessun riposo viene inserito automaticamente.</td></tr>';
   if(v.abs.length){
    v.abs.forEach((label,j)=>{
-    h+='<tr><td>'+(!v.pairs.length&&j===0?dateLabel:'')+'</td><td colspan="3"><b>'+esc(label)+'</b></td><td>'+(target==null?'—':'0:00')+'</td><td>0:00</td></tr>';
+    h+='<tr><td>'+(!v.pairs.length&&!v.pause.length&&j===0?dateLabel:'')+'</td><td colspan="4"><b>'+esc(label)+'</b></td><td>'+(target==null?'—':'0:00')+'</td><td>0:00</td></tr>';
    });
   }
  }
  h+='</tbody>';
  if(selectedBadge&&target!=null){
-  h+='<tfoot><tr><th colspan="3">TOTALI MESE</th><th>'+fmtMin(totalWorked)+'</th><th>'+fmtMin(totalSupplementary)+'</th><th>'+fmtMin(totalOvertime)+'</th></tr>';
-  h+='<tr><td colspan="6"><b>Riferimento contrattuale:</b> '+(isMartinoliBadge(selectedBadge)?'38:00 settimanali (6:20 lun–sab; domenica riposo)':(/BRUGHERA|FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase()))?(/FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase())?'30:00 settimanali · B1 Soccorritore · dal 01/11/2026':'30:00 settimanali (5:00 lun–sab; domenica riposo)'):'giornaliero '+fmtMin(target))+' · <b>Ore ordinarie lavorate:</b> '+fmtMin(totalOrdinary)+' · <b>Ore supplementari:</b> '+fmtMin(totalSupplementary)+' · <b>Ore straordinarie:</b> '+fmtMin(totalOvertime)+'</td></tr></tfoot>';
+  h+='<tfoot><tr><th colspan="4">TOTALI MESE</th><th>'+fmtMin(totalWorked)+'</th><th>'+fmtMin(totalSupplementary)+'</th><th>'+fmtMin(totalOvertime)+'</th></tr>';
+  h+='<tr><td colspan="7"><b>Riferimento contrattuale:</b> '+(isMartinoliBadge(selectedBadge)?'38:00 settimanali (6:20 lun–sab; domenica riposo)':(/BRUGHERA|FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase()))?(/FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase())?'30:00 settimanali · B1 Soccorritore · dal 01/11/2026':'30:00 settimanali (5:00 lun–sab; domenica riposo)'):'giornaliero '+fmtMin(target))+' · <b>Ore ordinarie lavorate:</b> '+fmtMin(totalOrdinary)+' · <b>Ore supplementari:</b> '+fmtMin(totalSupplementary)+' · <b>Ore straordinarie:</b> '+fmtMin(totalOvertime)+'</td></tr></tfoot>';
  }
  return h+'</table>'+ccnlPremiumReport(selectedBadge,selectedMonth)
 }
