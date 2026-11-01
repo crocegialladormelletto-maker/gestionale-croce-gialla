@@ -1621,6 +1621,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     <div class="field"><label>Mezzo</label><input id="fvdVehicle" disabled></div>
     <div class="field"><label>Tipo servizio</label><input id="fvdType" disabled></div>
     <div class="field"><label>Numero foglio</label><input id="fvdNumField" disabled></div>
+    <div class="field hidden" id="fv118NumberField"><label><b>Numero scheda 118</b></label><input id="fv118Number" maxlength="40" disabled placeholder="Numero scheda 118"></div>
    </div>
   </div>
 
@@ -5232,6 +5233,9 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvdVehicle').value=f.mezzo||'';
  $('fvdType').value=f.tipo_servizio||'';
  $('fvdNumField').value=f.numero_foglio||'';
+ $('fv118NumberField').classList.toggle('hidden',!is118);
+ $('fv118Number').value=f.numero_scheda_118||'';
+ $('fv118Number').disabled=!(is118&&f.stato!=='CHIUSO'&&prof?.ruolo==='AMMINISTRATORE');
  $('fvPatientSection').classList.remove('hidden');
  $('fvPatientSectionTitle').textContent=is118?'Percorso':'Paziente e percorso';
  $('fvPatientFields').classList.toggle('hidden',is118||isAssistanceManifestation(f.tipo_servizio));
@@ -5395,6 +5399,7 @@ async function saveTravelSheet(silent=false){
  };
  if(String(currentFoglio?.tipo_servizio||'').trim()==='118'){
   if(prof?.ruolo==='AMMINISTRATORE'){
+   row.numero_scheda_118=$('fv118Number').value.trim().toUpperCase()||null;
    row.luogo_carico=$('fvd118Load').value.trim()||null;
    row.destinazione=$('fvd118To').value.trim()||null;
    // Per i servizi 118 la destinazione è facoltativa, anche se il paziente non è trasportato.
@@ -5436,11 +5441,14 @@ async function saveTravelSheet(silent=false){
   modalita_pagamento:$('fvPayMode').value||null,
   data_pagamento:$('fvPayMode').value==='BONIFICO DIFFERITO'?null:($('fvPayDate').value||null)
  });
- const r=await sb.from('fogli_viaggio').update(row).eq('id',currentFoglioId).select('id,paziente_nome,paziente_cognome,modalita_pagamento,data_pagamento,destinazione,luogo_carico').maybeSingle();
+ const r=await sb.from('fogli_viaggio').update(row).eq('id',currentFoglioId).select('id,paziente_nome,paziente_cognome,modalita_pagamento,data_pagamento,destinazione,luogo_carico,numero_scheda_118').maybeSingle();
  if(r.error){msg('fvDetailMsg',r.error.message,'err');return false}
  if(!r.data){msg('fvDetailMsg','Nessuna modifica registrata: verifica permessi e stato del foglio.','err');return false}
  if(Object.prototype.hasOwnProperty.call(row,'modalita_pagamento')&&(String(r.data.modalita_pagamento||'')!==String(row.modalita_pagamento||'')||String(r.data.data_pagamento||'')!==String(row.data_pagamento||''))){
   msg('fvDetailMsg','Attenzione: metodo o data pagamento diversi da quelli inseriti. La modifica NON è confermata.','err');return false;
+ }
+ if(Object.prototype.hasOwnProperty.call(row,'numero_scheda_118')&&String(r.data.numero_scheda_118||'')!==String(row.numero_scheda_118||'')){
+  msg('fvDetailMsg','Il numero della scheda 118 non risulta salvato nel database.','err');return false;
  }
  if(Object.prototype.hasOwnProperty.call(row,'luogo_carico')&&String(r.data.luogo_carico||'').trim()!==String(row.luogo_carico||'').trim()){
   msg('fvDetailMsg','Il Target 118 non risulta salvato nel database.','err');return false;
