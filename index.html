@@ -851,9 +851,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div class="layout"><aside class="side">
 <button class="nav active" data-v="dash">⌂ Dashboard</button>
 <button class="nav" data-v="new">✚ Nuovo servizio</button>
-<button class="nav" data-v="servicesOrd">🚐 Servizi ordinari</button>
+<!-- Gestione ordinari integrata nel Calendario; sezione storica preservata -->
 <button class="nav" type="button" data-admin-or-centralino="true" data-href="trasporti-multipaziente/">🚑 Trasporti multipaziente</button>
-<button class="nav" data-v="calendar">📅 Calendario</button>
+<button class="nav" data-v="calendar">📅 Calendario servizi</button>
 <button class="nav" data-v="patients">🪪 Anagrafica pazienti</button>
 <button class="nav" data-v="emergency">🚨 Emergenza 118</button>
 <button class="nav" data-v="assistance">🎪 Assistenze manifestazioni</button>
@@ -889,7 +889,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <section id="agendaPres" class="surface hidden" data-admin-only="true" style="padding:22px"><h2>Appuntamenti Presidente</h2><div id="agendaPresMsg"></div></section>
 <section id="agendaEvents" class="surface hidden" style="padding:22px"><h2>Eventi e manifestazioni</h2><div id="agendaEventsMsg"></div></section>
-<section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button><button class="btn secondary jump" data-v="servicesOrd">🚐 Servizi ordinari</button><button class="btn secondary jump" data-v="communications">📣 Scrivi ai volontari</button></div></div><div class="pad">
+<section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button><button class="btn secondary jump" data-v="communications">📣 Scrivi ai volontari</button></div></div><div class="pad">
 <div id="cgeDashboardAgendas" class="grid2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:16px">
  <div id="cgeDashPresidentBox" data-admin-only="true" class="card" style="padding:16px;border-top:5px solid #ffdb17">
   <h3>📅 Appuntamenti Presidente</h3><div id="cgeDashPresidentList">Caricamento appuntamenti...</div>
@@ -1269,7 +1269,9 @@ document.addEventListener('DOMContentLoaded',()=>{
      <button type="button" class="btn secondary cal-vehicle" data-cal-vehicle="09">09</button>
     </div>
    </div>
-   <div id="calMsg"></div>
+   <div class="field" style="max-width:340px;margin-top:9px"><label for="calServiceTypeFilter">Filtra tipo di servizio</label>
+<select id="calServiceTypeFilter"><option value="">Tutti i servizi</option><option value="VISITA">Visite</option><option value="TRASFERIMENTO">Trasferimenti</option><option value="TRASPORTO SEMPLICE">Trasporti semplici</option><option value="DIMISSIONE">Dimissioni</option><option value="ASSISTENZA">Assistenze manifestazioni</option></select></div>
+<div id="calMsg"></div>
    <div class="calendar-wrap" style="margin-top:10px">
     <div class="cal-weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Gio</div><div>Ven</div><div>Sab</div><div>Dom</div></div>
     <div id="calGrid" class="cal-grid"></div>
@@ -5585,7 +5587,13 @@ function calAddAvailabilityEvents(target,rows,range,withNames){
 function calendarFilteredEvents(prefix,events){
  const st=$(prefix+'ShowTurns')?.checked!==false,ss=$(prefix+'ShowServices')?.checked!==false,sa=$(prefix+'ShowAvailability')?.checked!==false;
  let rows=events.filter(e=>(e.kind==='turn'&&st)||(e.kind==='service'&&ss)||(['avail','unavail','pref'].includes(e.kind)&&sa));
- if(prefix==='cal'&&opCalVehicle)rows=rows.filter(e=>e.vehicle===opCalVehicle);
+ if(prefix==='cal'){
+  if(opCalVehicle)rows=rows.filter(e=>e.vehicle===opCalVehicle);
+  const serviceType=$('calServiceTypeFilter')?.value||'';
+  if(serviceType)rows=rows.filter(e=>e.kind!=='service'||(serviceType==='ASSISTENZA'
+   ?isAssistanceManifestation(e.raw?.tipo_servizio)||isAssistanceManifestation(e.raw?.tipo_servizio_altro)
+   :typeof ordType==='function'&&ordType(e.raw?.tipo_servizio)===serviceType));
+ }
  return rows
 }
 function volunteerEventCrewState(roles,vehicle){
@@ -5655,7 +5663,7 @@ async function loadOperationalCalendar(){
  msg('calMsg','Caricamento calendario...');
  const range=calVisibleRange(opCalCursor,opCalMode),startIso=range.startYmd+'T00:00:00',endIso=range.endYmd+'T23:59:59';
  const readCalendar=()=>Promise.all([
-  sb.from('servizi_giornalieri').select('id,data_servizio,ora_partenza_prevista,ora_carico_paziente_prevista,ora_rientro_previsto,mezzo,tipo_servizio,tipo_servizio_altro,luogo_partenza,indirizzo_partenza,luogo_carico_paziente,indirizzo_carico_paziente,destinazione,indirizzo_destinazione,ospedale_destinazione,stato_gestionale,priorita').gte('data_servizio',range.startYmd).lte('data_servizio',range.endYmd).neq('stato_gestionale','ANNULLATO').order('data_servizio').order('ora_partenza_prevista'),
+  sb.from('servizi_giornalieri').select('id,data_servizio,ora_partenza_prevista,ora_carico_paziente_prevista,ora_rientro_previsto,mezzo,tipo_servizio,tipo_servizio_altro,luogo_partenza,indirizzo_partenza,luogo_carico_paziente,indirizzo_carico_paziente,destinazione,indirizzo_destinazione,ospedale_destinazione,stato_gestionale,priorita,equipaggio_minimo,capo_servizio_obbligatorio').gte('data_servizio',range.startYmd).lte('data_servizio',range.endYmd).neq('stato_gestionale','ANNULLATO').order('data_servizio').order('ora_partenza_prevista'),
   sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo,stato,note').gte('data_turno',range.startYmd).lte('data_turno',range.endYmd).order('data_turno').order('ora_inizio'),
   sb.from('disponibilita_personale').select('id,badge_personale,inizio,fine,tipo,preferenza_mezzo,note').lte('inizio',endIso).gte('fine',startIso).order('inizio')
  ]);
@@ -5678,7 +5686,7 @@ async function loadOperationalCalendar(){
  if(turns.length){const rr=await sb.from('turni_personale').select('turno_id,badge_personale,ruolo,risposta,confermato').in('turno_id',turns.map(x=>x.id));if(rr.error){msg('calMsg','Turni visualizzati senza nominativi: '+rr.error.message,'warn')}else assignments=rr.data||[]}
  let serviceAssignments=[];
  if(services.length){
-  const srCrew=await sb.from('servizi_equipaggio').select('servizio_id,badge_personale,ruolo').in('servizio_id',services.map(x=>x.id));
+  const srCrew=await sb.from('servizi_equipaggio').select('id,servizio_id,badge_personale,ruolo').in('servizio_id',services.map(x=>x.id));
   if(srCrew.error){msg('calMsg','Servizi visualizzati senza equipaggio: '+srCrew.error.message,'warn')}
   else serviceAssignments=srCrew.data||[];
  }
@@ -5704,11 +5712,23 @@ function renderOperationalCalendarDay(){
  const d=new Date(opCalSelected+'T12:00:00');title.textContent=new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d).replace(/^./,c=>c.toUpperCase());
  const rows=calendarFilteredEvents('cal',opCalEvents).filter(e=>e.date===opCalSelected).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
  box.innerHTML=rows.length?rows.map(e=>{
-  if(e.kind==='service')return '<div class="cal-detail-item service"><b>'+(e.time?esc(e.time)+' · ':'')+esc(e.title)+'</b><br>'+esc(e.subtitle||'')+'<br><span class="muted">Equipaggio: '+esc(calendarCrewSummary(e.raw.assignments))+'</span><div class="actions" style="margin-top:7px"><button class="btn secondary" data-cal-open-service="'+esc(e.raw.id)+'">Apri servizio</button></div></div>';
+  if(e.kind==='service'){
+   const isOrd=typeof ordType==='function'&&!!ordType(e.raw.tipo_servizio);
+   const crew=e.raw.assignments||[];
+   const min=Number(e.raw.equipaggio_minimo)>0?Number(e.raw.equipaggio_minimo):(String(e.raw.mezzo||'')==='06'?1:2);
+   const hasDriver=crew.some(x=>x.ruolo==='AUTISTA'),hasCapo=!e.raw.capo_servizio_obbligatorio||crew.some(x=>x.ruolo==='CAPO_SERVIZIO');
+   const complete=crew.length>=min&&hasDriver&&hasCapo;
+   const editable=isOrd&&e.date>=todaySafe()&&!['ANNULLATO','CHIUSO','TERMINATO','DA CONTABILIZZARE','COMPLETATO'].includes(String(e.raw.stato_gestionale||'').toUpperCase());
+   const status=isOrd?'<span class="pill '+(complete?'g':'r')+'">'+(complete?'Equipaggio completo':'Equipaggio da completare · '+crew.length+'/'+min+(!hasDriver?' · manca autista':'')+(!hasCapo?' · manca capo servizio':''))+'</span> ':'';
+   const members=crew.map(x=>'<div class="dim-person">• '+esc(people.find(p=>p.badge===x.badge_personale)?.nome_completo||x.badge_personale)+' · '+esc(x.ruolo)+(editable&&x.id?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:7px" data-cal-ord-remove="'+esc(x.id)+'" data-cal-ord-service="'+esc(e.raw.id)+'">Rimuovi</button>':'')+'</div>').join('');
+   return '<div class="cal-detail-item service"><b>'+(e.time?esc(e.time)+' · ':'')+esc(e.title)+'</b><br>'+esc(e.subtitle||'')+'<br>'+status+'<span class="muted">Equipaggio: '+esc(calendarCrewSummary(crew))+'</span>'+members+'<div class="actions" style="margin-top:7px"><button class="btn secondary" data-cal-open-service="'+esc(e.raw.id)+'">Apri servizio</button>'+(editable?'<button type="button" class="btn yellow" data-cal-ord-add="'+esc(e.raw.id)+'">✚ Aggiungi componente</button>':'')+'</div><div id="calOrdEditor-'+esc(e.raw.id)+'"></div></div>';
+  }
   if(e.kind==='turn'){const names=(e.raw.assignments||[]).map(a=>{const p=people.find(x=>x.badge===a.badge_personale);return (p?.nome_completo||a.badge_personale)+' ('+(a.ruolo||'—')+(String(a.risposta||'').toUpperCase()==='NON DISPONIBILE'?' · non disponibile':'')+')'}).join(', ');return '<div class="cal-detail-item turn"><b>'+esc(e.time||'')+' · '+esc(e.title)+'</b><br>'+esc(calTime(e.raw.ora_inizio))+'–'+esc(calTime(e.raw.ora_fine))+(names?'<br><span class="muted">'+esc(names)+'</span>':'<br><span class="muted">Nessun operatore assegnato</span>')+'<div class="actions" style="margin-top:7px"><button class="btn secondary" data-cal-open-shifts="1">Vai ai turni</button></div></div>'}
   return '<div class="cal-detail-item '+e.kind+'"><b>'+esc((e.time?e.time+' · ':'')+e.title)+'</b>'+(e.subtitle?'<br>'+esc(e.subtitle):'')+'</div>'
  }).join(''):'<div class="notice">Nessun elemento per questa giornata con i filtri selezionati.</div>';
  document.querySelectorAll('[data-cal-open-service]').forEach(b=>b.onclick=()=>openService(b.dataset.calOpenService));
+ document.querySelectorAll('[data-cal-ord-add]').forEach(b=>b.onclick=()=>calOrdOpen(b.dataset.calOrdAdd));
+ document.querySelectorAll('[data-cal-ord-remove]').forEach(b=>b.onclick=()=>calOrdRemove(b.dataset.calOrdRemove,b.dataset.calOrdService));
  document.querySelectorAll('[data-cal-open-shifts]').forEach(b=>b.onclick=()=>{if($('sd'))$('sd').value=opCalSelected;view('shifts')})
 }
 function moveOperationalCalendar(delta){
