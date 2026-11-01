@@ -1428,18 +1428,21 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 
 <section id="travelSheets" class="surface hidden">
- <div class="hero"><h2>Fogli Viaggio</h2><p>Archivio dei Fogli Viaggio ordinari. I Fogli 118 sono gestiti nel relativo archivio separato.</p></div>
+ <div class="hero"><h2>📄 Fogli Viaggio</h2><p>In evidenza i fogli del mese corrente. Consulta i mesi precedenti da Archivio fogli viaggio.</p></div>
  <div class="pad">
   <div class="section">
-   <h3>📊 Riepilogo mensile Fogli Viaggio</h3>
+   <h3>📊 Riepilogo mensile · <span id="fvCurrentMonthLabel">Mese corrente</span></h3>
    <div class="grid4">
-    <div class="field"><label>Mese</label><input id="fvMonth" type="month"></div>
+    <div class="field"><label>Mese corrente</label><input id="fvMonth" type="month" readonly></div>
     <div class="stat"><small>SERVIZI</small><b id="fvMonthlyCount">0</b></div>
     <div class="stat"><small>KM TOTALI</small><b id="fvMonthlyKm">0 km</b></div>
     <div class="stat"><small>FOGLI CHIUSI</small><b id="fvMonthlyClosed">0</b></div>
    </div>
    <div id="fvMonthMsg"></div>
   </div>
+  <div class="section">
+  <h3>📄 Fogli ordinari · <span id="fvListMonthLabel">Mese corrente</span></h3>
+  <p class="muted">Ricerca e filtri limitati ai fogli del mese corrente.</p>
   <div class="grid4">
    <div class="field"><label>Data</label><input id="fvDate" type="date"></div>
    <div class="field"><label>Stato</label><select id="fvState"><option value="">Tutti</option><option>APERTO</option><option>CHIUSO</option></select></div>
@@ -1459,6 +1462,32 @@ document.addEventListener('DOMContentLoaded',()=>{
    <thead><tr><th>Numero</th><th>Data</th><th>Mezzo</th><th>Servizio</th><th>Paziente</th><th>Percorso</th><th>Stato</th><th id="fvTotalHead">Totale</th><th></th></tr></thead>
    <tbody id="fvBody"></tbody>
   </table></div>
+  </div>
+  <div class="section">
+   <div class="actions" style="justify-content:space-between;align-items:center">
+    <h3 style="margin:0">📚 Archivio fogli viaggio</h3>
+    <button id="fvArchiveToggle" class="btn blue" type="button" aria-expanded="false">📚 Archivio fogli viaggio</button>
+   </div>
+   <div id="fvArchivePanel" class="hidden" style="margin-top:14px">
+    <p class="muted">Consulta i fogli ordinari dei mesi precedenti. Nessun documento viene eliminato o spostato.</p>
+    <div class="grid3">
+     <div class="field"><label>Mese</label><select id="fvArchiveMonth"><option value="">Seleziona mese</option></select></div>
+     <div class="field"><label>Mezzo</label><select id="fvArchiveVehicle"><option value="">Tutti</option></select></div>
+     <div class="field"><label>Ricerca</label><input id="fvArchiveSearch" placeholder="Numero foglio, paziente, destinazione..."></div>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+     <div class="stat"><small>SERVIZI EFFETTUATI NEL MESE</small><b id="fvArchiveCount">0</b></div>
+     <div class="stat"><small>KM TOTALI DEL MESE</small><b id="fvArchiveKm">0 km</b></div>
+    </div>
+    <p class="muted" style="margin:8px 0">I totali sono calcolati sui fogli chiusi di tutto il mese, indipendentemente dai filtri dell'elenco.</p>
+    <div class="toolbar"><button id="fvArchiveRefresh" class="btn secondary" type="button">↻ Aggiorna archivio</button></div>
+    <div id="fvArchiveMsg"></div>
+    <div class="table"><table>
+     <thead><tr><th>Numero</th><th>Data</th><th>Mezzo</th><th>Servizio</th><th>Paziente</th><th>Percorso</th><th>Stato</th><th>Totale</th><th></th></tr></thead>
+     <tbody id="fvArchiveBody"><tr><td colspan="9">Seleziona un mese per consultare lo storico.</td></tr></tbody>
+    </table></div>
+   </div>
+  </div>
  </div>
 </section>
 
@@ -4760,16 +4789,80 @@ function displayFoglioNumero(f){
  if(!/^\d{2}$/.test(mezzo)||!year)return raw;
  return 'FV-'+year+'-'+mezzo+'-'+raw.padStart(6,'0');
 }
+function fvOrdMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function fvOrdRenderArchive(rows){
+ $('fvArchiveBody').innerHTML=rows.length?rows.map(x=>'<tr>'+
+ '<td><b>'+esc(displayFoglioNumero(x))+'</b></td><td>'+esc(x.data_servizio)+'</td>'+
+ '<td>'+esc(x.mezzo)+'</td><td>'+esc(x.tipo_servizio||'—')+'</td>'+
+ '<td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td>'+
+ '<td>'+esc(x.luogo_partenza||'—')+' → '+esc(x.destinazione||'—')+'</td>'+
+ '<td><span class="pill '+(x.stato==='CHIUSO'?'g':'')+'">'+esc(x.stato)+'</span></td>'+
+ '<td class="'+(prof?.ruolo==='CENTRALINO'?'hidden':'')+'">'+euro(x.totale_servizio)+'</td>'+
+ '<td><button class="btn secondary" data-open-fv="'+esc(x.id)+'">Apri</button></td></tr>').join(''):
+ '<tr><td colspan="9">Nessun foglio viaggio nel mese selezionato.</td></tr>';
+ $('fvArchiveBody').querySelectorAll('[data-open-fv]').forEach(b=>b.onclick=()=>openTravelSheet(b.dataset.openFv));
+}
+async function fvOrdLoadArchiveMonths(){
+ const select=$('fvArchiveMonth'),old=select.value;
+ const r=await sb.from('fogli_viaggio').select('data_servizio').neq('tipo_servizio','118')
+  .lt('data_servizio',fv118MonthBounds(fvOrdMonth()).start)
+  .order('data_servizio',{ascending:false}).limit(5000);
+ if(r.error)return msg('fvArchiveMsg',r.error.message,'err');
+ const months=[...new Set((r.data||[]).map(x=>String(x.data_servizio||'').slice(0,7)).filter(Boolean))].sort().reverse();
+ select.innerHTML='<option value="">Seleziona mese</option>'+months.map(x=>'<option value="'+esc(x)+'">'+esc(fv118MonthName(x))+'</option>').join('');
+ select.value=months.includes(old)?old:(months[0]||'');
+}
+async function fvOrdLoadArchive(){
+ if($('fvArchivePanel').classList.contains('hidden'))return;
+ const month=$('fvArchiveMonth').value;
+ if(!month){$('fvArchiveCount').textContent='0';$('fvArchiveKm').textContent='0 km';fvOrdRenderArchive([]);return;}
+ if(month>=fvOrdMonth())return msg('fvArchiveMsg','Seleziona un mese precedente.','warn');
+ msg('fvArchiveMsg','Caricamento archivio...');
+ const b=fv118MonthBounds(month),all=[];
+ for(let offset=0;offset<10000;offset+=1000){
+  const r=await sb.from('fogli_viaggio')
+   .select('id,numero_foglio,progressivo,data_servizio,mezzo,tipo_servizio,paziente_cognome,paziente_nome,luogo_partenza,destinazione,stato,totale_servizio,km_partenza,km_arrivo,km_percorsi')
+   .neq('tipo_servizio','118').gte('data_servizio',b.start).lt('data_servizio',b.end)
+   .order('data_servizio',{ascending:false}).order('progressivo',{ascending:false}).range(offset,offset+999);
+  if(r.error)return msg('fvArchiveMsg',r.error.message,'err');
+  all.push(...(r.data||[]));if((r.data||[]).length<1000)break;
+ }
+ const performed=all.filter(x=>x.stato==='CHIUSO');
+ const km=performed.reduce((sum,x)=>sum+Number(x.km_percorsi??(x.km_arrivo!=null&&x.km_partenza!=null?Math.max(0,x.km_arrivo-x.km_partenza):0)),0);
+ $('fvArchiveCount').textContent=performed.length.toLocaleString('it-IT');
+ $('fvArchiveKm').textContent=km.toLocaleString('it-IT')+' km';
+ const veh=$('fvArchiveVehicle').value,txt=$('fvArchiveSearch').value.trim().toLowerCase();
+ let rows=all;if(veh)rows=rows.filter(x=>String(x.mezzo)===veh);
+ if(txt)rows=rows.filter(x=>JSON.stringify(x).toLowerCase().includes(txt)||displayFoglioNumero(x).toLowerCase().includes(txt));
+ fvOrdRenderArchive(rows);
+ msg('fvArchiveMsg',rows.length+' fogli visualizzati · '+fv118MonthName(month));
+}
+$('fvArchiveToggle').onclick=async()=>{
+ const panel=$('fvArchivePanel');panel.classList.toggle('hidden');
+ const visible=!panel.classList.contains('hidden');
+ $('fvArchiveToggle').setAttribute('aria-expanded',String(visible));
+ $('fvArchiveToggle').textContent=visible?'✕ Chiudi archivio':'📚 Archivio fogli viaggio';
+ if(visible){await fvOrdLoadArchiveMonths();await fvOrdLoadArchive();}
+};
+$('fvArchiveMonth').onchange=fvOrdLoadArchive;
+$('fvArchiveVehicle').onchange=fvOrdLoadArchive;
+$('fvArchiveRefresh').onclick=async()=>{await fvOrdLoadArchiveMonths();await fvOrdLoadArchive();};
+$('fvArchiveSearch').oninput=()=>{clearTimeout(window.fvOrdArchiveT);window.fvOrdArchiveT=setTimeout(fvOrdLoadArchive,250);};
 async function loadTravelSheets(){
  if(['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)){
-  if(!$('fvMonth').value)$('fvMonth').value=new Date().toISOString().slice(0,7);
+  $('fvMonth').value=fvOrdMonth();
+  $('fvCurrentMonthLabel').textContent=fv118MonthName(fvOrdMonth());
+  $('fvListMonthLabel').textContent=fv118MonthName(fvOrdMonth());
   await loadTravelSheetsMonthlySummary();
  }
  msg('fvMsg','Caricamento...');
  const z=$('fvSearch').value.toLowerCase().trim();
  const exactNumberSearch=/^(?:fv[- ]?(?:20[0-9]{2})?[- ]?(?:0[6789])?[- ]?)?[0-9]{1,6}$/i.test(z)&&z.length>0;
- let q=sb.from('fogli_viaggio').select('*').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
- // La ricerca per numero deve trovare il foglio anche con filtri data/stato/mezzo rimasti attivi.
+ const currentBounds=fv118MonthBounds(fvOrdMonth());
+ let q=sb.from('fogli_viaggio').select('*').neq('tipo_servizio','118')
+  .gte('data_servizio',currentBounds.start).lt('data_servizio',currentBounds.end)
+  .order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
+ // I filtri e la ricerca agiscono soltanto sul mese corrente; lo storico è nell'archivio.
  if(!exactNumberSearch){
   if($('fvDate').value)q=q.eq('data_servizio',$('fvDate').value);
   if($('fvState').value)q=q.eq('stato',$('fvState').value);
@@ -4790,7 +4883,7 @@ async function loadTravelSheets(){
 }
 async function loadTravelSheetsMonthlySummary(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
- const month=$('fvMonth').value||new Date().toISOString().slice(0,7);
+ const month=fvOrdMonth();
  $('fvMonth').value=month;
  const b=fv118MonthBounds(month);
  msg('fvMonthMsg','Aggiornamento riepilogo...');
