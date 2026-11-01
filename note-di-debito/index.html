@@ -345,6 +345,8 @@ async function saveDraft(silent=false){
 $('save').onclick=()=>saveDraft(false);
 $('issue').onclick=async()=>{
  if(!confirm('Emettere definitivamente '+active.numero+'? Dopo l’emissione i dati del documento non saranno più modificabili.'))return;
+ // La data del documento è quella di emissione in Italia; la data del servizio resta invariata.
+ $('dDate').value=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
  if(!await saveDraft(true))return;
  const r=await sb.rpc('cge_emetti_nota_debito',{p_id:active.id});
  if(r.error)return msg('detailMsg',r.error.message,'err');
