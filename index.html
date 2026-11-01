@@ -6300,17 +6300,36 @@ async function loadOperationalDashboard(){
  if($('dashOpsUrgentExpiry'))$('dashOpsUrgentExpiry').textContent=String(expRows.length);
 
  const activeEmergencyFascia=dashOpsCurrentEmergencyFascia();
- // Un mezzo assegnato alla fascia attiva è occupato sia in emergenza sia nelle dimissioni.
- // La fascia NOTTE (00:00–07:00) viene valutata sulla data corrente dopo mezzanotte.
+ // Il turno NOTTE indicato nel calendario del 31 (24:00-07:00 +1 giorno)
+ // occupa il mezzo dalle 00:00 alle 07:00 del giorno 1: usare il giorno PRECEDENTE.
+ const isOvernight118=activeEmergencyFascia==='NOTTE';
+ let activeShiftVehicleRows=vehicleShifts.data||[];
+ let activeEmergencyRows=emgRows;
+ let overnightFetchError=null;
+ if(isOvernight118){
+  const previousDate=new Date(day+'T12:00:00Z');
+  previousDate.setUTCDate(previousDate.getUTCDate()-1);
+  const previousDay=previousDate.toISOString().slice(0,10);
+  const [previousVehicles,previousEmergency]=await Promise.all([
+   sb.rpc('cge_mezzi_turni_assegnati',{p_giorno:previousDay}),
+   sb.rpc('cge_emergenza_turni_v2',{p_dal:previousDay,p_al:previousDay})
+  ]);
+  overnightFetchError=previousVehicles.error||previousEmergency.error||null;
+  if(!previousVehicles.error)activeShiftVehicleRows=previousVehicles.data||[];
+  if(!previousEmergency.error)activeEmergencyRows=previousEmergency.data||[];
+ }
+ // Per la notte, non utilizzare le assegnazioni della data odierna: appartengono
+ // alla notte successiva, e non devono occupare il mezzo con 24 ore di anticipo.
  const emergencyVehicles=new Set(
-  [...(vehicleShifts.data||[]).filter(x=>x.tipo==='EMERGENZA'&&x.fascia===activeEmergencyFascia&&x.mezzo),...emgRows.filter(x=>x.fascia===activeEmergencyFascia&&x.mezzo)].map(x=>String(x.mezzo).padStart(2,'0'))
+  [...activeShiftVehicleRows.filter(x=>x.tipo==='EMERGENZA'&&x.fascia===activeEmergencyFascia&&x.mezzo),...activeEmergencyRows.filter(x=>x.fascia===activeEmergencyFascia&&x.mezzo)].map(x=>String(x.mezzo).padStart(2,'0'))
  );
  const dischargeVehicles=new Set(
-  (vehicleShifts.data||[]).filter(x=>x.tipo==='DIMISSIONI'&&x.fascia===activeEmergencyFascia&&x.mezzo).map(x=>String(x.mezzo).padStart(2,'0'))
+  activeShiftVehicleRows.filter(x=>x.tipo==='DIMISSIONI'&&x.fascia===activeEmergencyFascia&&x.mezzo).map(x=>String(x.mezzo).padStart(2,'0'))
  );
  const assignedVehicles=new Set([...emergencyVehicles,...dischargeVehicles]);
+ if(overnightFetchError)errors.push('Verifica turni notte: '+overnightFetchError.message);
 
- const currentEmergency=emgRows.filter(x=>x.fascia===activeEmergencyFascia);
+ const currentEmergency=activeEmergencyRows.filter(x=>x.fascia===activeEmergencyFascia);
  const emergencyCovered=currentEmergency.some(x=>x.ruolo==='AUTISTA')&&currentEmergency.some(x=>x.ruolo==='CAPO_SERVIZIO')&&currentEmergency.some(x=>x.mezzo);
  dashSetSmartCard('dashSmartEmergency',emergencyCovered?'ok':'alert',emergencyCovered?'COPERTA':'SCOPERTA',
   activeEmergencyFascia+' · '+volFasciaOrario(activeEmergencyFascia)+(currentEmergency.length?' · '+currentEmergency.length+' presenze':' · nessuna presenza'));
