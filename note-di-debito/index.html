@@ -51,6 +51,17 @@
       <div class="stat"><small>EMESSE DA INCASSARE</small><b id="sIssued">0</b></div>
       <div class="stat"><small>PAGATE</small><b id="sPaid">0</b></div>
      </div>
+     <div class="section no-print" id="ndReportSection" style="border:2px solid #f3c400;background:#fffdf1">
+       <div class="actions" style="justify-content:space-between;margin-bottom:10px">
+        <div><h3 style="margin:0 0 4px">📊 Report mensile Note di Debito</h3><div class="muted">Riepilogo economico, incassi e anzianità delle somme non riscosse · stampa A4 / PDF</div></div>
+       </div>
+       <div class="grid3">
+        <div class="field"><label>Mese del report</label><input id="ndReportMonth" type="month"></div>
+        <div class="field"><label>Versione senza nominativi</label><button type="button" class="btn yellow" onclick="ndReportGenerate('summary')">🖨 Report sintetico · Consiglio Direttivo</button></div>
+        <div class="field"><label>Versione riservata</label><button type="button" class="btn blue" onclick="ndReportGenerate('admin')">🧾 Report amministrativo completo</button></div>
+       </div>
+       <p class="muted" style="margin:9px 0 0">I dati vengono letti dal gestionale al momento della stampa. Le fatture Aruba e le bozze non rientrano nei totali delle Note di Debito emesse.</p>
+     </div>
      <div id="multiBox" class="multi-panel no-print"><div class="multi-row"><button id="createMulti" type="button" class="multi-action">🧾 CREA NOTA UNICA DA PIÙ FOGLI VIAGGIO</button><strong id="multiSelection">Seleziona almeno due fogli</strong></div><div class="muted" style="margin-top:7px">Riservato ad Amministrazione · Una sola nota progressiva · Pagamenti già registrati conservati</div></div><div class="toolbar no-print">
       <input id="search" placeholder="Cerca numero, paziente, intestatario, destinazione..." style="max-width:430px">
       <button id="refresh" class="btn secondary">↻ Aggiorna</button>
@@ -558,4 +569,6 @@ $('downloadPdf').onclick=async()=>{
 };
 sb.auth.getSession().then(()=>enter());
 </script>
+<script src="report-mensile.js?v=20261101-report-note-1"></script>
+<script>ndReportInit();</script>
 </body></html>
