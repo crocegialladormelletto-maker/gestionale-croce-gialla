@@ -5579,8 +5579,17 @@ $('fvPrint').onclick=cgePrintTravelSheetClick;
 
 $('fvClose').onclick=async()=>{
  if(!currentFoglioId)return;
- const ok=await saveTravelSheet(true);
- if(!ok)return;
+ // Nei mesi archiviati, il foglio 118 e' gia' presente nel registro ufficiale.
+ // Non eseguire un salvataggio completo che tenterebbe di riscrivere il mese chiuso.
+ // La RPC di chiusura riconcilia il solo stato, dopo il controllo di corrispondenza del registro.
+ const isArchived118=String(currentFoglio?.tipo_servizio||'').trim()==='118'
+  && String(currentFoglio?.data_servizio||'').slice(0,7)<fv118LocalMonth();
+ if(isArchived118){
+  if(!confirm('Il mese del foglio 118 e\' archiviato. La chiusura usera\' i dati gia\' salvati, senza salvare eventuali modifiche presenti a schermo. Continuare?'))return;
+ }else{
+  const ok=await saveTravelSheet(true);
+  if(!ok)return;
+ }
  const payMode=String(currentFoglio?.modalita_pagamento||$('fvPayMode')?.value||'').toUpperCase();
  if(String(currentFoglio?.tipo_servizio||'').trim()!=='118'&&['CONTANTI','POS'].includes(payMode)){
   let receiptCount=0;
