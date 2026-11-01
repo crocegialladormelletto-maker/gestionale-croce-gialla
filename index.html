@@ -1556,6 +1556,11 @@ document.addEventListener('DOMContentLoaded',()=>{
      <div class="field"><label>Mezzo</label><select id="fv118ArchiveVehicle"><option value="">Tutti</option></select></div>
      <div class="field"><label>Ricerca nell'archivio</label><input id="fv118ArchiveSearch" placeholder="Numero, scheda 118, destinazione..."></div>
     </div>
+    <div class="grid2" style="margin-top:12px">
+     <div class="stat"><small>SERVIZI 118 EFFETTUATI NEL MESE</small><b id="fv118ArchiveCount">0</b></div>
+     <div class="stat"><small>KM TOTALI DEI SERVIZI EFFETTUATI</small><b id="fv118ArchiveKm">0 km</b></div>
+    </div>
+    <p class="muted" style="margin:8px 0">I totali comprendono tutti i fogli 118 chiusi del mese selezionato, anche quando applichi filtri o ricerche all'elenco.</p>
     <div class="toolbar"><button id="fv118ArchiveRefresh" type="button" class="btn secondary">↻ Aggiorna archivio</button><button id="fv118ArchivePrint" type="button" class="btn blue">🖨 Stampa riepilogo mese</button></div>
     <div id="fv118ArchiveMsg"></div>
     <div class="table"><table>
@@ -4966,18 +4971,34 @@ async function fv118LoadArchiveMonths(){
 async function fv118LoadArchive(){
  if($('fv118ArchivePanel').classList.contains('hidden'))return;
  const month=$('fv118ArchiveMonth').value;
- if(!month){$('fv118ArchiveBody').innerHTML='<tr><td colspan="8">Nessun mese archiviato disponibile.</td></tr>';return;}
+ if(!month){
+  $('fv118ArchiveCount').textContent='0';
+  $('fv118ArchiveKm').textContent='0 km';
+  $('fv118ArchiveBody').innerHTML='<tr><td colspan="8">Nessun mese archiviato disponibile.</td></tr>';
+  return;
+ }
  if(month>=fv118LocalMonth())return msg('fv118ArchiveMsg','Seleziona un mese precedente a quello corrente.','warn');
  msg('fv118ArchiveMsg','Caricamento archivio...');
  const b=fv118MonthBounds(month);
- let q=sb.from('fogli_viaggio').select('*').eq('tipo_servizio','118')
-  .gte('data_servizio',b.start).lt('data_servizio',b.end)
-  .order('data_servizio',{ascending:false}).order('progressivo',{ascending:false});
- if($('fv118ArchiveVehicle').value)q=q.eq('mezzo',$('fv118ArchiveVehicle').value);
- const r=await q.limit(1000);
- if(r.error)return msg('fv118ArchiveMsg',r.error.message,'err');
+ // Legge l'intero mese prima di applicare i filtri: i totali restano mensili.
+ const all=[];
+ for(let from=0;from<10000;from+=1000){
+  const r=await sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,numero_scheda_118,destinazione,ora_arrivo_dea,stato,km_partenza,km_arrivo,km_percorsi')
+   .eq('tipo_servizio','118').gte('data_servizio',b.start).lt('data_servizio',b.end)
+   .order('data_servizio',{ascending:false}).order('progressivo',{ascending:false}).range(from,from+999);
+  if(r.error)return msg('fv118ArchiveMsg',r.error.message,'err');
+  all.push(...(r.data||[]));
+  if((r.data||[]).length<1000)break;
+ }
+ const closed=all.filter(x=>x.stato==='CHIUSO');
+ const km=closed.reduce((total,x)=>total+Number(x.km_percorsi??((x.km_partenza!=null&&x.km_arrivo!=null)?Math.max(0,x.km_arrivo-x.km_partenza):0)),0);
+ $('fv118ArchiveCount').textContent=closed.length.toLocaleString('it-IT');
+ $('fv118ArchiveKm').textContent=km.toLocaleString('it-IT')+' km';
+ const vehicle=$('fv118ArchiveVehicle').value;
  const search=$('fv118ArchiveSearch').value.toLowerCase().trim();
- let rows=r.data||[];if(search)rows=rows.filter(x=>JSON.stringify(x).toLowerCase().includes(search));
+ let rows=all;
+ if(vehicle)rows=rows.filter(x=>String(x.mezzo)===vehicle);
+ if(search)rows=rows.filter(x=>JSON.stringify(x).toLowerCase().includes(search));
  fv118RenderRows(rows,'fv118ArchiveBody');
  msg('fv118ArchiveMsg',rows.length+' fogli visualizzati · '+fv118MonthName(month));
 }
