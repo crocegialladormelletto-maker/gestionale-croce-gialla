@@ -864,9 +864,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 <button class="nav" data-v="travelSheets">📄 Fogli Viaggio</button>
 <button class="nav" type="button" data-href="registro-viaggi/?v=1.21" title="Registro ufficiale, report mensili, stampa e controlli">📊 Registro servizi</button>
 <button class="nav" data-v="services" title="Ricerca e consultazione dei singoli servizi">🔎 Ricerca servizi</button>
-<button class="nav" data-v="paymentReceipts" data-admin-only="true">🧾 Archivio ricevute</button>
-<button class="nav" type="button" data-admin-only="true" data-href="note-di-debito/">🧾 Note di Debito</button>
-<button class="nav" type="button" id="navArubaInvoices" data-admin-only="true">🧮 Fatture Aruba da emettere</button>
 <button class="nav" data-v="crew" title="Gestione avanzata degli equipaggi dei servizi">👥 Gestione equipaggi</button>
 <button class="nav sep" data-v="people" data-people-filter="ACTIVE_VOL" data-admin-only="true">👥 Gestione personale</button>
 <button class="nav" type="button" data-admin-only="true" data-href="corsisti-prova/index.html">🎓 Corsisti</button>
@@ -1494,7 +1491,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 </section>
 
 <section id="paymentReceipts" class="surface hidden">
- <div class="hero"><h2>🧾 Archivio ricevute</h2><p>Ricevute di pagamenti CONTANTI e POS collegate ai Fogli Viaggio.</p></div>
+ <div class="hero"><h2>🧾 Archivio ricevute</h2><p>Ricevute di pagamenti CONTANTI e POS collegate ai Fogli Viaggio.</p><div class="actions"><button type="button" class="btn secondary jump" data-v="accounting">← Torna a Contabilità</button></div></div>
  <div class="pad">
   <div class="stats">
    <div class="stat"><small>RICEVUTE VISUALIZZATE</small><b id="prCount">0</b></div>
@@ -2640,7 +2637,17 @@ Causale: numero preventivo</textarea>
  </div>
 </section>
 
-<section id="accounting" class="surface hidden"><div class="hero"><h2>Contabilità servizi</h2></div><div class="pad">
+<section id="accounting" class="surface hidden"><div class="hero"><h2>🧾 Contabilità</h2><p>Incassi, Note di Debito, ricevute e fatture Aruba in un unico punto di accesso amministrativo.</p></div><div class="pad">
+<div class="section" data-admin-only="true" id="accQuickAccess">
+ <h3>📂 Gestione documenti e incassi</h3>
+ <p class="muted">Scegli la funzione da aprire. Ogni archivio mantiene registrazioni, numerazione e stampe proprie; la Prima Nota rimane separata.</p>
+ <div class="grid2" style="gap:12px">
+  <div class="box"><h3>🧾 Note di Debito</h3><p class="muted">Emissione, archivio, pagamenti e report mensili.</p><button type="button" class="btn yellow jump" data-href="note-di-debito/">Apri Note di Debito</button></div>
+  <div class="box"><h3>📑 Archivio ricevute</h3><p class="muted">Ricevute contanti e POS dei fogli viaggio, consultazione e ricerca.</p><button type="button" class="btn secondary jump" data-v="paymentReceipts">Apri Archivio ricevute</button></div>
+  <div class="box"><h3>🧮 Fatture Aruba da emettere</h3><p class="muted">Accedi all'elenco delle fatture ancora da emettere, attualmente mostrato nel quadro operativo.</p><button type="button" class="btn blue" id="navArubaInvoices">Apri fatture da emettere</button></div>
+  <div class="box"><h3>💰 Riepilogo contabile</h3><p class="muted">Situazione incassi, da incassare, fatture già emesse e pagamenti.</p><button type="button" class="btn secondary" id="accGoSummary">Vai al riepilogo</button></div>
+ </div>
+</div>
 <div class="section" data-admin-only="true"><h3>Verifica invio email Note di Debito</h3><p class="muted">Invia una sola email di prova dalla tesoreria ad amministrazione@crocegiallaemergenza.it. Nessun documento o cliente viene coinvolto.</p><button type="button" id="accTestEmail" class="btn blue">✉ Invia email di prova</button><div id="accTestEmailMsg" style="margin-top:9px"></div></div>
 <div class="stats"><div class="stat"><small>TOTALE DA INCASSARE</small><b id="accDue">€ 0</b></div><div class="stat"><small>PAGATI</small><b id="accPaid">0</b></div><div class="stat"><small>PARZIALI</small><b id="accPart">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="accCount">0</b></div></div>
 <div class="section" data-admin-only="true"><h3>💰 Riepilogo incassi registrati</h3><p class="muted">Incassi effettivamente registrati nel registro pagamenti servizi. I bonifici differiti ancora da ricevere non sono conteggiati. Le Note di Debito hanno un riepilogo separato.</p><div class="stats"><div class="stat"><small>INCASSATO NEL MESE</small><b id="accMonthCollected">€ 0</b></div><div class="stat"><small>INCASSATO NELL'ANNO</small><b id="accYearCollected">€ 0</b></div><div class="stat"><small>OPERAZIONI NEL MESE</small><b id="accMonthOperations">0</b></div><div class="stat"><small>OPERAZIONI NELL'ANNO</small><b id="accYearOperations">0</b></div></div><div class="grid2"><div class="section" style="margin:0"><h3>Questo mese</h3><div id="accMonthBreakdown" class="muted">Caricamento...</div></div><div class="section" style="margin:0"><h3>Da inizio anno</h3><div id="accYearBreakdown" class="muted">Caricamento...</div></div></div><div class="section" style="margin-top:14px"><h3>📅 Incassi mese per mese</h3><p class="muted">Storico per data di pagamento registrata. Ogni mese distingue contanti, POS e bonifici accreditati; i bonifici differiti non incassati sono esclusi.</p><div class="table"><table><thead><tr><th>Mese</th><th>Contanti</th><th>POS</th><th>Bonifici</th><th>Totale incassato</th><th>Operazioni</th></tr></thead><tbody id="accMonthlyRows"><tr><td colspan="6">Caricamento...</td></tr></tbody></table></div></div><div id="accCollectionMsg"></div></div>
@@ -7356,7 +7363,8 @@ async function dashboard(){
 }
 $('dashOpsRefresh').onclick=loadOperationalDashboard;
 if($('dashOpenDebitNotes'))$('dashOpenDebitNotes').onclick=()=>location.href='note-di-debito/';
-if($('navArubaInvoices'))$('navArubaInvoices').onclick=async()=>{view('dash');await loadOperationalDashboard();const el=$('dashArubaQueue')?.closest('section');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
+if($('navArubaInvoices'))$('navArubaInvoices').onclick=async()=>{await view('dash');await loadOperationalDashboard();const el=$('dashArubaQueue')?.closest('section');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
+if($('accGoSummary'))$('accGoSummary').onclick=()=>{const el=$('accDue')?.closest('.stats');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
 $('dashOpenCandidates').onclick=()=>openPendingAssistance();
 $('dashCriticalAssistanceOpen').onclick=()=>view('assistance');
 
