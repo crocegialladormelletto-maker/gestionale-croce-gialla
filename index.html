@@ -862,8 +862,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <button class="nav" type="button" data-href="assistenze-manifestazioni/">📑 Gestionale manifestazioni</button>
 <button class="nav" data-v="travelSheets118">🚨 Fogli Viaggio 118</button>
 <button class="nav" data-v="travelSheets">📄 Fogli Viaggio</button>
-<button class="nav" data-v="services">🔎 Archivio servizi</button>
-<button class="nav" type="button" data-href="registro-viaggi/?v=1.21">📊 Registro servizi</button>
+<button class="nav" type="button" data-href="registro-viaggi/?v=1.21" title="Registro ufficiale, report mensili, stampa e controlli">📊 Registro servizi</button>
+<button class="nav" data-v="services" title="Ricerca e consultazione dei singoli servizi">🔎 Ricerca servizi</button>
 <button class="nav" data-v="paymentReceipts" data-admin-only="true">🧾 Archivio ricevute</button>
 <button class="nav" type="button" data-admin-only="true" data-href="note-di-debito/">🧾 Note di Debito</button>
 <button class="nav" type="button" id="navArubaInvoices" data-admin-only="true">🧮 Fatture Aruba da emettere</button>
@@ -1410,7 +1410,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 </div>
 </div></section>
 
-<section id="services" class="surface hidden"><div class="hero"><h2>🔎 Archivio servizi</h2><p>Ricerca di tutti i servizi programmati e dello storico, di ogni tipologia.</p></div><div class="pad">
+<section id="services" class="surface hidden"><div class="hero"><h2>🔎 Ricerca servizi</h2><p>Consulta i singoli servizi programmati e lo storico. Il Registro servizi rimane autonomo per report e controlli SISP.</p><div class="actions"><button class="btn yellow" type="button" data-href="registro-viaggi/?v=1.21">📊 Apri Registro servizi · Report e PDF</button></div></div><div class="pad">
 <div class="section"><h3>🔎 Ricerca nell’archivio servizi</h3><p class="muted">Filtra lo storico per paziente, date, mezzo, tipo servizio, equipaggio, Foglio Viaggio, stato operativo e pagamento.</p>
 <div class="grid4">
  <div class="field"><label>Ricerca generale</label><input id="fq" placeholder="Nome, luogo, destinazione…" autocomplete="off"></div>
