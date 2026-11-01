@@ -873,8 +873,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <button class="nav" type="button" data-admin-only="true" data-href="corsisti-prova/index.html">🎓 Corsisti</button>
 <button class="nav" data-v="communications">📣 Comunicazioni volontari</button>
 <button class="nav" type="button" data-admin-only="true" data-href="personale-formazione/">🎓 Personale e formazione</button>
-<button class="nav" data-v="shifts">🕒 Gestione turni</button>
-<button class="nav" data-v="availability">📅 Disponibilità volontari</button>
+<button class="nav" data-v="shifts">🕒 Turni e disponibilità</button>
 <button class="nav sep" data-v="vehicles">🚐 Mezzi e scadenze</button><button class="nav" data-v="personnelExpiries">⏰ Scadenze personale <span id="personnelExpiryNavCount" class="expiry-mini-badge hidden">0</span></button>
 <button class="nav" type="button" data-href="checklist-ambulanze/">✅ Archivio checklist ambulanze</button>
 <button class="nav" data-v="tariffs">€ Tariffari</button>
@@ -2109,14 +2108,25 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <div class="table"><table><thead><tr><th>Badge</th><th>Nominativo</th><th>Inquadramento</th><th>Stato</th><th>Qualifiche</th><th>Ore mese</th><th>Ore trimestre</th><th>Telefono</th><th>Stato APP</th><th></th></tr></thead><tbody id="ptbody"></tbody></table></div></div></section>
 
-<section id="shifts" class="surface hidden"><div class="hero"><h2>Gestione turni</h2><div class="actions"><button type="button" class="btn secondary jump" data-v="availability">📅 Consulta disponibilità volontari</button></div></div><div class="pad">
+<section id="shifts" class="surface hidden">
+<div class="hero"><h2>🕒 Turni e disponibilità</h2><p>Turni, volontari disponibili e controllo delle coperture in un'unica sezione.</p>
+<div class="actions" id="tdTabs"><button type="button" class="btn yellow" data-td-tab="riepilogo">📅 Riepilogo del giorno</button><button type="button" class="btn secondary" data-td-tab="turni">🕒 Gestione turni</button><button type="button" class="btn secondary" data-td-tab="disponibilita">👥 Disponibilità volontari</button></div></div>
+<div class="pad">
+<div id="tdPanel-riepilogo">
+<div class="section"><div class="actions" style="justify-content:space-between;align-items:center;flex-wrap:wrap"><h3>📅 Turni e disponibilità del giorno</h3><div class="actions"><label for="tdDate">Data</label><input type="date" id="tdDate"><button id="tdRefresh" type="button" class="btn secondary">↻ Aggiorna</button></div></div>
+<p class="muted">Disponibile = dichiarato dal volontario; Da verificare = nessuna indicazione registrata. Le assegnazioni 118 sono consultabili nel Turnario Emergenza dedicato.</p>
+<div id="tdSummaryMsg"></div><div id="tdSummary" class="grid2"></div><div class="actions" style="margin-top:12px"><button type="button" class="btn secondary jump" data-v="emergency">🚨 Apri Turnario Emergenza 118</button><button type="button" class="btn secondary" data-td-tab="turni">✚ Gestisci turni</button><button type="button" class="btn secondary" data-td-tab="disponibilita">✚ Registra disponibilità</button></div>
+</div></div>
+<div id="tdPanel-turni" class="hidden">
 <div class="section"><h3>Nuovo turno</h3><div class="grid4"><div class="field"><label>Data *</label><input id="sd" type="date"></div><div class="field"><label>Inizio *</label><input id="ssi" type="time"></div><div class="field"><label>Fine *</label><input id="sse" type="time"></div><div class="field"><label>Mezzo</label><select id="sm"></select></div><div class="field"><label>Tipo</label><select id="stype"><option>EMERGENZA</option><option>ORDINARIO</option><option>DIMISSIONI</option><option>ASSISTENZA</option></select></div><div class="field"><label>Note</label><input id="snote"></div></div><div class="toolbar"><button id="ssave" class="btn yellow">Crea turno</button></div><div id="shiftmsg"></div></div>
 <div class="section"><h3>Assegna operatore al turno</h3><div class="grid3"><div class="field"><label>Turno</label><select id="shiftSel"></select></div><div class="field"><label>Operatore</label><select id="shiftPerson"></select></div><div class="field"><label>Ruolo</label><select id="shiftRole"><option>AUTISTA</option><option>CAPO_SERVIZIO</option><option>SOCCORRITORE</option><option>SECONDO_SOCCORRITORE</option><option>ACCOMPAGNATORE</option><option value="AFFIANCATO">TIROCINANTE / AFFIANCATO</option></select></div></div><div class="toolbar"><button id="shiftAdd" class="btn secondary">Assegna</button></div></div>
-<div id="shiftList"></div></div></section>
-
-<section id="availability" class="surface hidden"><div class="hero"><h2>Disponibilità volontari</h2><div class="actions"><button type="button" class="btn secondary jump" data-v="shifts">🕒 Vai a Gestione turni</button></div></div><div class="pad">
+<div id="shiftList"></div></div>
+</div>
+<div id="tdPanel-disponibilita" class="hidden">
+<h3>👥 Disponibilità volontari</h3>
 <div class="section"><div class="grid4"><div class="field"><label>Operatore *</label><select id="avp"></select></div><div class="field"><label>Da *</label><input id="avfrom" type="datetime-local"></div><div class="field"><label>A *</label><input id="avto" type="datetime-local"></div><div class="field"><label>Tipo</label><select id="avtype"><option>DISPONIBILE</option><option>INDISPONIBILE</option><option>PREFERENZA</option></select></div><div class="field"><label>Mezzo preferito</label><select id="avm"></select></div><div class="field"><label>Note</label><input id="avnote"></div></div><div class="toolbar"><button id="avsave" class="btn yellow">Salva disponibilità</button></div><div id="avmsg"></div></div>
-<div class="table"><table><thead><tr><th>Operatore</th><th>Da</th><th>A</th><th>Tipo</th><th>Mezzo</th><th>Note</th></tr></thead><tbody id="avbody"></tbody></table></div></div></section>
+<div class="table"><table><thead><tr><th>Operatore</th><th>Da</th><th>A</th><th>Tipo</th><th>Mezzo</th><th>Note</th></tr></thead><tbody id="avbody"></tbody></table></div></div>
+</div></div></section>
 
 <section id="vehicles" class="surface hidden"><div class="hero"><h2>🚑 Mezzi, manutenzioni e scadenze</h2><p>Situazione operativa della flotta e controllo delle prossime scadenze.</p></div><div class="pad">
 <div class="stats">
@@ -3940,6 +3950,7 @@ async function checkGestionaleAuth(){
 }
 async function view(v,options={}){
  if(!await checkGestionaleAuth())return;
+ if(v==='availability'){v='shifts';window.tdRequestedTab='disponibilita'}
  const current=[...document.querySelectorAll('main>section')].find(x=>!x.classList.contains('hidden'))?.id||'';
  if(current==='serviceDetail'&&v!=='serviceDetail')resetServiceDetailForm();
  if(current==='assistance'&&v!=='assistance')closeAssistanceCrewPanels();
@@ -3953,9 +3964,10 @@ async function view(v,options={}){
   if(options.patient)usePatientForService(options.patient);
  }
  selectView(v);
- const loader=({agendaPres:()=>window.cgeAgendaOpen('pres'),agendaEvents:()=>window.cgeAgendaOpen('events'),dash:async()=>{await Promise.all([refreshDashboardPersonnelExpiryAlert(),refreshDashboardEmployeeCommitments()]);await dashboard();if(window.cgeDashboardAgendas)await window.cgeDashboardAgendas();},statistics:loadStatistics,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,paymentReceipts:loadPaymentReceiptsView,travelSheets118:loadTravelSheets118,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,personnelExpiries:loadPersonnelExpiries,tariffs:loadTariffsView,accounting:loadAccounting,primaNota:loadPrimaNota,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
+ const loader=({agendaPres:()=>window.cgeAgendaOpen('pres'),agendaEvents:()=>window.cgeAgendaOpen('events'),dash:async()=>{await Promise.all([refreshDashboardPersonnelExpiryAlert(),refreshDashboardEmployeeCommitments()]);await dashboard();if(window.cgeDashboardAgendas)await window.cgeDashboardAgendas();},statistics:loadStatistics,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,paymentReceipts:loadPaymentReceiptsView,travelSheets118:loadTravelSheets118,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadTurniDisponibilita,availability:loadTurniDisponibilita,vehicles:loadVehiclesView,personnelExpiries:loadPersonnelExpiries,tariffs:loadTariffsView,accounting:loadAccounting,primaNota:loadPrimaNota,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
  const result=await loader();
  selectView(v);
+ if(v==='shifts'&&window.tdRequestedTab){tdOpenTab(window.tdRequestedTab);window.tdRequestedTab=null}
  return result;
 }
 document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=()=>{if(b.dataset.href){if(editingPersonBadge)resetPerson();location.href=b.dataset.href;return}if(b.dataset.v==='people'&&b.dataset.peopleFilter){peopleCategoryFilter=b.dataset.peopleFilter;peopleAppFilter='ALL';}view(b.dataset.v)});
@@ -9642,6 +9654,57 @@ window.addEventListener('afterprint',()=>document.body.classList.remove('print-r
 $('asManage').onclick=()=>{view('shifts');$('stype').value='ASSISTENZA';$('sd').value=calYmd(asCursor)};
 
 
+// Pannello unificato: i dati originali restano nelle tabelle esistenti.
+let tdCurrentTab='riepilogo';
+function tdOpenTab(tab){
+ if(!['riepilogo','turni','disponibilita'].includes(tab))tab='riepilogo';
+ tdCurrentTab=tab;
+ document.querySelectorAll('#tdTabs [data-td-tab]').forEach(b=>b.className='btn '+(b.dataset.tdTab===tab?'yellow':'secondary'));
+ ['riepilogo','turni','disponibilita'].forEach(k=>$('tdPanel-'+k)?.classList.toggle('hidden',k!==tab));
+ if(tab==='riepilogo')void tdLoadSummary();
+ else if(tab==='turni')void loadShifts();
+ else if(tab==='disponibilita')void loadAvailability();
+}
+async function loadTurniDisponibilita(){
+ if(!$('tdDate').value)$('tdDate').value=todaySafe();
+ tdOpenTab(window.tdRequestedTab||tdCurrentTab);
+ window.tdRequestedTab=null;
+}
+async function tdLoadSummary(){
+ const day=$('tdDate')?.value||todaySafe();
+ if(!$('tdSummary'))return;
+ msg('tdSummaryMsg','Caricamento situazione del giorno...');
+ const from=new Date(day+'T00:00:00').toISOString(),to=new Date(day+'T23:59:59').toISOString();
+ const [tr,ar,assignments]=await Promise.all([
+  sb.from('turni').select('id,data_turno,ora_inizio,ora_fine,tipo_turno,mezzo').eq('data_turno',day).order('ora_inizio'),
+  sb.from('disponibilita_personale').select('badge_personale,inizio,fine,tipo').lt('inizio',to).gt('fine',from),
+  sb.from('v_turni_gestionale').select('id,equipaggio').eq('data_turno',day)
+ ]);
+ if(tr.error||ar.error){msg('tdSummaryMsg','Impossibile leggere tutti i dati: '+(tr.error||ar.error).message,'warn');return}
+ const shiftRows=tr.data||[],av=ar.data||[];
+ const crewById=new Map((assignments.data||[]).map(x=>[x.id,x.equipaggio||[]]));
+ const personRows=(people||[]).filter(p=>String(p.stato||'ATTIVO').toUpperCase()!=='CESSATO');
+ const states=personRows.map(p=>{
+  const rows=av.filter(a=>String(a.badge_personale)===String(p.badge));
+  const unavailable=rows.some(a=>String(a.tipo).toUpperCase()==='INDISPONIBILE');
+  const available=rows.some(a=>String(a.tipo).toUpperCase()==='DISPONIBILE');
+  return {name:p.nome_completo||p.badge,state:unavailable?'Non disponibile':available?'Disponibile':'Da verificare',cls:unavailable?'r':available?'g':''};
+ });
+ const countByState=state=>states.filter(p=>p.state===state).length;
+ const shiftsHtml=shiftRows.map(t=>{
+  const crew=crewById.get(t.id)||[];
+  const names=crew.map(x=>esc(x.nome||x.badge||x.badge_personale||'Operatore')+' · '+esc(x.ruolo||'')).join(', ');
+  const min=String(t.mezzo||'')==='06'?1:2,hasDriver=crew.some(x=>x.ruolo==='AUTISTA');
+  const full=crew.length>=min&&hasDriver;
+  return '<div class="ops-row"><b>'+esc(calTime(t.ora_inizio))+'–'+esc(calTime(t.ora_fine))+' · '+esc(t.tipo_turno||'Turno')+' · Mezzo '+esc(t.mezzo||'—')+'</b> <span class="pill '+(full?'g':'r')+'">'+(full?'Equipaggio minimo presente':'Da verificare')+'</span><div class="muted">'+(names||'Nessun equipaggio assegnato')+'</div></div>';
+ }).join('')||'<div class="notice">Nessun turno generale registrato nella data.</div>';
+ const peopleHtml=states.sort((a,b)=>a.name.localeCompare(b.name,'it')).map(p=>'<div class="ops-row" style="display:flex;justify-content:space-between;gap:8px"><span>'+esc(p.name)+'</span><span class="pill '+p.cls+'">'+p.state+'</span></div>').join('')||'<div class="notice">Nessun nominativo caricato.</div>';
+ $('tdSummary').innerHTML='<div class="section"><h3>🕒 Turni · '+shiftRows.length+'</h3>'+shiftsHtml+'</div><div class="section"><h3>👥 Volontari / personale</h3><p class="muted">'+countByState('Disponibile')+' disponibili dichiarati · '+countByState('Non disponibile')+' indisponibili · '+countByState('Da verificare')+' da verificare</p><div style="max-height:390px;overflow:auto">'+peopleHtml+'</div></div>';
+ msg('tdSummaryMsg','');
+}
+document.querySelectorAll('[data-td-tab]').forEach(b=>b.addEventListener('click',()=>tdOpenTab(b.dataset.tdTab)));
+$('tdDate').onchange=tdLoadSummary;
+$('tdRefresh').onclick=tdLoadSummary;
 async function loadShifts(){
  const r=await sb.from('v_turni_gestionale').select('*').gte('data_turno',new Date(Date.now()-7*86400000).toISOString().slice(0,10)).order('data_turno').order('ora_inizio');
  const sh=r.data||[];
