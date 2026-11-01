@@ -5235,7 +5235,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvdNumField').value=f.numero_foglio||'';
  $('fv118NumberField').classList.toggle('hidden',!is118);
  $('fv118Number').value=f.numero_scheda_118||'';
- $('fv118Number').disabled=!(is118&&f.stato!=='CHIUSO'&&prof?.ruolo==='AMMINISTRATORE');
+ $('fv118Number').disabled=true; // Per coerenza con il Registro ufficiale, usare la rettifica amministrativa tracciata.
  $('fvPatientSection').classList.remove('hidden');
  $('fvPatientSectionTitle').textContent=is118?'Percorso':'Paziente e percorso';
  $('fvPatientFields').classList.toggle('hidden',is118||isAssistanceManifestation(f.tipo_servizio));
@@ -5344,7 +5344,7 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  $('fvSave').classList.toggle('hidden',closed);
  $('fvSaveKmClosed').classList.toggle('hidden',!adminClosed118);
  $('fvReopen118').classList.toggle('hidden',!adminClosed118);
- $('fvCorrect118Number').classList.toggle('hidden',!adminClosed118);
+ $('fvCorrect118Number').classList.toggle('hidden',!(is118&&prof?.ruolo==='AMMINISTRATORE'));
  $('fvCorrectAccounting').classList.toggle('hidden',!(prof?.ruolo==='AMMINISTRATORE'&&closed&&!is118));
  $('fvCorrectTimes').classList.toggle('hidden',!(prof?.ruolo==='AMMINISTRATORE'&&closed&&!is118));
  $('fvClose').classList.toggle('hidden',closed);
@@ -5358,7 +5358,7 @@ $('fvdBack').onclick=()=>view(String(currentFoglio?.tipo_servizio||'').trim()===
 $('fvdService').onclick=()=>{const id=$('fvdService').dataset.serviceId;if(id)openService(id)};
 $('fvCorrect118Number').onclick=async()=>{
  const f=currentFoglio;
- if(prof?.ruolo!=='AMMINISTRATORE'||f?.tipo_servizio!=='118'||f?.stato!=='CHIUSO')return;
+ if(prof?.ruolo!=='AMMINISTRATORE'||f?.tipo_servizio!=='118')return;
  const before=f.numero_scheda_118||'';
  const numero=window.prompt('Numero corretto della scheda 118 (attuale: '+(before||'—')+'):',before);
  if(numero===null)return;
@@ -5367,11 +5367,11 @@ $('fvCorrect118Number').onclick=async()=>{
  const motivo=window.prompt('Motivazione obbligatoria della rettifica (sarà conservata nel registro attività):','Correzione da scheda cartacea 118');
  if(motivo===null)return;
  if(motivo.trim().length<8)return msg('fvDetailMsg','Motivazione troppo breve (minimo 8 caratteri).','warn');
- if(!window.confirm('Confermi la rettifica del foglio '+f.numero_foglio+'?\\nNumero precedente: '+(before||'—')+'\\nNumero corretto: '+nuovo+'\\nIl foglio resterà CHIUSO.'))return;
+ if(!window.confirm('Confermi la rettifica del foglio '+f.numero_foglio+'?\\nNumero precedente: '+(before||'—')+'\\nNumero corretto: '+nuovo+'\\nLo stato del foglio resterà invariato.'))return;
  const {data,error}=await sb.rpc('cge_amministratore_rettifica_numero_scheda_118',{p_foglio:f.id,p_numero:nuovo,p_motivo:motivo.trim(),p_precedente:before});
  if(error)return msg('fvDetailMsg','Rettifica non riuscita: '+error.message,'err');
  await loadTravelSheetDetail(f.id);
- msg('fvDetailMsg','Rettifica registrata: scheda 118 '+data.numero+'. Foglio rimasto chiuso.','ok');
+ msg('fvDetailMsg','Rettifica registrata: scheda 118 '+data.numero+'. Stato del foglio invariato; registro sincronizzato.','ok');
 };
 
 
@@ -5399,7 +5399,6 @@ async function saveTravelSheet(silent=false){
  };
  if(String(currentFoglio?.tipo_servizio||'').trim()==='118'){
   if(prof?.ruolo==='AMMINISTRATORE'){
-   row.numero_scheda_118=$('fv118Number').value.trim().toUpperCase()||null;
    row.luogo_carico=$('fvd118Load').value.trim()||null;
    row.destinazione=$('fvd118To').value.trim()||null;
    // Per i servizi 118 la destinazione è facoltativa, anche se il paziente non è trasportato.
