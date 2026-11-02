@@ -11927,8 +11927,16 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  }
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
-  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id').maybeSingle();
+  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio,modalita_pagamento').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
+  // Controllo effettivo dei dati contabili persistiti: mai confermare un salvataggio incompleto.
+  if(!tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio)){
+   if(row.importo_inserito!==null&&row.importo_inserito!==undefined&&Number(r.data.importo_inserito)!==Number(row.importo_inserito))
+    throw new Error('L’importo non è stato registrato nel database. Riapri il foglio e riprova; la chiusura è bloccata.');
+   if(row.modalita_pagamento&&String(r.data.modalita_pagamento||'').toUpperCase()!==String(row.modalita_pagamento).toUpperCase())
+    throw new Error('La modalità di pagamento non è stata registrata. Il foglio rimane aperto.');
+  }
+  tabletCurrentSheet={...tabletCurrentSheet,...row,...r.data};
   tabletCurrentSheet={...tabletCurrentSheet,...row};
   const syncWarnings=[];
 
