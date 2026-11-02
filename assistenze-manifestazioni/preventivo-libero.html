@@ -94,7 +94,7 @@ async function downloadDocumentPdf(){
  y=52;
  const title=tariff?'PROPOSTA TARIFFARIA':'PREVENTIVO DI ASSISTENZA';
  text(title,M,y,17,true,navy);
- text('N. '+q.number,R,y,11,true,blue);y+=8;
+ setTxt(11,true,blue);pdf.text('N. '+q.number,R,y,{align:'right'});y+=8;
  const prettyDate=q.issued?.split('-').reverse().join('/')||'-';
  text('Data emissione: '+prettyDate,M,y,10,false,blue);
  text('Validità: '+(q.validity||'Da concordare'),105,y,10,false,blue);y+=7;
