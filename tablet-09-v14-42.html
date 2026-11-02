@@ -3910,9 +3910,25 @@ $('mpw').onkeydown=e=>{if(e.key==='Enter')$('mgo').click()};
 $('tgo').onclick=async()=>{
  const user=$('tuser').value.trim().toLowerCase(),pass=$('tpw').value;
  if(!/^tablet0[6-9]$/.test(user)||!pass)return msg('tloginmsg','Inserisci username tablet06 / tablet07 / tablet08 / tablet09 e password.','warn');
- msg('tloginmsg','Accesso in corso...');
- const r=await sb.auth.signInWithPassword({email:user+'@crocegiallaemergenza.it',password:pass});
- if(r.error)return msg('tloginmsg','Credenziali del Tablet non valide.','err');enter();
+ const button=$('tgo');
+ if(button.disabled)return;
+ button.disabled=true;
+ msg('tloginmsg','Verifica accesso tablet in corso...');
+ const timeout=(ms)=>new Promise((_,reject)=>setTimeout(()=>reject(new Error('TEMPO_SCADUTO')),ms));
+ try{
+  const r=await Promise.race([sb.auth.signInWithPassword({email:user+'@crocegiallaemergenza.it',password:pass}),timeout(18000)]);
+  if(r.error)throw new Error('CREDENZIALI');
+  msg('tloginmsg','Credenziali corrette. Caricamento servizi del mezzo...');
+  await Promise.race([enter(),timeout(22000)]);
+  if(!$('login').classList.contains('hidden'))msg('tloginmsg','Accesso non completato. Controlla la connessione e riprova.','err');
+ }catch(e){
+  const message=e.message==='TEMPO_SCADUTO'
+   ?'Connessione lenta o bloccata: accesso non completato. Controlla Internet, aggiorna la pagina e riprova.'
+   :e.message==='CREDENZIALI'
+   ?'Credenziali tablet non valide.'
+   :'Errore durante l’accesso: '+(e.message||String(e));
+  msg('tloginmsg',message,'err');
+ }finally{button.disabled=false;}
 };
 $('tpw').onkeydown=e=>{if(e.key==='Enter')$('tgo').click()};
 $('vpinToggle').onclick=()=>{const show=$('vpin').type==='password';$('vpin').type=show?'text':'password';$('vpinToggle').textContent=show?'Nascondi':'Mostra'};
