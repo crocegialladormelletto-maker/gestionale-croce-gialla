@@ -21,7 +21,7 @@
 <div id="status" role="status"></div>
 <div class="card records"><h2>Archivio preventivi su questo dispositivo</h2><p class="muted">I preventivi sono salvati in questo browser, non nel database centrale. Per conservarli o condividerli, esporta anche il PDF.</p><div id="archive"></div></div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="./jspdf.umd.min.js?v=2.5.2-local"></script>
 <script>
 const $=id=>document.getElementById(id), KEY='cge_preventivi_liberi_v1';let activeId=null;
 function data(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
