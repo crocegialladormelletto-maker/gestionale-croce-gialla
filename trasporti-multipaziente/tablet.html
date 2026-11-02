@@ -23,6 +23,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const clock=v=>v?String(v).slice(0,5):'';
 const n=v=>v===null||v===undefined?'':String(v);
 let busy=false;
+const paymentDraft=new Map(); // Mantieni le scelte anche quando una tratta viene salvata e l'interfaccia si aggiorna.
 function message(t,kind='good'){$('message').innerHTML='<div class="'+kind+'">'+esc(t)+'</div>'}
 function raise(r){if(r.error)throw r.error;return r.data}
 async function check(){
@@ -45,6 +46,9 @@ async function load(){
   for(const t of trips){
    const ps=raise(await sb.from('trasporti_multipaziente_pazienti').select('ordine_carico,fascia_rientro,servizio_id,servizi_giornalieri(paziente_nome,paziente_cognome,luogo_carico_paziente,indirizzo_carico_paziente,numero_foglio)').eq('trasporto_id',t.id).order('ordine_carico'));
    const legs=raise(await sb.from('trasporti_multipaziente_tratte').select('id,ordine,fase,descrizione,ora_prevista,ora_partenza,ora_arrivo,km_iniziali,km_finali,km_percorsi,note').eq('trasporto_id',t.id).order('ordine'));
+   const serviceIds=ps.map(p=>p.servizio_id);
+   const sheets=serviceIds.length?raise(await sb.from('fogli_viaggio').select('servizio_giornaliero_id,modalita_pagamento,stato').in('servizio_giornaliero_id',serviceIds)):[];
+   const sheetByService=new Map(sheets.map(f=>[f.servizio_giornaliero_id,f]));
    html+='<section class="card"><h2>'+esc(t.descrizione)+'</h2><div class="row"><span class="pill">Mezzo 06</span><span class="pill">'+esc(t.stato)+'</span></div><h3>Pazienti</h3>';
    for(const p of ps){const s=p.servizi_giornalieri||{};html+='<div class="person"><b>'+esc(s.paziente_nome)+' '+esc(s.paziente_cognome)+'</b><div class="muted">Carico '+p.ordine_carico+' · '+esc(s.luogo_carico_paziente||'')+' '+esc(s.indirizzo_carico_paziente||'')+' · Rientro '+esc(p.fascia_rientro.toLowerCase())+'</div></div>'}
    html+='<h3>Registra le tratte in ordine</h3>';
@@ -70,7 +74,10 @@ async function load(){
     html+='<p class="muted">Disponibile dopo la terza tratta. Ogni foglio mantiene il suo paziente e il suo importo. I chilometri vengono ripartiti senza sovrapposizioni; il percorso effettivo resta documentato nelle tre tratte.</p>';
     for(const p of ps){
      const sp=p.servizi_giornalieri||{};
-     html+='<div class="person"><label>Metodo di pagamento effettivo · '+esc(sp.paziente_nome)+' '+esc(sp.paziente_cognome)+'</label><select data-pay="'+esc(p.servizio_id)+'"><option value="">— Conferma il metodo effettivo —</option><option value="POS">POS</option><option value="CONTANTI">Contanti</option><option value="BONIFICO">Bonifico ricevuto</option><option value="BONIFICO ISTANTANEO">Bonifico istantaneo ricevuto</option><option value="BONIFICO DIFFERITO">Bonifico differito / da incassare</option><option value="NON DOVUTO">Non dovuto</option></select></div>';
+     const known=String(sheetByService.get(p.servizio_id)?.modalita_pagamento||'').toUpperCase().trim();
+     const selection=paymentDraft.has(p.servizio_id)?paymentDraft.get(p.servizio_id):known;
+     const options=[['','— Conferma il metodo effettivo —'],['POS','POS'],['CONTANTI','Contanti'],['BONIFICO','Bonifico ricevuto'],['BONIFICO ISTANTANEO','Bonifico istantaneo ricevuto'],['BONIFICO DIFFERITO','Bonifico differito / da incassare'],['NON DOVUTO','Non dovuto']];
+     html+='<div class="person"><label>Metodo di pagamento effettivo · '+esc(sp.paziente_nome)+' '+esc(sp.paziente_cognome)+'</label><select data-pay="'+esc(p.servizio_id)+'">'+options.map(([value,label])=>'<option value="'+esc(value)+'"'+(value===selection?' selected':'')+'>'+esc(label)+'</option>').join('')+'</select></div>';
     }
     html+='<button type="button" data-close="'+esc(t.id)+'" '+(allDone?'':'disabled')+'>✅ Chiudi entrambi i fogli viaggio</button>';
     if(!allDone)html+='<p class="warning">Completa e salva prima tutti gli orari e i chilometri delle tre tratte.</p>';
@@ -94,7 +101,9 @@ async function save(id){
  busy=true;
  try{
   raise(await sb.rpc('cge_mp_tablet_salva_tratta',{p_tratta:id,p_ora_partenza:get('ora_partenza'),p_ora_arrivo:get('ora_arrivo'),p_km_iniziali:from,p_km_finali:to}));
-  busy=false;await load();message('Tratta salvata. I chilometri finali sono stati riportati alla tratta successiva, se ancora vuota.');
+  const verify=raise(await sb.from('trasporti_multipaziente_tratte').select('ora_partenza,ora_arrivo,km_iniziali,km_finali').eq('id',id).single());
+  if(String(verify.ora_partenza||'').slice(0,5)!==get('ora_partenza')||String(verify.ora_arrivo||'').slice(0,5)!==get('ora_arrivo')||verify.km_iniziali!==from||verify.km_finali!==to)throw Error('I dati non corrispondono a quelli salvati sul server.');
+  busy=false;await load();message('Tratta salvata e verificata nel database.');
  }catch(e){message('Salvataggio non riuscito: '+(e.message||String(e)),'error')}finally{busy=false}
 }
 async function closeTrip(id){
@@ -116,6 +125,7 @@ async function closeTrip(id){
  }catch(e){busy=false;box.querySelector('[data-close]').disabled=false;message('Nessun foglio chiuso: '+(e.message||String(e)),'error')}
 }
 $('refresh').onclick=load;$('search').onclick=load;
+document.addEventListener('change',e=>{if(e.target.matches('[data-pay]'))paymentDraft.set(e.target.dataset.pay,e.target.value)});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-save]');if(b)save(b.dataset.save);const c=e.target.closest('[data-close]');if(c)closeTrip(c.dataset.close)});
 check();
 </script></body></html>
