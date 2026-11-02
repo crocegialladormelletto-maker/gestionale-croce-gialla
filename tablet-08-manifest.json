@@ -1,0 +1,26 @@
+{
+  "id": "/gestionale-croce-gialla/tablet-08-app",
+  "name": "Croce Gialla Emergenza · Tablet 08",
+  "short_name": "Tablet 08",
+  "description": "Trasporti ordinari, dimissioni e assistenze - mezzo 08",
+  "start_url": "/gestionale-croce-gialla/tablet-09-v14-42.html?area=tablet&mezzo=08&source=pwa",
+  "scope": "/gestionale-croce-gialla/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#12375d",
+  "background_color": "#f2f5f8",
+  "icons": [
+    {
+      "src": "/gestionale-croce-gialla/icons/icon-192-v6.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/gestionale-croce-gialla/icons/icon-512-v6.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
