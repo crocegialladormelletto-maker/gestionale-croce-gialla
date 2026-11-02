@@ -8440,7 +8440,7 @@ async function loadTabletSheet(serviceId){
   $('tabletPatientEmail').value=tabletCurrentService.paziente_email||f.email||'';
   ['tabletPatientFirst','tabletPatientLast','tabletPatientCf','tabletPatientDob','tabletPatientPhone','tabletPatientAddress','tabletPatientEmail'].forEach(id=>{if($(id))$(id).disabled=closed;});
  }
- document.querySelectorAll('[data-ts-field]').forEach(el=>{
+ document.querySelectorAll('#tabletSheetForm [data-ts-field]').forEach(el=>{
  const key=el.dataset.tsField;el.disabled=closed;
  if(el.type==='checkbox')el.checked=!!f[key];
  else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
@@ -8499,8 +8499,16 @@ async function saveTabletSheet(silent=false){
  if(!isInternalService&&!is118Service&&!tabletIsArubaAssistance&&row.importo_inserito===null)return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
-  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id').maybeSingle();
+  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio,modalita_pagamento').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
+  // Controllo effettivo dei dati contabili persistiti: mai confermare un salvataggio incompleto.
+  if(!tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio)){
+   if(row.importo_inserito!==null&&row.importo_inserito!==undefined&&Number(r.data.importo_inserito)!==Number(row.importo_inserito))
+    throw new Error('L’importo non è stato registrato nel database. Riapri il foglio e riprova; la chiusura è bloccata.');
+   if(row.modalita_pagamento&&String(r.data.modalita_pagamento||'').toUpperCase()!==String(row.modalita_pagamento).toUpperCase())
+    throw new Error('La modalità di pagamento non è stata registrata. Il foglio rimane aperto.');
+  }
+  tabletCurrentSheet={...tabletCurrentSheet,...row,...r.data};
   if(!silent)msg('tabletSheetMsg','Dati salvati. Il Foglio Viaggio resta aperto e può essere completato successivamente.','ok');
   return true;
  }catch(e){msg('tabletSheetMsg',e.message||String(e),'err');return false}
@@ -8519,7 +8527,7 @@ async function tabletCloseSheet(){
  if(!confirm('Chiudere definitivamente il Foglio Viaggio? Non sarà più modificabile dal tablet.'))return;
  tabletBusy=true;msg('tabletSheetMsg','Chiusura in corso...');
  try{
-  const r=await sb.rpc('cge_tablet_chiudi_foglio_viaggio',{p_foglio:tabletCurrentSheet.id});
+  const r=await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{p_foglio:tabletCurrentSheet.id,p_modalita:document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||null,p_data:document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||null});
   if(r.error)throw r.error;
   tabletBusy=false;await tabletRefreshListAfterAct(tabletCurrentService.id);
   msg('tabletSheetMsg','Foglio Viaggio chiuso.','ok')
