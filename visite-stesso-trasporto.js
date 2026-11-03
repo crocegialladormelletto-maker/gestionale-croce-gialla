@@ -149,3 +149,43 @@
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);else attach();
 })();
+
+/* Visualizzazione degli orari quando si apre una scheda servizio. */
+(function(){
+ if(typeof window.openService!=='function')return;
+ const originalOpen=window.openService;
+ const escapeText=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ let requestNumber=0;
+ function renderPanel(service){
+   document.getElementById('cgeServiceVisitsPanel')?.remove();
+   const items=Array.isArray(service?.appuntamenti_visite)?service.appuntamenti_visite:[];
+   if(!items.length)return;
+   const panel=document.createElement('aside');
+   panel.id='cgeServiceVisitsPanel';
+   panel.setAttribute('aria-label','Orari delle visite del servizio');
+   panel.style.cssText='position:fixed;right:20px;bottom:20px;z-index:2147483000;width:min(430px,calc(100vw - 40px));max-height:65vh;overflow:auto;background:white;color:#14305a;border:3px solid #e9bf00;border-radius:12px;box-shadow:0 12px 45px #0005;padding:15px;font:inherit';
+   const heading=document.createElement('div');heading.style.cssText='display:flex;justify-content:space-between;gap:8px;align-items:center';
+   heading.innerHTML='<strong>🕒 '+(items.length===2?'DOPPIA VISITA':'VISITE DEL TRASPORTO')+'</strong>';
+   const close=document.createElement('button');close.type='button';close.textContent='✕';close.setAttribute('aria-label','Chiudi riepilogo visite');close.className='btn secondary';
+   close.onclick=()=>panel.remove();heading.append(close);panel.append(heading);
+   const sub=document.createElement('p');sub.style.cssText='margin:6px 0;color:#456';
+   sub.textContent=[service.paziente_cognome,service.paziente_nome,service.data_servizio].filter(Boolean).join(' · ');
+   panel.append(sub);
+   items.forEach((v,i)=>{
+     const line=document.createElement('div');line.style.cssText='padding:9px 0;border-top:1px solid #e2e7ef';
+     const title=document.createElement('strong');title.textContent=(i+1)+'ª visita — '+(v.ora||'Orario da definire');line.append(title);
+     const dest=document.createElement('div');dest.textContent=v.reparto||'Reparto da definire';line.append(dest);panel.append(line);
+   });
+   const foot=document.createElement('small');foot.textContent='Un solo servizio e un solo foglio viaggio.';panel.append(foot);
+   document.body.append(panel);
+ }
+ window.openService=function(id,...args){
+   const seq=++requestNumber;
+   const output=originalOpen.call(this,id,...args);
+   Promise.resolve(output).then(async()=>{
+     const found=await sb.from('servizi_giornalieri').select('id,data_servizio,paziente_nome,paziente_cognome,appuntamenti_visite').eq('id',id).maybeSingle();
+     if(seq===requestNumber&&!found.error&&found.data)renderPanel(found.data);
+   }).catch(()=>{});
+   return output;
+ };
+})();
