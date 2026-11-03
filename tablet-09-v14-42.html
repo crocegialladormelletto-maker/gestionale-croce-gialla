@@ -12120,7 +12120,7 @@ $('tabletSheetForm').addEventListener('change',async e=>{
   // Il metodo scelto è persistito subito: un successivo salvataggio parziale
   // del foglio non può far sparire il pagamento dal gestionale.
   const field=e.target, sheet=tabletCurrentSheet, mode=field.value;
-  if(!sheet||sheet.stato==='CHIUSO'||!mode||tabletBusy)return;
+  if(!['06','08'].includes(String(tabletMezzo))||!sheet||sheet.stato==='CHIUSO'||!mode||tabletBusy)return;
   const chosenSheetId=sheet.id;
   field.disabled=true;
   msg('tabletSheetMsg','Registrazione metodo di pagamento in corso...');
