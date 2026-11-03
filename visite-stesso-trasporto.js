@@ -74,3 +74,78 @@
   }
   ordDrawDay=draw;
 })();
+/* Accesso diretto dalla schermata Calendario servizi principale */
+(function(){
+ const $=id=>document.getElementById(id);
+ const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function launch(){
+  $('cgeMainVisitsDialog')?.remove();
+  const dialog=document.createElement('dialog');dialog.id='cgeMainVisitsDialog';
+  dialog.style.cssText='border:2px solid #e6bb00;border-radius:12px;padding:20px;max-width:800px;width:94%;max-height:90vh;overflow:auto';
+  dialog.innerHTML='<h2>🕒 Visite nello stesso trasporto</h2><p>Seleziona la data e il servizio già programmato. Gli appuntamenti restano collegati a un solo foglio viaggio.</p>'+
+  '<label>Data del trasporto <input id="cgeVisitsDate" type="date" value="2026-11-23"></label>'+
+  '<div id="cgeVisitsServices" style="margin:12px 0"></div><div id="cgeVisitsEditor"></div>'+
+  '<button type="button" class="btn secondary" id="cgeVisitsClose">Chiudi</button>';
+  document.body.append(dialog);
+  $('cgeVisitsClose').onclick=()=>dialog.close();
+  dialog.onclose=()=>dialog.remove();
+  async function search(){
+   const root=$('cgeVisitsServices');root.textContent='Caricamento trasporti...';$('cgeVisitsEditor').replaceChildren();
+   const result=await sb.from('servizi_giornalieri').select('id,data_servizio,paziente_nome,paziente_cognome,destinazione,tipo_servizio,appuntamenti_visite,updated_at,stato_gestionale')
+      .eq('data_servizio',$('cgeVisitsDate').value).order('ora_prevista');
+   if(result.error){root.textContent='Errore: '+result.error.message;return}
+   const services=(result.data||[]).filter(s=>!['ANNULLATO','CHIUSO','TERMINATO'].includes(s.stato_gestionale));
+   root.replaceChildren();
+   if(!services.length){root.textContent='Nessun trasporto modificabile in questa data.';return}
+   services.forEach(s=>{
+    const b=document.createElement('button');b.type='button';b.className='btn secondary';
+    b.style.cssText='display:block;width:100%;text-align:left;margin:5px 0';
+    b.textContent=[s.paziente_cognome,s.paziente_nome,s.tipo_servizio,s.destinazione].filter(Boolean).join(' · ');
+    b.onclick=()=>editor(s);root.append(b);
+   });
+  }
+  function editor(s){
+   const root=$('cgeVisitsEditor');root.replaceChildren();
+   const title=document.createElement('h3');title.textContent='Appuntamenti per '+[s.paziente_nome,s.paziente_cognome].filter(Boolean).join(' ');root.append(title);
+   const list=document.createElement('div');root.append(list);
+   const existing=Array.isArray(s.appuntamenti_visite)?s.appuntamenti_visite:[];
+   function add(v={}){
+    const row=document.createElement('div');row.style.cssText='display:grid;grid-template-columns:1fr 2fr auto;gap:8px;margin:8px 0';
+    row.innerHTML='<label>Orario<input type="time" required value="'+escapeHtml(v.ora||'')+'"></label>'+
+    '<label>Ospedale / reparto<input maxlength="250" required value="'+escapeHtml(v.reparto||'')+'"></label>'+
+    '<button type="button" class="btn secondary">Rimuovi</button>';
+    row.querySelector('button').onclick=()=>{if(list.children.length>1)row.remove()};
+    list.append(row);
+   }
+   (existing.length?existing:[{},{}]).forEach(add);
+   const addBtn=document.createElement('button');addBtn.type='button';addBtn.className='btn secondary';addBtn.textContent='+ Aggiungi visita';
+   addBtn.onclick=()=>{if(list.children.length<10)add()};root.append(addBtn);
+   const save=document.createElement('button');save.type='button';save.className='btn yellow';save.style.margin='8px';save.textContent='Salva orari visite';root.append(save);
+   const feedback=document.createElement('div');root.append(feedback);
+   save.onclick=async()=>{
+    const visits=[...list.children].map(row=>({ora:row.querySelector('input[type=time]').value,reparto:row.querySelector('input:not([type=time])').value.trim()}));
+    if(visits.some(v=>!v.ora||!v.reparto)){feedback.textContent='Inserisci tutti gli orari e i reparti.';return}
+    save.disabled=true;feedback.textContent='Salvataggio...';
+    const result=await sb.from('servizi_giornalieri').update({appuntamenti_visite:visits})
+      .eq('id',s.id).eq('updated_at',s.updated_at).select('id,updated_at');
+    save.disabled=false;
+    if(result.error){feedback.textContent='Errore: '+result.error.message;return}
+    if(!result.data?.length){feedback.textContent='Il servizio è stato aggiornato altrove: chiudi e riapri.';return}
+    s.appuntamenti_visite=visits;s.updated_at=result.data[0].updated_at;
+    feedback.textContent='✓ Visite salvate sullo stesso trasporto.';
+    if(typeof loadOrdinaryCalendar==='function')loadOrdinaryCalendar();
+    if(typeof loadOperationalCalendar==='function')loadOperationalCalendar();
+   };
+  }
+  $('cgeVisitsDate').onchange=search;
+  dialog.showModal();search();
+ }
+ function attach(){
+  const anchor=$('calMsg');
+  if(!anchor||$('cgeMainVisitsButton'))return;
+  const b=document.createElement('button');b.id='cgeMainVisitsButton';b.type='button';b.className='btn yellow';
+  b.style.cssText='margin:8px 8px 8px 0';b.textContent='🕒 Visite nello stesso trasporto';b.onclick=launch;
+  anchor.parentElement.insertBefore(b,anchor);
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);else attach();
+})();
