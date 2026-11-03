@@ -74,7 +74,7 @@ async function loadOrdinaryCalendar(){
  const seq=++ordSeq,r=calVisibleRange(ordCursor,'month');
  msg('ordMsg','Caricamento servizi ordinari...');
  const response=await sb.from('servizi_giornalieri')
-  .select('id,data_servizio,tipo_servizio,paziente_nome,paziente_cognome,luogo_partenza,destinazione,ospedale_destinazione,mezzo,ora_partenza_prevista,ora_arrivo_destinazione_prevista,ora_rientro_previsto,equipaggio_minimo,capo_servizio_obbligatorio,stato,stato_gestionale')
+  .select('id,data_servizio,tipo_servizio,paziente_nome,paziente_cognome,luogo_partenza,destinazione,ospedale_destinazione,mezzo,ora_partenza_prevista,ora_arrivo_destinazione_prevista,ora_rientro_previsto,equipaggio_minimo,capo_servizio_obbligatorio,stato,stato_gestionale,appuntamenti_visite,updated_at')
   .gte('data_servizio',r.startYmd).lte('data_servizio',r.endYmd)
   .order('data_servizio').order('ora_partenza_prevista').limit(2000);
  if(seq!==ordSeq)return;
@@ -382,3 +382,6 @@ async function calOrdRemove(assignmentId,serviceId){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);
   else attach();
 })();
+
+// Carica il modulo aggiuntivo per più appuntamenti nello stesso trasporto.
+(function(){const sc=document.createElement('script');sc.src='visite-stesso-trasporto.js';document.body.appendChild(sc);})();
