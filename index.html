@@ -13322,10 +13322,12 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(!tabletSheetIs118&&row.importo_inserito===null){
   const savedBase=tabletCurrentSheet?.importo_inserito;
   if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
-  else if(!tabletIsAssistance) {
+  else if(!tabletIsAssistance && (
+    silent || !String(tabletCurrentService?.note||'').startsWith('NON PROGRAMMATO · tablet mezzo ')
+  )) {
    const baseInput=document.querySelector('#tabletSheetForm [data-ts-field="importo_inserito"]');
    if(baseInput)baseInput.focus();
-   return msg('tabletSheetMsg','Importo servizio non acquisito. Reinserisci l’importo nel campo Importo servizio € e premi Salva dati.','warn'),false;
+   return msg('tabletSheetMsg','Importo servizio non acquisito. Inserisci l’importo nel campo Importo servizio € prima della chiusura.','warn'),false;
   }
  }
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
