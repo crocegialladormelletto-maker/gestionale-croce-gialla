@@ -263,6 +263,9 @@ async function calOrdRemove(assignmentId,serviceId){
    dialog.innerHTML='<form id="cgeMultiForm" style="display:grid;gap:10px">'+
     '<h2 style="margin:0;color:#123b72">Prenotazioni multiple paziente</h2>'+
     '<p class="muted">Inserisci il paziente una sola volta e aggiungi le singole visite. Ogni data crea un servizio separato nel Calendario servizi.</p>'+
+    '<div style="background:#eef3fb;padding:12px;border-radius:9px"><label style="display:block;font-weight:700">Cerca paziente già registrato<input type="search" id="cgeMultiPatientSearch" autocomplete="off" placeholder="Digita cognome, nome oppure codice fiscale" style="width:100%"></label>'+
+    '<div id="cgeMultiPatientResults" role="status" aria-live="polite" style="margin-top:7px">Cerca un paziente esistente oppure compila i dati per un nuovo paziente.</div>'+
+    '<div id="cgeMultiPatientSelected" style="font-weight:700;color:#123b72"></div></div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
     '<label>Nome paziente<input name="nome" required maxlength="120"></label>'+
     '<label>Cognome paziente<input name="cognome" required maxlength="120"></label>'+
@@ -277,6 +280,52 @@ async function calOrdRemove(assignmentId,serviceId){
     '<div class="actions"><button type="submit" class="btn yellow" id="cgeMultiSave">Salva tutte le visite</button><button type="button" class="btn secondary" id="cgeMultiClose">Chiudi</button></div></form>';
    document.body.append(dialog);
    const rows=byId('cgeMultiRows'),feedback=byId('cgeMultiFeedback');
+   let chosenPatient=null,searchSerial=0;
+   const searchInput=byId('cgeMultiPatientSearch');
+   const results=byId('cgeMultiPatientResults');
+   const clearChosen=()=>{chosenPatient=null;byId('cgeMultiPatientSelected').textContent='';};
+   const patientFields=['nome','cognome','telefono'];
+   const setPatient=p=>{
+     chosenPatient=p;
+     for(const field of patientFields)byId('cgeMultiForm').elements[field].value=p[field]||'';
+     if(p.indirizzo)byId('cgeMultiForm').elements.partenza.value=p.indirizzo;
+     byId('cgeMultiPatientSelected').textContent='Paziente selezionato: '+p.cognome+' '+p.nome;
+     results.replaceChildren();
+   };
+   for(const field of patientFields)byId('cgeMultiForm').elements[field].addEventListener('input',clearChosen);
+   let debounce=null;
+   searchInput.addEventListener('input',()=>{
+     clearTimeout(debounce);
+     const search=searchInput.value.trim();
+     const serial=++searchSerial;
+     if(search.length<2){results.textContent='Digita almeno 2 caratteri per cercare.';return}
+     results.textContent='Ricerca paziente...';
+     debounce=setTimeout(async()=>{
+       try{
+         const escaped=search.replace(/[,%()]/g,' ').trim();
+         if(!escaped){results.textContent='Inserisci un nome o cognome valido.';return}
+         const q=sb.from('anagrafica_pazienti')
+           .select('id,nome,cognome,codice_fiscale,data_nascita,telefono,indirizzo,email')
+           .or('nome.ilike.%'+escaped+'%,cognome.ilike.%'+escaped+'%,codice_fiscale.ilike.%'+escaped+'%')
+           .order('cognome').order('nome').limit(30);
+         const response=await q;
+         if(serial!==searchSerial||!dialog.isConnected)return;
+         if(response.error)throw response.error;
+         const patients=response.data||[];
+         results.replaceChildren();
+         if(!patients.length){results.textContent='Nessun paziente trovato. Puoi compilare i dati manualmente.';return}
+         const heading=document.createElement('div');heading.textContent=patients.length+' pazienti trovati — selezionane uno:';results.append(heading);
+         for(const p of patients){
+           const button=document.createElement('button');
+           button.type='button';button.className='btn secondary';
+           button.style.cssText='display:block;width:100%;text-align:left;margin:4px 0;padding:8px';
+           button.textContent=[p.cognome,p.nome,p.data_nascita?'nato/a '+p.data_nascita:'',p.codice_fiscale||''].filter(Boolean).join(' · ');
+           button.onclick=()=>setPatient(p);
+           results.append(button);
+         }
+       }catch(err){if(serial===searchSerial)results.textContent='Errore ricerca pazienti: '+(err.message||String(err));}
+     },250);
+   });
    rows.onclick=e=>{if(e.target.closest('.multi-remove')&&rows.children.length>1){e.target.closest('.cge-multi-row').remove();}};
    byId('cgeMultiAdd').onclick=()=>{
     if(rows.children.length>=30)return feedback.textContent='Massimo 30 appuntamenti per richiesta.';
@@ -299,8 +348,10 @@ async function calOrdRemove(assignmentId,serviceId){
      return feedback.textContent='Una visita risulta duplicata: correggi data, ora o destinazione.';
     if(!confirm('Creare '+visits.length+' servizi distinti per '+fd.get('nome')+' '+fd.get('cognome')+'?'))return;
     const group='MULTI-'+crypto.randomUUID();
-    const common={paziente_nome:String(fd.get('nome')).trim(),paziente_cognome:String(fd.get('cognome')).trim(),
-      telefono:String(fd.get('telefono')||'').trim()||null,mezzo:fd.get('mezzo'),tipo_servizio:fd.get('tipo'),
+    const common={paziente_id:chosenPatient?.id||null,paziente_nome:String(fd.get('nome')).trim(),paziente_cognome:String(fd.get('cognome')).trim(),
+      telefono:String(fd.get('telefono')||'').trim()||null,
+      ...(chosenPatient?{codice_fiscale:chosenPatient.codice_fiscale||null,data_nascita:chosenPatient.data_nascita||null,paziente_indirizzo:chosenPatient.indirizzo||null,paziente_email:chosenPatient.email||null}:{}),
+      mezzo:fd.get('mezzo'),tipo_servizio:fd.get('tipo'),
       luogo_partenza:String(fd.get('partenza')).trim(),riferimento_richiesta:group,
       note:String(fd.get('note')||'').trim()||null,stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',
       equipaggio_minimo:fd.get('mezzo')==='06'?1:2};
