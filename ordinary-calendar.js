@@ -384,4 +384,4 @@ async function calOrdRemove(assignmentId,serviceId){
 })();
 
 // Carica il modulo aggiuntivo per più appuntamenti nello stesso trasporto.
-(function(){const sc=document.createElement('script');sc.src='visite-stesso-trasporto.js';document.body.appendChild(sc);})();
+(function(){const sc=document.createElement('script');sc.src='visite-stesso-trasporto.js?v=20261103-2';document.body.appendChild(sc);})();
