@@ -150,42 +150,73 @@
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);else attach();
 })();
 
-/* Visualizzazione degli orari quando si apre una scheda servizio. */
+
+/* Visite nella scheda del servizio, centralino e tablet equipaggio. */
 (function(){
- if(typeof window.openService!=='function')return;
- const originalOpen=window.openService;
- const escapeText=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let requestNumber=0;
- function renderPanel(service){
-   document.getElementById('cgeServiceVisitsPanel')?.remove();
-   const items=Array.isArray(service?.appuntamenti_visite)?service.appuntamenti_visite:[];
-   if(!items.length)return;
-   const panel=document.createElement('aside');
-   panel.id='cgeServiceVisitsPanel';
-   panel.setAttribute('aria-label','Orari delle visite del servizio');
-   panel.style.cssText='position:fixed;right:20px;bottom:20px;z-index:2147483000;width:min(430px,calc(100vw - 40px));max-height:65vh;overflow:auto;background:white;color:#14305a;border:3px solid #e9bf00;border-radius:12px;box-shadow:0 12px 45px #0005;padding:15px;font:inherit';
-   const heading=document.createElement('div');heading.style.cssText='display:flex;justify-content:space-between;gap:8px;align-items:center';
-   heading.innerHTML='<strong>🕒 '+(items.length===2?'DOPPIA VISITA':'VISITE DEL TRASPORTO')+'</strong>';
-   const close=document.createElement('button');close.type='button';close.textContent='✕';close.setAttribute('aria-label','Chiudi riepilogo visite');close.className='btn secondary';
-   close.onclick=()=>panel.remove();heading.append(close);panel.append(heading);
-   const sub=document.createElement('p');sub.style.cssText='margin:6px 0;color:#456';
-   sub.textContent=[service.paziente_cognome,service.paziente_nome,service.data_servizio].filter(Boolean).join(' · ');
-   panel.append(sub);
-   items.forEach((v,i)=>{
-     const line=document.createElement('div');line.style.cssText='padding:9px 0;border-top:1px solid #e2e7ef';
-     const title=document.createElement('strong');title.textContent=(i+1)+'ª visita — '+(v.ora||'Orario da definire');line.append(title);
-     const dest=document.createElement('div');dest.textContent=v.reparto||'Reparto da definire';line.append(dest);panel.append(line);
-   });
-   const foot=document.createElement('small');foot.textContent='Un solo servizio e un solo foglio viaggio.';panel.append(foot);
-   document.body.append(panel);
- }
- window.openService=function(id,...args){
-   const seq=++requestNumber;
-   const output=originalOpen.call(this,id,...args);
-   Promise.resolve(output).then(async()=>{
-     const found=await sb.from('servizi_giornalieri').select('id,data_servizio,paziente_nome,paziente_cognome,appuntamenti_visite').eq('id',id).maybeSingle();
-     if(seq===requestNumber&&!found.error&&found.data)renderPanel(found.data);
-   }).catch(()=>{});
-   return output;
+ const $=id=>document.getElementById(id);
+ const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
+ const itemsOf=data=>Array.isArray(data?.appuntamenti_visite)?data.appuntamenti_visite.filter(x=>x&&x.ora&&x.reparto):[];
+ let activeMain=null,activeTablet=null;
+ const markup=(items,forTablet)=>{
+  const head=items.length===2?'🔁 DOPPIA VISITA':'🔁 VISITE MULTIPLE';
+  return '<h3 style="margin:0 0 10px;color:#12375d">'+head+'</h3>'+
+    '<p style="margin:0 0 8px">Appuntamenti previsti durante lo stesso trasporto</p>'+
+    '<div style="display:grid;gap:8px">'+items.map((v,i)=>'<div style="padding:10px;border-radius:9px;background:#f1f6fc;border-left:5px solid #ffdb17">'+
+    '<strong>'+(i+1)+'ª visita — ore '+escapeHtml(v.ora)+'</strong><div style="margin-top:4px">'+escapeHtml(v.reparto)+'</div></div>').join('')+'</div>'+
+    (forTablet?'<p style="margin:10px 0 0;font-weight:700">Un solo servizio e un solo foglio viaggio.</p>':'');
  };
+ function insertMain(id,items){
+   if(activeMain!==id||!$('serviceDetail')||$('serviceDetail').classList.contains('hidden'))return;
+   $('cgeVisitDetailInline')?.remove();
+   if(!items.length)return;
+   const form=$('detailForm'),first=form?.querySelector('.section');
+   if(!first)return;
+   const section=document.createElement('section');
+   section.id='cgeVisitDetailInline';section.className='section';
+   section.style.cssText='border:2px solid #e8bb00;background:#fffdf3';
+   section.innerHTML=markup(items,false);
+   first.after(section);
+ }
+ function insertTablet(id,items){
+   if(activeTablet!==id)return;
+   $('cgeTabletVisitsInline')?.remove();
+   if(!items.length)return;
+   const fields=$('tabletServiceData');if(!fields||$('tabletDetail')?.classList.contains('hidden'))return;
+   const section=document.createElement('div');
+   section.id='cgeTabletVisitsInline';section.className='section';
+   section.style.cssText='border:2px solid #e6b900;background:#fffdf2;margin:12px 0';
+   section.innerHTML=markup(items,true);
+   fields.after(section);
+ }
+ async function fetchVisits(id){
+   const r=await sb.from('servizi_giornalieri')
+     .select('appuntamenti_visite').eq('id',id).maybeSingle();
+   if(r.error)throw r.error;
+   return itemsOf(r.data);
+ }
+ if(typeof window.openService==='function'){
+   const old=window.openService;
+   window.openService=async function(id,...rest){
+     activeMain=String(id);
+     $('cgeVisitDetailInline')?.remove();
+     const result=await old.call(this,id,...rest);
+     try{const items=await fetchVisits(id);insertMain(String(id),items)}
+     catch(e){if(typeof msg==='function')msg('dActionMsg','Orari visite non disponibili: '+(e.message||String(e)),'warn')}
+     return result;
+   };
+ }
+ if(typeof window.openTabletService==='function'){
+   const old=window.openTabletService;
+   window.openTabletService=async function(id,...rest){
+     activeTablet=String(id);
+     $('cgeTabletVisitsInline')?.remove();
+     const result=await old.call(this,id,...rest);
+     try{const items=await fetchVisits(id);insertTablet(String(id),items)}
+     catch(e){
+       const place=$('tabletDetailMsg');
+       if(place){const note=document.createElement('div');note.className='notice warn';note.textContent='Orari delle visite non disponibili: '+(e.message||String(e));place.append(note)}
+     }
+     return result;
+   };
+ }
 })();
