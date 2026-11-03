@@ -11953,7 +11953,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   if(!tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio)){
    if(row.importo_inserito!==null&&row.importo_inserito!==undefined&&Number(r.data.importo_inserito)!==Number(row.importo_inserito))
     throw new Error('L’importo non è stato registrato nel database. Riapri il foglio e riprova; la chiusura è bloccata.');
-   if(row.modalita_pagamento&&String(r.data.modalita_pagamento||'').toUpperCase()!==String(row.modalita_pagamento).toUpperCase())
+   if(String(r.data.modalita_pagamento||'').toUpperCase()!==String(row.modalita_pagamento||'').toUpperCase())
     throw new Error('La modalità di pagamento non è stata registrata. Il foglio rimane aperto.');
   }
   tabletCurrentSheet={...tabletCurrentSheet,...row,...r.data};
@@ -12113,10 +12113,29 @@ if($('tabletPrivacyClearSignature'))$('tabletPrivacyClearSignature').onclick=()=
 if($('tabletPrivacyViewSignature'))$('tabletPrivacyViewSignature').onclick=tabletPrivacyShowSavedSignature;
 $('tabletCloseSheet').onclick=tabletCloseSheet;
 $('tabletSheetForm').addEventListener('input',tabletCalcSheet);
-$('tabletSheetForm').addEventListener('change',e=>{
+$('tabletSheetForm').addEventListener('change',async e=>{
  if(e.target?.matches('[data-ts-field="modalita_pagamento"]')){
   tabletUpdatePaymentDateVisibility();
   tabletToggleReceiptSection();
+  // Il metodo scelto è persistito subito: un successivo salvataggio parziale
+  // del foglio non può far sparire il pagamento dal gestionale.
+  const field=e.target, sheet=tabletCurrentSheet, mode=field.value;
+  if(!sheet||sheet.stato==='CHIUSO'||!mode||tabletBusy)return;
+  const chosenSheetId=sheet.id;
+  field.disabled=true;
+  msg('tabletSheetMsg','Registrazione metodo di pagamento in corso...');
+  try{
+   const date=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||null;
+   const r=await sb.rpc('cge_tablet_salva_pagamento_foglio',{p_foglio:chosenSheetId,p_modalita:mode,p_data:date});
+   if(r.error)throw r.error;
+   const v=await sb.from('fogli_viaggio').select('id,modalita_pagamento,data_pagamento').eq('id',chosenSheetId).eq('mezzo',tabletMezzo).single();
+   if(v.error||String(v.data?.modalita_pagamento||'').toUpperCase()!==String(mode).toUpperCase())throw new Error('Il pagamento non risulta salvato nel database.');
+   if(tabletCurrentSheet?.id===chosenSheetId){
+    tabletCurrentSheet={...tabletCurrentSheet,modalita_pagamento:v.data.modalita_pagamento,data_pagamento:v.data.data_pagamento};
+    msg('tabletSheetMsg','Metodo di pagamento '+mode+' salvato e verificato nel database.','ok');
+   }
+  }catch(err){msg('tabletSheetMsg','ATTENZIONE: metodo di pagamento NON salvato. '+(err.message||String(err)),'err')}
+  finally{field.disabled=false;}
  }
 });
 $('tabletPrintSheet').onclick=async()=>{
