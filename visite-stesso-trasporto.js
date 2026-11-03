@@ -74,149 +74,80 @@
   }
   ordDrawDay=draw;
 })();
-/* Accesso diretto dalla schermata Calendario servizi principale */
-(function(){
- const $=id=>document.getElementById(id);
- const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- function launch(){
-  $('cgeMainVisitsDialog')?.remove();
-  const dialog=document.createElement('dialog');dialog.id='cgeMainVisitsDialog';
-  dialog.style.cssText='border:2px solid #e6bb00;border-radius:12px;padding:20px;max-width:800px;width:94%;max-height:90vh;overflow:auto';
-  dialog.innerHTML='<h2>🕒 Visite nello stesso trasporto</h2><p>Seleziona la data e il servizio già programmato. Gli appuntamenti restano collegati a un solo foglio viaggio.</p>'+
-  '<label>Data del trasporto <input id="cgeVisitsDate" type="date" value="2026-11-23"></label>'+
-  '<div id="cgeVisitsServices" style="margin:12px 0"></div><div id="cgeVisitsEditor"></div>'+
-  '<button type="button" class="btn secondary" id="cgeVisitsClose">Chiudi</button>';
-  document.body.append(dialog);
-  $('cgeVisitsClose').onclick=()=>dialog.close();
-  dialog.onclose=()=>dialog.remove();
-  async function search(){
-   const root=$('cgeVisitsServices');root.textContent='Caricamento trasporti...';$('cgeVisitsEditor').replaceChildren();
-   const result=await sb.from('servizi_giornalieri').select('id,data_servizio,paziente_nome,paziente_cognome,destinazione,tipo_servizio,appuntamenti_visite,updated_at,stato_gestionale')
-      .eq('data_servizio',$('cgeVisitsDate').value).order('ora_prevista');
-   if(result.error){root.textContent='Errore: '+result.error.message;return}
-   const services=(result.data||[]).filter(s=>!['ANNULLATO','CHIUSO','TERMINATO'].includes(s.stato_gestionale));
-   root.replaceChildren();
-   if(!services.length){root.textContent='Nessun trasporto modificabile in questa data.';return}
-   services.forEach(s=>{
-    const b=document.createElement('button');b.type='button';b.className='btn secondary';
-    b.style.cssText='display:block;width:100%;text-align:left;margin:5px 0';
-    b.textContent=[s.paziente_cognome,s.paziente_nome,s.tipo_servizio,s.destinazione].filter(Boolean).join(' · ');
-    b.onclick=()=>editor(s);root.append(b);
-   });
-  }
-  function editor(s){
-   const root=$('cgeVisitsEditor');root.replaceChildren();
-   const title=document.createElement('h3');title.textContent='Appuntamenti per '+[s.paziente_nome,s.paziente_cognome].filter(Boolean).join(' ');root.append(title);
-   const list=document.createElement('div');root.append(list);
-   const existing=Array.isArray(s.appuntamenti_visite)?s.appuntamenti_visite:[];
-   function add(v={}){
-    const row=document.createElement('div');row.style.cssText='display:grid;grid-template-columns:1fr 2fr auto;gap:8px;margin:8px 0';
-    row.innerHTML='<label>Orario<input type="time" required value="'+escapeHtml(v.ora||'')+'"></label>'+
-    '<label>Ospedale / reparto<input maxlength="250" required value="'+escapeHtml(v.reparto||'')+'"></label>'+
-    '<button type="button" class="btn secondary">Rimuovi</button>';
-    row.querySelector('button').onclick=()=>{if(list.children.length>1)row.remove()};
-    list.append(row);
-   }
-   (existing.length?existing:[{},{}]).forEach(add);
-   const addBtn=document.createElement('button');addBtn.type='button';addBtn.className='btn secondary';addBtn.textContent='+ Aggiungi visita';
-   addBtn.onclick=()=>{if(list.children.length<10)add()};root.append(addBtn);
-   const save=document.createElement('button');save.type='button';save.className='btn yellow';save.style.margin='8px';save.textContent='Salva orari visite';root.append(save);
-   const feedback=document.createElement('div');root.append(feedback);
-   save.onclick=async()=>{
-    const visits=[...list.children].map(row=>({ora:row.querySelector('input[type=time]').value,reparto:row.querySelector('input:not([type=time])').value.trim()}));
-    if(visits.some(v=>!v.ora||!v.reparto)){feedback.textContent='Inserisci tutti gli orari e i reparti.';return}
-    save.disabled=true;feedback.textContent='Salvataggio...';
-    const result=await sb.from('servizi_giornalieri').update({appuntamenti_visite:visits})
-      .eq('id',s.id).eq('updated_at',s.updated_at).select('id,updated_at');
-    save.disabled=false;
-    if(result.error){feedback.textContent='Errore: '+result.error.message;return}
-    if(!result.data?.length){feedback.textContent='Il servizio è stato aggiornato altrove: chiudi e riapri.';return}
-    s.appuntamenti_visite=visits;s.updated_at=result.data[0].updated_at;
-    feedback.textContent='✓ Visite salvate sullo stesso trasporto.';
-    if(typeof loadOrdinaryCalendar==='function')loadOrdinaryCalendar();
-    if(typeof loadOperationalCalendar==='function')loadOperationalCalendar();
-   };
-  }
-  $('cgeVisitsDate').onchange=search;
-  dialog.showModal();search();
- }
- function attach(){
-  const anchor=$('calMsg');
-  if(!anchor||$('cgeMainVisitsButton'))return;
-  const b=document.createElement('button');b.id='cgeMainVisitsButton';b.type='button';b.className='btn yellow';
-  b.style.cssText='margin:8px 8px 8px 0';b.textContent='🕒 Visite nello stesso trasporto';b.onclick=launch;
-  anchor.parentElement.insertBefore(b,anchor);
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);else attach();
-})();
 
-
-/* Visite nella scheda del servizio, centralino e tablet equipaggio. */
+/* Visite dentro la scheda servizio e tablet; nessun popup. */
 (function(){
- const $=id=>document.getElementById(id);
- const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
- const itemsOf=data=>Array.isArray(data?.appuntamenti_visite)?data.appuntamenti_visite.filter(x=>x&&x.ora&&x.reparto):[];
- let activeMain=null,activeTablet=null;
- const markup=(items,forTablet)=>{
-  const head=items.length===2?'🔁 DOPPIA VISITA':'🔁 VISITE MULTIPLE';
-  return '<h3 style="margin:0 0 10px;color:#12375d">'+head+'</h3>'+
-    '<p style="margin:0 0 8px">Appuntamenti previsti durante lo stesso trasporto</p>'+
-    '<div style="display:grid;gap:8px">'+items.map((v,i)=>'<div style="padding:10px;border-radius:9px;background:#f1f6fc;border-left:5px solid #ffdb17">'+
-    '<strong>'+(i+1)+'ª visita — ore '+escapeHtml(v.ora)+'</strong><div style="margin-top:4px">'+escapeHtml(v.reparto)+'</div></div>').join('')+'</div>'+
-    (forTablet?'<p style="margin:10px 0 0;font-weight:700">Un solo servizio e un solo foglio viaggio.</p>':'');
- };
- function insertMain(id,items){
-   if(activeMain!==id||!$('serviceDetail')||$('serviceDetail').classList.contains('hidden'))return;
-   $('cgeVisitDetailInline')?.remove();
-   if(!items.length)return;
-   const form=$('detailForm'),first=form?.querySelector('.section');
-   if(!first)return;
-   const section=document.createElement('section');
-   section.id='cgeVisitDetailInline';section.className='section';
-   section.style.cssText='border:2px solid #e8bb00;background:#fffdf3';
-   section.innerHTML=markup(items,false);
-   first.after(section);
+ const el=id=>document.getElementById(id);
+ const safe=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const entries=s=>Array.isArray(s?.appuntamenti_visite)?s.appuntamenti_visite:[];
+ let active=0,tabletActive=0;
+ function showMain(s){
+  el('cgeVisitDetailInline')?.remove();
+  const first=el('detailForm')?.querySelector('.section');
+  if(!first||!s||el('serviceDetail')?.classList.contains('hidden'))return;
+  const p=document.createElement('section');p.className='section';p.id='cgeVisitDetailInline';
+  p.style.cssText='border:2px solid #dbb800;background:#fffdf1';
+  p.innerHTML='<h3>🔁 Orari delle visite</h3><p class="muted">Stesso trasporto, un solo foglio viaggio.</p><div data-list></div>'+
+   '<div class="actions" style="margin-top:10px"><button class="btn secondary" type="button" data-add>+ Aggiungi visita</button>'+
+   '<button class="btn yellow" type="button" data-save>Salva appuntamenti</button></div><div data-status role="status"></div>';
+  first.after(p);const list=p.querySelector('[data-list]');
+  const add=v=>{
+   const row=document.createElement('div');row.style.cssText='display:grid;grid-template-columns:1fr 2fr auto;gap:8px;margin:8px 0;align-items:end';
+   row.innerHTML='<label>Orario visita<input type="time" data-time value="'+safe(v?.ora||'')+'"></label>'+
+   '<label>Ospedale / reparto<input type="text" data-place maxlength="250" value="'+safe(v?.reparto||'')+'"></label>'+
+   '<button type="button" class="btn secondary" data-remove>Rimuovi</button>';
+   row.querySelector('[data-remove]').onclick=()=>{if(list.children.length>1)row.remove()};
+   list.append(row);
+  };
+  (entries(s).length?entries(s):[{},{}]).forEach(add);
+  p.querySelector('[data-add]').onclick=()=>{if(list.children.length<10)add({})};
+  let busy=false;
+  p.querySelector('[data-save]').onclick=async()=>{
+   if(busy)return;const msg=p.querySelector('[data-status]'),button=p.querySelector('[data-save]');
+   const data=[...list.children].map(row=>({ora:row.querySelector('[data-time]').value,reparto:row.querySelector('[data-place]').value.trim()}));
+   if(data.some(x=>!x.ora||!x.reparto)){msg.textContent='Inserisci ora e reparto di ogni visita.';return}
+   if(new Set(data.map(x=>x.ora+'|'+x.reparto.toLowerCase())).size!==data.length){msg.textContent='Appuntamento duplicato.';return}
+   busy=true;button.disabled=true;
+   try{
+    const r=await sb.from('servizi_giornalieri').update({appuntamenti_visite:data}).eq('id',s.id).eq('updated_at',s.updated_at).select('id,updated_at');
+    if(r.error)throw r.error;if(!r.data?.length)throw Error('Servizio modificato: riaprilo e riprova.');
+    s.updated_at=r.data[0].updated_at;s.appuntamenti_visite=data;
+    msg.textContent='✓ Appuntamenti salvati, disponibili anche per gli equipaggi.';
+   }catch(e){msg.textContent='Errore: '+(e.message||String(e))}
+   finally{busy=false;button.disabled=false}
+  };
  }
- function insertTablet(id,items){
-   if(activeTablet!==id)return;
-   $('cgeTabletVisitsInline')?.remove();
-   if(!items.length)return;
-   const fields=$('tabletServiceData');if(!fields||$('tabletDetail')?.classList.contains('hidden'))return;
-   const section=document.createElement('div');
-   section.id='cgeTabletVisitsInline';section.className='section';
-   section.style.cssText='border:2px solid #e6b900;background:#fffdf2;margin:12px 0';
-   section.innerHTML=markup(items,true);
-   fields.after(section);
+ function showTablet(id,data){
+  el('cgeTabletVisitsInline')?.remove();
+  if(!data?.length||String(tabletCurrentService?.id)!==String(id))return;
+  const field=el('tabletServiceData');if(!field)return;
+  const panel=document.createElement('div');panel.id='cgeTabletVisitsInline';panel.className='section';
+  panel.style.cssText='border:2px solid #dbb800;background:#fffdf1;margin:12px 0';
+  panel.innerHTML='<h3>🔁 '+(data.length===2?'DOPPIA VISITA':'VISITE MULTIPLE')+'</h3>'+
+   data.map((v,i)=>'<div style="padding:10px;margin:7px 0;border-left:5px solid #ffdb17;background:#edf4fc"><b>'+
+   (i+1)+'ª visita · ore '+safe(v.ora)+'</b><div>'+safe(v.reparto)+'</div></div>').join('');
+  field.after(panel);
  }
- async function fetchVisits(id){
-   const r=await sb.from('servizi_giornalieri')
-     .select('appuntamenti_visite').eq('id',id).maybeSingle();
-   if(r.error)throw r.error;
-   return itemsOf(r.data);
+ if(typeof loadServiceDetail==='function'){
+  const original=loadServiceDetail;
+  loadServiceDetail=async function(...args){
+   const token=++active;const ret=await original.apply(this,args);
+   if(token===active&&typeof currentService!=='undefined')showMain(currentService);
+   return ret;
+  };
  }
- if(typeof window.openService==='function'){
-   const old=window.openService;
-   window.openService=async function(id,...rest){
-     activeMain=String(id);
-     $('cgeVisitDetailInline')?.remove();
-     const result=await old.call(this,id,...rest);
-     try{const items=await fetchVisits(id);insertMain(String(id),items)}
-     catch(e){if(typeof msg==='function')msg('dActionMsg','Orari visite non disponibili: '+(e.message||String(e)),'warn')}
-     return result;
-   };
- }
- if(typeof window.openTabletService==='function'){
-   const old=window.openTabletService;
-   window.openTabletService=async function(id,...rest){
-     activeTablet=String(id);
-     $('cgeTabletVisitsInline')?.remove();
-     const result=await old.call(this,id,...rest);
-     try{const items=await fetchVisits(id);insertTablet(String(id),items)}
-     catch(e){
-       const place=$('tabletDetailMsg');
-       if(place){const note=document.createElement('div');note.className='notice warn';note.textContent='Orari delle visite non disponibili: '+(e.message||String(e));place.append(note)}
-     }
-     return result;
-   };
+ if(typeof openTabletService==='function'){
+  const original=openTabletService;
+  openTabletService=async function(id,...args){
+   const token=++tabletActive;
+   el('cgeTabletVisitsInline')?.remove();
+   const ret=await original.call(this,id,...args);
+   try{
+    const r=await sb.from('servizi_giornalieri').select('appuntamenti_visite').eq('id',id).maybeSingle();
+    if(r.error)throw r.error;
+    if(token===tabletActive)showTablet(id,entries(r.data));
+   }catch(e){const area=el('tabletDetailMsg');if(area)area.textContent='Visite non disponibili: '+(e.message||String(e))}
+   return ret;
+  };
  }
 })();
