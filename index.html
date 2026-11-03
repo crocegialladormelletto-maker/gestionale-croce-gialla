@@ -2849,19 +2849,7 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>KM partenza</label><input id="tabletAdKmStart" type="number" min="0" step="1" inputmode="numeric"></div>
     <div class="field"><label>KM chiusura / rientro</label><input id="tabletAdKmClose" type="number" min="0" step="1" inputmode="numeric"></div>
    </div>
-   <div id="tabletAdPatientSection">
-    <h3>Dati anagrafici paziente</h3>
-    <div class="grid3">
-     <div class="field"><label>Nome *</label><input id="tabletAdFirst" maxlength="120"></div>
-     <div class="field"><label>Cognome *</label><input id="tabletAdLast" maxlength="120"></div>
-     <div class="field"><label>Codice fiscale</label><input id="tabletAdCf" maxlength="16" autocapitalize="characters"></div>
-     <div class="field"><label>Data di nascita</label><input id="tabletAdDob" type="date"></div>
-     <div class="field"><label>Telefono</label><input id="tabletAdPhone" maxlength="60" type="tel"></div>
-     <div class="field"><label>Indirizzo</label><input id="tabletAdAddress" maxlength="400" autocomplete="street-address"></div>
-     <div class="field"><label>E-mail</label><input id="tabletAdEmail" maxlength="254" type="email" autocomplete="email"></div>
-    </div>
-    <div class="muted" style="margin:6px 0 12px">I dati vengono registrati o aggiornati automaticamente nell’Anagrafica Pazienti quando crei il servizio.</div>
-   </div>
+   <div class="notice ok" style="margin:12px 0"><b>APERTURA RAPIDA:</b> crea il servizio con partenza, destinazione ed equipaggio. Non serve conoscere già il nome del paziente. Nel Foglio Viaggio registra <b>prima gli orari effettivi</b>, poi completa l’anagrafica e salva.</div>
    <h3>Equipaggio a bordo</h3>
    <div class="grid2">
     <div class="field"><label>Autista *</label><select id="tabletAdDriver" required><option value="">Caricamento nominativi…</option></select></div>
@@ -2870,6 +2858,19 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Secondo soccorritore (facoltativo)</label><select id="tabletAdSecond"><option value="">Caricamento nominativi…</option></select></div>
    </div>
    <div id="tabletCrewNamesMsg"></div>
+   <div id="tabletAdPatientSection">
+    <h3>Dati paziente · da completare durante il servizio</h3>
+    <div class="grid3">
+     <div class="field"><label>Nome (facoltativo all’apertura)</label><input id="tabletAdFirst" maxlength="120" placeholder="Da compilare quando noto"></div>
+     <div class="field"><label>Cognome (facoltativo all’apertura)</label><input id="tabletAdLast" maxlength="120" placeholder="Da compilare quando noto"></div>
+     <div class="field"><label>Codice fiscale</label><input id="tabletAdCf" maxlength="16" autocapitalize="characters"></div>
+     <div class="field"><label>Data di nascita</label><input id="tabletAdDob" type="date"></div>
+     <div class="field"><label>Telefono</label><input id="tabletAdPhone" maxlength="60" type="tel"></div>
+     <div class="field"><label>Indirizzo</label><input id="tabletAdAddress" maxlength="400" autocomplete="street-address"></div>
+     <div class="field"><label>E-mail</label><input id="tabletAdEmail" maxlength="254" type="email" autocomplete="email"></div>
+    </div>
+    <div class="muted" style="margin:6px 0 12px">Puoi lasciare vuoti nome e cognome all’apertura. Dopo la partenza completa i dati reali nel Foglio Viaggio, usando Salva dati; prima della chiusura saranno richiesti. Non usare nomi fittizi.</div>
+   </div>
    <h3>Tariffa e note</h3>
    <div class="grid2">
     <div class="field"><label>Tariffario</label><select id="tabletAdTariffGroup"><option value="">Nessuno / concordata</option></select></div>
@@ -2926,6 +2927,7 @@ Causale: numero preventivo</textarea>
     <div class="notice"><b>Sequenza operativa:</b> 1) Prendi in carico · 2) Svolgi il servizio compilando il Foglio Viaggio · 3) Chiudi servizio. Dopo la chiusura il servizio passa al gestionale principale per la Nota di Debito.</div>
     <div id="tabletSheetMsg"></div>
     <form id="tabletSheetForm">
+    <div class="notice ok" style="margin-bottom:10px"><b>1 · ORARI PRIMA DI TUTTO</b> — Registra subito la partenza e i successivi orari reali; premi <b>Salva dati</b> anche se il paziente non è ancora identificato. Compila nome e cognome più avanti, prima della chiusura.</div>
     <h3 class="tablet-section-title">Orari effettivi e percorrenza</h3>
     <div class="tablet-fields">
      <div class="field"><label id="tabletDepartureLabel">Partenza effettiva</label><input type="time" data-ts-field="ora_partenza_servizio"></div>
@@ -2987,7 +2989,7 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Indirizzo</label><input id="tabletPatientAddress" maxlength="400"></div>
      <div class="field"><label>E-mail</label><input id="tabletPatientEmail" type="email" maxlength="254"></div>
     </div>
-    <div id="tabletPatientIncomplete" class="notice warn hidden"><b>DATI PAZIENTE INCOMPLETI</b> · completa le informazioni disponibili durante il servizio.</div>
+    <div id="tabletPatientIncomplete" class="notice warn hidden"><b>DATI PAZIENTE DA COMPLETARE</b> · puoi registrare e salvare prima gli orari effettivi. Inserisci nome e cognome reali quando li conosci: sono necessari prima di chiudere il Foglio Viaggio.</div>
     <div class="actions" style="margin-top:12px">
      <button id="tabletPrivacyToggle" class="btn secondary" type="button">🔐 Privacy / dati paziente</button>
     </div>
@@ -12481,7 +12483,7 @@ function tabletUpdateImmediatePaymentDateVisibility(){
 function tabletApplyImmediateTypeRules(){
  const internal=$('tabletAdType').value==='Servizio interno';
  if($('tabletAdPatientSection'))$('tabletAdPatientSection').classList.toggle('hidden',internal);
- ['tabletAdFirst','tabletAdLast'].forEach(id=>{if($(id))$(id).required=!internal;});
+ ['tabletAdFirst','tabletAdLast'].forEach(id=>{if($(id))$(id).required=false;});
  if(internal){
   ['tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail'].forEach(id=>{if($(id))$(id).value='';});
  }
@@ -12513,7 +12515,6 @@ function tabletUpdateImmediateQuote(){
  const night=$('tabletAdNight').value==='true',manual=tabletMezzo==='08'?'':$('tabletAdAmount').value;
  const internal=$('tabletAdType').value==='Servizio interno';
  if(!internal){
-  if(!$('tabletAdFirst').value.trim()||!$('tabletAdLast').value.trim())return msg('tabletAdMsg','Inserisci nome e cognome del paziente.','warn');
   const cf=$('tabletAdCf')?.value.trim()||'';
   if(cf&&cf.length!==16)return msg('tabletAdMsg','Controlla il codice fiscale del paziente.','warn');
   if($('tabletAdEmail')&&!$('tabletAdEmail').checkValidity())return msg('tabletAdMsg','Controlla l’indirizzo e-mail del paziente.','warn');
@@ -12678,7 +12679,11 @@ async function tabletCreateImmediate(){
   tabletImmediateAutoKm=latestKm;
   return msg('tabletAdMsg','KM partenza aggiornati a '+latestKm.toLocaleString('it-IT')+' dall’ultimo foglio chiuso. Controlla e premi nuovamente «Crea servizio e Foglio Viaggio».','warn');
  }
- if(!confirm('Creare ORA un servizio non programmato per il mezzo '+tabletMezzo+' e il relativo Foglio Viaggio?'))return;
+ if($('tabletAdCf')?.value.trim() && $('tabletAdCf').value.trim().length!==16)
+  return msg('tabletAdMsg','Il codice fiscale, se inserito, deve avere 16 caratteri. Altrimenti lascialo vuoto e completalo dopo.','warn');
+ if($('tabletAdEmail')?.value.trim() && !$('tabletAdEmail').checkValidity())
+  return msg('tabletAdMsg','Controlla l’indirizzo email oppure compilalo successivamente.','warn');
+ if(!confirm('Aprire il Foglio Viaggio non programmato per il mezzo '+tabletMezzo+'? Il paziente può essere inserito dopo: una volta aperto registra subito gli orari effettivi.'))return;
  tabletBusy=true;msg('tabletAdMsg','Creazione servizio e Foglio Viaggio...');
  let created=null;
  let createdPayMode=null;
@@ -12780,7 +12785,7 @@ $('tabletImmediateToggle').onclick=async e=>{
  panel.classList.remove('hidden');
  button.textContent='✕ Chiudi nuovo servizio';
  button.setAttribute('aria-expanded','true');
- msg('tabletAdMsg','Nuovo servizio: modulo aperto. Compila i dati e premi «Crea servizio e Foglio Viaggio».','ok');
+ msg('tabletAdMsg','Compila prima luogo di partenza, destinazione ed equipaggio. Il paziente puoi inserirlo dopo, nel Foglio Viaggio.','ok');
  panel.scrollIntoView({behavior:'auto',block:'start'});
  let hasPreviousDraft=false;
  try{
