@@ -240,3 +240,94 @@ async function calOrdRemove(assignmentId,serviceId){
  }catch(e){msg('calMsg','Rimozione non riuscita: '+(e.message||String(e)),'err')}
  finally{calOrdBusy=false}
 }
+
+
+// Prenotazioni multiple: una richiesta, un servizio indipendente per ciascuna visita.
+// Il riferimento di gruppo non modifica fogli viaggio, numerazione o contabilita.
+(function(){
+  if(typeof document==='undefined')return;
+  const byId=id=>document.getElementById(id);
+  const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let saving=false;
+  const today=()=>new Date().toLocaleDateString('en-CA');
+  const row=(i,d='',h='09:00',dest='')=>'<div class="cge-multi-row" style="display:grid;grid-template-columns:1fr 1fr 2fr auto;gap:8px;align-items:end;margin:8px 0">'+
+   '<label>Data '+i+'<input type="date" required class="multi-date" min="'+today()+'" value="'+safe(d)+'"></label>'+
+   '<label>Ora visita<input type="time" required class="multi-time" value="'+safe(h)+'"></label>'+
+   '<label>Destinazione / reparto<input required maxlength="250" class="multi-dest" value="'+safe(dest)+'" placeholder="Ospedale e reparto"></label>'+
+   '<button type="button" class="btn secondary multi-remove">Rimuovi</button></div>';
+  function open(){
+   if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
+   byId('cgeMultiDialog')?.remove();
+   const dialog=document.createElement('dialog');dialog.id='cgeMultiDialog';
+   dialog.style.cssText='border:2px solid #e2bb00;border-radius:12px;max-width:870px;width:94%;max-height:90vh;overflow:auto;padding:22px;background:#fff;color:#153152;box-shadow:0 18px 55px #0005';
+   dialog.innerHTML='<form id="cgeMultiForm" style="display:grid;gap:10px">'+
+    '<h2 style="margin:0;color:#123b72">Prenotazioni multiple paziente</h2>'+
+    '<p class="muted">Inserisci il paziente una sola volta e aggiungi le singole visite. Ogni data crea un servizio separato nel Calendario servizi.</p>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+    '<label>Nome paziente<input name="nome" required maxlength="120"></label>'+
+    '<label>Cognome paziente<input name="cognome" required maxlength="120"></label>'+
+    '<label>Telefono<input name="telefono" type="tel" maxlength="50"></label>'+
+    '<label>Mezzo da programmare<select name="mezzo" required><option value="">Seleziona mezzo</option><option>06</option><option>07</option><option>08</option><option>09</option></select></label>'+
+    '<label>Luogo di partenza<input name="partenza" required maxlength="250" placeholder="Indirizzo carico paziente"></label>'+
+    '<label>Tipo servizio<select name="tipo"><option value="VISITA">Visita</option><option value="TRASPORTO SEMPLICE">Trasporto semplice</option><option value="TRASFERIMENTO">Trasferimento</option></select></label></div>'+
+    '<label>Note comuni (facoltative)<textarea name="note" rows="2" maxlength="1500"></textarea></label>'+
+    '<h3 style="margin:5px 0 0">Appuntamenti</h3><div id="cgeMultiRows">'+row(1,today())+row(2)+'</div>'+
+    '<div class="actions"><button type="button" class="btn secondary" id="cgeMultiAdd">+ Aggiungi visita</button></div>'+
+    '<div id="cgeMultiFeedback" role="status" aria-live="polite"></div>'+
+    '<div class="actions"><button type="submit" class="btn yellow" id="cgeMultiSave">Salva tutte le visite</button><button type="button" class="btn secondary" id="cgeMultiClose">Chiudi</button></div></form>';
+   document.body.append(dialog);
+   const rows=byId('cgeMultiRows'),feedback=byId('cgeMultiFeedback');
+   rows.onclick=e=>{if(e.target.closest('.multi-remove')&&rows.children.length>1){e.target.closest('.cge-multi-row').remove();}};
+   byId('cgeMultiAdd').onclick=()=>{
+    if(rows.children.length>=30)return feedback.textContent='Massimo 30 appuntamenti per richiesta.';
+    const div=document.createElement('div');div.innerHTML=row(rows.children.length+1);
+    rows.appendChild(div.firstElementChild);
+   };
+   byId('cgeMultiClose').onclick=()=>{if(!saving)dialog.close()};
+   dialog.addEventListener('close',()=>dialog.remove());
+   byId('cgeMultiForm').onsubmit=async e=>{
+    e.preventDefault();if(saving)return;
+    const form=e.currentTarget,fd=new FormData(form);
+    const visits=[...rows.querySelectorAll('.cge-multi-row')].map(x=>({
+     date:x.querySelector('.multi-date').value,
+     time:x.querySelector('.multi-time').value,
+     dest:x.querySelector('.multi-dest').value.trim()
+    }));
+    if(!visits.length||visits.some(v=>!v.date||!v.time||!v.dest))return feedback.textContent='Completa data, ora e destinazione per ogni visita.';
+    if(visits.some(v=>v.date<today()))return feedback.textContent='Non inserire appuntamenti nel passato.';
+    if(new Set(visits.map(v=>v.date+'|'+v.time+'|'+v.dest.toLowerCase())).size!==visits.length)
+     return feedback.textContent='Una visita risulta duplicata: correggi data, ora o destinazione.';
+    if(!confirm('Creare '+visits.length+' servizi distinti per '+fd.get('nome')+' '+fd.get('cognome')+'?'))return;
+    const group='MULTI-'+crypto.randomUUID();
+    const common={paziente_nome:String(fd.get('nome')).trim(),paziente_cognome:String(fd.get('cognome')).trim(),
+      telefono:String(fd.get('telefono')||'').trim()||null,mezzo:fd.get('mezzo'),tipo_servizio:fd.get('tipo'),
+      luogo_partenza:String(fd.get('partenza')).trim(),riferimento_richiesta:group,
+      note:String(fd.get('note')||'').trim()||null,stato:'DA ESEGUIRE',stato_gestionale:'DA ASSEGNARE',
+      equipaggio_minimo:fd.get('mezzo')==='06'?1:2};
+    const payload=visits.map(v=>({...common,data_servizio:v.date,ora_appuntamento_prevista:v.time,
+      ora_prevista:v.time,destinazione:v.dest}));
+    saving=true;byId('cgeMultiSave').disabled=true;feedback.textContent='Salvataggio in corso...';
+    try{
+     const result=await sb.from('servizi_giornalieri').insert(payload).select('id,data_servizio');
+     if(result.error)throw result.error;
+     if((result.data||[]).length!==payload.length)throw Error('Numero di servizi restituiti non corrispondente: verifica prima di riprovare.');
+     dialog.close();
+     if(typeof loadOperationalCalendar==='function')await loadOperationalCalendar();
+     if(typeof loadOrdinaryCalendar==='function')await loadOrdinaryCalendar();
+     if(typeof msg==='function'&&byId('calMsg'))msg('calMsg',visits.length+' visite create correttamente. Ogni servizio e modificabile singolarmente.','ok');
+    }catch(error){feedback.textContent='Salvataggio non riuscito: '+(error.message||String(error))+'. Nessun tentativo automatico di reinvio.';}
+    finally{saving=false;const btn=byId('cgeMultiSave');if(btn)btn.disabled=false;}
+   };
+   dialog.showModal();
+  }
+  function attach(){
+   const anchor=byId('calMsg');
+   if(!anchor||byId('cgeMultiOpen'))return;
+   const b=document.createElement('button');b.id='cgeMultiOpen';b.type='button';
+   b.className='btn yellow';b.style.margin='8px 8px 8px 0';
+   b.textContent='＋ Prenotazioni multiple paziente';b.onclick=open;
+   anchor.parentElement.insertBefore(b,anchor);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);
+  else attach();
+})();
