@@ -9218,7 +9218,7 @@ async function loadEmergenzaVol(){
  if(seq!==emgVolSeq)return;
  if(timeR.error)return msg('emgVolMsg',timeR.error.message,'err');
  if(r.error)return msg('emgVolMsg',r.error.message,'err');
- const times=new Map((timeR.data||[]).map(x=>[x.id,x]));
+ const times=new Map((timeR.data||[]).map(x=>[x.id,{ora_inizio_personale:x.ora_inizio,ora_fine_personale:x.ora_fine}]));
  emgVolRows=(r.data||[]).map(x=>({...x,...(times.get(x.id)||{})}));emgRenderMonth('Vol');msg('emgVolMsg','');
 }
 async function loadEmergenzaAdmin(){
@@ -9231,7 +9231,7 @@ async function loadEmergenzaAdmin(){
  if(seq!==emgAdminSeq)return;
  if(timeR.error)return msg('emgAdminMsg',timeR.error.message,'err');
  if(r.error)return msg('emgAdminMsg',r.error.message,'err');
- const times=new Map((timeR.data||[]).map(x=>[x.id,x]));
+ const times=new Map((timeR.data||[]).map(x=>[x.id,{ora_inizio_personale:x.ora_inizio,ora_fine_personale:x.ora_fine}]));
  emgAdminRows=(r.data||[]).map(x=>({...x,...(times.get(x.id)||{})}));emgRenderMonth('Admin');msg('emgAdminMsg','');
  await loadEmergenzaEligible();
 }
