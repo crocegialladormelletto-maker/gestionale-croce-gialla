@@ -4812,8 +4812,9 @@ async function loadTravelSheetDetail(id=currentFoglioId){
   $('fvKmStart').disabled=false;
   $('fvKmEnd').disabled=false;
  }
- if($('fvReceiptFile'))$('fvReceiptFile').disabled=closed;
- if($('fvReceiptUpload'))$('fvReceiptUpload').classList.toggle('hidden',closed);
+ // La ricevuta e' documentazione amministrativa integrabile anche dopo la chiusura.
+ if($('fvReceiptFile'))$('fvReceiptFile').disabled=false;
+ if($('fvReceiptUpload'))$('fvReceiptUpload').classList.remove('hidden');
  $('fvSave').classList.toggle('hidden',closed);
  $('fvSaveKmClosed').classList.toggle('hidden',!adminClosed118);
  $('fvCorrectAccounting').classList.toggle('hidden',!(prof?.ruolo==='AMMINISTRATORE'&&closed&&!is118));
