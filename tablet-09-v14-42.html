@@ -11898,6 +11898,31 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
  }
+ // Una scheda rimasta aperta durante una rettifica contabile puo avere un metodo
+ // vecchio. Non sovrascrivere mai un incasso gia registrato nel database.
+ if(!tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio)){
+  const paid=await sb.from('pagamenti_servizi')
+   .select('modalita,data_pagamento')
+   .eq('foglio_viaggio_id',tabletCurrentSheet.id)
+   .eq('stato','REGISTRATO')
+   .order('data_pagamento',{ascending:false})
+   .limit(1);
+  if(paid.error)return msg('tabletSheetMsg','Impossibile verificare il pagamento gia registrato: '+paid.error.message,'err'),false;
+  const recorded=paid.data?.[0];
+  if(recorded){
+   const recordedMode=String(recorded.modalita||'').trim().toUpperCase();
+   const displayedMode=String(row.modalita_pagamento||'').trim().toUpperCase();
+   if(displayedMode!==recordedMode){
+    row.modalita_pagamento=recordedMode;
+    const select=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
+    if(select)select.value=recordedMode;
+    msg('tabletSheetMsg','Metodo aggiornato dal pagamento gia registrato: '+recordedMode+'. Nessun nuovo incasso creato.','warn');
+   }
+   row.data_pagamento=recorded.data_pagamento||null;
+   const payDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
+   if(payDate)payDate.value=row.data_pagamento||'';
+  }
+ }
  if(tabletCurrentService && !tabletIs118Type(tabletCurrentService.tipo_servizio) && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno' && !isAssistanceManifestation(tabletCurrentService.tipo_servizio)){
   try{
    const sig=await tabletPrivacyUploadSignature();
