@@ -11892,6 +11892,7 @@ function tabletCalcSheet(){
 async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(!tabletCurrentSheet||tabletCurrentSheet.stato==='CHIUSO'||tabletBusy)return false;
  const row={};
+ let recordedPaymentMode=null;
  let privacySaveError=null;
  for(const el of document.querySelectorAll('#tabletSheetForm [data-ts-field]')){
   const name=el.dataset.tsField;
@@ -11912,6 +11913,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   const recorded=paid.data?.[0];
   if(recorded){
    const recordedMode=String(recorded.modalita||'').trim().toUpperCase();
+   recordedPaymentMode=recordedMode;
    const displayedMode=String(row.modalita_pagamento||'').trim().toUpperCase();
    if(displayedMode!==recordedMode){
     row.modalita_pagamento=recordedMode;
@@ -11984,6 +11986,13 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
   else if(!tabletIsAssistance) return msg('tabletSheetMsg','Indica l’importo base, anche 0,00 se non dovuto.','warn'),false;
  }
+ // Un pagamento REGISTRATO e' definitivo per il tablet: lascia intatti metodo e data.
+ // Non includere queste colonne nell'UPDATE, altrimenti il trigger anti-rettifica
+ // puo' interpretare il salvataggio operativo come una modifica contabile.
+ if(recordedPaymentMode){
+  delete row.modalita_pagamento;
+  delete row.data_pagamento;
+ }
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio,modalita_pagamento').maybeSingle();
@@ -11992,8 +12001,8 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   if(!tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio)){
    if(row.importo_inserito!==null&&row.importo_inserito!==undefined&&Number(r.data.importo_inserito)!==Number(row.importo_inserito))
     throw new Error('L’importo non è stato registrato nel database. Riapri il foglio e riprova; la chiusura è bloccata.');
-   if(String(r.data.modalita_pagamento||'').toUpperCase()!==String(row.modalita_pagamento||'').toUpperCase())
-    throw new Error('La modalità di pagamento non è stata registrata. Il foglio rimane aperto.');
+   if(String(r.data.modalita_pagamento||'').toUpperCase()!==String(recordedPaymentMode||row.modalita_pagamento||'').toUpperCase())
+    throw new Error('La modalità di pagamento non coincide con il pagamento registrato. Il foglio rimane aperto.');
   }
   tabletCurrentSheet={...tabletCurrentSheet,...row,...r.data};
   tabletCurrentSheet={...tabletCurrentSheet,...row};
