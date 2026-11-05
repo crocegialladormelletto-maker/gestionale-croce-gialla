@@ -2881,7 +2881,7 @@ Causale: numero preventivo</textarea>
     </div>
     <div id="tabletReceiptSection" class="section hidden" style="margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
      <h3 style="margin-top:0">📎 Ricevuta pagamento</h3>
-     <p class="muted"><b>OBBLIGATORIA per CONTANTI e POS.</b> Scatta una foto della ricevuta/scontrino oppure carica un PDF o un’immagine prima di chiudere il Foglio Viaggio.</p>
+     <p class="muted"><b>Ricevuta POS o contanti da conservare.</b> Puoi caricarla ora oppure successivamente dal gestionale, anche dopo la chiusura del Foglio Viaggio. La mancanza della ricevuta non blocca la chiusura.</p>
      <div class="actions" style="align-items:end">
       <div class="field" style="flex:1;min-width:240px"><label>Foto / PDF ricevuta</label><input id="tabletReceiptFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment"></div>
       <button id="tabletReceiptUpload" class="btn yellow" type="button">📤 Carica ricevuta</button>
@@ -12081,17 +12081,9 @@ async function tabletCloseSheet(){
    return msg('tabletSheetMsg','Firma privacy obbligatoria: fai firmare il paziente oppure seleziona “Impossibilitato a firmare” e indica la motivazione prima di chiudere il Foglio Viaggio.','warn');
   }
  }
- const payMode=String(tabletCurrentSheet?.modalita_pagamento||document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'').toUpperCase();
- if(!standalone118&&['CONTANTI','POS'].includes(payMode)){
-  let receiptCount=0;
-  try{receiptCount=await paymentReceiptCount(tabletCurrentSheet.id)}
-  catch(e){return msg('tabletSheetMsg','Impossibile verificare la ricevuta del pagamento: '+(e.message||String(e)),'err')}
-  if(receiptCount<1){
-   tabletToggleReceiptSection();
-   if($('tabletReceiptSection'))$('tabletReceiptSection').scrollIntoView({behavior:'smooth',block:'center'});
-   return msg('tabletReceiptMsg','Per pagamenti in '+payMode+' devi caricare almeno una ricevuta prima di chiudere il Foglio Viaggio.','warn');
-  }
- }
+ // La ricevuta POS/contanti e' un allegato documentale acquisibile dopo la chiusura.
+ // Il pagamento resta registrato e il foglio non deve restare aperto per mancanza dell'allegato.
+ // L'amministrazione puo' allegare successivamente dal dettaglio Foglio Viaggio.
  const confirmText=standalone118
   ?'Chiudere definitivamente il Foglio Viaggio 118? Verifica numero scheda 118, destinazione, equipaggio e KM rientro.'
   :'Chiudere il servizio? I dati del Foglio Viaggio verranno chiusi e il servizio passerà al gestionale per la gestione amministrativa.';
