@@ -11528,10 +11528,23 @@ async function startTabletArea(){
  $('tabletPricePanel').classList.add('hidden');$('tabletImmediatePanel').classList.add('hidden');
  // Il codice del mezzo è disponibile solo dopo l'accesso: controlla ora la bozza locale.
  tabletUpdateImmediateDraftButton();
- await tabletLoadCrewPeople();
- await tabletLoadTariffs();
- $('tabletDetail').classList.add('hidden');tabletCurrentService=null;tabletCurrentSheet=null;tabletSetListMode('week');await tabletRefreshList();
- tabletRefreshTimer=setInterval(tabletRefreshList,20000);
+ // Carica per prima cosa i servizi: nominativi e tariffari sono dati accessori.
+ // Non devono impedire l'accesso al tablet se una richiesta rimane bloccata.
+ $('tabletDetail').classList.add('hidden');tabletCurrentService=null;tabletCurrentSheet=null;tabletSetListMode('week');
+ const tabletStartupTimeout=ms=>new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo scaduto durante il caricamento dei servizi')),ms));
+ try{
+  await Promise.race([tabletRefreshList(),tabletStartupTimeout(15000)]);
+ }catch(e){
+  msg('tabletMsg','Impossibile completare il caricamento: '+(e.message||String(e))+'. Premi Aggiorna servizi per riprovare.','err');
+ }
+ tabletRefreshTimer=setInterval(()=>tabletRefreshList().catch(e=>msg('tabletMsg','Aggiornamento servizi non riuscito: '+(e.message||String(e)),'err')),20000);
+ Promise.allSettled([
+  Promise.race([tabletLoadCrewPeople(),tabletStartupTimeout(12000)]),
+  Promise.race([tabletLoadTariffs(),tabletStartupTimeout(12000)])
+ ]).then(results=>{
+  const failures=results.filter(x=>x.status==='rejected');
+  if(failures.length)msg('tabletCrewNamesMsg','Alcuni dati accessori non sono disponibili. I servizi restano consultabili; riapri il tablet per riprovare.','warn');
+ });
 }
 function stopTabletArea(){if(tabletRefreshTimer)clearInterval(tabletRefreshTimer);tabletRefreshTimer=null}
 function tabletReadOnlyField(label,value){return '<div class="field"><label>'+esc(label)+'</label><div class="notice" style="margin:2px 0">'+esc(value||'—')+'</div></div>'}
