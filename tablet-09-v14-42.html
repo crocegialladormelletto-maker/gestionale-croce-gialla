@@ -12076,7 +12076,9 @@ async function tabletCloseSheet(){
  tabletCurrentSheet={...tabletCurrentSheet,...refreshed.data};
  const closeType=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase();
  if(!standalone118&&!tabletIs118Type(closeType)&&!closeType.includes('SERVIZIO INTERNO')){
-  const chosen=String(document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||tabletCurrentSheet.modalita_pagamento||'').trim().toUpperCase();
+  const chosen=String(tabletCurrentSheet.modalita_pagamento||'').trim().toUpperCase();
+  const paymentSelect=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
+  if(paymentSelect&&paymentSelect.value!==chosen)paymentSelect.value=chosen;
   if(Number(tabletCurrentSheet.totale_servizio||0)>0&&!chosen)return msg('tabletSheetMsg','Seleziona il metodo di pagamento prima di chiudere.','warn');
   if(chosen&&chosen!==String(tabletCurrentSheet.modalita_pagamento||'').trim().toUpperCase())return msg('tabletSheetMsg','Il metodo di pagamento non è stato salvato: usa Salva dati e riprova.','err');
  }
@@ -12100,8 +12102,10 @@ async function tabletCloseSheet(){
  if(!confirm(confirmText))return;
  tabletBusy=true;msg('tabletSheetMsg',standalone118?'Chiusura Foglio 118 in corso...':'Chiusura servizio in corso...');
  try{
-  const paymentMode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||tabletCurrentSheet.modalita_pagamento||null;
-  const paymentDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||tabletCurrentSheet.data_pagamento||(['CONTANTI','POS'].includes(String(paymentMode).toUpperCase())?todaySafe():null);
+  // Il database e' autorevole: la select del tablet puo' contenere un valore obsoleto.
+  // Non inviare mai un metodo diverso da quello appena rilevato dal foglio persistito.
+  const paymentMode=tabletCurrentSheet.modalita_pagamento||null;
+  const paymentDate=tabletCurrentSheet.data_pagamento||(['CONTANTI','POS'].includes(String(paymentMode).toUpperCase())?todaySafe():null);
   const r=await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{p_foglio:tabletCurrentSheet.id,p_modalita:paymentMode,p_data:paymentDate});
   if(r.error)throw r.error;
   tabletCurrentSheet={...tabletCurrentSheet,...(r.data||{}),stato:'CHIUSO'};
