@@ -81,6 +81,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .riepStatus.bad{background:#fff0ed;color:#a32424}
 .riepStatus.wait{background:#fff3d6;color:#795000}
 .riepRowBad{background:#fffafa}
+.riepWeekly{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:10px;margin:12px 0}
+.riepWeekCard{background:#fff;border:1px solid #cbd8e8;border-radius:12px;padding:13px}
+.riepWeekCard b{display:block;margin:0 0 7px}
+.riepWeekCard .riepSaldo{font-size:21px;font-weight:900;color:#153f73}
+.riepWeekCard .riepSaldo.negative{color:#b42318}
+.riepWeekCard .riepSaldo.positive{color:#157347}
+.riepWeekCard small{display:block;color:#475569;line-height:1.5;margin-top:7px}
 .riepHint{font-size:13px;color:#56657e;line-height:1.6}
 @media(max-width:900px){.riepFilters{grid-template-columns:1fr 1fr}.riepStats{grid-template-columns:1fr 1fr}}
 @media(max-width:580px){.riepFilters{grid-template-columns:1fr}.riepStats{grid-template-columns:1fr 1fr}}
@@ -201,7 +208,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
    <div class="riepStat"><small>Anomalie da verificare</small><strong id="riepAlerts">—</strong></div>
    <div class="riepStat"><small>Pause registrate</small><strong id="riepBreaks">—</strong></div>
   </div>
-  <div id="riepMessage" class="notice">Scegli un periodo e premi Aggiorna.</div>
+  <div id="riepMessage" class="notice">Scegli un periodo e premi Aggiorna.</div><div id="riepWeekly" class="riepWeekly"></div>
   <div class="riepTableBox"><table class="riepTable" id="riepTable"><thead><tr><th>Data</th><th>Dipendente</th><th>Turno previsto</th><th>Entrata</th><th>Uscita</th><th>Pause</th><th>Ore effettive</th><th>Esito</th><th>Controllo</th></tr></thead><tbody id="riepBody"></tbody></table></div>
   <p class="riepHint">Le ore effettive sono calcolate dalle coppie entrata/uscita complete; le pause sono mostrate separatamente e non vengono sottratte automaticamente. Ritardi e assenze sono segnalazioni da verificare, non sanzioni. Per correggere una timbratura usa il Registro storico, che conserva il motivo e l'audit.</p>
  </div>
@@ -818,7 +825,7 @@ async function renderRiepilogo(){
    else if(e.tipo==='FINE_PAUSA'){const p=pauseOpen.get(b);if(p){ensure(b,riepDay(p.evento_at)).pause.push({start:p,end:e});pauseOpen.delete(b)}else ensure(b,riepDay(e.evento_at)).pause.push({start:null,end:e})}
   }
   for(const p of pauseOpen.values())ensure(String(p.badge),riepDay(p.evento_at)).pause.push({start:p,end:null});
-  const today=riepDay(new Date()),rows=[];let hrs=0,expect=0,alertCount=0,breakCount=0;
+  const today=riepDay(new Date()),rows=[];let hrs=0,expect=0,alertCount=0,breakCount=0;const weekStats=new Map();
   for(let day=new Date(range.start+'T12:00:00');riepDate(day)<=range.end;day.setDate(day.getDate()+1)){
    const dayKey=riepDate(day);
    for(const personRow of people){
@@ -829,6 +836,11 @@ async function renderRiepilogo(){
     if(!t&&!primaryAbs&&!d.items.length&&!d.pause.length&&!d.stray.length)continue;
     const mins=d.items.reduce((sum,x)=>sum+(x.end?riepDur(x.start.evento_at,x.end.evento_at):0),0);
     const plan=riepPlannedMin(t);hrs+=mins;expect+=plan;
+    const monday=riepDate(riepMonday(new Date(dayKey+'T12:00:00'))),wk=b+'|'+monday;
+    if(!weekStats.has(wk))weekStats.set(wk,{badge:b,name:personRow.nome_completo,monday,worked:0,scheduled:0,justified:0,incomplete:false,days:new Set()});
+    const ws=weekStats.get(wk);ws.worked+=mins;ws.scheduled+=plan;ws.days.add(dayKey);
+    const justified=primaryAbs&&String(primaryAbs.causale||'').toUpperCase()!=='RIPOSO'&&!d.items.some(x=>x.end)?Math.min(plan,Math.max(0,Number(primaryAbs.ore||0)*60)):0;
+    ws.justified+=justified;ws.incomplete=ws.incomplete||d.items.some(x=>!x.end)||d.stray.length>0;
     let pauses=d.pause.map(x=>x.start&&x.end?time(x.start.evento_at)+'–'+time(x.end.evento_at)+' ('+fmtMin(riepDur(x.start.evento_at,x.end.evento_at))+')':(x.start?'Pausa aperta '+time(x.start.evento_at):'Fine senza inizio'));
     breakCount+=d.pause.filter(x=>x.start&&x.end).length;
     const labels=[],nowOrFuture=dayKey>=today;
@@ -854,11 +866,27 @@ async function renderRiepilogo(){
   const span=range.start===range.end?range.start:range.start+' → '+range.end;
   $('riepPeriod').textContent='Periodo visualizzato: '+span+' · '+(only?person(only):'tutti i dipendenti')+' · settimana da lunedì a domenica.';
   $('riepHours').textContent=fmtMin(hrs);$('riepPlanned').textContent=fmtMin(expect);$('riepAlerts').textContent=String(alertCount);$('riepBreaks').textContent=String(breakCount);
+  // Saldi settimanali informativi: non cambiano registrazioni o trattamento retributivo.
+  const signed=m=>(m<0?'−':m>0?'+':'')+fmtMin(Math.abs(Math.round(m)));
+  const summaries=[...weekStats.values()].sort((a,b)=>a.monday.localeCompare(b.monday)||a.name.localeCompare(b.name));
+  $('riepWeekly').innerHTML=summaries.map(w=>{
+   const fullWeekEnd=new Date(w.monday+'T12:00:00');fullWeekEnd.setDate(fullWeekEnd.getDate()+6);
+   const complete=riepDate(fullWeekEnd)<today&&!w.incomplete&&w.days.size===7;
+   const target=String(w.name||'').toUpperCase().includes('BRUGHERA')?1800:2280;
+   const saldo=w.worked-target;
+   const remaining=Math.max(0,target-w.justified-w.worked);
+   const label=complete?(remaining===0?'Ore quadrate (con eventuali assenze giustificate)':'Differenza da verificare'):'Settimana non conclusa o timbrature incomplete';
+   return '<div class="riepWeekCard"><b>'+esc(w.name)+'</b><small>Settimana dal '+esc(new Date(w.monday+'T12:00:00').toLocaleDateString('it-IT'))+'</small>'+
+    '<div class="riepSaldo '+(complete?(saldo<0?'negative':saldo>0?'positive':''):'')+'">'+(complete?'Saldo '+signed(saldo):'Parziale '+signed(saldo))+'</div>'+
+    '<small>Ore lavorate: '+fmtMin(w.worked)+' · Ore settimanali: '+fmtMin(target)+(w.justified?' · Assenze registrate: '+fmtMin(w.justified):'')+'</small>'+
+    '<small>'+esc(label)+(complete&&w.justified?' · Residuo considerando le assenze: '+fmtMin(remaining):'')+'</small></div>';
+  }).join('');
+  if(!summaries.length)$('riepWeekly').innerHTML='';
   $('riepBody').innerHTML=rows.map(r=>'<tr'+(r.bad?' class="riepRowBad"':'')+'><td>'+esc(new Date(r.day+'T12:00:00').toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'}))+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.expected)+'</td><td>'+esc(r.starts)+'</td><td>'+esc(r.ends)+'</td><td>'+esc(r.pauses)+'</td><td><b>'+esc(r.worked)+'</b></td><td><span class="riepStatus '+(r.bad?'bad':r.waiting?'wait':'')+'">'+esc(r.status)+'</span></td><td><button class="secondary mini riepGo" type="button" data-badge="'+esc(r.badge)+'" data-day="'+esc(r.day)+'">Registro</button></td></tr>').join('');
   if(!rows.length)$('riepBody').innerHTML='<tr><td colspan="9">Nessun turno o timbratura per il periodo scelto.</td></tr>';
   msg('riepMessage',rows.length?rows.length+' righe visualizzate. '+(alertCount?alertCount+' anomalie da verificare.':'Nessuna anomalia nel confronto.'):'Nessun dato da visualizzare.',alertCount?'warn':'ok');
   document.querySelectorAll('.riepGo').forEach(b=>b.onclick=()=>{const d=b.dataset.day;$('filterEmp').value=b.dataset.badge;$('month').value=d.slice(0,7);loadData().then(()=>showPage('storico'))});
- }catch(e){msg('riepMessage','Impossibile caricare il riepilogo: '+(e.message||String(e)),'err');$('riepBody').innerHTML=''}
+ }catch(e){msg('riepMessage','Impossibile caricare il riepilogo: '+(e.message||String(e)),'err');$('riepBody').innerHTML='';$('riepWeekly').innerHTML=''}
  finally{if(seq===riepilogoSeq)refresh.disabled=false}
 }
 function initRiepilogo(){
