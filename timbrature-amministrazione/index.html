@@ -783,6 +783,18 @@ async function renderRiepilogo(){
   const uniq=(arr)=>[...new Map(arr.map(x=>[x.id||String(x.badge)+'|'+String(x.evento_at)+'|'+x.tipo,x])).values()];
   const allContext=uniq([...context,...extra.flatMap(r=>r.context||r.events||[])]);
   const allPauses=uniq([...pauseEvents,...extra.flatMap(r=>r.pauseEvents||[])]);
+  const allAbsences=uniq([...absences,...extra.flatMap(r=>r.absences||[])]);
+  const absMap=new Map();
+  for(const a of allAbsences){
+   const from=String(a.data_dal||'').slice(0,10),to=String(a.data_al||'').slice(0,10);
+   if(!from||!to)continue;
+   const begin=new Date(from+'T12:00:00'),last=new Date(to+'T12:00:00');
+   for(let d=new Date(begin),i=0;d<=last&&i<370;d.setDate(d.getDate()+1),i++){
+    const key=String(a.badge)+'|'+riepDate(d);
+    if(!absMap.has(key))absMap.set(key,[]);
+    if(!absMap.get(key).some(x=>x.id===a.id))absMap.get(key).push(a);
+   }
+  }
   const planned=new Map(schedules.filter(t=>t.giorno>=range.start&&t.giorno<=range.end).map(t=>[String(t.badge)+'|'+t.giorno,t]));
   const ev=allContext.filter(e=>!e.eliminato_at).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
   const pairs=new Map(),entry=new Map();
@@ -811,8 +823,10 @@ async function renderRiepilogo(){
    const dayKey=riepDate(day);
    for(const personRow of people){
     const b=String(personRow.badge);if(only&&only!==b)continue;
-    const t=planned.get(b+'|'+dayKey),d=pairs.get(b+'|'+dayKey)||{items:[],pause:[],stray:[]};
-    if(!t&&!d.items.length&&!d.pause.length&&!d.stray.length)continue;
+    const key=b+'|'+dayKey,t=planned.get(key),d=pairs.get(key)||{items:[],pause:[],stray:[]};
+    const dayAbs=absMap.get(key)||[],effectiveAbs=dayAbs.filter(x=>String(x.causale||'').toUpperCase()!=='RIPOSO');
+    const primaryAbs=effectiveAbs[0]||dayAbs[0]||null;
+    if(!t&&!primaryAbs&&!d.items.length&&!d.pause.length&&!d.stray.length)continue;
     const mins=d.items.reduce((sum,x)=>sum+(x.end?riepDur(x.start.evento_at,x.end.evento_at):0),0);
     const plan=riepPlannedMin(t);hrs+=mins;expect+=plan;
     let pauses=d.pause.map(x=>x.start&&x.end?time(x.start.evento_at)+'–'+time(x.end.evento_at)+' ('+fmtMin(riepDur(x.start.evento_at,x.end.evento_at))+')':(x.start?'Pausa aperta '+time(x.start.evento_at):'Fine senza inizio'));
@@ -821,17 +835,19 @@ async function renderRiepilogo(){
     if(d.items.some(x=>!x.end)&&dayKey<today)labels.push('Uscita mancante');
     if(d.stray.length)labels.push('Uscita senza entrata');
     if(d.pause.some(x=>!x.start||!x.end)&&dayKey<today)labels.push('Pausa incompleta');
-    if(t&&!t.riposo&&!t.assente&&plan>0&&!d.items.length&&dayKey<today)labels.push('Timbrature mancanti');
+    if(t&&!t.riposo&&!t.assente&&plan>0&&!primaryAbs&&!d.items.length&&dayKey<today)labels.push('Timbrature mancanti');
+    if(dayAbs.length>1&&new Set(dayAbs.map(x=>String(x.causale||'').toUpperCase())).size>1)labels.push('Causali sovrapposte: '+dayAbs.map(x=>x.causale).join(' / '));
     if(t&&!t.riposo&&!t.assente&&d.items.length&&t.inizio){
      const actual=d.items[0].start,localTime=new Date(actual.evento_at).toLocaleTimeString('en-GB',{timeZone:'Europe/Rome',hour:'2-digit',minute:'2-digit',hour12:false});
      const plannedStart=String(t.inizio).slice(0,5);
      if(localTime>plannedStart&&dayKey<=today)labels.push('Ritardo '+(function(){const a=localTime.split(':').map(Number),p=plannedStart.split(':').map(Number);return fmtMin(a[0]*60+a[1]-p[0]*60-p[1])})());
     }
     if(labels.length)alertCount+=labels.length;
-    const expectedLabel=t?(t.riposo?'Riposo':t.assente?'Assenza'+(t.causale?' · '+t.causale:''):t.inizio&&t.fine?String(t.inizio).slice(0,5)+'–'+String(t.fine).slice(0,5):'Non indicato'):'Non programmato';
+    const absenceLabel=primaryAbs?String(primaryAbs.causale||'ASSENZA').toUpperCase()+(primaryAbs.ore!=null?' ('+Number(primaryAbs.ore).toLocaleString('it-IT',{maximumFractionDigits:2})+' h)':''):'';
+    const expectedLabel=primaryAbs?absenceLabel:t?(t.riposo?'Riposo':t.assente?'Assenza'+(t.causale?' · '+t.causale:''):t.inizio&&t.fine?String(t.inizio).slice(0,5)+'–'+String(t.fine).slice(0,5):'Non indicato'):'Non programmato';
     const inText=d.items.map(x=>time(x.start.evento_at)).join(', ')||'—';
     const outText=d.items.map(x=>x.end?time(x.end.evento_at):'—').join(', ')||'—';
-    let status=labels.length?labels.join(' · '):d.items.length?(d.items.some(x=>!x.end)?'In servizio':'Regolare'):(t?.riposo?'Riposo':t?.assente?'Assenza':nowOrFuture?'Da effettuare':'Nessuna timbratura');
+    let status=labels.length?labels.join(' · '):d.items.length?(d.items.some(x=>!x.end)?'In servizio':'Regolare'):(primaryAbs?String(primaryAbs.causale||'Assenza').toUpperCase():t?.riposo?'Riposo':t?.assente?'Assenza':nowOrFuture?'Da effettuare':'Nessuna timbratura');
     rows.push({day:dayKey,badge:b,name:personRow.nome_completo,expected:expectedLabel,starts:inText,ends:outText,pauses:pauses.join('; ')||'—',worked:d.items.some(x=>x.end)?fmtMin(mins):d.items.length?'In corso':'—',status,bad:labels.length>0,waiting:status==='In servizio'||status==='Da effettuare'});
    }
   }
