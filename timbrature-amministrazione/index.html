@@ -689,7 +689,7 @@ function printRows(selectedBadge='',selectedMonth=''){
  let h='<table class="printTable"><thead><tr><th>Data</th><th>Entrata</th><th>Uscita</th><th>Pausa registrata</th><th>Totale ore giornaliere</th><th>Supplementari</th><th>Straordinari</th></tr></thead><tbody>';
  for(const d of Object.keys(by).sort()){
   const v=by[d],dateLabel=new Date(d+'T12:00:00').toLocaleDateString('it-IT');
-  const sundayWork=(isMartinoliBadge(selectedBadge)||String(person(selectedBadge)||'').toUpperCase().includes('BRUGHERA'))&&new Date(d+'T12:00:00').getDay()===0&&v.totalMin>0;
+  const sundayWork=String(person(selectedBadge)||'').toUpperCase().includes('BRUGHERA')&&new Date(d+'T12:00:00').getDay()===0&&v.totalMin>0;
   let overtime=0,supplementary=0,ordinary=v.totalMin;
   if(target!=null){
    if(selectedBadge&&(isMartinoliBadge(selectedBadge)||(/BRUGHERA|FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase())))){
