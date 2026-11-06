@@ -140,8 +140,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <section id="page-ccnl" class="adminPage"><div class="pageHead"><div><h2>📘 Riferimenti CCNL ANPAS–Misericordie</h2><div class="muted">Scheda di consultazione amministrativa · livello C1</div></div></div>
 <div class="card"><h3>Contratti applicati</h3>
 <table><thead><tr><th>Dipendente</th><th>Livello</th><th>Orario ordinario</th><th>Riposo ordinario</th></tr></thead><tbody>
-<tr><td>Andrea Martinoli</td><td>C1</td><td>38 ore/settimana · 6 ore e 20 minuti lun–sab</td><td>Domenica</td></tr>
-<tr><td>Francesca Brughera</td><td>C1</td><td>30 ore/settimana · 5 ore lun–sab (part-time)</td><td>Domenica</td></tr><tr><td>Greta Farinaccio (dal 01/11/2026)</td><td>B1 · Soccorritore</td><td>30 ore/settimana (distribuzione giornaliera da confermare)</td><td>Da confermare</td></tr></tbody></table>
+<tr><td>Andrea Martinoli</td><td>C1</td><td>38 ore/settimana · 7 ore lun–mar; mercoledì riposo; 6 ore gio–dom</td><td>Mercoledì</td></tr>
+<tr><td>Francesca Brughera</td><td>C1</td><td>30 ore/settimana · 5 ore lun–sab (part-time)</td><td>Domenica</td></tr><tr><td>Greta Farinaccio (dal 01/11/2026)</td><td>B1 · Soccorritore</td><td>38 ore/settimana · 7 ore lun–mar; giovedì riposo; 6 ore mer e ven–dom</td><td>Giovedì</td></tr></tbody></table>
 <h3>Articoli e disposizioni da consultare</h3>
 <ul>
 <li><b>Art. 53</b> – Riferimenti alla retribuzione oraria e alle basi di calcolo</li>
@@ -551,9 +551,9 @@ function nightExit(e,source=context){if(!e||e.tipo!=='USCITA')return false;const
 function dailyTargetMinutes(badge){
  const n=String(person(badge)||'').trim().toUpperCase().replace(/\s+/g,' ');
  // Riconoscimento robusto anche se l'anagrafica è salvata come "Andrea Martinoli" o "Francesca Brughera".
- if(n.includes('MARTINOLI')&&n.includes('ANDREA'))return 380; // 6 ore e 20 minuti
+ if(n.includes('MARTINOLI')&&n.includes('ANDREA'))return 360; // soglia giornaliera indicativa; il contratto è 38 ore settimanali
  if(n.includes('BRUGHERA')&&n.includes('FRANCESCA'))return 300; // 5 ore
- if(n.includes('FARINACCIO')&&n.includes('GRETA'))return 300; // soglia di visualizzazione; articolazione giornaliera da confermare
+ if(n.includes('FARINACCIO')&&n.includes('GRETA'))return 360; // soglia giornaliera indicativa; il contratto è 38 ore settimanali
  return null;
 }
 // Prospetto automatico CCNL art.55/57: minuti effettivi, settimana lun-dom, fuso italiano.
@@ -694,7 +694,7 @@ function printRows(selectedBadge='',selectedMonth=''){
   if(target!=null){
    if(selectedBadge&&(isMartinoliBadge(selectedBadge)||(/BRUGHERA|FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase())))){
     const week=weekKey(d),before=weeklyRunning[week]||0,after=before+v.totalMin;
-    if(isMartinoliBadge(selectedBadge)){
+    if(isMartinoliBadge(selectedBadge)||String(person(selectedBadge)||'').toUpperCase().includes('FARINACCIO')){
      overtime=Math.max(0,after-2280)-Math.max(0,before-2280);
     }else{
      supplementary=Math.max(0,Math.min(after,2280)-1800)-Math.max(0,Math.min(before,2280)-1800);
@@ -724,7 +724,7 @@ function printRows(selectedBadge='',selectedMonth=''){
  h+='</tbody>';
  if(selectedBadge&&target!=null){
   h+='<tfoot><tr><th colspan="4">TOTALI MESE</th><th>'+fmtMin(totalWorked)+'</th><th>'+fmtMin(totalSupplementary)+'</th><th>'+fmtMin(totalOvertime)+'</th></tr>';
-  h+='<tr><td colspan="7"><b>Riferimento contrattuale:</b> '+(isMartinoliBadge(selectedBadge)?'38:00 settimanali (6:20 lun–sab; domenica riposo)':(/BRUGHERA|FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase()))?(/FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase())?'30:00 settimanali · B1 Soccorritore · dal 01/11/2026':'30:00 settimanali (5:00 lun–sab; domenica riposo)'):'giornaliero '+fmtMin(target))+' · <b>Ore ordinarie lavorate:</b> '+fmtMin(totalOrdinary)+' · <b>Ore supplementari:</b> '+fmtMin(totalSupplementary)+' · <b>Ore straordinarie:</b> '+fmtMin(totalOvertime)+'</td></tr></tfoot>';
+  h+='<tr><td colspan="7"><b>Riferimento contrattuale:</b> '+(isMartinoliBadge(selectedBadge)?'38:00 settimanali (7:00 lun–mar; mer riposo; 6:00 gio–dom)':(/BRUGHERA|FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase()))?(/FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase())?'38:00 settimanali (7:00 lun–mar; gio riposo; 6:00 mer e ven–dom) · B1 Soccorritore · dal 01/11/2026':'30:00 settimanali (5:00 lun–sab; domenica riposo)'):'giornaliero '+fmtMin(target))+' · <b>Ore ordinarie lavorate:</b> '+fmtMin(totalOrdinary)+' · <b>Ore supplementari:</b> '+fmtMin(totalSupplementary)+' · <b>Ore straordinarie:</b> '+fmtMin(totalOvertime)+'</td></tr></tfoot>';
  }
  return h+'</table>'+ccnlPremiumReport(selectedBadge,selectedMonth)
 }
