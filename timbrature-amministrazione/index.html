@@ -776,10 +776,15 @@ async function renderRiepilogo(){
  const refresh=$('riepRefresh');refresh.disabled=true;
  msg('riepMessage','Lettura timbrature e turni programmati...');
  try{
+  const monthsNeeded=[...new Set([range.start.slice(0,7),range.end.slice(0,7)])];
+  const extra=await Promise.all(monthsNeeded.filter(m=>m!==$('month').value).map(m=>api({action:'data',badge:null,month:m})));
   const schedules=await riepLoadSchedules(range.start,range.end);
   if(seq!==riepilogoSeq)return;
+  const uniq=(arr)=>[...new Map(arr.map(x=>[x.id||String(x.badge)+'|'+String(x.evento_at)+'|'+x.tipo,x])).values()];
+  const allContext=uniq([...context,...extra.flatMap(r=>r.context||r.events||[])]);
+  const allPauses=uniq([...pauseEvents,...extra.flatMap(r=>r.pauseEvents||[])]);
   const planned=new Map(schedules.filter(t=>t.giorno>=range.start&&t.giorno<=range.end).map(t=>[String(t.badge)+'|'+t.giorno,t]));
-  const ev=context.filter(e=>!e.eliminato_at).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+  const ev=allContext.filter(e=>!e.eliminato_at).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
   const pairs=new Map(),entry=new Map();
   const ensure=(badge,day)=>{const key=String(badge)+'|'+day;if(!pairs.has(key))pairs.set(key,{items:[],pause:[],stray:[]});return pairs.get(key)};
   for(const e of ev){
@@ -795,7 +800,7 @@ async function renderRiepilogo(){
   }
   for(const e of entry.values())ensure(String(e.badge),riepDay(e.evento_at)).items.push({start:e,end:null});
   const pauseOpen=new Map();
-  for(const e of [...pauseEvents].sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at))){
+  for(const e of [...allPauses].sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at))){
    const b=String(e.badge);
    if(e.tipo==='INIZIO_PAUSA'){if(pauseOpen.has(b)){const p=pauseOpen.get(b);ensure(b,riepDay(p.evento_at)).pause.push({start:p,end:null})}pauseOpen.set(b,e)}
    else if(e.tipo==='FINE_PAUSA'){const p=pauseOpen.get(b);if(p){ensure(b,riepDay(p.evento_at)).pause.push({start:p,end:e});pauseOpen.delete(b)}else ensure(b,riepDay(e.evento_at)).pause.push({start:null,end:e})}
