@@ -64,6 +64,26 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:600px){.grid,.grid4{grid-template-columns:1fr}}
 @media print{@page{size:A4 portrait;margin:10mm 10mm}body.printingRegister .printTable{width:100%;font-size:10px;margin-top:6px;table-layout:auto}body.printingRegister .printTable th,body.printingRegister .printTable td{padding:4px 5px;line-height:1.2}body.printingRegister .printBrandRow{margin-bottom:4px}body.printingRegister .printBrandRow img{width:48px;height:48px}body.printingRegister .printBrandText .line1{font-size:15px}body.printingRegister .printBrandMonth{margin:3px 0 5px}body.printingRegister .printTable tr{break-inside:avoid;page-break-inside:avoid}body.printingRegister .printTable tfoot{break-inside:avoid;page-break-inside:avoid}}
 @media print{header,.noPrint,#loginBox{display:none!important}.printOnly{display:block}.printClosedStamp{display:block}.printBrand{display:block!important}.wrap{max-width:none;margin:0;padding:0}.card{box-shadow:none;border:0;padding:0}.printTable th,.printTable td{border:1px solid #333;padding:7px}.printTable th{background:#eee!important}body.printingRegister .adminPage{display:none!important}body.printingRegister #page-storico{display:block!important}body.printingRegister #page-storico .card{display:block!important}body.printingRegister #page-storico .card.noPrint{display:none!important}.printTable tfoot th,.printTable tfoot td{font-weight:900;background:#f3f6fa!important}.printTable tfoot tr:last-child td{text-align:center;font-size:12px}}
+
+/* Riepilogo operativo a video */
+.sideBtn[data-page="controlli"]{background:#126d89}
+.riepFilters{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end}
+.riepFilters label{margin-top:0}
+.riepFilters button{height:45px}
+.riepStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:16px 0}
+.riepStat{border:1px solid #cad8e9;border-radius:12px;background:#f5f9ff;padding:14px}
+.riepStat small{display:block;color:#475569;font-weight:700}
+.riepStat strong{display:block;font-size:25px;margin-top:6px;color:#12375d}
+.riepTableBox{overflow:auto}
+.riepTable{min-width:870px}
+.riepTable td,.riepTable th{padding:11px 9px}
+.riepStatus{display:inline-block;font-size:12px;font-weight:800;padding:5px 8px;border-radius:8px;background:#e8f7ee;color:#14532d}
+.riepStatus.bad{background:#fff0ed;color:#a32424}
+.riepStatus.wait{background:#fff3d6;color:#795000}
+.riepRowBad{background:#fffafa}
+.riepHint{font-size:13px;color:#56657e;line-height:1.6}
+@media(max-width:900px){.riepFilters{grid-template-columns:1fr 1fr}.riepStats{grid-template-columns:1fr 1fr}}
+@media(max-width:580px){.riepFilters{grid-template-columns:1fr}.riepStats{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -101,6 +121,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button class="sideBtn" data-page="storico">📚 <span class="sideLabel">Registro storico</span></button>
 <button class="sideBtn" data-page="anomalie">⚠️ <span class="sideLabel">Anomalie</span><span id="anomalyBadge" class="menuBadge okBadge">0</span></button>
 <button class="sideBtn" data-page="riepiloghi">📊 Riepiloghi mensili</button>
+<button class="sideBtn" data-page="controlli">🔎 <span class="sideLabel">Riepilogo e controlli</span></button>
 <button class="sideBtn" type="button" id="openEmployeeShifts">📅 <span class="sideLabel">Turni Dipendenti</span></button>
 <button class="sideBtn" data-page="impegni">📌 <span class="sideLabel">Impegni / Assenze programmati</span></button>
 <button class="sideBtn" data-page="causali">📅 Causali / Assenze</button>
@@ -162,6 +183,29 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <h3>Riepilogo mensile dipendenti</h3>
 <div id="monthlySummary"></div>
 </div></section>
+
+
+<section id="page-controlli" class="adminPage">
+ <div class="pageHead"><div><h2>🔎 Riepilogo e controlli</h2><div class="muted">Timbrature effettive, pause e turni previsti · consultazione a video senza stampa</div></div></div>
+ <div class="card noPrint">
+  <div class="riepFilters">
+   <div><label for="riepEmp">Dipendente</label><select id="riepEmp"><option value="">Tutti i dipendenti</option></select></div>
+   <div><label for="riepView">Periodo</label><select id="riepView"><option value="day">Giorno</option><option value="week" selected>Settimana lun–dom</option><option value="month">Mese</option></select></div>
+   <div><label for="riepDate">Data di riferimento</label><input type="date" id="riepDate" min="2026-09-01"></div>
+   <button class="primary" id="riepRefresh" type="button">↻ Aggiorna</button>
+  </div>
+  <p class="riepHint" id="riepPeriod"></p>
+  <div class="riepStats">
+   <div class="riepStat"><small>Ore timbrate complete</small><strong id="riepHours">—</strong></div>
+   <div class="riepStat"><small>Ore programmate</small><strong id="riepPlanned">—</strong></div>
+   <div class="riepStat"><small>Anomalie da verificare</small><strong id="riepAlerts">—</strong></div>
+   <div class="riepStat"><small>Pause registrate</small><strong id="riepBreaks">—</strong></div>
+  </div>
+  <div id="riepMessage" class="notice">Scegli un periodo e premi Aggiorna.</div>
+  <div class="riepTableBox"><table class="riepTable" id="riepTable"><thead><tr><th>Data</th><th>Dipendente</th><th>Turno previsto</th><th>Entrata</th><th>Uscita</th><th>Pause</th><th>Ore effettive</th><th>Esito</th><th>Controllo</th></tr></thead><tbody id="riepBody"></tbody></table></div>
+  <p class="riepHint">Le ore effettive sono calcolate dalle coppie entrata/uscita complete; le pause sono mostrate separatamente e non vengono sottratte automaticamente. Ritardi e assenze sono segnalazioni da verificare, non sanzioni. Per correggere una timbratura usa il Registro storico, che conserva il motivo e l'audit.</p>
+ </div>
+</section>
 
 <section id="page-impegni" class="adminPage"><div class="pageHead"><div><h2>Impegni / Assenze programmati</h2><div class="muted">Indisponibilità personali programmate dei dipendenti, visibili in Dashboard.</div></div></div>
 <div class="card noPrint">
@@ -686,9 +730,127 @@ function printRows(selectedBadge='',selectedMonth=''){
 }
 function renderRegister(){let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo==='USCITA'&&nightExit(e)?'USCITA · SMONTO NOTTE':e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':monthClosed?'🔒 Mese chiuso':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}h+='</tbody></table>';$('register').innerHTML=events.length?h:'<div class="muted">Nessuna timbratura.</div>';const fe=$('filterEmp').value;const meseLabel=formatMonthLabel($('month').value||'');$('printHead').innerHTML='<div class="printBrand"><div class="printBrandRow"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100" alt="Logo Croce Gialla Emergenza ODV"><div class="printBrandText"><div class="line1">CROCE GIALLA EMERGENZA ODV</div><div class="line2">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</div></div></div><div class="printBrandMonth">'+esc(meseLabel)+'</div>'+(monthClosed?'<div class="printClosedStamp">🔒 MESE CHIUSO – REGISTRO DEFINITIVO</div>':'')+'</div>'}
 function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
-function renderAll(){renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
-function showPage(name){document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
+function renderAll(){initRiepilogo();renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
+function showPage(name){if(name==='controlli')renderRiepilogo();document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
 function printFromSection(){const pe=$('printEmp').value,pm=$('printMonth').value;if(!pe||!pm)return alert('Seleziona dipendente e mese.');$('filterEmp').value=pe;$('month').value=pm;loadData().then(()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows(pe,pm);document.body.classList.add('printingRegister');window.print();document.body.classList.remove('printingRegister');$('register').innerHTML=old})}
+
+/* Riepilogo operativo: solo lettura; usa la stessa sessione amministrativa e i turni salvati. */
+const riepilogoTurniApi='https://ihottewckpwpwqzpxusl.supabase.co/functions/v1/timbrature-turni-sessione';
+let riepilogoSeq=0;
+const riepDay=s=>new Date(s).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
+const riepDate=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const riepMonday=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate(),12);x.setDate(x.getDate()-(x.getDay()+6)%7);return x};
+function riepRange(){
+ const d=$('riepDate').value||riepDate(new Date()),view=$('riepView').value;
+ const a=new Date(d+'T12:00:00'),start=new Date(a),end=new Date(a);
+ if(view==='week'){start.setDate(start.getDate()-(start.getDay()+6)%7);end.setTime(start.getTime());end.setDate(end.getDate()+6)}
+ if(view==='month'){start.setDate(1);end.setMonth(start.getMonth()+1,0)}
+ return {start:riepDate(start),end:riepDate(end)};
+}
+async function riepLoadSchedules(start,end){
+ const monday=riepMonday(new Date(start+'T12:00:00'));
+ const tokenValue=await token();if(!tokenValue)throw Error('Sessione amministrativa non attiva');
+ const jobs=[];
+ while(riepDate(monday)<=end&&jobs.length<6){
+  const day=riepDate(monday);
+  jobs.push((async()=>{
+   const r=await fetch(riepilogoTurniApi,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tokenValue},body:JSON.stringify({action:'load',from:day})});
+   const obj=await r.json();if(!r.ok)throw Error(obj.error||'Caricamento turni non riuscito');
+   return obj.turni||[];
+  })());
+  monday.setDate(monday.getDate()+7);
+ }
+ return (await Promise.all(jobs)).flat();
+}
+function riepDur(start,end){
+ const v=(new Date(end).getTime()-new Date(start).getTime())/60000;
+ return v>=0&&v<=24*60?Math.round(v):0;
+}
+function riepPlannedMin(t){
+ if(!t||t.riposo||t.assente||!t.inizio||!t.fine)return 0;
+ const a=String(t.inizio).slice(0,5).split(':').map(Number),b=String(t.fine).slice(0,5).split(':').map(Number);
+ let v=b[0]*60+b[1]-a[0]*60-a[1];if(v<0)v+=1440;return v;
+}
+async function renderRiepilogo(){
+ const seq=++riepilogoSeq,range=riepRange(),only=$('riepEmp').value;
+ const refresh=$('riepRefresh');refresh.disabled=true;
+ msg('riepMessage','Lettura timbrature e turni programmati...');
+ try{
+  const schedules=await riepLoadSchedules(range.start,range.end);
+  if(seq!==riepilogoSeq)return;
+  const planned=new Map(schedules.filter(t=>t.giorno>=range.start&&t.giorno<=range.end).map(t=>[String(t.badge)+'|'+t.giorno,t]));
+  const ev=context.filter(e=>!e.eliminato_at).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+  const pairs=new Map(),entry=new Map();
+  const ensure=(badge,day)=>{const key=String(badge)+'|'+day;if(!pairs.has(key))pairs.set(key,{items:[],pause:[],stray:[]});return pairs.get(key)};
+  for(const e of ev){
+   const b=String(e.badge);
+   if(e.tipo==='ENTRATA'){
+    if(entry.has(b)){const old=entry.get(b);ensure(b,riepDay(old.evento_at)).items.push({start:old,end:null});}
+    entry.set(b,e);
+   }else if(e.tipo==='USCITA'){
+    const start=entry.get(b);
+    if(start){ensure(b,riepDay(start.evento_at)).items.push({start,end:e});entry.delete(b)}
+    else ensure(b,riepDay(e.evento_at)).stray.push(e);
+   }
+  }
+  for(const e of entry.values())ensure(String(e.badge),riepDay(e.evento_at)).items.push({start:e,end:null});
+  const pauseOpen=new Map();
+  for(const e of [...pauseEvents].sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at))){
+   const b=String(e.badge);
+   if(e.tipo==='INIZIO_PAUSA'){if(pauseOpen.has(b)){const p=pauseOpen.get(b);ensure(b,riepDay(p.evento_at)).pause.push({start:p,end:null})}pauseOpen.set(b,e)}
+   else if(e.tipo==='FINE_PAUSA'){const p=pauseOpen.get(b);if(p){ensure(b,riepDay(p.evento_at)).pause.push({start:p,end:e});pauseOpen.delete(b)}else ensure(b,riepDay(e.evento_at)).pause.push({start:null,end:e})}
+  }
+  for(const p of pauseOpen.values())ensure(String(p.badge),riepDay(p.evento_at)).pause.push({start:p,end:null});
+  const today=riepDay(new Date()),rows=[];let hrs=0,expect=0,alertCount=0,breakCount=0;
+  for(let day=new Date(range.start+'T12:00:00');riepDate(day)<=range.end;day.setDate(day.getDate()+1)){
+   const dayKey=riepDate(day);
+   for(const personRow of people){
+    const b=String(personRow.badge);if(only&&only!==b)continue;
+    const t=planned.get(b+'|'+dayKey),d=pairs.get(b+'|'+dayKey)||{items:[],pause:[],stray:[]};
+    if(!t&&!d.items.length&&!d.pause.length&&!d.stray.length)continue;
+    const mins=d.items.reduce((sum,x)=>sum+(x.end?riepDur(x.start.evento_at,x.end.evento_at):0),0);
+    const plan=riepPlannedMin(t);hrs+=mins;expect+=plan;
+    let pauses=d.pause.map(x=>x.start&&x.end?time(x.start.evento_at)+'–'+time(x.end.evento_at)+' ('+fmtMin(riepDur(x.start.evento_at,x.end.evento_at))+')':(x.start?'Pausa aperta '+time(x.start.evento_at):'Fine senza inizio'));
+    breakCount+=d.pause.filter(x=>x.start&&x.end).length;
+    const labels=[],nowOrFuture=dayKey>=today;
+    if(d.items.some(x=>!x.end)&&dayKey<today)labels.push('Uscita mancante');
+    if(d.stray.length)labels.push('Uscita senza entrata');
+    if(d.pause.some(x=>!x.start||!x.end)&&dayKey<today)labels.push('Pausa incompleta');
+    if(t&&!t.riposo&&!t.assente&&plan>0&&!d.items.length&&dayKey<today)labels.push('Timbrature mancanti');
+    if(t&&!t.riposo&&!t.assente&&d.items.length&&t.inizio){
+     const actual=d.items[0].start,localTime=new Date(actual.evento_at).toLocaleTimeString('en-GB',{timeZone:'Europe/Rome',hour:'2-digit',minute:'2-digit',hour12:false});
+     const plannedStart=String(t.inizio).slice(0,5);
+     if(localTime>plannedStart&&dayKey<=today)labels.push('Ritardo '+(function(){const a=localTime.split(':').map(Number),p=plannedStart.split(':').map(Number);return fmtMin(a[0]*60+a[1]-p[0]*60-p[1])})());
+    }
+    if(labels.length)alertCount+=labels.length;
+    const expectedLabel=t?(t.riposo?'Riposo':t.assente?'Assenza'+(t.causale?' · '+t.causale:''):t.inizio&&t.fine?String(t.inizio).slice(0,5)+'–'+String(t.fine).slice(0,5):'Non indicato'):'Non programmato';
+    const inText=d.items.map(x=>time(x.start.evento_at)).join(', ')||'—';
+    const outText=d.items.map(x=>x.end?time(x.end.evento_at):'—').join(', ')||'—';
+    let status=labels.length?labels.join(' · '):d.items.length?(d.items.some(x=>!x.end)?'In servizio':'Regolare'):(t?.riposo?'Riposo':t?.assente?'Assenza':nowOrFuture?'Da effettuare':'Nessuna timbratura');
+    rows.push({day:dayKey,badge:b,name:personRow.nome_completo,expected:expectedLabel,starts:inText,ends:outText,pauses:pauses.join('; ')||'—',worked:d.items.some(x=>x.end)?fmtMin(mins):d.items.length?'In corso':'—',status,bad:labels.length>0,waiting:status==='In servizio'||status==='Da effettuare'});
+   }
+  }
+  const span=range.start===range.end?range.start:range.start+' → '+range.end;
+  $('riepPeriod').textContent='Periodo visualizzato: '+span+' · '+(only?person(only):'tutti i dipendenti')+' · settimana da lunedì a domenica.';
+  $('riepHours').textContent=fmtMin(hrs);$('riepPlanned').textContent=fmtMin(expect);$('riepAlerts').textContent=String(alertCount);$('riepBreaks').textContent=String(breakCount);
+  $('riepBody').innerHTML=rows.map(r=>'<tr'+(r.bad?' class="riepRowBad"':'')+'><td>'+esc(new Date(r.day+'T12:00:00').toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'}))+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.expected)+'</td><td>'+esc(r.starts)+'</td><td>'+esc(r.ends)+'</td><td>'+esc(r.pauses)+'</td><td><b>'+esc(r.worked)+'</b></td><td><span class="riepStatus '+(r.bad?'bad':r.waiting?'wait':'')+'">'+esc(r.status)+'</span></td><td><button class="secondary mini riepGo" type="button" data-badge="'+esc(r.badge)+'" data-day="'+esc(r.day)+'">Registro</button></td></tr>').join('');
+  if(!rows.length)$('riepBody').innerHTML='<tr><td colspan="9">Nessun turno o timbratura per il periodo scelto.</td></tr>';
+  msg('riepMessage',rows.length?rows.length+' righe visualizzate. '+(alertCount?alertCount+' anomalie da verificare.':'Nessuna anomalia nel confronto.'):'Nessun dato da visualizzare.',alertCount?'warn':'ok');
+  document.querySelectorAll('.riepGo').forEach(b=>b.onclick=()=>{const d=b.dataset.day;$('filterEmp').value=b.dataset.badge;$('month').value=d.slice(0,7);loadData().then(()=>showPage('storico'))});
+ }catch(e){msg('riepMessage','Impossibile caricare il riepilogo: '+(e.message||String(e)),'err');$('riepBody').innerHTML=''}
+ finally{if(seq===riepilogoSeq)refresh.disabled=false}
+}
+function initRiepilogo(){
+ const sel=$('riepEmp'),current=sel.value;
+ sel.innerHTML='<option value="">Tutti i dipendenti</option>'+people.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+'</option>').join('');
+ if([...sel.options].some(x=>x.value===current))sel.value=current;
+ if(!$('riepDate').value)$('riepDate').value=riepDate(new Date());
+}
+$('riepRefresh').onclick=renderRiepilogo;
+$('riepEmp').onchange=renderRiepilogo;
+$('riepDate').onchange=renderRiepilogo;
+$('riepView').onchange=renderRiepilogo;
+
 document.querySelectorAll('.sideBtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$('mobileMenuBtn').onclick=()=>$('sideMenu').classList.toggle('open');$('refreshAnomalies').onclick=()=>refreshData('refreshAnomalies');$('printMonthlyBtn').onclick=printFromSection;
 $('addAbsence').onclick=addAbsence;$('commitAdd').onclick=addCommitment;$('openCommitmentsPage').onclick=()=>showPage('impegni');$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('showConversionBtn').onclick=openConversion;$('convertSave').onclick=saveConversion;$('convertCancel').onclick=()=>{resetConversion();$('conversionForm').classList.add('hidden')};$('newEmployeeBtn').onclick=()=>{const opening=$('newEmployeeForm').classList.contains('hidden');resetNewEmployee();$('newEmployeeForm').classList.toggle('hidden',!opening)};$('cancelEmployeeBtn').onclick=()=>{resetNewEmployee();$('newEmployeeForm').classList.add('hidden')};$('createEmployeeBtn').onclick=createEmployee;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=()=>refreshData('refreshBtn');$('refreshTop').onclick=()=>refreshData('refreshTop');$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
 $('printBtn').onclick=()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows($('filterEmp').value,$('month').value);window.print();$('register').innerHTML=old};$('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
