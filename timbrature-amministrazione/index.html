@@ -873,11 +873,11 @@ async function renderRiepilogo(){
    const fullWeekEnd=new Date(w.monday+'T12:00:00');fullWeekEnd.setDate(fullWeekEnd.getDate()+6);
    const complete=riepDate(fullWeekEnd)<today&&!w.incomplete&&w.days.size===7;
    const target=String(w.name||'').toUpperCase().includes('BRUGHERA')?1800:2280;
-   const saldo=w.worked-target;
+   const saldo=w.worked+w.justified-target;
    const remaining=Math.max(0,target-w.justified-w.worked);
-   const label=complete?(remaining===0?'Ore quadrate (con eventuali assenze giustificate)':'Differenza da verificare'):'Settimana non conclusa o timbrature incomplete';
+   const label=complete?(remaining===0?'Saldo coperto da lavoro e assenze giustificate':'Differenza da verificare'):'Settimana non conclusa o timbrature incomplete';
    return '<div class="riepWeekCard"><b>'+esc(w.name)+'</b><small>Settimana dal '+esc(new Date(w.monday+'T12:00:00').toLocaleDateString('it-IT'))+'</small>'+
-    '<div class="riepSaldo '+(complete?(saldo<0?'negative':saldo>0?'positive':''):'')+'">'+(complete?'Saldo '+signed(saldo):'Parziale '+signed(saldo))+'</div>'+
+    '<div class="riepSaldo '+(complete?(saldo<0?'negative':saldo>0?'positive':''):'')+'">'+(complete?'Saldo settimanale '+signed(saldo):'Saldo provvisorio '+signed(saldo))+'</div>'+
     '<small>Ore lavorate: '+fmtMin(w.worked)+' · Ore settimanali: '+fmtMin(target)+(w.justified?' · Assenze registrate: '+fmtMin(w.justified):'')+'</small>'+
     '<small>'+esc(label)+(complete&&w.justified?' · Residuo considerando le assenze: '+fmtMin(remaining):'')+'</small></div>';
   }).join('');
