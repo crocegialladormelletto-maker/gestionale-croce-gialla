@@ -173,6 +173,8 @@ async function loadAll(){
  sheets=(fs.data||[]).map(f=>{const service=docByService.get(f.servizio_giornaliero_id);return {...f,luogo_carico_descrizione:f.luogo_carico||[service?.luogo_carico_paziente,service?.indirizzo_carico_paziente].filter(Boolean).join(' ')||'luogo di carico non indicato'};}).filter(f=>{
   const t=String(f.tipo_servizio||'').trim().toUpperCase();
   if(t==='SERVIZIO INTERNO'||t==='INTERNO'||t.includes('SERVIZIO INTERNO'))return false;
+  // I servizi a importo zero non generano note di debito.
+  if(f.totale_servizio!==null && f.totale_servizio!=='' && Number(f.totale_servizio)===0)return false;
   const d=f.servizio_giornaliero_id?docByService.get(f.servizio_giornaliero_id):null;
   return (d?.documento_da_emettere||'NOTA_DEBITO')==='NOTA_DEBITO';
  });notes=ns.data||[];updateCounts();render();msg('listMsg','');
