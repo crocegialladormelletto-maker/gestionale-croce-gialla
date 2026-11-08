@@ -486,7 +486,7 @@ function renderTodayBanner(){
  });
  const label=new Date(today+'T12:00:00').toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
  const remindNames=inNow.filter(p=>['MARTINOLI ANDREA','BRUGHERA FRANCESCA'].includes(String(p.nome_completo||'').toUpperCase())).map(p=>p.nome_completo);
- const reminder=remindNames.length?'<div class="exitReminder blinkReminder">🔔 Promemoria: '+esc(remindNames.join(' e '))+' — ricordarsi di timbrare l\\'uscita prima di lasciare il servizio.</div>':'';
+ const reminder=remindNames.length?'<div class="exitReminder blinkReminder">🔔 Promemoria: '+esc(remindNames.join(' e '))+' — ricordarsi di timbrare l\'uscita prima di lasciare il servizio.</div>':'';
  $('todayBanner').innerHTML='<div class="todayHead"><div><h3>🕒 Timbrature di oggi</h3><div class="muted">'+esc(label.charAt(0).toUpperCase()+label.slice(1))+'</div></div><div class="todayStats"><span class="todayStat">Timbrature: '+todayEvents.length+'</span><span class="todayStat">In servizio: '+inNow.length+'</span><span class="todayStat">Pause: '+todayPauses.length+'</span><span class="todayStat">Turni conclusi: '+completed+'</span><span class="todayStat">Causali: '+todayAbs.length+'</span></div></div>'+reminder+'<div class="todayRows">'+(rows.length?rows.join(''):'<div class="muted">Nessuna timbratura o causale registrata oggi.</div>')+'</div>';
 }
 function renderDashboard(){
