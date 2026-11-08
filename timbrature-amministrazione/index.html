@@ -460,24 +460,34 @@ window.deleteCommitment=deleteCommitment;
 function renderTodayBanner(){
  const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
  const todayEvents=context.filter(e=>!e.eliminato_at&&new Date(e.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'})===today).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+ const todayPauses=pauseEvents.filter(e=>new Date(e.evento_at).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'})===today).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
  const todayAbs=absences.filter(a=>String(a.data_dal)<=today&&String(a.data_al)>=today);
- const badges=[...new Set([...todayEvents.map(e=>e.badge),...todayAbs.map(a=>a.badge)])];
+ const badges=[...new Set([...todayEvents.map(e=>e.badge),...todayPauses.map(e=>e.badge),...todayAbs.map(a=>a.badge)])];
  const inNow=people.filter(p=>analyzeBadge(p.badge,context.filter(e=>!e.eliminato_at&&e.badge===p.badge&&new Date(e.evento_at)<=new Date())).open);
  const completed=badges.filter(b=>{const xs=todayEvents.filter(e=>e.badge===b);return xs.some(e=>e.tipo==='ENTRATA')&&xs.some(e=>e.tipo==='USCITA')&&!inNow.some(p=>p.badge===b)}).length;
  const rows=badges.map(b=>{
   const xs=todayEvents.filter(e=>e.badge===b);
+  const ps=todayPauses.filter(e=>e.badge===b);
   const a=todayAbs.find(x=>x.badge===b);
-  const parts=xs.map(e=>'<b>'+esc(e.tipo==='ENTRATA'?'Entrata':(nightExit(e)?'Uscita · SMONTO NOTTE':'Uscita'))+'</b> '+esc(time(e.evento_at)));
+  const parts=[...xs.map(e=>({at:e.evento_at,html:'<b>'+esc(e.tipo==='ENTRATA'?'Entrata':(nightExit(e)?'Uscita · SMONTO NOTTE':'Uscita'))+'</b> '+esc(time(e.evento_at))})),
+   ...ps.map(e=>({at:e.evento_at,html:'<b>'+esc(e.tipo==='INIZIO_PAUSA'?'☕ Inizio pausa':'▶ Fine pausa')+'</b> '+esc(time(e.evento_at))}))].sort((a,b)=>new Date(a.at)-new Date(b.at)).map(e=>e.html);
   if(a)parts.push('<b>Causale:</b> '+esc(absenceLabel(a.causale))+(a.ore!=null?' · '+esc(a.ore)+' h':'')+(a.nota?' · '+esc(a.nota):''));
   let status='USCITO',cls='out';
-  if(inNow.some(p=>p.badge===b)){status='IN SERVIZIO';cls='in'}
+  const working=inNow.some(p=>p.badge===b);
+  // Considera aperta solo una pausa successiva all'ultima entrata del turno,
+  // senza inventare una fine pausa o alterare le timbrature originali.
+  const lastShift=context.filter(e=>!e.eliminato_at&&e.badge===b).sort((a,b)=>new Date(b.evento_at)-new Date(a.evento_at))[0];
+  const lastPause=pauseEvents.filter(e=>e.badge===b).sort((a,b)=>new Date(b.evento_at)-new Date(a.evento_at))[0];
+  const paused=working&&lastShift?.tipo==='ENTRATA'&&lastPause?.tipo==='INIZIO_PAUSA'&&new Date(lastPause.evento_at)>new Date(lastShift.evento_at);
+  if(paused){status='☕ PAUSA IN CORSO dalle '+time(lastPause.evento_at);cls='abs'}
+  else if(working){status='IN SERVIZIO';cls='in'}
   else if(a&&!xs.length){status=absenceLabel(a.causale);cls='abs'}
   return '<div class="todayRow"><div class="todayName">'+esc(person(b))+'</div><div class="todayTimes">'+(parts.join(' · ')||'Nessuna timbratura')+'</div><div class="todayStatus '+cls+'">'+esc(status)+'</div></div>'
  });
  const label=new Date(today+'T12:00:00').toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
  const remindNames=inNow.filter(p=>['MARTINOLI ANDREA','BRUGHERA FRANCESCA'].includes(String(p.nome_completo||'').toUpperCase())).map(p=>p.nome_completo);
- const reminder=remindNames.length?'<div class="exitReminder blinkReminder">🔔 Promemoria: '+esc(remindNames.join(' e '))+' — ricordarsi di timbrare l\'uscita prima di lasciare il servizio.</div>':'';
- $('todayBanner').innerHTML='<div class="todayHead"><div><h3>🕒 Timbrature di oggi</h3><div class="muted">'+esc(label.charAt(0).toUpperCase()+label.slice(1))+'</div></div><div class="todayStats"><span class="todayStat">Timbrature: '+todayEvents.length+'</span><span class="todayStat">In servizio: '+inNow.length+'</span><span class="todayStat">Turni conclusi: '+completed+'</span><span class="todayStat">Causali: '+todayAbs.length+'</span></div></div>'+reminder+'<div class="todayRows">'+(rows.length?rows.join(''):'<div class="muted">Nessuna timbratura o causale registrata oggi.</div>')+'</div>';
+ const reminder=remindNames.length?'<div class="exitReminder blinkReminder">🔔 Promemoria: '+esc(remindNames.join(' e '))+' — ricordarsi di timbrare l\\'uscita prima di lasciare il servizio.</div>':'';
+ $('todayBanner').innerHTML='<div class="todayHead"><div><h3>🕒 Timbrature di oggi</h3><div class="muted">'+esc(label.charAt(0).toUpperCase()+label.slice(1))+'</div></div><div class="todayStats"><span class="todayStat">Timbrature: '+todayEvents.length+'</span><span class="todayStat">In servizio: '+inNow.length+'</span><span class="todayStat">Pause: '+todayPauses.length+'</span><span class="todayStat">Turni conclusi: '+completed+'</span><span class="todayStat">Causali: '+todayAbs.length+'</span></div></div>'+reminder+'<div class="todayRows">'+(rows.length?rows.join(''):'<div class="muted">Nessuna timbratura o causale registrata oggi.</div>')+'</div>';
 }
 function renderDashboard(){
  const analyses=monthlyAnalyses(),inNow=analyses.filter(x=>x.open),total=analyses.reduce((s,x)=>s+x.total,0),allAn=analyses.flatMap(x=>x.an);
