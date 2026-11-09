@@ -106,10 +106,11 @@ async function ordOpen(id){
  if(!roles.length){box.innerHTML='<div class="notice warn">Nessun ruolo libero con operatori qualificati.</div>';return}
  box.innerHTML='<div class="ord-editor-inner"><div class="field"><label>Ruolo</label><select data-ord-role>'+
   roles.map(([r,name])=>'<option value="'+esc(r)+'">'+esc(name)+'</option>').join('')+
-  '</select></div><div class="field"><label>Operatore</label><select data-ord-badge></select></div>'+
+  '</select></div><div class="field"><label>Categoria personale</label><select data-ord-category><option value="VOLONTARIO">Volontari</option><option value="DIPENDENTE">Dipendenti</option></select></div><div class="field"><label>Operatore</label><select data-ord-badge></select></div>'+
   '<div class="actions"><button class="btn yellow" type="button" data-ord-confirm>Assegna definitivamente</button>'+
   '<button class="btn secondary" type="button" data-ord-close>Chiudi</button></div><div data-ord-feedback></div></div>';
  box.querySelector('[data-ord-role]').onchange=()=>ordChoices(id);
+ box.querySelector('[data-ord-category]').onchange=()=>ordChoices(id);
  box.querySelector('[data-ord-confirm]').onclick=()=>ordAssign(id);
  box.querySelector('[data-ord-close]').onclick=()=>{box.innerHTML=''};
  ordChoices(id);
@@ -117,12 +118,12 @@ async function ordOpen(id){
 function ordChoices(id){
  const s=ordItems.find(x=>x.id===id),box=$('ordEditor-'+id);
  if(!s||!box)return;
- const select=box.querySelector('[data-ord-badge]'),role=box.querySelector('[data-ord-role]')?.value;
+ const select=box.querySelector('[data-ord-badge]'),role=box.querySelector('[data-ord-role]')?.value,dep=box.querySelector('[data-ord-category]')?.value==='DIPENDENTE';
  if(!select)return;
  const taken=new Set(ordCrew.filter(x=>x.servizio_id===id).map(x=>x.badge_personale));
- const options=(ordEligible.get(s.data_servizio)||[]).filter(x=>x.ruolo===role&&!taken.has(x.badge))
+ const options=(ordEligible.get(s.data_servizio)||[]).filter(x=>x.ruolo===role&&!taken.has(x.badge)&&cgeIsEmployee(people.find(p=>p.badge===x.badge))===dep)
   .sort((a,b)=>String(a.badge).localeCompare(String(b.badge),'it',{numeric:true}));
- select.innerHTML='<option value="">Scegli operatore</option>'+
+ select.innerHTML='<option value="">Scegli '+(dep?'dipendente':'volontario')+'</option>'+
   options.map(x=>'<option value="'+esc(x.badge)+'">'+esc(x.nome_completo+' · badge '+x.badge)+'</option>').join('');
 }
 async function ordAssign(id){
@@ -196,22 +197,23 @@ async function calOrdOpen(id){
  if(!roles.length){box.innerHTML='<div class="notice warn">Nessun ruolo disponibile con operatori qualificati.</div>';return}
  box.innerHTML='<div class="ord-editor-inner"><div class="field"><label>Ruolo</label><select data-cal-ord-role>'+
   roles.map(([role,name])=>'<option value="'+esc(role)+'">'+esc(name)+'</option>').join('')+
-  '</select></div><div class="field"><label>Operatore qualificato</label><select data-cal-ord-person></select></div>'+
+  '</select></div><div class="field"><label>Categoria personale</label><select data-cal-ord-category><option value="VOLONTARIO">Volontari</option><option value="DIPENDENTE">Dipendenti</option></select></div><div class="field"><label>Operatore qualificato</label><select data-cal-ord-person></select></div>'+
   '<div class="actions"><button type="button" class="btn yellow" data-cal-ord-confirm>Assegna definitivamente</button>'+
   '<button type="button" class="btn secondary" data-cal-ord-close>Chiudi</button></div><div data-cal-ord-msg></div></div>';
- const roleSelect=box.querySelector('[data-cal-ord-role]'),personSelect=box.querySelector('[data-cal-ord-person]');
+ const roleSelect=box.querySelector('[data-cal-ord-role]'),personSelect=box.querySelector('[data-cal-ord-person]'),categorySelect=box.querySelector('[data-cal-ord-category]');
  const choices=()=>{
   const taken=new Set(crew.map(x=>x.badge_personale));
-  const selected=eligible.filter(p=>p.ruolo===roleSelect.value&&!taken.has(p.badge));
-  personSelect.innerHTML=selected.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo||p.badge)+'</option>').join('');
+  const selected=eligible.filter(p=>p.ruolo===roleSelect.value&&!taken.has(p.badge)&&cgeIsEmployee(people.find(x=>x.badge===p.badge))===(categorySelect.value==='DIPENDENTE'));
+  personSelect.innerHTML='<option value="">Seleziona '+(categorySelect.value==='DIPENDENTE'?'dipendente':'volontario')+'</option>'+selected.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo||p.badge)+'</option>').join('');
   box.querySelector('[data-cal-ord-confirm]').disabled=!selected.length;
  };
- roleSelect.onchange=choices;choices();
+ roleSelect.onchange=choices;categorySelect.onchange=choices;choices();
  box.querySelector('[data-cal-ord-close]').onclick=()=>{box.innerHTML='';box.dataset.open='false'};
  box.querySelector('[data-cal-ord-confirm]').onclick=async()=>{
   const role=roleSelect.value,badge=personSelect.value;
   const member=eligible.find(p=>p.ruolo===role&&p.badge===badge);
   if(!member||calOrdBusy)return;
+  if(cgeIsEmployee(people.find(x=>x.badge===badge))!==(categorySelect.value==='DIPENDENTE'))return;
   if(!confirm('Assegnare definitivamente '+member.nome_completo+' come '+(ordRoles.find(x=>x[0]===role)?.[1]||role)+' al servizio del '+service.data_servizio+'?'))return;
   calOrdBusy=true;box.querySelector('[data-cal-ord-confirm]').disabled=true;
   try{
