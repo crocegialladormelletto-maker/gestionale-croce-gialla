@@ -3959,6 +3959,13 @@ async function refreshMaster(){
   sb.from('personale_qualifiche').select('*').eq('attiva',true)
  ]);
  vehicles=v.data||[];tariffs=t.data||[];tariffDestinations=td.data||[];people=p.data||[];qualifications=q.data||[];pq=pqual.data||[];
+ if(['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)){
+  const types=await sb.rpc('cge_tipologia_personale_equipaggi');
+  if(!types.error){
+   const byBadge=new Map((types.data||[]).map(x=>[String(x.badge),x.dipendente===true]));
+   people.forEach(x=>{if(byBadge.has(String(x.badge)))x.dipendente=byBadge.get(String(x.badge));});
+  }else console.warn('Tipologia personale non disponibile:',types.error.message);
+ }
  const vo=opts(vehicles,'codice',x=>x.codice+' · '+x.tipologia+' · '+x.targa);
  ['m','sm','avm','exm','fm','fvVehicle','fv118Vehicle'].forEach(id=>{
   if(!$(id))return;
@@ -3973,8 +3980,9 @@ async function refreshMaster(){
  $('ttar').innerHTML=opts(tariffs,'id',x=>x.nome);
  const selectedAdminTariff=tariffs.find(x=>x.codice===tariffViewCode);
  if(selectedAdminTariff)$('ttar').value=selectedAdminTariff.id;
- const po=opts(people.filter(x=>x.attivo!==false),'badge',x=>x.nome_completo+' · '+x.badge);
- ['shiftPerson','avp'].forEach(id=>$(id).innerHTML=po);
+ const activePeople=people.filter(x=>x.attivo!==false);
+ $('shiftPerson').innerHTML=crewGroupedOptions(activePeople);
+ $('avp').innerHTML=opts(activePeople,'badge',x=>x.nome_completo+' · '+x.badge);
  renderQualChecks();
  refreshTariffDestinations();
 }
@@ -3984,8 +3992,20 @@ function qualificationDisplayName(q){
  return code==='ALLEGATO_A'||/operatore\s+allegato\s*a\b/i.test(name)?'Accompagnatore':(name||q?.codice||'—');
 }
 function renderQualChecks(selected=[]){$('pquals').innerHTML=qualifications.map(q=>'<label class="check"><input type="checkbox" data-qual="'+esc(q.codice)+'" '+(selected.includes(q.codice)?'checked':'')+'> '+esc(qualificationDisplayName(q))+'</label>').join('')}
+function crewEmployeeType(badge){
+ const p=people.find(x=>String(x.badge)===String(badge));
+ return p?.dipendente===true?'DIPENDENTE':p?.dipendente===false?'VOLONTARIO':'DA VERIFICARE';
+}
+function crewGroupedOptions(list){
+ const groups=[['DIPENDENTE','DIPENDENTI'],['VOLONTARIO','VOLONTARI'],['DA VERIFICARE','TIPOLOGIA DA VERIFICARE']];
+ return '<option value="">Seleziona operatore</option>'+groups.map(([type,label])=>{
+  const rows=(list||[]).filter(p=>crewEmployeeType(p.badge)===type);
+  return rows.length?'<optgroup label="'+label+'">'+rows.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo+' · '+p.badge+' · '+type)+'</option>').join('')+'</optgroup>':'';
+ }).join('');
+}
+function crewEmployeeLabel(badge){return ' · '+crewEmployeeType(badge)}
 function qualifiedPeople(role){let qcode=role==='ACCOMPAGNATORE'?'ALLEGATO_A':role;return people.filter(p=>p.attivo!==false&&pq.some(x=>x.badge_personale===p.badge&&x.codice_qualifica===qcode&&x.attiva))}
-function refreshCrewPeople(){$('cp').innerHTML=opts(qualifiedPeople($('cr').value),'badge',x=>x.nome_completo+' · '+x.badge)}
+function refreshCrewPeople(){$('cp').innerHTML=crewGroupedOptions(qualifiedPeople($('cr').value))}
 $('cr').onchange=refreshCrewPeople;
 
 const TARIFF_CATEGORIES=[
@@ -6738,7 +6758,7 @@ function resetServiceDetailForm(){
 }
 function detailCrewCandidates(){
  if(!$('dCrewPerson'))return;
- $('dCrewPerson').innerHTML=opts(qualifiedPeople($('dCrewRole').value),'badge',x=>x.nome_completo+' · '+x.badge);
+ $('dCrewPerson').innerHTML=crewGroupedOptions(qualifiedPeople($('dCrewRole').value));
 }
 $('dCrewRole').onchange=detailCrewCandidates;
 
@@ -7422,7 +7442,7 @@ async function loadCrew(requestedServiceId=null){
  crewRows=cr.data||[];
  $('clist').innerHTML=crewRows.length?crewRows.map(x=>{
   const p=people.find(z=>z.badge===x.badge_personale);
-  return '<div class="box"><b>'+esc(p?.nome_completo||x.badge_personale)+'</b> · '+esc(x.ruolo)+
+  return '<div class="box"><b>'+esc(p?.nome_completo||x.badge_personale)+'</b>'+esc(crewEmployeeLabel(x.badge_personale))+' · '+esc(x.ruolo)+
    ' <button class="btn danger" style="float:right" data-remove-crew="'+esc(x.id)+'">Rimuovi</button></div>';
  }).join(''):'<div class="notice">Nessun operatore assegnato a questo servizio. Puoi creare l’equipaggio qui sopra.</div>';
  $('clist').querySelectorAll('[data-remove-crew]').forEach(b=>b.onclick=()=>window.removeCrew(b.dataset.removeCrew));
@@ -8028,7 +8048,7 @@ function dimRenderDay(kind){
  $(prefix+'Day').innerHTML=DIM_FASCE.map(([fascia,label])=>{
   const slot=dimRowsFor(rows,day,fascia),
   covered=dimSlotCovered(slot),mine=slot.some(x=>x.badge_personale===volunteerBadge),
-  peopleHtml=slot.map(row=>'<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
+  peopleHtml=slot.map(row=>'<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+esc(admin?crewEmployeeLabel(row.badge_personale):'')+
    ' · <b>'+esc(dimRoleLabel(row.ruolo))+'</b>'+
    (admin&&prof?.ruolo==='AMMINISTRATORE'?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-dim-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
    '</div>').join(''),
@@ -8225,7 +8245,7 @@ function emgRenderDay(kind){
   const slot=emgRowsFor(rows,day,fascia),
   covered=emgSlotCovered(slot),mine=slot.some(x=>x.badge_personale===volunteerBadge),
   mezzo=emgAssignedMezzo(slot),
-  peopleHtml=slot.map(row=>'<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+
+  peopleHtml=slot.map(row=>'<div class="dim-person">• '+esc(row.nome_completo||row.badge_personale)+esc(admin?crewEmployeeLabel(row.badge_personale):'')+
    ' · <b>'+esc(emgRoleLabel(row.ruolo))+'</b>'+
    (admin&&['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)?'<button type="button" class="btn danger" style="padding:3px 7px;margin-left:4px" data-emg-remove="'+esc(row.id)+'">Rimuovi</button>':'')+
    '</div>').join(''),
@@ -8717,7 +8737,7 @@ async function loadShifts(){
  const sh=r.data||[];
  $('shiftSel').innerHTML=opts(sh.filter(x=>x.data_turno>=today()),'id',x=>x.data_turno+' · '+x.ora_inizio.slice(0,5)+'-'+x.ora_fine.slice(0,5)+' · '+(x.mezzo||'senza mezzo'));
  $('shiftList').innerHTML=sh.length?sh.map(x=>{
-  const members=(x.equipaggio||[]).map(z=>{const unavailable=z.risposta==='NON DISPONIBILE';return esc(z.nome||z.badge)+' ('+esc(z.ruolo||'—')+') <span class="pill '+(unavailable?'r':'g')+'">'+(unavailable?'Non disponibile':'Assegnato')+'</span>'+(z.nota_risposta_volontario?' <span class="muted">· '+esc(z.nota_risposta_volontario)+'</span>':'')}).join('<br>');
+  const members=(x.equipaggio||[]).map(z=>{const unavailable=z.risposta==='NON DISPONIBILE';return esc(z.nome||z.badge)+esc(crewEmployeeLabel(z.badge))+' ('+esc(z.ruolo||'—')+') <span class="pill '+(unavailable?'r':'g')+'">'+(unavailable?'Non disponibile':'Assegnato')+'</span>'+(z.nota_risposta_volontario?' <span class="muted">· '+esc(z.nota_risposta_volontario)+'</span>':'')}).join('<br>');
   return '<div class="box"><b>'+esc(x.data_turno)+' · '+esc(x.ora_inizio.slice(0,5))+'-'+esc(x.ora_fine.slice(0,5))+' · '+esc(x.tipo_turno)+'</b><br>Mezzo '+esc(x.mezzo||'—')+'<div style="margin-top:6px">'+(members||'Nessun operatore assegnato')+'</div>'+(x.data_turno>=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())?'<div class="actions" style="margin-top:8px"><button type="button" class="btn danger" data-delete-shift="'+esc(x.id)+'">🗑 Cancella turno</button></div>':'')+'</div>';
  }).join(''):'<div class="notice">Nessun turno inserito.</div>';
  $('shiftList').querySelectorAll('[data-delete-shift]').forEach(b=>b.onclick=()=>deleteShift(b.dataset.deleteShift,sh));
