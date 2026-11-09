@@ -98,7 +98,7 @@ $('form').reset();resetPatientSearch();$('formTitle').textContent=selected?'Modi
 let d=selected||{tipologia:'PRIVATO',stato:'ATTIVA',data_inserimento:new Date().toLocaleDateString('en-CA'),importo_insoluto:0};for(const el of $('form').elements){if(el.name&&d[el.name]!=null)el.value=d[el.name]}$('editor').classList.remove('hidden');$('editor').scrollIntoView({behavior:'smooth',block:'start'})}
 function close(){selected=null;$('editor').classList.add('hidden')}
 $('login').onsubmit=async e=>{e.preventDefault();try{const r=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});token=r.access_token;if(!token)throw Error('Sessione non disponibile');$('password').value='';await enter();notice('Accesso effettuato.')}catch(err){notice(err.message,true)}};
-$('logout').onclick=()=>{token='';sessionStorage.removeItem('cge_restrizioni_sso');sessionStorage.setItem('cge_restrizioni_logout','1');$('app').classList.add('hidden');$('loginPanel').classList.remove('hidden');$('logout').classList.add('hidden');};
+$('logout').onclick=()=>{token='';sessionStorage.removeItem('cge_restrizioni_sso');sessionStorage.setItem('cge_restrizioni_logout','1');$('app').classList.add('hidden');$('loginPanel').classList.remove('hidden');$('logout').classList.add('hidden');notice('Sezione chiusa. Per uscire anche dal gestionale principale, effettua la disconnessione dal gestionale.');};
 $('search').oninput=render;$('filter').onchange=render;$('new').onclick=()=>edit(null);$('cancel').onclick=close;
 $('rows').onclick=e=>{const btn=e.target.closest('button[data-id]');if(btn)edit(btn.dataset.id)};
 $('form').onsubmit=async e=>{e.preventDefault();if(!canEdit)return;const btn=$('save');btn.disabled=true;try{let data=Object.fromEntries(new FormData($('form')).entries());for(let k of ['codice_fiscale_piva','indirizzo','telefono','email','note'])data[k]=data[k]?.trim()||null;data.denominazione=data.denominazione.trim();data.motivo=data.motivo.trim();data.importo_insoluto=Number(data.importo_insoluto)||0;data.updated_by=uid;
@@ -110,7 +110,7 @@ $('history').onclick=async()=>{if(!selected)return;try{let d=await request('/res
 function loginFallback(message=''){ $('sessionWait').classList.add('hidden');$('loginPanel').classList.remove('hidden');if(message)notice(message,true); }
 (async()=>{
 try{
- if(sessionStorage.getItem('cge_restrizioni_logout')==='1'){loginFallback();return}
+ if(sessionStorage.getItem('cge_restrizioni_logout')==='1'){sessionStorage.removeItem('cge_restrizioni_logout');loginFallback();return}
  const transfer=sessionStorage.getItem('cge_restrizioni_sso');
  sessionStorage.removeItem('cge_restrizioni_sso');
  let candidate='';
