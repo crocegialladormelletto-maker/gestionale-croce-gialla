@@ -6894,7 +6894,7 @@ async function loadServiceDetail(id=currentServiceId){
    const p=people.find(z=>z.badge===x.badge_personale);
    const nome=x.personale?.nome_completo||p?.nome_completo||x.badge_personale;
    const canRemove=!['IN CORSO','DA CONTABILIZZARE','CHIUSO','ANNULLATO'].includes(s.stato_gestionale);
-   return '<div class="box"><b>'+esc(nome)+'</b> · '+esc(x.ruolo)+(canRemove?' <button class="btn danger" style="float:right" data-dcrew-remove="'+esc(x.id)+'">Rimuovi</button>':'')+'</div>';
+   return '<div class="box"><b>'+esc(nome)+'</b>'+esc(crewEmployeeLabel(x.badge_personale))+' · '+esc(x.ruolo)+(canRemove?' <button class="btn danger" style="float:right" data-dcrew-remove="'+esc(x.id)+'">Rimuovi</button>':'')+'</div>';
   }).join(''):'<div class="notice">Nessun componente assegnato a questo specifico servizio.</div>';
  }
  document.querySelectorAll('[data-dcrew-remove]').forEach(b=>b.onclick=()=>removeDetailCrew(b.dataset.dcrewRemove));
@@ -8086,9 +8086,8 @@ function dimAdminAssignControls(day,fascia,slot){
   remaining.map(role=>{
    const candidates=dimAdminEligible.filter(p=>p.ruolo===role&&!slot.some(x=>x.badge_personale===p.badge));
    return '<div class="actions" style="margin-top:6px"><label class="muted" style="min-width:84px">'+dimRoleLabel(role)+'</label>'+
-    '<select data-dim-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Volontario '+dimRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
-     '<option value="">Scegli volontario</option>'+
-     candidates.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo+' · '+p.badge)+'</option>').join('')+
+    '<select data-dim-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Operatore '+dimRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
+     crewGroupedOptions(candidates)+
     '</select><button type="button" class="btn yellow" style="padding:8px" data-dim-assign="'+esc(fascia)+
      '" data-dim-role="'+role+'"'+(candidates.length?'':' disabled')+'>Aggiungi</button></div>';
   }).join('')+'</div>';
@@ -8102,18 +8101,18 @@ async function loadDimissioniEligible(){
  if(seq!==dimAdminEligibleSeq||day!==dimAdminSelected)return;
  if(r.error){
   dimRenderDay('Admin');
-  return msg('dimAdminMsg','Impossibile caricare i volontari abilitati: '+r.error.message,'err');
+  return msg('dimAdminMsg','Impossibile caricare gli operatori abilitati: '+r.error.message,'err');
  }
  dimAdminEligible=r.data||[];
  dimRenderDay('Admin');
- if(!dimAdminEligible.length)msg('dimAdminMsg','Nessun volontario abilitato trovato per la data selezionata.','warn');
+ if(!dimAdminEligible.length)msg('dimAdminMsg','Nessun operatore abilitato trovato per la data selezionata.','warn');
 }
 async function dimAdminAssign(day,fascia,role){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||dimAdminBusy||day!==dimAdminSelected)return;
  const badge=$('dimAdminDay').querySelector('[data-dim-assign-person="'+fascia+'-'+role+'"]')?.value;
  const person=dimAdminEligible.find(p=>p.badge===badge&&p.ruolo===role);
  if(dimRowsFor(dimAdminRows,day,fascia).some(x=>x.ruolo===role))return msg('dimAdminMsg','Questo ruolo è già occupato nella fascia selezionata.','warn');
- if(!person)return msg('dimAdminMsg','Seleziona un volontario con qualifica valida.','warn');
+ if(!person)return msg('dimAdminMsg','Seleziona un operatore con qualifica valida.','warn');
  if(!confirm('Inserire DEFINITIVAMENTE '+person.nome_completo+' nel turno DIMISSIONI del '+day+
   ', '+fascia+' come '+dimRoleLabel(role)+'?'))return;
  dimAdminBusy=true;msg('dimAdminMsg','Inserimento nell’equipaggio in corso...');
@@ -8282,9 +8281,8 @@ function emgAdminAssignControls(day,fascia,slot){
   remaining.map(role=>{
    const candidates=emgAdminEligible.filter(p=>p.ruolo===role&&!slot.some(x=>x.badge_personale===p.badge));
    return '<div class="actions" style="margin-top:6px"><label class="muted" style="min-width:84px">'+emgRoleLabel(role)+'</label>'+
-    '<select data-emg-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Volontario '+emgRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
-     '<option value="">Scegli volontario</option>'+
-     candidates.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo+' · '+p.badge)+'</option>').join('')+
+    '<select data-emg-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Operatore '+emgRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
+     crewGroupedOptions(candidates)+
     '</select><button type="button" class="btn yellow" style="padding:8px" data-emg-assign="'+esc(fascia)+
      '" data-emg-role="'+role+'"'+(candidates.length?'':' disabled')+'>Aggiungi</button></div>';
   }).join('')+'</div>';
@@ -8298,7 +8296,7 @@ async function loadEmergenzaEligible(){
  if(seq!==emgAdminEligibleSeq||day!==emgAdminSelected)return;
  if(r.error){
   emgRenderDay('Admin');
-  return msg('emgAdminMsg','Impossibile caricare i volontari abilitati: '+r.error.message,'err');
+  return msg('emgAdminMsg','Impossibile caricare gli operatori abilitati: '+r.error.message,'err');
  }
  emgAdminEligible=r.data||[];
  emgRenderDay('Admin');
@@ -8308,7 +8306,7 @@ async function emgAdminAssign(day,fascia,role){
  const badge=$('emgAdminDay').querySelector('[data-emg-assign-person="'+fascia+'-'+role+'"]')?.value;
  const person=emgAdminEligible.find(p=>p.badge===badge&&p.ruolo===role);
  if(emgRowsFor(emgAdminRows,day,fascia).some(x=>x.ruolo===role))return msg('emgAdminMsg','Questo ruolo è già occupato nella fascia selezionata.','warn');
- if(!person)return msg('emgAdminMsg','Seleziona un volontario con qualifica valida.','warn');
+ if(!person)return msg('emgAdminMsg','Seleziona un operatore con qualifica valida.','warn');
  if(!confirm('Inserire DEFINITIVAMENTE '+person.nome_completo+' nel turno EMERGENZA 118 del '+day+
   ', '+fascia+' come '+emgRoleLabel(role)+'?'))return;
  emgAdminBusy=true;msg('emgAdminMsg','Inserimento nell’equipaggio in corso...');
