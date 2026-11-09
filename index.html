@@ -3968,7 +3968,16 @@ async function view(v,options={}){
  selectView(v);
  return result;
 }
-document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=async()=>{if(b.dataset.href){if(editingPersonBadge)resetPerson();if(b.dataset.href==='clienti-con-restrizioni/'){try{const {data}=await sb.auth.getSession();const sess=data?.session;if(sess?.access_token){sessionStorage.setItem('cge_restrizioni_sso',JSON.stringify({token:sess.access_token,expires_at:sess.expires_at||0}));}}catch(e){console.warn('Sessione restrizioni non trasferita',e)}}location.href=b.dataset.href;return}if(b.dataset.v==='people'&&b.dataset.peopleFilter){peopleCategoryFilter=b.dataset.peopleFilter;peopleAppFilter='ALL';}view(b.dataset.v)});
+document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=async()=>{if(b.dataset.href){if(editingPersonBadge)resetPerson();if(b.dataset.href==='clienti-con-restrizioni/'){
+ sessionStorage.removeItem('cge_restrizioni_logout');
+ // La sessione è condivisa con la pagina di destinazione, senza credenziali nell'URL.
+ let sessionData=null;
+ try{const raw=localStorage.getItem('sb-ihottewckpwpwqzpxusl-auth-token');if(raw)sessionData=JSON.parse(raw)}catch(e){}
+ if(!sessionData?.access_token){
+  try{const response=await Promise.race([sb.auth.getSession(),new Promise(resolve=>setTimeout(()=>resolve(null),2500))]);sessionData=response?.data?.session||null}catch(e){}
+ }
+ if(sessionData?.access_token)sessionStorage.setItem('cge_restrizioni_sso',JSON.stringify({token:sessionData.access_token,expires_at:sessionData.expires_at||0}));
+}location.href=b.dataset.href;return}if(b.dataset.v==='people'&&b.dataset.peopleFilter){peopleCategoryFilter=b.dataset.peopleFilter;peopleAppFilter='ALL';}view(b.dataset.v)});
 function volunteerGoTo(target){
  if(target==='volAgenda'&&window.cgeVolunteerAgendaOpen)window.cgeVolunteerAgendaOpen();
  const el=$(target);if(!el)return;
