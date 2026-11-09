@@ -40,6 +40,7 @@ main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 
 <div class="card">
 <div class="section-title">Dati controllo</div>
 <div class="meta">
+<div id="mezzoPcBox" class="hidden"><label>Ambulanza *<select id="mezzoPc"><option value="">Seleziona mezzo</option><option value="07">Ambulanza 07 · 118</option><option value="08">Ambulanza 08</option><option value="09">Ambulanza 09 · 118</option></select></label></div>
 <div><label>Data<input id="data" type="date"></label></div>
 <div><label>Ora<input id="ora" type="time"></label></div>
 <div><label>Compilatore<input id="compilatore" placeholder="Nome e cognome"></label></div>
@@ -79,7 +80,7 @@ main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 
 <div><label>Esito<select id="filterEsito" onchange="renderArchive()"><option value="">Tutti</option><option>OPERATIVO</option><option>OPERATIVO CON RISERVA</option><option>NON OPERATIVO</option></select></label></div>
 <div style="display:flex;align-items:end;gap:8px"><button class="yellow" onclick="exportData()">Esporta archivio PDF</button><a class="light" style="padding:10px;border-radius:10px;font-weight:700;text-decoration:none" href="../">Torna al gestionale</a></div>
 </div>
-<div style="overflow:auto;padding:0 12px 16px"><table class="archive-table"><thead><tr><th>Data/Ora</th><th>Compilatore</th><th>KM</th><th>Carburante</th><th>Esito</th><th>KO</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
+<div style="overflow:auto;padding:0 12px 16px"><table class="archive-table"><thead><tr><th>Mezzo</th><th>Data/Ora</th><th>Compilatore</th><th>KM</th><th>Carburante</th><th>Esito</th><th>KO</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
 </div>
 </section>
 </main>
@@ -186,11 +187,17 @@ async function currentAccess(){
 async function saveChecklist(){
  if(!validate())return;
  const access=await currentAccess();
- if(!access||access.ruolo!=='TABLET'||!['07','08','09'].includes(String(access.mezzo||''))){
-  alert('Questa checklist può essere salvata esclusivamente dai Tablet delle Ambulanze 07, 08 e 09.');
+ if(!access||!['TABLET','AMMINISTRATORE','CENTRALINO'].includes(access.ruolo)){
+  alert('Accesso non autorizzato al salvataggio delle checklist.');
   return;
  }
- activeMezzo=String(access.mezzo);
+ const selectedMezzo=access.ruolo==='TABLET'?String(access.mezzo||''):String(document.getElementById('mezzoPc').value||'');
+ if(!['07','08','09'].includes(selectedMezzo)){
+  alert('Seleziona l’ambulanza 07, 08 oppure 09 prima di salvare.');
+  if(access.ruolo!=='TABLET')document.getElementById('mezzoPc').focus();
+  return;
+ }
+ activeMezzo=selectedMezzo;
  const payload={mezzo:activeMezzo,data:data.value,ora:ora.value,compilatore:compilatore.value.trim(),km_iniziali:Number(km.value),carburante:carburante.value,passaggio_consegne:passaggio.value||null,note_finali:noteFinali.value||null,controllo_scadenze:scadenze.value||null,esito:esito.value,firma:firma.value.trim(),risposte:JSON.parse(JSON.stringify(responses))};
  const btn=document.querySelector('.top-actions .primary'); if(btn){btn.disabled=true;btn.textContent='Salvataggio...'}
  const {error}=await sb.from('checklist_ambulanze').insert(payload);
@@ -203,18 +210,18 @@ function resetForm(){if(!confirm('Pulire tutta la checklist?'))return;document.q
 async function showView(v){newView.classList.toggle('hidden',v!=='new');archiveView.classList.toggle('hidden',v!=='archive');tabNuova.classList.toggle('active',v==='new');tabArchivio.classList.toggle('active',v==='archive');if(v==='new')setNow();if(v==='archive')await renderArchive()}
 async function renderArchive(){
  const access=await currentAccess();
- if(!access){archiveBody.innerHTML='<tr><td colspan="7">Sessione non valida. Accedi dal gestionale principale o dal Tablet del mezzo.</td></tr>';return}
+ if(!access){archiveBody.innerHTML='<tr><td colspan="8">Sessione non valida. Accedi dal gestionale principale o dal Tablet del mezzo.</td></tr>';return}
  let query=sb.from('checklist_ambulanze').select('*').order('created_at',{ascending:false});
  if(access.ruolo==='TABLET'){
   activeMezzo=String(access.mezzo||'');
   query=query.eq('mezzo',activeMezzo);
  }
  const {data:rows,error}=await query;
- if(error){archiveBody.innerHTML='<tr><td colspan="7">Impossibile caricare l’archivio.</td></tr>';return}
+ if(error){archiveBody.innerHTML='<tr><td colspan="8">Impossibile caricare l’archivio.</td></tr>';return}
  archiveCache=rows||[];
  const d=filterDate?.value||'',n=(filterName?.value||'').toLowerCase(),e=filterEsito?.value||'';
  const list=archiveCache.filter(r=>(!d||r.data===d)&&(!n||String(r.compilatore||'').toLowerCase().includes(n))&&(!e||r.esito===e));
- archiveBody.innerHTML=list.map(r=>{const ko=Object.values(r.risposte||{}).filter(x=>x.value==='KO'||x.value==='SCADUTO'||x.value==='VUOTA').length;return '<tr><td>'+esc(r.data)+' '+esc(String(r.ora||'').slice(0,5))+'</td><td>'+esc(r.compilatore)+'</td><td>'+esc(r.km_iniziali)+'</td><td>'+esc(r.carburante)+'</td><td><span class="badge '+(r.esito==='OPERATIVO'?'b-ok':'b-ko')+'">'+esc(r.esito)+'</span></td><td>'+ko+'</td><td><button class="light" onclick="openRecord(\''+r.id+'\')">Apri</button></td></tr>'}).join('')||'<tr><td colspan="7">Nessuna checklist salvata.</td></tr>'
+ archiveBody.innerHTML=list.map(r=>{const ko=Object.values(r.risposte||{}).filter(x=>x.value==='KO'||x.value==='SCADUTO'||x.value==='VUOTA').length;return '<tr><td>'+esc(r.mezzo||'—')+'</td><td>'+esc(r.data)+' '+esc(String(r.ora||'').slice(0,5))+'</td><td>'+esc(r.compilatore)+'</td><td>'+esc(r.km_iniziali)+'</td><td>'+esc(r.carburante)+'</td><td><span class="badge '+(r.esito==='OPERATIVO'?'b-ok':'b-ko')+'">'+esc(r.esito)+'</span></td><td>'+ko+'</td><td><button class="light" onclick="openRecord(\''+r.id+'\')">Apri</button></td></tr>'}).join('')||'<tr><td colspan="8">Nessuna checklist salvata.</td></tr>'
 }
 function openRecord(id){
  const r=archiveCache.find(x=>x.id===id);if(!r)return;showView('new');data.value=r.data;ora.value=String(r.ora||'').slice(0,5);compilatore.value=r.compilatore;km.value=r.km_iniziali;carburante.value=r.carburante;passaggio.value=r.passaggio_consegne||'';noteFinali.value=r.note_finali||'';scadenze.value=r.controllo_scadenze||'';esito.value=r.esito||'';firma.value=r.firma||'';responses=JSON.parse(JSON.stringify(r.risposte||{}));
@@ -258,7 +265,7 @@ renderChecklist();setNow();
 (async()=>{
  const access=await currentAccess();
  if(!access){
-  alert('Sessione tablet non valida. Rientra dal link dedicato del mezzo.');
+  alert('Sessione non valida. Accedi al gestionale prima di compilare la checklist.');
   location.href='../';
   return;
  }
@@ -266,6 +273,9 @@ renderChecklist();setNow();
   alert('La checklist ambulanze è disponibile solo per i mezzi 07, 08 e 09.');
   location.href='../?area=tablet&mezzo='+encodeURIComponent(access.mezzo||'');
   return;
+ }
+ if(access.ruolo==='AMMINISTRATORE'||access.ruolo==='CENTRALINO'){
+  document.getElementById('mezzoPcBox').classList.remove('hidden');
  }
  if(access.ruolo==='TABLET'){
   activeMezzo=String(access.mezzo||'');
