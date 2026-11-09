@@ -2109,7 +2109,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <section id="shifts" class="surface hidden"><div class="hero"><h2>Gestione turni</h2><div class="actions"><button type="button" class="btn secondary jump" data-v="availability">📅 Consulta disponibilità volontari</button></div></div><div class="pad">
 <div class="section"><h3>Nuovo turno</h3><div class="grid4"><div class="field"><label>Data *</label><input id="sd" type="date"></div><div class="field"><label>Inizio *</label><input id="ssi" type="time"></div><div class="field"><label>Fine *</label><input id="sse" type="time"></div><div class="field"><label>Mezzo</label><select id="sm"></select></div><div class="field"><label>Tipo</label><select id="stype"><option>EMERGENZA</option><option>ORDINARIO</option><option>DIMISSIONI</option><option>ASSISTENZA</option></select></div><div class="field"><label>Note</label><input id="snote"></div></div><div class="toolbar"><button id="ssave" class="btn yellow">Crea turno</button></div><div id="shiftmsg"></div></div>
-<div class="section"><h3>Assegna operatore al turno</h3><div class="grid3"><div class="field"><label>Turno</label><select id="shiftSel"></select></div><div class="field"><label>Operatore</label><select id="shiftPerson"></select></div><div class="field"><label>Ruolo</label><select id="shiftRole"><option>AUTISTA</option><option>CAPO_SERVIZIO</option><option>SOCCORRITORE</option><option>SECONDO_SOCCORRITORE</option><option>ACCOMPAGNATORE</option><option value="AFFIANCATO">TIROCINANTE / AFFIANCATO</option></select></div></div><div class="toolbar"><button id="shiftAdd" class="btn secondary">Assegna</button></div></div>
+<div class="section"><h3>Assegna operatore al turno</h3><div class="grid3"><div class="field"><label>Turno</label><select id="shiftSel"></select></div><div class="field"><label>Categoria personale</label><select id="shiftPersonCategory"><option value="VOLONTARIO">Volontari</option><option value="DIPENDENTE">Dipendenti</option></select></div><div class="field"><label>Operatore</label><select id="shiftPerson"></select></div><div class="field"><label>Ruolo</label><select id="shiftRole"><option>AUTISTA</option><option>CAPO_SERVIZIO</option><option>SOCCORRITORE</option><option>SECONDO_SOCCORRITORE</option><option>ACCOMPAGNATORE</option><option value="AFFIANCATO">TIROCINANTE / AFFIANCATO</option></select></div></div><div class="toolbar"><button id="shiftAdd" class="btn secondary">Assegna</button></div></div>
 <div id="shiftList"></div></div></section>
 
 <section id="availability" class="surface hidden"><div class="hero"><h2>Disponibilità volontari</h2><div class="actions"><button type="button" class="btn secondary jump" data-v="shifts">🕒 Vai a Gestione turni</button></div></div><div class="pad">
@@ -4305,10 +4305,19 @@ async function refreshMaster(){
  const selectedAdminTariff=tariffs.find(x=>x.codice===tariffViewCode);
  if(selectedAdminTariff)$('ttar').value=selectedAdminTariff.id;
  const po=opts(people.filter(x=>x.attivo!==false),'badge',x=>x.nome_completo+' · '+x.badge);
- ['shiftPerson','avp'].forEach(id=>$(id).innerHTML=po);
+ $('avp').innerHTML=po;refreshShiftPersonnelDropdown();
  renderQualChecks();
  refreshTariffDestinations();
 }
+function cgeIsEmployee(p){return p?.dipendente===true||p?.dipendente==='true'}
+function refreshShiftPersonnelDropdown(){
+const el=$('shiftPerson'),cat=$('shiftPersonCategory');if(!el||!cat)return;
+const prev=el.value,dep=cat.value==='DIPENDENTE';
+const rows=(people||[]).filter(p=>p.attivo!==false&&cgeIsEmployee(p)===dep);
+el.innerHTML='<option value="">Seleziona '+(dep?'dipendente':'volontario')+'</option>'+rows.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo||p.badge)+' · '+esc(p.badge)+'</option>').join('');
+if(rows.some(p=>p.badge===prev))el.value=prev;
+}
+$('shiftPersonCategory')?.addEventListener('change',refreshShiftPersonnelDropdown);
 function qualificationDisplayName(q){
  const code=String(q?.codice||'').toUpperCase();
  const name=String(q?.nome||'');
@@ -9012,7 +9021,7 @@ async function dimAdminAssign(day,fascia,role){
  const badge=$('dimAdminDay').querySelector('[data-dim-assign-person="'+fascia+'-'+role+'"]')?.value;
  const person=dimAdminEligible.find(p=>p.badge===badge&&p.ruolo===role);
  if(dimRowsFor(dimAdminRows,day,fascia).some(x=>x.ruolo===role))return msg('dimAdminMsg','Questo ruolo è già occupato nella fascia selezionata.','warn');
- if(!person)return msg('dimAdminMsg','Seleziona un volontario con qualifica valida.','warn');
+ if(!person)return msg('dimAdminMsg','Seleziona un operatore con qualifica valida.','warn');
  if(!confirm('Inserire DEFINITIVAMENTE '+person.nome_completo+' nel turno DIMISSIONI del '+day+
   ', '+fascia+' come '+dimRoleLabel(role)+'?'))return;
  dimAdminBusy=true;msg('dimAdminMsg','Inserimento nell’equipaggio in corso...');
@@ -9202,7 +9211,12 @@ function emgRenderDay(kind){
  });
  if(admin){
   $(prefix+'Day').querySelectorAll('[data-emg-remove]').forEach(button=>button.onclick=()=>emgRemove(button.dataset.emgRemove));
-  $(prefix+'Day').querySelectorAll('[data-emg-assign]').forEach(button=>button.onclick=()=>emgAdminAssign(day,button.dataset.emgAssign,button.dataset.emgRole));
+  $(prefix+'Day').querySelectorAll('[data-emg-assign]').forEach(button=>button.onclick=()=>emgAdminAssign(day,button.dataset.emgAssign,button.dataset.emgRole));$(prefix+'Day').querySelectorAll('[data-emg-assign-category]').forEach(category=>{
+ const select=$(prefix+'Day').querySelector('[data-emg-assign-person="'+category.dataset.emgAssignCategory+'"]');
+ const button=category.parentElement?.querySelector('[data-emg-assign]');
+ const refresh=()=>{if(!select)return;select.value='';let n=0;Array.from(select.options).forEach(o=>{if(o.dataset.category){o.hidden=o.dataset.category!==category.value;if(!o.hidden)n++;}});if(button)button.disabled=!n;};
+ category.addEventListener('change',refresh);refresh();
+ });
   $(prefix+'Day').querySelectorAll('[data-emg-mezzo-save]').forEach(button=>button.onclick=()=>emgAssignMezzo(button));
  }else{
   $(prefix+'Day').querySelectorAll('[data-emg-join]').forEach(button=>button.onclick=()=>emgJoin(day,button.dataset.emgJoin));
@@ -9216,10 +9230,14 @@ function emgAdminAssignControls(day,fascia,slot){
  return '<div class="dim-admin-assign"><b>Aggiungi all’equipaggio</b>'+
   remaining.map(role=>{
    const candidates=emgAdminEligible.filter(p=>p.ruolo===role&&!slot.some(x=>x.badge_personale===p.badge));
+const volunteerCandidates=candidates.filter(p=>!cgeIsEmployee(people.find(q=>q.badge===p.badge)));
+const employeeCandidates=candidates.filter(p=>cgeIsEmployee(people.find(q=>q.badge===p.badge)));
    return '<div class="actions" style="margin-top:6px"><label class="muted" style="min-width:84px">'+emgRoleLabel(role)+'</label>'+
-    '<select data-emg-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Volontario '+emgRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
-     '<option value="">Scegli volontario</option>'+
-     candidates.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo+' · '+p.badge)+'</option>').join('')+
+    '<select data-emg-assign-category="'+esc(fascia)+'-'+role+'" style="min-width:110px;flex:0 1 120px"><option value="VOLONTARIO">Volontari</option><option value="DIPENDENTE">Dipendenti</option></select>'+
+    '<select data-emg-assign-person="'+esc(fascia)+'-'+role+'" aria-label="Operatore '+emgRoleLabel(role)+' '+esc(fascia)+'" style="min-width:0;flex:1 1 125px">'+
+     '<option value="">Scegli operatore</option>'+
+     volunteerCandidates.map(p=>'<option data-category="VOLONTARIO" value="'+esc(p.badge)+'">'+esc(p.nome_completo+' · '+p.badge)+'</option>').join('')+
+     employeeCandidates.map(p=>'<option data-category="DIPENDENTE" value="'+esc(p.badge)+'" hidden>'+esc(p.nome_completo+' · '+p.badge)+'</option>').join('')+
     '</select><button type="button" class="btn yellow" style="padding:8px" data-emg-assign="'+esc(fascia)+
      '" data-emg-role="'+role+'"'+(candidates.length?'':' disabled')+'>Aggiungi</button></div>';
   }).join('')+'</div>';
@@ -9242,6 +9260,8 @@ async function emgAdminAssign(day,fascia,role){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo)||emgAdminBusy||day!==emgAdminSelected)return;
  const badge=$('emgAdminDay').querySelector('[data-emg-assign-person="'+fascia+'-'+role+'"]')?.value;
  const person=emgAdminEligible.find(p=>p.badge===badge&&p.ruolo===role);
+ const kind=$('emgAdminDay').querySelector('[data-emg-assign-category="'+fascia+'-'+role+'"]')?.value||'VOLONTARIO';
+ if(person&&cgeIsEmployee(people.find(p=>p.badge===badge))!==(kind==='DIPENDENTE'))return msg('emgAdminMsg','Categoria del personale non corrispondente.','err');
  if(emgRowsFor(emgAdminRows,day,fascia).some(x=>x.ruolo===role))return msg('emgAdminMsg','Questo ruolo è già occupato nella fascia selezionata.','warn');
  if(!person)return msg('emgAdminMsg','Seleziona un volontario con qualifica valida.','warn');
  if(!confirm('Inserire DEFINITIVAMENTE '+person.nome_completo+' nel turno EMERGENZA 118 del '+day+
