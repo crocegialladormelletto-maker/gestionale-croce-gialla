@@ -7956,8 +7956,43 @@ async function removeDetailCrew(id){
 }
 
 $('refresh').onclick=loadServices;$('fd').onchange=loadServices;$('fs').onchange=loadServices;$('fm').onchange=loadServices;$('fq').oninput=()=>{clearTimeout(window.qq);window.qq=setTimeout(loadServices,250)};
+
+function cgeNormalizeRestrictedName(value){
+ return String(value||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('it');
+}
+async function cgeCheckRestrictedCustomer(){
+ // Servizi ordinari: controllo anche se il paziente è digitato manualmente.
+ const type=String($('t').value||'').toUpperCase();
+ if(type.includes('118')||type.includes('EMERGENZA'))return true;
+ const n=$('pn').value.trim(),c=$('pc').value.trim(),cf=$('cf').value.trim().toUpperCase().replace(/\s/g,'');
+ const full=cgeNormalizeRestrictedName([n,c].filter(Boolean).join(' '));
+ const rev=cgeNormalizeRestrictedName([c,n].filter(Boolean).join(' '));
+ if(!cf&&!full)return true;
+ let records;
+ try{
+  const {data,error}=await sb.from('clienti_restrizioni').select('id,denominazione,codice_fiscale_piva,stato,motivo').eq('stato','ATTIVA').limit(1000);
+  if(error)throw error;
+  records=data||[];
+ }catch(err){
+  msg('fmsg','Impossibile verificare Clienti con Restrizioni. Salvataggio sospeso per sicurezza: '+(err.message||String(err)),'err');
+  return false;
+ }
+ const match=records.find(x=>
+  (cf&&String(x.codice_fiscale_piva||'').toUpperCase().replace(/\s/g,'')===cf) ||
+  (full&&[full,rev].includes(cgeNormalizeRestrictedName(x.denominazione)))
+ );
+ if(!match)return true;
+ if(prof?.ruolo!=='AMMINISTRATORE'){
+  msg('fmsg','⚠️ CLIENTE CON RESTRIZIONE ATTIVA: '+match.denominazione+'. Non è possibile salvare il servizio senza autorizzazione amministrativa. Contatta Presidente/Tesoriere. Motivo: '+match.motivo,'err');
+  return false;
+ }
+ const authorized=confirm('⚠️ CLIENTE CON RESTRIZIONE ATTIVA: '+match.denominazione+'\\nMotivo: '+match.motivo+'\\n\\nSei un amministratore. Vuoi autorizzare eccezionalmente questo servizio?');
+ if(!authorized){msg('fmsg','Inserimento annullato: cliente con restrizione attiva.','warn');return false}
+ return true;
+}
 $('form').onsubmit=async e=>{
  e.preventDefault();
+ if(!(await cgeCheckRestrictedCustomer()))return;
  const selectedTariff=tariffDestinations.find(x=>x.tariffa_destinazione_id===$('tarDest').value);
  const selectedTariffario=tariffs.find(x=>x.id===$('tar').value);
  const selectedType=selectedVehicleTariffType();
