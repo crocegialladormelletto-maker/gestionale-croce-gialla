@@ -31,9 +31,10 @@ main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 
 <body>
 <header><div class="wrap"><div class="brand"><img class="mark" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div><h1>Checklist Ambulanza</h1><div class="sub">Croce Gialla Emergenza ODV · Dormelletto · Checklist completa</div></div></div></div></header>
 <main class="wrap">
-<div class="tabs">
+<div class="tabs" style="align-items:center">
 <button id="tabNuova" class="active" onclick="showView('new')">Nuova checklist</button>
 <button id="tabArchivio" onclick="showView('archive')">Archivio checklist</button>
+<a href="../" id="returnMainChecklist" style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;background:#0b2d57;color:white;text-decoration:none;border:2px solid #ffd21c;border-radius:10px;padding:11px 16px;font-weight:800;min-height:42px">← Torna al gestionale principale</a>
 </div>
 
 <section id="newView">
@@ -85,7 +86,7 @@ main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 
 <div><label>Filtra data<input id="filterDate" type="date" oninput="renderArchive()"></label></div>
 <div><label>Filtra compilatore<input id="filterName" oninput="renderArchive()" placeholder="Cerca nome"></label></div>
 <div><label>Esito<select id="filterEsito" onchange="renderArchive()"><option value="">Tutti</option><option>OPERATIVO</option><option>OPERATIVO CON RISERVA</option><option>NON OPERATIVO</option></select></label></div>
-<div style="display:flex;align-items:end;gap:8px"><button class="yellow" onclick="exportData()">Esporta archivio PDF</button><a class="light" style="padding:10px;border-radius:10px;font-weight:700;text-decoration:none" href="../">Torna al gestionale</a></div>
+<div style="display:flex;align-items:end;gap:8px"><button class="yellow" onclick="exportData()">Esporta archivio PDF</button></div>
 </div>
 <div style="overflow:auto;padding:0 12px 16px"><table class="archive-table"><thead><tr><th>Mezzo</th><th>Data/Ora</th><th>Compilatore</th><th>KM</th><th>Carburante</th><th>Esito</th><th>KO</th><th>Azioni</th></tr></thead><tbody id="archiveBody"></tbody></table></div>
 </div>
