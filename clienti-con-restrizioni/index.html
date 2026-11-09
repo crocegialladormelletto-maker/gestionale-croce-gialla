@@ -12,9 +12,11 @@
 <div class="wide"><label>Motivo della restrizione *</label><textarea name="motivo" required rows="2" maxlength="1500"></textarea></div><div class="wide"><label>Note amministrative (non inserire dati sanitari)</label><textarea name="note" rows="3" maxlength="3000"></textarea></div></div>
 <p class="row"><button id="save">Salva anagrafica</button><button class="secondary" type="button" id="cancel">Annulla</button><button class="secondary hidden" type="button" id="history">Storico modifiche</button></p></form><div id="historyResult" class="hidden"></div></section>
 <p class="muted">Le restrizioni sono solo amministrative: non bloccano automaticamente i servizi 118. La consultazione non equivale all'autorizzazione di un nuovo trasporto.</p></div><div id="message" role="status" aria-live="polite"></div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
 const URL='https://ihottewckpwpwqzpxusl.supabase.co', KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
-const $=id=>document.getElementById(id);let token=sessionStorage.getItem('cge_restrizioni_token')||'',uid='',canEdit=false,items=[],selected=null;
+const sb=supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+const $=id=>document.getElementById(id);let token='',uid='',canEdit=false,items=[],selected=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function notice(s,error=false){$('message').innerHTML='<div class="msg '+(error?'err':'')+'">'+esc(s)+'</div>'}
 async function request(path,options={}){let response=await fetch(URL+path,{...options,headers:{apikey:KEY,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{}),...(options.headers||{})}});let t=await response.text(),d;try{d=t?JSON.parse(t):null}catch{d=t}if(!response.ok)throw Error(d?.message||d?.error_description||d?.error||'Errore '+response.status);return d}
@@ -34,8 +36,8 @@ function edit(id){selected=items.find(x=>x.id===id)||null;if(!canEdit){if(select
 $('form').reset();$('formTitle').textContent=selected?'Modifica anagrafica':'Nuova anagrafica';$('history').classList.toggle('hidden',!selected);$('historyResult').classList.add('hidden');$('historyResult').textContent='';
 let d=selected||{tipologia:'PRIVATO',stato:'ATTIVA',data_inserimento:new Date().toLocaleDateString('en-CA'),importo_insoluto:0};for(const el of $('form').elements){if(el.name&&d[el.name]!=null)el.value=d[el.name]}$('editor').classList.remove('hidden');$('editor').scrollIntoView({behavior:'smooth',block:'start'})}
 function close(){selected=null;$('editor').classList.add('hidden')}
-$('login').onsubmit=async e=>{e.preventDefault();try{let r=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});token=r.access_token;sessionStorage.setItem('cge_restrizioni_token',token);$('password').value='';await enter();notice('Accesso effettuato.')}catch(err){notice(err.message,true)}};
-$('logout').onclick=()=>{sessionStorage.removeItem('cge_restrizioni_token');token='';location.reload()};
+$('login').onsubmit=async e=>{e.preventDefault();try{const {data,error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;token=data.session?.access_token||'';if(!token)throw Error('Sessione non disponibile');$('password').value='';await enter();notice('Accesso effettuato.')}catch(err){notice(err.message,true)}};
+$('logout').onclick=async()=>{await sb.auth.signOut();token='';location.reload()};
 $('search').oninput=render;$('filter').onchange=render;$('new').onclick=()=>edit(null);$('cancel').onclick=close;
 $('rows').onclick=e=>{const btn=e.target.closest('button[data-id]');if(btn)edit(btn.dataset.id)};
 $('form').onsubmit=async e=>{e.preventDefault();if(!canEdit)return;const btn=$('save');btn.disabled=true;try{let data=Object.fromEntries(new FormData($('form')).entries());for(let k of ['codice_fiscale_piva','indirizzo','telefono','email','note'])data[k]=data[k]?.trim()||null;data.denominazione=data.denominazione.trim();data.motivo=data.motivo.trim();data.importo_insoluto=Number(data.importo_insoluto)||0;data.updated_by=uid;
@@ -43,5 +45,7 @@ if(!data.denominazione||!data.motivo)throw Error('Compila nome e motivo.');
 if(!selected){let same=items.find(x=>data.codice_fiscale_piva&&x.codice_fiscale_piva?.toUpperCase()===data.codice_fiscale_piva.toUpperCase());if(same&&!confirm('Esiste già una scheda con lo stesso codice fiscale / P.IVA. Continuare?'))return;data.created_by=uid;await request('/rest/v1/clienti_restrizioni',{method:'POST',body:JSON.stringify(data),headers:{Prefer:'return=minimal'}})}else await request('/rest/v1/clienti_restrizioni?id=eq.'+encodeURIComponent(selected.id),{method:'PATCH',body:JSON.stringify(data),headers:{Prefer:'return=minimal'}});
 close();await load();notice('Anagrafica salvata correttamente.')}catch(err){notice('Salvataggio non riuscito: '+err.message,true)}finally{btn.disabled=false}};
 $('history').onclick=async()=>{if(!selected)return;try{let d=await request('/rest/v1/clienti_restrizioni_storico?select=operazione,registrato_il,operatore&restrizione_id=eq.'+encodeURIComponent(selected.id)+'&order=registrato_il.desc&limit=100');$('historyResult').innerHTML='<h3>Storico modifiche</h3>'+d.map(x=>'<p>'+esc(new Date(x.registrato_il).toLocaleString('it-IT'))+' · '+esc(x.operazione)+' · '+esc(x.operatore)+'</p>').join('');$('historyResult').classList.remove('hidden')}catch(err){notice(err.message,true)}};
-if(token)enter().catch(e=>{sessionStorage.removeItem('cge_restrizioni_token');token='';notice(e.message,true)});
+// Riutilizza la sessione Supabase già aperta nel gestionale principale (stessa origine e stesso progetto).
+(async()=>{try{const {data,error}=await sb.auth.getSession();if(error)throw error;let session=data?.session;if(!session){const refreshed=await sb.auth.refreshSession();session=refreshed.data?.session}if(!session?.access_token)return;token=session.access_token;await enter()}catch(err){token='';$('loginPanel').classList.remove('hidden');$('app').classList.add('hidden');notice('Accesso automatico non disponibile: '+err.message,true)}})();
+sb.auth.onAuthStateChange((_event,session)=>{if(session?.access_token)token=session.access_token});
 </script></body></html>
