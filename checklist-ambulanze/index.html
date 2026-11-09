@@ -64,6 +64,7 @@ main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 
 </div>
 </div>
 
+<div id="draftStatus" role="status" aria-live="polite" style="margin:8px 0;color:#0b2d57;font-size:13px">La compilazione viene conservata automaticamente su questo dispositivo, anche se aggiorni la pagina. Il salvataggio definitivo resta «Salva checklist».</div>
 <div class="top-actions">
 <button class="primary" onclick="saveChecklist()">Salva checklist</button>
 <button class="yellow" onclick="window.print()">Stampa / Salva PDF</button>
@@ -88,7 +89,56 @@ main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 
 <script>
 const SUPABASE_URL="https://ihottewckpwpwqzpxusl.supabase.co", SUPABASE_KEY="sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-let archiveCache=[],activeMezzo='';
+let archiveCache=[],activeMezzo='',draftStorageKey='',draftReady=false;
+const draftFieldIds=['mezzoPc','data','ora','compilatore','km','carburante','passaggio','noteFinali','scadenze','esito','firma'];
+function draftSnapshot(){
+ const fields={};
+ draftFieldIds.forEach(id=>{const el=document.getElementById(id);if(el)fields[id]=el.value;});
+ return {version:1,fields,responses:JSON.parse(JSON.stringify(responses)),updatedAt:new Date().toISOString()};
+}
+function draftHasWork(draft){
+ if(!draft||!draft.fields)return false;
+ if(Object.keys(draft.responses||{}).length)return true;
+ return ['mezzoPc','compilatore','km','carburante','passaggio','noteFinali','scadenze','esito','firma'].some(k=>String(draft.fields[k]||'').trim());
+}
+function writeDraft(){
+ if(!draftReady||!draftStorageKey)return;
+ try{
+  const draft=draftSnapshot();
+  if(draftHasWork(draft))localStorage.setItem(draftStorageKey,JSON.stringify(draft));
+  else localStorage.removeItem(draftStorageKey);
+  const el=document.getElementById('draftStatus');if(el)el.textContent='Bozza conservata automaticamente su questo dispositivo. Per registrarla nell’archivio premi «Salva checklist».';
+ }catch(e){
+  const el=document.getElementById('draftStatus');if(el)el.textContent='Attenzione: non è stato possibile conservare la bozza su questo dispositivo. Salva la checklist prima di uscire.';
+ }
+}
+function clearDraft(){
+ if(draftStorageKey){try{localStorage.removeItem(draftStorageKey)}catch(e){}}
+}
+function restoreDraft(){
+ if(!draftStorageKey)return false;
+ let draft;
+ try{draft=JSON.parse(localStorage.getItem(draftStorageKey)||'null')}catch(e){return false}
+ if(!draftHasWork(draft))return false;
+ draftFieldIds.forEach(id=>{
+  const el=document.getElementById(id);
+  if(el&&Object.prototype.hasOwnProperty.call(draft.fields,id))el.value=draft.fields[id];
+ });
+ responses=draft.responses&&typeof draft.responses==='object'&&!Array.isArray(draft.responses)?draft.responses:{};
+ updateChecklistChoiceStyles();
+ const el=document.getElementById('draftStatus');
+ if(el)el.textContent='Checklist recuperata automaticamente dopo l’aggiornamento della pagina. Premi «Salva checklist» per registrarla definitivamente.';
+ return true;
+}
+function updateChecklistChoiceStyles(){
+ document.querySelectorAll('.choice').forEach(btn=>{
+  btn.classList.remove('sel','ok','ko','na','warn');
+  const x=responses[btn.dataset.key];
+  if(x&&x.value===btn.dataset.val)btn.classList.add('sel',x.value==='OK'||['4/4','3/4','2/4','1/4','1/2'].includes(x.value)?'ok':x.value==='KO'||x.value==='SCADUTO'||x.value==='VUOTA'?'ko':x.value==='N.A.'?'na':'warn');
+ });
+ document.querySelectorAll('[data-note]').forEach(inp=>inp.value=(responses[inp.dataset.note]||{}).note||'');
+ document.querySelectorAll('[data-special]').forEach(inp=>inp.value=(responses[inp.dataset.special]||{}).value||'');
+}
 const sections = [
 {title:'Vano guida · Documenti mezzo',items:['Carta circolazione','Assicurazione','Revisione in regola','Fogli marcia','Schede 118']},
 {title:'Vano guida · Motore',items:['Corretto avviamento','Corretto livello olio']},
@@ -203,11 +253,22 @@ async function saveChecklist(){
  const {error}=await sb.from('checklist_ambulanze').insert(payload);
  if(btn){btn.disabled=false;btn.textContent='Salva checklist'}
  if(error){alert('Salvataggio non riuscito: '+error.message);return}
+ clearDraft();
+ draftReady=false;
+ const status=document.getElementById('draftStatus');if(status)status.textContent='Checklist registrata correttamente nell’archivio. Per un nuovo controllo premi «Nuova / Pulisci».';
  alert('Checklist salvata. È ora visibile anche nell’archivio del gestionale principale.');
  await renderArchive();
 }
-function resetForm(){if(!confirm('Pulire tutta la checklist?'))return;document.querySelectorAll('input,textarea').forEach(x=>x.value='');document.querySelectorAll('select').forEach(x=>x.selectedIndex=0);document.querySelectorAll('.choice').forEach(x=>x.classList.remove('sel','ok','ko','na','warn'));responses={};setNow()}
-async function showView(v){newView.classList.toggle('hidden',v!=='new');archiveView.classList.toggle('hidden',v!=='archive');tabNuova.classList.toggle('active',v==='new');tabArchivio.classList.toggle('active',v==='archive');if(v==='new')setNow();if(v==='archive')await renderArchive()}
+function resetForm(){
+ if(!confirm('Pulire tutta la checklist e cancellare la bozza conservata su questo dispositivo?'))return;
+ clearDraft();
+ document.querySelectorAll('#newView input,#newView textarea').forEach(x=>x.value='');
+ document.querySelectorAll('#newView select').forEach(x=>x.selectedIndex=0);
+ document.querySelectorAll('.choice').forEach(x=>x.classList.remove('sel','ok','ko','na','warn'));
+ responses={};draftReady=true;setNow();
+ const status=document.getElementById('draftStatus');if(status)status.textContent='Nuova checklist: compilazione conservata automaticamente su questo dispositivo.';
+}
+async function showView(v){newView.classList.toggle('hidden',v!=='new');archiveView.classList.toggle('hidden',v!=='archive');tabNuova.classList.toggle('active',v==='new');tabArchivio.classList.toggle('active',v==='archive');if(v==='archive')await renderArchive()}
 async function renderArchive(){
  const access=await currentAccess();
  if(!access){archiveBody.innerHTML='<tr><td colspan="8">Sessione non valida. Accedi dal gestionale principale o dal Tablet del mezzo.</td></tr>';return}
@@ -224,9 +285,10 @@ async function renderArchive(){
  archiveBody.innerHTML=list.map(r=>{const ko=Object.values(r.risposte||{}).filter(x=>x.value==='KO'||x.value==='SCADUTO'||x.value==='VUOTA').length;return '<tr><td>'+esc(r.mezzo||'—')+'</td><td>'+esc(r.data)+' '+esc(String(r.ora||'').slice(0,5))+'</td><td>'+esc(r.compilatore)+'</td><td>'+esc(r.km_iniziali)+'</td><td>'+esc(r.carburante)+'</td><td><span class="badge '+(r.esito==='OPERATIVO'?'b-ok':'b-ko')+'">'+esc(r.esito)+'</span></td><td>'+ko+'</td><td><button class="light" onclick="openRecord(\''+r.id+'\')">Apri</button></td></tr>'}).join('')||'<tr><td colspan="8">Nessuna checklist salvata.</td></tr>'
 }
 function openRecord(id){
- const r=archiveCache.find(x=>x.id===id);if(!r)return;showView('new');data.value=r.data;ora.value=String(r.ora||'').slice(0,5);compilatore.value=r.compilatore;km.value=r.km_iniziali;carburante.value=r.carburante;passaggio.value=r.passaggio_consegne||'';noteFinali.value=r.note_finali||'';scadenze.value=r.controllo_scadenze||'';esito.value=r.esito||'';firma.value=r.firma||'';responses=JSON.parse(JSON.stringify(r.risposte||{}));
- document.querySelectorAll('.choice').forEach(btn=>{btn.classList.remove('sel','ok','ko','na','warn');const x=responses[btn.dataset.key];if(x&&x.value===btn.dataset.val){btn.classList.add('sel',x.value==='OK'||['4/4','3/4','2/4','1/4','1/2'].includes(x.value)?'ok':x.value==='KO'||x.value==='SCADUTO'||x.value==='VUOTA'?'ko':x.value==='N.A.'?'na':'warn')}})
- document.querySelectorAll('[data-note]').forEach(inp=>inp.value=(responses[inp.dataset.note]||{}).note||'');document.querySelectorAll('[data-special]').forEach(inp=>inp.value=(responses[inp.dataset.special]||{}).value||'');window.scrollTo(0,0)
+ const r=archiveCache.find(x=>x.id===id);if(!r)return;
+ if(draftHasWork(draftSnapshot())&&draftReady&&!confirm('Aprendo una checklist dell’archivio sostituirai la compilazione attualmente aperta. Continuare?'))return;
+ showView('new');if(document.getElementById('mezzoPc'))document.getElementById('mezzoPc').value=r.mezzo||'';data.value=r.data;ora.value=String(r.ora||'').slice(0,5);compilatore.value=r.compilatore;km.value=r.km_iniziali;carburante.value=r.carburante;passaggio.value=r.passaggio_consegne||'';noteFinali.value=r.note_finali||'';scadenze.value=r.controllo_scadenze||'';esito.value=r.esito||'';firma.value=r.firma||'';responses=JSON.parse(JSON.stringify(r.risposte||{}));
+ updateChecklistChoiceStyles();writeDraft();window.scrollTo(0,0)
 }
 function exportData(){
  const d=filterDate?.value||'';
@@ -262,6 +324,10 @@ function exportData(){
 }
 function setNow(){const d=new Date();const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');data.value=y+'-'+m+'-'+day;ora.value=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 renderChecklist();setNow();
+document.getElementById('newView').addEventListener('input',writeDraft);
+document.getElementById('newView').addEventListener('change',writeDraft);
+document.getElementById('newView').addEventListener('click',event=>{if(event.target.closest('.choice'))writeDraft()});
+window.addEventListener('pagehide',writeDraft);
 (async()=>{
  const access=await currentAccess();
  if(!access){
@@ -284,7 +350,12 @@ renderChecklist();setNow();
   const a=document.querySelector('#archiveView .section-title'); if(a)a.textContent='Archivio checklist Ambulanza '+activeMezzo;
   const back=document.querySelector('#archiveView a.light'); if(back)back.href='../?area=tablet&mezzo='+encodeURIComponent(activeMezzo);
  }
- if(access.ruolo==='AMMINISTRATORE'||access.ruolo==='CENTRALINO')showView('archive');
+ const auth=await sb.auth.getUser();
+ if(auth.data?.user?.id)draftStorageKey='cge_checklist_ambulanze_draft_v1_'+auth.data.user.id+(access.ruolo==='TABLET'?'_'+activeMezzo:'_pc');
+ const wasRestored=restoreDraft();
+ draftReady=true;
+ if(wasRestored)await showView('new');
+ else if(access.ruolo==='AMMINISTRATORE'||access.ruolo==='CENTRALINO')await showView('archive');
  else await renderArchive();
 })();
 </script>
