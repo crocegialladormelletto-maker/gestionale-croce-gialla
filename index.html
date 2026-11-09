@@ -13316,7 +13316,9 @@ function tabletCalcSheet(){
  const persistedBase=tabletCurrentSheet?.importo_inserito;
  const base=baseField?.value!==''&&baseField?.value!=null?n('importo_inserito'):(persistedBase!=null&&persistedBase!==''?Number(persistedBase):0);
  const sum=base+(get('sedia_montascale')?.checked?n('supplemento_sedia'):0)+(get('barella_bariatrica')?.checked?n('supplemento_bariatrica'):0);
- if($('tabletSheetTotal'))$('tabletSheetTotal').value=sum.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+ // Non mostrare € 0,00 se nessun importo base è ancora stato acquisito.
+ const amountKnown=(baseField?.value!==''&&baseField?.value!=null)||(persistedBase!=null&&persistedBase!=='');
+ if($('tabletSheetTotal'))$('tabletSheetTotal').value=amountKnown?sum.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2}):'Da verificare';
 }
 async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(!tabletCurrentSheet||tabletCurrentSheet.stato==='CHIUSO'||tabletBusy)return false;
@@ -13408,16 +13410,12 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   const draft=String(field?.value??'').trim().replace(',','.');
   if(draft!==''&&Number.isFinite(Number(draft))&&Number(draft)>=0)row.importo_inserito=Number(draft);
  }
- if(!tabletSheetIs118&&row.importo_inserito===null){
+ if(!tabletSheetIs118&&row.importo_inserito==null){
+  // Un importo mancante non deve bloccare la chiusura operativa:
+  // conserva quello esistente in archivio, senza mai sovrascriverlo con NULL o 0.
   const savedBase=tabletCurrentSheet?.importo_inserito;
-  if(savedBase!==null&&savedBase!==undefined&&savedBase!=='') row.importo_inserito=Number(savedBase);
-  else if(!tabletIsAssistance && (
-    silent || !String(tabletCurrentService?.note||'').startsWith('NON PROGRAMMATO · tablet mezzo ')
-  )) {
-   const baseInput=document.querySelector('#tabletSheetForm [data-ts-field="importo_inserito"]');
-   if(baseInput)baseInput.focus();
-   return msg('tabletSheetMsg','Importo servizio non acquisito. Inserisci l’importo nel campo Importo servizio € prima della chiusura.','warn'),false;
-  }
+  if(savedBase!==null&&savedBase!==undefined&&savedBase!=='')row.importo_inserito=Number(savedBase);
+  else delete row.importo_inserito;
  }
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
@@ -13459,9 +13457,9 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
     throw new Error('Importo servizio non memorizzato sul server: '+(retry.error?.message||'verifica salvataggio non riuscita'));
    r.data.importo_inserito=retry.data.importo_inserito;
   }
-  if(!tabletSheetIs118&&!tabletIsAssistance&&r.data.importo_inserito==null)
-   throw new Error('Importo servizio mancante: inserisci l’importo reale prima di chiudere il foglio.');
-  tabletCurrentSheet={...tabletCurrentSheet,...row};
+  // La contabilità resta in verifica quando manca il prezzo, senza impedire
+  // la registrazione operativa del viaggio o creare un pagamento fittizio.
+  tabletCurrentSheet={...tabletCurrentSheet,...row,...r.data};
   const syncWarnings=[];
 
   // La sincronizzazione accessoria non deve bloccare il salvataggio del foglio.
