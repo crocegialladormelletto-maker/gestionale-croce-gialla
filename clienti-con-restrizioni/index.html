@@ -4,7 +4,14 @@
 <div class="row" style="margin-bottom:15px"><a class="btn secondary" href="../">← Gestionale principale</a><span class="grow"></span><span id="who"></span><button id="logout" class="secondary hidden">Esci</button></div>
 <section class="panel hidden" id="loginPanel"><h2>Accesso riservato</h2><p>Amministratori, Tesoriere e Centralino possono consultare le anagrafiche. Solo gli amministratori autorizzati possono gestirle.</p><form id="login"><div class="grid"><div><label>Email</label><input type="email" id="email" required autocomplete="username"></div><div><label>Password</label><input type="password" id="password" required autocomplete="current-password"></div></div><p><button>Accedi</button></p></form></section>
 <p id="sessionWait" class="muted">Verifica sessione del gestionale in corso…</p><div id="app" class="hidden"><section class="panel"><div class="row"><h2 class="grow">Elenco anagrafiche</h2><button id="new" class="yellow hidden">+ Nuova anagrafica</button></div><div class="row"><input id="search" placeholder="Cerca nome, codice fiscale o P.IVA" style="max-width:430px"><select id="filter" style="max-width:220px"><option value="">Tutti gli stati</option><option value="ATTIVA">Attive</option><option value="REVOCATA">Revocate</option></select></div><p id="count" class="muted"></p><div class="scroll"><table><thead><tr><th>Cliente / Struttura</th><th>Tipo</th><th>CF / P.IVA</th><th>Motivo</th><th>Insoluto</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="rows"></tbody></table></div></section>
-<section id="editor" class="panel hidden"><h2 id="formTitle">Nuova anagrafica</h2><form id="form"><div class="grid">
+<section id="editor" class="panel hidden"><h2 id="formTitle">Nuova anagrafica</h2>
+<div class="panel" style="background:#f7fafc;border:1px solid #dce5ed;padding:14px">
+<label for="patientSearch">🔎 Cerca un paziente già presente nel gestionale</label>
+<input id="patientSearch" type="search" placeholder="Scrivi almeno 2 lettere del nome, cognome o codice fiscale" autocomplete="off">
+<div id="patientSearchStatus" class="muted" aria-live="polite">Seleziona un risultato per compilare automaticamente i dati. Puoi anche inserire l'anagrafica manualmente.</div>
+<div id="patientResults" class="hidden" style="max-height:260px;overflow:auto;margin-top:8px"></div>
+</div>
+<form id="form"><div class="grid">
 <div><label>Tipologia *</label><select name="tipologia" required><option value="PRIVATO">Privato / Paziente</option><option value="STRUTTURA">Struttura sanitaria</option><option value="AZIENDA">Azienda</option><option value="ASSOCIAZIONE">Associazione</option><option value="ALTRO">Altro</option></select></div>
 <div><label>Nome e cognome / Ragione sociale *</label><input name="denominazione" required maxlength="200"></div><div><label>CF / Partita IVA</label><input name="codice_fiscale_piva" maxlength="24"></div>
 <div class="wide"><label>Indirizzo</label><input name="indirizzo" maxlength="300"></div><div><label>Telefono</label><input name="telefono" maxlength="50"></div><div><label>Email</label><input type="email" name="email" maxlength="200"></div>
@@ -30,8 +37,64 @@ await load();
 }
 async function load(){items=await request('/rest/v1/clienti_restrizioni?select=*&order=created_at.desc&limit=1000');render()}
 function render(){let q=$('search').value.toLocaleLowerCase('it'),f=$('filter').value;let data=items.filter(x=>(!f||x.stato===f)&&[x.denominazione,x.codice_fiscale_piva,x.motivo].some(v=>(v||'').toLocaleLowerCase('it').includes(q)));$('count').textContent=data.length+' anagrafiche visualizzate';$('rows').innerHTML=data.map(x=>'<tr><td><b>'+esc(x.denominazione)+'</b></td><td>'+esc(x.tipologia)+'</td><td>'+esc(x.codice_fiscale_piva||'—')+'</td><td>'+esc(x.motivo)+'</td><td>'+Number(x.importo_insoluto||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'})+'</td><td><span class="pill '+(x.stato==='ATTIVA'?'active':'revoked')+'">'+esc(x.stato)+'</span></td><td><button class="secondary" data-id="'+esc(x.id)+'">'+(canEdit?'Apri / Modifica':'Consulta')+'</button></td></tr>').join('')||'<tr><td colspan="7">Nessuna anagrafica trovata.</td></tr>'}
+let patientResults=[],patientLookupSeq=0,patientLookupTimer=null;
+function resetPatientSearch(){
+ clearTimeout(patientLookupTimer);patientLookupSeq++;patientResults=[];
+ $('patientSearch').value='';$('patientResults').innerHTML='';$('patientResults').classList.add('hidden');
+ $('patientSearchStatus').textContent="Seleziona un risultato per compilare automaticamente i dati. Puoi anche inserire l'anagrafica manualmente.";
+}
+async function searchExistingPatients(){
+ const q=$('patientSearch').value.trim(),seq=++patientLookupSeq;
+ if(q.length<2){patientResults=[];$('patientResults').classList.add('hidden');$('patientSearchStatus').textContent='Scrivi almeno 2 caratteri per cercare.';return}
+ $('patientSearchStatus').textContent='Ricerca dei pazienti in corso…';
+ try{
+   // Ricerca nominativo, cognome e codice fiscale nella rubrica pazienti esistente.
+   const clean=q.replace(/[,%()]/g,' ').trim();if(clean.length<2)return;
+   const term='*'+clean.replace(/\s+/g,'*')+'*';
+   const filters='or=('+['nome','cognome','codice_fiscale'].map(k=>k+'.ilike.'+term).join(',')+')';
+   const url='/rest/v1/anagrafica_pazienti?select=id,nome,cognome,codice_fiscale,telefono,indirizzo,email&'+encodeURIComponent(filters)+'&order=cognome.asc&limit=30';
+   const rows=await request(url);
+   if(seq!==patientLookupSeq)return;
+   patientResults=Array.isArray(rows)?rows:[];
+   $('patientSearchStatus').textContent=patientResults.length?patientResults.length+' pazienti trovati. Seleziona quello corretto.':'Nessun paziente trovato. Puoi compilare i dati manualmente.';
+   $('patientResults').innerHTML=patientResults.map((p,i)=>
+     '<button type="button" class="secondary" data-patient-index="'+i+'" style="display:block;width:100%;text-align:left;margin:4px 0">'+
+     '<strong>'+esc([p.cognome,p.nome].filter(Boolean).join(' '))+'</strong>'+
+     (p.codice_fiscale?' · '+esc(p.codice_fiscale):'')+
+     (p.indirizzo?' <span class="muted"> · '+esc(p.indirizzo)+'</span>':'')+'</button>'
+   ).join('');
+   $('patientResults').classList.toggle('hidden',!patientResults.length);
+ }catch(err){
+   if(seq!==patientLookupSeq)return;
+   patientResults=[];$('patientResults').classList.add('hidden');
+   $('patientSearchStatus').textContent='Ricerca non disponibile: '+(err.message||String(err))+'. Puoi inserire i dati manualmente.';
+ }
+}
+$('patientSearch').addEventListener('input',()=>{
+ clearTimeout(patientLookupTimer);
+ const q=$('patientSearch').value.trim();
+ if(q.length<2){patientLookupSeq++;patientResults=[];$('patientResults').classList.add('hidden');$('patientSearchStatus').textContent='Scrivi almeno 2 caratteri per cercare.';return}
+ patientLookupTimer=setTimeout(searchExistingPatients,320);
+});
+$('patientResults').addEventListener('click',e=>{
+ const btn=e.target.closest('[data-patient-index]');if(!btn)return;
+ const p=patientResults[Number(btn.dataset.patientIndex)];if(!p)return;
+ const f=$('form').elements;
+ const fullName=[p.nome,p.cognome].filter(Boolean).join(' ').trim();
+ if(!fullName){$('patientSearchStatus').textContent='Anagrafica senza nominativo: verifica manualmente.';return}
+ f.namedItem('tipologia').value='PRIVATO';
+ f.namedItem('denominazione').value=fullName;
+ f.namedItem('codice_fiscale_piva').value=p.codice_fiscale||'';
+ f.namedItem('indirizzo').value=p.indirizzo||'';
+ f.namedItem('telefono').value=p.telefono||'';
+ f.namedItem('email').value=p.email||'';
+ $('patientSearch').value=[p.cognome,p.nome].filter(Boolean).join(' ');
+ $('patientResults').classList.add('hidden');
+ $('patientSearchStatus').textContent='✓ Paziente selezionato. Dati copiati nella scheda; completa motivo e restrizione e salva.';
+ f.namedItem('motivo').focus();
+});
 function edit(id){selected=items.find(x=>x.id===id)||null;if(!canEdit){if(selected)notice(selected.denominazione+': '+selected.motivo+' (stato: '+selected.stato+').');return}
-$('form').reset();$('formTitle').textContent=selected?'Modifica anagrafica':'Nuova anagrafica';$('history').classList.toggle('hidden',!selected);$('historyResult').classList.add('hidden');$('historyResult').textContent='';
+$('form').reset();resetPatientSearch();$('formTitle').textContent=selected?'Modifica anagrafica':'Nuova anagrafica';$('history').classList.toggle('hidden',!selected);$('historyResult').classList.add('hidden');$('historyResult').textContent='';
 let d=selected||{tipologia:'PRIVATO',stato:'ATTIVA',data_inserimento:new Date().toLocaleDateString('en-CA'),importo_insoluto:0};for(const el of $('form').elements){if(el.name&&d[el.name]!=null)el.value=d[el.name]}$('editor').classList.remove('hidden');$('editor').scrollIntoView({behavior:'smooth',block:'start'})}
 function close(){selected=null;$('editor').classList.add('hidden')}
 $('login').onsubmit=async e=>{e.preventDefault();try{const r=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});token=r.access_token;if(!token)throw Error('Sessione non disponibile');$('password').value='';await enter();notice('Accesso effettuato.')}catch(err){notice(err.message,true)}};
