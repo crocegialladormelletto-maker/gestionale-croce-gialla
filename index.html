@@ -4290,6 +4290,18 @@ async function refreshMaster(){
   sb.from('personale_qualifiche').select('*').eq('attiva',true)
  ]);
  vehicles=v.data||[];tariffs=t.data||[];tariffDestinations=td.data||[];people=p.data||[];qualifications=q.data||[];pq=pqual.data||[];
+ if(prof?.ruolo==='CENTRALINO'){
+  const types=await sb.rpc('cge_tipologie_personale_turni');
+  if(types.error){
+    console.error('Categorie dipendenti/volontari non disponibili:',types.error.message);
+    people=people.map(p=>({...p,dipendente:null}));
+    msg('shiftmsg','Impossibile distinguere dipendenti e volontari: '+types.error.message,'err');
+  }else{
+    const map=new Map((types.data||[]).map(row=>[row.badge,row.dipendente]));
+    people=people.map(p=>({...p,dipendente:map.has(p.badge)?map.get(p.badge):null}));
+  }
+ }
+
  const vo=opts(vehicles,'codice',x=>x.codice+' · '+x.tipologia+' · '+x.targa);
  ['m','sm','avm','exm','fm','fvVehicle','fv118Vehicle'].forEach(id=>{
   if(!$(id))return;
