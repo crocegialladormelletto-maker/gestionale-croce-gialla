@@ -52,7 +52,7 @@ async function searchExistingPatients(){
    const clean=q.replace(/[,%()]/g,' ').trim();if(clean.length<2)return;
    const term='*'+clean.replace(/\s+/g,'*')+'*';
    const filters='or=('+['nome','cognome','codice_fiscale'].map(k=>k+'.ilike.'+term).join(',')+')';
-   const url='/rest/v1/anagrafica_pazienti?select=id,nome,cognome,codice_fiscale,telefono,indirizzo,email&'+encodeURIComponent(filters)+'&order=cognome.asc&limit=30';
+   const url='/rest/v1/anagrafica_pazienti?select=id,nome,cognome,codice_fiscale,telefono,indirizzo,email&or='+encodeURIComponent(filters.slice(3))+'&order=cognome.asc&limit=30';
    const rows=await request(url);
    if(seq!==patientLookupSeq)return;
    patientResults=Array.isArray(rows)?rows:[];
