@@ -2680,11 +2680,11 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Destinazione tariffaria</label><select id="tabletAdTariffDest"><option value="">—</option></select></div>
     <div class="field"><label>Fascia</label><select id="tabletAdNight"><option value="false">Diurno</option><option value="true">Notturno</option></select></div>
     <div class="field"><label>Importo concordato € (solo senza tariffario)</label><input id="tabletAdAmount" type="number" step="0.01" min="0" max="10000" placeholder="Vuoto = da concordare"></div>
-    <div class="field" id="tabletAdPaymentBox"><label>Modalità pagamento</label><select id="tabletAdPayment"><option value="">Da indicare</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="ALTRO">Altro</option></select></div>
-    <div class="field" id="tabletAdPaymentDateBox"><label>Data pagamento</label><input id="tabletAdPaymentDate" type="date"></div>
+    <div class="field" id="tabletAdPaymentBox" style="display:none!important"><label>Modalità pagamento</label><select id="tabletAdPayment"><option value="">Da indicare</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="ALTRO">Altro</option></select></div>
+    <div class="field" id="tabletAdPaymentDateBox" style="display:none!important"><label>Data pagamento</label><input id="tabletAdPaymentDate" type="date"></div>
     <div class="field"><label>Note operative</label><textarea id="tabletAdNotes" maxlength="2000"></textarea></div>
    </div>
-   <div id="tabletAdQuote" class="notice">Seleziona un tariffario oppure lascia il prezzo da concordare con il Centralino.</div><div class="notice" id="tabletAdReceiptNotice">Se scegli POS o CONTANTI, dopo aver creato il servizio il tablet aprirà il Foglio Viaggio e ti chiederà di caricare la ricevuta prima della chiusura.</div>
+   <div id="tabletAdQuote" class="notice">Seleziona un tariffario oppure lascia il prezzo da concordare con il Centralino.</div><div class="notice" id="tabletAdReceiptNotice">Il tablet registra solo la cifra del servizio. Gli incassi e le ricevute vengono gestiti dall’amministrazione.</div>
    <div class="actions"><button id="tabletAdDraftSave" type="button" class="btn secondary">💾 Salva dati</button><button id="tabletAdSubmit" type="submit" class="btn yellow">Crea servizio e Foglio Viaggio</button></div><div class="muted" style="margin-top:6px">Salva dati conserva la compilazione sul tablet senza creare ancora il servizio. Potrai riaprirla e completarla successivamente.</div>
    <div id="tabletAdMsg"></div>
    </form>
@@ -2868,7 +2868,7 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Annotazioni</label><textarea data-ts-field="annotazioni"></textarea></div>
     </div>
     <div id="tabletServicePaymentSection">
-    <h3 class="tablet-section-title" style="margin-top:20px">Servizio e pagamento</h3>
+    <h3 class="tablet-section-title" style="margin-top:20px">Importo del servizio</h3><div class="notice">Indica soltanto la cifra del trasporto. Metodo, data e registrazione del pagamento sono gestiti dall’amministrazione nel gestionale.</div>
     <div class="tablet-fields">
      <div class="field"><label>Importo base € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito"></div>
      <div class="field"><label>Sedia cingolata / motorizzata</label><label class="check"><input type="checkbox" data-ts-field="sedia_montascale"> Utilizzata</label></div>
@@ -2876,10 +2876,9 @@ Causale: numero preventivo</textarea>
      <div class="field"><label>Barella bariatrica</label><label class="check"><input type="checkbox" data-ts-field="barella_bariatrica"> Utilizzata</label></div>
      <div class="field"><label>Supplemento bariatrica €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_bariatrica"></div>
      <div class="field"><label>Totale calcolato €</label><input id="tabletSheetTotal" disabled value="—"></div>
-     <div class="field"><label>Modalità pagamento</label><select data-ts-field="modalita_pagamento"><option value="">Non indicata</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="NON DOVUTO">Non dovuto</option><option value="ALTRO">Altro</option></select></div>
-     <div class="field" id="tabletSheetPayDateBox"><label>Data pagamento</label><input type="date" data-ts-field="data_pagamento"></div>
+
     </div>
-    <div id="tabletReceiptSection" class="section hidden" style="margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
+    <div id="tabletReceiptSection" class="section hidden" style="display:none!important;margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
      <h3 style="margin-top:0">📎 Ricevuta pagamento</h3>
      <p class="muted"><b>Ricevuta POS o contanti da conservare.</b> Puoi caricarla ora oppure successivamente dal gestionale, anche dopo la chiusura del Foglio Viaggio. La mancanza della ricevuta non blocca la chiusura.</p>
      <div class="actions" style="align-items:end">
@@ -11445,16 +11444,11 @@ async function tabletCreateImmediate(){
   if(Number.isFinite(kmStart))kmUpdate.km_partenza=kmStart;
   if(Number.isFinite(kmClose))kmUpdate.km_arrivo=kmClose;
   const immediateInternal=$('tabletAdType').value==='Servizio interno';
-  const payMode=immediateInternal?null:($('tabletAdPayment')?.value||null);
-  const payDate=(immediateInternal||payMode==='BONIFICO DIFFERITO')?null:($('tabletAdPaymentDate')?.value||null);
-  kmUpdate.modalita_pagamento=payMode;
-  kmUpdate.data_pagamento=payDate;
+  // Non trasmettere metodo e data di pagamento dal tablet.
+  const payMode=null;
   const ku=await sb.from('fogli_viaggio').update(kmUpdate).eq('id',created.foglio_id).eq('mezzo',tabletMezzo).eq('stato','APERTO');
   if(ku.error)throw ku.error;
-  const su=await sb.from('servizi_giornalieri').update({
-   modalita_pagamento_prevista:payMode
-  }).eq('id',created.servizio_id);
-  if(su.error)throw su.error;
+
   msg('tabletAdMsg','Servizio creato. Foglio Viaggio '+created.numero_foglio+' collegato.','ok');
   tabletClearImmediateDraft();
   $('tabletImmediateForm').reset();
@@ -11503,18 +11497,6 @@ $('tabletImmediateToggle').onclick=async()=>{
  if(!panel.classList.contains('hidden')){await tabletLoadCrewPeople();tabletApplyImmediateTypeRules();await tabletPrefillImmediateKm();}
 };
 if($('tabletReceiptUpload'))$('tabletReceiptUpload').onclick=()=>uploadPaymentReceipt(tabletCurrentSheet,'tabletReceiptFile','tablet');
-const tabletPayModeField=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
-if(tabletPayModeField)tabletPayModeField.onchange=()=>{
- const dateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
- if(tabletPayModeField.value&&tabletPayModeField.value!=='BONIFICO DIFFERITO'){
-  if(dateField&&!dateField.value&&['CONTANTI','POS'].includes(tabletPayModeField.value))dateField.value=todaySafe();
- }
- if(!tabletPayModeField.value||tabletPayModeField.value==='BONIFICO DIFFERITO'){
-  if(dateField)dateField.value='';
- }
- tabletUpdatePaymentDateVisibility();
- tabletToggleReceiptSection();
-};
 $('tabletPriceGroup').onchange=tabletRenderTariffPrices;
 $('tabletPriceSearch').oninput=tabletRenderTariffPrices;
 $('tabletAdType').onchange=tabletApplyImmediateTypeRules;
@@ -11919,32 +11901,10 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
  }
- // Una scheda rimasta aperta durante una rettifica contabile puo avere un metodo
- // vecchio. Non sovrascrivere mai un incasso gia registrato nel database.
- if(!tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio)){
-  const paid=await sb.from('pagamenti_servizi')
-   .select('modalita,data_pagamento')
-   .eq('foglio_viaggio_id',tabletCurrentSheet.id)
-   .eq('stato','REGISTRATO')
-   .order('data_pagamento',{ascending:false})
-   .limit(1);
-  if(paid.error)return msg('tabletSheetMsg','Impossibile verificare il pagamento gia registrato: '+paid.error.message,'err'),false;
-  const recorded=paid.data?.[0];
-  if(recorded){
-   const recordedMode=String(recorded.modalita||'').trim().toUpperCase();
-   recordedPaymentMode=recordedMode;
-   const displayedMode=String(row.modalita_pagamento||'').trim().toUpperCase();
-   if(displayedMode!==recordedMode){
-    row.modalita_pagamento=recordedMode;
-    const select=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
-    if(select)select.value=recordedMode;
-    msg('tabletSheetMsg','Metodo aggiornato dal pagamento gia registrato: '+recordedMode+'. Nessun nuovo incasso creato.','warn');
-   }
-   row.data_pagamento=recorded.data_pagamento||null;
-   const payDate=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
-   if(payDate)payDate.value=row.data_pagamento||'';
-  }
- }
+ // La registrazione pagamenti compete esclusivamente all'amministrazione.
+ // Il tablet non legge, modifica o sincronizza modalita e data di pagamento.
+ delete row.modalita_pagamento;
+ delete row.data_pagamento;
  if(tabletCurrentService && !tabletIs118Type(tabletCurrentService.tipo_servizio) && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno' && !isAssistanceManifestation(tabletCurrentService.tipo_servizio)){
   try{
    const sig=await tabletPrivacyUploadSignature();
@@ -12008,20 +11968,16 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  // Un pagamento REGISTRATO e' definitivo per il tablet: lascia intatti metodo e data.
  // Non includere queste colonne nell'UPDATE, altrimenti il trigger anti-rettifica
  // puo' interpretare il salvataggio operativo come una modifica contabile.
- if(recordedPaymentMode){
-  delete row.modalita_pagamento;
-  delete row.data_pagamento;
- }
+
  tabletBusy=true;msg('tabletSheetMsg','Salvataggio in corso...');
  try{
-  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio,modalita_pagamento').maybeSingle();
+  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
   // Controllo effettivo dei dati contabili persistiti: mai confermare un salvataggio incompleto.
   if(!tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio)){
    if(row.importo_inserito!==null&&row.importo_inserito!==undefined&&Number(r.data.importo_inserito)!==Number(row.importo_inserito))
     throw new Error('L’importo non è stato registrato nel database. Riapri il foglio e riprova; la chiusura è bloccata.');
-   if(String(r.data.modalita_pagamento||'').toUpperCase()!==String(recordedPaymentMode||row.modalita_pagamento||'').toUpperCase())
-    throw new Error('La modalità di pagamento non coincide con il pagamento registrato. Il foglio rimane aperto.');
+
   }
   tabletCurrentSheet={...tabletCurrentSheet,...row,...r.data};
   tabletCurrentSheet={...tabletCurrentSheet,...row};
@@ -12094,13 +12050,6 @@ async function tabletCloseSheet(){
  if(refreshed.error||!refreshed.data)return msg('tabletSheetMsg','Impossibile verificare il foglio salvato: '+(refreshed.error?.message||'foglio non trovato'),'err');
  tabletCurrentSheet={...tabletCurrentSheet,...refreshed.data};
  const closeType=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase();
- if(!standalone118&&!tabletIs118Type(closeType)&&!closeType.includes('SERVIZIO INTERNO')){
-  const chosen=String(tabletCurrentSheet.modalita_pagamento||'').trim().toUpperCase();
-  const paymentSelect=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
-  if(paymentSelect&&paymentSelect.value!==chosen)paymentSelect.value=chosen;
-  if(Number(tabletCurrentSheet.totale_servizio||0)>0&&!chosen)return msg('tabletSheetMsg','Seleziona il metodo di pagamento prima di chiudere.','warn');
-  if(chosen&&chosen!==String(tabletCurrentSheet.modalita_pagamento||'').trim().toUpperCase())return msg('tabletSheetMsg','Il metodo di pagamento non è stato salvato: usa Salva dati e riprova.','err');
- }
  const privacyRequired=closeType!=='118'&&!closeType.includes('EMERGENZA')&&!closeType.includes('SERVIZIO INTERNO')&&closeType!=='INTERNO'&&!isAssistanceManifestation(closeType);
  if(privacyRequired){
   const signatureStatus=String(tabletCurrentSheet?.privacy_firma_stato||'NON_FIRMATO').toUpperCase();
@@ -12123,9 +12072,7 @@ async function tabletCloseSheet(){
  try{
   // Il database e' autorevole: la select del tablet puo' contenere un valore obsoleto.
   // Non inviare mai un metodo diverso da quello appena rilevato dal foglio persistito.
-  const paymentMode=tabletCurrentSheet.modalita_pagamento||null;
-  const paymentDate=tabletCurrentSheet.data_pagamento||(['CONTANTI','POS'].includes(String(paymentMode).toUpperCase())?todaySafe():null);
-  const r=await sb.rpc('cge_tablet_chiudi_foglio_con_pagamento',{p_foglio:tabletCurrentSheet.id,p_modalita:paymentMode,p_data:paymentDate});
+  const r=await sb.rpc('cge_tablet_chiudi_foglio_viaggio',{p_foglio:tabletCurrentSheet.id});
   if(r.error)throw r.error;
   tabletCurrentSheet={...tabletCurrentSheet,...(r.data||{}),stato:'CHIUSO'};
   msg('tabletSheetMsg','Foglio chiuso correttamente nel database.','ok');
@@ -12176,31 +12123,6 @@ if($('tabletPrivacyClearSignature'))$('tabletPrivacyClearSignature').onclick=()=
 if($('tabletPrivacyViewSignature'))$('tabletPrivacyViewSignature').onclick=tabletPrivacyShowSavedSignature;
 $('tabletCloseSheet').onclick=tabletCloseSheet;
 $('tabletSheetForm').addEventListener('input',tabletCalcSheet);
-$('tabletSheetForm').addEventListener('change',async e=>{
- if(e.target?.matches('[data-ts-field="modalita_pagamento"]')){
-  tabletUpdatePaymentDateVisibility();
-  tabletToggleReceiptSection();
-  // Il metodo scelto è persistito subito: un successivo salvataggio parziale
-  // del foglio non può far sparire il pagamento dal gestionale.
-  const field=e.target, sheet=tabletCurrentSheet, mode=field.value;
-  if(!['06','08'].includes(String(tabletMezzo))||!sheet||sheet.stato==='CHIUSO'||!mode||tabletBusy)return;
-  const chosenSheetId=sheet.id;
-  field.disabled=true;
-  msg('tabletSheetMsg','Registrazione metodo di pagamento in corso...');
-  try{
-   const date=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]')?.value||null;
-   const r=await sb.rpc('cge_tablet_salva_pagamento_foglio',{p_foglio:chosenSheetId,p_modalita:mode,p_data:date});
-   if(r.error)throw r.error;
-   const v=await sb.from('fogli_viaggio').select('id,modalita_pagamento,data_pagamento').eq('id',chosenSheetId).eq('mezzo',tabletMezzo).single();
-   if(v.error||String(v.data?.modalita_pagamento||'').toUpperCase()!==String(mode).toUpperCase())throw new Error('Il pagamento non risulta salvato nel database.');
-   if(tabletCurrentSheet?.id===chosenSheetId){
-    tabletCurrentSheet={...tabletCurrentSheet,modalita_pagamento:v.data.modalita_pagamento,data_pagamento:v.data.data_pagamento};
-    msg('tabletSheetMsg','Metodo di pagamento '+mode+' salvato e verificato nel database.','ok');
-   }
-  }catch(err){msg('tabletSheetMsg','ATTENZIONE: metodo di pagamento NON salvato. '+(err.message||String(err)),'err')}
-  finally{field.disabled=false;}
- }
-});
 $('tabletPrintSheet').onclick=async()=>{
  if(!tabletCurrentSheet)return;
  const printWindow=openFoglioPrintWindow();
