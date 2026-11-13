@@ -2881,7 +2881,7 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Tariffario</label><select id="tabletAdTariffGroup"><option value="">Nessuno / concordata</option></select></div>
     <div class="field"><label>Destinazione tariffaria</label><select id="tabletAdTariffDest"><option value="">—</option></select></div>
     <div class="field"><label>Fascia</label><select id="tabletAdNight"><option value="false">Diurno</option><option value="true">Notturno</option></select></div>
-    <div class="field"><label>Importo concordato € (solo senza tariffario)</label><input id="tabletAdAmount" type="number" step="0.01" min="0" max="10000" placeholder="Vuoto = da concordare"></div>
+    <div class="field"><label>Importo servizio € (solo senza tariffario)</label><input id="tabletAdAmount" type="number" step="0.01" min="0" max="10000" placeholder="Vuoto = da concordare"></div>
     <div class="field" id="tabletAdPaymentBox"><label>Modalità pagamento</label><select id="tabletAdPayment"><option value="">Da indicare</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico istantaneo / già ricevuto</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="ALTRO">Altro</option></select></div>
     <div class="field" id="tabletAdPaymentDateBox"><label>Data pagamento</label><input id="tabletAdPaymentDate" type="date"></div>
     <div class="field"><label>Note operative</label><textarea id="tabletAdNotes" maxlength="2000"></textarea></div>
@@ -12369,7 +12369,7 @@ function renderTabletList(){
  '<div><div class="muted">'+esc(tabletDateLabel(s.data_servizio))+'</div><span class="tablet-hour">'+esc(tabletFmt(s.ora_partenza_prevista))+'</span></div>'+
  '<span class="tablet-vehicle">'+esc(s.mezzo)+'</span><span class="tablet-pill">'+esc(st)+'</span></div>'+
  '<div class="tablet-flow">'+esc(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+'<br>'+esc(s.luogo_partenza||'Sede')+' → '+(s.luogo_carico_paziente||s.indirizzo_carico_paziente?'<b>CARICO:</b> '+esc([s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · '))+' → ':'')+esc(s.ospedale_destinazione||s.destinazione||'—')+'</div>'+
- '<div class="notice" style="margin:8px 0">Importo previsto per il paziente: <b>'+esc(tabletServiceAmount(s))+'</b></div>'+
+ '<div class="notice" style="margin:8px 0">Importo servizio per il paziente: <b>'+esc(tabletServiceAmount(s))+'</b></div>'+
  '<div class="muted">'+(isAssistanceManifestation(s.tipo_servizio)?'Partenza dalla sede: '+esc(tabletFmt(s.ora_partenza_prevista))+' · Inizio assistenza: '+esc(tabletFmt(s.ora_inizio_assistenza_prevista))+' · Fine assistenza: '+esc(tabletFmt(s.ora_fine_assistenza_prevista))+' · Rientro previsto in sede: '+esc(tabletFmt(s.ora_rientro_previsto)):'Carico previsto: '+esc(tabletFmt(s.ora_carico_paziente_prevista))+' · Arrivo destinazione previsto: '+esc(tabletFmt(s.ora_arrivo_destinazione_prevista))+' · Rientro previsto: '+esc(tabletFmt(s.ora_rientro_previsto)))+'</div>'+
  '<div style="margin-top:6px"><span class="pill '+(ready?'g':'r')+'">'+crew.length+'/'+esc(s.equipaggio_minimo??(String(s.mezzo||'')==='06'?1:2))+' componenti assegnati</span>'+
  (s.numero_foglio?' <span class="pill b">'+esc(s.numero_foglio)+'</span>':'')+'</div>'+
@@ -12736,7 +12736,7 @@ function tabletUpdateImmediateQuote(){
   $('tabletAdQuote').className='notice warn';$('tabletAdQuote').textContent='Scegli tariffario oppure importo concordato, non entrambi.';return;
  }
  $('tabletAdQuote').className='notice';
- $('tabletAdQuote').textContent=x?'Importo previsto per il paziente: '+euro(night?x.importo_notturno:x.importo_diurno):
+ $('tabletAdQuote').textContent=x?'Importo servizio per il paziente: '+euro(night?x.importo_notturno:x.importo_diurno):
  manual!==''?'Importo concordato: '+euro(Number(manual)):'Nessuna tariffa impostata: da concordare con il Centralino.';
 }
 // Valori automatici soltanto nella pagina: nessun dato di pazienti o bozze viene modificato.
@@ -13155,7 +13155,7 @@ async function openTabletService(id){
  (isAssistanceManifestation(s.tipo_servizio)?'':tabletReadOnlyField('Carico paziente',[s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · ')))+
  (isAssistanceManifestation(s.tipo_servizio)?'':tabletReadOnlyField('Percorso operativo',[[s.luogo_partenza,s.indirizzo_partenza].filter(Boolean).join(' · '),[s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · '),[s.ospedale_destinazione||s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · ')].filter(Boolean).join(' → ')))+
  tabletReadOnlyField('Destinazione',[s.ospedale_destinazione||s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · '))+
- tabletReadOnlyField(isAssistanceManifestation(s.tipo_servizio)?'Importo previsto assistenza':'Importo previsto per il paziente',tabletServiceAmount(s))+
+ tabletReadOnlyField(isAssistanceManifestation(s.tipo_servizio)?'Importo servizio assistenza':'Importo servizio per il paziente',tabletServiceAmount(s))+
  tabletReadOnlyField('Equipaggio',crew.map(x=>x.nome_completo+' · '+x.ruolo).join(' | '))+
  tabletReadOnlyField('Note operative',isAssistanceManifestation(s.tipo_servizio)?extractEventContact(s.note).notes:s.note)+'</div>';
  renderTabletDetailHeader();await loadTabletSheet(id);
