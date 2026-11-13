@@ -2455,10 +2455,11 @@ Causale: numero preventivo</textarea>
  </div>
 </section>
 
-<section id="accounting" class="surface hidden"><div class="hero"><h2>Contabilità servizi</h2></div><div class="pad">
-<div class="stats"><div class="stat"><small>TOTALE DA INCASSARE</small><b id="accDue">€ 0</b></div><div class="stat"><small>PAGATI</small><b id="accPaid">0</b></div><div class="stat"><small>PARZIALI</small><b id="accPart">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="accCount">0</b></div></div>
-<div class="section"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="1"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
-<div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto</th><th>Pagamento</th><th>Stato gestionale</th></tr></thead><tbody id="accBody"></tbody></table></div></div></section>
+<section id="accounting" class="surface hidden"><div class="hero"><h2>Contabilità servizi</h2><p>Controllo rapido degli incassi per Presidente e Tesoriere. Un servizio senza pagamento registrato è da verificare, non necessariamente insoluto.</p></div><div class="pad">
+<div class="stats"><div class="stat"><small>RESIDUO DA VERIFICARE</small><b id="accDue">€ 0</b></div><div class="stat"><small>SALDATI</small><b id="accPaid">0</b></div><div class="stat"><small>PARZIALI</small><b id="accPart">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="accCount">0</b></div></div>
+<div class="section"><h3>Registra pagamento verificato</h3><p class="muted">Confronta il pagamento effettivo con POS, contanti o banca. Il tablet non certifica che il cliente abbia pagato.</p><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo ricevuto €</label><input id="accAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>BONIFICO DIFFERITO</option><option>BONIFICO ISTANTANEO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
+<div class="section"><div class="actions" style="align-items:end"><div class="field"><label>Visualizza</label><select id="accStatusFilter"><option value="verificare">Da verificare</option><option value="tutti">Tutti</option><option value="saldati">Saldati</option><option value="parziali">Parziali</option><option value="definire">Importo da definire</option></select></div><div class="field"><label>Cerca paziente, mezzo, servizio</label><input id="accQuickSearch" placeholder="Cerca..."></div><button id="accRefresh" type="button" class="btn secondary">↻ Aggiorna</button></div><p id="accListInfo" class="muted"></p>
+<div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto / residuo</th><th>Verifica pagamento</th><th>Azione</th></tr></thead><tbody id="accBody"></tbody></table></div></div></div></section>
 
 <section id="communications" class="surface hidden">
  <div class="hero"><h2>📣 Comunicazioni ai volontari</h2>
@@ -10756,19 +10757,74 @@ if($('pnPrintYear'))$('pnPrintYear').onclick=pnPrintYear;
 if($('pnRunStartupCheck'))$('pnRunStartupCheck').onclick=pnRunStartupCheck;
 if($('pnRunDryTest'))$('pnRunDryTest').onclick=pnRunDryTest;
 
-async function loadAccounting(){
- const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(500);
- const a=r.data||[], due=a.filter(x=>Number(x.residuo)>0);
- $('accDue').textContent=euro(due.reduce((z,x)=>z+Number(x.residuo||0),0));
- $('accPaid').textContent=a.filter(x=>x.stato_contabile==='SALDATO').length;
- $('accPart').textContent=a.filter(x=>x.stato_contabile==='PARZIALE').length;
- $('accCount').textContent=a.filter(x=>x.stato_gestionale==='DA CONTABILIZZARE').length;
- $('accService').innerHTML=opts(due,'servizio_id',x=>x.data_servizio+' · '+x.mezzo+' · '+x.tipo_servizio+' · '+([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||x.destinazione||''));
- $('accBody').innerHTML=a.length?a.map(x=>'<tr><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.tipo_servizio)+' · mezzo '+esc(x.mezzo)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>Servizio '+euro(x.importo_dovuto)+'<br><strong>Incassato '+euro(x.importo_incassato)+'</strong><br><span class="muted">Residuo '+euro(x.residuo)+'</span></td><td><span class="pill b">'+esc(x.stato_contabile)+'</span></td><td>'+esc(x.stato_gestionale||'—')+'</td></tr>').join(''):'<tr><td colspan="6">Nessun servizio.</td></tr>';
+let accountingRows=[];
+function accountingLabel(x){
+ const due=Number(x.importo_dovuto||0), paid=Number(x.importo_incassato||0), residual=Number(x.residuo||0);
+ if(x.stato_contabile==='SALDATO'||(due>0&&residual<=0&&paid>=due))return 'SALDATO';
+ if(paid>0&&residual>0)return 'PARZIALE';
+ if(due<=0)return 'DA DEFINIRE';
+ return 'DA VERIFICARE';
 }
-$('accSave').onclick=async()=>{if(!$('accService').value||$('accAmount').value==='')return msg('accMsg','Seleziona il servizio e inserisci l’importo.','warn');const r=await sb.from('pagamenti_servizi').insert({servizio_id:$('accService').value,importo:Number($('accAmount').value),modalita:$('accMode').value,riferimento:$('accRef').value.trim()||null});if(r.error)return msg('accMsg',r.error.message,'err');msg('accMsg','Pagamento registrato.','ok');loadAccounting()};
-
-
+function renderAccounting(){
+ const status=$('accStatusFilter').value,search=$('accQuickSearch').value.trim().toLowerCase();
+ const filtered=accountingRows.filter(x=>{
+  const s=accountingLabel(x);
+  if(status==='verificare'&&!['DA VERIFICARE','PARZIALE'].includes(s))return false;
+  if(status==='saldati'&&s!=='SALDATO')return false;
+  if(status==='parziali'&&s!=='PARZIALE')return false;
+  if(status==='definire'&&s!=='DA DEFINIRE')return false;
+  return !search||[x.data_servizio,x.mezzo,x.tipo_servizio,x.paziente_nome,x.paziente_cognome,x.destinazione].some(v=>String(v||'').toLowerCase().includes(search));
+ });
+ $('accListInfo').textContent=filtered.length+' servizi visualizzati. «Da verificare» significa che non risulta un saldo completo registrato, non che il paziente non abbia pagato.';
+ $('accBody').innerHTML=filtered.length?filtered.map(x=>{
+  const statusLabel=accountingLabel(x);
+  const action=(statusLabel==='DA VERIFICARE'||statusLabel==='PARZIALE')?'<button type="button" class="btn secondary" data-acc-service="'+esc(String(x.servizio_id))+'">Registra incasso</button>':'—';
+  return '<tr><td>'+esc(x.data_servizio||'—')+'</td><td>'+esc(x.tipo_servizio||'—')+' · mezzo '+esc(x.mezzo||'—')+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+euro(x.importo_dovuto)+'<br><span class="muted">Registrato '+euro(x.importo_incassato)+' · residuo '+euro(x.residuo)+'</span></td><td><span class="pill '+(statusLabel==='SALDATO'?'g':statusLabel==='PARZIALE'?'y':'b')+'">'+esc(statusLabel)+'</span></td><td>'+action+'</td></tr>';
+ }).join(''):'<tr><td colspan="6">Nessun servizio per questo filtro.</td></tr>';
+ document.querySelectorAll('[data-acc-service]').forEach(btn=>btn.onclick=()=>{
+  const x=accountingRows.find(v=>String(v.servizio_id)===btn.dataset.accService);
+  if(!x)return;
+  $('accService').value=String(x.servizio_id);
+  $('accAmount').value=Number(x.residuo||0)>0?Number(x.residuo).toFixed(2):'';
+  $('accRef').value='';
+  $('accSave').scrollIntoView({behavior:'smooth',block:'center'});
+ });
+}
+async function loadAccounting(){
+ if(prof?.ruolo!=='AMMINISTRATORE')return;
+ const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(1000);
+ if(r.error)return msg('accMsg','Errore lettura servizi: '+r.error.message,'err');
+ accountingRows=r.data||[];
+ const due=accountingRows.filter(x=>Number(x.residuo)>0);
+ $('accDue').textContent=euro(due.reduce((z,x)=>z+Number(x.residuo||0),0));
+ $('accPaid').textContent=accountingRows.filter(x=>accountingLabel(x)==='SALDATO').length;
+ $('accPart').textContent=accountingRows.filter(x=>accountingLabel(x)==='PARZIALE').length;
+ $('accCount').textContent=accountingRows.filter(x=>x.stato_gestionale==='DA CONTABILIZZARE').length;
+ $('accService').innerHTML=opts(due,'servizio_id',x=>x.data_servizio+' · mezzo '+x.mezzo+' · '+x.tipo_servizio+' · '+([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||x.destinazione||''));
+ renderAccounting();
+}
+$('accStatusFilter').onchange=renderAccounting;
+$('accQuickSearch').oninput=renderAccounting;
+$('accRefresh').onclick=loadAccounting;
+$('accService').onchange=()=>{
+ const x=accountingRows.find(v=>String(v.servizio_id)===$('accService').value);
+ if(x)$('accAmount').value=Number(x.residuo||0)>0?Number(x.residuo).toFixed(2):'';
+};
+$('accSave').onclick=async()=>{
+ if(!$('accService').value||Number($('accAmount').value)<=0)return msg('accMsg','Seleziona un servizio e inserisci un importo maggiore di zero.','warn');
+ const x=accountingRows.find(v=>String(v.servizio_id)===$('accService').value);
+ const amount=Number($('accAmount').value);
+ if(x&&amount>Number(x.residuo||0)+0.001)return msg('accMsg','Importo maggiore del residuo: verifica prima di registrare.','warn');
+ $('accSave').disabled=true;
+ try{
+  const r=await sb.from('pagamenti_servizi').insert({servizio_id:$('accService').value,importo:amount,modalita:$('accMode').value,riferimento:$('accRef').value.trim()||null});
+  if(r.error)throw r.error;
+  msg('accMsg','Pagamento registrato.','ok');
+  $('accAmount').value='';$('accRef').value='';
+  await loadAccounting();
+ }catch(e){msg('accMsg','Pagamento non registrato: '+(e.message||String(e)),'err')}
+ finally{$('accSave').disabled=false}
+};
 
 async function loadMonitorBannerAdmin(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
