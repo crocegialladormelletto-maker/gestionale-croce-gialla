@@ -2870,13 +2870,7 @@ Causale: numero preventivo</textarea>
     <div id="tabletServicePaymentSection">
     <h3 class="tablet-section-title" style="margin-top:20px">Importo del servizio</h3><div class="notice">Indica soltanto la cifra del trasporto. Metodo, data e registrazione del pagamento sono gestiti dall’amministrazione nel gestionale.</div>
     <div class="tablet-fields">
-     <div class="field"><label>Importo base € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito" oninput="tabletCalcSheet()" onchange="tabletCalcSheet()" onblur="tabletCalcSheet()"></div>
-     <div class="field"><label>Sedia cingolata / motorizzata</label><label class="check"><input type="checkbox" data-ts-field="sedia_montascale" onchange="tabletCalcSheet()"> Utilizzata</label></div>
-     <div class="field"><label>Supplemento sedia €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_sedia" oninput="tabletCalcSheet()" onchange="tabletCalcSheet()" onblur="tabletCalcSheet()"></div>
-     <div class="field"><label>Barella bariatrica</label><label class="check"><input type="checkbox" data-ts-field="barella_bariatrica" onchange="tabletCalcSheet()"> Utilizzata</label></div>
-     <div class="field"><label>Supplemento bariatrica €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_bariatrica" oninput="tabletCalcSheet()" onchange="tabletCalcSheet()" onblur="tabletCalcSheet()"></div>
-     <div class="field"><label>Totale calcolato €</label><input id="tabletSheetTotal" disabled value="—"></div>
-
+     <div class="field"><label>Importo servizio € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito"></div>
     </div>
     <div id="tabletReceiptSection" class="section hidden" style="display:none!important;margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
      <h3 style="margin-top:0">📎 Ricevuta pagamento</h3>
@@ -11884,22 +11878,11 @@ function tabletConfigureTimeFields(is118){
 }
 function tabletCalcSheet(){
  const form=document.getElementById('tabletSheetForm');
- if(!form)return 0;
- const get=k=>form.querySelector('[data-ts-field="'+k+'"]');
- const parseAmount=k=>{
-  const raw=String(get(k)?.value??'').trim().replace(',','.');
-  const value=Number(raw);
-  return Number.isFinite(value)?value:0;
- };
- const kmA=get('km_partenza')?.value??'',kmB=get('km_arrivo')?.value??'';
+ if(!form)return;
+ const kmA=form.querySelector('[data-ts-field="km_partenza"]')?.value??'';
+ const kmB=form.querySelector('[data-ts-field="km_arrivo"]')?.value??'';
  const kmTotal=document.getElementById('tabletKmTotal');
  if(kmTotal)kmTotal.value=kmA!==''&&kmB!==''&&Number(kmB)>=Number(kmA)?String(Number(kmB)-Number(kmA)):'—';
- const total=parseAmount('importo_inserito')+
-  (get('sedia_montascale')?.checked?parseAmount('supplemento_sedia'):0)+
-  (get('barella_bariatrica')?.checked?parseAmount('supplemento_bariatrica'):0);
- const totalField=document.getElementById('tabletSheetTotal');
- if(totalField)totalField.value=total.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
- return total;
 }
 async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(!tabletCurrentSheet||tabletCurrentSheet.stato==='CHIUSO'||tabletBusy)return false;
@@ -11912,6 +11895,8 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
  }
+ // Campi supplementi non presenti sul tablet: rimangono invariati nel database
+ // e sono modificabili esclusivamente dal gestionale amministrativo.
  // La registrazione pagamenti compete esclusivamente all'amministrazione.
  // Il tablet non legge, modifica o sincronizza modalita e data di pagamento.
  delete row.modalita_pagamento;
