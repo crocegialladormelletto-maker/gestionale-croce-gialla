@@ -1857,22 +1857,25 @@ document.addEventListener('DOMContentLoaded',()=>{
   <div class="field" style="margin-top:9px"><label id="detailStructureLabel">Ospedale / RSA / struttura</label><input id="dstruct"></div>
  </div>
 
- <div class="section"><h3>♿ Dotazioni per il servizio</h3>
+ <div class="section" style="display:none!important"><h3>♿ Dotazioni per il servizio</h3>
 <p class="muted">Le dotazioni sono visibili ai volontari prima dell’iscrizione.</p>
 <div class="inline-checks">
 <label class="check"><input id="dSediaMotorizzata" type="checkbox"> Sedia motorizzata / cingolata (+ € 15)</label>
 <label class="check"><input id="dBarellaBariatrica" type="checkbox"> Barella bariatrica (+ € 20)</label>
 </div></div>
 <div class="section"><h3>Economico</h3>
-  <div class="grid4">
-   <div class="field"><label>Importo servizio €</label><input id="dAmount" type="number" min="0" step="1"><div class="muted" id="dTariffBaseInfo"></div></div>
-   <div class="field"><label>Sconto €</label><input id="dDiscount" type="number" min="0" step="1"></div>
-   <div class="field"><label>Importo finale €</label><input id="dFinal" type="number" min="0" step="1"></div>
-   <div class="field"><label>Pagamento previsto</label><select id="dPayMode"><option value="">—</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select></div>
+  <div class="field" style="max-width:320px">
+   <label>Importo servizio €</label><input id="dAmount" type="number" min="0" step="0.01">
+   <div class="muted" id="dTariffBaseInfo"></div>
+  </div>
+  <div style="display:none!important">
+   <input id="dDiscount" type="number" min="0" step="0.01">
+   <input id="dFinal" type="number" min="0" step="0.01">
+   <select id="dPayMode"><option value="">—</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select>
   </div>
  </div>
 
- <div class="section"><h3>Note</h3>
+ <div class="section"><h3>Note</h3><p class="muted">Indica nelle note operative eventuali dotazioni necessarie (es. sedia motorizzata o barella bariatrica). Le note sono visibili all’equipaggio sui tablet.</p>
   <div class="grid2">
    <div class="field"><label>Note operative</label><textarea id="dNotes"></textarea></div>
    <div class="field" id="dAdminNotesField"><label>Note amministrazione</label><textarea id="dAdminNotes"></textarea></div>
@@ -1975,7 +1978,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div class="field"><label>E-mail paziente</label><input id="patientEmail" type="email" maxlength="254" autocomplete="email"></div></div></div>
 <div class="section hidden" id="newEventContactSection"><h3>Referente manifestazione</h3><div class="grid2"><div class="field"><label>Nome referente</label><input id="eventRefName" maxlength="120" placeholder="Referente sul posto"></div><div class="field"><label>Telefono referente</label><input id="eventRefPhone" type="tel" maxlength="40" placeholder="Recapito del referente"></div></div></div>
 <div class="section"><h3>Percorso</h3><div class="grid2"><div class="field"><label>Luogo partenza</label><input id="lp"></div><div class="field"><label>Indirizzo partenza</label><input id="ip"></div><div class="field"><label>Luogo carico paziente</label><input id="loadPlace" placeholder="Es. domicilio, RSA, ospedale"></div><div class="field"><label>Indirizzo carico paziente</label><input id="loadAddress" placeholder="Via, numero civico, Comune"></div><div class="field"><label id="newDestinationLabel">Destinazione</label><input id="dest"></div><div class="field"><label>Indirizzo destinazione</label><input id="idest"></div></div><div class="field" style="margin-top:9px"><label id="newStructureLabel">Ospedale / RSA / struttura</label><input id="strutt"></div></div>
-<div class="section" id="newServiceSpecialEquipment"><h3>♿ Dotazioni necessarie per il servizio</h3>
+<div class="section" id="newServiceSpecialEquipment" style="display:none!important"><h3>♿ Dotazioni necessarie per il servizio</h3>
 <p class="muted">Indica le dotazioni che il volontario deve conoscere prima di iscriversi.</p>
 <div class="inline-checks">
 <label class="check"><input id="newSediaMotorizzata" type="checkbox"> Sedia motorizzata / cingolata (+ € 15)</label>
@@ -1996,7 +1999,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div class="field"><label for="tarBasePrice">Tariffa originale €</label><input id="tarBasePrice" type="text" value="—" readonly tabindex="-1"></div>
 </div><div class="muted" style="margin-top:7px">L’importo aggiornato viene riportato in «Importo servizio €» e vale solo per il servizio corrente.</div>
 </div>
-<div id="tarQuote"></div><div class="field" style="margin-top:9px"><label>Note operative</label><textarea id="note"></textarea></div></div>
+<div id="tarQuote"></div><div class="field" style="margin-top:9px"><label>Note operative (indicare anche le dotazioni necessarie)</label><textarea id="note"></textarea></div></div>
 <div class="section"><h3>📎 Allegati richiesta servizio</h3>
 <p class="muted">Puoi allegare uno o più PDF ricevuti da RSA, strutture o altri richiedenti. Dimensione massima 10 MB per file.</p>
 <div class="field"><label>File PDF</label><input id="newServiceAttachments" type="file" accept="application/pdf,.pdf" multiple></div>
