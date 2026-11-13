@@ -1522,21 +1522,21 @@
     </div>
    </div>
 
-   <div class="section" id="fvEconomicSection"><h3>Importi e supplementi</h3>
-    <div class="grid4">
-     <div class="field"><label>Importo base €</label><input id="fvBase" type="number" min="0" step="1"></div>
+   <div class="section" id="fvEconomicSection"><h3>Importo del servizio</h3>
+    <div class="field" style="max-width:340px"><label>Importo servizio €</label><input id="fvBase" type="number" min="0" step="0.01"></div>
+    <div class="grid4" style="display:none!important">
      <div class="field"><label>Supplemento sedia €</label><input id="fvChairAmount" type="number" min="0" step="1"></div>
      <div class="field"><label>Supplemento bariatrica €</label><input id="fvBariAmount" type="number" min="0" step="1"></div>
      <div class="field"><label>Totale calcolato €</label><input id="fvGrandTotal" disabled></div>
     </div>
-    <div class="inline-checks" style="margin-top:10px">
+    <div class="inline-checks" style="display:none!important">
      <label class="check"><input id="fvChair" type="checkbox"> Sedia cingolata / motorizzata</label>
      <label class="check"><input id="fvBari" type="checkbox"> Barella bariatrica</label>
     </div>
    </div>
 
-   <div class="section" id="fvPaymentSection"><h3>Pagamento</h3>
-    <div class="grid3">
+   <div class="section" id="fvPaymentSection"><h3>Ricevute del servizio</h3>
+    <div class="grid3" style="display:none!important">
      <div class="field"><label>Modalità</label><select id="fvPayMode"><option value="">Non registrato</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select></div>
      <div class="field" id="fvPayDateBox"><label>Data pagamento</label><input id="fvPayDate" type="date"></div>
      <div class="field"><label>Stato contabile collegato</label><input id="fvAccountingState" disabled></div>
