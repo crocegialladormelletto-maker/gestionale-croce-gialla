@@ -2870,11 +2870,11 @@ Causale: numero preventivo</textarea>
     <div id="tabletServicePaymentSection">
     <h3 class="tablet-section-title" style="margin-top:20px">Importo del servizio</h3><div class="notice">Indica soltanto la cifra del trasporto. Metodo, data e registrazione del pagamento sono gestiti dall’amministrazione nel gestionale.</div>
     <div class="tablet-fields">
-     <div class="field"><label>Importo base € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito"></div>
-     <div class="field"><label>Sedia cingolata / motorizzata</label><label class="check"><input type="checkbox" data-ts-field="sedia_montascale"> Utilizzata</label></div>
-     <div class="field"><label>Supplemento sedia €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_sedia"></div>
-     <div class="field"><label>Barella bariatrica</label><label class="check"><input type="checkbox" data-ts-field="barella_bariatrica"> Utilizzata</label></div>
-     <div class="field"><label>Supplemento bariatrica €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_bariatrica"></div>
+     <div class="field"><label>Importo base € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito" oninput="tabletCalcSheet()" onchange="tabletCalcSheet()" onblur="tabletCalcSheet()"></div>
+     <div class="field"><label>Sedia cingolata / motorizzata</label><label class="check"><input type="checkbox" data-ts-field="sedia_montascale" onchange="tabletCalcSheet()"> Utilizzata</label></div>
+     <div class="field"><label>Supplemento sedia €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_sedia" oninput="tabletCalcSheet()" onchange="tabletCalcSheet()" onblur="tabletCalcSheet()"></div>
+     <div class="field"><label>Barella bariatrica</label><label class="check"><input type="checkbox" data-ts-field="barella_bariatrica" onchange="tabletCalcSheet()"> Utilizzata</label></div>
+     <div class="field"><label>Supplemento bariatrica €</label><input type="number" min="0" step="0.01" data-ts-field="supplemento_bariatrica" oninput="tabletCalcSheet()" onchange="tabletCalcSheet()" onblur="tabletCalcSheet()"></div>
      <div class="field"><label>Totale calcolato €</label><input id="tabletSheetTotal" disabled value="—"></div>
 
     </div>
@@ -11883,12 +11883,23 @@ function tabletConfigureTimeFields(is118){
  if($('tabletBaseArrivalLabel'))$('tabletBaseArrivalLabel').textContent=is118?'Ora arrivo sede':'Rientro in sede';
 }
 function tabletCalcSheet(){
- const kmA=document.querySelector('#tabletSheetForm [data-ts-field="km_partenza"]')?.value??'',kmB=document.querySelector('#tabletSheetForm [data-ts-field="km_arrivo"]')?.value??'';
- $('tabletKmTotal').value=kmA!==''&&kmB!==''&&Number(kmB)>=Number(kmA)?String(Number(kmB)-Number(kmA)):'—';
- const get=k=>document.querySelector('#tabletSheetForm [data-ts-field="'+k+'"]');
- const n=k=>Number(get(k)?.value||0);
- const sum=n('importo_inserito')+(get('sedia_montascale')?.checked?n('supplemento_sedia'):0)+(get('barella_bariatrica')?.checked?n('supplemento_bariatrica'):0);
- $('tabletSheetTotal').value=sum.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const form=document.getElementById('tabletSheetForm');
+ if(!form)return 0;
+ const get=k=>form.querySelector('[data-ts-field="'+k+'"]');
+ const parseAmount=k=>{
+  const raw=String(get(k)?.value??'').trim().replace(',','.');
+  const value=Number(raw);
+  return Number.isFinite(value)?value:0;
+ };
+ const kmA=get('km_partenza')?.value??'',kmB=get('km_arrivo')?.value??'';
+ const kmTotal=document.getElementById('tabletKmTotal');
+ if(kmTotal)kmTotal.value=kmA!==''&&kmB!==''&&Number(kmB)>=Number(kmA)?String(Number(kmB)-Number(kmA)):'—';
+ const total=parseAmount('importo_inserito')+
+  (get('sedia_montascale')?.checked?parseAmount('supplemento_sedia'):0)+
+  (get('barella_bariatrica')?.checked?parseAmount('supplemento_bariatrica'):0);
+ const totalField=document.getElementById('tabletSheetTotal');
+ if(totalField)totalField.value=total.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+ return total;
 }
 async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(!tabletCurrentSheet||tabletCurrentSheet.stato==='CHIUSO'||tabletBusy)return false;
@@ -12123,6 +12134,7 @@ if($('tabletPrivacyClearSignature'))$('tabletPrivacyClearSignature').onclick=()=
 if($('tabletPrivacyViewSignature'))$('tabletPrivacyViewSignature').onclick=tabletPrivacyShowSavedSignature;
 $('tabletCloseSheet').onclick=tabletCloseSheet;
 $('tabletSheetForm').addEventListener('input',tabletCalcSheet);
+$('tabletSheetForm').addEventListener('change',tabletCalcSheet);
 $('tabletPrintSheet').onclick=async()=>{
  if(!tabletCurrentSheet)return;
  const printWindow=openFoglioPrintWindow();
