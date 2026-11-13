@@ -11935,6 +11935,66 @@ function accCompleted(x){
   !['ANNULLATO','DA ASSEGNARE','CONFERMATO','IN CORSO'].includes(status) &&
   (['DA CONTABILIZZARE','TERMINATO','CHIUSO','CONTABILIZZATO'].includes(status)||operational==='COMPLETATO');
 }
+function accPaymentSuggestion(serviceId){
+ const sheets=accSheetNotes.get(String(serviceId))||[];
+ let candidates=[];
+ for(const sheet of sheets){
+  const note=String(sheet.annotazioni||'');
+  const lines=note.split(/[\n;]+/).map(x=>x.trim()).filter(Boolean);
+  for(const line of lines){
+   const s=line.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+   if(/\b(non pagat[oaie]|non incassat[oaie]|da pagare|da incassare|non effettuato|pagamento non|bonifico da ricevere|bonifico da effettuare|in attesa|da verificare|non dovuto|gratuito|senza pagamento|da saldare)\b/.test(s))continue;
+   const cash=/\b(contanti|contante)\b/.test(s);
+   const pos=/\b(pos|bancomat|carta di credito|carta di debito)\b/.test(s);
+   const bank=/\b(bonifico|accredito)\b/.test(s);
+   const payment=/\b(pagat[oaie]|pagamento effettuato|incassat[oaie]|saldat[oaie]|ricevut[oaie]|effettuat[oaie])\b/.test(s);
+   if(!payment||![cash,pos,bank].some(Boolean))continue;
+   const method=[cash?'CONTANTI':null,pos?'POS':null,bank?'BONIFICO':null].filter(Boolean);
+   if(method.length!==1)continue;
+   candidates.push({mode:method[0],note:line,numero:sheet.numero_foglio||''});
+  }
+ }
+ if(!candidates.length)return null;
+ // Con informazioni contrastanti non si propone un pagamento da registrare.
+ if(new Set(candidates.map(x=>x.mode)).size!==1)return {ambiguous:true};
+ return candidates[candidates.length-1];
+}
+async function accConfirmSuggestedPayment(id,button){
+ if(prof?.ruolo!=='AMMINISTRATORE')return msg('accMsg','Operazione riservata agli amministratori.','warn');
+ const x=accAccountingRows.find(v=>String(v.servizio_id)===String(id));
+ const suggestion=accPaymentSuggestion(id);
+ if(!x||!suggestion||suggestion.ambiguous)return msg('accMsg','Segnalazione non univoca: verifica il servizio.','warn');
+ const left=Number(x.residuo||0);
+ if(!Number.isFinite(left)||left<=0)return msg('accMsg','Il servizio non ha un residuo positivo. Aggiorna la contabilità.','warn');
+ const label=suggestion.mode==='BONIFICO'?'Hai verificato che il bonifico sia effettivamente ACCREDITATO sul conto?':'Hai verificato che il pagamento sia stato effettivamente ricevuto?';
+ if(!confirm(label+'\n\n'+suggestion.numero+'\nAnnotazione: '+suggestion.note+'\nMetodo proposto: '+suggestion.mode+'\nResiduo: '+euro(left)))return;
+ const raw=prompt('Importo effettivamente incassato in euro (massimo '+euro(left)+'):',left.toFixed(2).replace('.',','));
+ if(raw===null)return;
+ const amount=Number(String(raw).trim().replace(',','.'));
+ if(!Number.isFinite(amount)||amount<=0||amount>left+0.001||!/^\d+(?:[.,]\d{1,2})?$/.test(String(raw).trim()))
+  return msg('accMsg','Importo non valido o superiore al residuo. Nessun pagamento registrato.','warn');
+ button.disabled=true;
+ try{
+  // Ricontrolla saldo e movimenti prima dell'inserimento, senza mai trasformare
+  // le annotazioni del volontario in un incasso automaticamente.
+  const fresh=await sb.from('v_contabilita_servizi').select('residuo,importo_incassato').eq('servizio_id',id).maybeSingle();
+  if(fresh.error||!fresh.data)throw new Error(fresh.error?.message||'Servizio non trovato');
+  if(Math.abs(Number(fresh.data.residuo||0)-left)>0.001)throw new Error('Il residuo è cambiato: aggiorna la pagina prima di registrare.');
+  const already=await sb.from('pagamenti_servizi').select('id,importo,modalita,stato').eq('servizio_id',id).eq('stato','REGISTRATO').limit(100);
+  if(already.error)throw already.error;
+  if((already.data||[]).length>=100)throw new Error('Troppi movimenti: verificare il registro prima di registrare.');
+  if(Number(fresh.data.importo_incassato||0)>0 && !confirm('Esistono già incassi registrati per questo servizio. Confermi di voler aggiungere un ALTRO pagamento?'))return;
+  if(!confirm('Conferma definitiva: registrare '+euro(amount)+' con '+suggestion.mode+'?'))return;
+  const record=await sb.from('pagamenti_servizi').insert({
+   servizio_id:id,importo:amount,modalita:suggestion.mode,stato:'REGISTRATO',
+   riferimento:'Confermato amministrazione da annotazioni '+suggestion.numero
+  });
+  if(record.error)throw record.error;
+  await loadAccounting();
+  msg('accMsg','Pagamento di '+euro(amount)+' registrato. Stato aggiornato.','ok');
+ }catch(err){msg('accMsg','Pagamento NON registrato: '+(err.message||String(err)),'err')}
+ finally{button.disabled=false}
+}
 function accRenderFiltered(){
  const a=accAccountingRows;
  const deferred=x=>String(x.modalita_pagamento_prevista||x.modalita_pagamento||'').toUpperCase()==='BONIFICO DIFFERITO';
@@ -11948,7 +12008,8 @@ function accRenderFiltered(){
   $(id).className='btn '+(accCurrentFilter===key?'yellow':'secondary');
  }
  $('accFilterInfo').textContent=rows.length+' servizi visualizzati · solo servizi effettuati';
- $('accBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.tipo_servizio)+' · mezzo '+esc(x.mezzo)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>Servizio '+euro(x.importo_dovuto)+(prof?.ruolo==='AMMINISTRATORE'?'<br><button type="button" class="btn secondary" style="padding:3px 7px;margin-top:4px" data-acc-edit-amount="'+esc(x.servizio_id)+'">Modifica importo</button>':'')+'<br><strong>Incassato '+euro(x.importo_incassato)+'</strong><br><span class="muted">Residuo '+euro(x.residuo)+'</span></td><td><span class="pill b">'+esc(x.stato_contabile)+'</span></td><td style="min-width:200px;white-space:normal">'+((accSheetNotes.get(String(x.servizio_id))||[]).map(f=>'<div><strong>'+esc(f.numero_foglio||'Foglio viaggio')+'</strong>: '+esc(f.annotazioni?.trim()||'Nessuna annotazione')+'</div>').join('')||'<span class="muted">Nessuna annotazione presente</span>')+'</td><td>'+esc(x.stato_gestionale||'—')+'</td></tr>').join(''):'<tr><td colspan="7">Nessun servizio per questo filtro.</td></tr>';
+ $('accBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.tipo_servizio)+' · mezzo '+esc(x.mezzo)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>Servizio '+euro(x.importo_dovuto)+(prof?.ruolo==='AMMINISTRATORE'?'<br><button type="button" class="btn secondary" style="padding:3px 7px;margin-top:4px" data-acc-edit-amount="'+esc(x.servizio_id)+'">Modifica importo</button>':'')+'<br><strong>Incassato '+euro(x.importo_incassato)+'</strong><br><span class="muted">Residuo '+euro(x.residuo)+'</span></td><td><span class="pill b">'+esc(x.stato_contabile)+'</span></td><td style="min-width:200px;white-space:normal">'+((accSheetNotes.get(String(x.servizio_id))||[]).map(f=>'<div><strong>'+esc(f.numero_foglio||'Foglio viaggio')+'</strong>: '+esc(f.annotazioni?.trim()||'Nessuna annotazione')+'</div>').join('')||'<span class="muted">Nessuna annotazione presente</span>')+(Number(x.residuo||0)>0&&accPaymentSuggestion(x.servizio_id)?(accPaymentSuggestion(x.servizio_id).ambiguous?'<div class="muted"><strong>Segnalazioni contrastanti: verifica manuale</strong></div>':'<div style="margin-top:7px"><span class="pill b">'+(accPaymentSuggestion(x.servizio_id).mode==='BONIFICO'?'Bonifico segnalato · verifica accredito':'Pagamento segnalato · da confermare')+'</span><br><button type="button" class="btn secondary" style="margin-top:6px;padding:5px 9px" data-acc-confirm-note="'+esc(String(x.servizio_id))+'">Conferma pagamento</button></div>'):'')+'</td><td>'+esc(x.stato_gestionale||'—')+'</td></tr>').join(''):'<tr><td colspan="7">Nessun servizio per questo filtro.</td></tr>';
+ $('accBody').querySelectorAll('[data-acc-confirm-note]').forEach(button=>button.onclick=()=>accConfirmSuggestedPayment(button.dataset.accConfirmNote,button));
  $('accBody').querySelectorAll('[data-acc-edit-amount]').forEach(button=>button.onclick=async()=>{
   if(prof?.ruolo!=='AMMINISTRATORE')return;
   const id=button.dataset.accEditAmount;
