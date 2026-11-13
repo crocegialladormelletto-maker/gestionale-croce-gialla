@@ -2657,8 +2657,8 @@ Causale: numero preventivo</textarea>
 <div class="section" data-admin-only="true"><h3>Verifica invio email Note di Debito</h3><p class="muted">Invia una sola email di prova dalla tesoreria ad amministrazione@crocegiallaemergenza.it. Nessun documento o cliente viene coinvolto.</p><button type="button" id="accTestEmail" class="btn blue">✉ Invia email di prova</button><div id="accTestEmailMsg" style="margin-top:9px"></div></div>
 <div class="stats"><div class="stat"><small>TOTALE DA INCASSARE</small><b id="accDue">€ 0</b></div><div class="stat"><small>PAGATI</small><b id="accPaid">0</b></div><div class="stat"><small>PARZIALI</small><b id="accPart">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="accCount">0</b></div></div>
 <div class="section" data-admin-only="true"><h3>💰 Riepilogo incassi registrati</h3><p class="muted">Incassi effettivamente registrati nel registro pagamenti servizi. I bonifici differiti ancora da ricevere non sono conteggiati. Le Note di Debito hanno un riepilogo separato.</p><div class="stats"><div class="stat"><small>INCASSATO NEL MESE</small><b id="accMonthCollected">€ 0</b></div><div class="stat"><small>INCASSATO NELL'ANNO</small><b id="accYearCollected">€ 0</b></div><div class="stat"><small>OPERAZIONI NEL MESE</small><b id="accMonthOperations">0</b></div><div class="stat"><small>OPERAZIONI NELL'ANNO</small><b id="accYearOperations">0</b></div></div><div class="grid2"><div class="section" style="margin:0"><h3>Questo mese</h3><div id="accMonthBreakdown" class="muted">Caricamento...</div></div><div class="section" style="margin:0"><h3>Da inizio anno</h3><div id="accYearBreakdown" class="muted">Caricamento...</div></div></div><div class="section" style="margin-top:14px"><h3>📅 Incassi mese per mese</h3><p class="muted">Storico per data di pagamento registrata. Ogni mese distingue contanti, POS e bonifici accreditati; i bonifici differiti non incassati sono esclusi.</p><div class="table"><table><thead><tr><th>Mese</th><th>Contanti</th><th>POS</th><th>Bonifici</th><th>Totale incassato</th><th>Operazioni</th></tr></thead><tbody id="accMonthlyRows"><tr><td colspan="6">Caricamento...</td></tr></tbody></table></div></div><div id="accCollectionMsg"></div></div>
-<div class="section" data-admin-only="true"><h3>🏦 Registra incasso fattura Aruba</h3><p class="muted">Seleziona un servizio con fattura Aruba già emessa, registra soltanto il pagamento effettivamente ricevuto. Il riepilogo mensile si aggiorna automaticamente; non inserire lo stesso incasso anche in «Registra pagamento».</p><div class="grid4"><div class="field"><label>Servizio fatturato Aruba</label><select id="accArubaService"><option value="">Caricamento...</option></select></div><div class="field"><label>Importo incassato €</label><input id="accArubaAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label>Metodo</label><select id="accArubaMode"><option value="BONIFICO">Bonifico accreditato</option><option value="POS">POS</option><option value="CONTANTI">Contanti</option></select></div><div class="field"><label>Data effettiva incasso</label><input id="accArubaDate" type="date"></div></div><div class="toolbar"><button type="button" id="accArubaSave" class="btn yellow">💰 Registra incasso Aruba</button></div><div id="accArubaMsg"></div></div><div class="section"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="1"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
-<div class="section"><h3>Servizi contabili</h3><p class="muted">I servizi futuri e quelli non ancora svolti restano nei calendari. Lo storico dei servizi effettuati rimane disponibile.</p><div class="actions"><button id="accFilterDue" class="btn yellow" type="button">Da incassare</button><button id="accFilterDeferred" class="btn secondary" type="button">Bonifici differiti</button><button id="accFilterPaid" class="btn secondary" type="button">Incassati</button><button id="accFilterHistory" class="btn secondary" type="button">Storico completo</button></div><div id="accFilterInfo" class="muted"></div></div><div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto</th><th>Pagamento</th><th>Annotazioni equipaggio</th><th>Stato gestionale</th></tr></thead><tbody id="accBody"></tbody></table></div></div></section>
+<div class="section" data-admin-only="true"><h3>🏦 Registra incasso fattura Aruba</h3><p class="muted">Seleziona un servizio con fattura Aruba già emessa, registra soltanto il pagamento effettivamente ricevuto. Il riepilogo mensile si aggiorna automaticamente; non inserire lo stesso incasso anche in «Registra pagamento».</p><div class="grid4"><div class="field"><label>Servizio fatturato Aruba</label><select id="accArubaService"><option value="">Caricamento...</option></select></div><div class="field"><label>Importo incassato €</label><input id="accArubaAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label>Metodo</label><select id="accArubaMode"><option value="BONIFICO">Bonifico accreditato</option><option value="POS">POS</option><option value="CONTANTI">Contanti</option></select></div><div class="field"><label>Data effettiva incasso</label><input id="accArubaDate" type="date"></div></div><div class="toolbar"><button type="button" id="accArubaSave" class="btn yellow">💰 Registra incasso Aruba</button></div><div id="accArubaMsg"></div></div><div class="section hidden" style="display:none!important"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="1"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div></div>
+<div class="section"><h3>Servizi contabili</h3><p class="muted">Conferma gli incassi dalla riga del servizio. Per i bonifici verifica prima l’effettivo accredito.</p><div id="accMsg"></div><p class="muted">I servizi futuri e quelli non ancora svolti restano nei calendari. Lo storico dei servizi effettuati rimane disponibile.</p><div class="actions"><button id="accFilterDue" class="btn yellow" type="button">Da incassare</button><button id="accFilterDeferred" class="btn secondary" type="button">Bonifici differiti</button><button id="accFilterPaid" class="btn secondary" type="button">Incassati</button><button id="accFilterHistory" class="btn secondary" type="button">Storico completo</button></div><div id="accFilterInfo" class="muted"></div></div><div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto</th><th>Pagamento</th><th>Annotazioni equipaggio</th><th>Stato gestionale</th></tr></thead><tbody id="accBody"></tbody></table></div></div></section>
 
 <section id="communications" class="surface hidden">
  <div class="hero"><h2>📣 Comunicazioni ai volontari</h2>
@@ -11960,67 +11960,64 @@ function accPaymentSuggestion(serviceId){
  return candidates[candidates.length-1];
 }
 async function accConfirmSuggestedPayment(id,button){
- const showError=message=>{
-  const text='Pagamento NON registrato: '+message;
-  msg('accMsg',text,'err');
-  alert(text);
+ const fail=message=>{
+  const note='Pagamento NON registrato: '+message;
+  msg('accMsg',note,'err');alert(note);
  };
- if(prof?.ruolo!=='AMMINISTRATORE')return showError('operazione riservata agli amministratori.');
+ if(prof?.ruolo!=='AMMINISTRATORE')return fail('operazione riservata agli amministratori.');
  const x=accAccountingRows.find(v=>String(v.servizio_id)===String(id));
- const suggestion=accPaymentSuggestion(id);
- if(!x||!suggestion||suggestion.ambiguous)return showError('annotazione non univoca. Verifica il servizio.');
+ if(!x)return fail('servizio non trovato. Aggiorna la contabilità.');
  const left=Number(x.residuo||0);
- if(!Number.isFinite(left)||left<=0)return showError('residuo non positivo. Aggiorna i dati.');
- const label=suggestion.mode==='BONIFICO'?'Confermi di aver verificato l’ACCREDITO effettivo in banca?':'Confermi di aver verificato che il pagamento sia stato ricevuto?';
- if(!confirm(label+'\n\n'+suggestion.numero+'\nAnnotazione: '+suggestion.note+'\nMetodo: '+suggestion.mode+'\nResiduo: '+euro(left)))return;
- const raw=prompt('Importo effettivamente incassato in euro (massimo '+euro(left)+'):',left.toFixed(2).replace('.',','));
+ if(!Number.isFinite(left)||left<=0)return fail('nessun residuo positivo: aggiorna la contabilità.');
+ const suggestion=accPaymentSuggestion(id);
+ const isDeferred=String(x.modalita_pagamento_prevista||x.modalita_pagamento||'').toUpperCase()==='BONIFICO DIFFERITO';
+ const defaultMode=isDeferred?'BONIFICO':suggestion&&!suggestion.ambiguous?suggestion.mode:'';
+ const rawMode=prompt('Metodo del pagamento effettivamente ricevuto: CONTANTI, POS oppure BONIFICO.\nPer i bonifici conferma solo dopo aver verificato l’accredito.',defaultMode);
+ if(rawMode===null)return;
+ const mode=String(rawMode).trim().toUpperCase();
+ if(!['CONTANTI','POS','BONIFICO'].includes(mode))return fail('metodo non valido: scegli CONTANTI, POS oppure BONIFICO.');
+ if(mode==='BONIFICO'&&!confirm('Hai VERIFICATO che il bonifico sia accreditato sul conto bancario?'))return;
+ const raw=prompt('Importo effettivamente ricevuto, fino a '+euro(left)+':',left.toFixed(2).replace('.',','));
  if(raw===null)return;
  const amount=Number(String(raw).trim().replace(',','.'));
- if(!Number.isFinite(amount)||amount<=0||amount>left+0.001||!/^\d+(?:[.,]\d{1,2})?$/.test(String(raw).trim()))
-  return showError('importo non valido o superiore al residuo.');
- button.disabled=true;
- button.textContent='Verifica e registrazione...';
+ if(!/^\d+(?:[.,]\d{1,2})?$/.test(String(raw).trim())||!Number.isFinite(amount)||amount<=0||amount>left+0.001)return fail('importo non valido o superiore al residuo.');
+ const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const payDate=prompt('Data effettiva di incasso (AAAA-MM-GG):',today);
+ if(payDate===null)return;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(payDate)||new Date(payDate+'T12:00:00').toString()==='Invalid Date')return fail('data non valida.');
+ if(!confirm('CONFERMA INCASSO\nServizio: '+x.data_servizio+' · mezzo '+x.mezzo+'\nImporto: '+euro(amount)+'\nMetodo: '+mode+'\nData: '+payDate+'\n\nProcedere alla registrazione?'))return;
+ button.disabled=true;button.textContent='Registrazione...';
  let insertedId=null;
  try{
   const fresh=await sb.from('v_contabilita_servizi').select('residuo,importo_incassato').eq('servizio_id',id).maybeSingle();
-  if(fresh.error||!fresh.data)throw new Error(fresh.error?.message||'Servizio non trovato');
-  if(Math.abs(Number(fresh.data.residuo||0)-left)>0.001)throw new Error('Il residuo è cambiato: aggiorna la pagina prima di registrare.');
-  const already=await sb.from('pagamenti_servizi').select('id,importo,modalita,stato').eq('servizio_id',id).eq('stato','REGISTRATO').limit(100);
+  if(fresh.error||!fresh.data)throw new Error(fresh.error?.message||'servizio non disponibile');
+  if(Math.abs(Number(fresh.data.residuo||0)-left)>0.001)throw new Error('residuo cambiato: aggiorna la schermata.');
+  const already=await sb.from('pagamenti_servizi').select('id').eq('servizio_id',id).eq('stato','REGISTRATO').limit(101);
   if(already.error)throw already.error;
-  if((already.data||[]).length>=100)throw new Error('Troppi movimenti: verificare il registro.');
-  if(Number(fresh.data.importo_incassato||0)>0&&!confirm('Esistono altri incassi registrati. Vuoi davvero aggiungere un nuovo pagamento?'))return;
-  const record=await sb.from('pagamenti_servizi').insert({
-   servizio_id:id,importo:amount,modalita:suggestion.mode,stato:'REGISTRATO',
-   riferimento:'Confermato amministrazione da annotazioni '+suggestion.numero
+  if((already.data||[]).length>100)throw new Error('movimenti troppo numerosi: verifica il registro.');
+  if(Number(fresh.data.importo_incassato||0)>0&&!confirm('È già registrato un pagamento parziale. Confermi un ulteriore incasso?'))return;
+  const result=await sb.from('pagamenti_servizi').insert({
+   servizio_id:id,importo:amount,modalita:mode,stato:'REGISTRATO',data_pagamento:payDate,
+   riferimento:'Confermato da amministrazione in Servizi contabili'
   }).select('id').single();
-  if(record.error||!record.data?.id)throw new Error(record.error?.message||'Il database non ha confermato la registrazione.');
-  insertedId=record.data.id;
+  if(result.error||!result.data?.id)throw new Error(result.error?.message||'registrazione non confermata dal database');
+  insertedId=result.data.id;
   button.textContent='Registrato';
-  // La registrazione è avvenuta: non consentire una seconda conferma mentre aggiorniamo la vista.
-  const refreshed=await sb.from('v_contabilita_servizi').select('residuo,importo_incassato').eq('servizio_id',id).maybeSingle();
-  if(refreshed.error||!refreshed.data){
-   msg('accMsg','Pagamento registrato nel database, ma riepilogo non aggiornato. Ricarica Contabilità prima di qualsiasi altra operazione.','warn');
-   alert('Pagamento REGISTRATO. La schermata non è riuscita ad aggiornarsi: non premere di nuovo Conferma pagamento.');
-   return;
-  }
-  const stillDue=Number(refreshed.data.residuo||0);
-  if(stillDue>=left-0.001){
-   msg('accMsg','Pagamento registrato, ma il residuo non risulta aggiornato. Verifica prima di altre registrazioni.','warn');
-   alert('Pagamento REGISTRATO, ma residuo non ancora aggiornato. Non ripetere la registrazione.');
+  const check=await sb.from('v_contabilita_servizi').select('residuo').eq('servizio_id',id).maybeSingle();
+  if(check.error||!check.data||Number(check.data.residuo||0)>=left-0.001){
+   msg('accMsg','Incasso registrato, ma riepilogo non ancora aggiornato. Non confermare di nuovo.','warn');
+   alert('Pagamento registrato. Non premere di nuovo il pulsante; verifica il riepilogo.');
    return;
   }
   await loadAccounting();
-  msg('accMsg','Incasso confermato: '+euro(amount)+'. Residuo aggiornato.','ok');
+  msg('accMsg','Incasso di '+euro(amount)+' registrato.','ok');
  }catch(err){
   if(insertedId){
-   msg('accMsg','Pagamento registrato ma aggiornamento schermata non riuscito. Non ripetere la conferma.','warn');
-   alert('Pagamento REGISTRATO: impossibile aggiornare la schermata. Non ripetere.');
-  }else showError(err.message||String(err));
+   msg('accMsg','Pagamento registrato, ma aggiornamento schermata non riuscito. Non ripetere.','warn');
+   alert('Pagamento REGISTRATO. Non ripetere la conferma.');
+  }else fail(err.message||String(err));
  }finally{
-  if(!insertedId){
-   button.disabled=false;
-   button.textContent='Conferma pagamento';
-  }
+  if(!insertedId){button.disabled=false;button.textContent='Conferma pagamento'}
  }
 }
 function accRenderFiltered(){
@@ -12036,7 +12033,15 @@ function accRenderFiltered(){
   $(id).className='btn '+(accCurrentFilter===key?'yellow':'secondary');
  }
  $('accFilterInfo').textContent=rows.length+' servizi visualizzati · solo servizi effettuati';
- $('accBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.tipo_servizio)+' · mezzo '+esc(x.mezzo)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>Servizio '+euro(x.importo_dovuto)+(prof?.ruolo==='AMMINISTRATORE'?'<br><button type="button" class="btn secondary" style="padding:3px 7px;margin-top:4px" data-acc-edit-amount="'+esc(x.servizio_id)+'">Modifica importo</button>':'')+'<br><strong>Incassato '+euro(x.importo_incassato)+'</strong><br><span class="muted">Residuo '+euro(x.residuo)+'</span></td><td><span class="pill b">'+esc(x.stato_contabile)+'</span></td><td style="min-width:200px;white-space:normal">'+((accSheetNotes.get(String(x.servizio_id))||[]).map(f=>'<div><strong>'+esc(f.numero_foglio||'Foglio viaggio')+'</strong>: '+esc(f.annotazioni?.trim()||'Nessuna annotazione')+'</div>').join('')||'<span class="muted">Nessuna annotazione presente</span>')+(Number(x.residuo||0)>0&&accPaymentSuggestion(x.servizio_id)?(accPaymentSuggestion(x.servizio_id).ambiguous?'<div class="muted"><strong>Segnalazioni contrastanti: verifica manuale</strong></div>':'<div style="margin-top:7px"><span class="pill b">'+(accPaymentSuggestion(x.servizio_id).mode==='BONIFICO'?'Bonifico segnalato · verifica accredito':'Pagamento segnalato · da confermare')+'</span><br><button type="button" class="btn secondary" style="margin-top:6px;padding:5px 9px" data-acc-confirm-note="'+esc(String(x.servizio_id))+'">Conferma pagamento</button></div>'):'')+'</td><td>'+esc(x.stato_gestionale||'—')+'</td></tr>').join(''):'<tr><td colspan="7">Nessun servizio per questo filtro.</td></tr>';
+ $('accBody').innerHTML=rows.length?rows.map(x=>{
+  const due=Number(x.residuo||0)>0;
+  const suggestion=accPaymentSuggestion(x.servizio_id);
+  const deferred=String(x.modalita_pagamento_prevista||x.modalita_pagamento||'').toUpperCase()==='BONIFICO DIFFERITO';
+  const label=deferred?'Bonifico differito · verifica accredito':suggestion?.ambiguous?'Annotazioni contrastanti':suggestion?.mode==='BONIFICO'?'Bonifico segnalato · verifica accredito':suggestion?'Pagamento segnalato · da confermare':'Pagamento da verificare';
+  const action=due&&prof?.ruolo==='AMMINISTRATORE'?'<div style="margin-top:7px"><span class="muted">'+esc(label)+'</span><br><button type="button" class="btn secondary" style="margin-top:6px;padding:5px 9px" data-acc-confirm-note="'+esc(String(x.servizio_id))+'">Conferma pagamento</button></div>':'';
+  const annotations=(accSheetNotes.get(String(x.servizio_id))||[]).map(f=>'<div><strong>'+esc(f.numero_foglio||'Foglio viaggio')+'</strong>: '+esc(f.annotazioni?.trim()||'Nessuna annotazione')+'</div>').join('')||'<span class="muted">Nessuna annotazione presente</span>';
+  return '<tr><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.tipo_servizio)+' · mezzo '+esc(x.mezzo)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>Servizio '+euro(x.importo_dovuto)+(prof?.ruolo==='AMMINISTRATORE'?'<br><button type="button" class="btn secondary" style="padding:3px 7px;margin-top:4px" data-acc-edit-amount="'+esc(x.servizio_id)+'">Modifica importo</button>':'')+'<br><strong>Incassato '+euro(x.importo_incassato)+'</strong><br><span class="muted">Residuo '+euro(x.residuo)+'</span></td><td><span class="pill b">'+esc(x.stato_contabile)+'</span>'+action+'</td><td style="min-width:200px;white-space:normal">'+annotations+'</td><td>'+esc(x.stato_gestionale||'—')+'</td></tr>';
+ }).join(''):'<tr><td colspan="7">Nessun servizio per questo filtro.</td></tr>';
  $('accBody').querySelectorAll('[data-acc-confirm-note]').forEach(button=>button.onclick=()=>accConfirmSuggestedPayment(button.dataset.accConfirmNote,button));
  $('accBody').querySelectorAll('[data-acc-edit-amount]').forEach(button=>button.onclick=async()=>{
   if(prof?.ruolo!=='AMMINISTRATORE')return;
