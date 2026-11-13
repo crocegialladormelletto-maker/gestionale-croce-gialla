@@ -2658,7 +2658,7 @@ Causale: numero preventivo</textarea>
 <div class="stats"><div class="stat"><small>TOTALE DA INCASSARE</small><b id="accDue">€ 0</b></div><div class="stat"><small>PAGATI</small><b id="accPaid">0</b></div><div class="stat"><small>PARZIALI</small><b id="accPart">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="accCount">0</b></div></div>
 <div class="section" data-admin-only="true"><h3>💰 Riepilogo incassi registrati</h3><p class="muted">Incassi effettivamente registrati nel registro pagamenti servizi. I bonifici differiti ancora da ricevere non sono conteggiati. Le Note di Debito hanno un riepilogo separato.</p><div class="stats"><div class="stat"><small>INCASSATO NEL MESE</small><b id="accMonthCollected">€ 0</b></div><div class="stat"><small>INCASSATO NELL'ANNO</small><b id="accYearCollected">€ 0</b></div><div class="stat"><small>OPERAZIONI NEL MESE</small><b id="accMonthOperations">0</b></div><div class="stat"><small>OPERAZIONI NELL'ANNO</small><b id="accYearOperations">0</b></div></div><div class="grid2"><div class="section" style="margin:0"><h3>Questo mese</h3><div id="accMonthBreakdown" class="muted">Caricamento...</div></div><div class="section" style="margin:0"><h3>Da inizio anno</h3><div id="accYearBreakdown" class="muted">Caricamento...</div></div></div><div class="section" style="margin-top:14px"><h3>📅 Incassi mese per mese</h3><p class="muted">Storico per data di pagamento registrata. Ogni mese distingue contanti, POS e bonifici accreditati; i bonifici differiti non incassati sono esclusi.</p><div class="table"><table><thead><tr><th>Mese</th><th>Contanti</th><th>POS</th><th>Bonifici</th><th>Totale incassato</th><th>Operazioni</th></tr></thead><tbody id="accMonthlyRows"><tr><td colspan="6">Caricamento...</td></tr></tbody></table></div></div><div id="accCollectionMsg"></div></div>
 <div class="section" data-admin-only="true"><h3>🏦 Registra incasso fattura Aruba</h3><p class="muted">Seleziona un servizio con fattura Aruba già emessa, registra soltanto il pagamento effettivamente ricevuto. Il riepilogo mensile si aggiorna automaticamente; non inserire lo stesso incasso anche in «Registra pagamento».</p><div class="grid4"><div class="field"><label>Servizio fatturato Aruba</label><select id="accArubaService"><option value="">Caricamento...</option></select></div><div class="field"><label>Importo incassato €</label><input id="accArubaAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label>Metodo</label><select id="accArubaMode"><option value="BONIFICO">Bonifico accreditato</option><option value="POS">POS</option><option value="CONTANTI">Contanti</option></select></div><div class="field"><label>Data effettiva incasso</label><input id="accArubaDate" type="date"></div></div><div class="toolbar"><button type="button" id="accArubaSave" class="btn yellow">💰 Registra incasso Aruba</button></div><div id="accArubaMsg"></div></div><div class="section"><h3>Registra pagamento</h3><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo €</label><input id="accAmount" type="number" step="1"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
-<div class="section"><h3>Servizi contabili</h3><p class="muted">I servizi futuri e quelli non ancora svolti restano nei calendari. Lo storico dei servizi effettuati rimane disponibile.</p><div class="actions"><button id="accFilterDue" class="btn yellow" type="button">Da incassare</button><button id="accFilterDeferred" class="btn secondary" type="button">Bonifici differiti</button><button id="accFilterPaid" class="btn secondary" type="button">Incassati</button><button id="accFilterHistory" class="btn secondary" type="button">Storico completo</button></div><div id="accFilterInfo" class="muted"></div></div><div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto</th><th>Pagamento</th><th>Stato gestionale</th></tr></thead><tbody id="accBody"></tbody></table></div></div></section>
+<div class="section"><h3>Servizi contabili</h3><p class="muted">I servizi futuri e quelli non ancora svolti restano nei calendari. Lo storico dei servizi effettuati rimane disponibile.</p><div class="actions"><button id="accFilterDue" class="btn yellow" type="button">Da incassare</button><button id="accFilterDeferred" class="btn secondary" type="button">Bonifici differiti</button><button id="accFilterPaid" class="btn secondary" type="button">Incassati</button><button id="accFilterHistory" class="btn secondary" type="button">Storico completo</button></div><div id="accFilterInfo" class="muted"></div></div><div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto</th><th>Pagamento</th><th>Annotazioni equipaggio</th><th>Stato gestionale</th></tr></thead><tbody id="accBody"></tbody></table></div></div></section>
 
 <section id="communications" class="surface hidden">
  <div class="hero"><h2>📣 Comunicazioni ai volontari</h2>
@@ -11926,6 +11926,7 @@ if($('accTestEmail'))$('accTestEmail').onclick=async()=>{
 
 let accCurrentFilter='due';
 let accAccountingRows=[];
+let accSheetNotes=new Map();
 function accCompleted(x){
  const status=String(x.stato_gestionale||'').toUpperCase();
  const operational=String(x.stato||'').toUpperCase();
@@ -11947,7 +11948,7 @@ function accRenderFiltered(){
   $(id).className='btn '+(accCurrentFilter===key?'yellow':'secondary');
  }
  $('accFilterInfo').textContent=rows.length+' servizi visualizzati · solo servizi effettuati';
- $('accBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.tipo_servizio)+' · mezzo '+esc(x.mezzo)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>Servizio '+euro(x.importo_dovuto)+(prof?.ruolo==='AMMINISTRATORE'?'<br><button type="button" class="btn secondary" style="padding:3px 7px;margin-top:4px" data-acc-edit-amount="'+esc(x.servizio_id)+'">Modifica importo</button>':'')+'<br><strong>Incassato '+euro(x.importo_incassato)+'</strong><br><span class="muted">Residuo '+euro(x.residuo)+'</span></td><td><span class="pill b">'+esc(x.stato_contabile)+'</span></td><td>'+esc(x.stato_gestionale||'—')+'</td></tr>').join(''):'<tr><td colspan="6">Nessun servizio per questo filtro.</td></tr>';
+ $('accBody').innerHTML=rows.length?rows.map(x=>'<tr><td>'+esc(x.data_servizio)+'</td><td>'+esc(x.tipo_servizio)+' · mezzo '+esc(x.mezzo)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>Servizio '+euro(x.importo_dovuto)+(prof?.ruolo==='AMMINISTRATORE'?'<br><button type="button" class="btn secondary" style="padding:3px 7px;margin-top:4px" data-acc-edit-amount="'+esc(x.servizio_id)+'">Modifica importo</button>':'')+'<br><strong>Incassato '+euro(x.importo_incassato)+'</strong><br><span class="muted">Residuo '+euro(x.residuo)+'</span></td><td><span class="pill b">'+esc(x.stato_contabile)+'</span></td><td style="min-width:200px;white-space:normal">'+((accSheetNotes.get(String(x.servizio_id))||[]).map(f=>'<div><strong>'+esc(f.numero_foglio||'Foglio viaggio')+'</strong>: '+esc(f.annotazioni?.trim()||'Nessuna annotazione')+'</div>').join('')||'<span class="muted">Nessuna annotazione presente</span>')+'</td><td>'+esc(x.stato_gestionale||'—')+'</td></tr>').join(''):'<tr><td colspan="7">Nessun servizio per questo filtro.</td></tr>';
  $('accBody').querySelectorAll('[data-acc-edit-amount]').forEach(button=>button.onclick=async()=>{
   if(prof?.ruolo!=='AMMINISTRATORE')return;
   const id=button.dataset.accEditAmount;
@@ -11997,6 +11998,23 @@ async function loadAccounting(){
  if(r.error){msg('accMsg','Impossibile caricare la contabilità: '+r.error.message,'err');return}
  const a=(r.data||[]).filter(x=>accCompleted(x)&&String(x.tipo_servizio||'').trim()!=='118'&&String(x.stato_gestionale||'').toUpperCase()!=='ANNULLATO');
  accAccountingRows=a;
+ accSheetNotes=new Map();
+ const serviceIds=[...new Set(a.map(x=>String(x.servizio_id||'')).filter(Boolean))];
+ let notesLoadingError=null;
+ for(let i=0;i<serviceIds.length;i+=100){
+  const nr=await sb.from('fogli_viaggio')
+   .select('servizio_giornaliero_id,numero_foglio,annotazioni')
+   .in('servizio_giornaliero_id',serviceIds.slice(i,i+100))
+   .order('numero_foglio',{ascending:false})
+   .limit(1000);
+  if(nr.error){notesLoadingError=nr.error;break}
+  for(const note of nr.data||[]){
+   const k=String(note.servizio_giornaliero_id||'');
+   if(!accSheetNotes.has(k))accSheetNotes.set(k,[]);
+   accSheetNotes.get(k).push(note);
+  }
+ }
+ if(notesLoadingError)msg('accMsg','Annotazioni equipaggi non disponibili: '+notesLoadingError.message,'warn');
  const due=a.filter(x=>Number(x.residuo)>0);
  $('accDue').textContent=euro(due.reduce((z,x)=>z+Number(x.residuo||0),0));
  $('accPaid').textContent=a.filter(x=>x.stato_contabile==='SALDATO').length;
