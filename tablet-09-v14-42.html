@@ -1687,7 +1687,7 @@
 </div></div>
 <div class="section"><h3>Economico</h3>
   <div class="grid4">
-   <div class="field"><label>Importo previsto €</label><input id="dAmount" type="number" min="0" step="1"><div class="muted" id="dTariffBaseInfo"></div></div>
+   <div class="field"><label>Importo servizio €</label><input id="dAmount" type="number" min="0" step="1"><div class="muted" id="dTariffBaseInfo"></div></div>
    <div class="field"><label>Sconto €</label><input id="dDiscount" type="number" min="0" step="1"></div>
    <div class="field"><label>Importo finale €</label><input id="dFinal" type="number" min="0" step="1"></div>
    <div class="field"><label>Pagamento previsto</label><select id="dPayMode"><option value="">—</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>ALTRO</option></select></div>
@@ -1807,7 +1807,7 @@
 <div class="field"><label>Tariffario</label><select id="tar"><option value="">Nessuno / tariffa concordata</option></select></div>
 <div class="field"><label>Destinazione tariffaria</label><select id="tarDest"><option value="">—</option></select></div>
 <div class="field"><label>Fascia</label><select id="tarNight"><option value="false">DIURNO</option><option value="true">NOTTURNO</option></select></div>
-<div class="field"><label>Importo previsto €</label><input id="imp" type="number" step="1" min="0"></div>
+<div class="field"><label>Importo servizio €</label><input id="imp" type="number" step="1" min="0"></div>
 </div>
 <div id="tarAdjustment" class="section hidden" style="margin:10px 0;background:#f4f9fd">
 <h3 style="margin:0 0 5px">↕ Variazione tariffa per questo servizio</h3>
@@ -1816,7 +1816,7 @@
 <div class="field"><label for="tarChangeType">Operazione</label><select id="tarChangeType"><option value="NONE">Nessuna variazione</option><option value="PLUS">＋ Aumenta la tariffa</option><option value="MINUS">− Riduci la tariffa</option></select></div>
 <div class="field"><label for="tarChangeValue">Importo variazione €</label><input id="tarChangeValue" type="number" min="1" max="10000" step="1" placeholder="Es. 5" disabled></div>
 <div class="field"><label for="tarBasePrice">Tariffa originale €</label><input id="tarBasePrice" type="text" value="—" readonly tabindex="-1"></div>
-</div><div class="muted" style="margin-top:7px">L’importo aggiornato viene riportato in «Importo previsto €» e vale solo per il servizio corrente.</div>
+</div><div class="muted" style="margin-top:7px">L’importo aggiornato viene riportato in «Importo servizio €» e vale solo per il servizio corrente.</div>
 </div>
 <div id="tarQuote"></div><div class="field" style="margin-top:9px"><label>Note operative</label><textarea id="note"></textarea></div></div>
 <div class="section"><h3>📎 Allegati richiesta servizio</h3>
@@ -2680,7 +2680,7 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Tariffario</label><select id="tabletAdTariffGroup"><option value="">Nessuno / concordata</option></select></div>
     <div class="field"><label>Destinazione tariffaria</label><select id="tabletAdTariffDest"><option value="">—</option></select></div>
     <div class="field"><label>Fascia</label><select id="tabletAdNight"><option value="false">Diurno</option><option value="true">Notturno</option></select></div>
-    <div class="field"><label>Importo concordato € (solo senza tariffario)</label><input id="tabletAdAmount" type="number" step="0.01" min="0" max="10000" placeholder="Vuoto = da concordare"></div>
+    <div class="field"><label>Importo servizio € (solo senza tariffario)</label><input id="tabletAdAmount" type="number" step="0.01" min="0" max="10000" placeholder="Vuoto = da concordare"></div>
     <div class="field" id="tabletAdPaymentBox" style="display:none!important"><label>Modalità pagamento</label><select id="tabletAdPayment"><option value="">Da indicare</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="ALTRO">Altro</option></select></div>
     <div class="field" id="tabletAdPaymentDateBox" style="display:none!important"><label>Data pagamento</label><input id="tabletAdPaymentDate" type="date"></div>
     <div class="field"><label>Note operative</label><textarea id="tabletAdNotes" maxlength="2000"></textarea></div>
@@ -11044,7 +11044,7 @@ function renderTabletList(){
  '<div><div class="muted">'+esc(tabletDateLabel(s.data_servizio))+'</div><span class="tablet-hour">'+esc(tabletFmt(s.ora_partenza_prevista))+'</span></div>'+
  '<span class="tablet-vehicle">'+esc(s.mezzo)+'</span><span class="tablet-pill">'+esc(st)+'</span></div>'+
  '<div class="tablet-flow">'+esc(s.tipo_servizio_altro||s.tipo_servizio||'Servizio')+'<br>'+esc(s.luogo_partenza||'Sede')+' → '+(s.luogo_carico_paziente||s.indirizzo_carico_paziente?'<b>CARICO:</b> '+esc([s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · '))+' → ':'')+esc(s.ospedale_destinazione||s.destinazione||'—')+'</div>'+
- '<div class="notice" style="margin:8px 0">Importo previsto per il paziente: <b>'+esc(tabletServiceAmount(s))+'</b></div>'+
+ '<div class="notice" style="margin:8px 0">Importo servizio per il paziente: <b>'+esc(tabletServiceAmount(s))+'</b></div>'+
  '<div class="muted">'+(isAssistanceManifestation(s.tipo_servizio)?'Partenza dalla sede: '+esc(tabletFmt(s.ora_partenza_prevista))+' · Inizio assistenza: '+esc(tabletFmt(s.ora_inizio_assistenza_prevista))+' · Fine assistenza: '+esc(tabletFmt(s.ora_fine_assistenza_prevista))+' · Rientro previsto in sede: '+esc(tabletFmt(s.ora_rientro_previsto)):'Carico previsto: '+esc(tabletFmt(s.ora_carico_paziente_prevista))+' · Arrivo destinazione previsto: '+esc(tabletFmt(s.ora_arrivo_destinazione_prevista))+' · Rientro previsto: '+esc(tabletFmt(s.ora_rientro_previsto)))+'</div>'+
  '<div style="margin-top:6px"><span class="pill '+(ready?'g':'r')+'">'+crew.length+'/'+esc(s.equipaggio_minimo??(String(s.mezzo||'')==='06'?1:2))+' componenti assegnati</span>'+
  (s.numero_foglio?' <span class="pill b">'+esc(s.numero_foglio)+'</span>':'')+'</div>'+
@@ -11412,7 +11412,7 @@ function tabletUpdateImmediateQuote(){
   $('tabletAdQuote').className='notice warn';$('tabletAdQuote').textContent='Scegli tariffario oppure importo concordato, non entrambi.';return;
  }
  $('tabletAdQuote').className='notice';
- $('tabletAdQuote').textContent=x?'Importo previsto per il paziente: '+euro(night?x.importo_notturno:x.importo_diurno):
+ $('tabletAdQuote').textContent=x?'Importo servizio per il paziente: '+euro(night?x.importo_notturno:x.importo_diurno):
  manual!==''?'Importo concordato: '+euro(Number(manual)):'Nessuna tariffa impostata: da concordare con il Centralino.';
 }
 async function tabletPrefillImmediateKm(){
@@ -11676,7 +11676,7 @@ async function openTabletService(id){
  (isAssistanceManifestation(s.tipo_servizio)?'':tabletReadOnlyField('Carico paziente',[s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · ')))+
  (isAssistanceManifestation(s.tipo_servizio)?'':tabletReadOnlyField('Percorso operativo',[[s.luogo_partenza,s.indirizzo_partenza].filter(Boolean).join(' · '),[s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(' · '),[s.ospedale_destinazione||s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · ')].filter(Boolean).join(' → ')))+
  tabletReadOnlyField('Destinazione',[s.ospedale_destinazione||s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(' · '))+
- tabletReadOnlyField(isAssistanceManifestation(s.tipo_servizio)?'Importo previsto assistenza':'Importo previsto per il paziente',tabletServiceAmount(s))+
+ tabletReadOnlyField(isAssistanceManifestation(s.tipo_servizio)?'Importo servizio assistenza':'Importo servizio per il paziente',tabletServiceAmount(s))+
  tabletReadOnlyField('Equipaggio',crew.map(x=>x.nome_completo+' · '+x.ruolo).join(' | '))+
  tabletReadOnlyField('Note operative',isAssistanceManifestation(s.tipo_servizio)?extractEventContact(s.note).notes:s.note)+'</div>';
  renderTabletDetailHeader();await loadTabletSheet(id);
