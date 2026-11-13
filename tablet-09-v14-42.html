@@ -786,7 +786,7 @@
 <button class="nav sep" data-v="vehicles">🚐 Mezzi e scadenze</button><button class="nav" data-v="personnelExpiries">⏰ Scadenze personale <span id="personnelExpiryNavCount" class="expiry-mini-badge hidden">0</span></button>
 <button class="nav" type="button" data-href="checklist-ambulanze/">✅ Archivio checklist ambulanze</button>
 <button class="nav" data-v="tariffs">€ Tariffari</button>
-<button class="nav" data-v="accounting" data-admin-only="true">🧾 Contabilità</button>
+<button class="nav" data-v="accounting" data-admin-only="true">🧾 Servizi da verificare pagamento</button>
 <button class="nav" data-v="primaNota" data-admin-only="true">📒 Prima Nota</button>
 <button class="nav" data-v="activityLog" data-admin-only="true">📋 Registro attività</button>
 <button class="nav" data-v="backup" data-admin-only="true">🔐 Backup & Export</button>
@@ -2455,11 +2455,11 @@ Causale: numero preventivo</textarea>
  </div>
 </section>
 
-<section id="accounting" class="surface hidden"><div class="hero"><h2>Contabilità servizi</h2><p>Controllo rapido degli incassi per Presidente e Tesoriere. Un servizio senza pagamento registrato è da verificare, non necessariamente insoluto.</p></div><div class="pad">
+<section id="accounting" class="surface hidden"><div class="hero"><h2>Servizi da verificare pagamento</h2><p>Elenco unico per Presidente e Tesoriere con annotazioni degli equipaggi e pagamenti registrati. La frase «pagato» nelle annotazioni è una segnalazione da verificare, non un incasso contabilizzato.</p></div><div class="pad">
 <div class="stats"><div class="stat"><small>RESIDUO DA VERIFICARE</small><b id="accDue">€ 0</b></div><div class="stat"><small>SALDATI</small><b id="accPaid">0</b></div><div class="stat"><small>PARZIALI</small><b id="accPart">0</b></div><div class="stat"><small>DA CONTABILIZZARE</small><b id="accCount">0</b></div></div>
 <div class="section"><h3>Registra pagamento verificato</h3><p class="muted">Confronta il pagamento effettivo con POS, contanti o banca. Il tablet non certifica che il cliente abbia pagato.</p><div class="grid4"><div class="field"><label>Servizio</label><select id="accService"></select></div><div class="field"><label>Importo ricevuto €</label><input id="accAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label>Modalità</label><select id="accMode"><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>BONIFICO DIFFERITO</option><option>BONIFICO ISTANTANEO</option><option>ALTRO</option></select></div><div class="field"><label>Riferimento / ricevuta</label><input id="accRef"></div></div><div class="toolbar"><button id="accSave" class="btn yellow">Registra pagamento</button></div><div id="accMsg"></div></div>
 <div class="section"><div class="actions" style="align-items:end"><div class="field"><label>Visualizza</label><select id="accStatusFilter"><option value="verificare">Da verificare</option><option value="tutti">Tutti</option><option value="saldati">Saldati</option><option value="parziali">Parziali</option><option value="definire">Importo da definire</option></select></div><div class="field"><label>Cerca paziente, mezzo, servizio</label><input id="accQuickSearch" placeholder="Cerca..."></div><button id="accRefresh" type="button" class="btn secondary">↻ Aggiorna</button></div><p id="accListInfo" class="muted"></p>
-<div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto / residuo</th><th>Verifica pagamento</th><th>Azione</th></tr></thead><tbody id="accBody"></tbody></table></div></div></div></section>
+<div class="table"><table><thead><tr><th>Data</th><th>Servizio</th><th>Paziente</th><th>Dovuto / residuo</th><th>Verifica pagamento</th><th>Annotazioni del foglio viaggio</th><th>Azione</th></tr></thead><tbody id="accBody"></tbody></table></div></div></div></section>
 
 <section id="communications" class="surface hidden">
  <div class="hero"><h2>📣 Comunicazioni ai volontari</h2>
@@ -10758,6 +10758,7 @@ if($('pnRunStartupCheck'))$('pnRunStartupCheck').onclick=pnRunStartupCheck;
 if($('pnRunDryTest'))$('pnRunDryTest').onclick=pnRunDryTest;
 
 let accountingRows=[];
+let accountingSheetNotes=new Map();
 function accountingLabel(x){
  const due=Number(x.importo_dovuto||0), paid=Number(x.importo_incassato||0), residual=Number(x.residuo||0);
  if(x.stato_contabile==='SALDATO'||(due>0&&residual<=0&&paid>=due))return 'SALDATO';
@@ -10769,18 +10770,20 @@ function renderAccounting(){
  const status=$('accStatusFilter').value,search=$('accQuickSearch').value.trim().toLowerCase();
  const filtered=accountingRows.filter(x=>{
   const s=accountingLabel(x);
-  if(status==='verificare'&&!['DA VERIFICARE','PARZIALE'].includes(s))return false;
+  if(status==='verificare'&&!['DA VERIFICARE','PARZIALE','DA DEFINIRE'].includes(s))return false;
   if(status==='saldati'&&s!=='SALDATO')return false;
   if(status==='parziali'&&s!=='PARZIALE')return false;
   if(status==='definire'&&s!=='DA DEFINIRE')return false;
-  return !search||[x.data_servizio,x.mezzo,x.tipo_servizio,x.paziente_nome,x.paziente_cognome,x.destinazione].some(v=>String(v||'').toLowerCase().includes(search));
+  return !search||[x.data_servizio,x.mezzo,x.tipo_servizio,x.paziente_nome,x.paziente_cognome,x.destinazione,...(accountingSheetNotes.get(String(x.servizio_id))||[]).flatMap(f=>[f.annotazioni,f.numero_foglio])].some(v=>String(v||'').toLowerCase().includes(search));
  });
  $('accListInfo').textContent=filtered.length+' servizi visualizzati. «Da verificare» significa che non risulta un saldo completo registrato, non che il paziente non abbia pagato.';
  $('accBody').innerHTML=filtered.length?filtered.map(x=>{
   const statusLabel=accountingLabel(x);
+  const sheets=accountingSheetNotes.get(String(x.servizio_id))||[];
+  const annotations=sheets.length?sheets.map(f=>'<div><strong>'+esc(f.numero_foglio||'Foglio viaggio')+'</strong>: '+esc(f.annotazioni?.trim()||'Nessuna annotazione')+'</div>').join(''):'<span class="muted">Nessuna annotazione collegata</span>';
   const action=(statusLabel==='DA VERIFICARE'||statusLabel==='PARZIALE')?'<button type="button" class="btn secondary" data-acc-service="'+esc(String(x.servizio_id))+'">Registra incasso</button>':'—';
-  return '<tr><td>'+esc(x.data_servizio||'—')+'</td><td>'+esc(x.tipo_servizio||'—')+' · mezzo '+esc(x.mezzo||'—')+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+euro(x.importo_dovuto)+'<br><span class="muted">Registrato '+euro(x.importo_incassato)+' · residuo '+euro(x.residuo)+'</span></td><td><span class="pill '+(statusLabel==='SALDATO'?'g':statusLabel==='PARZIALE'?'y':'b')+'">'+esc(statusLabel)+'</span></td><td>'+action+'</td></tr>';
- }).join(''):'<tr><td colspan="6">Nessun servizio per questo filtro.</td></tr>';
+  return '<tr><td>'+esc(x.data_servizio||'—')+'</td><td>'+esc(x.tipo_servizio||'—')+' · mezzo '+esc(x.mezzo||'—')+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+euro(x.importo_dovuto)+'<br><span class="muted">Registrato '+euro(x.importo_incassato)+' · residuo '+euro(x.residuo)+'</span></td><td><span class="pill '+(statusLabel==='SALDATO'?'g':statusLabel==='PARZIALE'?'y':'b')+'">'+esc(statusLabel)+'</span></td><td>'+annotations+'</td><td>'+action+'</td></tr>';
+ }).join(''):'<tr><td colspan="7">Nessun servizio per questo filtro.</td></tr>';
  document.querySelectorAll('[data-acc-service]').forEach(btn=>btn.onclick=()=>{
   const x=accountingRows.find(v=>String(v.servizio_id)===btn.dataset.accService);
   if(!x)return;
@@ -10795,6 +10798,25 @@ async function loadAccounting(){
  const r=await sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(1000);
  if(r.error)return msg('accMsg','Errore lettura servizi: '+r.error.message,'err');
  accountingRows=r.data||[];
+ accountingSheetNotes=new Map();
+ // Collega le annotazioni del tablet ai servizi, senza interpretarle come incassi.
+ // Query a lotti per non superare i limiti delle liste IN.
+ const ids=[...new Set(accountingRows.map(x=>String(x.servizio_id||'')).filter(Boolean))];
+ let noteError=null;
+ for(let i=0;i<ids.length;i+=100){
+  const notes=await sb.from('fogli_viaggio')
+   .select('servizio_giornaliero_id,numero_foglio,annotazioni')
+   .in('servizio_giornaliero_id',ids.slice(i,i+100))
+   .order('numero_foglio',{ascending:false})
+   .limit(1000);
+  if(notes.error){noteError=notes.error;break}
+  for(const f of notes.data||[]){
+   const key=String(f.servizio_giornaliero_id);
+   if(!accountingSheetNotes.has(key))accountingSheetNotes.set(key,[]);
+   accountingSheetNotes.get(key).push(f);
+  }
+ }
+ if(noteError)msg('accMsg','Annotazioni non disponibili: '+noteError.message,'warn');
  const due=accountingRows.filter(x=>Number(x.residuo)>0);
  $('accDue').textContent=euro(due.reduce((z,x)=>z+Number(x.residuo||0),0));
  $('accPaid').textContent=accountingRows.filter(x=>accountingLabel(x)==='SALDATO').length;
