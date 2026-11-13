@@ -11960,40 +11960,68 @@ function accPaymentSuggestion(serviceId){
  return candidates[candidates.length-1];
 }
 async function accConfirmSuggestedPayment(id,button){
- if(prof?.ruolo!=='AMMINISTRATORE')return msg('accMsg','Operazione riservata agli amministratori.','warn');
+ const showError=message=>{
+  const text='Pagamento NON registrato: '+message;
+  msg('accMsg',text,'err');
+  alert(text);
+ };
+ if(prof?.ruolo!=='AMMINISTRATORE')return showError('operazione riservata agli amministratori.');
  const x=accAccountingRows.find(v=>String(v.servizio_id)===String(id));
  const suggestion=accPaymentSuggestion(id);
- if(!x||!suggestion||suggestion.ambiguous)return msg('accMsg','Segnalazione non univoca: verifica il servizio.','warn');
+ if(!x||!suggestion||suggestion.ambiguous)return showError('annotazione non univoca. Verifica il servizio.');
  const left=Number(x.residuo||0);
- if(!Number.isFinite(left)||left<=0)return msg('accMsg','Il servizio non ha un residuo positivo. Aggiorna la contabilità.','warn');
- const label=suggestion.mode==='BONIFICO'?'Hai verificato che il bonifico sia effettivamente ACCREDITATO sul conto?':'Hai verificato che il pagamento sia stato effettivamente ricevuto?';
- if(!confirm(label+'\n\n'+suggestion.numero+'\nAnnotazione: '+suggestion.note+'\nMetodo proposto: '+suggestion.mode+'\nResiduo: '+euro(left)))return;
+ if(!Number.isFinite(left)||left<=0)return showError('residuo non positivo. Aggiorna i dati.');
+ const label=suggestion.mode==='BONIFICO'?'Confermi di aver verificato l’ACCREDITO effettivo in banca?':'Confermi di aver verificato che il pagamento sia stato ricevuto?';
+ if(!confirm(label+'\n\n'+suggestion.numero+'\nAnnotazione: '+suggestion.note+'\nMetodo: '+suggestion.mode+'\nResiduo: '+euro(left)))return;
  const raw=prompt('Importo effettivamente incassato in euro (massimo '+euro(left)+'):',left.toFixed(2).replace('.',','));
  if(raw===null)return;
  const amount=Number(String(raw).trim().replace(',','.'));
  if(!Number.isFinite(amount)||amount<=0||amount>left+0.001||!/^\d+(?:[.,]\d{1,2})?$/.test(String(raw).trim()))
-  return msg('accMsg','Importo non valido o superiore al residuo. Nessun pagamento registrato.','warn');
+  return showError('importo non valido o superiore al residuo.');
  button.disabled=true;
+ button.textContent='Verifica e registrazione...';
+ let insertedId=null;
  try{
-  // Ricontrolla saldo e movimenti prima dell'inserimento, senza mai trasformare
-  // le annotazioni del volontario in un incasso automaticamente.
   const fresh=await sb.from('v_contabilita_servizi').select('residuo,importo_incassato').eq('servizio_id',id).maybeSingle();
   if(fresh.error||!fresh.data)throw new Error(fresh.error?.message||'Servizio non trovato');
   if(Math.abs(Number(fresh.data.residuo||0)-left)>0.001)throw new Error('Il residuo è cambiato: aggiorna la pagina prima di registrare.');
   const already=await sb.from('pagamenti_servizi').select('id,importo,modalita,stato').eq('servizio_id',id).eq('stato','REGISTRATO').limit(100);
   if(already.error)throw already.error;
-  if((already.data||[]).length>=100)throw new Error('Troppi movimenti: verificare il registro prima di registrare.');
-  if(Number(fresh.data.importo_incassato||0)>0 && !confirm('Esistono già incassi registrati per questo servizio. Confermi di voler aggiungere un ALTRO pagamento?'))return;
-  if(!confirm('Conferma definitiva: registrare '+euro(amount)+' con '+suggestion.mode+'?'))return;
+  if((already.data||[]).length>=100)throw new Error('Troppi movimenti: verificare il registro.');
+  if(Number(fresh.data.importo_incassato||0)>0&&!confirm('Esistono altri incassi registrati. Vuoi davvero aggiungere un nuovo pagamento?'))return;
   const record=await sb.from('pagamenti_servizi').insert({
    servizio_id:id,importo:amount,modalita:suggestion.mode,stato:'REGISTRATO',
    riferimento:'Confermato amministrazione da annotazioni '+suggestion.numero
-  });
-  if(record.error)throw record.error;
+  }).select('id').single();
+  if(record.error||!record.data?.id)throw new Error(record.error?.message||'Il database non ha confermato la registrazione.');
+  insertedId=record.data.id;
+  button.textContent='Registrato';
+  // La registrazione è avvenuta: non consentire una seconda conferma mentre aggiorniamo la vista.
+  const refreshed=await sb.from('v_contabilita_servizi').select('residuo,importo_incassato').eq('servizio_id',id).maybeSingle();
+  if(refreshed.error||!refreshed.data){
+   msg('accMsg','Pagamento registrato nel database, ma riepilogo non aggiornato. Ricarica Contabilità prima di qualsiasi altra operazione.','warn');
+   alert('Pagamento REGISTRATO. La schermata non è riuscita ad aggiornarsi: non premere di nuovo Conferma pagamento.');
+   return;
+  }
+  const stillDue=Number(refreshed.data.residuo||0);
+  if(stillDue>=left-0.001){
+   msg('accMsg','Pagamento registrato, ma il residuo non risulta aggiornato. Verifica prima di altre registrazioni.','warn');
+   alert('Pagamento REGISTRATO, ma residuo non ancora aggiornato. Non ripetere la registrazione.');
+   return;
+  }
   await loadAccounting();
-  msg('accMsg','Pagamento di '+euro(amount)+' registrato. Stato aggiornato.','ok');
- }catch(err){msg('accMsg','Pagamento NON registrato: '+(err.message||String(err)),'err')}
- finally{button.disabled=false}
+  msg('accMsg','Incasso confermato: '+euro(amount)+'. Residuo aggiornato.','ok');
+ }catch(err){
+  if(insertedId){
+   msg('accMsg','Pagamento registrato ma aggiornamento schermata non riuscito. Non ripetere la conferma.','warn');
+   alert('Pagamento REGISTRATO: impossibile aggiornare la schermata. Non ripetere.');
+  }else showError(err.message||String(err));
+ }finally{
+  if(!insertedId){
+   button.disabled=false;
+   button.textContent='Conferma pagamento';
+  }
+ }
 }
 function accRenderFiltered(){
  const a=accAccountingRows;
