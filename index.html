@@ -1865,7 +1865,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 </div></div>
 <div class="section"><h3>Economico</h3>
   <div class="grid4">
-   <div class="field"><label>Importo previsto €</label><input id="dAmount" type="number" min="0" step="1"><div class="muted" id="dTariffBaseInfo"></div></div>
+   <div class="field"><label>Importo servizio €</label><input id="dAmount" type="number" min="0" step="1"><div class="muted" id="dTariffBaseInfo"></div></div>
    <div class="field"><label>Sconto €</label><input id="dDiscount" type="number" min="0" step="1"></div>
    <div class="field"><label>Importo finale €</label><input id="dFinal" type="number" min="0" step="1"></div>
    <div class="field"><label>Pagamento previsto</label><select id="dPayMode"><option value="">—</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option value="BONIFICO DIFFERITO">BONIFICO DIFFERITO</option><option>ALTRO</option></select></div>
@@ -1985,7 +1985,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div class="field"><label>Tariffario</label><select id="tar"><option value="">Nessuno / tariffa concordata</option></select></div>
 <div class="field"><label>Destinazione tariffaria</label><select id="tarDest"><option value="">—</option></select></div>
 <div class="field"><label>Fascia</label><select id="tarNight"><option value="false">DIURNO</option><option value="true">NOTTURNO</option></select></div>
-<div class="field"><label>Importo previsto €</label><input id="imp" type="number" step="1" min="0"></div>
+<div class="field"><label>Importo servizio €</label><input id="imp" type="number" step="1" min="0"></div>
 </div>
 <div id="tarAdjustment" class="section hidden" style="margin:10px 0;background:#f4f9fd">
 <h3 style="margin:0 0 5px">↕ Variazione tariffa per questo servizio</h3>
@@ -1994,7 +1994,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div class="field"><label for="tarChangeType">Operazione</label><select id="tarChangeType"><option value="NONE">Nessuna variazione</option><option value="PLUS">＋ Aumenta la tariffa</option><option value="MINUS">− Riduci la tariffa</option></select></div>
 <div class="field"><label for="tarChangeValue">Importo variazione €</label><input id="tarChangeValue" type="number" min="1" max="10000" step="1" placeholder="Es. 5" disabled></div>
 <div class="field"><label for="tarBasePrice">Tariffa originale €</label><input id="tarBasePrice" type="text" value="—" readonly tabindex="-1"></div>
-</div><div class="muted" style="margin-top:7px">L’importo aggiornato viene riportato in «Importo previsto €» e vale solo per il servizio corrente.</div>
+</div><div class="muted" style="margin-top:7px">L’importo aggiornato viene riportato in «Importo servizio €» e vale solo per il servizio corrente.</div>
 </div>
 <div id="tarQuote"></div><div class="field" style="margin-top:9px"><label>Note operative</label><textarea id="note"></textarea></div></div>
 <div class="section"><h3>📎 Allegati richiesta servizio</h3>
