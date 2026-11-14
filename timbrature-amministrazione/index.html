@@ -1057,7 +1057,7 @@ async function collectMonthVerification(month){
   riepLoadSchedules(range.start,range.end),
   api({action:'check_backup',month})
  ]);
- const allEvents=(r.context||[]).filter(e=>!e.eliminato_at).sort((a,b)=>Date.parse(a.evento_at)-Date.parse(b.evento_at));
+ const allEvents=[...new Map([...(r.context||[]),...(r.events||[])].filter(e=>!e.eliminato_at).map(e=>[e.id,e])).values()].sort((a,b)=>Date.parse(a.evento_at)-Date.parse(b.evento_at));
  const monthEvents=allEvents.filter(e=>romeDay(e.evento_at).slice(0,7)===month);
  const pauses=(r.pauseEvents||[]).filter(e=>romeDay(e.evento_at).slice(0,7)===month);
  const restDays=(r.absences||[]).filter(a=>a.data_dal<=range.end&&a.data_al>=range.start);
