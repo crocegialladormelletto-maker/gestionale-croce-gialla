@@ -141,6 +141,37 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .simpleMenu .menuGroup .sideBtn{display:block;width:100%;text-align:left;background:#25486e!important;color:#e8f0f8!important;border:0!important;font-size:12px;font-weight:700;padding:12px 10px!important;margin:4px 0!important;border-radius:7px!important;box-shadow:none}
 .simpleMenu .menuGroup .sideBtn.active{background:#ffda22!important;color:#102e54!important}
 .simpleMenu .menuHelp{font-size:11px;color:#bdcee1;line-height:1.5;margin:20px 7px 6px}
+
+/* Scheda personale: semplice, con operazioni separate dai dati */
+.simpleMenu>.sideBtn[data-page="dashboard"]{background:#315477!important}
+.simpleMenu>.sideBtn[data-page="timbrature"]{background:#2369a9!important}
+.simpleMenu>.sideBtn[data-page="scheda"]{background:#087b7d!important}
+.simpleMenu>.sideBtn#openEmployeeShifts{background:#6951a8!important}
+.simpleMenu>.sideBtn[data-page="storico"]{background:#485e7d!important}
+.simpleMenu>.sideBtn[data-page="stampe"]{background:#23794f!important}
+.simpleMenu>.sideBtn[data-page="anomalie"]{background:#ab5823!important}
+.simpleMenu>.sideBtn.active{background:#ffda22!important;color:#102e54!important}
+.simpleMenu .menuGroup#menuAnalisi summary{background:#225d80}
+.simpleMenu .menuGroup#menuGestione summary{background:#66519a}
+.simpleMenu .menuGroup#menuAvanzate summary{background:#526578}
+.simpleMenu .menuGroup .sideBtn.active{background:#ffda22!important;color:#102e54!important}
+.profileFilters{display:grid;grid-template-columns:1fr 190px auto;gap:12px;align-items:end}
+.profileFilters label{font-weight:800;display:block;margin-bottom:6px}
+.profileFilters button{height:45px}
+.profileActions{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
+.profileActions button{border:0;border-radius:9px;padding:12px 16px;font-weight:800;color:#fff;background:#23794f}
+.profileActions #profileEdit{background:#2369a9}.profileActions #profileAbsence{background:#6951a8}
+.profileStats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.profileStat{padding:13px;border:1px solid #cfdbe9;border-radius:11px;background:#f3f7fc}
+.profileStat small{display:block;color:#56657e;font-weight:700}.profileStat strong{display:block;color:#12375d;font-size:24px;margin-top:6px}
+.profileColumns{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:15px 0}
+.profileColumns .card{min-width:0}.profileTableWrap{overflow-x:auto;margin:12px 0}.profileTable{width:100%;border-collapse:collapse;font-size:13px}
+.profileTable th{background:#e8f0fa;color:#173b72;text-align:left;padding:9px}
+.profileTable td{border-bottom:1px solid #e0e7f0;padding:9px;vertical-align:middle}
+.profileTable tr:nth-child(even){background:#f7f9fd}
+.profileRest{font-weight:800;color:#60728a}.profileMissing{color:#667085}.profileAnomaly{border-left:4px solid #bb6825;background:#fff7ed;padding:11px;margin:9px 0;border-radius:6px}
+@media(max-width:1100px){.profileColumns{grid-template-columns:1fr}}
+@media(max-width:650px){.profileFilters{grid-template-columns:1fr}.profileStats{grid-template-columns:1fr 1fr}.profileActions button{width:100%}}
 </style>
 </head>
 <body>
@@ -176,6 +207,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="menuSectionTitle">OPERAZIONI PRINCIPALI</div>
 <button class="sideBtn active" data-page="dashboard">🏠 <span class="sideLabel">Panoramica</span><span id="dashboardBadge" class="menuBadge neutralBadge">—</span></button>
 <button class="sideBtn" data-page="timbrature">🕒 <span class="sideLabel">Timbrature di oggi</span></button>
+<button class="sideBtn" data-page="scheda">👤 <span class="sideLabel">Scheda dipendente</span></button>
 <button class="sideBtn" type="button" id="openEmployeeShifts">📅 <span class="sideLabel">Turni dipendenti</span></button>
 <button class="sideBtn" data-page="storico">📋 <span class="sideLabel">Registro presenze</span></button>
 <button class="sideBtn" data-page="stampe">🖨️ <span class="sideLabel">Stampa registro</span></button>
@@ -359,6 +391,31 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 </section>
 
+<section id="page-scheda" class="adminPage">
+<div class="pageHead"><div><h2>👤 Scheda dipendente</h2><div class="muted">Un solo punto per consultare turni, presenze, pause, assenze e anomalie</div></div></div>
+<div class="card noPrint">
+ <div class="profileFilters">
+  <div><label for="profileEmp">Dipendente</label><select id="profileEmp"></select></div>
+  <div><label for="profileMonth">Mese</label><input id="profileMonth" type="month" min="2026-09"></div>
+  <button id="profileRefresh" class="secondary" type="button">↻ Aggiorna dati</button>
+ </div>
+ <div class="profileActions">
+  <button type="button" id="profilePrint">🖨️ Stampa mese</button>
+  <button type="button" id="profileEdit">✏️ Correggi timbrature</button>
+  <button type="button" id="profileAbsence">📅 Gestisci ferie e assenze</button>
+ </div>
+ <div id="profileNotice" class="notice">Seleziona un dipendente.</div>
+ <div class="profileStats" id="profileStats"></div>
+</div>
+<div class="profileColumns noPrint">
+ <div class="card"><h3>📅 Turni programmati</h3><div class="muted">Mese selezionato, inclusi i giorni di riposo</div><div id="profileShifts"></div></div>
+ <div class="card"><h3>🕒 Timbrature e pause</h3><div class="muted">Movimenti effettivi in ordine cronologico, non orari programmati</div><div id="profileEvents"></div></div>
+</div>
+<div class="profileColumns noPrint">
+ <div class="card"><h3>🏖️ Assenze e causali</h3><div id="profileAbsences"></div></div>
+ <div class="card"><h3>⚠️ Anomalie da controllare</h3><div id="profileAnomalies"></div></div>
+</div>
+</section>
 <section id="page-storico" class="adminPage">
 <div class="card noPrint">
 <h3>Filtro e stampa mensile</h3>
@@ -843,8 +900,75 @@ function renderRegister(){
  $('printHead').innerHTML='<div class="printBrand"><div class="printBrandRow"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100" alt="Logo Croce Gialla Emergenza ODV"><div class="printBrandText"><div class="line1">CROCE GIALLA EMERGENZA ODV</div><div class="line2">Registro mensile presenze'+(fe?' · '+esc(person(fe)):'')+'</div></div></div><div class="printBrandMonth">'+esc(meseLabel)+'</div>'+(monthClosed?'<div class="printClosedStamp">MESE CHIUSO – REGISTRO DEFINITIVO</div>':'')+'</div>';
 }
 function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
-function renderAll(){initRiepilogo();renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
-function showPage(name){const group=document.querySelector('.simpleMenu .menuGroup .sideBtn[data-page="'+name+'"]')?.closest('details');if(group)group.open=true;if(name==='controlli')renderRiepilogo();document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
+
+let profileSequence=0;
+function profileMonthDates(month){
+ const [yy,mm]=month.split('-').map(Number);
+ const start=new Date(yy,mm-1,1,12),end=new Date(yy,mm,0,12);
+ const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+ return {start:key(start),end:key(end),first:start,last:end};
+}
+function profileTable(headers,rows){
+ if(!rows.length)return '<div class="muted" style="margin:12px 0">Nessun dato registrato per il periodo.</div>';
+ return '<div class="profileTableWrap"><table class="profileTable"><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+}
+async function renderProfile(){
+ const seq=++profileSequence,badge=$('profileEmp').value,month=$('profileMonth').value;
+ if(!badge||!month)return;
+ $('profileNotice').textContent='Caricamento scheda e turni programmati…';
+ for(const id of ['profileShifts','profileEvents','profileAbsences','profileAnomalies'])$(id).innerHTML='';
+ try{
+  // Si usa il servizio amministrativo già autenticato; nessuna esposizione dei dati ai dipendenti.
+  const [yy,mm]=month.split('-').map(Number),range=profileMonthDates(month);
+  const response=await api({action:'data',badge,month});
+  const schedules=await riepLoadSchedules(range.start,range.end);
+  if(seq!==profileSequence)return;
+  const own=Array.from(new Map(schedules.filter(t=>String(t.badge)===String(badge)&&t.giorno>=range.start&&t.giorno<=range.end).map(t=>[t.giorno,t])).values()).sort((a,b)=>a.giorno.localeCompare(b.giorno));
+  const eventRows=(response.events||[]).filter(e=>String(e.badge)===String(badge)&&monthKey(e.evento_at)===month).map(e=>({...e,pause:false}));
+  const pauseRows=(response.pauseEvents||[]).filter(e=>String(e.badge)===String(badge)&&monthKey(e.evento_at)===month).map(e=>({...e,pause:true}));
+  const sorted=[...eventRows,...pauseRows].sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+  const active=eventRows.filter(e=>!e.eliminato_at);
+  let total=0,entry=null;
+  for(const e of active.slice().sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at))){
+   if(e.tipo==='ENTRATA')entry=e.evento_at;
+   else if(e.tipo==='USCITA'&&entry){total+=Math.max(0,(Date.parse(e.evento_at)-Date.parse(entry))/60000);entry=null}
+  }
+  const abs=(response.absences||[]).filter(a=>String(a.badge)===String(badge)&&String(a.data_dal).slice(0,10)<=range.end&&String(a.data_al).slice(0,10)>=range.start);
+  const allContext=(response.context||[]).filter(e=>String(e.badge)===String(badge)&&!e.eliminato_at);
+  const analyses=analyzeBadge(badge,allContext);
+  const anomalies=analyses.an.filter(a=>monthKey(a.at)===month);
+  $('profileStats').innerHTML='<div class="profileStat"><small>Ore timbrate (senza detrazione automatica pause)</small><strong>'+fmtMin(total)+'</strong></div><div class="profileStat"><small>Turni programmati</small><strong>'+own.filter(t=>!t.riposo).length+'</strong></div><div class="profileStat"><small>Anomalie segnalate</small><strong>'+anomalies.length+'</strong></div>';
+  $('profileShifts').innerHTML=profileTable(['Giorno','Orario / Stato'],own.map(t=>['<b>'+new Date(t.giorno+'T12:00:00').toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'})+'</b>',t.riposo?'<span class="profileRest">RIPOSO</span>':t.inizio&&t.fine?'<b>'+esc(String(t.inizio).slice(0,5))+' – '+esc(String(t.fine).slice(0,5))+'</b>':'ASSENTE']));
+  $('profileEvents').innerHTML=profileTable(['Data e ora','Movimento'],sorted.map(e=>[esc(dt(e.evento_at)),(e.eliminato_at?'<s>':'')+'<b>'+esc(e.pause?(e.tipo==='INIZIO_PAUSA'?'Inizio pausa':'Fine pausa'):e.tipo)+'</b>'+(e.eliminato_at?'</s> · ANNULLATA':'')]));
+  $('profileAbsences').innerHTML=profileTable(['Dal / al','Causale'],abs.map(a=>[esc(new Date(a.data_dal+'T12:00:00').toLocaleDateString('it-IT'))+(a.data_al!==a.data_dal?' – '+esc(new Date(a.data_al+'T12:00:00').toLocaleDateString('it-IT')):''),'<b>'+esc(absenceLabel(a.causale))+'</b>']));
+  $('profileAnomalies').innerHTML=anomalies.length?anomalies.map(a=>'<div class="profileAnomaly"><b>'+esc(a.type)+'</b><div>'+esc(dt(a.at))+'</div><div>'+esc(a.msg)+'</div></div>').join(''):'<div class="notice ok">Nessuna anomalia automatica rilevata nel periodo.</div>';
+  $('profileNotice').textContent='Scheda aggiornata · '+(people.find(p=>String(p.badge)===String(badge))?.nome_completo||'Dipendente')+' · '+formatMonthLabel(month);
+ }catch(e){if(seq!==profileSequence)return;$('profileNotice').textContent='Impossibile caricare la scheda: '+(e.message||String(e))}
+}
+function initProfile(){
+ const sel=$('profileEmp'),current=sel.value;
+ sel.innerHTML=people.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+'</option>').join('');
+ if(people.some(p=>String(p.badge)===String(current)))sel.value=current;
+ if(!$('profileMonth').value)$('profileMonth').value=$('month').value||currentMonth;
+}
+$('profileEmp').onchange=renderProfile;
+$('profileMonth').onchange=renderProfile;
+$('profileRefresh').onclick=renderProfile;
+$('profilePrint').onclick=()=>{
+ $('printEmp').value=$('profileEmp').value;$('printMonth').value=$('profileMonth').value;
+ if(!$('printEmp').value)return alert('Seleziona un dipendente');
+ printFromSection();
+};
+$('profileEdit').onclick=()=>{
+ $('filterEmp').value=$('profileEmp').value;$('month').value=$('profileMonth').value;
+ loadData().then(ok=>{if(ok)showPage('storico')});
+};
+$('profileAbsence').onclick=()=>{
+ $('absEmp').value=$('profileEmp').value;$('month').value=$('profileMonth').value;showPage('causali');
+};
+
+function renderAll(){initProfile();initRiepilogo();renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
+function showPage(name){if(name==='scheda')renderProfile();const group=document.querySelector('.simpleMenu .menuGroup .sideBtn[data-page="'+name+'"]')?.closest('details');if(group)group.open=true;if(name==='controlli')renderRiepilogo();document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
 function printFromSection(){const pe=$('printEmp').value,pm=$('printMonth').value;if(!pe||!pm)return alert('Seleziona dipendente e mese.');$('filterEmp').value=pe;$('month').value=pm;loadData().then(()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows(pe,pm);document.body.classList.add('printingRegister');window.print();document.body.classList.remove('printingRegister');$('register').innerHTML=old})}
 
 /* Riepilogo operativo: solo lettura; usa la stessa sessione amministrativa e i turni salvati. */
