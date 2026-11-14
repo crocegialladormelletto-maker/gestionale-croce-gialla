@@ -2010,14 +2010,15 @@ document.addEventListener('DOMContentLoaded',()=>{
 <section id="patients" class="surface hidden">
  <div class="hero"><h2>🪪 Anagrafica pazienti</h2><p>Riservata ad Amministrazione e Centralino. Ricerca e riutilizzo dei dati anagrafici per i servizi successivi.</p></div>
  <div class="pad">
-  <div class="section"><h3>Cerca un paziente</h3>
-   <div class="actions"><input id="patientAdminSearch" placeholder="Cognome o codice fiscale" style="flex:1;min-width:180px" aria-label="Cerca nell’anagrafica">
+  <div class="section"><h3>🔎 Cerca un paziente</h3>
+   <div class="actions"><input id="patientAdminSearch" placeholder="Cognome, nome, codice fiscale o telefono" style="flex:1;min-width:180px" aria-label="Cerca nell’anagrafica">
     <button id="patientAdminFind" class="btn secondary" type="button">🔎 Cerca</button>
     <button id="patientAdminNew" class="btn yellow" type="button">✚ Nuova scheda</button></div>
    <div id="patientAdminMsg"></div><div id="patientAdminResults"></div>
   </div>
   <div class="section">
-   <div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">📋 Elenco pazienti</h3><div class="muted">Elenco alfabetico delle anagrafiche memorizzate.</div></div><div class="actions"><span id="patientDirectoryCount" class="pill b">0</span><button id="patientDirectoryRefresh" class="btn secondary" type="button">↻ Aggiorna</button></div></div>
+   <button id="patientDirectoryToggle" class="btn secondary" type="button" aria-expanded="false" aria-controls="patientDirectoryPanel">📋 Visualizza elenco pazienti</button>
+   <div id="patientDirectoryPanel" class="hidden" style="margin-top:14px"><div class="actions" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0">📋 Elenco pazienti</h3><div class="muted">Elenco alfabetico delle anagrafiche memorizzate.</div></div><div class="actions"><span id="patientDirectoryCount" class="pill b">0</span><button id="patientDirectoryRefresh" class="btn secondary" type="button">↻ Aggiorna</button></div></div>
    <div id="patientDirectoryMsg"></div>
    <div class="notice ok" style="margin-top:8px"><b id="patientDirectoryTotalLabel">Totale pazienti memorizzati: 0</b></div>
    <div id="patientDirectoryList" style="margin-top:8px"></div>
@@ -2025,6 +2026,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     <button id="patientDirectoryPrev" class="btn secondary" type="button">← Precedente</button>
     <span id="patientDirectoryPageInfo" class="pill b">Pagina 1 di 1</span>
     <button id="patientDirectoryNext" class="btn secondary" type="button">Successiva →</button>
+   </div>
    </div>
   </div>
   <div class="section"><h3 id="patientAdminTitle">Nuovo paziente</h3>
@@ -2041,6 +2043,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     <button id="paUse" type="button" class="btn secondary">Usa nel Nuovo servizio</button>
     <button id="paDelete" type="button" class="btn danger hidden">🗑 Elimina paziente</button></div>
    <div id="paMsg"></div>
+   <div id="patientTransportHistory" class="hidden" style="margin-top:20px;border-top:1px solid #d6e2ee;padding-top:15px"><div class="actions" style="justify-content:space-between;align-items:center"><h3 style="margin:0">🚑 Storico dei trasporti</h3><button id="patientTransportRefresh" class="btn secondary" type="button">↻ Aggiorna storico</button></div><div id="patientTransportStatus" class="muted" aria-live="polite"></div><div id="patientTransportRows"></div></div>
    <p class="muted">Solo dati anagrafici necessari alla gestione dei trasporti. Non inserire diagnosi o altre informazioni cliniche.</p>
   </div>
  </div>
@@ -8130,8 +8133,8 @@ async function patientFind(term){
  if(/^[a-zA-Z0-9]{16}$/.test(q)){
   r=await sb.from('anagrafica_pazienti').select(PATIENT_FIELDS).eq('codice_fiscale',q.toUpperCase()).limit(30);
  }else{
-  const cleaned=q.replace(/[%_\\]/g,'');
-  r=await sb.from('anagrafica_pazienti').select(PATIENT_FIELDS).ilike('cognome','%'+cleaned+'%').order('cognome').limit(30);
+  const cleaned=q.replace(/[%_\\,()]/g,'');
+  r=await sb.from('anagrafica_pazienti').select(PATIENT_FIELDS).or(['cognome','nome','codice_fiscale','telefono'].map(f=>f+'.ilike.*'+cleaned+'*').join(',')).order('cognome').limit(30);
  }
  return r;
 }
@@ -8186,6 +8189,9 @@ function patientAdminOpen(p,clearSearch=true){
  $('paPhone').value=p?.telefono||'';
  $('paAddress').value=p?.indirizzo||'';$('paEmail').value=p?.email||'';
  if($('paDelete'))$('paDelete').classList.toggle('hidden',!p?.id);
+ $('patientTransportHistory').classList.toggle('hidden',!p?.id);
+ $('patientTransportRows').innerHTML='';$('patientTransportStatus').textContent=p?.id?'Caricamento trasporti collegati…':'';
+ if(p?.id)loadPatientTransportHistory(p.id);
  msg('paMsg','');
 }
 function bindPatientDirectoryButtons(){
@@ -8216,6 +8222,28 @@ function renderPatientDirectory(total=null){
   '<div class="notice">Nessun paziente presente in anagrafica.</div>';
  bindPatientDirectoryButtons();
 }
+let patientHistoryRequest=0;
+async function loadPatientTransportHistory(id){
+ const request=++patientHistoryRequest;
+ if(!id)return;
+ const status=$('patientTransportStatus'),container=$('patientTransportRows');
+ status.textContent='Caricamento trasporti collegati…';container.innerHTML='';
+ const result=await sb.from('servizi_giornalieri').select('id,data_servizio,tipo_servizio,mezzo,destinazione,stato_gestionale').eq('paziente_id',id).order('data_servizio',{ascending:false}).limit(200);
+ if(request!==patientHistoryRequest||adminPatientId!==id)return;
+ if(result.error){status.textContent='Impossibile leggere lo storico: '+result.error.message;return}
+ const rows=result.data||[];
+ status.textContent=rows.length?rows.length+' trasporti collegati'+(rows.length===200?' (mostrati gli ultimi 200)':''):'Nessun trasporto collegato a questa anagrafica.';
+ if(!rows.length)return;
+ const ids=rows.map(x=>x.id);
+ const sheets=await sb.from('fogli_viaggio').select('servizio_giornaliero_id,numero_foglio').in('servizio_giornaliero_id',ids);
+ if(request!==patientHistoryRequest||adminPatientId!==id)return;
+ const sheetMap=new Map((sheets.data||[]).map(x=>[x.servizio_giornaliero_id,x.numero_foglio]));
+ container.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr><th>Data</th><th>Tipo</th><th>Destinazione</th><th>Mezzo</th><th>Foglio viaggio</th><th>Stato</th><th></th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(x.data_servizio||'—')+'</td><td>'+esc(x.tipo_servizio||'—')+'</td><td>'+esc(x.destinazione||'—')+'</td><td>'+esc(x.mezzo||'—')+'</td><td>'+esc(sheetMap.get(x.id)||'—')+'</td><td>'+esc(x.stato_gestionale||'—')+'</td><td><button class="btn secondary" type="button" data-patient-transport="'+esc(x.id)+'">Apri servizio</button></td></tr>').join('')+'</tbody></table></div>';
+ container.querySelectorAll('[data-patient-transport]').forEach(b=>b.onclick=()=>openService(b.dataset.patientTransport));
+ if(sheets.error)status.textContent+=' · Numeri foglio viaggio temporaneamente non disponibili.';
+}
+$('patientTransportRefresh').onclick=()=>adminPatientId&&loadPatientTransportHistory(adminPatientId);
+$('patientDirectoryToggle').onclick=()=>{const panel=$('patientDirectoryPanel');const show=panel.classList.contains('hidden');panel.classList.toggle('hidden',!show);$('patientDirectoryToggle').textContent=show?'✕ Nascondi elenco pazienti':'📋 Visualizza elenco pazienti';$('patientDirectoryToggle').setAttribute('aria-expanded',String(show));if(show)loadPatientDirectory();};
 async function loadPatientDirectory(){
  if(!['CENTRALINO','AMMINISTRATORE'].includes(prof?.ruolo))return;
  msg('patientDirectoryMsg','Caricamento elenco pazienti...');
@@ -8249,7 +8277,7 @@ async function loadPatientsView(){
  $('patientAdminResults').innerHTML='';
  msg('patientAdminMsg','');
  if(!$('paName').value&&!$('paSurname').value)patientAdminOpen(null,false);
- await loadPatientDirectory();
+ if(!$('patientDirectoryPanel').classList.contains('hidden'))await loadPatientDirectory();
 }
 $('patientAdminFind').onclick=patientAdminFind;
 $('patientAdminSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();patientAdminFind()}};
