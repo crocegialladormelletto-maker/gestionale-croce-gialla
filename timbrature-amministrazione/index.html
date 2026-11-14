@@ -197,6 +197,21 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .dashSubHead h3{font-size:15px;margin:7px 0}.dashSubHead button{font-size:12px}
 @media(max-width:1000px){.dashQuick{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:660px){.dashMetrics{grid-template-columns:1fr}.dashQuick{grid-template-columns:1fr 1fr}.dashTop{flex-wrap:wrap}.dashQuickBtn{font-size:12px}}
+
+.simpleMenu>.sideBtn[data-page="correggi"]{background:#95612b!important}
+.simpleMenu .menuGroup .sideBtn[data-page="verifica"]{background:#326f5f!important}
+.correctRow{display:grid;grid-template-columns:100px minmax(160px,1fr) 220px auto;gap:8px;align-items:end;margin:8px 0;padding:10px;background:#f5f8fc;border:1px solid #dce5ef;border-radius:9px}
+.correctRow label{font-size:12px;margin:0}.correctRow input{width:100%;padding:10px;font-size:14px}
+.correctRow button{font-size:12px;padding:10px;border-radius:8px;background:#2769a4;color:white}
+.correctRow .danger{background:#a63e32}
+.correctReason{max-width:620px;margin:14px 0}
+.verifyIssues{margin-top:12px;display:grid;gap:9px}
+.verifyIssue{background:#fff8ed;border:1px solid #ead0aa;border-left:4px solid #b77925;padding:11px;border-radius:8px}
+.verifyOk{background:#eaf7ef;border:1px solid #b4dcc6;padding:12px;border-radius:9px}
+.verifyKpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.verifyKpis>div{background:#f3f7fb;border:1px solid #d6e2ee;border-radius:10px;padding:12px}
+.verifyKpis strong{font-size:23px;color:#173b72;display:block}
+@media(max-width:800px){.correctRow{grid-template-columns:1fr 1fr}.verifyKpis{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -236,12 +251,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button class="sideBtn" type="button" id="openEmployeeShifts">📅 <span class="sideLabel">Turni dipendenti</span></button>
 <button class="sideBtn" data-page="storico">📋 <span class="sideLabel">Registro presenze</span></button>
 <button class="sideBtn" data-page="stampe">🖨️ <span class="sideLabel">Stampa registro</span></button>
+<button class="sideBtn" data-page="correggi">✏️ <span class="sideLabel">Correggi giornata</span></button>
 <button class="sideBtn" data-page="anomalie">⚠️ <span class="sideLabel">Anomalie da controllare</span><span id="anomalyBadge" class="menuBadge okBadge">0</span></button>
 <details class="menuGroup" id="menuAnalisi"><summary>📊 Riepiloghi e verifiche <span>⌄</span></summary>
 <div class="menuGroupInner">
 <button class="sideBtn" data-page="controlli">Confronto turni e timbrature</button>
 <button class="sideBtn" data-page="riepiloghi">Riepiloghi mensili</button>
 <button class="sideBtn" data-page="chiusura">Chiusura del mese</button>
+<button class="sideBtn" data-page="verifica">Controllo fine mese</button>
 </div></details>
 <details class="menuGroup" id="menuGestione"><summary>👥 Dipendenti e assenze <span>⌄</span></summary>
 <div class="menuGroupInner">
@@ -386,7 +403,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <section id="page-chiusura" class="adminPage"><div class="pageHead"><div><h2>Chiusura mese</h2><div class="muted">Backup e blocco amministrativo del periodo</div></div></div>
 <div class="card noPrint">
 <div class="toolbar"><div><h3 style="margin:0">Mese di lavoro</h3><div class="muted">La chiusura blocca inserimenti, modifiche ed eliminazioni del mese.</div></div><div><button id="closeMonthBtn" class="danger">🔒 CHIUDI MESE</button> <button id="reopenMonthBtn" class="orange hidden">🔓 RIAPRI MESE</button></div></div>
-<div id="monthMsg" class="notice">Prima della chiusura verifica che non siano presenti anomalie.</div>
+<div id="monthMsg" class="notice">Prima della chiusura verifica che non siano presenti anomalie.</div><button id="monthRunCheck" class="secondary" type="button">✅ Esegui controllo fine mese</button>
 </div></section>
 
 <section id="page-dipendenti" class="adminPage"><div class="pageHead"><div><h2>Dipendenti / PIN</h2><div class="muted">Gestione accessi alla postazione timbrature</div></div></div>
@@ -448,6 +465,25 @@ button:disabled{opacity:.45;cursor:not-allowed}
  <div class="card"><h3>🏖️ Assenze e causali</h3><div id="profileAbsences"></div></div>
  <div class="card"><h3>⚠️ Anomalie da controllare</h3><div id="profileAnomalies"></div></div>
 </div>
+</section>
+<section id="page-correggi" class="adminPage">
+ <div class="pageHead"><div><h2>✏️ Correggi giornata</h2><div class="muted">Verifica i movimenti di un dipendente e correggili con motivazione obbligatoria e tracciamento nell'Audit.</div></div></div>
+ <div class="card">
+  <div class="profileFilters"><div><label for="correctEmp">Dipendente</label><select id="correctEmp"></select></div><div><label for="correctDate">Giorno da correggere</label><input type="date" id="correctDate" min="2026-09-01"></div><button type="button" id="correctLoad" class="secondary">Visualizza giornata</button></div>
+  <div id="correctState" class="notice">Seleziona il dipendente e la giornata.</div>
+  <div id="correctTable"></div>
+  <div class="notice">Ogni correzione viene salvata singolarmente e registrata nell'Audit. Le timbrature annullate non vengono eliminate definitivamente. I mesi chiusi sono protetti.</div>
+ </div>
+</section>
+<section id="page-verifica" class="adminPage">
+ <div class="pageHead"><div><h2>✅ Controllo fine mese</h2><div class="muted">Verifica dati e backup prima della chiusura amministrativa.</div></div></div>
+ <div class="card">
+  <div class="profileFilters"><div><label for="verifyMonth">Mese da controllare</label><input type="month" id="verifyMonth" min="2026-09"></div><div></div><button type="button" id="verifyRun" class="secondary">Avvia verifiche</button></div>
+  <div id="verifyState" class="notice">Esegui il controllo prima di chiudere il mese.</div>
+  <div id="verifySummary"></div><div id="verifyDetails"></div>
+  <div class="notice">Le segnalazioni sono controlli di coerenza, non provvedimenti disciplinari. I giustificativi e i turni autorizzati vanno verificati dall'amministrazione.</div>
+  <button id="verifyGoClose" class="secondary" type="button">Vai alla chiusura mese</button>
+ </div>
 </section>
 <section id="page-storico" class="adminPage">
 <div class="card noPrint">
@@ -934,6 +970,65 @@ function renderRegister(){
 }
 function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
 
+
+let correctRows=[];
+const romeDay=x=>new Date(x).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
+const romeLocalInput=x=>{const d=new Date(x);const str=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(d);return str.replace(' ','T')};
+function initializeChecks(){
+ for(const id of ['correctEmp']){const sel=$(id),cur=sel.value;sel.innerHTML=people.map(p=>'<option value="'+esc(p.badge)+'">'+esc(p.nome_completo)+'</option>').join('');if(people.some(p=>String(p.badge)===String(cur)))sel.value=cur}
+ if(!$('correctDate').value)$('correctDate').value=romeDay(new Date());
+ if(!$('verifyMonth').value)$('verifyMonth').value=$('month').value||currentMonth;
+}
+async function loadCorrectionDay(){
+ const badge=$('correctEmp').value,day=$('correctDate').value;
+ if(!badge||!day)return;
+ $('correctState').textContent='Caricamento giornata…';$('correctTable').innerHTML='';
+ try{
+  const r=await api({action:'data',badge,month:day.slice(0,7)});
+  const ev=(r.events||[]).filter(e=>String(e.badge)===String(badge)&&romeDay(e.evento_at)===day);
+  const pa=(r.pauseEvents||[]).filter(e=>String(e.badge)===String(badge)&&romeDay(e.evento_at)===day);
+  correctRows=[...ev.map(e=>({...e,pause:false})),...pa.map(e=>({...e,pause:true}))].sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+  const locked=(r.months||[]).some(m=>String(m.mese).slice(0,7)===day.slice(0,7)&&m.chiuso);
+  $('correctState').textContent=person(badge)+' · '+new Date(day+'T12:00:00').toLocaleDateString('it-IT')+(locked?' · MESE CHIUSO, modifiche bloccate':'');
+  let h='<div class="correctReason"><label for="correctMotivo">Motivo della rettifica (obbligatorio)</label><input id="correctMotivo" placeholder="Es. Orario concordato verificato su foglio presenza" maxlength="400"></div><h3>Movimenti presenti</h3>';
+  for(const e of correctRows){
+   const label=e.pause?(e.tipo==='INIZIO_PAUSA'?'Inizio pausa':'Fine pausa'):e.tipo;
+   h+='<div class="correctRow"><div><b>'+esc(label)+'</b>'+(e.eliminato_at?'<div class="muted">ANNULLATA</div>':'')+'</div><div><label>Data e ora effettiva</label><input class="correctTime" type="datetime-local" data-event="'+esc(e.id)+'" value="'+esc(romeLocalInput(e.evento_at))+'" '+(e.eliminato_at||locked?'disabled':'')+'></div><div><small>'+esc(e.origine||'App pausa')+'</small></div><div><button type="button" data-correct-event="'+esc(e.id)+'" '+(e.eliminato_at||locked?'disabled':'')+'>Salva orario</button></div></div>';
+  }
+  if(!correctRows.length)h+='<div class="notice">Nessuna timbratura registrata in questo giorno.</div>';
+  h+='<h3>Aggiungi timbratura mancante</h3><div class="correctRow"><div><select id="correctNewType"><option value="ENTRATA">Entrata</option><option value="USCITA">Uscita</option></select></div><div><input id="correctNewTime" type="datetime-local" value="'+esc(day)+'T13:00" '+(locked?'disabled':'')+'></div><div><small>Inserimento storico con motivazione</small></div><div><button id="correctAdd" type="button" '+(locked?'disabled':'')+'>Aggiungi</button></div></div>';
+  $('correctTable').innerHTML=h;
+  $('correctTable').querySelectorAll('[data-correct-event]').forEach(b=>b.onclick=()=>saveCorrectionEvent(b.dataset.correctEvent));
+  $('correctAdd').onclick=addCorrectionEvent;
+ }catch(e){$('correctState').textContent='Caricamento non riuscito: '+(e.message||String(e))}
+}
+function correctionReason(){const reason=$('correctMotivo')?.value.trim()||'';if(reason.length<5)throw Error('Inserisci una motivazione di almeno 5 caratteri.');return reason}
+function correctionTimestamp(v){
+ if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v))throw Error('Inserisci data e ora.');
+ const d=new Date(v);if(!Number.isFinite(d.getTime()))throw Error('Data e ora non valide.');
+ return d.toISOString();
+}
+async function saveCorrectionEvent(id){
+ try{
+  const e=correctRows.find(x=>x.id===id);if(!e||e.eliminato_at)throw Error('Movimento non modificabile');
+  const raw=$('correctTable').querySelector('[data-event="'+id+'"]').value;
+  if(raw.slice(0,10)!==romeDay(e.evento_at))throw Error('La correzione deve restare nella stessa giornata: seleziona la giornata corretta per altri casi.');
+  const newTime=correctionTimestamp(raw),motivo=correctionReason();
+  if(!confirm('Salvare la rettifica di '+e.tipo+' da '+dt(e.evento_at)+' a '+dt(newTime)+'?'))return;
+  await api(e.pause?{action:'pause_update',id,evento_at:newTime,motivo}:{action:'update',id,evento_at:newTime,motivo});
+  await loadData();await loadCorrectionDay();$('correctState').textContent='Correzione salvata e tracciata nell’Audit.';
+ }catch(err){alert('Correzione non salvata: '+(err.message||String(err)))}
+}
+async function addCorrectionEvent(){
+ try{
+  const tipo=$('correctNewType').value,raw=$('correctNewTime').value;
+  if(raw.slice(0,10)!==$('correctDate').value)throw Error('La nuova timbratura deve appartenere alla giornata selezionata.');
+  const evento_at=correctionTimestamp(raw),motivo=correctionReason();
+  if(!confirm('Inserire '+tipo+' alle '+raw.slice(11)+'? Il movimento sarà riconoscibile come inserimento storico.'))return;
+  await api({action:'historical',badge:$('correctEmp').value,tipo,evento_at,motivo,nota_interna:motivo});
+  await loadData();await loadCorrectionDay();$('correctState').textContent='Timbratura inserita nello storico con motivazione e Audit.';
+ }catch(err){alert('Inserimento non riuscito: '+(err.message||String(err)))}
+}
 let profileSequence=0;
 function profileMonthDates(month){
  const [yy,mm]=month.split('-').map(Number);
@@ -992,16 +1087,13 @@ $('profilePrint').onclick=()=>{
  if(!$('printEmp').value)return alert('Seleziona un dipendente');
  printFromSection();
 };
-$('profileEdit').onclick=()=>{
- $('filterEmp').value=$('profileEmp').value;$('month').value=$('profileMonth').value;
- loadData().then(ok=>{if(ok)showPage('storico')});
-};
+$('profileEdit').onclick=()=>{$('correctEmp').value=$('profileEmp').value;$('correctDate').value=romeDay(new Date());showPage('correggi')};
 $('profileAbsence').onclick=()=>{
  $('absEmp').value=$('profileEmp').value;$('month').value=$('profileMonth').value;loadData().then(ok=>{if(ok){$('absEmp').value=$('profileEmp').value;showPage('causali')}});
 };
 
-function renderAll(){initProfile();initRiepilogo();renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
-function showPage(name){if(name==='scheda')renderProfile();const group=document.querySelector('.simpleMenu .menuGroup .sideBtn[data-page="'+name+'"]')?.closest('details');if(group)group.open=true;if(name==='controlli')renderRiepilogo();document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
+function renderAll(){initializeChecks();initProfile();initRiepilogo();renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
+function showPage(name){if(name==='scheda')renderProfile();if(name==='correggi')loadCorrectionDay();const group=document.querySelector('.simpleMenu .menuGroup .sideBtn[data-page="'+name+'"]')?.closest('details');if(group)group.open=true;if(name==='controlli')renderRiepilogo();document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
 function printFromSection(){const pe=$('printEmp').value,pm=$('printMonth').value;if(!pe||!pm)return alert('Seleziona dipendente e mese.');$('filterEmp').value=pe;$('month').value=pm;loadData().then(()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows(pe,pm);document.body.classList.add('printingRegister');window.print();document.body.classList.remove('printingRegister');$('register').innerHTML=old})}
 
 /* Riepilogo operativo: solo lettura; usa la stessa sessione amministrativa e i turni salvati. */
@@ -1158,6 +1250,7 @@ function initRiepilogo(){
  if([...sel.options].some(x=>x.value===current))sel.value=current;
  if(!$('riepDate').value)$('riepDate').value=riepDate(new Date());
 }
+$('correctLoad').onclick=loadCorrectionDay;$('verifyGoClose').onclick=()=>showPage('chiusura');$('monthRunCheck').onclick=()=>{showPage('verifica');runMonthVerification()};$('verifyRun').onclick=runMonthVerification;
 $('riepRefresh').onclick=renderRiepilogo;
 $('riepEmp').onchange=renderRiepilogo;
 $('riepDate').onchange=renderRiepilogo;
