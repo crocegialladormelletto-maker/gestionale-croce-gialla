@@ -964,7 +964,7 @@ $('profileEdit').onclick=()=>{
  loadData().then(ok=>{if(ok)showPage('storico')});
 };
 $('profileAbsence').onclick=()=>{
- $('absEmp').value=$('profileEmp').value;$('month').value=$('profileMonth').value;showPage('causali');
+ $('absEmp').value=$('profileEmp').value;$('month').value=$('profileMonth').value;loadData().then(ok=>{if(ok){$('absEmp').value=$('profileEmp').value;showPage('causali')}});
 };
 
 function renderAll(){initProfile();initRiepilogo();renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
