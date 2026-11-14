@@ -212,6 +212,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .verifyKpis>div{background:#f3f7fb;border:1px solid #d6e2ee;border-radius:10px;padding:12px}
 .verifyKpis strong{font-size:23px;color:#173b72;display:block}
 @media(max-width:800px){.correctRow{grid-template-columns:1fr 1fr}.verifyKpis{grid-template-columns:1fr}}
+@media print{body.printingRegister .registerPrintEnd{display:block;margin-top:18px;border-top:1px solid #abc0d7;padding:12px 2px;font-size:10px;color:#344054}body.printingRegister .registerPrintEnd>div{display:flex;justify-content:space-between;gap:20px;margin-top:18px}body.printingRegister .printTable{font-size:11px}body.printingRegister .printTable td{word-wrap:break-word}}
+.registerPrintEnd{display:none}
 </style>
 </head>
 <body>
@@ -948,7 +950,7 @@ function printRows(selectedBadge='',selectedMonth=''){
   h+='<tfoot><tr><th colspan="4">TOTALI MESE</th><th>'+fmtMin(totalWorked)+'</th><th>'+fmtMin(totalSupplementary)+'</th><th>'+fmtMin(totalOvertime)+'</th></tr>';
   h+='<tr><td colspan="7"><b>Riferimento contrattuale:</b> '+(isMartinoliBadge(selectedBadge)?'38:00 settimanali (7:00 lun–mar; mer riposo; 6:00 gio–dom)':(/BRUGHERA|FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase()))?(/FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase())?'38:00 settimanali (7:00 lun–mar; gio riposo; 6:00 mer e ven–dom) · B1 Soccorritore · dal 01/11/2026':'30:00 settimanali (5:00 lun–sab; domenica riposo)'):'giornaliero '+fmtMin(target))+' · <b>Ore ordinarie lavorate:</b> '+fmtMin(totalOrdinary)+' · <b>Ore supplementari:</b> '+fmtMin(totalSupplementary)+' · <b>Ore straordinarie:</b> '+fmtMin(totalOvertime)+'</td></tr></tfoot>';
  }
- return h+'</table>'+($('printPremiumDetails')?.checked?ccnlPremiumReport(selectedBadge,selectedMonth):'')
+ return h+'</table>'+'<div class="registerPrintEnd"><p>Registro presenze: orari registrati e causali del periodo. Le pause sono esposte separatamente e non detratte automaticamente dal totale.</p><div><span>Verificato dall\'amministrazione: ________________________</span><span>Data: ____ / ____ / ________</span></div></div>'+($('printPremiumDetails')?.checked?ccnlPremiumReport(selectedBadge,selectedMonth):'')
 }
 function renderRegister(){
  const badge=$('filterEmp').value,month=$('month').value;
@@ -1127,8 +1129,8 @@ async function collectMonthVerification(month){
 function verificationUI(result){
  const {month,issues,closed,backup}=result;
  const sorted=issues.sort((a,b)=>a.day.localeCompare(b.day)||a.badge.localeCompare(b.badge));
- const backupLabel=backup.backup_presente?'Backup verificato: '+new Date(backup.creato_il).toLocaleString('it-IT')+' · '+backup.righe_salvate+' movimenti':'Nessun backup di chiusura rilevato';
- $('verifySummary').innerHTML='<div class="verifyKpis"><div><small>Turni controllati</small><strong>'+result.checked+'</strong></div><div><small>Segnalazioni</small><strong>'+sorted.length+'</strong></div><div><small>Movimenti nel mese</small><strong>'+result.eventCount+'</strong></div></div><div class="notice '+(closed&&!backup.backup_presente?'warn':closed?'ok':'')+'"><b>'+esc(closed?'MESE CHIUSO':'MESE APERTO')+'</b> · '+esc(backupLabel)+'</div>';
+ const backupLabel=backup.backup_presente?(backup.backup_completo?'Backup completo verificato: ':'Backup precedente parziale (solo movimenti): ')+new Date(backup.creato_il).toLocaleString('it-IT')+' · '+backup.righe_salvate+' timbrature'+(backup.backup_completo?' · '+backup.pause_salvate+' pause · '+backup.causali_salvate+' causali · '+backup.turni_salvati+' turni':' · non contiene pause, causali e turni'):'Nessun backup di chiusura rilevato';
+ $('verifySummary').innerHTML='<div class="verifyKpis"><div><small>Turni controllati</small><strong>'+result.checked+'</strong></div><div><small>Segnalazioni</small><strong>'+sorted.length+'</strong></div><div><small>Movimenti nel mese</small><strong>'+result.eventCount+'</strong></div></div><div class="notice '+(closed&&!backup.backup_completo?'warn':closed?'ok':'')+'"><b>'+esc(closed?'MESE CHIUSO':'MESE APERTO')+'</b> · '+esc(backupLabel)+'</div>';
  $('verifyDetails').innerHTML=sorted.length?'<h3>Situazioni da verificare</h3><div class="verifyIssues">'+sorted.map(i=>'<div class="verifyIssue"><b>'+esc(person(i.badge))+' · '+esc(new Date(i.day+'T12:00:00').toLocaleDateString('it-IT'))+' · '+esc(i.label)+'</b><div>'+esc(i.detail)+'</div></div>').join('')+'</div>':'<div class="verifyOk">Nessuna incoerenza automatica rilevata nei dati controllati. Restano necessarie le verifiche amministrative dei giustificativi.</div>';
  $('verifyState').textContent='Controllo completato per '+formatMonthLabel(month)+'. I turni futuri e quelli ancora in corso non sono trattati come assenze.';
 }
