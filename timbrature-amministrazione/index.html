@@ -91,6 +91,37 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .riepHint{font-size:13px;color:#56657e;line-height:1.6}
 @media(max-width:900px){.riepFilters{grid-template-columns:1fr 1fr}.riepStats{grid-template-columns:1fr 1fr}}
 @media(max-width:580px){.riepFilters{grid-template-columns:1fr}.riepStats{grid-template-columns:1fr 1fr}}
+
+/* Registro più leggibile a video */
+.registerInfo{padding:11px 14px;background:#eef5ff;border:1px solid #c9d8ee;border-radius:10px;color:#173b72;font-size:13px;font-weight:700;margin:10px 0}
+.registerScroll{overflow-x:auto}.registerTable{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+.registerTable th{text-align:left;background:#173b72;color:#fff;padding:12px 11px;white-space:nowrap}
+.registerTable td{border-bottom:1px solid #dce4ee;padding:12px 11px;vertical-align:middle}
+.registerTable tr:nth-child(even){background:#f7f9fd}.registerTable tr.regEntry td:nth-child(3){color:#147142}
+.registerTable tr.regExit td:nth-child(3){color:#9b2929}.registerTable tr.regPause td:nth-child(3){color:#8b610b}
+.registerTable .regDate{font-weight:800;white-space:nowrap}.registerTable .deleted{opacity:.55}
+.printOption{display:flex;align-items:center;gap:9px;margin:13px 0;padding:12px;background:#f2f6fc;border-radius:9px;font-weight:700;color:#173b72}
+.printOption input{width:18px;height:18px;accent-color:#173b72}
+@media print{
+ @page{size:A4 landscape;margin:12mm}
+ body.printingRegister .printTable{width:100%;font-size:11px;border-collapse:collapse;table-layout:fixed;margin:12px 0 8px}
+ body.printingRegister .printTable thead th{background:#173b72!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:8px 7px;text-align:left}
+ body.printingRegister .printTable tbody td{padding:7px 7px;line-height:1.35;border:1px solid #b9c8d8}
+ body.printingRegister .printTable tbody tr:nth-child(even){background:#f1f5fa!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ body.printingRegister .printTable th:nth-child(1){width:13%}
+ body.printingRegister .printTable th:nth-child(2),body.printingRegister .printTable th:nth-child(3){width:11%}
+ body.printingRegister .printTable th:nth-child(4){width:24%}
+ body.printingRegister .printTable th:nth-child(5){width:17%}
+ body.printingRegister .printTable th:nth-child(6),body.printingRegister .printTable th:nth-child(7){width:12%}
+ body.printingRegister .printTable tfoot th,body.printingRegister .printTable tfoot td{background:#e5edf8!important;font-size:11px;padding:9px 7px}
+ body.printingRegister .printBrandRow{justify-content:flex-start;border-bottom:3px solid #e0b600;padding-bottom:8px;margin-bottom:10px}
+ body.printingRegister .printBrandRow img{width:54px;height:54px}
+ body.printingRegister .printBrandText .line1{font-size:18px;color:#173b72}
+ body.printingRegister .printBrandText .line2{font-size:13px}
+ body.printingRegister .printBrandMonth{font-size:16px;font-weight:900;text-align:left;margin:9px 0}
+ body.printingRegister .printTable tr{break-inside:avoid;page-break-inside:avoid}
+ body.printingRegister .printTable+div{break-before:page;page-break-before:always}
+}
 </style>
 </head>
 <body>
@@ -323,7 +354,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <section id="page-stampe" class="adminPage"><div class="pageHead"><div><h2>Stampe</h2><div class="muted">Registro mensile per dipendente</div></div></div>
 <div class="card noPrint">
 <div class="grid"><div><label>Dipendente</label><select id="printEmp"></select></div><div><label>Mese</label><input id="printMonth" type="month" min="2026-09"></div><div style="display:flex;align-items:end"><button id="printMonthlyBtn" class="primary" style="width:100%">🖨️ STAMPA REGISTRO</button></div></div>
-<div class="notice">La stampa contiene Data, Entrata, Uscita, Pause registrate dall’app (inizio, fine e durata), Totale ore giornaliere, Supplementari, Straordinari ed eventuali causali. La pausa è indicata separatamente e non viene detratta automaticamente dalle ore.</div>
+<label class="printOption"><input id="printPremiumDetails" type="checkbox"> Includi prospetto dettagliato maggiorazioni e indennità (facoltativo)</label><div class="notice">La stampa contiene Data, Entrata, Uscita, Pause registrate dall’app (inizio, fine e durata), Totale ore giornaliere, Supplementari, Straordinari ed eventuali causali. La pausa è indicata separatamente e non viene detratta automaticamente dalle ore.</div>
 </div></section>
 </main></div>
 </div>
@@ -761,14 +792,26 @@ function printRows(selectedBadge='',selectedMonth=''){
   h+='<tfoot><tr><th colspan="4">TOTALI MESE</th><th>'+fmtMin(totalWorked)+'</th><th>'+fmtMin(totalSupplementary)+'</th><th>'+fmtMin(totalOvertime)+'</th></tr>';
   h+='<tr><td colspan="7"><b>Riferimento contrattuale:</b> '+(isMartinoliBadge(selectedBadge)?'38:00 settimanali (7:00 lun–mar; mer riposo; 6:00 gio–dom)':(/BRUGHERA|FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase()))?(/FARINACCIO/.test(String(person(selectedBadge)||'').toUpperCase())?'38:00 settimanali (7:00 lun–mar; gio riposo; 6:00 mer e ven–dom) · B1 Soccorritore · dal 01/11/2026':'30:00 settimanali (5:00 lun–sab; domenica riposo)'):'giornaliero '+fmtMin(target))+' · <b>Ore ordinarie lavorate:</b> '+fmtMin(totalOrdinary)+' · <b>Ore supplementari:</b> '+fmtMin(totalSupplementary)+' · <b>Ore straordinarie:</b> '+fmtMin(totalOvertime)+'</td></tr></tfoot>';
  }
- return h+'</table>'+ccnlPremiumReport(selectedBadge,selectedMonth)
+ return h+'</table>'+($('printPremiumDetails')?.checked?ccnlPremiumReport(selectedBadge,selectedMonth):'')
 }
-function renderRegister(){let h='<table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Data/ora</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';for(const e of events){h+='<tr class="'+(e.eliminato_at?'deleted':'')+'"><td>'+esc(person(e.badge))+'</td><td>'+esc(e.tipo==='USCITA'&&nightExit(e)?'USCITA · SMONTO NOTTE':e.tipo)+'</td><td>'+esc(dt(e.evento_at))+'</td><td><span class="pill '+(e.origine==='LIVE'?'live':'hist')+'">'+esc(e.origine)+'</span></td><td>'+esc(e.nota_interna||'')+'</td><td>'+(e.eliminato_at?'Eliminata':monthClosed?'🔒 Mese chiuso':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Elimina</button>')+'</td></tr>'}const selectedBadge=$('filterEmp').value,selectedMonth=$('month').value;
-const pauses=pauseEvents.filter(p=>(!selectedBadge||p.badge===selectedBadge)&&(!selectedMonth||monthKey(p.evento_at)===selectedMonth)).sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
-for(const p of pauses){
-h+='<tr><td>'+esc(person(p.badge))+'</td><td>'+esc(p.tipo==='INIZIO_PAUSA'?'☕ INIZIO PAUSA':'▶ FINE PAUSA')+'</td><td>'+esc(dt(p.evento_at))+'</td><td><span class="pill live">APP PAUSA</span></td><td>—</td><td>'+(monthClosed?'🔒 Mese chiuso':'<button class="secondary mini" onclick="editPause(\''+p.id+'\')">Correggi pausa</button>')+'</td></tr>';
+function renderRegister(){
+ const badge=$('filterEmp').value,month=$('month').value;
+ const filteredEvents=events.filter(e=>(!badge||String(e.badge)===String(badge))&&(!month||monthKey(e.evento_at)===month));
+ const filteredPauses=pauseEvents.filter(p=>(!badge||String(p.badge)===String(badge))&&(!month||monthKey(p.evento_at)===month));
+ const rows=[...filteredEvents.map(e=>({...e,isPause:false})),...filteredPauses.map(p=>({...p,isPause:true}))].sort((a,b)=>new Date(a.evento_at)-new Date(b.evento_at));
+ let h='<div class="registerInfo">Movimenti in ordine cronologico · entrate, uscite e pause · le registrazioni annullate rimangono visibili per controllo amministrativo.</div><div class="registerScroll"><table class="registerTable"><thead><tr><th>Data e ora</th><th>Dipendente</th><th>Movimento</th><th>Origine</th><th>Nota interna</th><th>Azioni</th></tr></thead><tbody>';
+ for(const e of rows){
+  const pause=e.isPause,annullata=!!e.eliminato_at;
+  const name=pause?(e.tipo==='INIZIO_PAUSA'?'INIZIO PAUSA':'FINE PAUSA'):(e.tipo==='USCITA'&&nightExit(e)?'USCITA · SMONTO NOTTE':e.tipo);
+  const klass=pause?'regPause':e.tipo==='ENTRATA'?'regEntry':'regExit';
+  const action=annullata?'Annullata':monthClosed?'🔒 Mese chiuso':pause?'<button class="secondary mini" onclick="editPause(\''+e.id+'\')">Correggi pausa</button>':'<button class="secondary mini" onclick="editEvent(\''+e.id+'\')">Modifica</button><button class="danger mini" onclick="deleteEvent(\''+e.id+'\')">Annulla</button>';
+  h+='<tr class="'+(annullata?'deleted ':'')+klass+'"><td class="regDate">'+esc(dt(e.evento_at))+'</td><td>'+esc(person(e.badge))+'</td><td><strong>'+esc(name)+'</strong></td><td>'+esc(pause?'APP PAUSA':e.origine||'')+'</td><td>'+esc(e.nota_interna||'—')+'</td><td>'+action+'</td></tr>';
+ }
+ h+='</tbody></table></div>';
+ $('register').innerHTML=rows.length?h:'<div class="muted">Nessuna timbratura.</div>';
+ const fe=$('filterEmp').value,meseLabel=formatMonthLabel($('month').value||'');
+ $('printHead').innerHTML='<div class="printBrand"><div class="printBrandRow"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100" alt="Logo Croce Gialla Emergenza ODV"><div class="printBrandText"><div class="line1">CROCE GIALLA EMERGENZA ODV</div><div class="line2">Registro mensile presenze'+(fe?' · '+esc(person(fe)):'')+'</div></div></div><div class="printBrandMonth">'+esc(meseLabel)+'</div>'+(monthClosed?'<div class="printClosedStamp">MESE CHIUSO – REGISTRO DEFINITIVO</div>':'')+'</div>';
 }
-h+='</tbody></table>';$('register').innerHTML=events.length||pauses.length?h:'<div class="muted">Nessuna timbratura.</div>';const fe=$('filterEmp').value;const meseLabel=formatMonthLabel($('month').value||'');$('printHead').innerHTML='<div class="printBrand"><div class="printBrandRow"><img src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=100" alt="Logo Croce Gialla Emergenza ODV"><div class="printBrandText"><div class="line1">CROCE GIALLA EMERGENZA ODV</div><div class="line2">Registro timbrature'+(fe?' - '+esc(person(fe)):'')+'</div></div></div><div class="printBrandMonth">'+esc(meseLabel)+'</div>'+(monthClosed?'<div class="printClosedStamp">🔒 MESE CHIUSO – REGISTRO DEFINITIVO</div>':'')+'</div>'}
 function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
 function renderAll(){initRiepilogo();renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
 function showPage(name){if(name==='controlli')renderRiepilogo();document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
