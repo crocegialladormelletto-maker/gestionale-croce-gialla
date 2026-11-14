@@ -12,7 +12,7 @@
  <nav class="employeeTabs" aria-label="Sezioni personali">
   <button data-employee-tab="clocking" class="selected" type="button">🕒 Timbra</button>
   <button data-employee-tab="break" type="button">☕ Pausa</button>
-  <button data-employee-tab="shifts" type="button">📅 I miei turni</button>
+  <button data-employee-tab="shifts" type="button">📅 Turni dipendenti</button>
   <button data-employee-tab="history" type="button">📋 Le mie timbrature</button>
  </nav>
  <section data-employee-panel="clocking">
@@ -28,7 +28,7 @@
   <p class="muted">Le pause vengono registrate separatamente e sono visibili all'amministrazione.</p>
  </section>
  <section data-employee-panel="shifts" class="hidden">
-  <div class="shiftPanel" aria-label="I miei turni programmati"><h3>📅 I miei turni</h3><div class="shiftIntro">Questa settimana e la prossima · orari programmati</div><div id="myShifts" aria-live="polite">Caricamento turni…</div><button id="refreshShifts" class="shiftRefresh" type="button">Aggiorna turni</button></div>
+  <div class="shiftPanel" aria-label="Turni programmati dei dipendenti"><h3>📅 Turni dipendenti</h3><div class="shiftIntro">Questa settimana e la prossima · orari programmati di tutti e tre</div><label for="shiftEmployee">Visualizza i turni di</label><select id="shiftEmployee"><option value="19">Martinoli Andrea</option><option value="37">Brughera Francesca</option><option value="39">Farinaccio Greta</option></select><div id="myShifts" aria-live="polite">Caricamento turni…</div><button id="refreshShifts" class="shiftRefresh" type="button">Aggiorna turni</button></div>
  </section>
  <section data-employee-panel="history" class="hidden">
   <h3>📋 Le mie timbrature</h3><p class="muted">Le timbrature effettive registrate. Le eventuali correzioni sono riservate all'amministrazione.</p><div id="tbl"></div>
@@ -54,10 +54,11 @@ async function refresh(){try{const r=await api({action:'employee_data'});events=
 function showEmployeeTab(which){
  document.querySelectorAll('[data-employee-panel]').forEach(p=>p.classList.toggle('hidden',p.dataset.employeePanel!==which));
  document.querySelectorAll('[data-employee-tab]').forEach(b=>{b.classList.toggle('selected',b.dataset.employeeTab===which);b.setAttribute('aria-pressed',String(b.dataset.employeeTab===which))});
- if(which==='shifts'&&token)loadMyShifts();
+ if(which==='shifts'&&token){if(!$('shiftEmployee').dataset.chosen)$('shiftEmployee').value=employeeBadge;loadMyShifts();}
  if(which==='history'&&token)refresh();
 }
 document.querySelectorAll('[data-employee-tab]').forEach(b=>b.onclick=()=>showEmployeeTab(b.dataset.employeeTab));
+$('shiftEmployee').addEventListener('change',()=>{$('shiftEmployee').dataset.chosen='1';loadMyShifts()});
 async function loadMyShifts(){
  const target=$('myShifts');if(!token||!employeeBadge){target.textContent='Accedi per visualizzare i tuoi turni.';return}
  target.textContent='Caricamento turni…';
@@ -65,7 +66,8 @@ async function loadMyShifts(){
   const today=new Date(),monday=new Date(today.getFullYear(),today.getMonth(),today.getDate());monday.setDate(monday.getDate()-((monday.getDay()+6)%7));
   const dateKey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
   const from=dateKey(monday),r=await api({action:'my_shifts',from});
-  const shifts=(r.turni||[]).filter(t=>String(t.badge)===employeeBadge);
+  const selectedBadge=$('shiftEmployee').value||employeeBadge;
+  const shifts=(r.turni||[]).filter(t=>String(t.badge)===selectedBadge);
   target.replaceChildren();
   const current=dateKey(today);
   for(let w=0;w<2;w++){
