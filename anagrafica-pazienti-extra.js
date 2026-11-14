@@ -3,20 +3,28 @@
 'use strict';
 const $p=id=>document.getElementById(id);
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const FIELDS=['indirizzo_ritiro_abituale','destinazioni_abituali','contatto_nome','contatto_relazione','contatto_telefono','note_operative'];
-const IDS=['paPickup','paDestinations','paContactName','paContactRelation','paContactPhone','paOperationalNotes'];
-const SELECT='id,nome,cognome,codice_fiscale,data_nascita,telefono,indirizzo,email,indirizzo_ritiro_abituale,destinazioni_abituali,contatto_nome,contatto_relazione,contatto_telefono,note_operative,updated_at,updated_by';
+const FIELDS=['destinazioni_abituali','contatto_nome','contatto_relazione','contatto_telefono','note_operative'];
+const ADDRESS_FIELDS=['ritiro_via','ritiro_civico','ritiro_comune','ritiro_cap','ritiro_provincia'];
+const ADDRESS_IDS=['paPickupStreet','paPickupNumber','paPickupCity','paPickupCap','paPickupProvince'];
+const IDS=['paDestinations','paContactName','paContactRelation','paContactPhone','paOperationalNotes'];
+const SELECT='id,nome,cognome,codice_fiscale,data_nascita,telefono,indirizzo,email,indirizzo_ritiro_abituale,ritiro_via,ritiro_civico,ritiro_comune,ritiro_cap,ritiro_provincia,destinazioni_abituali,contatto_nome,contatto_relazione,contatto_telefono,note_operative,updated_at,updated_by';
 const section=$p('paSave')?.closest('.section');
 if(!section || typeof sb==='undefined')return;
 const toolbar=$p('paSave').parentElement;
 const info=document.createElement('div');
 info.innerHTML=`
 <div class="section" style="background:#f5f9fd;border:1px solid #dce8f2;margin-top:14px">
- <h3>📍 Indirizzi abituali e destinazioni</h3>
- <div class="grid3">
- <div class="field"><label>Indirizzo di ritiro abituale</label><input id="paPickup" maxlength="400" placeholder="Se diverso dalla residenza"></div>
- <div class="field" style="grid-column:span 2"><label>Destinazioni abituali (una per riga)</label><textarea id="paDestinations" maxlength="2000" rows="3" placeholder="Ospedale, ambulatorio, RSA, indirizzo"></textarea></div>
+ <h3>Indirizzo di ritiro abituale <span class="muted">(facoltativo)</span></h3>
+ <div style="display:grid;grid-template-columns:minmax(180px,3fr) minmax(75px,1fr) minmax(150px,2fr) minmax(85px,1fr) minmax(78px,.8fr);gap:10px" id="paAddressGrid">
+ <div class="field"><label for="paPickupStreet">Via / Piazza</label><input id="paPickupStreet" maxlength="240" placeholder="Via Roma"></div>
+ <div class="field"><label for="paPickupNumber">N. civico</label><input id="paPickupNumber" maxlength="20" placeholder="12/A"></div>
+ <div class="field"><label for="paPickupCity">Comune</label><input id="paPickupCity" maxlength="120" placeholder="Dormelletto"></div>
+ <div class="field"><label for="paPickupCap">CAP</label><input id="paPickupCap" maxlength="5" inputmode="numeric" placeholder="28040" pattern="[0-9]{5}" title="Il CAP deve essere composto da 5 cifre"></div>
+ <div class="field"><label for="paPickupProvince">Provincia</label><input id="paPickupProvince" maxlength="2" placeholder="NO" style="text-transform:uppercase" pattern="[A-Za-z]{2}" title="Usa la sigla di 2 lettere"></div>
  </div>
+ <style>@media(max-width:850px){#paAddressGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}#paAddressGrid .field:first-child{grid-column:1/-1}}@media(max-width:480px){#paAddressGrid{grid-template-columns:1fr!important}#paAddressGrid .field:first-child{grid-column:auto}}</style>
+ <div id="paPickupLegacy" class="muted hidden" style="margin-top:5px"></div>
+ <div class="field" style="margin-top:10px"><label for="paDestinations">Destinazioni abituali (una per riga)</label><textarea id="paDestinations" maxlength="2000" rows="2" placeholder="Ospedale, ambulatorio, RSA, indirizzo"></textarea></div>
  <h3>☎️ Contatto di riferimento</h3><div class="grid3">
  <div class="field"><label>Nome del referente</label><input id="paContactName" maxlength="160"></div>
  <div class="field"><label>Rapporto con il paziente</label><input id="paContactRelation" maxlength="100"></div>
@@ -34,13 +42,22 @@ const oldFormRow=patientFormRow;
 patientFormRow=function(){
  const row=oldFormRow();
  FIELDS.forEach((k,i)=>row[k]=$p(IDS[i]).value.trim()||null);
+ ADDRESS_FIELDS.forEach((k,i)=>row[k]=$p(ADDRESS_IDS[i]).value.trim()||null);
+ if(row.ritiro_cap&&!/^\d{5}$/.test(row.ritiro_cap)){ $p('paPickupCap').setCustomValidity('Inserire un CAP di 5 cifre');$p('paPickupCap').reportValidity();throw Error('CAP non valido'); }
+ $p('paPickupCap').setCustomValidity('');
+ if(row.ritiro_provincia&&!/^[A-Za-z]{2}$/.test(row.ritiro_provincia)){ $p('paPickupProvince').setCustomValidity('Inserire la sigla provincia di 2 lettere');$p('paPickupProvince').reportValidity();throw Error('Provincia non valida'); }
+ $p('paPickupProvince').setCustomValidity('');row.ritiro_provincia=row.ritiro_provincia?.toUpperCase()||null;
+ const hasParts=ADDRESS_FIELDS.some(k=>row[k]);
+ const legacy=adminPatientRecord?.id===adminPatientId?(adminPatientRecord.indirizzo_ritiro_abituale||null):null;
+ row.indirizzo_ritiro_abituale=hasParts?[ [row.ritiro_via,row.ritiro_civico].filter(Boolean).join(' '),[row.ritiro_cap,row.ritiro_comune].filter(Boolean).join(' '),row.ritiro_provincia? '('+row.ritiro_provincia+')':'' ].filter(Boolean).join(', '):legacy;
  return row;
 };
 const oldOpen=patientAdminOpen;
 patientAdminOpen=function(p,clearSearch=true){
  oldOpen(p,clearSearch);
  const seq=++viewSeq;
- IDS.forEach(id=>$p(id).value='');
+ IDS.concat(ADDRESS_IDS).forEach(id=>$p(id).value='');
+ $p('paPickupLegacy').classList.add('hidden');$p('paPickupLegacy').textContent='';
  $p('paLastUpdated').textContent='';
  $p('paRestrictionInfo').innerHTML='';
  audit.classList.toggle('hidden',!p?.id);
@@ -53,11 +70,14 @@ patientAdminOpen=function(p,clearSearch=true){
   if(r.error){$p('paLastUpdated').textContent='Alcuni dettagli non sono disponibili: '+r.error.message;return;}
   const row=r.data;adminPatientRecord=row;
   FIELDS.forEach((k,i)=>$p(IDS[i]).value=row[k]||'');
+  ADDRESS_FIELDS.forEach((k,i)=>$p(ADDRESS_IDS[i]).value=row[k]||'');
+  const structured=ADDRESS_FIELDS.some(k=>row[k]);
+  if(!structured&&row.indirizzo_ritiro_abituale){$p('paPickupLegacy').textContent='Indirizzo precedente conservato: '+row.indirizzo_ritiro_abituale+' · Compila le nuove caselle per sostituirlo.';$p('paPickupLegacy').classList.remove('hidden');}
   if(row.updated_at)$p('paLastUpdated').textContent='Ultimo aggiornamento: '+new Date(row.updated_at).toLocaleString('it-IT');
   await Promise.allSettled([checkRestriction(row,seq),loadAudit(row.id,seq)]);
  })();
 };
-const LABELS={nome:'Nome',cognome:'Cognome',codice_fiscale:'Codice fiscale',data_nascita:'Data nascita',telefono:'Telefono',indirizzo:'Indirizzo',email:'Email',indirizzo_ritiro_abituale:'Ritiro abituale',destinazioni_abituali:'Destinazioni frequenti',contatto_nome:'Referente',contatto_relazione:'Relazione',contatto_telefono:'Telefono referente',note_operative:'Note operative'};
+const LABELS={nome:'Nome',cognome:'Cognome',codice_fiscale:'Codice fiscale',data_nascita:'Data nascita',telefono:'Telefono',indirizzo:'Indirizzo',email:'Email',indirizzo_ritiro_abituale:'Ritiro abituale',ritiro_via:'Via',ritiro_civico:'Civico',ritiro_comune:'Comune',ritiro_cap:'CAP',ritiro_provincia:'Provincia',destinazioni_abituali:'Destinazioni frequenti',contatto_nome:'Referente',contatto_relazione:'Relazione',contatto_telefono:'Telefono referente',note_operative:'Note operative'};
 async function loadAudit(id,seq){
  const r=await sb.from('anagrafica_pazienti_modifiche').select('operazione,modificato_il,modificato_da,dati_precedenti,dati_nuovi').eq('paziente_id',id).order('modificato_il',{ascending:false}).limit(50);
  if(seq!==viewSeq||adminPatientId!==id)return;
