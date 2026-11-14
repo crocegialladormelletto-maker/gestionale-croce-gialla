@@ -6,11 +6,39 @@ const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'
 const FIELDS=['destinazioni_abituali','contatto_nome','contatto_relazione','contatto_telefono','note_operative'];
 const ADDRESS_FIELDS=['ritiro_via','ritiro_civico','ritiro_comune','ritiro_cap','ritiro_provincia'];
 const ADDRESS_IDS=['paPickupStreet','paPickupNumber','paPickupCity','paPickupCap','paPickupProvince'];
+const RESIDENCE_FIELDS=['residenza_via','residenza_civico','residenza_comune','residenza_cap','residenza_provincia'];
+const RESIDENCE_IDS=['paResidenceStreet','paResidenceNumber','paResidenceCity','paResidenceCap','paResidenceProvince'];
+function assembleAddress(parts){return [[parts[0],parts[1]].filter(Boolean).join(' '),[parts[3],parts[2]].filter(Boolean).join(' '),parts[4]?'('+parts[4]+')':''].filter(Boolean).join(', ');}
 const IDS=['paDestinations','paContactName','paContactRelation','paContactPhone','paOperationalNotes'];
-const SELECT='id,nome,cognome,codice_fiscale,data_nascita,telefono,indirizzo,email,indirizzo_ritiro_abituale,ritiro_via,ritiro_civico,ritiro_comune,ritiro_cap,ritiro_provincia,destinazioni_abituali,contatto_nome,contatto_relazione,contatto_telefono,note_operative,updated_at,updated_by';
+const SELECT='id,nome,cognome,codice_fiscale,data_nascita,telefono,indirizzo,email,residenza_via,residenza_civico,residenza_comune,residenza_cap,residenza_provincia,indirizzo_ritiro_abituale,ritiro_via,ritiro_civico,ritiro_comune,ritiro_cap,ritiro_provincia,destinazioni_abituali,contatto_nome,contatto_relazione,contatto_telefono,note_operative,updated_at,updated_by';
 const section=$p('paSave')?.closest('.section');
 if(!section || typeof sb==='undefined')return;
 const toolbar=$p('paSave').parentElement;
+// Sostituisce solo il campo visivo, mantenendo il vecchio input per i servizi esistenti.
+const legacyResidence=$p('paAddress');
+const residenceContainer=legacyResidence.closest('.field');
+const residenceBlock=document.createElement('div');
+residenceBlock.className='field';
+residenceBlock.style.gridColumn='1 / -1';
+residenceBlock.innerHTML=`<label style="font-weight:800;margin-bottom:8px">Indirizzo principale del paziente</label>
+<div id="paResidenceGrid" style="display:grid;grid-template-columns:minmax(180px,3fr) minmax(75px,1fr) minmax(150px,2fr) minmax(85px,1fr) minmax(78px,.8fr);gap:10px">
+ <div class="field"><label for="paResidenceStreet">Via / Piazza</label><input id="paResidenceStreet" maxlength="240" placeholder="Via Roma"></div>
+ <div class="field"><label for="paResidenceNumber">Numero civico</label><input id="paResidenceNumber" maxlength="20" placeholder="12/A"></div>
+ <div class="field"><label for="paResidenceCity">Comune</label><input id="paResidenceCity" maxlength="120" placeholder="Dormelletto"></div>
+ <div class="field"><label for="paResidenceCap">CAP</label><input id="paResidenceCap" maxlength="5" inputmode="numeric" pattern="[0-9]{5}" placeholder="28040" title="Inserire un CAP di 5 cifre"></div>
+ <div class="field"><label for="paResidenceProvince">Provincia</label><input id="paResidenceProvince" maxlength="2" pattern="[A-Za-z]{2}" placeholder="NO" style="text-transform:uppercase" title="Inserire la sigla di 2 lettere"></div>
+</div>
+<div id="paResidenceLegacy" class="muted hidden" style="margin-top:5px"></div>
+<style>@media(max-width:850px){#paResidenceGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}#paResidenceGrid .field:first-child{grid-column:1/-1}}@media(max-width:480px){#paResidenceGrid{grid-template-columns:1fr!important}#paResidenceGrid .field:first-child{grid-column:auto}}</style>`;
+residenceContainer.replaceWith(residenceBlock);
+legacyResidence.style.display='none';
+residenceBlock.append(legacyResidence);
+function syncResidence(){
+ const vals=RESIDENCE_IDS.map(id=>$p(id).value.trim());
+ vals[4]=vals[4].toUpperCase();
+ if(vals.some(Boolean))legacyResidence.value=assembleAddress(vals);
+}
+RESIDENCE_IDS.forEach(id=>$p(id).addEventListener('input',syncResidence));
 const info=document.createElement('div');
 info.innerHTML=`
 <div class="section" style="background:#f5f9fd;border:1px solid #dce8f2;margin-top:14px">
@@ -43,18 +71,27 @@ patientFormRow=function(){
  const row=oldFormRow();
  FIELDS.forEach((k,i)=>row[k]=$p(IDS[i]).value.trim()||null);
  ADDRESS_FIELDS.forEach((k,i)=>row[k]=$p(ADDRESS_IDS[i]).value.trim()||null);
+ RESIDENCE_FIELDS.forEach((k,i)=>row[k]=$p(RESIDENCE_IDS[i]).value.trim()||null);
+ row.residenza_provincia=row.residenza_provincia?.toUpperCase()||null;
+ const residenceParts=RESIDENCE_IDS.map(id=>$p(id).value.trim());
+ residenceParts[4]=residenceParts[4].toUpperCase();
+ // Se non sono ancora stati compilati i campi separati, conserva l'indirizzo storico.
+ row.indirizzo=residenceParts.some(Boolean)?assembleAddress(residenceParts):(adminPatientRecord?.id===adminPatientId?(adminPatientRecord.indirizzo||null):legacyResidence.value.trim()||null);
+ legacyResidence.value=row.indirizzo||'';
  row.ritiro_provincia=row.ritiro_provincia?.toUpperCase()||null;
  const hasParts=ADDRESS_FIELDS.some(k=>row[k]);
  const legacy=adminPatientRecord?.id===adminPatientId?(adminPatientRecord.indirizzo_ritiro_abituale||null):null;
  row.indirizzo_ritiro_abituale=hasParts?[ [row.ritiro_via,row.ritiro_civico].filter(Boolean).join(' '),[row.ritiro_cap,row.ritiro_comune].filter(Boolean).join(' '),row.ritiro_provincia? '('+row.ritiro_provincia+')':'' ].filter(Boolean).join(', '):legacy;
  return row;
 };
-$p('paSave').addEventListener('click',e=>{for(const id of ['paPickupCap','paPickupProvince']){const field=$p(id);if(field.value.trim()&&!field.checkValidity()){e.stopImmediatePropagation();field.reportValidity();return;}}},true);
+$p('paSave').addEventListener('click',e=>{for(const id of ['paPickupCap','paPickupProvince','paResidenceCap','paResidenceProvince']){const field=$p(id);if(field.value.trim()&&!field.checkValidity()){e.stopImmediatePropagation();field.reportValidity();return;}}},true);
 const oldOpen=patientAdminOpen;
 patientAdminOpen=function(p,clearSearch=true){
  oldOpen(p,clearSearch);
  const seq=++viewSeq;
- IDS.concat(ADDRESS_IDS).forEach(id=>$p(id).value='');
+ IDS.concat(ADDRESS_IDS,RESIDENCE_IDS).forEach(id=>$p(id).value='');
+ $p('paResidenceLegacy').classList.add('hidden');$p('paResidenceLegacy').textContent='';
+ legacyResidence.value=p?.indirizzo||'';
  $p('paPickupLegacy').classList.add('hidden');$p('paPickupLegacy').textContent='';
  $p('paLastUpdated').textContent='';
  $p('paRestrictionInfo').innerHTML='';
@@ -69,13 +106,20 @@ patientAdminOpen=function(p,clearSearch=true){
   const row=r.data;adminPatientRecord=row;
   FIELDS.forEach((k,i)=>$p(IDS[i]).value=row[k]||'');
   ADDRESS_FIELDS.forEach((k,i)=>$p(ADDRESS_IDS[i]).value=row[k]||'');
+  RESIDENCE_FIELDS.forEach((k,i)=>$p(RESIDENCE_IDS[i]).value=row[k]||'');
+  legacyResidence.value=row.indirizzo||'';
+  const hasResidenceParts=RESIDENCE_FIELDS.some(k=>row[k]);
+  if(!hasResidenceParts&&row.indirizzo){
+   $p('paResidenceLegacy').textContent='Indirizzo precedente conservato: '+row.indirizzo+'. Puoi suddividerlo nei cinque campi quando aggiorni la scheda.';
+   $p('paResidenceLegacy').classList.remove('hidden');
+  }
   const structured=ADDRESS_FIELDS.some(k=>row[k]);
   if(!structured&&row.indirizzo_ritiro_abituale){$p('paPickupLegacy').textContent='Indirizzo precedente conservato: '+row.indirizzo_ritiro_abituale+' · Compila le nuove caselle per sostituirlo.';$p('paPickupLegacy').classList.remove('hidden');}
   if(row.updated_at)$p('paLastUpdated').textContent='Ultimo aggiornamento: '+new Date(row.updated_at).toLocaleString('it-IT');
   await Promise.allSettled([checkRestriction(row,seq),loadAudit(row.id,seq)]);
  })();
 };
-const LABELS={nome:'Nome',cognome:'Cognome',codice_fiscale:'Codice fiscale',data_nascita:'Data nascita',telefono:'Telefono',indirizzo:'Indirizzo',email:'Email',indirizzo_ritiro_abituale:'Ritiro abituale',ritiro_via:'Via',ritiro_civico:'Civico',ritiro_comune:'Comune',ritiro_cap:'CAP',ritiro_provincia:'Provincia',destinazioni_abituali:'Destinazioni frequenti',contatto_nome:'Referente',contatto_relazione:'Relazione',contatto_telefono:'Telefono referente',note_operative:'Note operative'};
+const LABELS={nome:'Nome',cognome:'Cognome',codice_fiscale:'Codice fiscale',data_nascita:'Data nascita',telefono:'Telefono',indirizzo:'Indirizzo',residenza_via:'Via residenza',residenza_civico:'Civico residenza',residenza_comune:'Comune residenza',residenza_cap:'CAP residenza',residenza_provincia:'Provincia residenza',email:'Email',indirizzo_ritiro_abituale:'Ritiro abituale',ritiro_via:'Via',ritiro_civico:'Civico',ritiro_comune:'Comune',ritiro_cap:'CAP',ritiro_provincia:'Provincia',destinazioni_abituali:'Destinazioni frequenti',contatto_nome:'Referente',contatto_relazione:'Relazione',contatto_telefono:'Telefono referente',note_operative:'Note operative'};
 async function loadAudit(id,seq){
  const r=await sb.from('anagrafica_pazienti_modifiche').select('operazione,modificato_il,modificato_da,dati_precedenti,dati_nuovi').eq('paziente_id',id).order('modificato_il',{ascending:false}).limit(50);
  if(seq!==viewSeq||adminPatientId!==id)return;
