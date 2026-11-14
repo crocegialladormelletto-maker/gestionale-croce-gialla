@@ -2036,10 +2036,16 @@ document.addEventListener('DOMContentLoaded',()=>{
     <div class="field"><label>Codice fiscale</label><input id="paCf" maxlength="16"></div>
     <div class="field"><label>Data nascita</label><input type="date" id="paDob"></div>
     <div class="field"><label>Telefono</label><input id="paPhone" maxlength="60"></div>
-    <div class="field"><label>Indirizzo</label><input id="paAddress" maxlength="400" autocomplete="street-address" placeholder="Via, numero civico, CAP e Comune"></div>
-    <div class="field"><label>E-mail</label><input id="paEmail" type="email" maxlength="254" autocomplete="email" placeholder="nome@esempio.it"></div>
-   </div>
-   <div class="toolbar"><button id="paSave" type="button" class="btn yellow">Salva anagrafica</button>
+    <div class="field"><label>Indirizzo storico (da verificare)</label><input id="paAddress" maxlength="400" placeholder="Indirizzo precedente, conservato"></div>
+    <div class="field"><label>E-mail</label><input id="paEmail" type="email" maxlength="254"></div>
+</div>
+<div class="notice" style="margin-top:12px">Gli indirizzi storici rimangono disponibili. Completa i campi separati solo con dati verificati.</div>
+<h3>🏠 Residenza</h3><div class="grid3">
+<div class="field"><label>Via / piazza</label><input id="paResVia" maxlength="200"></div><div class="field"><label>Civico</label><input id="paResCivico" maxlength="30"></div><div class="field"><label>Comune</label><input id="paResComune" maxlength="120"></div><div class="field"><label>CAP</label><input id="paResCap" maxlength="10"></div><div class="field"><label>Provincia</label><input id="paResProvincia" maxlength="10"></div>
+</div><h3>🚑 Prelievo abituale (se diverso dalla residenza)</h3><div class="grid3">
+<div class="field"><label>Via / piazza</label><input id="paPickVia" maxlength="200"></div><div class="field"><label>Civico</label><input id="paPickCivico" maxlength="30"></div><div class="field"><label>Comune</label><input id="paPickComune" maxlength="120"></div><div class="field"><label>CAP</label><input id="paPickCap" maxlength="10"></div><div class="field"><label>Provincia</label><input id="paPickProvincia" maxlength="10"></div>
+</div>
+<div class="toolbar"><button id="paSave" type="button" class="btn yellow">Salva anagrafica</button>
     <button id="paUse" type="button" class="btn secondary">Usa nel Nuovo servizio</button>
     <button id="paDelete" type="button" class="btn danger hidden">🗑 Elimina paziente</button></div>
    <div id="paMsg"></div>
@@ -8088,12 +8094,23 @@ $('form').onsubmit=async e=>{
  await view('crew');
 };
 
-const PATIENT_FIELDS='id,nome,cognome,codice_fiscale,data_nascita,telefono,indirizzo,email';
+const PATIENT_FIELDS='id,nome,cognome,codice_fiscale,data_nascita,telefono,indirizzo,email,indirizzo_ritiro_abituale,residenza_via,residenza_civico,residenza_comune,residenza_cap,residenza_provincia,ritiro_via,ritiro_civico,ritiro_comune,ritiro_cap,ritiro_provincia';
+function patientJoinAddress(parts){return parts.filter(x=>String(x||'').trim()).map(x=>String(x).trim()).join(', ')}
+function patientResidenceAddress(p){return patientJoinAddress([[p.residenza_via,p.residenza_civico].filter(Boolean).join(' '),p.residenza_cap,p.residenza_comune,p.residenza_provincia])||p.indirizzo||''}
+function patientPickupAddress(p){return patientJoinAddress([[p.ritiro_via,p.ritiro_civico].filter(Boolean).join(' '),p.ritiro_cap,p.ritiro_comune,p.ritiro_provincia])||p.indirizzo_ritiro_abituale||''}
+function patientStructuredData(prefix){return Object.fromEntries([['via','Via'],['civico','Civico'],['comune','Comune'],['cap','Cap'],['provincia','Provincia']].map(([key,ui])=>[key,$('pa'+prefix+ui).value.trim()||null]))}
 function patientFormRow(){
- return {nome:$('paName').value.trim(),cognome:$('paSurname').value.trim(),
- codice_fiscale:$('paCf').value.trim().toUpperCase()||null,
- data_nascita:$('paDob').value||null,telefono:$('paPhone').value.trim()||null,
- indirizzo:$('paAddress').value.trim()||null,email:$('paEmail').value.trim().toLowerCase()||null};
+ const residence=patientStructuredData('Res'),pickup=patientStructuredData('Pick');
+ const formatAddress=x=>patientJoinAddress([[x.via,x.civico].filter(Boolean).join(' '),x.cap,x.comune,x.provincia]);
+ const legacy=$('paAddress').value.trim()||null;
+ const row={nome:$('paName').value.trim(),cognome:$('paSurname').value.trim(),
+  codice_fiscale:$('paCf').value.trim().toUpperCase()||null,
+  data_nascita:$('paDob').value||null,telefono:$('paPhone').value.trim()||null,
+  indirizzo:formatAddress(residence)||legacy,email:$('paEmail').value.trim().toLowerCase()||null,
+  indirizzo_ritiro_abituale:formatAddress(pickup)||null};
+ for(const [k,v] of Object.entries(residence))row['residenza_'+k]=v;
+ for(const [k,v] of Object.entries(pickup))row['ritiro_'+k]=v;
+ return row;
 }
 function patientServiceRow(){
  return {nome:$('pn').value.trim(),cognome:$('pc').value.trim(),
@@ -8143,7 +8160,8 @@ function usePatientForService(p){
  servicePatientId=p.id;
  $('pn').value=p.nome||'';$('pc').value=p.cognome||'';$('cf').value=p.codice_fiscale||'';
  $('dn').value=p.data_nascita||'';$('tel').value=p.telefono||'';
- $('patientAddress').value=p.indirizzo||'';$('patientEmail').value=p.email||'';
+ $('patientAddress').value=patientResidenceAddress(p);$('patientEmail').value=p.email||'';
+ $('loadAddress').value=patientPickupAddress(p)||patientResidenceAddress(p);
  $('patientRemember').checked=false;
  msg('patientLookupMsg','Anagrafica richiamata: '+patientCardLabel(p),'ok');
 }
@@ -8171,7 +8189,7 @@ $('patientLookupButton').onclick=patientLookupSearch;
 $('patientLookupText').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();patientLookupSearch()}};
 $('patientClearButton').onclick=()=>{
  servicePatientId=null;patientLookupRows=[];
- ['pn','pc','cf','dn','tel','patientAddress','patientEmail','patientLookupText'].forEach(id=>$(id).value='');
+ ['pn','pc','cf','dn','tel','patientAddress','patientEmail','patientLookupText','loadAddress'].forEach(id=>$(id).value='');
  $('patientRemember').checked=false;$('patientLookupResults').innerHTML='';
  msg('patientLookupMsg','Nuovo paziente: compila i dati e scegli se memorizzarli.');
 };
@@ -8188,6 +8206,9 @@ function patientAdminOpen(p,clearSearch=true){
  $('paCf').value=p?.codice_fiscale||'';$('paDob').value=p?.data_nascita||'';
  $('paPhone').value=p?.telefono||'';
  $('paAddress').value=p?.indirizzo||'';$('paEmail').value=p?.email||'';
+ for(const [prefix,stem] of [['Res','residenza'],['Pick','ritiro']]){
+  for(const [key,ui] of [['via','Via'],['civico','Civico'],['comune','Comune'],['cap','Cap'],['provincia','Provincia']])$('pa'+prefix+ui).value=p?.[stem+'_'+key]||'';
+ }
  if($('paDelete'))$('paDelete').classList.toggle('hidden',!p?.id);
  $('patientTransportHistory').classList.toggle('hidden',!p?.id);
  $('patientTransportRows').innerHTML='';$('patientTransportStatus').textContent=p?.id?'Caricamento trasporti collegati…':'';
