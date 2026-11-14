@@ -12988,10 +12988,9 @@ async function tabletCreateImmediate(){
   }else{
    const ku=await sb.from('fogli_viaggio').update(kmUpdate).eq('id',created.foglio_id).eq('mezzo',tabletMezzo).eq('stato','APERTO');
    if(ku.error)throw ku.error;
-   const su=await sb.from('servizi_giornalieri').update({
-    modalita_pagamento_prevista:payMode
-   }).eq('id',created.servizio_id);
-   if(su.error)throw su.error;
+   // Il tablet non modifica direttamente i dati amministrativi del servizio.
+   // La creazione e il salvataggio operativo del foglio non devono dipendere
+   // da modalita_pagamento_prevista (protetta dal database).
    msg('tabletAdMsg','Servizio creato. Foglio Viaggio '+created.numero_foglio+' collegato.','ok');
   }
   // Non cancellare una bozza precedente se è stato creato un nuovo servizio vuoto.
