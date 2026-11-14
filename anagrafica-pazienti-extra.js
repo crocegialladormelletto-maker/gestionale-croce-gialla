@@ -43,15 +43,13 @@ patientFormRow=function(){
  const row=oldFormRow();
  FIELDS.forEach((k,i)=>row[k]=$p(IDS[i]).value.trim()||null);
  ADDRESS_FIELDS.forEach((k,i)=>row[k]=$p(ADDRESS_IDS[i]).value.trim()||null);
- if(row.ritiro_cap&&!/^\d{5}$/.test(row.ritiro_cap)){ $p('paPickupCap').setCustomValidity('Inserire un CAP di 5 cifre');$p('paPickupCap').reportValidity();throw Error('CAP non valido'); }
- $p('paPickupCap').setCustomValidity('');
- if(row.ritiro_provincia&&!/^[A-Za-z]{2}$/.test(row.ritiro_provincia)){ $p('paPickupProvince').setCustomValidity('Inserire la sigla provincia di 2 lettere');$p('paPickupProvince').reportValidity();throw Error('Provincia non valida'); }
- $p('paPickupProvince').setCustomValidity('');row.ritiro_provincia=row.ritiro_provincia?.toUpperCase()||null;
+ row.ritiro_provincia=row.ritiro_provincia?.toUpperCase()||null;
  const hasParts=ADDRESS_FIELDS.some(k=>row[k]);
  const legacy=adminPatientRecord?.id===adminPatientId?(adminPatientRecord.indirizzo_ritiro_abituale||null):null;
  row.indirizzo_ritiro_abituale=hasParts?[ [row.ritiro_via,row.ritiro_civico].filter(Boolean).join(' '),[row.ritiro_cap,row.ritiro_comune].filter(Boolean).join(' '),row.ritiro_provincia? '('+row.ritiro_provincia+')':'' ].filter(Boolean).join(', '):legacy;
  return row;
 };
+$p('paSave').addEventListener('click',e=>{for(const id of ['paPickupCap','paPickupProvince']){const field=$p(id);if(field.value.trim()&&!field.checkValidity()){e.stopImmediatePropagation();field.reportValidity();return;}}},true);
 const oldOpen=patientAdminOpen;
 patientAdminOpen=function(p,clearSearch=true){
  oldOpen(p,clearSearch);
