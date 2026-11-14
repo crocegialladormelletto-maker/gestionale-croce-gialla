@@ -172,6 +172,31 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .profileRest{font-weight:800;color:#60728a}.profileMissing{color:#667085}.profileAnomaly{border-left:4px solid #bb6825;background:#fff7ed;padding:11px;margin:9px 0;border-radius:6px}
 @media(max-width:1100px){.profileColumns{grid-template-columns:1fr}}
 @media(max-width:650px){.profileFilters{grid-template-columns:1fr}.profileStats{grid-template-columns:1fr 1fr}.profileActions button{width:100%}}
+
+/* Dashboard: prima le azioni e lo stato reale, dettagli avanzati apribili */
+.dashTop{margin-bottom:12px}.dashTop h2{font-size:25px;margin:0}.dashTop button{white-space:nowrap}
+.dashQuick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:15px}
+.dashQuickBtn{padding:14px 12px;border:0;border-radius:11px;color:white;background:#176c80;font-size:13px;font-weight:800;box-shadow:0 2px 5px #142c4115;cursor:pointer}
+.dashQuickBtn:nth-child(2){background:#2a68ad}.dashQuickBtn:nth-child(3){background:#237b52}.dashQuickBtn:nth-child(4){background:#aa5c25}
+.dashQuickBtn:hover{filter:brightness(1.1)}.dashToday{padding:17px!important}
+.dashToday .todayBanner{margin:0}.dashToday .todayHead{gap:10px}
+.dashToday .todayStats{display:none}
+.dashToday .todayRow{border:1px solid #d8e3ec;background:#f7fafc;border-radius:10px;margin:8px 0;padding:13px}
+.dashMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}
+.dashMetric{border:1px solid #d1ddeb;border-radius:12px;background:white;padding:17px;min-width:0;box-shadow:0 2px 7px #102c5210}
+.dashMetric span{display:block;color:#40546d;font-weight:800;font-size:12px}
+.dashMetric>b{display:block;color:#12365d;font-size:30px;margin:8px 0 3px}
+.dashMetric small{display:block;color:#60738b;font-size:12px;line-height:1.4}
+.dashMetric small span{display:inline;font-size:inherit;color:inherit}
+.dashSecondary{padding:4px 17px!important}
+.dashSecondary details{padding:3px 0;border-bottom:1px solid #dce4ec}
+.dashSecondary details:last-child{border-bottom:0}
+.dashSecondary summary{cursor:pointer;padding:16px 5px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px;font-weight:850;color:#173b72}
+.dashSecondary summary span{font-size:11px;font-weight:650;color:#60738b}
+.dashDetail{padding:0 5px 15px}.dashSubHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dashSubHead h3{font-size:15px;margin:7px 0}.dashSubHead button{font-size:12px}
+@media(max-width:1000px){.dashQuick{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:660px){.dashMetrics{grid-template-columns:1fr}.dashQuick{grid-template-columns:1fr 1fr}.dashTop{flex-wrap:wrap}.dashQuickBtn{font-size:12px}}
 </style>
 </head>
 <body>
@@ -258,25 +283,33 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <p><a href="https://www.anpas.org/contratto-collettivo-nazionale-di-lavoro/" target="_blank" rel="noopener noreferrer">🌐 Pagina ufficiale ANPAS sul CCNL</a></p>
 <p><a href="https://www.anpas.org/Allegati/CCNL/2024_CCNL_20_22_sito.pdf" target="_blank" rel="noopener noreferrer">📄 Apri testo PDF del CCNL ANPAS–Misericordie</a></p>
 </div></section>
-<section id="page-dashboard" class="adminPage active"><div class="pageHead"><div><h2>Dashboard</h2><div class="muted">Situazione generale delle timbrature</div></div></div><div class="card noPrint">
-<div class="toolbar"><div><h3 style="margin:0">Dashboard controllo</h3><div class="muted">Controlli automatici sulle timbrature registrate. Le segnalazioni servono come supporto operativo e vanno verificate dall'amministrazione.</div></div><button id="refreshTop" class="secondary" type="button">↻ AGGIORNA</button></div>
-<div id="todayBanner" class="todayBanner"></div>
-<div id="employeeCommitmentsDashboard" class="card" style="margin-top:14px;padding:14px">
- <div class="toolbar">
-  <div><h3 style="margin:0">📌 Impegni / Assenze programmati</h3><div class="muted">Impegni personali dei dipendenti previsti per oggi.</div></div>
-  <button id="openCommitmentsPage" class="secondary" type="button">GESTISCI</button>
- </div>
- <div id="employeeCommitmentsToday" style="margin-top:10px"></div>
+<section id="page-dashboard" class="adminPage active">
+<div class="dashTop pageHead"><div><h2>Panoramica del personale</h2><div class="muted">Chi è in servizio, presenze e situazioni da verificare</div></div><button id="refreshTop" class="secondary" type="button">↻ Aggiorna</button></div>
+<div class="dashQuick noPrint" aria-label="Operazioni rapide">
+ <button class="dashQuickBtn" data-dash-page="scheda">👤 Scheda dipendente</button>
+ <button class="dashQuickBtn" data-dash-page="storico">🕒 Correggi timbrature</button>
+ <button class="dashQuickBtn" data-dash-page="stampe">🖨️ Stampa registro</button>
+ <button class="dashQuickBtn" data-dash-page="anomalie">⚠️ Controlla anomalie</button>
 </div>
-<div class="grid4" style="margin-top:14px">
-<div class="kpi"><span>In servizio ora</span><b id="kpiNow">0</b><small id="kpiNowNames">Nessuno</small></div>
-<div class="kpi"><span>Ore registrate mese</span><b id="kpiHours">0:00</b><small>Mese selezionato</small></div>
-<div class="kpi"><span>Anomalie mese</span><b id="kpiAnom">0</b><small>Incluse 11 ore / incomplete</small></div>
-<div class="kpi"><span>Riposi &lt; 11 ore</span><b id="kpiRest">0</b><small>Controllo automatico</small></div>
+<div class="card dashToday">
+ <div id="todayBanner" class="todayBanner"></div>
 </div>
-<div id="currentService"></div>
-<div id="anomalyBox" style="margin-top:14px"></div>
-</div></section>
+<div class="dashMetrics">
+ <div class="dashMetric"><span>In servizio adesso</span><b id="kpiNow">0</b><small id="kpiNowNames">Nessuno</small></div>
+ <div class="dashMetric"><span>Ore registrate nel mese</span><b id="kpiHours">0:00</b><small>Ore da timbrature, pause da verificare separatamente</small></div>
+ <div class="dashMetric"><span>Anomalie da verificare</span><b id="kpiAnom">0</b><small><span id="kpiRest">0</span> segnalazioni per riposo inferiore a 11 ore</small></div>
+</div>
+<div class="card dashSecondary">
+ <details id="dashAnomalies"><summary>⚠️ Dettaglio anomalie del mese <span>Apri / chiudi</span></summary><div id="anomalyBox" class="dashDetail"></div></details>
+ <details id="dashCommitments"><summary>📌 Assenze e impegni programmati oggi <span>Apri / chiudi</span></summary>
+  <div id="employeeCommitmentsDashboard" class="dashDetail">
+   <div class="dashSubHead"><h3>Assenze e impegni di oggi</h3><button id="openCommitmentsPage" class="secondary" type="button">Gestisci</button></div>
+   <div id="employeeCommitmentsToday"></div>
+  </div>
+ </details>
+</div>
+<div id="currentService" class="hidden" aria-hidden="true"></div>
+</section>
 
 <section id="page-riepiloghi" class="adminPage"><div class="pageHead"><div><h2>Riepiloghi mensili</h2><div class="muted">Ore, giornate e controlli per dipendente</div></div></div>
 <div class="card noPrint">
@@ -1130,7 +1163,7 @@ $('riepEmp').onchange=renderRiepilogo;
 $('riepDate').onchange=renderRiepilogo;
 $('riepView').onchange=renderRiepilogo;
 
-document.querySelectorAll('.sideBtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$('mobileMenuBtn').onclick=()=>$('sideMenu').classList.toggle('open');$('refreshAnomalies').onclick=()=>refreshData('refreshAnomalies');$('printMonthlyBtn').onclick=printFromSection;
+document.querySelectorAll('.sideBtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));document.querySelectorAll('[data-dash-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.dashPage)));$('mobileMenuBtn').onclick=()=>$('sideMenu').classList.toggle('open');$('refreshAnomalies').onclick=()=>refreshData('refreshAnomalies');$('printMonthlyBtn').onclick=printFromSection;
 $('addAbsence').onclick=addAbsence;$('commitAdd').onclick=addCommitment;$('openCommitmentsPage').onclick=()=>showPage('impegni');$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('showConversionBtn').onclick=openConversion;$('convertSave').onclick=saveConversion;$('convertCancel').onclick=()=>{resetConversion();$('conversionForm').classList.add('hidden')};$('newEmployeeBtn').onclick=()=>{const opening=$('newEmployeeForm').classList.contains('hidden');resetNewEmployee();$('newEmployeeForm').classList.toggle('hidden',!opening)};$('cancelEmployeeBtn').onclick=()=>{resetNewEmployee();$('newEmployeeForm').classList.add('hidden')};$('createEmployeeBtn').onclick=createEmployee;$('savePin').onclick=savePin;$('addHist').onclick=addHist;$('refreshBtn').onclick=()=>refreshData('refreshBtn');$('refreshTop').onclick=()=>refreshData('refreshTop');$('filterEmp').onchange=loadData;$('month').onchange=loadData;$('closeMonthBtn').onclick=closeMonth;$('reopenMonthBtn').onclick=reopenMonth;
 $('printBtn').onclick=()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows($('filterEmp').value,$('month').value);window.print();$('register').innerHTML=old};$('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
 const d=new Date();const currentMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');$('month').value=currentMonth;$('printMonth').value=currentMonth;$('absFrom').value=new Date().toLocaleDateString('sv-SE');$('absTo').value=$('absFrom').value;$('commitDate').value=new Date().toLocaleDateString('sv-SE');
