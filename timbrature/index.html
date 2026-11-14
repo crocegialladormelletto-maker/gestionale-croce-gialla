@@ -34,7 +34,7 @@
   <h3>📋 Le mie timbrature</h3><p class="muted">Le timbrature effettive registrate. Le eventuali correzioni sono riservate all'amministrazione.</p><div id="tbl"></div>
  </section>
 </div>
-</div></div><div id="confirmOverlay" class="confirmOverlay hidden"><div class="confirmBox"><div id="confirmIcon" class="confirmIcon">✓</div><div id="confirmTitle" class="confirmTitle">TIMBRATURA REGISTRATA</div><div id="confirmTime" class="confirmTime">--:--</div><div id="confirmName" class="confirmName"></div><div class="confirmSub">Ritorno automatico alla schermata iniziale...</div></div></div><script>
+</div><div id="confirmOverlay" class="confirmOverlay hidden"><div class="confirmBox"><div id="confirmIcon" class="confirmIcon">✓</div><div id="confirmTitle" class="confirmTitle">TIMBRATURA REGISTRATA</div><div id="confirmTime" class="confirmTime">--:--</div><div id="confirmName" class="confirmName"></div><div class="confirmSub">Ritorno automatico alla schermata iniziale...</div></div></div><script>
 const API='https://ihottewckpwpwqzpxusl.supabase.co/functions/v1/timbrature-api';let token='',user='',employeeBadge='',events=[];const $=x=>document.getElementById(x);const pad=n=>String(n).padStart(2,'0');const now=()=>new Date();
 async function api(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',...(token?{'x-clock-token':token}:{})},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw new Error(j.error||'Errore');return j}
 function showMsg(id,t,k=''){const e=$(id);e.textContent=t;e.className='notice '+k}
