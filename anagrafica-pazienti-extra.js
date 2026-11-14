@@ -63,6 +63,65 @@ info.innerHTML=`
 <div id="paRestrictionInfo" role="status" aria-live="polite"></div>
 <div id="paLastUpdated" class="muted"></div>`;
 toolbar.before(info);
+// Impostazione compatta: gruppi chiari, campi esistenti spostati (non ricreati).
+const originalGrid=section.querySelector('.grid3');
+if(originalGrid){
+ const profile=document.createElement('div');
+ profile.id='paCompactProfile';
+ const field=id=>$p(id)?.closest('.field');
+ const createGroup=(heading,ids,extraClass='')=>{
+  const group=document.createElement('section');
+  group.className='pa-compact-group';
+  const title=document.createElement('h3');title.textContent=heading;group.append(title);
+  const grid=document.createElement('div');grid.className='pa-compact-fields '+extraClass;
+  ids.forEach(id=>{const node=id==='residence'?residenceBlock:field(id);if(node)grid.append(node)});
+  group.append(grid);profile.append(group);
+ };
+ createGroup('Dati anagrafici',['paName','paSurname','paCf','paDob'],'pa-personal-fields');
+ createGroup('Indirizzo di residenza',['residence'],'pa-residence-fields');
+ createGroup('Recapiti',['paPhone','paEmail'],'pa-contact-fields');
+ originalGrid.replaceWith(profile);
+}
+const extraSection=info.querySelector('.section');
+if(extraSection){
+ const details=document.createElement('details');
+ details.id='paExtraDetails';details.className='pa-extra-details';
+ const summary=document.createElement('summary');
+ summary.textContent='Informazioni aggiuntive (facoltative)';
+ details.append(summary);
+ extraSection.style.marginTop='0';
+ extraSection.style.background='transparent';
+ extraSection.style.border='0';
+ extraSection.style.padding='12px 4px 6px';
+ details.append(extraSection);
+ info.prepend(details);
+}
+toolbar.classList.add('pa-sticky-actions');
+$p('paSave').textContent='💾 Salva paziente';
+const patientStyle=document.createElement('style');
+patientStyle.textContent=`
+#paCompactProfile{display:grid;gap:12px}
+#paCompactProfile .pa-compact-group{border:1px solid #dce5ef;border-radius:12px;background:#fff;padding:15px}
+#paCompactProfile .pa-compact-group h3{font-size:16px;color:#11385b;margin:0 0 12px}
+#paCompactProfile .pa-compact-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#paCompactProfile .pa-personal-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+#paCompactProfile .pa-compact-group .field{min-width:0;margin:0}
+#paCompactProfile .pa-compact-group input{width:100%}
+#paCompactProfile #paResidenceGrid{grid-template-columns:minmax(180px,3fr) minmax(75px,1fr) minmax(150px,2fr) minmax(85px,1fr) minmax(78px,.8fr)}
+#paCompactProfile .pa-residence-fields{display:block}
+.pa-extra-details{margin:12px 0;border:1px solid #dce5ef;border-radius:12px;overflow:hidden;background:#f6f9fc}
+.pa-extra-details>summary{cursor:pointer;padding:15px 18px;font-weight:800;color:#11385b;list-style:none;display:flex;align-items:center;justify-content:space-between}
+.pa-extra-details>summary::after{content:'⌄';font-size:20px}
+.pa-extra-details[open]>summary::after{content:'⌃'}
+.pa-extra-details>summary::-webkit-details-marker{display:none}
+.pa-extra-details[open]>summary{border-bottom:1px solid #dce5ef}
+.pa-extra-details textarea{min-height:60px}
+.pa-sticky-actions{position:sticky;bottom:0;z-index:12;background:#fff;padding:12px 8px!important;border-top:2px solid #e1eaf3;box-shadow:0 -5px 18px #0b31551a;border-radius:10px;display:flex;flex-wrap:wrap;gap:8px}
+.pa-sticky-actions #paSave{background:#f8d635!important;color:#15385b!important;padding:12px 20px!important;font-size:15px!important}
+@media(max-width:850px){#paCompactProfile #paResidenceGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}#paCompactProfile #paResidenceGrid .field:first-child{grid-column:1/-1}}
+@media(max-width:600px){#paCompactProfile .pa-compact-fields{grid-template-columns:1fr}#paCompactProfile #paResidenceGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.pa-sticky-actions{bottom:0}.pa-sticky-actions #paSave{flex:1}}
+`;
+document.head.append(patientStyle);
 const audit=document.createElement('div');audit.id='paAuditPanel';audit.className='hidden';audit.innerHTML='<h3>🕓 Storico modifiche</h3><div id="paAuditRows" class="muted"></div>';
 $p('patientTransportHistory').before(audit);
 let viewSeq=0,historySeq=0;
