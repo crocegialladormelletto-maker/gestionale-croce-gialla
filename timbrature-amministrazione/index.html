@@ -1029,6 +1029,118 @@ async function addCorrectionEvent(){
   await loadData();await loadCorrectionDay();$('correctState').textContent='Timbratura inserita nello storico con motivazione e Audit.';
  }catch(err){alert('Inserimento non riuscito: '+(err.message||String(err)))}
 }
+
+let verifySequence=0, lastVerifyResult=null;
+function reportIssue(issues,badge,day,label,detail){
+ issues.push({badge,day,label,detail});
+}
+async function collectMonthVerification(month){
+ if(!/^\d{4}-\d{2}$/.test(month))throw Error('Seleziona un mese valido.');
+ const range=profileMonthDates(month);
+ const [r,scheduled,backup]=await Promise.all([
+  api({action:'data',badge:null,month}),
+  riepLoadSchedules(range.start,range.end),
+  api({action:'check_backup',month})
+ ]);
+ const allEvents=(r.context||[]).filter(e=>!e.eliminato_at).sort((a,b)=>Date.parse(a.evento_at)-Date.parse(b.evento_at));
+ const monthEvents=allEvents.filter(e=>romeDay(e.evento_at).slice(0,7)===month);
+ const pauses=(r.pauseEvents||[]).filter(e=>romeDay(e.evento_at).slice(0,7)===month);
+ const restDays=(r.absences||[]).filter(a=>a.data_dal<=range.end&&a.data_al>=range.start);
+ const employees=(r.people||[]);
+ const issues=[];
+ const now=new Date(),today=romeDay(now);
+ let checked=0,planned=0,recorded=0;
+ for(const p of employees){
+  const badge=String(p.badge);
+  const plans=scheduled.filter(t=>String(t.badge)===badge&&t.giorno>=range.start&&t.giorno<=range.end);
+  const personEvents=allEvents.filter(e=>String(e.badge)===badge);
+  const personPauses=pauses.filter(e=>String(e.badge)===badge);
+  const pairs=[],unpaired=[];
+  let open=null;
+  for(const e of personEvents){
+   if(e.tipo==='ENTRATA'){
+    if(open)unpaired.push(open);
+    open=e;
+   }else if(e.tipo==='USCITA'){
+    if(open){pairs.push({entry:open,exit:e});open=null}
+    else unpaired.push(e);
+   }
+  }
+  if(open)unpaired.push(open);
+  for(const e of unpaired){
+   const day=romeDay(e.evento_at);
+   if(day>=range.start&&day<=range.end&&day<today)reportIssue(issues,badge,day,'Timbratura incompleta',e.tipo+' senza movimento corrispondente');
+  }
+  const used=new Set();
+  for(const t of plans){
+   const day=t.giorno;if(day>today)continue;
+   checked++;const daily=pairs.filter(x=>romeDay(x.entry.evento_at)===day);
+   const started=personEvents.some(e=>e.tipo==='ENTRATA'&&romeDay(e.evento_at)===day);
+   const absence=restDays.some(a=>String(a.badge)===badge&&a.data_dal<=day&&a.data_al>=day&&a.causale!=='RIPOSO');
+   if(t.riposo){
+    if(daily.length||started)reportIssue(issues,badge,day,'Lavoro nel giorno di riposo','Verificare cambio turno o autorizzazione');
+    continue;
+   }
+   if(!t.inizio||!t.fine)continue;
+   planned++;
+   if(day===today)continue; // I turni di oggi potrebbero essere ancora in corso
+   if(!daily.length){
+    if(!absence)reportIssue(issues,badge,day,'Turno senza timbrature','Previsto '+String(t.inizio).slice(0,5)+'–'+String(t.fine).slice(0,5));
+    continue;
+   }
+   recorded+=daily.length;used.add(day);
+   const first=daily[0],actualStart=romeLocalInput(first.entry.evento_at).slice(11,16);
+   const expectedStart=String(t.inizio).slice(0,5);
+   const diff=(Number(actualStart.slice(0,2))*60+Number(actualStart.slice(3)))-(Number(expectedStart.slice(0,2))*60+Number(expectedStart.slice(3)));
+   if(diff>0)reportIssue(issues,badge,day,'Entrata successiva al turno','Scostamento '+diff+' min; da verificare, non è automaticamente un ritardo ingiustificato');
+   let actualMinutes=0;
+   for(const pair of daily)actualMinutes+=Math.max(0,(Date.parse(pair.exit.evento_at)-Date.parse(pair.entry.evento_at))/60000);
+   const expected=riepPlannedMin(t);
+   if(actualMinutes>expected+1)reportIssue(issues,badge,day,'Ore superiori al programmato','Registrate '+fmtMin(actualMinutes)+' rispetto a '+fmtMin(expected)+'; verificare autorizzazione');
+   if(actualMinutes>360){
+    const ps=personPauses.filter(e=>romeDay(e.evento_at)===day).sort((a,b)=>Date.parse(a.evento_at)-Date.parse(b.evento_at));
+    const starts=ps.filter(e=>e.tipo==='INIZIO_PAUSA').length,ends=ps.filter(e=>e.tipo==='FINE_PAUSA').length;
+    if(!starts||starts!==ends)reportIssue(issues,badge,day,'Pausa da verificare','Durata registrata oltre 6 ore; controllare pause e relativa documentazione');
+   }
+  }
+  const scheduledDays=new Set(plans.map(t=>t.giorno));
+  for(const pair of pairs){
+   const day=romeDay(pair.entry.evento_at);
+   if(day<range.start||day>range.end||day>=today)continue;
+   if(!scheduledDays.has(day))reportIssue(issues,badge,day,'Lavoro senza turno programmato','Verificare servizio straordinario o programmazione mancante');
+  }
+ }
+ const closed=(r.months||[]).some(m=>String(m.mese).slice(0,7)===month&&m.chiuso);
+ const pauseUnmatched=[];
+ for(const p of employees){
+  const rows=pauses.filter(x=>String(x.badge)===String(p.badge)).sort((a,b)=>Date.parse(a.evento_at)-Date.parse(b.evento_at));
+  let start=null;
+  for(const e of rows){
+   if(e.tipo==='INIZIO_PAUSA'){if(start)pauseUnmatched.push(start);start=e}
+   else if(e.tipo==='FINE_PAUSA'){if(!start)pauseUnmatched.push(e);start=null}
+  }
+  if(start)pauseUnmatched.push(start);
+ }
+ for(const item of pauseUnmatched)reportIssue(issues,String(item.badge),romeDay(item.evento_at),'Pausa incompleta','Inizio o fine pausa senza corrispondenza');
+ return {month,issues,closed,backup,checked,planned,recorded,eventCount:monthEvents.length,pausesCount:pauses.length,employees,scheduledCount:scheduled.length};
+}
+function verificationUI(result){
+ const {month,issues,closed,backup}=result;
+ const sorted=issues.sort((a,b)=>a.day.localeCompare(b.day)||a.badge.localeCompare(b.badge));
+ const backupLabel=backup.backup_presente?'Backup verificato: '+new Date(backup.creato_il).toLocaleString('it-IT')+' · '+backup.righe_salvate+' movimenti':'Nessun backup di chiusura rilevato';
+ $('verifySummary').innerHTML='<div class="verifyKpis"><div><small>Turni controllati</small><strong>'+result.checked+'</strong></div><div><small>Segnalazioni</small><strong>'+sorted.length+'</strong></div><div><small>Movimenti nel mese</small><strong>'+result.eventCount+'</strong></div></div><div class="notice '+(closed&&!backup.backup_presente?'warn':closed?'ok':'')+'"><b>'+esc(closed?'MESE CHIUSO':'MESE APERTO')+'</b> · '+esc(backupLabel)+'</div>';
+ $('verifyDetails').innerHTML=sorted.length?'<h3>Situazioni da verificare</h3><div class="verifyIssues">'+sorted.map(i=>'<div class="verifyIssue"><b>'+esc(person(i.badge))+' · '+esc(new Date(i.day+'T12:00:00').toLocaleDateString('it-IT'))+' · '+esc(i.label)+'</b><div>'+esc(i.detail)+'</div></div>').join('')+'</div>':'<div class="verifyOk">Nessuna incoerenza automatica rilevata nei dati controllati. Restano necessarie le verifiche amministrative dei giustificativi.</div>';
+ $('verifyState').textContent='Controllo completato per '+formatMonthLabel(month)+'. I turni futuri e quelli ancora in corso non sono trattati come assenze.';
+}
+async function runMonthVerification(){
+ const seq=++verifySequence,month=$('verifyMonth').value;
+ $('verifyState').textContent='Verifica dei turni, delle timbrature, delle pause e del backup…';
+ try{
+  const result=await collectMonthVerification(month);
+  if(seq!==verifySequence)return null;
+  lastVerifyResult=result;verificationUI(result);return result;
+ }catch(e){if(seq===verifySequence)$('verifyState').textContent='Controllo non completato: '+(e.message||String(e));return null}
+}
 let profileSequence=0;
 function profileMonthDates(month){
  const [yy,mm]=month.split('-').map(Number);
