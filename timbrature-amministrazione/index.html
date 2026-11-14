@@ -719,7 +719,20 @@ function renderMonthState(){
  $('closeMonthBtn').classList.toggle('hidden',monthClosed);$('reopenMonthBtn').classList.toggle('hidden',!monthClosed);$('addHist').disabled=monthClosed;$('addAbsence').disabled=monthClosed;
  msg('monthMsg',monthClosed?'Il mese è chiuso: inserimenti, modifiche ed eliminazioni sono bloccati.':'Mese aperto. Prima della chiusura verifica eventuali anomalie.',monthClosed?'warn':'ok')
 }
-async function closeMonth(){const an=monthlyAnalyses().flatMap(x=>x.an);if(an.length&&!confirm('Sono presenti '+an.length+' anomalie. Vuoi chiudere comunque il mese?'))return;if(!confirm('Confermi la chiusura del mese '+$('month').value+'?'))return;const note=prompt('Nota di chiusura (facoltativa):','Verificato da amministrazione')||'';try{await api({action:'close_month',month:$('month').value,note});await loadData()}catch(e){alert(e.message)}}
+async function closeMonth(){
+ const month=$('month').value;
+ let check;
+ try{check=await collectMonthVerification(month)}catch(e){return alert('Impossibile eseguire il controllo preliminare: '+(e.message||String(e))+'. Mese non chiuso.')}
+ if(check.issues.length&&!confirm('Il controllo di fine mese ha trovato '+check.issues.length+' segnalazioni. Prima di chiudere verifica che siano giustificate. Vuoi proseguire sotto responsabilità amministrativa?'))return;
+ if(!confirm('Confermi la chiusura amministrativa del mese '+month+'? Sarà creato un backup delle timbrature, pause, causali e turni.'))return;
+ const note=prompt('Annotazione di verifica per la chiusura (obbligatoria):',check.issues.length?'Segnalazioni esaminate dall’amministrazione':'Controllo turni e timbrature completato');
+ if(!note?.trim())return alert('Per la tracciabilità serve una nota amministrativa. Chiusura annullata.');
+ try{
+  const r=await api({action:'close_month',month,note:note.trim()+' · Segnalazioni controllo: '+check.issues.length});
+  await loadData();
+  alert('Mese chiuso. Backup registrato con '+r.backup_rows+' movimenti; verifica il backup completo nella sezione Controllo fine mese.');
+ }catch(e){alert('Chiusura non completata: '+(e.message||String(e)))}
+}
 async function reopenMonth(){const reason=prompt('Motivo della riapertura del mese:','');if(!reason?.trim())return;try{await api({action:'reopen_month',month:$('month').value,reason});await loadData()}catch(e){alert(e.message)}}
 function resetConversion(){ $('convertBadge').value='';$('convertDate').value='';$('convertRole').value='';$('convertHours').value='';$('convertMsg').textContent='';$('convertMsg').className='notice hidden'; }
 function resetNewEmployee(){for(const id of ['newBadge','newFirst','newLast','newStart','newRole','newHours','newPin'])$(id).value='';$('newEmployeeMsg').textContent='';$('newEmployeeMsg').className='notice hidden';}
@@ -1105,6 +1118,8 @@ async function collectMonthVerification(month){
     if(!starts||starts!==ends)reportIssue(issues,badge,day,'Pausa da verificare','Durata registrata oltre 6 ore; controllare pause e relativa documentazione');
    }
   }
+  const rests=analyzeBadge(badge,personEvents).an.filter(a=>a.rest&&romeDay(a.at).slice(0,7)===month);
+  for(const issue of rests)reportIssue(issues,badge,romeDay(issue.at),'Riposo giornaliero da verificare',issue.msg);
   const scheduledDays=new Set(plans.map(t=>t.giorno));
   for(const pair of pairs){
    const day=romeDay(pair.entry.evento_at);
