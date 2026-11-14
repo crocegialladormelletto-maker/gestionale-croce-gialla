@@ -122,6 +122,25 @@ button:disabled{opacity:.45;cursor:not-allowed}
  body.printingRegister .printTable tr{break-inside:avoid;page-break-inside:avoid}
  body.printingRegister .printTable+div{break-before:page;page-break-before:always}
 }
+
+/* Navigazione semplificata: poche azioni principali e gruppi facoltativi */
+.simpleMenu{background:#102e54;padding:15px 12px;border-radius:17px;align-self:start}
+.simpleMenu .sideTitle{font-size:16px;line-height:1.25;padding:6px 8px 13px;margin-bottom:7px;border-bottom:1px solid #426387}
+.simpleMenu .sideTitle small{display:block;font-size:12px;font-weight:500;color:#bed0e3;margin-top:5px}
+.simpleMenu .menuSectionTitle{font-size:10px;letter-spacing:1px;color:#bdd0e5;padding:12px 11px 9px;font-weight:900}
+.simpleMenu>.sideBtn{background:#1e456f!important;border:1px solid #476484!important;color:#fff!important;border-radius:10px!important;margin:4px 0!important;padding:13px 12px!important;min-height:48px;display:flex;align-items:center;gap:10px;font-size:14px;text-align:left}
+.simpleMenu>.sideBtn[data-page="anomalie"]{background:#533c43!important}
+.simpleMenu .sideBtn.active{background:#ffda22!important;color:#102e54!important;border-color:#ffe578!important}
+.simpleMenu .sideBtn .sideLabel{flex:1}
+.simpleMenu .menuGroup{border:1px solid #3b5c7b;border-radius:10px;margin-top:10px;overflow:hidden;background:#153b63}
+.simpleMenu .menuGroup summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;font-size:13px;padding:14px 11px}
+.simpleMenu .menuGroup summary::-webkit-details-marker{display:none}
+.simpleMenu .menuGroup[open] summary{background:#234e7b}
+.simpleMenu .menuGroup summary span{font-size:18px;line-height:1}
+.simpleMenu .menuGroupInner{padding:5px 8px 8px;background:#102e54}
+.simpleMenu .menuGroup .sideBtn{display:block;width:100%;text-align:left;background:#25486e!important;color:#e8f0f8!important;border:0!important;font-size:12px;font-weight:700;padding:12px 10px!important;margin:4px 0!important;border-radius:7px!important;box-shadow:none}
+.simpleMenu .menuGroup .sideBtn.active{background:#ffda22!important;color:#102e54!important}
+.simpleMenu .menuHelp{font-size:11px;color:#bdcee1;line-height:1.5;margin:20px 7px 6px}
 </style>
 </head>
 <body>
@@ -152,22 +171,33 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <div id="panel" class="hidden">
 <div class="adminShell">
-<aside id="sideMenu" class="sideMenu noPrint">
-<div class="sideTitle">AMMINISTRAZIONE TIMBRATURE</div>
-<button class="sideBtn active" data-page="dashboard">🏠 <span class="sideLabel">Dashboard</span><span id="dashboardBadge" class="menuBadge neutralBadge">—</span></button>
-<button class="sideBtn" data-page="timbrature">🕒 <span class="sideLabel">Timbrature</span></button>
-<button class="sideBtn" data-page="storico">📚 <span class="sideLabel">Registro storico</span></button>
-<button class="sideBtn" data-page="anomalie">⚠️ <span class="sideLabel">Anomalie</span><span id="anomalyBadge" class="menuBadge okBadge">0</span></button>
-<button class="sideBtn" data-page="riepiloghi">📊 Riepiloghi mensili</button>
-<button class="sideBtn" data-page="controlli">🔎 <span class="sideLabel">Riepilogo e controlli</span></button>
-<button class="sideBtn" type="button" id="openEmployeeShifts">📅 <span class="sideLabel">Turni Dipendenti</span></button>
-<button class="sideBtn" data-page="impegni">📌 <span class="sideLabel">Impegni / Assenze programmati</span></button>
-<button class="sideBtn" data-page="causali">📅 Causali / Assenze</button>
-<button class="sideBtn" data-page="chiusura">🔒 Chiusura mese</button>
-<button class="sideBtn" data-page="dipendenti">👥 Dipendenti / PIN</button>
-<button class="sideBtn" data-page="audit">🧾 Audit</button>
-<button class="sideBtn" data-page="stampe">🖨️ Stampe</button>
-<button class="sideBtn" data-page="ccnl">📘 <span class="sideLabel">CCNL ANPAS–Misericordie</span></button>
+<aside id="sideMenu" class="sideMenu simpleMenu noPrint">
+<div class="sideTitle">GESTIONE DIPENDENTI<small>Timbrature e presenze</small></div>
+<div class="menuSectionTitle">OPERAZIONI PRINCIPALI</div>
+<button class="sideBtn active" data-page="dashboard">🏠 <span class="sideLabel">Panoramica</span><span id="dashboardBadge" class="menuBadge neutralBadge">—</span></button>
+<button class="sideBtn" data-page="timbrature">🕒 <span class="sideLabel">Timbrature di oggi</span></button>
+<button class="sideBtn" type="button" id="openEmployeeShifts">📅 <span class="sideLabel">Turni dipendenti</span></button>
+<button class="sideBtn" data-page="storico">📋 <span class="sideLabel">Registro presenze</span></button>
+<button class="sideBtn" data-page="stampe">🖨️ <span class="sideLabel">Stampa registro</span></button>
+<button class="sideBtn" data-page="anomalie">⚠️ <span class="sideLabel">Anomalie da controllare</span><span id="anomalyBadge" class="menuBadge okBadge">0</span></button>
+<details class="menuGroup" id="menuAnalisi"><summary>📊 Riepiloghi e verifiche <span>⌄</span></summary>
+<div class="menuGroupInner">
+<button class="sideBtn" data-page="controlli">Confronto turni e timbrature</button>
+<button class="sideBtn" data-page="riepiloghi">Riepiloghi mensili</button>
+<button class="sideBtn" data-page="chiusura">Chiusura del mese</button>
+</div></details>
+<details class="menuGroup" id="menuGestione"><summary>👥 Dipendenti e assenze <span>⌄</span></summary>
+<div class="menuGroupInner">
+<button class="sideBtn" data-page="dipendenti">Dipendenti e PIN</button>
+<button class="sideBtn" data-page="causali">Ferie, permessi e causali</button>
+<button class="sideBtn" data-page="impegni">Assenze e impegni programmati</button>
+</div></details>
+<details class="menuGroup" id="menuAvanzate"><summary>⚙️ Strumenti avanzati <span>⌄</span></summary>
+<div class="menuGroupInner">
+<button class="sideBtn" data-page="audit">Storico modifiche (Audit)</button>
+<button class="sideBtn" data-page="ccnl">Riferimenti CCNL</button>
+</div></details>
+<div class="menuHelp">Le funzioni meno utilizzate sono nei gruppi apribili. Nessuna funzione è stata eliminata.</div>
 </aside>
 <main class="adminMain">
 <div class="card noPrint"><div class="toolbar">
@@ -814,7 +844,7 @@ function renderRegister(){
 }
 function renderAudit(){$('audit').innerHTML=auditRows.length?'<table><thead><tr><th>Quando</th><th>Azione</th><th>Dipendente</th><th>Motivo / dettaglio</th></tr></thead><tbody>'+auditRows.map(x=>'<tr><td>'+esc(dt(x.avvenuto_il))+'</td><td>'+esc(x.azione)+'</td><td>'+esc(x.badge?person(x.badge):'Amministrazione')+'</td><td>'+esc((x.dopo&&x.dopo.motivo)||(x.dopo&&x.dopo.note)||'')+'</td></tr>').join('')+'</tbody></table>':'<div class="muted">Nessuna attività.</div>'}
 function renderAll(){initRiepilogo();renderMonthState();renderTodayBanner();renderCommitments();renderDashboard();renderSummary();renderRegister();renderAudit();renderAbsences()}
-function showPage(name){if(name==='controlli')renderRiepilogo();document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
+function showPage(name){const group=document.querySelector('.simpleMenu .menuGroup .sideBtn[data-page="'+name+'"]')?.closest('details');if(group)group.open=true;if(name==='controlli')renderRiepilogo();document.querySelectorAll('.adminPage').forEach(x=>x.classList.toggle('active',x.id==='page-'+name));document.querySelectorAll('.sideBtn').forEach(x=>x.classList.toggle('active',x.dataset.page===name));if(window.innerWidth<=900)$('sideMenu').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
 function printFromSection(){const pe=$('printEmp').value,pm=$('printMonth').value;if(!pe||!pm)return alert('Seleziona dipendente e mese.');$('filterEmp').value=pe;$('month').value=pm;loadData().then(()=>{const old=$('register').innerHTML;$('register').innerHTML=printRows(pe,pm);document.body.classList.add('printingRegister');window.print();document.body.classList.remove('printingRegister');$('register').innerHTML=old})}
 
 /* Riepilogo operativo: solo lettura; usa la stessa sessione amministrativa e i turni salvati. */
