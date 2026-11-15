@@ -39,21 +39,19 @@ const content=document.createElement('div');content.style.cssText='padding:8px 1
 if(pickupHeading&&pickupGrid){content.append(pickupHeading,pickupGrid);}
 content.append(info);details.append(content);
 toolbar.before(details);
-// Il campo originale contiene gli indirizzi storici: mantenerlo sempre visibile.
+// I vecchi indirizzi sono stati copiati nei cinque campi di residenza.
+// Il campo originale resta nel DOM solo per compatibilità con i fogli viaggio.
 const legacyResidenceField=$p('paAddress')?.closest('.field');
-if(legacyResidenceField){
- legacyResidenceField.style.display='';
- const label=legacyResidenceField.querySelector('label');
- if(label)label.textContent='Indirizzo già registrato (da conservare)';
- const previous=$p('paAddress');
- previous.removeAttribute('placeholder');
- previous.placeholder='Indirizzo presente nella scheda originale';
- const note=document.createElement('div');
- note.className='muted';
- note.style.marginTop='4px';
- note.textContent='Gli indirizzi già salvati restano qui visibili. Compila i campi separati solo quando hai verificato via, civico, comune, CAP e provincia.';
- legacyResidenceField.append(note);
-}
+if(legacyResidenceField)legacyResidenceField.style.display='none';
+const residenceFieldIds=['paResVia','paResCivico','paResComune','paResCap','paResProvincia'];
+const residenceFieldKeys=['residenza_via','residenza_civico','residenza_comune','residenza_cap','residenza_provincia'];
+const residenceGrid=$p('paResVia')?.closest('.grid3');
+const reviewNotice=document.createElement('div');
+reviewNotice.className='muted hidden';
+reviewNotice.id='paResidenceReviewNotice';
+reviewNotice.style.cssText='margin-top:8px;color:#704800';
+reviewNotice.textContent='Indirizzo storico non completamente separabile: il testo originale è riportato nella casella Via/Piazza. Verifica i dettagli prima di modificarlo.';
+if(residenceGrid)residenceGrid.after(reviewNotice);
 const audit=document.createElement('div');audit.id='paAuditPanel';audit.className='hidden';audit.innerHTML='<h3>🕓 Storico modifiche</h3><div id="paAuditRows" class="muted"></div>';
 $p('patientTransportHistory').before(audit);
 let viewSeq=0,historySeq=0;
@@ -71,6 +69,7 @@ patientAdminOpen=function(p,clearSearch=true){
  oldOpen(p,clearSearch);
  const seq=++viewSeq;
  IDS.forEach(id=>$p(id).value='');
+ reviewNotice.classList.add('hidden');
  $p('paLastUpdated').textContent='';
  $p('paRestrictionInfo').innerHTML='';
  audit.classList.toggle('hidden',!p?.id);
@@ -83,6 +82,11 @@ patientAdminOpen=function(p,clearSearch=true){
   if(r.error){$p('paLastUpdated').textContent='Dettagli non disponibili: '+r.error.message;return;}
   const row=r.data;adminPatientRecord=row;
   FIELDS.forEach((key,i)=>$p(IDS[i]).value=row[key]||'');
+  // Leggi sempre dal record aggiornato, non dai vecchi risultati della ricerca.
+  residenceFieldKeys.forEach((key,i)=>{$p(residenceFieldIds[i]).value=row[key]||'';});
+  $p('paAddress').value=row.indirizzo||'';
+  const needsReview=!!row.indirizzo && row.residenza_via===row.indirizzo;
+  reviewNotice.classList.toggle('hidden',!needsReview);
   if(row.updated_at)$p('paLastUpdated').textContent='Ultimo aggiornamento: '+new Date(row.updated_at).toLocaleString('it-IT');
   await Promise.allSettled([checkRestriction(row,seq),loadAudit(row.id,seq)]);
  })();
