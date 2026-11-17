@@ -1,5 +1,6 @@
 // Calendario Visita / Trasferimento / Trasporto semplice / Dimissione — amministrazione e centralino
 let ordCursor=new Date(),ordDay=todaySafe(),ordItems=[],ordCrew=[],ordEligible=new Map(),ordSeq=0,ordBusy=false;
+let ordMpGroups=new Map(); // Trasporti multipaziente: chiave servizio -> gruppo visibile
 const ordRoles=[['AUTISTA','Autista'],['CAPO_SERVIZIO','Capo servizio'],['SOCCORRITORE','Soccorritore'],['SECONDO_SOCCORRITORE','Secondo soccorritore'],['ACCOMPAGNATORE','Accompagnatore'],['AFFIANCATO','Affiancato']];
 function ordType(value){
  const t=String(value||'').trim().toLocaleUpperCase('it-IT');
@@ -9,7 +10,9 @@ function ordType(value){
 }
 function ordVisible(){
  const filter=$('ordTypeFilter').value;
- return ordItems.filter(s=>!filter||ordType(s.tipo_servizio)===filter);
+ const matching=ordItems.filter(s=>!filter||ordType(s.tipo_servizio)===filter);
+ const seen=new Set();
+ return matching.filter(s=>{const group=ordMpGroups.get(String(s.id));if(!group)return true;if(seen.has(group.id))return false;seen.add(group.id);return true;});
 }
 function ordStatus(s,crew){
  const n=Number(s.equipaggio_minimo)>0?Number(s.equipaggio_minimo):(String(s.mezzo||'')==='06'?1:2);
@@ -52,14 +55,17 @@ function ordDrawDay(){
     '</div>';
   }).join(''):'<div class="muted">Nessun componente assegnato.</div>';
   const patient=[s.paziente_nome,s.paziente_cognome].filter(Boolean).join(' ');
-  return '<div class="dim-slot ord-card" data-ord-id="'+esc(s.id)+'"><b>🚐 '+esc(s.tipo_servizio)+'</b> '+
+  const mp=ordMpGroups.get(String(s.id));
+  const mpMembers=mp?mp.members:[];
+  const mpInfo=mp?'<div style="margin:10px 0;padding:11px;border-left:5px solid #e3b900;background:#fff9e7"><strong>🚐 MULTITRASPORTO · '+mpMembers.length+' trasporti · '+esc(mp.description||'Viaggio condiviso')+'</strong>'+mpMembers.map((p,i)=>'<div style="margin-top:8px"><b>'+(i+1)+'. '+esc([p.paziente_nome,p.paziente_cognome].filter(Boolean).join(' ')||'Paziente')+'</b> · '+esc(p.luogo_partenza||'Partenza da verificare')+' → '+esc(p.destinazione||p.ospedale_destinazione||'Destinazione da verificare')+' <button type="button" class="btn secondary" style="padding:4px 7px" data-ord-open="'+esc(p.id)+'">Apri trasporto</button></div>').join('')+'</div>':'';
+  return '<div class="dim-slot ord-card" data-ord-id="'+esc(s.id)+'"><b>🚐 '+(mp?'MULTITRASPORTO':esc(s.tipo_servizio))+'</b> '+
    '<span class="pill '+(st.ok?'g':'')+'">'+esc(st.label)+'</span>'+
    '<div class="muted">Partenza: '+esc(s.luogo_partenza||'—')+' → '+esc(s.destinazione||s.ospedale_destinazione||'—')+
    ' · Mezzo '+esc(s.mezzo||'—')+'</div>'+
    (patient?'<div class="muted">Paziente: '+esc(patient)+'</div>':'')+
    '<div class="muted">Orari: partenza '+esc(calTime(s.ora_partenza_prevista)||'—')+
    ' · arrivo '+esc(calTime(s.ora_arrivo_destinazione_prevista)||'—')+
-   ' · rientro '+esc(calTime(s.ora_rientro_previsto)||'—')+'</div>'+names+
+   ' · rientro '+esc(calTime(s.ora_rientro_previsto)||'—')+'</div>'+mpInfo+names+
    '<div class="actions" style="margin-top:8px">'+
    (editable?'<button class="btn yellow" type="button" data-ord-add="'+esc(s.id)+'">✚ Aggiungi componente</button>':'')+
    '<button class="btn secondary" type="button" data-ord-open="'+esc(s.id)+'">Apri servizio</button></div>'+
@@ -86,7 +92,25 @@ async function loadOrdinaryCalendar(){
   {data:[],error:null};
  if(seq!==ordSeq)return;
  if(cr.error)return msg('ordMsg','Errore lettura equipaggi: '+cr.error.message,'err');
- ordItems=services;ordCrew=cr.data||[];ordEligible.clear();
+ ordItems=services;ordCrew=cr.data||[];ordEligible.clear();ordMpGroups=new Map();
+ // Le appartenenze sono lette separatamente: i servizi rimangono intatti nel database.
+ try{
+  const trips=await sb.from('trasporti_multipaziente').select('id,descrizione,data_servizio,mezzo').gte('data_servizio',r.startYmd).lte('data_servizio',r.endYmd).neq('stato','ANNULLATO');
+  if(trips.error)throw trips.error;
+  if(trips.data?.length){
+   const members=await sb.from('trasporti_multipaziente_pazienti').select('trasporto_id,servizio_id,ordine_carico').in('trasporto_id',trips.data.map(t=>t.id));
+   if(members.error)throw members.error;
+   const byId=new Map(services.map(s=>[String(s.id),s]));
+   for(const trip of trips.data){
+    const entries=(members.data||[]).filter(m=>String(m.trasporto_id)===String(trip.id)).sort((a,b)=>a.ordine_carico-b.ordine_carico);
+    const groupMembers=entries.map(m=>byId.get(String(m.servizio_id))).filter(s=>s&&s.data_servizio===trip.data_servizio&&s.mezzo===trip.mezzo);
+    if(groupMembers.length<2)continue;
+    const group={id:String(trip.id),description:trip.descrizione,members:groupMembers};
+    groupMembers.forEach(s=>ordMpGroups.set(String(s.id),group));
+   }
+  }
+ }catch(error){console.warn('Raggruppamento multitrasporti non disponibile:',error);}
+ if(seq!==ordSeq)return;
  ordDraw();msg('ordMsg','');
 }
 async function ordOpen(id){
