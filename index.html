@@ -5816,13 +5816,15 @@ async function loadOperationalCalendar(){
   if(mpDisplayed.has(String(group.id)))return;
   mpDisplayed.add(String(group.id));
   const first=group.members[0];
-  const crew=serviceAssignments.filter(a=>a.servizio_id===first.id);
+  const crew=serviceAssignments.filter(a=>group.members.some(member=>String(member.id)===String(a.servizio_id)));
+  const crewUnique=[...new Map(crew.map(a=>[String(a.badge_personale)+'|'+String(a.ruolo),a])).values()];
+  const crewLabels=crewUnique.map(a=>{const person=people.find(p=>String(p.badge)===String(a.badge_personale));const role=String(a.ruolo||'').toUpperCase()==='AUTISTA'?'Autista':String(a.ruolo||'').toUpperCase()==='CAPO_SERVIZIO'?'Capo servizio':String(a.ruolo||'').replaceAll('_',' ');return role+': '+(person?.nome_completo||('Badge '+a.badge_personale))});
   const routeParts=[];
   const appendPlace=value=>{const place=String(value||'').trim();if(place&&routeParts[routeParts.length-1]!==place)routeParts.push(place)};
   group.members.forEach(p=>appendPlace([p.luogo_carico_paziente,p.indirizzo_carico_paziente].filter(Boolean).join(', ')||[p.luogo_partenza,p.indirizzo_partenza].filter(Boolean).join(', ')));
   group.members.forEach(p=>appendPlace([p.ospedale_destinazione||p.destinazione,p.indirizzo_destinazione].filter(Boolean).join(', ')));
-  const subtitle=(routeParts.length?routeParts.join(' → '):'Percorso da verificare')+' · '+group.members.length+' trasporti collegati';
-  opCalEvents.push({kind:'multipaziente',date:first.data_servizio,time:calTime(first.ora_partenza_prevista),vehicle:first.mezzo||'',coverageClass:'',title:'MULTITRASPORTO · M'+(first.mezzo||'—'),subtitle,raw:{...first,mpGroup:group,assignments:crew}});
+  const subtitle=(routeParts.length?routeParts.join(' → '):'Percorso da verificare')+' · '+group.members.length+' trasporti collegati · Equipaggio: '+(crewLabels.join(' · ')||'Da assegnare');
+  opCalEvents.push({kind:'multipaziente',date:first.data_servizio,time:calTime(first.ora_partenza_prevista),vehicle:first.mezzo||'',coverageClass:'',title:'MULTITRASPORTO · M'+(first.mezzo||'—'),subtitle,raw:{...first,mpGroup:group,assignments:crewUnique,mpCrewLabels:crewLabels}});
   return;
  }
  const assignments=serviceAssignments.filter(a=>a.servizio_id===s.id);
@@ -5851,7 +5853,9 @@ function renderOperationalCalendarDay(){
     const to=[s.ospedale_destinazione||s.destinazione,s.indirizzo_destinazione].filter(Boolean).join(', ')||'Da verificare';
     return '<div style="padding:10px 0;border-top:1px solid #dbe3ec"><b>Trasporto '+(i+1)+'</b><div>'+esc(from)+' → '+esc(to)+'</div><button type="button" class="btn secondary" style="margin-top:7px" data-cal-open-service="'+esc(s.id)+'">Apri trasporto '+(i+1)+'</button></div>';
    }).join('');
-   return '<div class="cal-detail-item service" style="border-left:6px solid #e6b700"><b>'+esc(e.time||'')+' · '+esc(e.title)+'</b><div>'+esc(group.description||'Trasporto condiviso')+'</div><div><strong>Percorso:</strong> '+esc(e.subtitle||'Da verificare')+'</div>'+details+'</div>';
+   const team=e.raw.mpCrewLabels||[];
+   const crewHtml='<div style="margin:10px 0;padding:10px;border-radius:8px;background:#edf5ff"><strong>Equipaggio assegnato</strong>'+(team.length?team.map(x=>'<div>• '+esc(x)+'</div>').join(''):'<div>Da assegnare</div>')+'</div>';
+   return '<div class="cal-detail-item service" style="border-left:6px solid #e6b700"><b>'+esc(e.time||'')+' · '+esc(e.title)+'</b><div>'+esc(group.description||'Trasporto condiviso')+'</div><div><strong>Percorso e trasporti:</strong> '+esc(e.subtitle||'Da verificare')+'</div>'+crewHtml+details+'</div>';
   }
   if(e.kind==='service'){
    const isOrd=typeof ordType==='function'&&!!ordType(e.raw.tipo_servizio);
