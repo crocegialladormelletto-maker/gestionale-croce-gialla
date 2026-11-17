@@ -6,20 +6,21 @@
 </head><body>
 <header><strong>🚑 Croce Gialla Emergenza ODV</strong><div>Trasporti multipaziente · programmazione e percorrenze</div></header>
 <main>
-<div class="actions"><a class="btn secondary" href="../index.html">← Torna al gestionale</a><button id="refresh" class="secondary">Aggiorna</button></div>
+<div class="actions"><a class="btn secondary" href="../index.html">← Torna al gestionale</a><button id="refresh" class="secondary">↻ Aggiorna ricerca</button></div>
 <h1>Trasporti multipaziente</h1><p class="muted">Più pazienti nello stesso viaggio, fogli individuali, tratte del mezzo registrate una sola volta.</p>
 <div id="status" aria-live="polite"></div><div id="auth" class="card">Verifica accesso in corso…</div>
 <div id="content" class="hidden">
 <section class="card">
 <h2>Cerca i trasporti</h2>
-<div class="grid"><div><label for="date">Data del servizio</label><input id="date" type="date" value="2026-11-02"></div><div><label for="vehicle">Mezzo</label><select id="vehicle"><option>06</option><option>07</option><option>08</option><option>09</option></select></div></div>
-<div class="actions"><button id="load">Mostra trasporti</button><button id="new" class="secondary">+ Crea trasporto</button></div>
+<div class="grid"><div><label for="date">Data del servizio</label><input id="date" type="date"></div><div><label for="vehicle">Mezzo</label><select id="vehicle"><option value="">— Seleziona mezzo —</option><option>06</option><option>07</option><option>08</option><option>09</option></select></div></div>
+<div class="actions"><button id="load">🔍 Cerca multitrasporti</button><button id="today" class="secondary">📅 Oggi</button><button id="new" class="secondary">+ Nuovo multitrasporto</button></div>
 </section>
 <section id="creation" class="card hidden">
 <h2>Nuovo trasporto multipaziente</h2>
-<label for="description">Descrizione</label><input id="description" value="Trasporto sanitario condiviso">
+<div class="grid"><div><label for="newDate">Data nuovo servizio</label><input id="newDate" type="date"></div><div><label for="newVehicle">Mezzo nuovo servizio</label><select id="newVehicle"><option value="">— Seleziona mezzo —</option><option>06</option><option>07</option><option>08</option><option>09</option></select></div></div>
+<label for="description">Descrizione</label><input id="description" placeholder="Es. Trasporto sanitario condiviso">
 <p class="muted">Seleziona almeno due servizi già programmati per lo stesso giorno e mezzo. Ognuno manterrà il proprio foglio viaggio e pagamento.</p>
-<div id="candidates"></div>
+<div class="actions"><button id="findCandidates" class="secondary" type="button">🔍 Trova servizi da collegare</button></div><div id="candidates" aria-live="polite">Seleziona data e mezzo, poi cerca i servizi disponibili.</div>
 <div class="actions"><button id="create">Crea e collega i servizi</button><button id="cancel" class="secondary">Annulla</button></div>
 </section>
 <div id="trips"></div>
@@ -62,13 +63,15 @@ async function init(){
   const a=await db('accessi_app',t=>t.select('ruolo,attivo').eq('user_id',session.user.id).single());
   if(!a?.attivo||!['AMMINISTRATORE','CENTRALINO'].includes(a.ruolo))throw Error('Funzione riservata ad amministrazione e centralino.');
   role=a.ruolo;$('auth').classList.add('hidden');$('content').classList.remove('hidden');
-  await load();
+  // Nessuna ricerca all'accesso: la pagina parte sempre vuota.
+  $('date').value='';$('vehicle').value='';$('trips').replaceChildren();
  }catch(e){$('auth').textContent=e.message||String(e);report(e.message||String(e),true)}
 }
 async function load(){
  try{
   report('Caricamento…');
   const date=$('date').value,mezzo=$('vehicle').value;
+  if(!date||!mezzo){$('trips').replaceChildren();return report('Seleziona una data e un mezzo per cercare i multitrasporti.',true)}
   const rows=await db('trasporti_multipaziente',t=>t.select('*').eq('data_servizio',date).eq('mezzo',mezzo).order('creato_il',{ascending:false}));
   if(!rows.length){$('trips').innerHTML='<div class="card">Nessun trasporto multipaziente per questa data e questo mezzo.</div>';report('Ricerca completata.');return}
   let out='';
@@ -130,31 +133,53 @@ async function addLeg(id,count){
 async function markCompleted(id){
  try{const legs=await db('trasporti_multipaziente_tratte',t=>t.select('km_iniziali,km_finali').eq('trasporto_id',id));if(legs.some(x=>x.km_iniziali===null||x.km_finali===null))return report('Per completare inserisci i chilometri di tutte le tratte.',true);await db('trasporti_multipaziente',t=>t.update({stato:'COMPLETATO',aggiornato_il:new Date().toISOString()}).eq('id',id).select());await load()}catch(e){report(e.message,true)}
 }
-async function showCreation(){
- $('creation').classList.remove('hidden');$('candidates').textContent='Caricamento servizi…';selected=[];
+function showCreation(){
+ $('creation').classList.remove('hidden');
+ $('newDate').value='';$('newVehicle').value='';$('description').value='';
+ $('candidates').textContent='Seleziona data e mezzo, poi cerca i servizi disponibili.';
+ selected=[];
+ $('creation').scrollIntoView({block:'start',behavior:'smooth'});
+}
+let candidatesSeq=0;
+async function findCandidates(){
+ const date=$('newDate').value,mezzo=$('newVehicle').value;
+ const seq=++candidatesSeq;
+ if(!date||!mezzo){$('candidates').textContent='Inserisci prima data e mezzo del nuovo multitrasporto.';return}
+ $('candidates').textContent='Caricamento dei servizi da collegare…';
  try{
-  const rows=await db('servizi_giornalieri',t=>t.select('id,paziente_nome,paziente_cognome,ora_prevista,luogo_carico_paziente,stato').eq('data_servizio',$('date').value).eq('mezzo',$('vehicle').value).order('ora_prevista'));
+  const rows=await db('servizi_giornalieri',t=>t.select('id,paziente_nome,paziente_cognome,ora_prevista,luogo_carico_paziente,stato').eq('data_servizio',date).eq('mezzo',mezzo).order('ora_prevista'));
   const linked=await db('trasporti_multipaziente_pazienti',t=>t.select('servizio_id'));
-  const ids=new Set(linked.map(x=>x.servizio_id));
-  $('candidates').innerHTML=rows.filter(x=>!ids.has(x.id)&&x.stato!=='ANNULLATO').map(x=>'<label class="patient"><input type="checkbox" style="width:auto" data-candidate="'+safe(x.id)+'"> '+safe(x.paziente_nome)+' '+safe(x.paziente_cognome)+' · '+human(x.ora_prevista)+' · '+safe(x.luogo_carico_paziente||'')+'</label>').join('')||'Non ci sono servizi disponibili da collegare.';
- }catch(e){report(e.message,true)}
+  if(seq!==candidatesSeq||date!==$('newDate').value||mezzo!==$('newVehicle').value)return;
+  const ids=new Set(linked.map(x=>String(x.servizio_id)));
+  $('candidates').innerHTML=rows.filter(x=>!ids.has(String(x.id))&&String(x.stato||'').toUpperCase()!=='ANNULLATO').map(x=>'<label class="patient"><input type="checkbox" style="width:auto" data-candidate="'+safe(x.id)+'"> '+safe(x.paziente_nome)+' '+safe(x.paziente_cognome)+' · '+human(x.ora_prevista)+' · '+safe(x.luogo_carico_paziente||'')+'</label>').join('')||'Non ci sono servizi disponibili da collegare per questa data e questo mezzo.';
+ }catch(e){if(seq===candidatesSeq)report('Impossibile caricare i servizi: '+e.message,true)}
 }
 async function createTrip(){
+ const date=$('newDate').value,mezzo=$('newVehicle').value;
+ if(!date||!mezzo)return report('Seleziona data e mezzo del nuovo multitrasporto.',true);
  const ids=[...document.querySelectorAll('[data-candidate]:checked')].map(x=>x.dataset.candidate);
  if(ids.length<2)return report('Seleziona almeno due pazienti.',true);
  let created;
  try{
-  created=(await db('trasporti_multipaziente',t=>t.insert({data_servizio:$('date').value,mezzo:$('vehicle').value,descrizione:$('description').value.trim()||'Trasporto multipaziente'}).select('id').single())).id;
+  created=(await db('trasporti_multipaziente',t=>t.insert({data_servizio:date,mezzo:mezzo,descrizione:$('description').value.trim()||'Trasporto multipaziente'}).select('id').single())).id;
   await db('trasporti_multipaziente_pazienti',t=>t.insert(ids.map((id,i)=>({trasporto_id:created,servizio_id:id,ordine_carico:i+1,fascia_rientro:'ALTRO'}))).select('servizio_id'));
   const chosenServices=await db('servizi_giornalieri',t=>t.select('*').in('id',ids));
   const byService=new Map(chosenServices.map(s=>[String(s.id),s]));
   const route=routeFromServices(ids.map(id=>byService.get(String(id))));
   await db('trasporti_multipaziente_tratte',t=>t.insert([{trasporto_id:created,ordine:1,fase:'ANDATA_CONDIVISA',descrizione:route.description}]).select('id'));
   if(route.missing.length)report('Collegamento creato. Verifica i dati mancanti: '+route.missing.join(', ')+'.',true);
-  $('creation').classList.add('hidden');await load();
+  $('creation').classList.add('hidden');$('date').value=date;$('vehicle').value=mezzo;await load();
  }catch(e){report('Creazione interrotta: '+e.message+'. Controlla il trasporto prima di riprovare.',true)}
 }
-$('load').onclick=load;$('refresh').onclick=load;$('new').onclick=showCreation;$('cancel').onclick=()=>$('creation').classList.add('hidden');$('create').onclick=createTrip;
+$('load').onclick=load;
+$('refresh').onclick=()=>{if($('date').value&&$('vehicle').value)load();else{$('trips').replaceChildren();report('Seleziona una data e un mezzo per effettuare la ricerca.')}};
+$('today').onclick=()=>{$('date').value=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())};
+$('new').onclick=showCreation;
+$('findCandidates').onclick=findCandidates;
+$('newDate').onchange=()=>{candidatesSeq++;$('candidates').textContent='Premi Trova servizi da collegare.'};
+$('newVehicle').onchange=()=>{candidatesSeq++;$('candidates').textContent='Premi Trova servizi da collegare.'};
+$('cancel').onclick=()=>{$('creation').classList.add('hidden');candidatesSeq++};
+$('create').onclick=createTrip;
 document.addEventListener('click',e=>{let b=e.target.closest('[data-save]');if(b)saveLeg(b.dataset.save);b=e.target.closest('[data-add-leg]');if(b)addLeg(b.dataset.addLeg,b.dataset.legCount);b=e.target.closest('[data-complete]');if(b)markCompleted(b.dataset.complete)});
 init();
 </script></body></html>
