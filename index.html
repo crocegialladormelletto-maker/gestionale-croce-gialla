@@ -5677,11 +5677,11 @@ function calAddAvailabilityEvents(target,rows,range,withNames){
 }
 function calendarFilteredEvents(prefix,events){
  const st=$(prefix+'ShowTurns')?.checked!==false,ss=$(prefix+'ShowServices')?.checked!==false,sa=$(prefix+'ShowAvailability')?.checked!==false;
- let rows=events.filter(e=>(e.kind==='turn'&&st)||(e.kind==='service'&&ss)||(['avail','unavail','pref'].includes(e.kind)&&sa));
+ let rows=events.filter(e=>(e.kind==='turn'&&st)||(['service','multipaziente'].includes(e.kind)&&ss)||(['avail','unavail','pref'].includes(e.kind)&&sa));
  if(prefix==='cal'){
   if(opCalVehicle)rows=rows.filter(e=>e.vehicle===opCalVehicle);
   const serviceType=$('calServiceTypeFilter')?.value||'';
-  if(serviceType)rows=rows.filter(e=>e.kind!=='service'||(serviceType==='ASSISTENZA'
+  if(serviceType)rows=rows.filter(e=>!['service','multipaziente'].includes(e.kind)||(serviceType==='ASSISTENZA'
    ?isAssistanceManifestation(e.raw?.tipo_servizio)||isAssistanceManifestation(e.raw?.tipo_servizio_altro)
    :typeof ordType==='function'&&ordType(e.raw?.tipo_servizio)===serviceType));
  }
@@ -5703,7 +5703,7 @@ function renderCalendarGrid(prefix,cursor,selected,events,mode){
   html+='<div class="cal-day '+(out?'out ':'')+(ymd===todayY?'today ':'')+(ymd===selected?'selected ':'')+'" data-cal-date="'+ymd+'"><div class="cal-date">'+d.getDate()+'</div>'+
    dayEvents.slice(0,limit).map(e=>'<button type="button" class="cal-event '+e.kind+' '+(e.coverageClass||'')+'" data-cal-date="'+ymd+'">'+
     (e.crewState&&['vcal','vfcal'].includes(prefix)?'<span class="cal-crew-dot '+e.crewState+'" aria-hidden="true"></span>':'')+esc((e.time?e.time+' ':'')+e.title)+
-    (prefix==='cal'&&e.kind==='service'&&e.subtitle?'<span class="cal-event-sub">'+esc(e.subtitle)+'</span>':'')+
+    (prefix==='cal'&&['service','multipaziente'].includes(e.kind)&&e.subtitle?'<span class="cal-event-sub">'+esc(e.subtitle)+'</span>':'')+
    '</button>').join('')+
    (dayEvents.length>limit?'<div class="cal-more">+'+(dayEvents.length-limit)+' altri</div>':'')+'</div>'
  }
