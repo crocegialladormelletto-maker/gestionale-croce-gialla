@@ -34,6 +34,27 @@ const human=t=>t?String(t).slice(0,5):'—';
 function report(t,err=false){$('status').innerHTML='<p class="'+(err?'error':'ok')+'">'+safe(t)+'</p>'}
 async function db(table,query){const r=await query(sb.from(table));if(r.error)throw r.error;return r.data}
 let role='',selected=[];
+
+function routeFromServices(services){
+ const ordered=[...services].filter(Boolean);
+ const places=[],missing=[];
+ const add=(value)=>{const v=String(value||'').trim();if(v&&places[places.length-1]?.toLocaleLowerCase('it-IT')!==v.toLocaleLowerCase('it-IT'))places.push(v)};
+ ordered.forEach((s,i)=>{
+  const pickup=[s.luogo_carico_paziente,s.indirizzo_carico_paziente].filter(Boolean).join(', ')||
+    s.luogo_partenza||s.paziente_indirizzo||'';
+  if(pickup)add(pickup);else missing.push('carico '+(i+1));
+ });
+ ordered.forEach((s,i)=>{
+  const dest=s.destinazione||s.ospedale_destinazione||'';
+  if(dest)add(dest);else missing.push('destinazione '+(i+1));
+ });
+ return {description:places.join(' → ')||'Percorso da completare',missing};
+}
+function isGenericRoute(value){
+ const txt=String(value||'').trim();
+ return !txt||txt==='Sede → punti di carico → destinazione'||txt==='Nuova tratta: compilare partenza, destinazione e orari';
+}
+
 async function init(){
  try{
   const session=(await sb.auth.getSession()).data.session;
@@ -54,6 +75,23 @@ async function load(){
   for(const trip of rows){
    const participants=await db('trasporti_multipaziente_pazienti',t=>t.select('servizio_id,ordine_carico,fascia_rientro,servizi_giornalieri(paziente_nome,paziente_cognome,ora_prevista,luogo_carico_paziente,indirizzo_carico_paziente,numero_foglio,stato)').eq('trasporto_id',trip.id).order('ordine_carico'));
    const legs=await db('trasporti_multipaziente_tratte',t=>t.select('*').eq('trasporto_id',trip.id).order('ordine'));
+   // Compila soltanto le tratte generiche, senza modificare un percorso scritto a mano.
+   if(legs.length&&participants.length&&legs.some(l=>isGenericRoute(l.descrizione))){
+    try{
+     const serviceIds=participants.map(p=>p.servizio_id);
+     const response=await sb.from('servizi_giornalieri').select('*').in('id',serviceIds);
+     if(response.error)throw response.error;
+     const byId=new Map((response.data||[]).map(s=>[String(s.id),s]));
+     const route=routeFromServices(participants.map(p=>byId.get(String(p.servizio_id))));
+     if(route.description!=='Percorso da completare'){
+      for(const leg of legs.filter(l=>isGenericRoute(l.descrizione))){
+       const update=await sb.from('trasporti_multipaziente_tratte').update({descrizione:route.description}).eq('id',leg.id).eq('descrizione',leg.descrizione).select('id');
+       if(update.error)throw update.error;
+       if(update.data?.length)leg.descrizione=route.description;
+      }
+     }
+    }catch(error){console.warn('Percorso automatico non aggiornato:',error);}
+   }
    const sum=legs.reduce((a,b)=>a+(b.km_percorsi??0),0),done=legs.filter(x=>x.km_percorsi!==null).length;
    out+='<section class="card"><h2>'+safe(trip.descrizione)+'</h2><p><span class="pill">Mezzo '+safe(trip.mezzo)+'</span> <span class="pill">'+safe(trip.stato)+'</span> <span class="pill">'+safe(trip.data_servizio)+'</span></p>';
    out+='<h3>Pazienti e fogli individuali</h3>';
@@ -108,7 +146,11 @@ async function createTrip(){
  try{
   created=(await db('trasporti_multipaziente',t=>t.insert({data_servizio:$('date').value,mezzo:$('vehicle').value,descrizione:$('description').value.trim()||'Trasporto multipaziente'}).select('id').single())).id;
   await db('trasporti_multipaziente_pazienti',t=>t.insert(ids.map((id,i)=>({trasporto_id:created,servizio_id:id,ordine_carico:i+1,fascia_rientro:'ALTRO'}))).select('servizio_id'));
-  await db('trasporti_multipaziente_tratte',t=>t.insert([{trasporto_id:created,ordine:1,fase:'ANDATA_CONDIVISA',descrizione:'Sede → punti di carico → destinazione'}]).select('id'));
+  const chosenServices=await db('servizi_giornalieri',t=>t.select('*').in('id',ids));
+  const byService=new Map(chosenServices.map(s=>[String(s.id),s]));
+  const route=routeFromServices(ids.map(id=>byService.get(String(id))));
+  await db('trasporti_multipaziente_tratte',t=>t.insert([{trasporto_id:created,ordine:1,fase:'ANDATA_CONDIVISA',descrizione:route.description}]).select('id'));
+  if(route.missing.length)report('Collegamento creato. Verifica i dati mancanti: '+route.missing.join(', ')+'.',true);
   $('creation').classList.add('hidden');await load();
  }catch(e){report('Creazione interrotta: '+e.message+'. Controlla il trasporto prima di riprovare.',true)}
 }
