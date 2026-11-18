@@ -3384,6 +3384,7 @@ let patientSearchRows=[],patientDirectoryRows=[],servicePatientId=null,adminPati
 let patientDirectoryPage=1;
 const PATIENT_DIRECTORY_PAGE_SIZE=10;
 let patientDirectoryTotal=0;
+let cgeAuthorizedUserId=null;
 let prof=null,people=[],qualifications=[],pq=[],vehicles=[],tariffs=[],tariffDestinations=[],servicesCache=[],currentServiceId=null,currentService=null,currentFoglioId=null,currentFoglio=null,volunteerBadge=null;
 let adminPersonDocuments=[],adminPersonDocumentsBadge='',adminPersonDocumentsRequest=0;
 let volNotifications=[];
@@ -3990,39 +3991,22 @@ setInterval(()=>{
 
 async function checkGestionaleAuth(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return true;
- // Il ruolo viene verificato sul database durante l'accesso. La navigazione
- // non deve acquisire nuovamente il lock di Supabase ad ogni click.
- // Si utilizza la sessione locale soltanto se appartiene all'utente autorizzato
- // ed il token non e' scaduto; le operazioni restano protette da RLS.
+ // Il ruolo è già stato autorizzato da accessi_app al login.
+ // Evitare getSession()/refreshSession() ad ogni click: possono restare in attesa
+ // del lock di autenticazione e bloccare tutta la dashboard.
+ let session=null;
  try{
   const raw=localStorage.getItem('sb-ihottewckpwpwqzpxusl-auth-token');
-  const cached=raw?JSON.parse(raw):null;
-  if(cached?.access_token&&cached?.user?.id===prof?.user_id&&
-     Number(cached?.expires_at||0)>Math.floor(Date.now()/1000)+30)return true;
+  session=raw?JSON.parse(raw):null;
  }catch(_){}
- // Non lasciare la navigazione bloccata indefinitamente in attesa di Supabase.
- const authTimeout=(promise,ms)=>Promise.race([
-  promise,
-  new Promise((_,reject)=>setTimeout(()=>reject(new Error('Verifica sessione troppo lenta: controlla la connessione e riprova.')),ms))
- ]);
- let data=null,error=null;
- try{
-  const result=await authTimeout(sb.auth.getSession(),8000);
-  data=result?.data;error=result?.error;
- }catch(e){
-  alert('Impossibile verificare la sessione di accesso. '+(e?.message||'Riprova.')+' Nessun dato è stato modificato.');
-  return false;
- }
- if(!error&&data?.session?.access_token)return true;
- // Non effettuare chiamate come anon: generano falsi "permission denied".
- let refresh;
- try{refresh=await authTimeout(sb.auth.refreshSession(),8000)}
- catch(e){
-  alert('Impossibile aggiornare la sessione di accesso. '+(e?.message||'Riprova.')+' Nessun dato è stato modificato.');
-  return false;
- }
- if(!refresh.error&&refresh.data?.session?.access_token)return true;
- alert('Sessione del gestionale scaduta. Accedi nuovamente: i servizi e i turni salvati non sono stati cancellati.');
+ const authorizedUserId=String(cgeAuthorizedUserId||'');
+ const storedUserId=String(session?.user?.id||'');
+ const tokenExpires=Number(session?.expires_at||0);
+ if(authorizedUserId&&storedUserId===authorizedUserId&&session?.access_token&&
+    tokenExpires>Math.floor(Date.now()/1000)+15)return true;
+ // Se la sessione è scaduta o non coincide, non aprire altre sezioni.
+ // Non cancellare i dati e non avviare una nuova richiesta di autenticazione bloccante.
+ alert('La sessione di accesso non risulta valida o è scaduta. Accedi nuovamente dal gestionale. I dati salvati non sono stati modificati.');
  $('app').classList.add('hidden');
  $('login').classList.remove('hidden');
  return false;
@@ -4251,6 +4235,7 @@ async function enter(authenticatedUser=null,tabletAccessToken=null){
   history.replaceState(null,'',fixedUrl.toString());
  }
  if(isCentralinoOnlyMode()&&r.data.ruolo!=='CENTRALINO'){await sb.auth.signOut();applyVolunteerOnlyLogin();return msg('cloginmsg','Questo link consente esclusivamente l’accesso al Centralino.','err')}
+ cgeAuthorizedUserId=currentUser.id;
  prof=r.data;$('login').classList.add('hidden');
  if(r.data.ruolo==='AMMINISTRATORE'){
   $('app').classList.remove('hidden');$('volApp').classList.add('hidden');$('monitorApp').classList.add('hidden');$('tabletApp').classList.add('hidden');$('who').textContent=(prof.nome||'Amministratore')+' · '+u.data.user.email;applyRoleUI();
