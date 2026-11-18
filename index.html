@@ -1985,9 +1985,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 <label class="check"><input id="newBarellaBariatrica" type="checkbox"> Barella bariatrica (+ € 20)</label>
 </div></div>
 <div class="section"><h3>Economico e note</h3><div class="grid4">
-<div class="field"><label>Tariffario</label><select id="tar"><option value="">Nessuno / tariffa concordata</option></select></div>
-<div class="field"><label>Destinazione tariffaria</label><select id="tarDest"><option value="">—</option></select></div>
-<div class="field"><label>Fascia</label><select id="tarNight"><option value="false">DIURNO</option><option value="true">NOTTURNO</option></select></div>
+<div class="field" id="newTariffField"><label>Tariffario</label><select id="tar"><option value="">Nessuno / tariffa concordata</option></select></div>
+<div class="field" id="newTariffDestinationField"><label>Destinazione tariffaria</label><select id="tarDest"><option value="">—</option></select></div>
+<div class="field" id="newTariffBandField"><label>Fascia</label><select id="tarNight"><option value="false">DIURNO</option><option value="true">NOTTURNO</option></select></div>
 <div class="field"><label>Importo servizio €</label><input id="imp" type="number" step="1" min="0"></div>
 </div>
 <div id="tarAdjustment" class="section hidden" style="margin:10px 0;background:#f4f9fd">
@@ -4555,6 +4555,8 @@ function updateManifestationTimes(){
  $('newDestinationLabel').textContent=isEvent?'Luogo manifestazione':'Destinazione';
  $('newDestinationAddressLabel').textContent=isEvent?'Indirizzo manifestazione':'Indirizzo destinazione';
  $('newStructureLabel').textContent=isEvent?'Nome manifestazione':'Ospedale / RSA / struttura';
+ // Per le manifestazioni mostra soltanto l'importo e le note operative.
+ ['newTariffField','newTariffDestinationField','newTariffBandField','tarAdjustment','tarQuote'].forEach(id=>$(id).classList.toggle('hidden',isEvent));
  $('newServiceTimesHelp').textContent=isEvent?
  'Orari assistenza: partenza dalla sede, inizio assistenza, fine assistenza e rientro previsto in sede.':
  'Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.';
