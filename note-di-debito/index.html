@@ -363,8 +363,10 @@ async function saveDraft(silent=false){
 $('save').onclick=()=>saveDraft(false);
 $('savePayText').onclick=async()=>{
  if(!active||active.stato!=='EMESSA')return;
- const patch={date_pagamento_testo:$('dPayDatesText').value.trim()||null,pagato_con_testo:$('dPaidWithText').value.trim()||null};
- const r=await sb.from('note_di_debito').update(patch).eq('id',active.id).eq('stato','EMESSA').select('*').single();
+ const r=await sb.rpc('cge_aggiorna_dettagli_saldo_nota',{
+  p_nota_id:active.id,p_date_testo:$('dPayDatesText').value.trim(),
+  p_metodi_testo:$('dPaidWithText').value.trim(),p_conferma:false
+ });
  if(r.error)return msg('detailMsg','Impossibile salvare: '+r.error.message,'err');
  active={...active,...r.data};msg('detailMsg','Dettagli pagamento salvati senza modificare gli incassi.','ok');
 };
@@ -415,10 +417,9 @@ $('savePayment').onclick=async()=>{
  const button=$('savePayment');
  button.disabled=true;
  try{
-  const update=await sb.from('note_di_debito').update({date_pagamento_testo:dates,pagato_con_testo:methods}).eq('id',active.id).eq('stato','EMESSA').is('data_pagamento',null).select('id').single();
-  if(update.error)throw update.error;
-  const normalizedMethod=methods.toUpperCase().includes('POS')&&methods.toUpperCase().includes('CONTANT')?'PAGAMENTO MISTO (CONTANTI + POS)':methods.slice(0,200);
-  const result=await sb.rpc('cge_registra_pagamento_nota_debito',{p_nota_id:active.id,p_modalita:normalizedMethod,p_data:lastDate});
+  const result=await sb.rpc('cge_aggiorna_dettagli_saldo_nota',{
+   p_nota_id:active.id,p_date_testo:dates,p_metodi_testo:methods,p_conferma:true
+  });
   if(result.error)throw result.error;
   const id=active.id;await loadAll();await openNote(id);
   msg('detailMsg','Saldo completo confermato. Nota spostata nella sezione Pagate, senza creare un nuovo incasso.','ok');
