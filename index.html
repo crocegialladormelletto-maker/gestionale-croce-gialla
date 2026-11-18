@@ -3954,10 +3954,27 @@ setInterval(()=>{
 
 async function checkGestionaleAuth(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return true;
- const {data,error}=await sb.auth.getSession();
+ // Non lasciare la navigazione bloccata indefinitamente in attesa di Supabase.
+ const authTimeout=(promise,ms)=>Promise.race([
+  promise,
+  new Promise((_,reject)=>setTimeout(()=>reject(new Error('Verifica sessione troppo lenta: controlla la connessione e riprova.')),ms))
+ ]);
+ let data=null,error=null;
+ try{
+  const result=await authTimeout(sb.auth.getSession(),8000);
+  data=result?.data;error=result?.error;
+ }catch(e){
+  alert('Impossibile verificare la sessione di accesso. '+(e?.message||'Riprova.')+' Nessun dato è stato modificato.');
+  return false;
+ }
  if(!error&&data?.session?.access_token)return true;
  // Non effettuare chiamate come anon: generano falsi "permission denied".
- const refresh=await sb.auth.refreshSession();
+ let refresh;
+ try{refresh=await authTimeout(sb.auth.refreshSession(),8000)}
+ catch(e){
+  alert('Impossibile aggiornare la sessione di accesso. '+(e?.message||'Riprova.')+' Nessun dato è stato modificato.');
+  return false;
+ }
  if(!refresh.error&&refresh.data?.session?.access_token)return true;
  alert('Sessione del gestionale scaduta. Accedi nuovamente: i servizi e i turni salvati non sono stati cancellati.');
  $('app').classList.add('hidden');
