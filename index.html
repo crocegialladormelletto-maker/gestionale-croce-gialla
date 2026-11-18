@@ -4027,9 +4027,26 @@ async function view(v,options={}){
  }
  selectView(v);
  const loader=({agendaPres:()=>window.cgeAgendaOpen('pres'),agendaEvents:()=>window.cgeAgendaOpen('events'),dash:async()=>{await Promise.all([refreshDashboardPersonnelExpiryAlert(),refreshDashboardEmployeeCommitments()]);await dashboard();if(window.cgeDashboardAgendas)await window.cgeDashboardAgendas();},statistics:loadStatistics,accessi:async()=>{},calendar:loadOperationalCalendar,emergency:loadEmergencyRoster,assistance:loadAssistanceRoster,servicesOrd:loadOrdinaryCalendar,services:loadServices,communications:loadCommunications,patients:loadPatientsView,new:loadPatientLookup,travelSheets:loadTravelSheets,paymentReceipts:loadPaymentReceiptsView,travelSheets118:loadTravelSheets118,debitNotes:()=>window.ndLoadList(),debitNoteDetail:async()=>{},crew:loadCrew,people:loadPeopleView,shifts:loadShifts,availability:loadAvailability,vehicles:loadVehiclesView,personnelExpiries:loadPersonnelExpiries,tariffs:loadTariffsView,accounting:loadAccounting,primaNota:loadPrimaNota,activityLog:loadActivityLog,backup:loadBackupExport,serviceDetail:async()=>{},travelSheetDetail:async()=>{}}[v]|| (async()=>{}));
- const result=await loader();
- selectView(v);
- return result;
+ // Mantieni aperta la sezione anche se il caricamento remoto è lento o fallisce.
+ const calendarStatus={calendar:'calMsg',servicesOrd:'ordMsg',emergency:'emMsg',assistance:'asMsg',agendaPres:'agendaPresMsg',agendaEvents:'agendaEventsMsg'};
+ const statusId=calendarStatus[v];
+ let timeoutId=null;
+ if(statusId){
+  timeoutId=setTimeout(()=>{
+   const section=$(v);
+   if(section&&!section.classList.contains('hidden'))
+    msg(statusId,'Il calendario è aperto, ma il caricamento dei dati sta impiegando troppo tempo. Verifica la connessione e aggiorna la sezione.','warn');
+  },9000);
+ }
+ try{
+  const result=await loader();
+  selectView(v);
+  return result;
+ }catch(error){
+  console.error('Errore apertura sezione '+v,error);
+  if(statusId)msg(statusId,'Impossibile caricare il calendario: '+(error?.message||String(error)),'err');
+  else msg('dashMsg','Errore apertura sezione: '+(error?.message||String(error)),'err');
+ }finally{if(timeoutId!==null)clearTimeout(timeoutId)}
 }
 document.querySelectorAll('.nav,.jump').forEach(b=>b.onclick=async()=>{if(b.dataset.href){if(editingPersonBadge)resetPerson();if(b.dataset.href==='clienti-con-restrizioni/'){
  sessionStorage.removeItem('cge_restrizioni_logout');
