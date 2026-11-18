@@ -289,8 +289,10 @@ function fill(){
  $('dEmail').disabled=false;
  $('saveRecipientEmail').classList.toggle('hidden',draft);
  $('save').classList.toggle('hidden',!draft);$('issue').classList.toggle('hidden',!draft);
- $('savePayment').classList.toggle('hidden',draft);
- $('legacyPayment').classList.toggle('hidden',draft);
+ const paymentAlreadyRecorded=!!n.data_pagamento;
+ $('savePayment').classList.toggle('hidden',draft||paymentAlreadyRecorded);
+ $('legacyPayment').classList.toggle('hidden',draft||paymentAlreadyRecorded);
+ $('legacyPayment').open=false;
  $('savePayText').classList.toggle('hidden',draft);
  $('print').disabled=false;$('downloadPdf').disabled=false;
  const alreadySent=n.email_stato==='INVIATA';
@@ -377,7 +379,8 @@ $('issue').onclick=async()=>{
 };
 $('savePayment').onclick=async()=>{
  if(active.stato!=='EMESSA')return;
- if(!$('dPayDate').value)return msg('detailMsg','Inserisci la data del pagamento.','err');
+ if(active.data_pagamento)return msg('detailMsg','Pagamento già registrato. La nota è presente nella sezione Pagate; non occorre registrarlo nuovamente.','ok');
+ if(!$('dPayDate').value)return msg('detailMsg','Per registrare contabilmente un pagamento unico, inserisci la relativa data nella sezione dedicata. Le caselle descrittive non generano incassi.','err');
  const r=await sb.rpc('cge_registra_pagamento_nota_debito',{p_nota_id:active.id,p_modalita:$('dPayment').value||null,p_data:$('dPayDate').value});
  if(r.error)return msg('detailMsg',r.error.message,'err');
  const id=active.id;await loadAll();await openNote(id);msg('detailMsg','Pagamento registrato.','ok');
