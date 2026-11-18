@@ -3339,6 +3339,42 @@ Causale: numero preventivo</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
+/* Diagnostica temporanea navigazione: attiva solo con ?diagnostica=1 */
+(function(){
+ if(new URLSearchParams(location.search).get('diagnostica')!=='1')return;
+ var reports=[],panel=null;
+ function add(message){
+  reports.push(String(message||'Errore sconosciuto').slice(0,350));
+  if(panel)panel.textContent='Diagnostica navigazione: '+reports.slice(-3).join(' | ');
+ }
+ window.addEventListener('error',function(e){
+  add('Errore JavaScript: '+(e.message||'script non caricato')+' (riga '+(e.lineno||'?')+')');
+ },true);
+ window.addEventListener('unhandledrejection',function(e){
+  var reason=e.reason;
+  add('Operazione non riuscita: '+(reason&&reason.message||String(reason||'sconosciuto')));
+ });
+ document.addEventListener('DOMContentLoaded',function(){
+  panel=document.createElement('div');
+  panel.id='cgeNavDiagnostics';
+  panel.setAttribute('role','status');
+  panel.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2147483647;background:#fff4cc;color:#14253a;border-top:3px solid #e0a800;padding:12px;font:14px/1.4 Arial,sans-serif;max-height:34vh;overflow:auto';
+  panel.textContent=reports.length?'Diagnostica navigazione: '+reports.join(' | '):'Diagnostica attiva: premi un pulsante del menu.';
+  document.body.appendChild(panel);
+  document.addEventListener('click',function(event){
+   var button=event.target.closest&&event.target.closest('.nav,.jump');
+   if(!button)return;
+   var target=button.dataset.v||button.dataset.href||'senza destinazione';
+   var before=[].map.call(document.querySelectorAll('main>section:not(.hidden)'),function(el){return el.id}).join(',');
+   setTimeout(function(){
+    var after=[].map.call(document.querySelectorAll('main>section:not(.hidden)'),function(el){return el.id}).join(',');
+    if(before===after)add('Click su '+target+' ricevuto, ma la sezione è rimasta '+(after||'invariata')+'. Script navigazione: '+(typeof window.view==='function'?'presente':'non disponibile')+'.');
+   },1800);
+  },true);
+ });
+})();
+</script>
+<script>
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co', KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
 const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 const LOGO_URL="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70";
