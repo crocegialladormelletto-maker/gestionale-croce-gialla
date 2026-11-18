@@ -107,10 +107,15 @@
        </div>
       </div>
       <div class="section"><h3>Pagamento</h3><div class="grid3">
-       <div class="field"><label>Modalità</label><select id="dPayment"><option value="">Da concordare</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>BONIFICO A VISTA</option><option>BONIFICO DIFFERITO</option><option>ALTRO</option></select></div>
-       <div class="field"><label>Data pagamento</label><input id="dPayDate" type="date"></div>
+       <div class="field"><label for="dPayDatesText">Data pagamento</label><textarea id="dPayDatesText" rows="2" placeholder="Es. 05/11/2026, 09/11/2026, 12/11/2026" style="width:100%;resize:vertical"></textarea></div>
+       <div class="field"><label for="dPaidWithText">Pagato con</label><textarea id="dPaidWithText" rows="2" placeholder="Es. Contanti, contanti, POS" style="width:100%;resize:vertical"></textarea></div>
        <div class="field"><label>Stato email</label><input id="dEmailState" disabled></div>
-      </div></div>
+      </div><p class="muted" style="font-size:12px">Campi descrittivi: non registrano nuovi incassi e non modificano quelli esistenti.</p>
+      <button id="savePayText" class="btn secondary hidden" type="button">Salva dettagli pagamento</button>
+      <details id="legacyPayment" class="hidden" style="margin-top:12px"><summary>Registrazione contabile di un pagamento unico</summary><div class="grid3" style="margin-top:10px">
+       <div class="field"><label>Modalità contabile</label><select id="dPayment"><option value="">Da concordare</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>BONIFICO A VISTA</option><option>BONIFICO DIFFERITO</option><option>ALTRO</option></select></div>
+       <div class="field"><label>Data pagamento</label><input id="dPayDate" type="date"></div>
+       </div></details></div>
      </form>
      <div class="actions no-print">
       <button id="save" class="btn secondary">Salva bozza</button>
@@ -276,6 +281,8 @@ function fill(){
  const n=active;$('dNumber').textContent=n.numero;$('dState').textContent=n.stato;$('dSheet').textContent=n.numero_foglio||'—';
  const map={dDate:'data_documento',dServiceDate:'data_servizio',dName:'intestatario',dCF:'cf_piva',dAddress:'indirizzo',dCap:'cap',dTown:'comune',dProvince:'provincia',dEmail:'email',dDescription:'descrizione',dAmount:'importo',dDiscount:'sconto',dPayment:'modalita_pagamento',dPayDate:'data_pagamento'};
  for(const [id,k] of Object.entries(map))$(id).value=n[k]??'';
+ $('dPayDatesText').value=n.date_pagamento_testo|| (n.data_pagamento?nice(n.data_pagamento):'');
+ $('dPaidWithText').value=n.pagato_con_testo||n.modalita_pagamento||'';
  $('dEmailState').value=n.email_stato||'NON_INVIATA';calcTotal();
  const draft=n.stato==='BOZZA';
  ['dDate','dName','dCF','dAddress','dCap','dTown','dProvince','dDescription','dAmount','dDiscount'].forEach(id=>$(id).disabled=!draft);
@@ -283,6 +290,8 @@ function fill(){
  $('saveRecipientEmail').classList.toggle('hidden',draft);
  $('save').classList.toggle('hidden',!draft);$('issue').classList.toggle('hidden',!draft);
  $('savePayment').classList.toggle('hidden',draft);
+ $('legacyPayment').classList.toggle('hidden',draft);
+ $('savePayText').classList.toggle('hidden',draft);
  $('print').disabled=false;$('downloadPdf').disabled=false;
  const alreadySent=n.email_stato==='INVIATA';
  $('sendPdfMail').disabled=draft||alreadySent;
@@ -341,7 +350,7 @@ function payloadDraft(){
  const amount=Number($('dAmount').value||0),discount=Number($('dDiscount').value||0);
  if(!$('dName').value.trim()||!$('dDescription').value.trim())throw new Error('Intestatario e descrizione sono obbligatori.');
  if(discount<0||amount<0||discount>amount)throw new Error('Controlla importo e sconto.');
- return {data_documento:$('dDate').value,intestatario:$('dName').value.trim(),cf_piva:$('dCF').value.trim()||null,indirizzo:$('dAddress').value.trim()||null,cap:$('dCap').value.trim()||null,comune:$('dTown').value.trim()||null,provincia:$('dProvince').value.trim()||null,email:$('dEmail').value.trim()||null,descrizione:$('dDescription').value.trim(),importo:amount,sconto:discount,modalita_pagamento:$('dPayment').value||null,data_pagamento:$('dPayDate').value||null,updated_at:new Date().toISOString()};
+ return {data_documento:$('dDate').value,intestatario:$('dName').value.trim(),cf_piva:$('dCF').value.trim()||null,indirizzo:$('dAddress').value.trim()||null,cap:$('dCap').value.trim()||null,comune:$('dTown').value.trim()||null,provincia:$('dProvince').value.trim()||null,email:$('dEmail').value.trim()||null,descrizione:$('dDescription').value.trim(),importo:amount,sconto:discount,modalita_pagamento:$('dPayment').value||null,data_pagamento:$('dPayDate').value||null,date_pagamento_testo:$('dPayDatesText').value.trim()||null,pagato_con_testo:$('dPaidWithText').value.trim()||null,updated_at:new Date().toISOString()};
 }
 async function saveDraft(silent=false){
  try{
@@ -350,6 +359,13 @@ async function saveDraft(silent=false){
  }catch(e){msg('detailMsg',e.message||String(e),'err');return false}
 }
 $('save').onclick=()=>saveDraft(false);
+$('savePayText').onclick=async()=>{
+ if(!active||active.stato!=='EMESSA')return;
+ const patch={date_pagamento_testo:$('dPayDatesText').value.trim()||null,pagato_con_testo:$('dPaidWithText').value.trim()||null};
+ const r=await sb.from('note_di_debito').update(patch).eq('id',active.id).eq('stato','EMESSA').select('*').single();
+ if(r.error)return msg('detailMsg','Impossibile salvare: '+r.error.message,'err');
+ active={...active,...r.data};msg('detailMsg','Dettagli pagamento salvati senza modificare gli incassi.','ok');
+};
 $('issue').onclick=async()=>{
  if(!confirm('Emettere definitivamente '+active.numero+'? Dopo l’emissione i dati del documento non saranno più modificabili.'))return;
  // Conserva la data documento scelta dall'amministrazione; il servizio mantiene la propria data.
@@ -509,7 +525,7 @@ function buildApprovedNoteBody(n){
    '</div>'+
    '<div style="background:#173a5e;color:#fff;font-weight:800;padding:7px 11px;font-size:12px;margin-top:9px">MODALITÀ DI PAGAMENTO</div>'+
    '<table style="width:100%;border-collapse:collapse;font-size:11px"><tbody>'+
-    '<tr><td style="width:15%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Metodo</td><td style="width:33%;background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+esc(n.modalita_pagamento||'BONIFICO')+'</td><td style="width:20%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">'+(paid?'☑':'☐')+' GIÀ PAGATO</td><td style="width:9%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Data</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+(paid?esc(nice(n.data_pagamento)):'')+'</td></tr>'+
+    '<tr><td style="width:15%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Metodo</td><td style="width:33%;background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+esc(n.pagato_con_testo||n.modalita_pagamento||'BONIFICO')+'</td><td style="width:20%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">'+(paid?'☑':'☐')+' GIÀ PAGATO</td><td style="width:9%;background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Data</td><td style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">'+esc(n.date_pagamento_testo||(paid?nice(n.data_pagamento):''))+'</td></tr>'+
     '<tr><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Banca</td><td colspan="4" style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px">UniCredit - filiale di Borgomanero</td></tr>'+
     '<tr><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">IBAN</td><td colspan="4" style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px;font-weight:700">IT84M0200845222000107312436</td></tr>'+
     '<tr><td style="background:#eef3f7;padding:7px 10px;font-weight:700;border:1px solid #dce4ea">Causale bonifico</td><td colspan="4" style="background:#fffcef;border:1px solid #d7c774;padding:7px 10px;font-weight:700">'+esc(String(n.modalita_pagamento||'').toUpperCase().includes('BONIFICO')?(n.numero||''):'—')+'</td></tr>'+
