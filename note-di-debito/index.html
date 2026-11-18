@@ -117,6 +117,7 @@
        <div class="field"><label>Data pagamento</label><input id="dPayDate" type="date"></div>
        </div></details></div>
      </form>
+     <div id="cashEntry" class="section hidden no-print" style="margin-top:14px"><h3>Registra incasso del servizio</h3><p class="muted">Registra qui soltanto un pagamento effettivamente ricevuto. Il saldo viene aggiornato automaticamente, senza duplicare incassi già presenti.</p><div class="grid3"><div class="field"><label for="cashSheet">Foglio viaggio</label><select id="cashSheet"></select></div><div class="field"><label for="cashAmount">Importo incassato €</label><input id="cashAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label for="cashDate">Data incasso</label><input id="cashDate" type="date"></div><div class="field"><label for="cashMethod">Pagato con</label><select id="cashMethod"><option value="POS">POS</option><option value="CONTANTI">Contanti</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO ISTANTANEO">Bonifico istantaneo</option><option value="ALTRO">Altro</option></select></div></div><p id="cashOutstanding" class="muted"></p><button type="button" class="btn green" id="cashSubmit">Registra incasso</button></div>
      <div class="actions no-print">
       <button id="save" class="btn secondary">Salva bozza</button>
       <button id="issue" class="btn yellow">✓ Emetti Nota di Debito</button>
@@ -291,6 +292,8 @@ function fill(){
  $('save').classList.toggle('hidden',!draft);$('issue').classList.toggle('hidden',!draft);
  const paymentAlreadyRecorded=!!n.data_pagamento;
  $('savePayment').classList.toggle('hidden',draft||paymentAlreadyRecorded);
+ $('cashEntry').classList.toggle('hidden',draft||paymentAlreadyRecorded);
+ if(!draft&&!paymentAlreadyRecorded)void loadCashEntry();
  $('legacyPayment').classList.add('hidden');
  $('legacyPayment').open=false;
  $('savePayText').classList.toggle('hidden',draft);
@@ -361,6 +364,46 @@ async function saveDraft(silent=false){
  }catch(e){msg('detailMsg',e.message||String(e),'err');return false}
 }
 $('save').onclick=()=>saveDraft(false);
+let cashOutstandingBySheet=new Map();
+async function loadCashEntry(){
+ if(!active||active.stato!=='EMESSA'||active.data_pagamento)return;
+ const id=active.id;
+ const ids=[...new Set([active.foglio_viaggio_id,...noteLinks.filter(x=>x.nota_id===id).map(x=>x.foglio_id)].filter(Boolean))];
+ const sheetResult=await sb.from('fogli_viaggio').select('id,numero_foglio,totale_servizio,servizio_giornaliero_id').in('id',ids);
+ if(sheetResult.error||sheetResult.data.length!==ids.length)return msg('detailMsg','Impossibile caricare i fogli per la registrazione incassi.','err');
+ const ss=sheetResult.data,servIds=ss.map(f=>f.servizio_giornaliero_id).filter(Boolean);
+ const [p1,p2]=await Promise.all([
+ sb.from('pagamenti_servizi').select('id,servizio_id,foglio_viaggio_id,importo').in('foglio_viaggio_id',ids).eq('stato','REGISTRATO'),
+ servIds.length?sb.from('pagamenti_servizi').select('id,servizio_id,foglio_viaggio_id,importo').in('servizio_id',servIds).eq('stato','REGISTRATO'):Promise.resolve({data:[],error:null})]);
+ if(p1.error||p2.error)return msg('detailMsg','Impossibile verificare gli incassi già registrati.','err');
+ const payments=[...new Map([...(p1.data||[]),...(p2.data||[])].map(p=>[p.id,p])).values()];
+ cashOutstandingBySheet=new Map(ss.map(f=>[f.id,{...f,residual:Math.max(0,Number(f.totale_servizio||0)-payments.filter(p=>p.foglio_viaggio_id===f.id||p.servizio_id===f.servizio_giornaliero_id).reduce((a,p)=>a+Number(p.importo||0),0))}]));
+ if(active?.id!==id)return;
+ const available=ss.filter(f=>cashOutstandingBySheet.get(f.id).residual>0.005);
+ $('cashSheet').innerHTML=available.length?available.map(f=>'<option value="'+esc(f.id)+'">'+esc(f.numero_foglio)+' — da incassare '+money(cashOutstandingBySheet.get(f.id).residual)+'</option>').join(''):'<option value="">Tutti i servizi risultano incassati</option>';
+ $('cashSubmit').disabled=!available.length;
+ $('cashDate').value=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
+ $('cashSheet').onchange=()=>{
+  const f=cashOutstandingBySheet.get($('cashSheet').value);
+  $('cashAmount').value=f?f.residual.toFixed(2):'';
+  $('cashOutstanding').textContent=f?'Residuo da incassare per questo foglio: '+money(f.residual):'Nessun residuo';
+ };
+ $('cashSheet').onchange();
+}
+$('cashSubmit').onclick=async()=>{
+ const f=cashOutstandingBySheet.get($('cashSheet').value);
+ const amount=Number($('cashAmount').value),method=$('cashMethod').value,date=$('cashDate').value;
+ if(!f)return msg('detailMsg','Seleziona un foglio con importo da incassare.','err');
+ if(!date||!Number.isFinite(amount)||amount<=0||amount>f.residual+0.005)return msg('detailMsg','Controlla data e importo: non può superare il residuo.','err');
+ if(!confirm('Registrare davvero '+money(amount)+' tramite '+method+' il '+date.split('-').reverse().join('/')+' per '+f.numero_foglio+'? Questa operazione crea un incasso in contabilità.'))return;
+ const btn=$('cashSubmit');btn.disabled=true;
+ try{
+  const r=await sb.rpc('cge_registra_incasso_da_nota',{p_nota_id:active.id,p_foglio_id:f.id,p_importo:amount,p_modalita:method,p_data:date});
+  if(r.error)throw r.error;
+  const nid=active.id;await loadAll();await openNote(nid);
+  msg('detailMsg',r.data?.saldo_completo?'Incasso registrato. Nota interamente pagata e spostata tra le Pagate.':'Incasso registrato. Il residuo della nota è stato aggiornato.','ok');
+ }catch(e){msg('detailMsg','Registrazione non riuscita: '+(e.message||String(e)),'err');btn.disabled=false;}
+};
 $('savePayText').onclick=async()=>{
  if(!active||active.stato!=='EMESSA')return;
  const r=await sb.rpc('cge_aggiorna_dettagli_saldo_nota',{
