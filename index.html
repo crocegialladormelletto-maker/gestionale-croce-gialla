@@ -1805,7 +1805,7 @@ document.addEventListener('DOMContentLoaded',()=>{
    <div class="field"><label>Priorità</label><select id="dpriority"><option>BASSA</option><option>NORMALE</option><option>ALTA</option><option>URGENTE</option></select></div>
    <div class="field"><label id="detailDepartureLabel">Partenza prevista</label><input id="dOp" type="time"></div>
    <div class="field" id="detailPatientLoadTime"><label>Carico paziente previsto</label><input id="dOc" type="time"></div>
-   <div class="field" id="detailDestinationTime"><label>Arrivo a destinazione previsto</label><input id="dOdest" type="time"></div><div class="field hidden" id="detailAssistanceStartTime"><label>Inizio assistenza</label><input id="dAsStart" type="time"></div><div class="field hidden" id="detailAssistanceEndTime"><label>Fine assistenza</label><input id="dAsEnd" type="time"></div>
+   <div class="field" id="detailDestinationTime"><label>Arrivo a destinazione previsto</label><input id="dOdest" type="time"></div><div class="field hidden" id="detailAssistanceStartTime"><label>Arrivo sul posto / inizio assistenza</label><input id="dAsStart" type="time"></div><div class="field hidden" id="detailAssistanceEndTime"><label>Fine assistenza</label><input id="dAsEnd" type="time"></div>
    <div class="field"><label id="detailReturnLabel">Rientro previsto</label><input id="dOr" type="time"></div>
    <div class="field"><label>Partenza effettiva</label><input id="dOpe" type="time"></div>
    <div class="field" id="detailPatientLoadActual"><label>Carico paziente effettivo</label><input id="dOce" type="time"></div>
@@ -1849,10 +1849,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   <div class="grid2">
    <div class="field"><label>Luogo partenza</label><input id="dlp"></div>
    <div class="field"><label>Indirizzo partenza</label><input id="dip"></div>
-   <div class="field"><label>Luogo carico paziente</label><input id="dLoadPlace"></div>
-   <div class="field"><label>Indirizzo carico paziente</label><input id="dLoadAddress"></div>
+   <div class="field" id="detailLoadPlaceField"><label>Luogo carico paziente</label><input id="dLoadPlace"></div>
+   <div class="field" id="detailLoadAddressField"><label>Indirizzo carico paziente</label><input id="dLoadAddress"></div>
    <div class="field"><label id="detailDestinationLabel">Destinazione</label><input id="ddest"></div>
-   <div class="field"><label>Indirizzo destinazione</label><input id="didest"></div>
+   <div class="field"><label id="detailDestinationAddressLabel">Indirizzo destinazione</label><input id="didest"></div>
   </div>
   <div class="field" style="margin-top:9px"><label id="detailStructureLabel">Ospedale / RSA / struttura</label><input id="dstruct"></div>
  </div>
@@ -1960,7 +1960,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 </dialog>
 
 <section id="new" class="surface hidden"><div class="hero"><h2>Nuovo servizio ordinario</h2><p id="newServiceTimesHelp">Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.</p></div><div class="pad"><div id="duplicatePreparedNotice" class="notice ok hidden"></div><form id="form">
-<div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data servizio *</label><input id="d" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label id="newDepartureLabel">Partenza prevista *</label><input id="op" type="time" required></div><div class="field hidden" id="newPatientLoadTime"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field" id="newDestinationTime"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field hidden" id="newAssistanceStartTime"><label>Inizio assistenza</label><input id="asStart" type="time"></div><div class="field hidden" id="newAssistanceEndTime"><label>Fine assistenza</label><input id="asEnd" type="time"></div><div class="field"><label id="newReturnLabel">Rientro previsto</label><input id="or" type="time"></div></div></div>
+<div class="section"><h3>Servizio e orari</h3><div class="grid3"><div class="field"><label>Data servizio *</label><input id="d" type="date" required></div><div class="field"><label>Mezzo *</label><select id="m" required></select></div><div class="field"><label>Tipo servizio *</label><select id="t" required><option value="">—</option><option>Emergenza / urgenza 118</option><option>Trasporto semplice</option><option>Dimissione</option><option>Trasferimento</option><option>Visita</option><option>Assistenza manifestazione</option><option>RSA</option><option>Servizio interno</option><option>Altro</option></select></div><div class="field"><label id="newDepartureLabel">Partenza prevista *</label><input id="op" type="time" required></div><div class="field hidden" id="newPatientLoadTime"><label>Carico paziente</label><input id="oc" type="time"></div><div class="field" id="newDestinationTime"><label>Arrivo a destinazione previsto</label><input id="odest" type="time"></div><div class="field hidden" id="newAssistanceStartTime"><label>Arrivo sul posto / inizio assistenza</label><input id="asStart" type="time"></div><div class="field hidden" id="newAssistanceEndTime"><label>Fine assistenza</label><input id="asEnd" type="time"></div><div class="field"><label id="newReturnLabel">Rientro previsto</label><input id="or" type="time"></div></div></div>
 <div class="section" id="newManagementData"><h3>Dati gestionali</h3><div class="grid3"><div class="field"><label>Data presa servizio *</label><input id="presaServizio" type="date" required></div></div></div>
 <div class="section" id="newPatientSection"><h3>Paziente / utente</h3>
 <div class="box" style="margin-bottom:12px">
@@ -1977,7 +1977,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div class="field"><label>Indirizzo paziente</label><input id="patientAddress" maxlength="400" autocomplete="street-address"></div>
 <div class="field"><label>E-mail paziente</label><input id="patientEmail" type="email" maxlength="254" autocomplete="email"></div></div></div>
 <div class="section hidden" id="newEventContactSection"><h3>Referente manifestazione</h3><div class="grid2"><div class="field"><label>Nome referente</label><input id="eventRefName" maxlength="120" placeholder="Referente sul posto"></div><div class="field"><label>Telefono referente</label><input id="eventRefPhone" type="tel" maxlength="40" placeholder="Recapito del referente"></div></div></div>
-<div class="section"><h3>Percorso</h3><div class="grid2"><div class="field"><label>Luogo partenza</label><input id="lp"></div><div class="field"><label>Indirizzo partenza</label><input id="ip"></div><div class="field"><label>Luogo carico paziente</label><input id="loadPlace" placeholder="Es. domicilio, RSA, ospedale"></div><div class="field"><label>Indirizzo carico paziente</label><input id="loadAddress" placeholder="Via, numero civico, Comune"></div><div class="field"><label id="newDestinationLabel">Destinazione</label><input id="dest"></div><div class="field"><label>Indirizzo destinazione</label><input id="idest"></div></div><div class="field" style="margin-top:9px"><label id="newStructureLabel">Ospedale / RSA / struttura</label><input id="strutt"></div></div>
+<div class="section"><h3>Percorso</h3><div class="grid2"><div class="field"><label>Luogo partenza</label><input id="lp"></div><div class="field"><label>Indirizzo partenza</label><input id="ip"></div><div class="field" id="newLoadPlaceField"><label>Luogo carico paziente</label><input id="loadPlace" placeholder="Es. domicilio, RSA, ospedale"></div><div class="field" id="newLoadAddressField"><label>Indirizzo carico paziente</label><input id="loadAddress" placeholder="Via, numero civico, Comune"></div><div class="field"><label id="newDestinationLabel">Destinazione</label><input id="dest"></div><div class="field"><label id="newDestinationAddressLabel">Indirizzo destinazione</label><input id="idest"></div></div><div class="field" style="margin-top:9px"><label id="newStructureLabel">Ospedale / RSA / struttura</label><input id="strutt"></div></div>
 <div class="section" id="newServiceSpecialEquipment" style="display:none!important"><h3>♿ Dotazioni necessarie per il servizio</h3>
 <p class="muted">Indica le dotazioni che il volontario deve conoscere prima di iscriversi.</p>
 <div class="inline-checks">
@@ -4485,8 +4485,11 @@ function updateManifestationTimes(){
  $('newReturnLabel').textContent=isEvent?'Rientro previsto in sede':'Rientro previsto';
  $('newPatientSection').classList.toggle('hidden',isEvent);
  $('newEventContactSection').classList.toggle('hidden',!isEvent);
- $('newDestinationLabel').textContent=isEvent?'Destinazione / luogo evento':'Destinazione';
- $('newStructureLabel').textContent=isEvent?'Nome manifestazione / struttura':'Ospedale / RSA / struttura';
+ $('newLoadPlaceField').classList.toggle('hidden',isEvent);
+ $('newLoadAddressField').classList.toggle('hidden',isEvent);
+ $('newDestinationLabel').textContent=isEvent?'Luogo manifestazione':'Destinazione';
+ $('newDestinationAddressLabel').textContent=isEvent?'Indirizzo manifestazione':'Indirizzo destinazione';
+ $('newStructureLabel').textContent=isEvent?'Nome manifestazione':'Ospedale / RSA / struttura';
  $('newServiceTimesHelp').textContent=isEvent?
  'Orari assistenza: partenza dalla sede, inizio assistenza, fine assistenza e rientro previsto in sede.':
  'Orari distinti: partenza, carico paziente, arrivo a destinazione e rientro previsto.';
@@ -4502,8 +4505,11 @@ function updateDetailManifestationTimes(){
  $('detailReturnLabel').textContent=isEvent?'Rientro previsto in sede':'Rientro previsto';
  $('detailPatientSection').classList.toggle('hidden',isEvent);
  $('detailEventContactSection').classList.toggle('hidden',!isEvent);
- $('detailDestinationLabel').textContent=isEvent?'Destinazione / luogo evento':'Destinazione';
- $('detailStructureLabel').textContent=isEvent?'Nome manifestazione / struttura':'Ospedale / RSA / struttura';
+ $('detailLoadPlaceField').classList.toggle('hidden',isEvent);
+ $('detailLoadAddressField').classList.toggle('hidden',isEvent);
+ $('detailDestinationLabel').textContent=isEvent?'Luogo manifestazione':'Destinazione';
+ $('detailDestinationAddressLabel').textContent=isEvent?'Indirizzo manifestazione':'Indirizzo destinazione';
+ $('detailStructureLabel').textContent=isEvent?'Nome manifestazione':'Ospedale / RSA / struttura';
 }
 $('t').addEventListener('change',updateManifestationTimes);
 $('t').addEventListener('input',updateManifestationTimes);
