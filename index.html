@@ -3990,6 +3990,16 @@ setInterval(()=>{
 
 async function checkGestionaleAuth(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return true;
+ // Il ruolo viene verificato sul database durante l'accesso. La navigazione
+ // non deve acquisire nuovamente il lock di Supabase ad ogni click.
+ // Si utilizza la sessione locale soltanto se appartiene all'utente autorizzato
+ // ed il token non e' scaduto; le operazioni restano protette da RLS.
+ try{
+  const raw=localStorage.getItem('sb-ihottewckpwpwqzpxusl-auth-token');
+  const cached=raw?JSON.parse(raw):null;
+  if(cached?.access_token&&cached?.user?.id===prof?.user_id&&
+     Number(cached?.expires_at||0)>Math.floor(Date.now()/1000)+30)return true;
+ }catch(_){}
  // Non lasciare la navigazione bloccata indefinitamente in attesa di Supabase.
  const authTimeout=(promise,ms)=>Promise.race([
   promise,
