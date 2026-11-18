@@ -110,7 +110,7 @@
        <div class="field"><label for="dPayDatesText">Data pagamento</label><textarea id="dPayDatesText" rows="2" placeholder="Es. 05/11/2026, 09/11/2026, 12/11/2026" style="width:100%;resize:vertical"></textarea></div>
        <div class="field"><label for="dPaidWithText">Pagato con</label><textarea id="dPaidWithText" rows="2" placeholder="Es. Contanti, contanti, POS" style="width:100%;resize:vertical"></textarea></div>
        <div class="field"><label>Stato email</label><input id="dEmailState" disabled></div>
-      </div><p class="muted" style="font-size:12px">Campi descrittivi: non registrano nuovi incassi e non modificano quelli esistenti.</p>
+      </div><p class="muted" style="font-size:12px">Indica le date e i metodi dei pagamenti. Quando il totale della nota è stato interamente incassato, usa “Conferma nota interamente pagata”. La conferma non crea nuovi incassi.</p>
       <button id="savePayText" class="btn secondary hidden" type="button">Salva dettagli pagamento</button>
       <details id="legacyPayment" class="hidden" style="margin-top:12px"><summary>Registrazione contabile di un pagamento unico</summary><div class="grid3" style="margin-top:10px">
        <div class="field"><label>Modalità contabile</label><select id="dPayment"><option value="">Da concordare</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>BONIFICO A VISTA</option><option>BONIFICO DIFFERITO</option><option>ALTRO</option></select></div>
@@ -120,7 +120,7 @@
      <div class="actions no-print">
       <button id="save" class="btn secondary">Salva bozza</button>
       <button id="issue" class="btn yellow">✓ Emetti Nota di Debito</button>
-      <button id="savePayment" class="btn green">€ Registra pagamento</button>
+      <button id="savePayment" class="btn green">✓ Conferma nota interamente pagata</button>
       <button id="print" class="btn blue">🖨 Stampa</button>
       <button id="downloadPdf" class="btn green">⬇ Scarica PDF</button>
       <button id="sendPdfMail" class="btn yellow">📧 Invia con PDF allegato</button>
@@ -291,7 +291,7 @@ function fill(){
  $('save').classList.toggle('hidden',!draft);$('issue').classList.toggle('hidden',!draft);
  const paymentAlreadyRecorded=!!n.data_pagamento;
  $('savePayment').classList.toggle('hidden',draft||paymentAlreadyRecorded);
- $('legacyPayment').classList.toggle('hidden',draft||paymentAlreadyRecorded);
+ $('legacyPayment').classList.add('hidden');
  $('legacyPayment').open=false;
  $('savePayText').classList.toggle('hidden',draft);
  $('print').disabled=false;$('downloadPdf').disabled=false;
@@ -377,13 +377,38 @@ $('issue').onclick=async()=>{
  if(r.error)return msg('detailMsg',r.error.message,'err');
  const id=active.id;await loadAll();await openNote(id);msg('detailMsg','Nota di Debito emessa correttamente.','ok');
 };
+function lastPaymentDateFromText(value){
+ const matches=[...String(value||'').matchAll(/(?:^|\\D)(\\d{2})\\/(\\d{2})\\/(\\d{4})(?=\\D|$)/g)];
+ const dates=matches.map(m=>{
+  const day=Number(m[1]),month=Number(m[2]),year=Number(m[3]);
+  const d=new Date(Date.UTC(year,month-1,day));
+  return d.getUTCFullYear()===year&&d.getUTCMonth()===month-1&&d.getUTCDate()===day
+   ?String(year).padStart(4,'0')+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0'):null;
+ }).filter(Boolean);
+ return dates.sort().at(-1)||null;
+}
 $('savePayment').onclick=async()=>{
- if(active.stato!=='EMESSA')return;
- if(active.data_pagamento)return msg('detailMsg','Pagamento già registrato. La nota è presente nella sezione Pagate; non occorre registrarlo nuovamente.','ok');
- if(!$('dPayDate').value)return msg('detailMsg','Per registrare contabilmente un pagamento unico, inserisci la relativa data nella sezione dedicata. Le caselle descrittive non generano incassi.','err');
- const r=await sb.rpc('cge_registra_pagamento_nota_debito',{p_nota_id:active.id,p_modalita:$('dPayment').value||null,p_data:$('dPayDate').value});
- if(r.error)return msg('detailMsg',r.error.message,'err');
- const id=active.id;await loadAll();await openNote(id);msg('detailMsg','Pagamento registrato.','ok');
+ if(!active||active.stato!=='EMESSA')return;
+ if(active.data_pagamento)return msg('detailMsg','Questa nota risulta già interamente pagata.','ok');
+ const dates=$('dPayDatesText').value.trim();
+ const methods=$('dPaidWithText').value.trim();
+ const lastDate=lastPaymentDateFromText(dates);
+ if(!dates||!methods||!lastDate)return msg('detailMsg','Compila “Data pagamento” (gg/mm/aaaa) e “Pagato con”. Inserisci almeno una data valida.','err');
+ const total=Number(active.totale||Math.max(0,Number(active.importo||0)-Number(active.sconto||0)));
+ if(!confirm('Confermi che la Nota di Debito '+active.numero+' è stata INTERAMENTE pagata per '+money(total)+'?\\n\\nUltimo pagamento: '+lastDate.split('-').reverse().join('/')+'\\nModalità: '+methods+'\\n\\nQuesta operazione cambia la classificazione della nota in Pagate, senza creare un nuovo incasso. Se manca anche solo una parte del saldo, premi Annulla.'))return;
+ const button=$('savePayment');
+ button.disabled=true;
+ try{
+  const update=await sb.from('note_di_debito').update({date_pagamento_testo:dates,pagato_con_testo:methods}).eq('id',active.id).eq('stato','EMESSA').is('data_pagamento',null).select('id').single();
+  if(update.error)throw update.error;
+  const normalizedMethod=methods.toUpperCase().includes('POS')&&methods.toUpperCase().includes('CONTANT')?'PAGAMENTO MISTO (CONTANTI + POS)':methods.slice(0,200);
+  const result=await sb.rpc('cge_registra_pagamento_nota_debito',{p_nota_id:active.id,p_modalita:normalizedMethod,p_data:lastDate});
+  if(result.error)throw result.error;
+  const id=active.id;await loadAll();await openNote(id);
+  msg('detailMsg','Saldo completo confermato. Nota spostata nella sezione Pagate, senza creare un nuovo incasso.','ok');
+ }catch(e){
+  msg('detailMsg','Non è stato possibile confermare il saldo: '+(e.message||String(e)),'err');
+ }finally{button.disabled=false;}
 };
 $('saveRecipientEmail').onclick=async()=>{
  if(!active||active.stato!=='EMESSA')return;
