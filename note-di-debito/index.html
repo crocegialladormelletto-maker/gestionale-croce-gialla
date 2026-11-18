@@ -395,6 +395,22 @@ $('savePayment').onclick=async()=>{
  const lastDate=lastPaymentDateFromText(dates);
  if(!dates||!methods||!lastDate)return msg('detailMsg','Compila “Data pagamento” (gg/mm/aaaa) e “Pagato con”. Inserisci almeno una data valida.','err');
  const total=Number(active.totale||Math.max(0,Number(active.importo||0)-Number(active.sconto||0)));
+ // Verifica i pagamenti realmente registrati per ogni foglio della nota.
+ const linkedIds=[...new Set([active.foglio_viaggio_id,...noteLinks.filter(l=>l.nota_id===active.id).map(l=>l.foglio_id)].filter(Boolean))];
+ if(!linkedIds.length)return msg('detailMsg','Non riesco a verificare i fogli collegati: conferma bloccata.','err');
+ const paymentSheets=await sb.from('fogli_viaggio').select('id,numero_foglio,servizio_giornaliero_id,totale_servizio').in('id',linkedIds);
+ if(paymentSheets.error||!paymentSheets.data||paymentSheets.data.length!==linkedIds.length)
+  return msg('detailMsg','Verifica fogli viaggio non riuscita: non posso confermare il saldo.','err');
+ const serviceIds=paymentSheets.data.map(f=>f.servizio_giornaliero_id).filter(Boolean);
+ const [bySheet,byService]=await Promise.all([
+  sb.from('pagamenti_servizi').select('id,foglio_viaggio_id,servizio_id,importo,stato').in('foglio_viaggio_id',linkedIds).eq('stato','REGISTRATO'),
+  serviceIds.length?sb.from('pagamenti_servizi').select('id,foglio_viaggio_id,servizio_id,importo,stato').in('servizio_id',serviceIds).eq('stato','REGISTRATO'):Promise.resolve({data:[],error:null})
+ ]);
+ if(bySheet.error||byService.error)return msg('detailMsg','Impossibile verificare gli incassi: conferma bloccata.','err');
+ const uniquePayments=new Map([...(bySheet.data||[]),...(byService.data||[])].map(p=>[p.id,p]));
+ const paidAmount=[...uniquePayments.values()].reduce((sum,p)=>sum+Number(p.importo||0),0);
+ if(Math.abs(paidAmount-total)>0.005)
+  return msg('detailMsg','Saldo non completo o non riconciliato: risultano '+money(paidAmount)+' di incassi registrati su '+money(total)+'. Verifica i pagamenti in Contabilità servizi prima di confermare.','err');
  if(!confirm('Confermi che la Nota di Debito '+active.numero+' è stata INTERAMENTE pagata per '+money(total)+'?\\n\\nUltimo pagamento: '+lastDate.split('-').reverse().join('/')+'\\nModalità: '+methods+'\\n\\nQuesta operazione cambia la classificazione della nota in Pagate, senza creare un nuovo incasso. Se manca anche solo una parte del saldo, premi Annulla.'))return;
  const button=$('savePayment');
  button.disabled=true;
