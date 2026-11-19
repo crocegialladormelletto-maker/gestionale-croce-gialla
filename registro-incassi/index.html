@@ -141,6 +141,19 @@ function renderMonthButtons(){
  }).join('')||'<span class="muted">Nessun mese disponibile</span>';
  $('monthButtons').querySelectorAll('[data-month]').forEach(b=>b.onclick=()=>{selectedOverviewMonth=b.dataset.month;renderOverview()});
 }
+function servicePerson(x){
+ const direct=[x.paziente_cognome,x.paziente_nome].filter(v=>String(v||'').trim()).join(' ').trim();
+ if(direct)return direct;
+ const linked=sheets.find(f=>f.servizio_giornaliero_id===x.servizio_id)||
+  sheets.find(f=>x.numero_foglio&&String(f.numero_foglio)===String(x.numero_foglio));
+ if(linked){
+  const name=[linked.paziente_cognome,linked.paziente_nome].filter(v=>String(v||'').trim()).join(' ').trim();
+  if(name)return name;
+  if(linked.intestatario_nota_debito)return String(linked.intestatario_nota_debito)+' (intestatario)';
+ }
+ const n=notes.find(n=>noteSheetIds(n).some(id=>sheets.some(f=>f.id===id&&(f.servizio_giornaliero_id===x.servizio_id||(x.numero_foglio&&String(f.numero_foglio)===String(x.numero_foglio))))));
+ return n?.intestatario?String(n.intestatario)+' (intestatario)':'Nominativo non presente';
+}
 function renderOverview(){
  renderMonthButtons();
  const q=$('overviewSearch').value.trim().toLowerCase(),filter=$('overviewFilter').value;
@@ -156,7 +169,7 @@ function renderOverview(){
  }).filter(r=>{
   if(filter!=='all'&&r.status!==filter)return false;
   if(normalizedDate(r.x.data_servizio).slice(0,7)!==selectedOverviewMonth)return false;
-  const x=r.x,needle=[x.numero_foglio,x.data_servizio,x.paziente_nome,x.paziente_cognome,r.note?.numero,r.note?.intestatario].join(' ').toLowerCase();
+  const x=r.x,needle=[x.numero_foglio,x.data_servizio,x.paziente_nome,x.paziente_cognome,servicePerson(x),r.note?.numero,r.note?.intestatario].join(' ').toLowerCase();
   return !q||needle.includes(q);
  }).sort((a,b)=>{
   // Date passate: dalla più recente alla più vecchia. Date future: per ultime, dalla più vicina.
@@ -172,7 +185,7 @@ function renderOverview(){
   const future=normalizedDate(x.data_servizio)>today();
   const state=r.status==='unknown'?(future?'📅 Futuro · importo da verificare':'⚪ Importo da verificare'):future&&r.status==='paid'?'🔵 Anticipo registrato':future&&r.status==='partial'?'🔵 Anticipo parziale':future?'📅 Servizio futuro':r.status==='paid'?'✅ Pagato':r.status==='partial'?'🟡 Parziale':'🔴 Da incassare';
   const canPay=r.remaining>.005&&!future;
-  return '<tr><td>'+esc(dateIT(x.data_servizio))+'<div><strong>'+esc(x.numero_foglio||'—')+'</strong></div></td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+esc(note?.numero||'—')+'</td><td>'+esc(money(r.due))+'</td><td>'+esc(money(r.paid))+'</td><td>'+esc(money(r.remaining))+'</td><td><strong>'+state+'</strong></td><td>'+esc(p?dateIT(p.data_pagamento)+' · '+p.modalita:'—')+'</td><td>'+(canPay?'<button type="button" class="secondary" data-overview-pay="'+esc(note&&note.stato==='EMESSA'?'note':'service')+'" data-overview-id="'+esc(note&&note.stato==='EMESSA'?note.id:x.servizio_id)+'">Registra pagamento</button>':'<span class="muted">Saldo completo</span>')+'</td></tr>';
+  return '<tr><td>'+esc(dateIT(x.data_servizio))+'<div><strong>'+esc(x.numero_foglio||'—')+'</strong></div></td><td>'+esc(servicePerson(x))+'</td><td>'+esc(note?.numero||'—')+'</td><td>'+esc(money(r.due))+'</td><td>'+esc(money(r.paid))+'</td><td>'+esc(money(r.remaining))+'</td><td><strong>'+state+'</strong></td><td>'+esc(p?dateIT(p.data_pagamento)+' · '+p.modalita:'—')+'</td><td>'+(canPay?'<button type="button" class="secondary" data-overview-pay="'+esc(note&&note.stato==='EMESSA'?'note':'service')+'" data-overview-id="'+esc(note&&note.stato==='EMESSA'?note.id:x.servizio_id)+'">Registra pagamento</button>':'<span class="muted">Saldo completo</span>')+'</td></tr>';
  }).join('')||'<tr><td colspan="9">Nessun servizio corrispondente</td></tr>';
  $('overviewRows').querySelectorAll('[data-overview-pay]').forEach(b=>b.onclick=()=>{
   $('origin').value=b.dataset.overviewPay;$('search').value='';targets();$('target').value=b.dataset.overviewId;selected();
@@ -209,7 +222,7 @@ async function reload(){
    sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(2000),
    allPages('note_di_debito','id,numero,intestatario,totale,stato,data_pagamento,foglio_viaggio_id','data_documento'),
    allPages('note_debito_fogli','nota_id,foglio_id'),
-   allPages('fogli_viaggio','id,numero_foglio,servizio_giornaliero_id,totale_servizio'),
+   allPages('fogli_viaggio','id,numero_foglio,servizio_giornaliero_id,totale_servizio,paziente_nome,paziente_cognome,intestatario_nota_debito'),
    allPages('pagamenti_servizi','id,servizio_id,foglio_viaggio_id,data_pagamento,importo,modalita,stato,riferimento,note','data_pagamento'),
    sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,paziente_nome,paziente_cognome,servizio_giornaliero_id,pagamento_segnalato,metodo_pagamento_segnalato').not('pagamento_segnalato','is',null).order('data_servizio',{ascending:false}).limit(500)
   ]);
