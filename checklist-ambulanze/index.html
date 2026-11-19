@@ -360,8 +360,34 @@ function exportData(){
  w.document.close();
  setTimeout(()=>{try{w.focus();w.print()}catch(err){alert('Impossibile avviare la stampa PDF.')}},300);
 }
-function setNow(){const d=new Date();const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');data.value=y+'-'+m+'-'+day;ora.value=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function italyNow(){
+ const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{
+  timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit',
+  hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+ }).formatToParts(new Date()).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+ return {date:parts.year+'-'+parts.month+'-'+parts.day,time:parts.hour+':'+parts.minute};
+}
+function setNow(){
+ const now=italyNow();
+ document.getElementById('data').value=now.date;
+ document.getElementById('ora').value=now.time;
+}
+function refreshTimeForToday(){
+ const now=italyNow();
+ if(document.getElementById('data').value===now.date){
+  document.getElementById('ora').value=now.time;
+  writeDraft();
+ }
+}
 renderChecklist();setNow();
+document.getElementById('data').addEventListener('change',refreshTimeForToday);
+document.getElementById('tabNuova').addEventListener('click',()=>{
+ const now=italyNow();
+ // Refresh the automatic time only on an otherwise empty new checklist.
+ if(!draftHasWork(draftSnapshot())&&document.getElementById('data').value===now.date){
+  document.getElementById('ora').value=now.time;
+ }
+});
 document.getElementById('newView').addEventListener('input',writeDraft);
 document.getElementById('newView').addEventListener('change',writeDraft);
 document.getElementById('newView').addEventListener('click',event=>{if(event.target.closest('.choice'))writeDraft()});
