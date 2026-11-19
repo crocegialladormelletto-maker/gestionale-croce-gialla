@@ -6,11 +6,13 @@
 <div class="panel"><h2>Situazione attuale</h2><p class="muted">Un pagamento viene contabilizzato soltanto dopo conferma dell'amministrazione. I dati del tablet sono segnalazioni.</p><div class="stats"><div class="stat"><small>Servizi con residuo</small><b id="due">—</b></div><div class="stat"><small>Incassi registrati</small><b id="count">—</b></div><div class="stat"><small>Tablet: pagato segnalato</small><b id="signalsCount">—</b></div></div></div>
 <div class="panel"><h2>Registra incasso</h2><p class="muted">Seleziona l'origine. I pagamenti delle Note di Debito usano la procedura di riconciliazione già esistente. Per i bonifici registra soltanto accrediti effettivi.</p><div class="grid"><div class="field"><label>Tipo documento</label><select id="origin"><option value="service">Servizio / fattura Aruba</option><option value="note">Nota di Debito</option></select></div><div class="field" style="grid-column:span 3"><label>Ricerca</label><input id="search" placeholder="Numero documento, nominativo, data"></div></div>
 <div class="field" style="margin-top:10px"><label>Servizio o documento da incassare</label><select id="target"></select></div><div class="field hidden" id="sheetField" style="margin-top:10px"><label>Foglio viaggio collegato (per note multiple)</label><select id="sheet"></select></div><div id="info" class="notice">Seleziona un servizio o una nota.</div>
-<div class="grid"><div class="field"><label>Importo ricevuto €</label><input id="amount" type="number" min=".01" step=".01"></div><div class="field"><label>Metodo</label><select id="method"><option value="POS">POS</option><option value="CONTANTI">Contanti</option><option value="BONIFICO">Bonifico già accreditato</option></select></div><div class="field"><label>Data effettiva incasso</label><input id="date" type="date"></div><div class="field"><label>Riferimento (facoltativo)</label><input id="ref" maxlength="160"></div></div><div class="actions"><button id="save">💰 Registra incasso</button><button id="refresh" class="secondary">↻ Aggiorna</button></div><div id="status"></div></div>
+<div class="grid"><div class="field"><label>Importo ricevuto €</label><input id="amount" type="number" min=".01" step=".01"></div><div class="field"><label>Metodo</label><select id="method"><option value="POS">POS</option><option value="CONTANTI">Contanti</option><option value="BONIFICO">Bonifico già accreditato</option></select></div><div class="field"><label>Data effettiva incasso (GG/MM/AAAA)</label><input id="date" type="text" inputmode="numeric" maxlength="10" placeholder="GG/MM/AAAA"></div><div class="field"><label>Riferimento (facoltativo)</label><input id="ref" maxlength="160"></div></div><div class="actions"><button id="save">💰 Registra incasso</button><button id="refresh" class="secondary">↻ Aggiorna</button></div><div id="status"></div></div>
 <div class="panel"><h2>Segnalazioni tablet da verificare</h2><div class="table"><table><thead><tr><th>Foglio</th><th>Data</th><th>Paziente</th><th>Segnalato</th><th>Metodo</th><th>Azione</th></tr></thead><tbody id="signalRows"></tbody></table></div></div>
 <div class="panel"><h2>Storico incassi</h2><p class="muted">Operazioni esistenti, non duplicate. Le registrazioni annullate restano distinguibili.</p><div class="table"><table><thead><tr><th>Data</th><th>Servizio / foglio</th><th>Importo</th><th>Metodo</th><th>Riferimento</th><th>Stato</th></tr></thead><tbody id="history"></tbody></table></div></div>
 </main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
 const sb=supabase.createClient("https://ihottewckpwpwqzpxusl.supabase.co","sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+const dateIT=value=>{const v=String(value||'').slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(v)?v.slice(8,10)+'/'+v.slice(5,7)+'/'+v.slice(0,4):v};
+const parseIT=value=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(value||'').trim());if(!m)return null;const d=new Date(Date.UTC(Number(m[3]),Number(m[2])-1,Number(m[1])));if(d.getUTCFullYear()!==Number(m[3])||d.getUTCMonth()!==Number(m[2])-1||d.getUTCDate()!==Number(m[1]))return null;return m[3]+'-'+m[2]+'-'+m[1]};
 const $=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),money=n=>Number(n||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'}),today=()=>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
 const notice=(value,kind='')=>{$('status').innerHTML=value?'<div class="notice '+kind+'">'+esc(value)+'</div>':''};
 let authorized=false,busy=false,services=[],notes=[],links=[],sheets=[],payments=[],signals=[];
@@ -29,7 +31,7 @@ function noteLinkedServiceIds(){const ids=new Set();for(const n of notes.filter(
 function noteSheets(n){const ids=new Set(noteSheetIds(n));return sheets.filter(f=>ids.has(f.id))}
 function used(f){return payments.filter(p=>p.stato==='REGISTRATO'&&(p.foglio_viaggio_id===f.id||(f.servizio_giornaliero_id&&p.servizio_id===f.servizio_giornaliero_id)))}
 function resid(f){return Math.max(0,Number(f.totale_servizio||0)-used(f).reduce((a,p)=>a+Number(p.importo||0),0))}
-function labelService(x){return [x.data_servizio,x.mezzo,x.tipo_servizio,[x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' '),money(x.residuo)].filter(Boolean).join(' · ')}
+function labelService(x){return [dateIT(x.data_servizio),x.mezzo,x.tipo_servizio,[x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' '),money(x.residuo)].filter(Boolean).join(' · ')}
 function labelNote(n){return [n.numero,n.intestatario,'Residuo '+money(noteSheets(n).reduce((a,f)=>a+resid(f),0))].filter(Boolean).join(' · ')}
 function targets(){
  const type=$('origin').value,q=$('search').value.trim().toLowerCase(),previous=$('target').value;
@@ -51,9 +53,9 @@ function render(){
  $('due').textContent=services.filter(x=>Number(x.residuo||0)>.005).length;$('count').textContent=payments.filter(x=>x.stato==='REGISTRATO').length;
  const covered=new Set(payments.filter(x=>x.stato==='REGISTRATO').flatMap(p=>[p.servizio_id,p.foglio_viaggio_id].filter(Boolean)));
  $('signalsCount').textContent=signals.filter(x=>x.pagamento_segnalato===true&&!covered.has(x.id)&&!covered.has(x.servizio_giornaliero_id)).length;
- $('signalRows').innerHTML=signals.slice(0,100).map(x=>'<tr><td>'+esc(x.numero_foglio)+'</td><td>'+esc(x.data_servizio)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' '))+'</td><td>'+esc(x.pagamento_segnalato===true?'Sì (da verificare)':'No')+'</td><td>'+esc(x.metodo_pagamento_segnalato||'—')+'</td><td>'+(x.servizio_giornaliero_id?'<button class="secondary" data-open="'+esc(x.servizio_giornaliero_id)+'">Seleziona servizio</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="6">Nessuna segnalazione</td></tr>';
+ $('signalRows').innerHTML=signals.slice(0,100).map(x=>'<tr><td>'+esc(x.numero_foglio)+'</td><td>'+esc(dateIT(x.data_servizio))+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' '))+'</td><td>'+esc(x.pagamento_segnalato===true?'Sì (da verificare)':'No')+'</td><td>'+esc(x.metodo_pagamento_segnalato||'—')+'</td><td>'+(x.servizio_giornaliero_id?'<button class="secondary" data-open="'+esc(x.servizio_giornaliero_id)+'">Seleziona servizio</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="6">Nessuna segnalazione</td></tr>';
  $('signalRows').querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{$('origin').value='service';$('search').value='';targets();$('target').value=b.dataset.open;selected();$('target').scrollIntoView({behavior:'smooth'})});
- $('history').innerHTML=payments.slice().sort((a,b)=>String(b.data_pagamento||'').localeCompare(String(a.data_pagamento||''))).slice(0,500).map(p=>'<tr><td>'+esc(p.data_pagamento)+'</td><td>'+esc(p.servizio_id||p.foglio_viaggio_id||'—')+'</td><td>'+esc(money(p.importo))+'</td><td>'+esc(p.modalita)+'</td><td>'+esc(p.riferimento||p.note||'—')+'</td><td>'+esc(p.stato)+'</td></tr>').join('')||'<tr><td colspan="6">Nessun movimento</td></tr>';
+ $('history').innerHTML=payments.slice().sort((a,b)=>String(b.data_pagamento||'').localeCompare(String(a.data_pagamento||''))).slice(0,500).map(p=>'<tr><td>'+esc(dateIT(p.data_pagamento))+'</td><td>'+esc(p.servizio_id||p.foglio_viaggio_id||'—')+'</td><td>'+esc(money(p.importo))+'</td><td>'+esc(p.modalita)+'</td><td>'+esc(p.riferimento||p.note||'—')+'</td><td>'+esc(p.stato)+'</td></tr>').join('')||'<tr><td colspan="6">Nessun movimento</td></tr>';
 }
 async function allPages(table,fields,orderColumn){
  const result=[];
@@ -85,11 +87,11 @@ async function reload(){
   render();notice('');$('save').disabled=false;
  }catch(e){notice('Dati incompleti: '+(e.message||String(e))+'. Nessun incasso consentito.','error')}
 }
-$('origin').onchange=()=>{$('search').value='';targets()};$('search').oninput=targets;$('target').onchange=selected;$('refresh').onclick=reload;$('date').value=today();
+$('origin').onchange=()=>{$('search').value='';targets()};$('search').oninput=targets;$('target').onchange=selected;$('refresh').onclick=reload;$('date').value=dateIT(today());
 $('save').onclick=async()=>{
  if(busy||!authorized)return;
- const type=$('origin').value,id=$('target').value,amount=Number($('amount').value),date=$('date').value,method=$('method').value;
- if(!id||!date||!Number.isFinite(amount)||amount<=0||Math.abs(amount*100-Math.round(amount*100))>.001)return notice('Documento, importo positivo con massimo due decimali e data sono obbligatori.','error');
+ const type=$('origin').value,id=$('target').value,amount=Number($('amount').value),date=parseIT($('date').value),method=$('method').value;
+ if(!id||!date||!Number.isFinite(amount)||amount<=0||Math.abs(amount*100-Math.round(amount*100))>.001)return notice('Documento, importo positivo e data nel formato GG/MM/AAAA sono obbligatori.','error');
  if(date>today())return notice('La data incasso non può essere futura.','error');
  if(method==='BONIFICO'&&!confirm('Il bonifico risulta realmente accreditato sul conto?'))return;
  const target=type==='service'?services.find(x=>x.servizio_id===id):notes.find(x=>x.id===id),sheet=type==='note'?sheets.find(x=>x.id===$('sheet').value):null;
@@ -97,7 +99,7 @@ $('save').onclick=async()=>{
  if(type==='service'&&noteLinkedServiceIds().has(id))return notice('Questo servizio è collegato a una Nota di Debito emessa: registra l’incasso selezionando la nota.','error');
  const due=type==='service'?Number(target.residuo||0):resid(sheet);
  if(amount>due+.005)return notice('Importo maggiore del residuo: aggiorna.','error');
- if(!confirm('Confermi INCASSO REALE di '+money(amount)+' con '+method+' il '+date+'? Verifica che non sia già registrato.'))return;
+ if(!confirm('Confermi INCASSO REALE di '+money(amount)+' con '+method+' il '+dateIT(date)+'? Verifica che non sia già registrato.'))return;
  busy=true;$('save').disabled=true;let saved=false;
  try{
   if(type==='note'){
