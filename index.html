@@ -2894,11 +2894,9 @@ Causale: numero preventivo</textarea>
     <div class="field"><label>Destinazione tariffaria</label><select id="tabletAdTariffDest"><option value="">—</option></select></div>
     <div class="field"><label>Fascia</label><select id="tabletAdNight"><option value="false">Diurno</option><option value="true">Notturno</option></select></div>
     <div class="field"><label>Importo servizio € (solo senza tariffario)</label><input id="tabletAdAmount" type="number" step="0.01" min="0" max="10000" placeholder="Vuoto = da concordare"></div>
-    <div class="field" id="tabletAdPaymentBox"><label>Modalità pagamento</label><select id="tabletAdPayment"><option value="">Da indicare</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico istantaneo / già ricevuto</option><option value="BONIFICO DIFFERITO">Bonifico differito</option><option value="ALTRO">Altro</option></select></div>
-    <div class="field" id="tabletAdPaymentDateBox"><label>Data pagamento</label><input id="tabletAdPaymentDate" type="date"></div>
-    <div class="field"><label>Note operative</label><textarea id="tabletAdNotes" maxlength="2000"></textarea></div>
+    <div class="field" id="tabletAdPaymentBox"><label>Il paziente ha pagato?</label><select id="tabletAdPaymentSignal" onchange="tabletToggleImmediatePaymentSignal()"><option value="">Non indicato</option><option value="yes">Sì</option><option value="no">No</option></select></div><div class="field hidden" id="tabletAdPaymentMethodBox"><label>Con quale metodo?</label><select id="tabletAdPaymentMethod"><option value="">Seleziona</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico già effettuato</option></select></div><p class="muted">Solo segnalazione; nessun incasso registrato.</p><div class="field"><label>Note operative</label><textarea id="tabletAdNotes" maxlength="2000"></textarea></div>
    </div>
-   <div id="tabletAdQuote" class="notice">Seleziona un tariffario oppure lascia il prezzo da concordare con il Centralino.</div><div class="notice" id="tabletAdReceiptNotice">Se scegli POS o CONTANTI, dopo aver creato il servizio il tablet aprirà il Foglio Viaggio e ti chiederà di caricare la ricevuta prima della chiusura.</div>
+   <div id="tabletAdQuote" class="notice">Seleziona un tariffario oppure lascia il prezzo da concordare con il Centralino.</div>
    <div class="actions"><button id="tabletAdDraftSave" type="button" class="btn secondary">💾 Salva dati</button><button id="tabletAdSubmit" type="submit" class="btn yellow">Crea servizio e Foglio Viaggio</button></div><div class="muted" style="margin-top:6px">Salva dati conserva la compilazione sul tablet senza creare ancora il servizio. Potrai riaprirla e completarla successivamente.</div>
    <div id="tabletAdMsg"></div>
    </form>
@@ -3090,22 +3088,7 @@ Causale: numero preventivo</textarea>
     <div class="tablet-fields">
      <div class="field"><label>Annotazioni</label><textarea data-ts-field="annotazioni"></textarea></div>
     </div>
-    <div id="tabletServicePaymentSection">
-    <h3 class="tablet-section-title" style="margin-top:20px">Importo servizio</h3>
-    <div class="tablet-fields">
-     <div class="field"><label>Importo servizio € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito"></div>
-     <div class="field"><label>Modalità indicata sul Foglio Viaggio (non contabilizzata)</label>
-      <select data-ts-field="modalita_pagamento">
-       <option value="">Non indicata</option>
-       <option value="CONTANTI">Contanti</option>
-       <option value="POS">POS</option>
-       <option value="BONIFICO">Bonifico istantaneo</option>
-       <option value="BONIFICO DIFFERITO">Bonifico differito</option>
-       <option value="NON DOVUTO">Non dovuto</option>
-      </select>
-     </div>
-    </div>
-    <div id="tabletReceiptSection" class="section" style="margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
+    <div id="tabletServicePaymentSection"><h3 class="tablet-section-title" style="margin-top:20px">Importo e segnalazione pagamento</h3><div class="tablet-fields"><div class="field"><label>Importo servizio € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito"></div><div class="field"><label>Il paziente ha pagato?</label><select data-ts-field="pagamento_segnalato" onchange="tabletTogglePaymentSignal()"><option value="">Non indicato</option><option value="yes">Sì</option><option value="no">No</option></select></div><div class="field hidden" id="tabletSignalMethodBox"><label>Con quale metodo?</label><select data-ts-field="metodo_pagamento_segnalato"><option value="">Seleziona</option><option value="CONTANTI">Contanti</option><option value="POS">POS</option><option value="BONIFICO">Bonifico già effettuato</option></select></div><p class="muted">Segnalazione per Stefano: nessun incasso registrato dal tablet.</p></div><div id="tabletReceiptSection" class="section" style="margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
      <h3 style="margin-top:0">🧾 Ricevuta o attestazione di pagamento</h3>
      <p class="muted">Carica una foto o un PDF della ricevuta, se disponibile. La data di caricamento sarà visibile nell'archivio; la data effettiva del pagamento va verificata sul documento. Il caricamento non registra un incasso in contabilità e non è obbligatorio per chiudere il foglio.</p>
      <div class="actions" style="align-items:end">
@@ -3528,6 +3511,7 @@ async function uploadPaymentReceipt(foglio,inputId,context){
  await loadPaymentReceipts(foglio,context);
  msg(msgId,'Ricevuta caricata e collegata al Foglio Viaggio.','ok');
 }
+function tabletTogglePaymentSignal(){const val=document.querySelector('#tabletSheetForm [data-ts-field="pagamento_segnalato"]')?.value||'';if($('tabletSignalMethodBox'))$('tabletSignalMethodBox').classList.toggle('hidden',val!=='yes');if(val!=='yes'){const m=document.querySelector('#tabletSheetForm [data-ts-field="metodo_pagamento_segnalato"]');if(m)m.value='';}}
 function tabletUpdatePaymentDateVisibility(){
  const mode=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]')?.value||'';
  const dateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
@@ -12854,13 +12838,8 @@ function tabletUpdateImmediateTariff(){
  if(rows.some(x=>x.tariffa_destinazione_id===selected))$('tabletAdTariffDest').value=selected;
  tabletUpdateImmediateQuote();
 }
-function tabletUpdateImmediatePaymentDateVisibility(){
- const mode=$('tabletAdPayment')?.value||'';
- const internal=$('tabletAdType')?.value==='Servizio interno';
- const deferred=mode==='BONIFICO DIFFERITO';
- if($('tabletAdPaymentDateBox'))$('tabletAdPaymentDateBox').classList.toggle('hidden',internal||deferred);
- if((internal||deferred)&&$('tabletAdPaymentDate'))$('tabletAdPaymentDate').value='';
-}
+function tabletToggleImmediatePaymentSignal(){const val=$('tabletAdPaymentSignal')?.value||'';if($('tabletAdPaymentMethodBox'))$('tabletAdPaymentMethodBox').classList.toggle('hidden',val!=='yes');if(val!=='yes'&&$('tabletAdPaymentMethod'))$('tabletAdPaymentMethod').value='';}
+function tabletUpdateImmediatePaymentDateVisibility(){tabletToggleImmediatePaymentSignal();}
 function tabletApplyImmediateTypeRules(){
  const internal=$('tabletAdType').value==='Servizio interno';
  if($('tabletAdPatientSection'))$('tabletAdPatientSection').classList.toggle('hidden',internal);
@@ -12873,12 +12852,7 @@ function tabletApplyImmediateTypeRules(){
  $('tabletAdNight').disabled=internal;
  $('tabletAdAmount').disabled=internal;
  if($('tabletAdPaymentBox'))$('tabletAdPaymentBox').classList.toggle('hidden',internal);
- if($('tabletAdPaymentDateBox'))$('tabletAdPaymentDateBox').classList.toggle('hidden',internal);
- if($('tabletAdPayment'))$('tabletAdPayment').disabled=internal;
- if($('tabletAdPaymentDate'))$('tabletAdPaymentDate').disabled=internal;
- if(internal){
-  if($('tabletAdPayment'))$('tabletAdPayment').value='';
-  if($('tabletAdPaymentDate'))$('tabletAdPaymentDate').value='';
+ if(internal){if($('tabletAdPaymentSignal'))$('tabletAdPaymentSignal').value='';if($('tabletAdPaymentMethod'))$('tabletAdPaymentMethod').value='';
   $('tabletAdTariffGroup').value='';
   tabletUpdateImmediateTariff();
   $('tabletAdAmount').value='0';
@@ -12997,7 +12971,7 @@ function tabletUpdateImmediateDraftButton(){
 }
 function tabletSaveImmediateDraft(){
  if(!tabletImmediateRestoredDraft&&$('tabletResumeDraft')?.dataset.hasDraft==='yes'&&!confirm('Hai una bozza precedente salvata sul tablet. Vuoi sostituirla con questi nuovi dati? Premi Annulla per conservarla.'))return;
- const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdPayment','tabletAdPaymentDate','tabletAdNotes'];
+ const ids=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdDriver','tabletAdLeader','tabletAdRescuer','tabletAdSecond','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdPaymentSignal','tabletAdPaymentMethod','tabletAdNotes'];
  const data={};
  ids.forEach(id=>{if($(id))data[id]=$(id).value;});
  data.saved_at=new Date().toISOString();
@@ -13007,7 +12981,7 @@ function tabletSaveImmediateDraft(){
 function tabletRestoreImmediateDraft(){
  let data=null;try{data=JSON.parse(localStorage.getItem(tabletImmediateDraftKey())||'null')}catch(_){}
  if(!data)return false;
- const simple=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdNight','tabletAdAmount','tabletAdPayment','tabletAdPaymentDate','tabletAdNotes'];
+ const simple=['tabletAdType','tabletAdOrigin','tabletAdDestination','tabletAdKmStart','tabletAdKmClose','tabletAdFirst','tabletAdLast','tabletAdCf','tabletAdDob','tabletAdPhone','tabletAdAddress','tabletAdEmail','tabletAdNight','tabletAdAmount','tabletAdPaymentSignal','tabletAdPaymentMethod','tabletAdNotes'];
  simple.forEach(id=>{if($(id)&&data[id]!=null)$(id).value=data[id];});
  if(data.tabletAdTariffGroup!=null&&$('tabletAdTariffGroup')){$('tabletAdTariffGroup').value=data.tabletAdTariffGroup;tabletUpdateImmediateTariff();}
  if(data.tabletAdTariffDest!=null&&$('tabletAdTariffDest'))$('tabletAdTariffDest').value=data.tabletAdTariffDest;
@@ -13021,7 +12995,7 @@ function tabletRestoreImmediateDraft(){
 function tabletClearImmediateDraft(){try{localStorage.removeItem(tabletImmediateDraftKey())}catch(_){}tabletUpdateImmediateDraftButton();}
 function tabletPilot08Prepare(){
  if(tabletMezzo!=='08')return;
- const ids=['tabletAdKmStart','tabletAdKmClose','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdPayment','tabletAdPaymentDate'];
+ const ids=['tabletAdKmStart','tabletAdKmClose','tabletAdTariffGroup','tabletAdTariffDest','tabletAdNight','tabletAdAmount','tabletAdPaymentSignal','tabletAdPaymentMethod'];
  ids.forEach(id=>{const el=$(id);if(el){const field=el.closest('.field');if(field)field.classList.add('hidden');}});
  const form=$('tabletImmediateForm');
  if(form&&!$('tabletPilot08Notice'))form.insertAdjacentHTML('afterbegin','<div id="tabletPilot08Notice" class="notice"><b>PROVA MEZZO 08:</b> prima vengono creati e verificati il servizio e il foglio viaggio. KM, prezzo e pagamento si inseriscono <b>solo nel foglio</b>, dopo l’apertura. Se la creazione segnala un errore, controlla l’elenco prima di riprovare.</div>');
@@ -13092,18 +13066,21 @@ async function tabletCreateImmediate(){
   if(Number.isFinite(kmStart))kmUpdate.km_partenza=kmStart;
   if(Number.isFinite(kmClose))kmUpdate.km_arrivo=kmClose;
   const immediateInternal=$('tabletAdType').value==='Servizio interno';
-  const payMode=immediateInternal?null:($('tabletAdPayment')?.value||null);
-  createdPayMode=payMode;
-  const payDate=(immediateInternal||payMode==='BONIFICO DIFFERITO')?null:($('tabletAdPaymentDate')?.value||null);
-  kmUpdate.modalita_pagamento=payMode;
-  kmUpdate.data_pagamento=payDate;
+  const signal=immediateInternal?null:($('tabletAdPaymentSignal')?.value||null);
+  const method=signal==='yes'?($('tabletAdPaymentMethod')?.value||null):null;
+  if(signal==='yes'&&!method)throw new Error('Indicare la modalità del pagamento segnalato.');
+  createdPayMode=method;
+  kmUpdate.pagamento_segnalato=signal==='yes'?true:(signal==='no'?false:null);
+  kmUpdate.metodo_pagamento_segnalato=method;
+  kmUpdate.pagamento_segnalato_il=signal?new Date().toISOString():null;
   if(tabletMezzo==='08'){
    // PROVA 08: creazione atomica confermata prima di qualsiasi dato accessorio.
    // Importi, KM e metodo pagamento vengono completati nel foglio, non in scritture separate qui.
    const check=await sb.from('fogli_viaggio').select('id,numero_foglio,servizio_giornaliero_id,stato').eq('id',created.foglio_id).eq('mezzo','08').single();
    if(check.error||!check.data||check.data.servizio_giornaliero_id!==created.servizio_id)
     throw new Error('Servizio creato: verifica collegamento foglio non riuscita. NON premere di nuovo Crea; aggiorna elenco.');
-   msg('tabletAdMsg','Servizio '+created.numero_foglio+' creato e verificato. Completa KM, importo e pagamento nel Foglio Viaggio.','ok');
+   const su=await sb.from('fogli_viaggio').update({pagamento_segnalato:kmUpdate.pagamento_segnalato,metodo_pagamento_segnalato:kmUpdate.metodo_pagamento_segnalato,pagamento_segnalato_il:kmUpdate.pagamento_segnalato_il}).eq('id',created.foglio_id).eq('mezzo','08').eq('stato','APERTO');if(su.error)throw su.error;
+   msg('tabletAdMsg','Servizio '+created.numero_foglio+' creato e verificato.','ok');
   }else{
    const ku=await sb.from('fogli_viaggio').update(kmUpdate).eq('id',created.foglio_id).eq('mezzo',tabletMezzo).eq('stato','APERTO');
    if(ku.error)throw ku.error;
@@ -13125,11 +13102,7 @@ async function tabletCreateImmediate(){
   try{await tabletRefreshList()}catch(e){msg('tabletMsg','Servizio creato, ma elenco non aggiornato. Premi Aggiorna: '+(e.message||String(e)),'warn')}
   if(tabletServices.some(x=>x.id===created.servizio_id)){
    await openTabletService(created.servizio_id);
-   if(['POS','CONTANTI'].includes(createdPayMode)){
-    tabletToggleReceiptSection();
-    msg('tabletReceiptMsg','Pagamento '+createdPayMode+': carica ora la foto o il PDF della ricevuta prima di chiudere il Foglio Viaggio.','warn');
-    if($('tabletReceiptSection'))$('tabletReceiptSection').scrollIntoView({behavior:'smooth',block:'center'});
-   }
+
   }
  }
 }
@@ -13210,12 +13183,7 @@ $('tabletAdTariffGroup').onchange=tabletUpdateImmediateTariff;
 $('tabletAdTariffDest').onchange=tabletUpdateImmediateQuote;
 $('tabletAdNight').onchange=tabletUpdateImmediateQuote;
 $('tabletAdAmount').oninput=tabletUpdateImmediateQuote;
-if($('tabletAdPayment'))$('tabletAdPayment').onchange=()=>{
- const mode=$('tabletAdPayment').value;
- if(mode&&!$('tabletAdPaymentDate').value&&['CONTANTI','POS'].includes(mode))$('tabletAdPaymentDate').value=todaySafe();
- if(!mode||mode==='BONIFICO DIFFERITO')$('tabletAdPaymentDate').value='';
- tabletUpdateImmediatePaymentDateVisibility();
-};
+if($('tabletAdPaymentSignal'))$('tabletAdPaymentSignal').onchange=tabletToggleImmediatePaymentSignal;
 $('tabletAdDraftSave').onclick=tabletSaveImmediateDraft;
 $('tabletImmediateForm').onsubmit=async e=>{e.preventDefault();await tabletCreateImmediate()};
 
@@ -13395,6 +13363,7 @@ async function openTabletDirect118(foglio){
   else el.value=f[key]??'';
  });
  tabletUpdatePaymentDateVisibility();
+ tabletTogglePaymentSignal();
  tabletToggleReceiptSection();
  $('tabletSaveSheet').classList.toggle('hidden',closed);
  $('tabletCloseSheet').classList.toggle('hidden',closed);
@@ -13501,9 +13470,11 @@ async function loadTabletSheet(serviceId){
  document.querySelectorAll('[data-ts-field]').forEach(el=>{
  const key=el.dataset.tsField;el.disabled=closed;
  if(el.type==='checkbox')el.checked=!!f[key];
+ else if(key==='pagamento_segnalato')el.value=f[key]===true?'yes':(f[key]===false?'no':'');
  else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
  else el.value=f[key]??'';
  });
+ tabletTogglePaymentSignal();
  if(!tabletSheetIs118&&tabletCurrentService){
   if($('tabletPatientFirst'))$('tabletPatientFirst').value=tabletCurrentService.paziente_nome||f.paziente_nome||'';
   if($('tabletPatientLast'))$('tabletPatientLast').value=f.paziente_cognome||tabletCurrentService.paziente_cognome||'';
@@ -13619,8 +13590,13 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   const name=el.dataset.tsField;
   if(el.type==='checkbox')row[name]=el.checked;
   else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
+  else if(name==='pagamento_segnalato')row[name]=el.value==='yes'?true:(el.value==='no'?false:null);
   else row[name]=el.value.trim()||null;
  }
+ if(row.pagamento_segnalato!==true)row.metodo_pagamento_segnalato=null;
+ if(row.pagamento_segnalato===true&&!row.metodo_pagamento_segnalato)return msg('tabletSheetMsg','Seleziona il metodo segnalato.','warn'),false;
+ if(tabletSheetIs118){delete row.pagamento_segnalato;delete row.metodo_pagamento_segnalato;}else row.pagamento_segnalato_il=row.pagamento_segnalato===null?null:new Date().toISOString();
+ delete row.modalita_pagamento;
  if(tabletCurrentService && !tabletIs118Type(tabletCurrentService.tipo_servizio) && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno' && !isAssistanceManifestation(tabletCurrentService.tipo_servizio)){
   try{
    const sig=await tabletPrivacyUploadSignature();
@@ -13722,12 +13698,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
    if(baseResult.data.importo_inserito==null || Number(baseResult.data.importo_inserito)!==Number(row.importo_inserito))
     throw new Error('Importo servizio non acquisito dal database (scrittura separata).');
   }
-  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio,modalita_pagamento,data_pagamento').maybeSingle();
-  // La modalita e solo informativa; eventuali trigger non devono cambiarla
-  // senza segnalare la mancata acquisizione.
-  if(!r.error&&r.data&&row.modalita_pagamento&&
-     String(r.data.modalita_pagamento||'').trim().toUpperCase()!==String(row.modalita_pagamento).trim().toUpperCase())
-    throw new Error('Modalità indicata non salvata sul Foglio Viaggio. Nessun pagamento registrato.');
+  const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio,pagamento_segnalato,metodo_pagamento_segnalato').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
   if(tabletSheetIs118){
    const destinationCheck=await sb.from('fogli_viaggio').select('destinazione').eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).maybeSingle();
