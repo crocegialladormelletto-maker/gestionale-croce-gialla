@@ -25,6 +25,7 @@ $('signIn').onclick=async()=>{const r=await sb.auth.signInWithPassword({email:$(
 $('password').onkeydown=e=>{if(e.key==='Enter')$('signIn').click()};
 $('logout').onclick=async()=>{await sb.auth.signOut();login()};
 function noteSheetIds(n){return [...new Set([n.foglio_viaggio_id,...links.filter(l=>l.nota_id===n.id).map(l=>l.foglio_id)].filter(Boolean))]}
+function noteLinkedServiceIds(){const ids=new Set();for(const n of notes.filter(n=>n.stato==='EMESSA'))for(const f of noteSheets(n))if(f.servizio_giornaliero_id)ids.add(f.servizio_giornaliero_id);return ids}
 function noteSheets(n){const ids=new Set(noteSheetIds(n));return sheets.filter(f=>ids.has(f.id))}
 function used(f){return payments.filter(p=>p.stato==='REGISTRATO'&&(p.foglio_viaggio_id===f.id||(f.servizio_giornaliero_id&&p.servizio_id===f.servizio_giornaliero_id)))}
 function resid(f){return Math.max(0,Number(f.totale_servizio||0)-used(f).reduce((a,p)=>a+Number(p.importo||0),0))}
@@ -32,7 +33,8 @@ function labelService(x){return [x.data_servizio,x.mezzo,x.tipo_servizio,[x.pazi
 function labelNote(n){return [n.numero,n.intestatario,'Residuo '+money(noteSheets(n).reduce((a,f)=>a+resid(f),0))].filter(Boolean).join(' · ')}
 function targets(){
  const type=$('origin').value,q=$('search').value.trim().toLowerCase(),previous=$('target').value;
- const all=type==='service'?services.filter(x=>Number(x.residuo||0)>.005&&String(x.tipo_servizio||'')!=='118'):notes.filter(n=>n.stato==='EMESSA'&&!n.data_pagamento&&noteSheets(n).some(f=>resid(f)>.005));
+ const linked=noteLinkedServiceIds();
+ const all=type==='service'?services.filter(x=>Number(x.residuo||0)>.005&&String(x.tipo_servizio||'')!=='118'&&!linked.has(x.servizio_id)):notes.filter(n=>n.stato==='EMESSA'&&!n.data_pagamento&&noteSheets(n).some(f=>resid(f)>.005));
  $('sheetField').classList.toggle('hidden',type!=='note');
  const arr=all.filter(x=>(type==='service'?labelService(x):labelNote(x)).toLowerCase().includes(q));
  $('target').innerHTML='<option value="">— Seleziona —</option>'+arr.slice(0,1600).map(x=>'<option value="'+esc(type==='service'?x.servizio_id:x.id)+'">'+esc(type==='service'?labelService(x):labelNote(x))+'</option>').join('');
@@ -67,7 +69,7 @@ async function reload(){
   for(let i=0;i<rs.length;i++)if(rs[i].error)throw rs[i].error;
   [services,notes,links,sheets,payments,signals]=rs.map(x=>x.data||[]);
   services=services.filter(x=>String(x.stato_gestionale||'')!=='ANNULLATO');
-  targets();const n=new URLSearchParams(location.search).get('nota');if(n&&notes.some(x=>x.id===n)){$('origin').value='note';$('search').value='';targets();$('target').value=n;selected();}
+  targets();const params=new URLSearchParams(location.search),n=params.get('nota'),service=params.get('servizio');if(n&&notes.some(x=>x.id===n)){$('origin').value='note';$('search').value='';targets();$('target').value=n;selected();}else if(service&&services.some(x=>x.servizio_id===service)){$('origin').value='service';$('search').value='';targets();$('target').value=service;selected();}
   render();notice('');$('save').disabled=payments.length>=5000;
   if(payments.length>=5000)notice('Limite di movimenti raggiunto: registrazione bloccata per verifica.','error');
  }catch(e){notice('Dati incompleti: '+(e.message||String(e))+'. Nessun incasso consentito.','error')}
@@ -81,6 +83,7 @@ $('save').onclick=async()=>{
  if(method==='BONIFICO'&&!confirm('Il bonifico risulta realmente accreditato sul conto?'))return;
  const target=type==='service'?services.find(x=>x.servizio_id===id):notes.find(x=>x.id===id),sheet=type==='note'?sheets.find(x=>x.id===$('sheet').value):null;
  if(!target||(type==='note'&&!sheet))return notice('Selezione non valida, aggiorna.','error');
+ if(type==='service'&&noteLinkedServiceIds().has(id))return notice('Questo servizio è collegato a una Nota di Debito emessa: registra l’incasso selezionando la nota.','error');
  const due=type==='service'?Number(target.residuo||0):resid(sheet);
  if(amount>due+.005)return notice('Importo maggiore del residuo: aggiorna.','error');
  if(!confirm('Confermi INCASSO REALE di '+money(amount)+' con '+method+' il '+date+'? Verifica che non sia già registrato.'))return;
@@ -103,7 +106,7 @@ $('save').onclick=async()=>{
   }
   saved=true;notice('Incasso registrato. Non ripetere.','ok');await reload();notice('Incasso registrato e saldi aggiornati.','ok');
  }catch(e){notice(saved?'Incasso registrato ma riepilogo non aggiornato: NON ripetere.':'Incasso non confermato: '+(e.message||String(e)),'error')}
- finally{busy=false;$('save').disabled=false}
+ finally{busy=false;if(saved)$('save').disabled=true;else $('save').disabled=false}
 };
 enter().catch(e=>{login();$('loginMsg').textContent=String(e.message||e)});
 </script></body></html>
