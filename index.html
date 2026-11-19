@@ -17,8 +17,9 @@
 (function(){
  try{
   const p=new URLSearchParams(location.search);
-  if(p.get('area')==='tablet' && p.get('mezzo')==='07'){
-   document.getElementById('cgeManifest').href='/gestionale-croce-gialla/tablet-07-manifest.json?v=14.58';
+  if(p.get('area')==='tablet' && ['06','07','08'].includes(p.get('mezzo'))){
+   const mezzo=p.get('mezzo');
+   document.getElementById('cgeManifest').href='/gestionale-croce-gialla/tablet-'+mezzo+'-manifest.json?v=14.84';
   }
  }catch(_){}
 })();
