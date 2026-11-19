@@ -9,25 +9,105 @@
 @media print{.address-fields{display:none!important}.print-only{display:block}.print-hide-empty{display:none!important}#notes{display:none!important}#notesPrint{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:13px}#conditionsSection{break-inside:auto}.row{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media print{#conditionsSection label,#conditionsSection textarea{display:none!important}#notesPrint:empty{display:none!important}#conditionsSection h2{display:block!important}}
 .km-rate{max-width:420px;border-left:4px solid #f3d642;background:#f7f9fc;padding:11px 14px;margin:12px 0 15px;border-radius:6px}.km-rate input{max-width:180px;margin:5px 0}.km-rate .notice{margin:3px 0 0}@media print{.km-rate{background:white;border-left:0;padding:2px 0;margin:5px 0 8px}.km-rate .notice{display:none}.km-rate input{width:92px;display:inline-block}.km-rate label{display:inline-block;margin-right:10px}}
+
+#professionalPrint{display:none}
+@media print{
+ @page{size:A4;margin:15mm 14mm 16mm}
+ html,body{background:#fff!important;color:#152b46!important;font-family:Arial,Helvetica,sans-serif!important}
+ body>.top,body>main{display:none!important}
+ #professionalPrint{display:block!important;width:100%;font-size:10.5pt;line-height:1.4}
+ #professionalPrint *{box-sizing:border-box}
+ #professionalPrint .p-head{display:flex;align-items:center;gap:15px;padding:0 0 13px;border-bottom:4px solid #e3bd22;margin-bottom:18px}
+ #professionalPrint .p-logo{width:84px;height:84px;object-fit:contain}
+ #professionalPrint .p-brand{font-size:17pt;font-weight:800;color:#123c70;line-height:1.1}
+ #professionalPrint .p-contact{font-size:8.2pt;color:#52647b;margin-top:6px;line-height:1.4}
+ #professionalPrint .p-doc-title{font-size:15pt;text-align:right;color:#123c70;font-weight:800;letter-spacing:.5px}
+ #professionalPrint .p-doc-date{font-size:9pt;text-align:right;color:#576d82;margin-top:6px}
+ #professionalPrint .p-flex{display:flex;justify-content:space-between;align-items:center;gap:18px}
+ #professionalPrint .p-rsa{padding:14px 16px;background:#f3f6fa;border-left:4px solid #e0bd24;margin:0 0 20px;break-inside:avoid}
+ #professionalPrint .p-label{font-size:8.5pt;text-transform:uppercase;letter-spacing:.9px;color:#62758b;font-weight:700}
+ #professionalPrint .p-rsa-name{font-weight:800;color:#173d69;font-size:13pt;margin:5px 0}
+ #professionalPrint .p-block{margin:19px 0 14px;break-inside:avoid}
+ #professionalPrint .p-block h2{font-size:11.5pt;color:#143f73;margin:0 0 9px;border:0;border-bottom:2px solid #e0bd24;padding:0 0 6px;line-height:1.2}
+ #professionalPrint table{width:100%;border-collapse:collapse;font-size:10pt;margin:6px 0}
+ #professionalPrint thead{display:table-header-group}
+ #professionalPrint tr{break-inside:avoid}
+ #professionalPrint th{background:#edf2f7!important;color:#143b66;font-size:9pt;font-weight:700;padding:9px;border-bottom:1px solid #ced9e5}
+ #professionalPrint td{padding:8px 9px;border-bottom:1px solid #dee5ec;overflow-wrap:anywhere}
+ #professionalPrint td:last-child,#professionalPrint th:last-child{text-align:right;font-weight:700}
+ #professionalPrint .p-km{font-size:9.5pt;color:#234a72;margin:6px 0 10px}
+ #professionalPrint .p-note{white-space:pre-wrap;overflow-wrap:anywhere;font-size:10pt}
+ #professionalPrint .p-small{font-size:8.5pt;color:#4c6178}
+ #professionalPrint .p-accept{margin-top:30px;padding-top:11px;border-top:1px solid #bac7d6;display:flex;justify-content:space-between;gap:24px;font-size:9pt}
+ #professionalPrint .p-accept>span{display:block;flex:1}
+ #professionalPrint .p-foot{margin-top:18px;text-align:center;font-size:8pt;color:#66778c}
+}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script></head><body><header class="top"><div class="brand"><img class="logo-cge" alt="Logo Croce Gialla Emergenza ODV" src="data:image/jpeg;base64,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"><div><h1>Croce Gialla Emergenza ODV</h1><small>Preventivi RSA · listino trasporti andata e ritorno</small></div></div></header>
 <main>
-<div class="actions no-print"><button id="cloudSave" onclick="saveCloud()">💾 Salva preventivo</button><button class="soft" onclick="showArchive()">📚 Archivio preventivi</button><button class="soft" onclick="save()">Salva bozza locale</button><button class="alt" onclick="window.print()">Stampa / salva PDF</button><button class="soft" onclick="newQuote()">Nuovo preventivo</button><button class="soft" onclick="load()">Recupera ultima bozza</button><button class="soft" onclick="location.href='../index.html'">Torna al gestionale</button></div>
+<div class="actions no-print"><button id="cloudSave" onclick="saveCloud()">💾 Salva preventivo</button><button class="soft" onclick="showArchive()">📚 Archivio preventivi</button><button class="soft" onclick="save()">Salva bozza locale</button><button class="alt" onclick="buildProfessionalPrint();window.print()">Stampa / salva PDF</button><button class="soft" onclick="newQuote()">Nuovo preventivo</button><button class="soft" onclick="load()">Recupera ultima bozza</button><button class="soft" onclick="location.href='../index.html'">Torna al gestionale</button></div>
 <p class="notice no-print">Il salvataggio nel gestionale è disponibile agli utenti autorizzati. Le bozze locali restano disponibili su questo browser.</p>
-<section id="archiveSection" class="no-print" style="display:none"><h2>Archivio preventivi RSA</h2><div class="actions"><input id="archiveSearch" placeholder="Cerca per nome RSA" oninput="renderArchive()" style="max-width:320px"><button class="soft" onclick="showArchive()">Aggiorna archivio</button><button class="soft" onclick="document.getElementById('archiveSection').style.display='none'">Chiudi</button></div><div id="archiveResults">Caricamento…</div></section><div id="cloudStatus" class="no-print notice" aria-live="polite"></div><section><h2>Dati preventivo</h2><div class="row"><div><label>RSA destinataria</label><input id="rsa" placeholder="Nome della RSA"></div><div><label>Data preventivo</label><input id="date" type="date"></div><div class="address-fields"><label>Via / Piazza</label><input id="street" placeholder="Es. Via Roma"></div><div><label>Numero civico</label><input id="civic" placeholder="Es. 12"></div><div><label>Comune</label><input id="city" placeholder="Es. Novara"></div><div><label>CAP</label><input id="zip" inputmode="numeric" maxlength="5" placeholder="Es. 28100"></div><div><label>Provincia</label><input id="province" maxlength="2" placeholder="Es. NO"></div><div><label>Riferimento / attenzione di</label><input id="attention" placeholder="Responsabile struttura"></div></div><div id="addressPrint" class="print-only address-print"></div></section>
+<section id="archiveSection" class="no-print" style="display:none"><h2>Archivio preventivi RSA</h2><div class="actions"><input id="archiveSearch" placeholder="Cerca per nome RSA" oninput="renderArchive()" style="max-width:320px"><button class="soft" onclick="showArchive()">Aggiorna archivio</button><button class="soft" onclick="document.getElementById('archiveSection').style.display='none'">Chiudi</button></div><div id="archiveResults">Caricamento…</div></section><div id="cloudStatus" class="no-print notice" aria-live="polite"></div><section class="no-print"><div class="actions"><div style="flex:1;min-width:250px"><label for="rsaSelect">Richiama una RSA già registrata</label><select id="rsaSelect" onchange="selectRSA(this.value)"><option value="">Seleziona una struttura dall'archivio…</option></select></div><button type="button" class="soft" onclick="loadRSA()" style="align-self:end">↻ Aggiorna elenco RSA</button><button type="button" onclick="saveRSA()" style="align-self:end">💾 Salva / aggiorna RSA</button></div><div class="notice">Quando salvi un preventivo, i dati della struttura vengono registrati anche nell'Archivio RSA.</div></section><section><h2>Dati preventivo</h2><div class="row"><div><label>RSA destinataria</label><input id="rsa" placeholder="Nome della RSA"></div><div><label>Data preventivo</label><input id="date" type="date"></div><div class="address-fields"><label>Via / Piazza</label><input id="street" placeholder="Es. Via Roma"></div><div><label>Numero civico</label><input id="civic" placeholder="Es. 12"></div><div><label>Comune</label><input id="city" placeholder="Es. Novara"></div><div><label>CAP</label><input id="zip" inputmode="numeric" maxlength="5" placeholder="Es. 28100"></div><div><label>Provincia</label><input id="province" maxlength="2" placeholder="Es. NO"></div><div><label>Riferimento / attenzione di</label><input id="attention" placeholder="Responsabile struttura"></div></div><div id="addressPrint" class="print-only address-print"></div></section>
 <section><h2>🚑 Trasporti in ambulanza — andata e ritorno</h2><p class="notice no-print">Inserisci le tariffe dei trasporti con ambulanza.</p><div class="km-rate"><label for="kmAmbulanza">Prezzo al km — Ambulanza (€ / km)</label><input id="kmAmbulanza" type="number" min="0" step="0.01" placeholder="Da compilare"><div class="notice">Tariffa chilometrica concordata per i trasporti in ambulanza.</div></div><table><thead><tr><th>Partenza</th><th>Destinazione</th><th>Prezzo A/R (€)</th><th class="no-print"> </th></tr></thead><tbody id="routesAmbulanza"></tbody></table><button class="soft no-print" onclick="addRoute('ambulanza')">+ Aggiungi tratta ambulanza</button></section>
 <section><h2>🚐 Trasporto semplice con Doblò — andata e ritorno</h2><p class="notice no-print">Inserisci le tariffe dei trasporti con Doblò.</p><div class="km-rate"><label for="kmDoblo">Prezzo al km — Doblò (€ / km)</label><input id="kmDoblo" type="number" min="0" step="0.01" placeholder="Da compilare"><div class="notice">Tariffa chilometrica concordata per il trasporto semplice con Doblò.</div></div><table><thead><tr><th>Partenza</th><th>Destinazione</th><th>Prezzo A/R (€)</th><th class="no-print"> </th></tr></thead><tbody id="routesDoblo"></tbody></table><button class="soft no-print" onclick="addRoute('doblo')">+ Aggiungi tratta Doblò</button></section>
 <section><h2>Attesa e fermo mezzo</h2><div class="row"><div><label>Tempo di attesa incluso (minuti)</label><input id="included" type="number" min="0" placeholder="Es. 30"></div><div><label>Tariffa fermo mezzo oltre il tempo incluso (€/ora)</label><input id="waiting" type="number" min="0" step=".01" placeholder="Es. 20,00"></div></div><p class="notice">Il supplemento per fermo mezzo scatta solo oltre il tempo di attesa incluso. </p></section>
 <section><h2>Supplementi facoltativi</h2><table><thead><tr><th>Servizio</th><th>Unità</th><th>Tariffa (€)</th><th class="no-print"> </th></tr></thead><tbody id="extras"></tbody></table><button class="soft no-print" onclick="addExtra()">+ Aggiungi supplemento</button></section>
 <section id="conditionsSection"><h2>Condizioni e note</h2><label class="no-print">Condizioni specifiche del preventivo</label><textarea id="notes" placeholder="Inserisci soltanto eventuali condizioni o note da stampare"></textarea><div class="print-only" id="notesPrint"></div></section><section class="preview" style="margin-top:30px">Per accettazione della RSA: _____________________________ &nbsp; Data: ______________</section>
-</main><script>
+</main><article id="professionalPrint" aria-label="Preventivo RSA per la stampa"></article><script>
 const SB_URL='https://ihottewckpwpwqzpxusl.supabase.co';const SB_KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
 const cloud=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-let currentCloudId=null,archiveRows=[];
+let currentCloudId=null,archiveRows=[],currentRSAId=null,rsaRows=[];
 const status=t=>{document.getElementById('cloudStatus').textContent=t;};
 async function currentUser(){const {data,error}=await cloud.auth.getUser();if(error||!data.user)throw Error('Accesso non disponibile. Entra prima nel gestionale con il tuo account.');return data.user;}
-async function saveCloud(){try{const user=await currentUser();const payload=data();if(!payload.rsa.trim())throw Error('Inserisci il nome della RSA.');status('Salvataggio in corso…');const row={rsa:payload.rsa.trim(),data_preventivo:payload.date||null,contenuto:payload,aggiornato_il:new Date().toISOString()};let result;if(currentCloudId){result=await cloud.from('preventivi_rsa').update(row).eq('id',currentCloudId).select('id').single();}else{result=await cloud.from('preventivi_rsa').insert({...row,creato_da:user.id}).select('id').single();}if(result.error)throw result.error;currentCloudId=result.data.id;status('✓ Preventivo salvato nel gestionale. Ora puoi ritrovarlo dall’Archivio preventivi RSA.');}catch(e){status('Impossibile salvare: '+(e.message||String(e)));}}
+
+const rsaFieldMap={nome:'rsa',via:'street',civico:'civic',comune:'city',cap:'zip',provincia:'province',riferimento:'attention'};
+function rsaValues(){return Object.fromEntries(Object.entries(rsaFieldMap).map(([col,id])=>[col,document.getElementById(id).value.trim()]));}
+async function loadRSA(){
+ try{
+  await currentUser();
+  const r=await cloud.from('anagrafica_rsa').select('id,nome,via,civico,comune,cap,provincia,riferimento').order('nome',{ascending:true}).limit(1000);
+  if(r.error)throw r.error;
+  rsaRows=r.data||[];
+  const sel=document.getElementById('rsaSelect');
+  sel.replaceChildren(new Option('Seleziona una struttura dall’archivio…',''));
+  rsaRows.forEach(x=>sel.add(new Option(x.nome+' — '+(x.comune||'Comune non indicato'),x.id)));
+  if(currentRSAId)sel.value=currentRSAId;
+ }catch(e){status('Archivio RSA: '+(e.message||String(e)));}
+}
+function selectRSA(id){
+ currentRSAId=id||null;
+ const x=rsaRows.find(v=>v.id===id);
+ if(!x)return;
+ for(const [col,inputId] of Object.entries(rsaFieldMap))document.getElementById(inputId).value=x[col]||'';
+ preparePrint();
+ status('Dati RSA richiamati. Ora puoi inserire le tariffe del preventivo.');
+}
+async function saveRSA(silent=false){
+ try{
+  const user=await currentUser();
+  const fields=rsaValues();
+  if(!fields.nome)throw Error('Inserisci il nome della RSA.');
+  const row={...fields,aggiornato_il:new Date().toISOString()};
+  let id=currentRSAId;
+  if(!id){
+   const already=await cloud.from('anagrafica_rsa').select('id,nome').ilike('nome',fields.nome).limit(20);
+   if(already.error)throw already.error;
+   const exact=(already.data||[]).find(x=>x.nome.trim().toLocaleLowerCase('it')===fields.nome.toLocaleLowerCase('it'));
+   if(exact)id=exact.id;
+  }
+  const result=id
+   ? await cloud.from('anagrafica_rsa').update(row).eq('id',id).select('id').single()
+   : await cloud.from('anagrafica_rsa').insert({...row,creato_da:user.id}).select('id').single();
+  if(result.error)throw result.error;
+  currentRSAId=result.data.id;
+  await loadRSA();
+  if(!silent)status('✓ RSA salvata nell’archivio. Puoi richiamarla nei prossimi preventivi.');
+  return true;
+ }catch(e){if(!silent)status('Impossibile salvare la RSA: '+(e.message||String(e)));return false;}
+}
+
+async function saveCloud(){try{const user=await currentUser();const payload=data();if(!payload.rsa.trim())throw Error('Inserisci il nome della RSA.');status('Salvataggio in corso…');const row={rsa:payload.rsa.trim(),data_preventivo:payload.date||null,contenuto:payload,aggiornato_il:new Date().toISOString()};let result;if(currentCloudId){result=await cloud.from('preventivi_rsa').update(row).eq('id',currentCloudId).select('id').single();}else{result=await cloud.from('preventivi_rsa').insert({...row,creato_da:user.id}).select('id').single();}if(result.error)throw result.error;currentCloudId=result.data.id;const rsaSaved=await saveRSA(true);status(rsaSaved?'✓ Preventivo e dati della RSA salvati nel gestionale.':'✓ Preventivo salvato. Attenzione: anagrafica RSA non aggiornata; usa Salva / aggiorna RSA.');}catch(e){status('Impossibile salvare: '+(e.message||String(e)));}}
 async function showArchive(){const panel=document.getElementById('archiveSection');panel.style.display='block';document.getElementById('archiveResults').textContent='Caricamento…';try{await currentUser();const r=await cloud.from('preventivi_rsa').select('id,rsa,data_preventivo,contenuto,aggiornato_il').order('aggiornato_il',{ascending:false}).limit(200);if(r.error)throw r.error;archiveRows=r.data||[];renderArchive();panel.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){document.getElementById('archiveResults').textContent='Impossibile aprire archivio: '+(e.message||String(e));}}
-function renderArchive(){const q=document.getElementById('archiveSearch').value.trim().toLowerCase();const list=archiveRows.filter(x=>x.rsa.toLowerCase().includes(q));const root=document.getElementById('archiveResults');root.replaceChildren();if(!list.length){root.textContent='Nessun preventivo trovato.';return;}const table=document.createElement('table');table.innerHTML='<thead><tr><th>RSA</th><th>Data</th><th>Ultima modifica</th><th>Azioni</th></tr></thead>';const tbody=document.createElement('tbody');list.forEach(x=>{const tr=document.createElement('tr');const a=document.createElement('td');a.textContent=x.rsa;const b=document.createElement('td');b.textContent=x.data_preventivo||'—';const d=document.createElement('td');d.textContent=new Date(x.aggiornato_il).toLocaleString('it-IT');const e=document.createElement('td');const btn=document.createElement('button');btn.textContent='Apri / modifica';btn.onclick=()=>{currentCloudId=x.id;fill(x.contenuto||{});preparePrint();panel.style.display='none';window.scrollTo(0,0);status('Preventivo caricato. Le modifiche verranno salvate sullo stesso preventivo.');};e.append(btn);tr.append(a,b,d,e);tbody.append(tr)});table.append(tbody);root.append(table);}
+function renderArchive(){const q=document.getElementById('archiveSearch').value.trim().toLowerCase();const list=archiveRows.filter(x=>x.rsa.toLowerCase().includes(q));const root=document.getElementById('archiveResults');root.replaceChildren();if(!list.length){root.textContent='Nessun preventivo trovato.';return;}const table=document.createElement('table');table.innerHTML='<thead><tr><th>RSA</th><th>Data</th><th>Ultima modifica</th><th>Azioni</th></tr></thead>';const tbody=document.createElement('tbody');list.forEach(x=>{const tr=document.createElement('tr');const a=document.createElement('td');a.textContent=x.rsa;const b=document.createElement('td');b.textContent=x.data_preventivo||'—';const d=document.createElement('td');d.textContent=new Date(x.aggiornato_il).toLocaleString('it-IT');const e=document.createElement('td');const btn=document.createElement('button');btn.textContent='Apri / modifica';btn.onclick=()=>{currentCloudId=x.id;currentRSAId=null;document.getElementById('rsaSelect').value='';fill(x.contenuto||{});preparePrint();panel.style.display='none';window.scrollTo(0,0);status('Preventivo caricato. Le modifiche verranno salvate sullo stesso preventivo.');};e.append(btn);tr.append(a,b,d,e);tbody.append(tr)});table.append(tbody);root.append(table);}
 const key='cge_preventivo_rsa_prova_1';
 const esc=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
 let routesAmbulanza=[],routesDoblo=[],extras=[];
@@ -42,6 +122,77 @@ renderRoutes('routesDoblo',routesDoblo,'routesDoblo');
 document.getElementById('extras').innerHTML=extras.map((e,i)=>'<tr><td><input aria-label="Supplemento" value="'+esc(e.name)+'" oninput="extras['+i+'].name=this.value"></td><td><input aria-label="Unità supplemento" value="'+esc(e.unit)+'" oninput="extras['+i+'].unit=this.value"></td><td><input aria-label="Tariffa supplemento" type="number" min="0" step=".01" value="'+esc(e.price)+'" oninput="extras['+i+'].price=this.value"></td><td class="no-print"><button class="delete" onclick="extras.splice('+i+',1);draw()">Elimina</button></td></tr>').join('');}
 function data(){return {routesAmbulanza,routesDoblo,extras,...Object.fromEntries(['rsa','date','street','civic','city','zip','province','attention','included','waiting','notes','kmAmbulanza','kmDoblo'].map(id=>[id,document.getElementById(id).value]))};}
 function fill(d){routesAmbulanza=d.routesAmbulanza||d.routes||[];routesDoblo=d.routesDoblo||[];extras=d.extras||[];for(const id of ['rsa','date','street','civic','city','zip','province','attention','included','waiting','notes','kmAmbulanza','kmDoblo'])document.getElementById(id).value=d[id]||(id==='street' ? d.address||'' : '');draw();}
+
+function printElem(tag,className,text){
+ const e=document.createElement(tag);
+ if(className)e.className=className;
+ if(text!==undefined)e.textContent=text;
+ return e;
+}
+function displayMoney(x){
+ const n=Number(String(x??'').replace(',','.'));
+ return Number.isFinite(n)&&String(x??'').trim()!==''?n.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':'—';
+}
+function buildProfessionalPrint(){
+ const root=document.getElementById('professionalPrint');root.replaceChildren();
+ const val=id=>document.getElementById(id).value.trim();
+ const head=printElem('div','p-head');
+ const src=document.querySelector('.logo-cge');
+ const logo=document.createElement('img');logo.className='p-logo';logo.src=src.src;logo.alt='Croce Gialla Emergenza ODV';
+ const brand=printElem('div','');brand.style.flex='1';
+ brand.append(printElem('div','p-brand','CROCE GIALLA EMERGENZA ODV'),printElem('div','p-contact','Via I Maggio 1 · 28040 Dormelletto (NO)\nC.F. 91023880031 · P. IVA 02809130038 · Tel. 0322 282730\ncrocegialladormelletto@crocegiallaemergenza.it'));
+ const doc=printElem('div','');doc.append(printElem('div','p-doc-title','PREVENTIVO RSA'),printElem('div','p-doc-date',val('date')?val('date').split('-').reverse().join('/'):''));
+ head.append(logo,brand,doc);root.append(head);
+ const recipient=printElem('div','p-rsa');
+ recipient.append(printElem('div','p-label','Spett.le struttura'),printElem('div','p-rsa-name',val('rsa')||'RSA'));
+ const street=[val('street'),val('civic')].filter(Boolean).join(', ');
+ const town=[val('zip'),val('city'),val('province')?'('+val('province').toUpperCase()+')':''].filter(Boolean).join(' ');
+ if(street)recipient.append(printElem('div','',street));
+ if(town)recipient.append(printElem('div','',town));
+ if(val('attention'))recipient.append(printElem('div','p-small','Alla cortese attenzione di '+val('attention')));
+ root.append(recipient);
+ function block(title){const e=printElem('section','p-block');e.append(printElem('h2','',title));root.append(e);return e;}
+ function vehicle(title,rows,km){
+  const b=block(title);
+  if(val(km))b.append(printElem('div','p-km','Tariffa chilometrica: '+displayMoney(val(km))+' / km'));
+  const filtered=rows.filter(r=>(r.to||'').trim()||(r.price??'').toString().trim());
+  if(filtered.length){
+   const t=printElem('table','');
+   const th=printElem('thead','');const hr=printElem('tr','');
+   ['Partenza','Destinazione','Prezzo andata e ritorno'].forEach(x=>hr.append(printElem('th','',x)));th.append(hr);t.append(th);
+   const tb=printElem('tbody','');
+   filtered.forEach(r=>{const tr=printElem('tr','');[r.from||'RSA',r.to||'',displayMoney(r.price)].forEach(x=>tr.append(printElem('td','',x)));tb.append(tr)});
+   t.append(tb);b.append(t);
+  }
+  if(!filtered.length&&!val(km))b.remove();
+ }
+ vehicle('TRASPORTI IN AMBULANZA',routesAmbulanza,'kmAmbulanza');
+ vehicle('TRASPORTO SEMPLICE CON DOBLÒ',routesDoblo,'kmDoblo');
+ const hasWait=val('included')!==''||val('waiting')!=='';
+ if(hasWait){
+ const b=block('ATTESA E FERMO MEZZO');
+ if(val('included'))b.append(printElem('div','p-km','Attesa inclusa nel prezzo: '+val('included')+' minuti'));
+ if(val('waiting'))b.append(printElem('div','p-km','Fermo mezzo oltre l’attesa inclusa: '+displayMoney(val('waiting'))+' / ora'));
+ }
+ const definedExtras=extras.filter(x=>(x.name||'').trim()&&(x.price??'').toString().trim()!=='');
+ if(definedExtras.length){
+  const b=block('SERVIZI E SUPPLEMENTI');
+  const t=printElem('table',''),thead=printElem('thead',''),tr=printElem('tr','');
+  ['Servizio','Unità','Tariffa'].forEach(x=>tr.append(printElem('th','',x)));thead.append(tr);t.append(thead);
+  const tb=printElem('tbody','');
+  definedExtras.forEach(x=>{const row=printElem('tr','');[x.name,x.unit||'',displayMoney(x.price)].forEach(v=>row.append(printElem('td','',v)));tb.append(row)});
+  t.append(tb);b.append(t);
+ }
+ const noteBlock=block('CONDIZIONI E NOTE');
+ if(val('notes'))noteBlock.append(printElem('div','p-note',val('notes')));
+ root.append(printElem('div','p-small','I prezzi indicati per le singole tratte si riferiscono sempre al viaggio di andata e ritorno.'));
+ const acceptance=printElem('div','p-accept');
+ acceptance.append(printElem('span','','Per accettazione della RSA: __________________________'),printElem('span','','Data: __________________'));
+ root.append(acceptance);
+ root.append(printElem('div','p-foot','Croce Gialla Emergenza ODV · Via I Maggio 1 · 28040 Dormelletto (NO)'));
+}
+window.addEventListener('beforeprint',buildProfessionalPrint);
+
 function preparePrint(){
  const val=id=>document.getElementById(id).value.trim();
  const line1=[val('street'),val('civic')].filter(Boolean).join(', ');
@@ -59,8 +210,8 @@ window.addEventListener('beforeprint',preparePrint);
 document.getElementById('notes').addEventListener('input',preparePrint);
 ['street','civic','zip','city','province'].forEach(id=>document.getElementById(id).addEventListener('input',preparePrint));
 function save(){try{localStorage.setItem(key,JSON.stringify(data()));alert('Bozza salvata su questo browser. Non sincronizzata con gli altri dispositivi.')}catch(e){alert('Salvataggio non riuscito: '+e.message)}}
-function load(){let x=localStorage.getItem(key);if(x){currentCloudId=null;fill(JSON.parse(x));preparePrint();status('Bozza locale caricata: premi Salva preventivo per registrarla nel gestionale.');}else alert('Nessuna bozza salvata su questo browser.')}
-function newQuote(){if(!confirm('Creare un nuovo preventivo? Salva prima la bozza se vuoi conservarla.'))return;currentCloudId=null;init();status('Nuovo preventivo: non ancora salvato.');}
+function load(){let x=localStorage.getItem(key);if(x){currentCloudId=null;currentRSAId=null;document.getElementById('rsaSelect').value='';fill(JSON.parse(x));preparePrint();status('Bozza locale caricata: premi Salva preventivo per registrarla nel gestionale.');}else alert('Nessuna bozza salvata su questo browser.')}
+function newQuote(){if(!confirm('Creare un nuovo preventivo? Salva prima la bozza se vuoi conservarla.'))return;currentCloudId=null;currentRSAId=null;document.getElementById('rsaSelect').value='';init();status('Nuovo preventivo: non ancora salvato.');}
 function init(){fill({date:new Date().toLocaleDateString('en-CA'),routesAmbulanza:[{from:'RSA',to:'Ospedale di Novara',price:''},{from:'RSA',to:'Ospedale di Borgomanero',price:''}],routesDoblo:[{from:'RSA',to:'Ospedale di Novara',price:''},{from:'RSA',to:'Ospedale di Borgomanero',price:''}],extras:[{name:'Barella bariatrica',unit:'€/trasporto',price:''},{name:'Toboga bariatrico',unit:'€/trasporto',price:''},{name:'Personale aggiuntivo',unit:'€/trasporto',price:''}]});}
-init();preparePrint();
+init();preparePrint();loadRSA();
 </script></body></html>
