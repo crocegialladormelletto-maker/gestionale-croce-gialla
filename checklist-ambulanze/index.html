@@ -32,7 +32,7 @@ main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 
 <header><div class="wrap"><div class="brand"><img class="mark" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><div><h1>Checklist Ambulanza</h1><div class="sub">Croce Gialla Emergenza ODV · Dormelletto · Checklist completa</div></div></div></div></header>
 <main class="wrap">
 <div class="tabs" style="align-items:center">
-<button type="button" id="tabNuova" class="active" onclick="showView('new')">Nuova checklist</button>
+<button type="button" id="tabNuova" class="active" onclick="startNewChecklist()">Nuova checklist</button>
 <button type="button" id="tabArchivio" onclick="showView('archive')">Archivio checklist</button>
 <a href="../" id="returnMainChecklist" style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;background:#0b2d57;color:white;text-decoration:none;border:2px solid #ffd21c;border-radius:10px;padding:11px 16px;font-weight:800;min-height:42px">← Torna al gestionale principale</a>
 </div>
@@ -75,7 +75,7 @@ main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 
 <div class="top-actions">
 <button class="primary" onclick="saveChecklist()">Salva checklist</button>
 <button class="yellow" onclick="window.print()">Stampa / Salva PDF</button>
-<button class="light" onclick="resetForm()">Nuova / Pulisci</button>
+<button class="light" onclick="resetForm()">Pulisci campi</button>
 </div>
 </section>
 
@@ -96,7 +96,7 @@ main{padding:0 14px 28px}.card{background:white;border-radius:14px;box-shadow:0 
 <script>
 const SUPABASE_URL="https://ihottewckpwpwqzpxusl.supabase.co", SUPABASE_KEY="sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-let archiveCache=[],activeMezzo='',draftStorageKey='',draftReady=false;
+let archiveCache=[],activeMezzo='',draftStorageKey='',draftReady=false,viewingArchivedRecord=false;
 const draftFieldIds=['mezzoPc','data','ora','compilatore','km','carburante','passaggio','noteFinali','scadenze','esito','firma'];
 function draftSnapshot(){
  const fields={};
@@ -283,14 +283,24 @@ async function saveChecklist(){
  alert('Checklist salvata. È ora visibile anche nell’archivio del gestionale principale.');
  await renderArchive();
 }
-function resetForm(){
- if(!confirm('Pulire tutta la checklist e cancellare la bozza conservata su questo dispositivo?'))return;
+function clearChecklistFields(){
  clearDraft();
  document.querySelectorAll('#newView input,#newView textarea').forEach(x=>x.value='');
  document.querySelectorAll('#newView select').forEach(x=>x.selectedIndex=0);
  document.querySelectorAll('.choice').forEach(x=>x.classList.remove('sel','ok','ko','na','warn'));
- responses={};draftReady=true;setNow();
- const status=document.getElementById('draftStatus');if(status)status.textContent='Nuova checklist: compilazione conservata automaticamente su questo dispositivo.';
+ responses={};draftReady=true;viewingArchivedRecord=false;setNow();
+ const status=document.getElementById('draftStatus');
+ if(status)status.textContent='Nuova checklist pronta per la compilazione.';
+}
+function resetForm(){
+ if(draftHasWork(draftSnapshot())&&draftReady&&!confirm('Cancellare la compilazione in corso? La bozza non salvata andrà persa.'))return;
+ clearChecklistFields();
+}
+function startNewChecklist(){
+ if(draftHasWork(draftSnapshot())&&draftReady&&!confirm('Aprire una nuova checklist? La compilazione attuale non salvata sarà cancellata.'))return;
+ clearChecklistFields();
+ showView('new');
+ window.scrollTo(0,0);
 }
 async function showView(v){
  const newPanel=document.getElementById('newView');
@@ -325,7 +335,7 @@ async function renderArchive(){
 function openRecord(id){
  const r=archiveCache.find(x=>x.id===id);if(!r)return;
  if(draftHasWork(draftSnapshot())&&draftReady&&!confirm('Aprendo una checklist dell’archivio sostituirai la compilazione attualmente aperta. Continuare?'))return;
- showView('new');if(document.getElementById('mezzoPc'))document.getElementById('mezzoPc').value=r.mezzo||'';data.value=r.data;ora.value=String(r.ora||'').slice(0,5);compilatore.value=r.compilatore;km.value=r.km_iniziali;carburante.value=r.carburante;passaggio.value=r.passaggio_consegne||'';noteFinali.value=r.note_finali||'';scadenze.value=r.controllo_scadenze||'';esito.value=r.esito||'';firma.value=r.firma||'';responses=JSON.parse(JSON.stringify(r.risposte||{}));
+ showView('new');viewingArchivedRecord=true;if(document.getElementById('mezzoPc'))document.getElementById('mezzoPc').value=r.mezzo||'';data.value=r.data;ora.value=String(r.ora||'').slice(0,5);compilatore.value=r.compilatore;km.value=r.km_iniziali;carburante.value=r.carburante;passaggio.value=r.passaggio_consegne||'';noteFinali.value=r.note_finali||'';scadenze.value=r.controllo_scadenze||'';esito.value=r.esito||'';firma.value=r.firma||'';responses=JSON.parse(JSON.stringify(r.risposte||{}));
  updateChecklistChoiceStyles();writeDraft();window.scrollTo(0,0)
 }
 function exportData(){
@@ -381,13 +391,7 @@ function refreshTimeForToday(){
 }
 renderChecklist();setNow();
 document.getElementById('data').addEventListener('change',refreshTimeForToday);
-document.getElementById('tabNuova').addEventListener('click',()=>{
- const now=italyNow();
- // Refresh the automatic time only on an otherwise empty new checklist.
- if(!draftHasWork(draftSnapshot())&&document.getElementById('data').value===now.date){
-  document.getElementById('ora').value=now.time;
- }
-});
+
 document.getElementById('newView').addEventListener('input',writeDraft);
 document.getElementById('newView').addEventListener('change',writeDraft);
 document.getElementById('newView').addEventListener('click',event=>{if(event.target.closest('.choice'))writeDraft()});
