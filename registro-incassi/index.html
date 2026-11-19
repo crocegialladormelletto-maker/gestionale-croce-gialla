@@ -32,13 +32,19 @@ function noteSheets(n){const ids=new Set(noteSheetIds(n));return sheets.filter(f
 function used(f){return payments.filter(p=>p.stato==='REGISTRATO'&&(p.foglio_viaggio_id===f.id||(f.servizio_giornaliero_id&&p.servizio_id===f.servizio_giornaliero_id)))}
 function resid(f){return Math.max(0,Number(f.totale_servizio||0)-used(f).reduce((a,p)=>a+Number(p.importo||0),0))}
 function labelService(x){return [dateIT(x.data_servizio),x.mezzo,x.tipo_servizio,[x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' '),money(x.residuo)].filter(Boolean).join(' · ')}
-function labelNote(n){return [n.numero,n.intestatario,'Residuo '+money(noteSheets(n).reduce((a,f)=>a+resid(f),0))].filter(Boolean).join(' · ')}
+function labelNote(n){
+ const nums=noteSheets(n).map(f=>f.numero_foglio).filter(Boolean);
+ return [n.numero,nums.join(' + '),n.intestatario,'Residuo '+money(noteSheets(n).reduce((a,f)=>a+resid(f),0))].filter(Boolean).join(' · ');
+}
+function matchesNoteSearch(n,query){
+ return labelNote(n).toLowerCase().includes(query);
+}
 function targets(){
  const type=$('origin').value,q=$('search').value.trim().toLowerCase(),previous=$('target').value;
  const linked=noteLinkedServiceIds();
  const all=type==='service'?services.filter(x=>Number(x.residuo||0)>.005&&String(x.tipo_servizio||'')!=='118'&&!linked.has(x.servizio_id)):notes.filter(n=>n.stato==='EMESSA'&&!n.data_pagamento&&noteSheets(n).some(f=>resid(f)>.005));
  $('sheetField').classList.toggle('hidden',type!=='note');
- const arr=all.filter(x=>(type==='service'?labelService(x):labelNote(x)).toLowerCase().includes(q));
+ const arr=all.filter(x=>type==='service'?labelService(x).toLowerCase().includes(q):matchesNoteSearch(x,q));
  $('target').innerHTML='<option value="">— Seleziona —</option>'+arr.slice(0,1600).map(x=>'<option value="'+esc(type==='service'?x.servizio_id:x.id)+'">'+esc(type==='service'?labelService(x):labelNote(x))+'</option>').join('');
  if(arr.some(x=>String(type==='service'?x.servizio_id:x.id)===previous))$('target').value=previous;
  selected();
@@ -102,7 +108,22 @@ async function reload(){
   render();notice('');$('save').disabled=false;
  }catch(e){notice('Dati incompleti: '+(e.message||String(e))+'. Nessun incasso consentito.','error')}
 }
-$('origin').onchange=()=>{$('search').value='';targets()};$('search').oninput=targets;$('target').onchange=selected;$('refresh').onclick=reload;$('date').value=dateIT(today());
+$('origin').onchange=()=>{$('search').value='';targets()};
+$('search').oninput=()=>{
+ const q=$('search').value.trim().toLowerCase();
+ if(q){
+  const dueNotes=notes.filter(n=>n.stato==='EMESSA'&&!n.data_pagamento&&noteSheets(n).some(f=>resid(f)>.005));
+  const exactOrSpecific=dueNotes.some(n=>String(n.numero||'').toLowerCase()===q||noteSheets(n).some(f=>String(f.numero_foglio||'').toLowerCase()===q));
+  const looksLikeDocument=/^(cge[_ -]|fv[-_]|\d{4}-0[6-9]-)/i.test(q);
+  const noteMatch=dueNotes.some(n=>matchesNoteSearch(n,q));
+  const serviceMatch=services.some(x=>Number(x.residuo||0)>.005&&labelService(x).toLowerCase().includes(q)&&!noteLinkedServiceIds().has(x.servizio_id));
+  if(noteMatch&&(exactOrSpecific||looksLikeDocument||(!serviceMatch&&$('origin').value==='service')))$('origin').value='note';
+ }
+ targets();
+ const available=[...$('target').options].filter(o=>o.value);
+ if(available.length===1){$('target').value=available[0].value;selected()}
+};
+$('target').onchange=selected;$('refresh').onclick=reload;$('date').value=dateIT(today());
 $('save').onclick=async()=>{
  if(busy||!authorized)return;
  const type=$('origin').value,id=$('target').value,amount=Number($('amount').value),date=parseIT($('date').value),method=$('method').value;
