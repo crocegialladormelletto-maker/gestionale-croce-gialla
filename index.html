@@ -3522,7 +3522,7 @@ function tabletUpdatePaymentDateVisibility(){
 }
 function tabletToggleReceiptSection(){
  const sec=$('tabletReceiptSection');if(!sec)return;
- const show=!!tabletCurrentSheet&&!tabletIs118Type(tabletCurrentSheet.tipo_servizio||tabletCurrentService?.tipo_servizio||'');
+ const show=false; // Incassi e ricevute amministrative sono gestiti esclusivamente dal gestionale.
  sec.classList.toggle('hidden',!show);
  if(!show){if($('tabletReceiptFile'))$('tabletReceiptFile').value='';msg('tabletReceiptMsg','')}
 }
@@ -12858,8 +12858,8 @@ function tabletApplyImmediateTypeRules(){
  $('tabletAdTariffDest').disabled=internal;
  $('tabletAdNight').disabled=internal;
  $('tabletAdAmount').disabled=internal;
- if($('tabletAdPaymentBox'))$('tabletAdPaymentBox').classList.toggle('hidden',internal);
- if(internal){if($('tabletAdPaymentSignal'))$('tabletAdPaymentSignal').value='';if($('tabletAdPaymentMethod'))$('tabletAdPaymentMethod').value='';
+ if($('tabletAdPaymentBox'))$('tabletAdPaymentBox').classList.remove('hidden');
+ if(internal){
   $('tabletAdTariffGroup').value='';
   tabletUpdateImmediateTariff();
   $('tabletAdAmount').value='0';
@@ -13073,7 +13073,7 @@ async function tabletCreateImmediate(){
   if(Number.isFinite(kmStart))kmUpdate.km_partenza=kmStart;
   if(Number.isFinite(kmClose))kmUpdate.km_arrivo=kmClose;
   const immediateInternal=$('tabletAdType').value==='Servizio interno';
-  const signal=immediateInternal?null:($('tabletAdPaymentSignal')?.value||null);
+  const signal=$('tabletAdPaymentSignal')?.value||null;
   const method=signal==='yes'?($('tabletAdPaymentMethod')?.value||null):null;
   if(signal==='yes'&&!method)throw new Error('Indicare la modalità del pagamento segnalato.');
   createdPayMode=method;
