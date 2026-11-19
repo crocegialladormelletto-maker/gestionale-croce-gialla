@@ -4,7 +4,8 @@
 <section id="login" class="panel hidden"><h2>Accesso amministrazione</h2><div class="field"><label>Email</label><input id="email" type="email"></div><div class="field"><label>Password</label><input id="password" type="password"></div><div class="actions"><button id="signIn">Accedi</button></div><div id="loginMsg"></div></section>
 <main id="app" class="hidden">
 <div class="panel"><h2>Situazione attuale</h2><p class="muted">Un pagamento viene contabilizzato soltanto dopo conferma dell'amministrazione. I dati del tablet sono segnalazioni.</p><div class="stats"><div class="stat"><small>Servizi con residuo</small><b id="due">—</b></div><div class="stat"><small>Incassi registrati</small><b id="count">—</b></div><div class="stat"><small>Tablet: pagato segnalato</small><b id="signalsCount">—</b></div></div></div>
-<div class="panel"><h2>Registra incasso</h2><p class="muted">Seleziona l'origine. I pagamenti delle Note di Debito usano la procedura di riconciliazione già esistente. Per i bonifici registra soltanto accrediti effettivi.</p><div class="grid"><div class="field"><label>Tipo documento</label><select id="origin"><option value="service">Servizio / fattura Aruba</option><option value="note">Nota di Debito</option></select></div><div class="field" style="grid-column:span 3"><label>Ricerca</label><input id="search" placeholder="Numero documento, nominativo, data"></div></div>
+<div class="panel"><h2>Registra incasso</h2><p class="muted">Seleziona l'origine. I pagamenti delle Note di Debito usano la procedura di riconciliazione già esistente. Per i bonifici registra soltanto accrediti effettivi.</p><div class="grid"><div class="field"><label>Tipo documento</label><select id="origin"><option value="service">Servizio / fattura Aruba</option><option value="note">Nota di Debito</option></select></div><div class="field" style="grid-column:span 3"><label>Ricerca per numero foglio, nota di debito o paziente</label><div style="display:flex;gap:8px"><input id="search" placeholder="Es. CGE_559_2026 oppure FV-2026-06-000146" style="flex:1;min-width:0"><button id="searchBtn" type="button" class="secondary">🔎 Cerca</button></div></div></div>
+<div id="searchResults" class="notice" aria-live="polite">Scrivi il numero del foglio, la nota di debito oppure il cognome e premi Cerca.</div>
 <div class="field" style="margin-top:10px"><label>Servizio o documento da incassare</label><select id="target"></select></div><div class="field hidden" id="sheetField" style="margin-top:10px"><label>Foglio viaggio collegato (per note multiple)</label><select id="sheet"></select></div><div id="info" class="notice">Seleziona un servizio o una nota.</div>
 <div class="grid"><div class="field"><label>Importo ricevuto €</label><input id="amount" type="number" min=".01" step=".01"></div><div class="field"><label>Metodo</label><select id="method"><option value="POS">POS</option><option value="CONTANTI">Contanti</option><option value="BONIFICO">Bonifico già accreditato</option></select></div><div class="field"><label>Data effettiva incasso (GG/MM/AAAA)</label><input id="date" type="text" inputmode="numeric" maxlength="10" placeholder="GG/MM/AAAA"></div><div class="field"><label>Riferimento (facoltativo)</label><input id="ref" maxlength="160"></div></div><div class="actions"><button id="save">💰 Registra incasso</button><button id="refresh" class="secondary">↻ Aggiorna</button></div><div id="status"></div></div>
 <div class="panel"><h2>Segnalazioni tablet da verificare</h2><div class="table"><table><thead><tr><th>Foglio</th><th>Data</th><th>Paziente</th><th>Segnalato</th><th>Metodo</th><th>Azione</th></tr></thead><tbody id="signalRows"></tbody></table></div></div>
@@ -39,15 +40,62 @@ function labelNote(n){
 function matchesNoteSearch(n,query){
  return labelNote(n).toLowerCase().includes(query);
 }
-function targets(){
- const type=$('origin').value,q=$('search').value.trim().toLowerCase(),previous=$('target').value;
- const linked=noteLinkedServiceIds();
+function searchMatches(){
+ const type=$('origin').value,q=$('search').value.trim().toLowerCase(),linked=noteLinkedServiceIds();
  const all=type==='service'?services.filter(x=>Number(x.residuo||0)>.005&&String(x.tipo_servizio||'')!=='118'&&!linked.has(x.servizio_id)):notes.filter(n=>n.stato==='EMESSA'&&!n.data_pagamento&&noteSheets(n).some(f=>resid(f)>.005));
+ return all.filter(x=>type==='service'?labelService(x).toLowerCase().includes(q):matchesNoteSearch(x,q));
+}
+function targets(){
+ const type=$('origin').value,previous=$('target').value,arr=searchMatches();
  $('sheetField').classList.toggle('hidden',type!=='note');
- const arr=all.filter(x=>type==='service'?labelService(x).toLowerCase().includes(q):matchesNoteSearch(x,q));
- $('target').innerHTML='<option value="">— Seleziona —</option>'+arr.slice(0,1600).map(x=>'<option value="'+esc(type==='service'?x.servizio_id:x.id)+'">'+esc(type==='service'?labelService(x):labelNote(x))+'</option>').join('');
+ $('target').innerHTML='<option value="">— Seleziona documento —</option>'+arr.slice(0,1600).map(x=>'<option value="'+esc(type==='service'?x.servizio_id:x.id)+'">'+esc(type==='service'?labelService(x):labelNote(x))+'</option>').join('');
  if(arr.some(x=>String(type==='service'?x.servizio_id:x.id)===previous))$('target').value=previous;
+ else if($('search').value.trim()&&arr.length===1)$('target').value=type==='service'?arr[0].servizio_id:arr[0].id;
  selected();
+ renderSearchResults(arr);
+}
+function renderSearchResults(arr){
+ const q=$('search').value.trim(),kind=$('origin').value;
+ if(!q){$('searchResults').textContent='Scrivi il numero del foglio, la nota di debito oppure il cognome e premi Cerca.';return}
+ if(!arr.length){$('searchResults').textContent='Nessun risultato per «'+q+'» fra i documenti da incassare. Verifica il numero oppure premi Cerca per aggiornare dal database.';return}
+ $('searchResults').innerHTML='<strong>'+arr.length+' risultato/i trovati</strong><div style="display:grid;gap:7px;margin-top:9px">'+arr.slice(0,25).map(x=>'<button type="button" class="secondary" style="text-align:left" data-result="'+esc(kind==='service'?x.servizio_id:x.id)+'">'+esc(kind==='service'?labelService(x):labelNote(x))+'</button>').join('')+'</div>';
+ $('searchResults').querySelectorAll('[data-result]').forEach(b=>b.onclick=()=>{$('target').value=b.dataset.result;selected();$('target').scrollIntoView({behavior:'smooth',block:'center'})});
+}
+async function remoteFind(){
+ if(!authorized)return;
+ const q=$('search').value.trim();
+ if(!q){targets();return}
+ const btn=$('searchBtn');btn.disabled=true;$('searchResults').textContent='Ricerca nel database in corso...';
+ try{
+  const term=q.replace(/[,%()]/g,'').trim();
+  const [ns,fs]=await Promise.all([
+   sb.from('note_di_debito').select('id,numero,intestatario,totale,stato,data_pagamento,foglio_viaggio_id').or('numero.ilike.%'+term+'%,intestatario.ilike.%'+term+'%').limit(100),
+   sb.from('fogli_viaggio').select('id,numero_foglio,servizio_giornaliero_id,totale_servizio').ilike('numero_foglio','%'+term+'%').limit(100)
+  ]);
+  if(ns.error||fs.error)throw new Error(ns.error?.message||fs.error?.message);
+  for(const n of ns.data||[])if(!notes.some(x=>x.id===n.id))notes.push(n);
+  for(const f of fs.data||[])if(!sheets.some(x=>x.id===f.id))sheets.push(f);
+  if((fs.data||[]).length){
+   const ids=(fs.data||[]).map(f=>f.id);
+   const [direct,linked]=await Promise.all([
+    sb.from('note_di_debito').select('id,numero,intestatario,totale,stato,data_pagamento,foglio_viaggio_id').in('foglio_viaggio_id',ids),
+    sb.from('note_debito_fogli').select('nota_id,foglio_id').in('foglio_id',ids)
+   ]);
+   if(direct.error||linked.error)throw new Error(direct.error?.message||linked.error?.message);
+   for(const n of direct.data||[])if(!notes.some(x=>x.id===n.id))notes.push(n);
+   for(const l of linked.data||[])if(!links.some(x=>x.nota_id===l.nota_id&&x.foglio_id===l.foglio_id))links.push(l);
+   const linkedIds=[...new Set((linked.data||[]).map(l=>l.nota_id))];
+   if(linkedIds.length){
+    const extra=await sb.from('note_di_debito').select('id,numero,intestatario,totale,stato,data_pagamento,foglio_viaggio_id').in('id',linkedIds);
+    if(extra.error)throw extra.error;
+    for(const n of extra.data||[])if(!notes.some(x=>x.id===n.id))notes.push(n);
+   }
+  }
+  const matchingNotes=notes.filter(n=>n.stato==='EMESSA'&&!n.data_pagamento&&matchesNoteSearch(n,q.toLowerCase()));
+  if(matchingNotes.length&&$('origin').value!=='note')$('origin').value='note';
+  targets();
+ }catch(e){$('searchResults').textContent='Ricerca non riuscita: '+(e.message||String(e))}
+ finally{btn.disabled=false}
 }
 function selected(){
  const id=$('target').value,type=$('origin').value;$('sheet').innerHTML='';
@@ -108,21 +156,19 @@ async function reload(){
   render();notice('');$('save').disabled=false;
  }catch(e){notice('Dati incompleti: '+(e.message||String(e))+'. Nessun incasso consentito.','error')}
 }
-$('origin').onchange=()=>{$('search').value='';targets()};
+$('origin').onchange=()=>{targets()};
 $('search').oninput=()=>{
  const q=$('search').value.trim().toLowerCase();
  if(q){
-  const dueNotes=notes.filter(n=>n.stato==='EMESSA'&&!n.data_pagamento&&noteSheets(n).some(f=>resid(f)>.005));
-  const exactOrSpecific=dueNotes.some(n=>String(n.numero||'').toLowerCase()===q||noteSheets(n).some(f=>String(f.numero_foglio||'').toLowerCase()===q));
-  const looksLikeDocument=/^(cge[_ -]|fv[-_]|\d{4}-0[6-9]-)/i.test(q);
-  const noteMatch=dueNotes.some(n=>matchesNoteSearch(n,q));
-  const serviceMatch=services.some(x=>Number(x.residuo||0)>.005&&labelService(x).toLowerCase().includes(q)&&!noteLinkedServiceIds().has(x.servizio_id));
-  if(noteMatch&&(exactOrSpecific||looksLikeDocument||(!serviceMatch&&$('origin').value==='service')))$('origin').value='note';
+  const outstanding=notes.filter(n=>n.stato==='EMESSA'&&!n.data_pagamento&&noteSheets(n).some(f=>resid(f)>.005));
+  const noteMatches=outstanding.filter(n=>matchesNoteSearch(n,q));
+  const servicesMatch=services.some(x=>Number(x.residuo||0)>.005&&labelService(x).toLowerCase().includes(q)&&!noteLinkedServiceIds().has(x.servizio_id));
+  if(noteMatches.length&&(q.startsWith('cge')||q.startsWith('fv-')||!servicesMatch))$('origin').value='note';
  }
  targets();
- const available=[...$('target').options].filter(o=>o.value);
- if(available.length===1){$('target').value=available[0].value;selected()}
 };
+$('search').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();remoteFind()}};
+$('searchBtn').onclick=remoteFind;
 $('target').onchange=selected;$('refresh').onclick=reload;$('date').value=dateIT(today());
 $('save').onclick=async()=>{
  if(busy||!authorized)return;
