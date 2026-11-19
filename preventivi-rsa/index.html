@@ -36,7 +36,7 @@ function preparePrint(){
  addressEl.textContent=address?'Indirizzo RSA: '+address:'';
  addressEl.style.display=address?'block':'none';
  const note=val('notes');
- document.getElementById('conditionsSection').classList.toggle('print-hide-empty',!note);
+ document.getElementById('notesPrint').classList.toggle('print-hide-empty',!note);
  document.getElementById('notesPrint').textContent=note;
 }
 window.addEventListener('beforeprint',preparePrint);
