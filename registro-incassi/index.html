@@ -4,7 +4,7 @@
 <section id="login" class="panel hidden"><h2>Accesso amministrazione</h2><div class="field"><label>Email</label><input id="email" type="email"></div><div class="field"><label>Password</label><input id="password" type="password"></div><div class="actions"><button id="signIn">Accedi</button></div><div id="loginMsg"></div></section>
 <main id="app" class="hidden">
 <div class="panel"><h2>Situazione attuale</h2><p class="muted">Un pagamento viene contabilizzato soltanto dopo conferma dell'amministrazione. I dati del tablet sono segnalazioni.</p><div class="stats"><div class="stat"><small>Servizi con residuo</small><b id="due">—</b></div><div class="stat"><small>Incassi registrati</small><b id="count">—</b></div><div class="stat"><small>Tablet: pagato segnalato</small><b id="signalsCount">—</b></div></div></div>
-<div class="panel"><h2>Situazione pagamenti per servizio</h2><p class="muted">Elenco consultabile anche per i servizi già pagati. I dati provengono dalla contabilità; la chiusura del foglio viaggio non viene modificata.</p><div class="grid" style="margin:12px 0"><div class="field" style="grid-column:span 3"><label>Cerca paziente, foglio viaggio o nota di debito</label><input id="overviewSearch" placeholder="Cerca in tutti i servizi"></div><div class="field"><label>Stato pagamento</label><select id="overviewFilter"><option value="all">Tutti</option><option value="due">Da incassare</option><option value="partial">Parzialmente pagati</option><option value="paid">Pagati / anticipi</option><option value="unknown">Importo da verificare</option></select></div></div><div id="overviewCount" class="muted"></div><div class="table"><table><thead><tr><th>Data / Foglio</th><th>Paziente</th><th>Nota di debito</th><th>Importo</th><th>Incassato</th><th>Residuo</th><th>Stato</th><th>Ultimo pagamento</th><th>Azione</th></tr></thead><tbody id="overviewRows"></tbody></table></div></div>
+<div class="panel"><h2>Situazione pagamenti per servizio</h2><p class="muted">Elenco consultabile anche per i servizi già pagati. I dati provengono dalla contabilità; la chiusura del foglio viaggio non viene modificata.</p><div class="grid" style="margin:12px 0"><div class="field" style="grid-column:span 3"><label>Cerca paziente, foglio viaggio o nota di debito</label><input id="overviewSearch" placeholder="Cerca in tutti i servizi"></div><div class="field"><label>Stato pagamento</label><select id="overviewFilter"><option value="all">Tutti</option><option value="due">Da incassare</option><option value="partial">Parzialmente pagati</option><option value="paid">Pagati / anticipi</option><option value="unknown">Importo da verificare</option></select></div></div><div class="field" style="margin:13px 0"><label>Scegli il mese dei servizi</label><div id="monthButtons" class="actions" style="margin:7px 0;gap:7px"></div></div><div id="overviewCount" class="muted" aria-live="polite"></div><div class="table"><table><thead><tr><th>Data / Foglio</th><th>Paziente</th><th>Nota di debito</th><th>Importo</th><th>Incassato</th><th>Residuo</th><th>Stato</th><th>Ultimo pagamento</th><th>Azione</th></tr></thead><tbody id="overviewRows"></tbody></table></div></div>
 <div class="panel"><h2>Registra incasso</h2><p class="muted">Seleziona l'origine. I pagamenti delle Note di Debito usano la procedura di riconciliazione già esistente. Per i bonifici registra soltanto accrediti effettivi.</p><div class="grid"><div class="field"><label>Tipo documento</label><select id="origin"><option value="service">Servizio / fattura Aruba</option><option value="note">Nota di Debito</option></select></div><div class="field" style="grid-column:span 3"><label>Ricerca per numero foglio, nota di debito o paziente</label><div style="display:flex;gap:8px"><input id="search" placeholder="Es. CGE_559_2026 oppure FV-2026-06-000146" style="flex:1;min-width:0"><button id="searchBtn" type="button" class="secondary">🔎 Cerca</button></div></div></div>
 <div id="searchResults" class="notice" aria-live="polite">Scrivi il numero del foglio, la nota di debito oppure il cognome e premi Cerca.</div>
 <div class="field" style="margin-top:10px"><label>Servizio o documento da incassare</label><select id="target"></select></div><div class="field hidden" id="sheetField" style="margin-top:10px"><label>Foglio viaggio collegato (per note multiple)</label><select id="sheet"></select></div><div id="info" class="notice">Seleziona un servizio o una nota.</div>
@@ -127,7 +127,22 @@ function normalizedDate(value){
  if(it)return it[3]+'-'+it[2].padStart(2,'0')+'-'+it[1].padStart(2,'0');
  return '';
 }
+let selectedOverviewMonth='';
+const monthNames=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+function renderMonthButtons(){
+ const keys=[...new Set(services.filter(x=>String(x.tipo_servizio||'')!=='118').map(x=>normalizedDate(x.data_servizio).slice(0,7)).filter(x=>/^\\d{4}-\\d{2}$/.test(x)))].sort();
+ const todayMonth=today().slice(0,7);
+ if(!keys.includes(selectedOverviewMonth))selectedOverviewMonth=keys.includes(todayMonth)?todayMonth:(keys.filter(x=>x<=todayMonth).at(-1)||keys[0]||'');
+ const counts=new Map();
+ services.filter(x=>String(x.tipo_servizio||'')!=='118').forEach(x=>{const k=normalizedDate(x.data_servizio).slice(0,7);counts.set(k,(counts.get(k)||0)+1)});
+ $('monthButtons').innerHTML=keys.map(k=>{
+  const [year,month]=k.split('-'),active=k===selectedOverviewMonth;
+  return '<button type="button" data-month="'+esc(k)+'" aria-pressed="'+active+'" style="background:'+(active?'#16324a':'#edf2f6')+';color:'+(active?'#fff':'#16324a')+';border:1px solid '+(active?'#16324a':'#cbd5df')+'">'+esc(monthNames[Number(month)-1]+' '+year)+' ('+counts.get(k)+')</button>';
+ }).join('')||'<span class="muted">Nessun mese disponibile</span>';
+ $('monthButtons').querySelectorAll('[data-month]').forEach(b=>b.onclick=()=>{selectedOverviewMonth=b.dataset.month;renderOverview()});
+}
 function renderOverview(){
+ renderMonthButtons();
  const q=$('overviewSearch').value.trim().toLowerCase(),filter=$('overviewFilter').value;
  const records=services.filter(x=>String(x.tipo_servizio||'')!=='118').map(x=>{
   const associated=sheets.filter(f=>f.servizio_giornaliero_id===x.servizio_id);
@@ -140,6 +155,7 @@ function renderOverview(){
   return {x,note,due,paid,remaining,status,related};
  }).filter(r=>{
   if(filter!=='all'&&r.status!==filter)return false;
+  if(normalizedDate(r.x.data_servizio).slice(0,7)!==selectedOverviewMonth)return false;
   const x=r.x,needle=[x.numero_foglio,x.data_servizio,x.paziente_nome,x.paziente_cognome,r.note?.numero,r.note?.intestatario].join(' ').toLowerCase();
   return !q||needle.includes(q);
  }).sort((a,b)=>{
@@ -150,7 +166,7 @@ function renderOverview(){
   if(af&&bf)return da.localeCompare(db);
   return db.localeCompare(da);
  });
- $('overviewCount').textContent=records.length+' servizi visualizzati (massimo 500 righe per schermata)';
+ $('overviewCount').textContent=(selectedOverviewMonth?monthNames[Number(selectedOverviewMonth.slice(5,7))-1]+' '+selectedOverviewMonth.slice(0,4)+' · ':'')+records.length+' servizi trovati (massimo 500 righe visibili)';
  $('overviewRows').innerHTML=records.slice(0,500).map(r=>{
   const x=r.x,p=r.related[0],note=r.note;
   const future=normalizedDate(x.data_servizio)>today();
