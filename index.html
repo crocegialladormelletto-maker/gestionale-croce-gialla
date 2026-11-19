@@ -14533,7 +14533,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.82-payment-method-sheet-only';
+const CGE_APP_BUILD='14.83-tablet-payment-signal';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
