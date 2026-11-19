@@ -42,7 +42,7 @@ self.addEventListener('fetch', event => {
       && url.searchParams.get('area') === 'tablet'
       && /^0[6-9]$/.test(url.searchParams.get('mezzo') || '');
     const freshUrl = isTablet ? new URL(request.url) : null;
-    if (freshUrl) freshUrl.searchParams.set('_cge_app_build', '14.82-payment-method-sheet-only');
+    if (freshUrl) freshUrl.searchParams.set('_cge_app_build', '14.83-tablet-payment-signal');
     event.respondWith(
       fetch(freshUrl ? freshUrl.href : request, {cache:'no-store'}).catch(async () => {
         if (url.pathname === APP_BASE + 'app-volontari.html') {
