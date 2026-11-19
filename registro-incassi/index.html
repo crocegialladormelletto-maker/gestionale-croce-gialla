@@ -132,6 +132,13 @@ function renderOverview(){
   if(filter!=='all'&&r.status!==filter)return false;
   const x=r.x,needle=[x.numero_foglio,x.data_servizio,x.paziente_nome,x.paziente_cognome,r.note?.numero,r.note?.intestatario].join(' ').toLowerCase();
   return !q||needle.includes(q);
+ }).sort((a,b)=>{
+  // Servizi passati e odierni: più recenti in alto. Servizi futuri: in fondo, in ordine crescente.
+  const current=today(),da=String(a.x.data_servizio||'').slice(0,10),db=String(b.x.data_servizio||'').slice(0,10);
+  const af=da>current,bf=db>current;
+  if(af!==bf)return af?1:-1;
+  if(af&&bf)return da.localeCompare(db);
+  return db.localeCompare(da);
  });
  $('overviewCount').textContent=records.length+' servizi visualizzati (massimo 500 righe per schermata)';
  $('overviewRows').innerHTML=records.slice(0,500).map(r=>{
