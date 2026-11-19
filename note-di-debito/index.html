@@ -125,6 +125,7 @@
       <button id="savePayment" class="btn green">✓ Conferma nota interamente pagata</button>
       <button id="print" class="btn blue">🖨 Stampa</button>
       <button id="downloadPdf" class="btn green">⬇ Scarica PDF</button>
+      <button id="saveCorrectedRecipient" type="button" class="btn secondary hidden">✏️ Salva intestatario corretto</button>
       <button id="sendPdfMail" class="btn yellow">📧 Invia con PDF allegato</button>
        <button id="saveRecipientEmail" class="btn secondary hidden" type="button">💾 Salva email destinatario</button>
      </div>
@@ -287,7 +288,9 @@ function fill(){
  $('dPaidWithText').value=n.pagato_con_testo||n.modalita_pagamento||'';
  $('dEmailState').value=n.email_stato||'NON_INVIATA';calcTotal();
  const draft=n.stato==='BOZZA';
- ['dDate','dName','dCF','dAddress','dCap','dTown','dProvince','dDescription','dAmount','dDiscount'].forEach(id=>$(id).disabled=!draft);
+ ['dDate','dCF','dAddress','dCap','dTown','dProvince','dDescription','dAmount','dDiscount'].forEach(id=>$(id).disabled=!draft);
+ $('dName').disabled=false;
+ $('saveCorrectedRecipient').classList.toggle('hidden',draft);
  $('dEmail').disabled=false;
  $('saveRecipientEmail').classList.toggle('hidden',draft);
  $('save').classList.toggle('hidden',!draft);$('issue').classList.toggle('hidden',!draft);
@@ -304,9 +307,9 @@ function fill(){
  $('savePayText').classList.toggle('hidden',draft);
  $('print').disabled=false;$('downloadPdf').disabled=false;
  const alreadySent=n.email_stato==='INVIATA';
- $('sendPdfMail').disabled=draft||alreadySent;
- $('sendPdfMail').textContent=alreadySent?'✓ Email già inviata':'📧 Invia con PDF allegato';
- $('sendPdfMail').title=draft?'Disponibile dopo l’emissione definitiva':alreadySent?'Email già inviata: controlla lo storico prima di un eventuale reinvio':'Invia direttamente la Nota di Debito con PDF allegato';
+ $('sendPdfMail').disabled=draft;
+ $('sendPdfMail').textContent=alreadySent?'📧 Reinvia nota corretta':'📧 Invia con PDF allegato';
+ $('sendPdfMail').title=draft?'Disponibile dopo l’emissione definitiva':alreadySent?'Reinvio esplicito della stessa nota; lo storico del primo invio rimane conservato':'Invia direttamente la Nota di Debito con PDF allegato';
  $('dPayment').disabled=false;$('dPayDate').disabled=false;
  $('draftNotice').classList.toggle('hidden',!draft);
  $('draftNotice').textContent=draft?'BOZZA MODIFICABILE: controlla e completa tutti i dati. Il documento diventerà definitivo solo premendo “Emetti Nota di Debito”.':'';
@@ -475,6 +478,21 @@ $('savePayment').onclick=async()=>{
   msg('detailMsg','Non è stato possibile confermare il saldo: '+(e.message||String(e)),'err');
  }finally{button.disabled=false;}
 };
+$('saveCorrectedRecipient').onclick=async()=>{
+ if(!active||active.stato!=='EMESSA')return;
+ const nome=$('dName').value.trim().replace(/\s+/g,' ');
+ if(nome===String(active.intestatario||'').trim())return msg('detailMsg','L’intestatario è già corretto. Puoi reinviare il PDF.','ok');
+ if(nome.length<5)return msg('detailMsg','Inserisci nome e cognome corretti.','err');
+ if(!confirm('CORREZIONE INTESTATARIO\n\nNota '+active.numero+'\nDa: '+active.intestatario+'\nA: '+nome+'\n\nNumero, importo e pagamenti restano invariati. Il precedente invio email rimane nello storico. Confermi?'))return;
+ const btn=$('saveCorrectedRecipient');btn.disabled=true;
+ try{
+  const r=await sb.rpc('cge_rettifica_intestatario_nota_emessa',{p_nota_id:active.id,p_intestatario:nome,p_motivo:'Rettifica anagrafica per reinvio documento corretto'});
+  if(r.error)throw r.error;
+  const id=active.id;await loadAll();await openNote(id);
+  msg('detailMsg','Intestatario corretto e salvato. Controlla il PDF, poi usa «Reinvia nota corretta» per inviarlo nuovamente.','ok');
+ }catch(e){msg('detailMsg','Correzione non salvata: '+(e.message||String(e)),'err')}
+ finally{btn.disabled=false}
+};
 $('saveRecipientEmail').onclick=async()=>{
  if(!active||active.stato!=='EMESSA')return;
  const email=$('dEmail').value.trim();
@@ -509,12 +527,17 @@ $('sendPdfMail').onclick=async()=>{
   btn.textContent='Verifica invii precedenti…';
   msg('detailMsg','Controllo se la nota è già stata inviata…');
   const prior=await Promise.race([cgeNotaEmailStatus(nota.id),cgeInvioTimeout('Verifica email',12000)]);
-  if(prior?.email_stato==='INVIATA'){
-   msg('detailMsg','Nota '+nota.numero+' già inviata il '+nice(prior.email_inviata_il)+'. Nessun nuovo invio effettuato.','ok');
-   btn.textContent='✓ Email già inviata';
-   return;
-  }
-  if(!confirm('Inviare la Nota di Debito '+nota.numero+' a '+nota.email+' con il PDF allegato?'))return;
+  const latest=await sb.from('note_di_debito').select('id,intestatario,email,stato').eq('id',nota.id).single();
+  if(latest.error||!latest.data||latest.data.stato!=='EMESSA')throw new Error('Non riesco a verificare la nota aggiornata.');
+  if(latest.data.intestatario!==nota.intestatario||latest.data.email!==nota.email)throw new Error('La nota è stata modificata. Riaprila e verifica prima di inviare.');
+  if($('dName').value.trim()!==nota.intestatario)throw new Error('Salva prima la correzione del nominativo.');
+  const repeat=prior?.email_stato==='INVIATA';
+  const question=(repeat?'REINVIO DI DOCUMENTO CORRETTO':'INVIO NOTA DI DEBITO')+
+   '\\n\\nNota: '+nota.numero+'\\nIntestatario: '+nota.intestatario+
+   '\\nDestinatario: '+nota.email+
+   (repeat?'\\nInvio precedente: '+nice(prior.email_inviata_il):'')+
+   '\\n\\n'+(repeat?'Inviare una NUOVA email con il PDF aggiornato? Lo storico del primo invio sarà conservato.':'Inviare il PDF allegato?');
+  if(!confirm(question))return;
   btn.textContent='Preparazione PDF…';
   msg('detailMsg','Preparazione del PDF in corso. La velocità dipende dal computer…');
   const canvas=await Promise.race([renderNoteCanvas(nota),cgeInvioTimeout('Preparazione PDF',35000)]);
