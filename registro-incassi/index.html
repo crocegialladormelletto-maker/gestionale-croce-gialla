@@ -55,23 +55,34 @@ function render(){
  $('signalRows').querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{$('origin').value='service';$('search').value='';targets();$('target').value=b.dataset.open;selected();$('target').scrollIntoView({behavior:'smooth'})});
  $('history').innerHTML=payments.slice().sort((a,b)=>String(b.data_pagamento||'').localeCompare(String(a.data_pagamento||''))).slice(0,500).map(p=>'<tr><td>'+esc(p.data_pagamento)+'</td><td>'+esc(p.servizio_id||p.foglio_viaggio_id||'—')+'</td><td>'+esc(money(p.importo))+'</td><td>'+esc(p.modalita)+'</td><td>'+esc(p.riferimento||p.note||'—')+'</td><td>'+esc(p.stato)+'</td></tr>').join('')||'<tr><td colspan="6">Nessun movimento</td></tr>';
 }
+async function allPages(table,fields,orderColumn){
+ const result=[];
+ for(let start=0;start<10000;start+=1000){
+  let query=sb.from(table).select(fields);
+  if(orderColumn)query=query.order(orderColumn,{ascending:false});
+  const r=await query.range(start,start+999);
+  if(r.error)throw new Error('Lettura '+table+': '+r.error.message);
+  result.push(...(r.data||[]));
+  if((r.data||[]).length<1000)return {data:result,error:null};
+ }
+ throw new Error('Limite di 10.000 record raggiunto per '+table+'. Registrazione bloccata per sicurezza.');
+}
 async function reload(){
  $('save').disabled=true;notice('Caricamento e verifica saldi...');
  try{
   const rs=await Promise.all([
    sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(2000),
-   sb.from('note_di_debito').select('id,numero,intestatario,totale,stato,data_pagamento,foglio_viaggio_id').order('data_documento',{ascending:false}).limit(2000),
-   sb.from('note_debito_fogli').select('nota_id,foglio_id').limit(5000),
-   sb.from('fogli_viaggio').select('id,numero_foglio,servizio_giornaliero_id,totale_servizio').limit(5000),
-   sb.from('pagamenti_servizi').select('id,servizio_id,foglio_viaggio_id,data_pagamento,importo,modalita,stato,riferimento,note').limit(5000),
+   allPages('note_di_debito','id,numero,intestatario,totale,stato,data_pagamento,foglio_viaggio_id','data_documento'),
+   allPages('note_debito_fogli','nota_id,foglio_id'),
+   allPages('fogli_viaggio','id,numero_foglio,servizio_giornaliero_id,totale_servizio'),
+   allPages('pagamenti_servizi','id,servizio_id,foglio_viaggio_id,data_pagamento,importo,modalita,stato,riferimento,note','data_pagamento'),
    sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,paziente_nome,paziente_cognome,servizio_giornaliero_id,pagamento_segnalato,metodo_pagamento_segnalato').not('pagamento_segnalato','is',null).order('data_servizio',{ascending:false}).limit(500)
   ]);
   for(let i=0;i<rs.length;i++)if(rs[i].error)throw rs[i].error;
   [services,notes,links,sheets,payments,signals]=rs.map(x=>x.data||[]);
   services=services.filter(x=>String(x.stato_gestionale||'')!=='ANNULLATO');
   targets();const params=new URLSearchParams(location.search),n=params.get('nota'),service=params.get('servizio');if(n&&notes.some(x=>x.id===n)){$('origin').value='note';$('search').value='';targets();$('target').value=n;selected();}else if(service&&services.some(x=>x.servizio_id===service)){$('origin').value='service';$('search').value='';targets();$('target').value=service;selected();}
-  render();notice('');$('save').disabled=payments.length>=5000;
-  if(payments.length>=5000)notice('Limite di movimenti raggiunto: registrazione bloccata per verifica.','error');
+  render();notice('');$('save').disabled=false;
  }catch(e){notice('Dati incompleti: '+(e.message||String(e))+'. Nessun incasso consentito.','error')}
 }
 $('origin').onchange=()=>{$('search').value='';targets()};$('search').oninput=targets;$('target').onchange=selected;$('refresh').onclick=reload;$('date').value=today();
