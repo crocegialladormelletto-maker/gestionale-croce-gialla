@@ -3,7 +3,7 @@
   "name": "Croce Gialla Emergenza · Tablet 06",
   "short_name": "Tablet 06",
   "description": "Trasporti ordinari, dimissioni e assistenze - mezzo 06",
-  "start_url": "/gestionale-croce-gialla/tablet-09-v14-42.html?area=tablet&mezzo=06&source=pwa",
+  "start_url": "/gestionale-croce-gialla/?area=tablet&mezzo=06&source=pwa",
   "scope": "/gestionale-croce-gialla/",
   "display": "standalone",
   "orientation": "any",
