@@ -130,7 +130,7 @@ function normalizedDate(value){
 let selectedOverviewMonth='';
 const monthNames=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 function renderMonthButtons(){
- const keys=[...new Set(services.filter(x=>String(x.tipo_servizio||'')!=='118').map(x=>normalizedDate(x.data_servizio).slice(0,7)).filter(x=>/^\\d{4}-\\d{2}$/.test(x)))].sort();
+ const keys=[...new Set(services.filter(x=>String(x.tipo_servizio||'')!=='118').map(x=>normalizedDate(x.data_servizio).slice(0,7)).filter(x=>/^\d{4}-\d{2}$/.test(x)))].sort();
  const todayMonth=today().slice(0,7);
  if(!keys.includes(selectedOverviewMonth))selectedOverviewMonth=keys.includes(todayMonth)?todayMonth:(keys.filter(x=>x<=todayMonth).at(-1)||keys[0]||'');
  const counts=new Map();
