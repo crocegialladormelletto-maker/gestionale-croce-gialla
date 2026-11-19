@@ -43,7 +43,7 @@
   </aside>
   <main>
    <section id="listView" class="surface">
-    <div class="hero"><h1 id="viewTitle">Fogli Viaggio da elaborare</h1><p id="viewSub">Fogli Viaggio chiusi che non hanno ancora una Nota di Debito.</p></div>
+    <div class="hero"><h1 id="viewTitle">Fogli Viaggio da elaborare</h1><p id="viewSub">Fogli Viaggio chiusi che non hanno ancora una Nota di Debito. Prima di emettere, verifica nel Registro Incassi se il pagamento è stato ricevuto e registrato.</p></div>
     <div class="pad">
      <div class="stats">
       <div class="stat"><small>DA ELABORARE</small><b id="sQueue">0</b></div>
@@ -211,7 +211,7 @@ function render(){
  const q=$('search').value.trim().toLowerCase(),g=groups();
  $('multiBox').classList.toggle('hidden',view!=='queue');
  const titles={
-  queue:['Fogli Viaggio da elaborare','Fogli Viaggio chiusi che non hanno ancora una Nota di Debito.'],
+  queue:['Fogli Viaggio da elaborare','Questi sono fogli marcia, NON note di debito. Stefano deve verificare o registrare gli incassi reali prima di emettere la nota; se il servizio non è pagato resta da incassare.'],
   drafts:['Bozze','Note di Debito create ma non ancora emesse.'],
   issued:['Emesse da incassare','Note emesse senza data di pagamento registrata.'],
   paid:['Pagate','Note emesse con pagamento registrato.'],
@@ -220,10 +220,10 @@ function render(){
  $('viewTitle').textContent=titles[view][0];$('viewSub').textContent=titles[view][1];
  const arr=g[view].filter(x=>!q||searchable(x).includes(q));
  if(view==='queue'){
-  $('thead').innerHTML='<tr><th>Foglio</th><th>Data</th><th>Paziente / intestatario</th><th>Servizio</th><th>Destinazione</th><th>Totale</th><th></th></tr>';
+  $('thead').innerHTML='<tr><th>Foglio marcia</th><th>Data</th><th>Paziente / intestatario</th><th>Servizio</th><th>Destinazione</th><th>Totale</th><th>Pagamento / Nota di debito</th></tr>';
   $('rows').innerHTML=arr.length?arr.map(f=>{
    const name=f.intestatario_nota_debito||[f.paziente_nome,f.paziente_cognome].filter(Boolean).join(' ')||'—';
-   return '<tr><td><label class="multi-row"><input type="checkbox" data-multi="'+esc(f.id)+'" '+(multiSelected.has(f.id)?'checked':'')+' aria-label="Seleziona '+esc(f.numero_foglio)+'"><b>'+esc(f.numero_foglio)+'</b></label><span class="muted">Mezzo '+esc(f.mezzo||'—')+'</span></td><td>'+nice(f.data_servizio)+'</td><td>'+esc(name)+'</td><td>'+esc(f.tipo_servizio||'—')+'</td><td>'+esc(f.destinazione||'—')+'</td><td><b>'+money(f.totale_servizio)+'</b></td><td><button class="btn yellow" data-create="'+esc(f.id)+'">Crea bozza</button></td></tr>';
+   return '<tr><td><label class="multi-row"><input type="checkbox" data-multi="'+esc(f.id)+'" '+(multiSelected.has(f.id)?'checked':'')+' aria-label="Seleziona '+esc(f.numero_foglio)+'"><b>'+esc(f.numero_foglio)+'</b></label><span class="muted">Mezzo '+esc(f.mezzo||'—')+'</span></td><td>'+nice(f.data_servizio)+'</td><td>'+esc(name)+'</td><td>'+esc(f.tipo_servizio||'—')+'</td><td>'+esc(f.destinazione||'—')+'</td><td><b>'+money(f.totale_servizio)+'</b></td><td><div style="display:grid;gap:6px"><a class="btn green" style="text-decoration:none;text-align:center" href="../registro-incassi/?servizio='+encodeURIComponent(f.servizio_giornaliero_id||'')+'">💰 Verifica / registra pagamento</a><button class="btn yellow" data-create="'+esc(f.id)+'">Crea bozza nota</button></div></td></tr>';
   }).join(''):'<tr><td colspan="7">Nessun Foglio Viaggio da elaborare.</td></tr>';
   document.querySelectorAll('[data-create]').forEach(b=>b.onclick=()=>createNote(b.dataset.create));
   document.querySelectorAll('[data-multi]').forEach(b=>b.onchange=()=>{if(b.checked)multiSelected.add(b.dataset.multi);else multiSelected.delete(b.dataset.multi);updateMultiStatus()});
@@ -422,7 +422,7 @@ $('savePayText').onclick=async()=>{
  active={...active,...r.data};msg('detailMsg','Dettagli pagamento salvati senza modificare gli incassi.','ok');
 };
 $('issue').onclick=async()=>{
- if(!confirm('Emettere definitivamente '+active.numero+'? Dopo l’emissione i dati del documento non saranno più modificabili.'))return;
+ if(!confirm('Prima dell’emissione hai verificato nel Registro Incassi i pagamenti già ricevuti? Se il servizio non è ancora pagato, NON registrare un incasso fittizio: la nota resterà da saldare.\\n\\nEmettere definitivamente '+active.numero+'?'))return;
  // Conserva la data documento scelta dall'amministrazione; il servizio mantiene la propria data.
  if(!$('dDate').value)return msg('detailMsg','Inserisci la data di emissione del documento.','err');
  if(!await saveDraft(true))return;
