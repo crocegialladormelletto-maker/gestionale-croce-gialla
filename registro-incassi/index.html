@@ -4,6 +4,7 @@
 <section id="login" class="panel hidden"><h2>Accesso amministrazione</h2><div class="field"><label>Email</label><input id="email" type="email"></div><div class="field"><label>Password</label><input id="password" type="password"></div><div class="actions"><button id="signIn">Accedi</button></div><div id="loginMsg"></div></section>
 <main id="app" class="hidden">
 <div class="panel"><h2>Situazione attuale</h2><p class="muted">Un pagamento viene contabilizzato soltanto dopo conferma dell'amministrazione. I dati del tablet sono segnalazioni.</p><div class="stats"><div class="stat"><small>Servizi con residuo</small><b id="due">—</b></div><div class="stat"><small>Incassi registrati</small><b id="count">—</b></div><div class="stat"><small>Tablet: pagato segnalato</small><b id="signalsCount">—</b></div></div></div>
+<div class="panel"><h2>Situazione pagamenti per servizio</h2><p class="muted">Elenco consultabile anche per i servizi già pagati. I dati provengono dalla contabilità; la chiusura del foglio viaggio non viene modificata.</p><div class="grid" style="margin:12px 0"><div class="field" style="grid-column:span 3"><label>Cerca paziente, foglio viaggio o nota di debito</label><input id="overviewSearch" placeholder="Cerca in tutti i servizi"></div><div class="field"><label>Stato pagamento</label><select id="overviewFilter"><option value="all">Tutti</option><option value="due">Da incassare</option><option value="partial">Parzialmente pagati</option><option value="paid">Pagati</option></select></div></div><div id="overviewCount" class="muted"></div><div class="table"><table><thead><tr><th>Data / Foglio</th><th>Paziente</th><th>Nota di debito</th><th>Importo</th><th>Incassato</th><th>Residuo</th><th>Stato</th><th>Ultimo pagamento</th><th>Azione</th></tr></thead><tbody id="overviewRows"></tbody></table></div></div>
 <div class="panel"><h2>Registra incasso</h2><p class="muted">Seleziona l'origine. I pagamenti delle Note di Debito usano la procedura di riconciliazione già esistente. Per i bonifici registra soltanto accrediti effettivi.</p><div class="grid"><div class="field"><label>Tipo documento</label><select id="origin"><option value="service">Servizio / fattura Aruba</option><option value="note">Nota di Debito</option></select></div><div class="field" style="grid-column:span 3"><label>Ricerca per numero foglio, nota di debito o paziente</label><div style="display:flex;gap:8px"><input id="search" placeholder="Es. CGE_559_2026 oppure FV-2026-06-000146" style="flex:1;min-width:0"><button id="searchBtn" type="button" class="secondary">🔎 Cerca</button></div></div></div>
 <div id="searchResults" class="notice" aria-live="polite">Scrivi il numero del foglio, la nota di debito oppure il cognome e premi Cerca.</div>
 <div class="field" style="margin-top:10px"><label>Servizio o documento da incassare</label><select id="target"></select></div><div class="field hidden" id="sheetField" style="margin-top:10px"><label>Foglio viaggio collegato (per note multiple)</label><select id="sheet"></select></div><div id="info" class="notice">Seleziona un servizio o una nota.</div>
@@ -118,12 +119,41 @@ function paymentDisplay(p){
  const person=service?[service.paziente_cognome,service.paziente_nome].filter(Boolean).join(' '):'';
  return '<strong>Foglio non collegato</strong>'+(service?'<div class="muted">'+esc(dateIT(service.data_servizio))+' · '+esc(person||service.tipo_servizio||'Servizio')+'</div>':'');
 }
+function renderOverview(){
+ const q=$('overviewSearch').value.trim().toLowerCase(),filter=$('overviewFilter').value;
+ const records=services.filter(x=>String(x.tipo_servizio||'')!=='118').map(x=>{
+  const associated=sheets.filter(f=>f.servizio_giornaliero_id===x.servizio_id);
+  const note=notes.find(n=>noteSheetIds(n).some(id=>associated.some(f=>f.id===id)));
+  const due=Number(x.importo_dovuto||0),paid=Number(x.importo_incassato||0),remaining=Math.max(0,Number(x.residuo||0));
+  const status=remaining<=.005?'paid':paid>.005?'partial':'due';
+  const related=payments.filter(p=>p.stato==='REGISTRATO'&&(p.servizio_id===x.servizio_id||associated.some(f=>f.id===p.foglio_viaggio_id))).sort((a,b)=>String(b.data_pagamento||'').localeCompare(String(a.data_pagamento||'')));
+  return {x,note,due,paid,remaining,status,related};
+ }).filter(r=>{
+  if(filter!=='all'&&r.status!==filter)return false;
+  const x=r.x,needle=[x.numero_foglio,x.data_servizio,x.paziente_nome,x.paziente_cognome,r.note?.numero,r.note?.intestatario].join(' ').toLowerCase();
+  return !q||needle.includes(q);
+ });
+ $('overviewCount').textContent=records.length+' servizi visualizzati (massimo 500 righe per schermata)';
+ $('overviewRows').innerHTML=records.slice(0,500).map(r=>{
+  const x=r.x,p=r.related[0],note=r.note;
+  const state=r.status==='paid'?'✅ Pagato':r.status==='partial'?'🟡 Parziale':'🔴 Da incassare';
+  const canPay=r.remaining>.005;
+  return '<tr><td>'+esc(dateIT(x.data_servizio))+'<div><strong>'+esc(x.numero_foglio||'—')+'</strong></div></td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'—')+'</td><td>'+esc(note?.numero||'—')+'</td><td>'+esc(money(r.due))+'</td><td>'+esc(money(r.paid))+'</td><td>'+esc(money(r.remaining))+'</td><td><strong>'+state+'</strong></td><td>'+esc(p?dateIT(p.data_pagamento)+' · '+p.modalita:'—')+'</td><td>'+(canPay?'<button type="button" class="secondary" data-overview-pay="'+esc(note&&note.stato==='EMESSA'?'note':'service')+'" data-overview-id="'+esc(note&&note.stato==='EMESSA'?note.id:x.servizio_id)+'">Registra pagamento</button>':'<span class="muted">Saldo completo</span>')+'</td></tr>';
+ }).join('')||'<tr><td colspan="9">Nessun servizio corrispondente</td></tr>';
+ $('overviewRows').querySelectorAll('[data-overview-pay]').forEach(b=>b.onclick=()=>{
+  $('origin').value=b.dataset.overviewPay;$('search').value='';targets();$('target').value=b.dataset.overviewId;selected();
+  $('target').scrollIntoView({behavior:'smooth',block:'center'});
+ });
+}
+$('overviewSearch').oninput=renderOverview;
+$('overviewFilter').onchange=renderOverview;
 function render(){
  $('due').textContent=services.filter(x=>Number(x.residuo||0)>.005).length;$('count').textContent=payments.filter(x=>x.stato==='REGISTRATO').length;
  const covered=new Set(payments.filter(x=>x.stato==='REGISTRATO').flatMap(p=>[p.servizio_id,p.foglio_viaggio_id].filter(Boolean)));
  $('signalsCount').textContent=signals.filter(x=>x.pagamento_segnalato===true&&!covered.has(x.id)&&!covered.has(x.servizio_giornaliero_id)).length;
  $('signalRows').innerHTML=signals.slice(0,100).map(x=>'<tr><td>'+esc(x.numero_foglio)+'</td><td>'+esc(dateIT(x.data_servizio))+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' '))+'</td><td>'+esc(x.pagamento_segnalato===true?'Sì (da verificare)':'No')+'</td><td>'+esc(x.metodo_pagamento_segnalato||'—')+'</td><td>'+(x.servizio_giornaliero_id?'<button class="secondary" data-open="'+esc(x.servizio_giornaliero_id)+'">Seleziona servizio</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="6">Nessuna segnalazione</td></tr>';
  $('signalRows').querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{$('origin').value='service';$('search').value='';targets();$('target').value=b.dataset.open;selected();$('target').scrollIntoView({behavior:'smooth'})});
+ renderOverview();
  $('history').innerHTML=payments.slice().sort((a,b)=>String(b.data_pagamento||'').localeCompare(String(a.data_pagamento||''))).slice(0,500).map(p=>'<tr><td>'+esc(dateIT(p.data_pagamento))+'</td><td>'+paymentDisplay(p)+'</td><td>'+esc(money(p.importo))+'</td><td>'+esc(p.modalita)+'</td><td>'+esc(p.riferimento||p.note||'—')+'</td><td>'+esc(p.stato)+'</td></tr>').join('')||'<tr><td colspan="6">Nessun movimento</td></tr>';
 }
 async function allPages(table,fields,orderColumn){
