@@ -1,0 +1,123 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Registro Incassi · Croce Gialla</title>
+<style>:root{--b:#16324a;--y:#f3c400;--l:#d9e2ea}*{box-sizing:border-box}body{margin:0;background:#edf2f6;color:#172533;font:14px system-ui,Arial}header{background:var(--b);color:white;border-bottom:5px solid var(--y);padding:16px 3%;display:flex;align-items:center;gap:12px;flex-wrap:wrap}header h1{margin:0;font-size:24px}header small{color:var(--y);font-weight:800}header .grow{flex:1}main{max-width:1280px;margin:20px auto;padding:0 13px}.panel{background:#fff;border:1px solid var(--l);border-radius:12px;padding:18px;margin:0 0 15px}.panel h2{margin:0 0 8px;color:var(--b)}.muted{color:#67798a;font-size:12px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{padding:13px;background:#f6f9fc;border:1px solid var(--l);border-radius:9px}.stat b{font-size:22px;display:block;color:var(--b)}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:12px;font-weight:800;color:var(--b)}input,select{width:100%;border:1px solid #cbd5df;border-radius:8px;padding:10px;font:inherit}button,a.btn{display:inline-block;text-decoration:none;border:0;border-radius:8px;background:var(--y);color:var(--b);font:800 13px system-ui;padding:10px 13px;cursor:pointer}.secondary{background:#e9eff5!important}button:disabled{opacity:.55}.hidden{display:none!important}.actions{display:flex;gap:9px;flex-wrap:wrap;margin:13px 0}.notice{padding:12px;border:1px solid #c0d8ec;background:#eef7ff;border-radius:8px;margin:10px 0}.error{border-color:#efb2bb;background:#fff0f1}.ok{border-color:#bce1c7;background:#edf9f1}.table{overflow:auto}table{width:100%;min-width:850px;border-collapse:collapse}th,td{border-bottom:1px solid #e5ebf1;padding:10px;text-align:left;vertical-align:top}th{background:#f4f7fa;color:var(--b);font-size:12px}.small{font-size:12px}#login{max-width:450px;margin:8vh auto}@media(max-width:740px){.grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr}}@media(max-width:450px){.grid{grid-template-columns:1fr}}</style></head><body>
+<header><div class="grow"><small>CROCE GIALLA EMERGENZA ODV</small><h1>💰 Registro Incassi</h1><div id="who" class="small">Registrazioni amministrative</div></div><a class="btn secondary" href="../">Gestionale</a><a class="btn secondary" href="../note-di-debito/">Note di Debito</a><button id="logout" class="secondary hidden">Esci</button></header>
+<section id="login" class="panel hidden"><h2>Accesso amministrazione</h2><div class="field"><label>Email</label><input id="email" type="email"></div><div class="field"><label>Password</label><input id="password" type="password"></div><div class="actions"><button id="signIn">Accedi</button></div><div id="loginMsg"></div></section>
+<main id="app" class="hidden">
+<div class="panel"><h2>Situazione attuale</h2><p class="muted">Un pagamento viene contabilizzato soltanto dopo conferma dell'amministrazione. I dati del tablet sono segnalazioni.</p><div class="stats"><div class="stat"><small>Servizi con residuo</small><b id="due">—</b></div><div class="stat"><small>Incassi registrati</small><b id="count">—</b></div><div class="stat"><small>Tablet: pagato segnalato</small><b id="signalsCount">—</b></div></div></div>
+<div class="panel"><h2>Registra incasso</h2><p class="muted">Seleziona l'origine. I pagamenti delle Note di Debito usano la procedura di riconciliazione già esistente. Per i bonifici registra soltanto accrediti effettivi.</p><div class="grid"><div class="field"><label>Tipo documento</label><select id="origin"><option value="service">Servizio / fattura Aruba</option><option value="note">Nota di Debito</option></select></div><div class="field" style="grid-column:span 3"><label>Ricerca</label><input id="search" placeholder="Numero documento, nominativo, data"></div></div>
+<div class="field" style="margin-top:10px"><label>Servizio o documento da incassare</label><select id="target"></select></div><div class="field hidden" id="sheetField" style="margin-top:10px"><label>Foglio viaggio collegato (per note multiple)</label><select id="sheet"></select></div><div id="info" class="notice">Seleziona un servizio o una nota.</div>
+<div class="grid"><div class="field"><label>Importo ricevuto €</label><input id="amount" type="number" min=".01" step=".01"></div><div class="field"><label>Metodo</label><select id="method"><option value="POS">POS</option><option value="CONTANTI">Contanti</option><option value="BONIFICO">Bonifico già accreditato</option></select></div><div class="field"><label>Data effettiva incasso</label><input id="date" type="date"></div><div class="field"><label>Riferimento (facoltativo)</label><input id="ref" maxlength="160"></div></div><div class="actions"><button id="save">💰 Registra incasso</button><button id="refresh" class="secondary">↻ Aggiorna</button></div><div id="status"></div></div>
+<div class="panel"><h2>Segnalazioni tablet da verificare</h2><div class="table"><table><thead><tr><th>Foglio</th><th>Data</th><th>Paziente</th><th>Segnalato</th><th>Metodo</th><th>Azione</th></tr></thead><tbody id="signalRows"></tbody></table></div></div>
+<div class="panel"><h2>Storico incassi</h2><p class="muted">Operazioni esistenti, non duplicate. Le registrazioni annullate restano distinguibili.</p><div class="table"><table><thead><tr><th>Data</th><th>Servizio / foglio</th><th>Importo</th><th>Metodo</th><th>Riferimento</th><th>Stato</th></tr></thead><tbody id="history"></tbody></table></div></div>
+</main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
+const sb=supabase.createClient("https://ihottewckpwpwqzpxusl.supabase.co","sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+const $=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),money=n=>Number(n||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'}),today=()=>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
+const notice=(value,kind='')=>{$('status').innerHTML=value?'<div class="notice '+kind+'">'+esc(value)+'</div>':''};
+let authorized=false,busy=false,services=[],notes=[],links=[],sheets=[],payments=[],signals=[];
+function login(){authorized=false;$('login').classList.remove('hidden');$('app').classList.add('hidden');$('logout').classList.add('hidden')}
+async function enter(){
+ const u=await sb.auth.getUser();if(!u.data.user)return login();
+ const r=await sb.from('accessi_app').select('nome,ruolo,attivo').eq('user_id',u.data.user.id).maybeSingle();
+ if(r.error||!r.data?.attivo||r.data.ruolo!=='AMMINISTRATORE')return login();
+ authorized=true;$('who').textContent=(r.data.nome||'Amministrazione')+' · Registro Incassi';$('login').classList.add('hidden');$('app').classList.remove('hidden');$('logout').classList.remove('hidden');await reload();
+}
+$('signIn').onclick=async()=>{const r=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(r.error){$('loginMsg').textContent='Credenziali non valide';return}await enter()};
+$('password').onkeydown=e=>{if(e.key==='Enter')$('signIn').click()};
+$('logout').onclick=async()=>{await sb.auth.signOut();login()};
+function noteSheetIds(n){return [...new Set([n.foglio_viaggio_id,...links.filter(l=>l.nota_id===n.id).map(l=>l.foglio_id)].filter(Boolean))]}
+function noteLinkedServiceIds(){const ids=new Set();for(const n of notes.filter(n=>n.stato==='EMESSA'))for(const f of noteSheets(n))if(f.servizio_giornaliero_id)ids.add(f.servizio_giornaliero_id);return ids}
+function noteSheets(n){const ids=new Set(noteSheetIds(n));return sheets.filter(f=>ids.has(f.id))}
+function used(f){return payments.filter(p=>p.stato==='REGISTRATO'&&(p.foglio_viaggio_id===f.id||(f.servizio_giornaliero_id&&p.servizio_id===f.servizio_giornaliero_id)))}
+function resid(f){return Math.max(0,Number(f.totale_servizio||0)-used(f).reduce((a,p)=>a+Number(p.importo||0),0))}
+function labelService(x){return [x.data_servizio,x.mezzo,x.tipo_servizio,[x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' '),money(x.residuo)].filter(Boolean).join(' · ')}
+function labelNote(n){return [n.numero,n.intestatario,'Residuo '+money(noteSheets(n).reduce((a,f)=>a+resid(f),0))].filter(Boolean).join(' · ')}
+function targets(){
+ const type=$('origin').value,q=$('search').value.trim().toLowerCase(),previous=$('target').value;
+ const linked=noteLinkedServiceIds();
+ const all=type==='service'?services.filter(x=>Number(x.residuo||0)>.005&&String(x.tipo_servizio||'')!=='118'&&!linked.has(x.servizio_id)):notes.filter(n=>n.stato==='EMESSA'&&!n.data_pagamento&&noteSheets(n).some(f=>resid(f)>.005));
+ $('sheetField').classList.toggle('hidden',type!=='note');
+ const arr=all.filter(x=>(type==='service'?labelService(x):labelNote(x)).toLowerCase().includes(q));
+ $('target').innerHTML='<option value="">— Seleziona —</option>'+arr.slice(0,1600).map(x=>'<option value="'+esc(type==='service'?x.servizio_id:x.id)+'">'+esc(type==='service'?labelService(x):labelNote(x))+'</option>').join('');
+ if(arr.some(x=>String(type==='service'?x.servizio_id:x.id)===previous))$('target').value=previous;
+ selected();
+}
+function selected(){
+ const id=$('target').value,type=$('origin').value;$('sheet').innerHTML='';
+ if(!id){$('amount').value='';$('info').textContent='Seleziona servizio o nota.';return}
+ if(type==='service'){const x=services.find(s=>s.servizio_id===id);if(!x)return;$('amount').value=Number(x.residuo||0).toFixed(2);$('info').textContent='Dovuto '+money(x.importo_dovuto)+' · Già incassato '+money(x.importo_incassato)+' · Residuo '+money(x.residuo);}
+ else{const n=notes.find(x=>x.id===id);if(!n)return;const fs=noteSheets(n).filter(f=>resid(f)>.005);$('sheet').innerHTML=fs.map(f=>'<option value="'+esc(f.id)+'">'+esc(f.numero_foglio)+' · '+esc(money(resid(f)))+'</option>').join('');$('sheet').onchange=()=>{const f=sheets.find(x=>x.id===$('sheet').value);$('amount').value=f?resid(f).toFixed(2):'';$('info').textContent='Nota '+n.numero+' · Totale '+money(n.totale)+' · Residuo del foglio '+(f?money(resid(f)):'—')};$('sheet').onchange();}
+}
+function render(){
+ $('due').textContent=services.filter(x=>Number(x.residuo||0)>.005).length;$('count').textContent=payments.filter(x=>x.stato==='REGISTRATO').length;
+ const covered=new Set(payments.filter(x=>x.stato==='REGISTRATO').flatMap(p=>[p.servizio_id,p.foglio_viaggio_id].filter(Boolean)));
+ $('signalsCount').textContent=signals.filter(x=>x.pagamento_segnalato===true&&!covered.has(x.id)&&!covered.has(x.servizio_giornaliero_id)).length;
+ $('signalRows').innerHTML=signals.slice(0,100).map(x=>'<tr><td>'+esc(x.numero_foglio)+'</td><td>'+esc(x.data_servizio)+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' '))+'</td><td>'+esc(x.pagamento_segnalato===true?'Sì (da verificare)':'No')+'</td><td>'+esc(x.metodo_pagamento_segnalato||'—')+'</td><td>'+(x.servizio_giornaliero_id?'<button class="secondary" data-open="'+esc(x.servizio_giornaliero_id)+'">Seleziona servizio</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="6">Nessuna segnalazione</td></tr>';
+ $('signalRows').querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{$('origin').value='service';$('search').value='';targets();$('target').value=b.dataset.open;selected();$('target').scrollIntoView({behavior:'smooth'})});
+ $('history').innerHTML=payments.slice().sort((a,b)=>String(b.data_pagamento||'').localeCompare(String(a.data_pagamento||''))).slice(0,500).map(p=>'<tr><td>'+esc(p.data_pagamento)+'</td><td>'+esc(p.servizio_id||p.foglio_viaggio_id||'—')+'</td><td>'+esc(money(p.importo))+'</td><td>'+esc(p.modalita)+'</td><td>'+esc(p.riferimento||p.note||'—')+'</td><td>'+esc(p.stato)+'</td></tr>').join('')||'<tr><td colspan="6">Nessun movimento</td></tr>';
+}
+async function allPages(table,fields,orderColumn){
+ const result=[];
+ for(let start=0;start<10000;start+=1000){
+  let query=sb.from(table).select(fields);
+  if(orderColumn)query=query.order(orderColumn,{ascending:false});
+  const r=await query.range(start,start+999);
+  if(r.error)throw new Error('Lettura '+table+': '+r.error.message);
+  result.push(...(r.data||[]));
+  if((r.data||[]).length<1000)return {data:result,error:null};
+ }
+ throw new Error('Limite di 10.000 record raggiunto per '+table+'. Registrazione bloccata per sicurezza.');
+}
+async function reload(){
+ $('save').disabled=true;notice('Caricamento e verifica saldi...');
+ try{
+  const rs=await Promise.all([
+   sb.from('v_contabilita_servizi').select('*').order('data_servizio',{ascending:false}).limit(2000),
+   allPages('note_di_debito','id,numero,intestatario,totale,stato,data_pagamento,foglio_viaggio_id','data_documento'),
+   allPages('note_debito_fogli','nota_id,foglio_id'),
+   allPages('fogli_viaggio','id,numero_foglio,servizio_giornaliero_id,totale_servizio'),
+   allPages('pagamenti_servizi','id,servizio_id,foglio_viaggio_id,data_pagamento,importo,modalita,stato,riferimento,note','data_pagamento'),
+   sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,paziente_nome,paziente_cognome,servizio_giornaliero_id,pagamento_segnalato,metodo_pagamento_segnalato').not('pagamento_segnalato','is',null).order('data_servizio',{ascending:false}).limit(500)
+  ]);
+  for(let i=0;i<rs.length;i++)if(rs[i].error)throw rs[i].error;
+  [services,notes,links,sheets,payments,signals]=rs.map(x=>x.data||[]);
+  services=services.filter(x=>String(x.stato_gestionale||'')!=='ANNULLATO');
+  targets();const params=new URLSearchParams(location.search),n=params.get('nota'),service=params.get('servizio');if(n&&notes.some(x=>x.id===n)){$('origin').value='note';$('search').value='';targets();$('target').value=n;selected();}else if(service&&services.some(x=>x.servizio_id===service)){$('origin').value='service';$('search').value='';targets();$('target').value=service;selected();}
+  render();notice('');$('save').disabled=false;
+ }catch(e){notice('Dati incompleti: '+(e.message||String(e))+'. Nessun incasso consentito.','error')}
+}
+$('origin').onchange=()=>{$('search').value='';targets()};$('search').oninput=targets;$('target').onchange=selected;$('refresh').onclick=reload;$('date').value=today();
+$('save').onclick=async()=>{
+ if(busy||!authorized)return;
+ const type=$('origin').value,id=$('target').value,amount=Number($('amount').value),date=$('date').value,method=$('method').value;
+ if(!id||!date||!Number.isFinite(amount)||amount<=0||Math.abs(amount*100-Math.round(amount*100))>.001)return notice('Documento, importo positivo con massimo due decimali e data sono obbligatori.','error');
+ if(date>today())return notice('La data incasso non può essere futura.','error');
+ if(method==='BONIFICO'&&!confirm('Il bonifico risulta realmente accreditato sul conto?'))return;
+ const target=type==='service'?services.find(x=>x.servizio_id===id):notes.find(x=>x.id===id),sheet=type==='note'?sheets.find(x=>x.id===$('sheet').value):null;
+ if(!target||(type==='note'&&!sheet))return notice('Selezione non valida, aggiorna.','error');
+ if(type==='service'&&noteLinkedServiceIds().has(id))return notice('Questo servizio è collegato a una Nota di Debito emessa: registra l’incasso selezionando la nota.','error');
+ const due=type==='service'?Number(target.residuo||0):resid(sheet);
+ if(amount>due+.005)return notice('Importo maggiore del residuo: aggiorna.','error');
+ if(!confirm('Confermi INCASSO REALE di '+money(amount)+' con '+method+' il '+date+'? Verifica che non sia già registrato.'))return;
+ busy=true;$('save').disabled=true;let saved=false;
+ try{
+  if(type==='note'){
+   const chk=await sb.from('fogli_viaggio').select('id,totale_servizio,servizio_giornaliero_id').eq('id',sheet.id).single();if(chk.error)throw chk.error;
+   const a=await sb.from('pagamenti_servizi').select('id,importo').eq('stato','REGISTRATO').eq('foglio_viaggio_id',sheet.id);
+   const b=chk.data.servizio_giornaliero_id?await sb.from('pagamenti_servizi').select('id,importo').eq('stato','REGISTRATO').eq('servizio_id',chk.data.servizio_giornaliero_id):{data:[],error:null};
+   if(a.error||b.error)throw Error('Controllo incassi esistenti non riuscito');
+   const unique=new Map([...(a.data||[]),...(b.data||[])].map(p=>[p.id,p]));
+   const fresh=Math.max(0,Number(chk.data.totale_servizio||0)-[...unique.values()].reduce((sum,p)=>sum+Number(p.importo||0),0));
+   if(amount>fresh+.005)throw Error('Residuo modificato: aggiorna senza ripetere la registrazione.');
+   const result=await sb.rpc('cge_registra_incasso_da_nota',{p_nota_id:target.id,p_foglio_id:sheet.id,p_importo:amount,p_modalita:method,p_data:date});if(result.error)throw result.error;
+  }else{
+   const fresh=await sb.from('v_contabilita_servizi').select('residuo,importo_incassato').eq('servizio_id',id).maybeSingle();if(fresh.error||!fresh.data)throw Error('Servizio non trovato');
+   if(amount>Number(fresh.data.residuo||0)+.005)throw Error('Residuo aggiornato: riprova dopo aggiornamento.');
+   if(Number(fresh.data.importo_incassato||0)>0&&!confirm('Esistono già pagamenti parziali. Confermi un ulteriore incasso?'))return;
+   const p=await sb.from('pagamenti_servizi').insert({servizio_id:id,importo:amount,data_pagamento:date,modalita:method,stato:'REGISTRATO',riferimento:$('ref').value.trim()||'Registro Incassi'}).select('id').single();if(p.error||!p.data)throw Error(p.error?.message||'Registrazione non confermata');
+  }
+  saved=true;notice('Incasso registrato. Non ripetere.','ok');await reload();notice('Incasso registrato e saldi aggiornati.','ok');
+ }catch(e){notice(saved?'Incasso registrato ma riepilogo non aggiornato: NON ripetere.':'Incasso non confermato: '+(e.message||String(e)),'error')}
+ finally{busy=false;if(saved)$('save').disabled=true;else $('save').disabled=false}
+};
+enter().catch(e=>{login();$('loginMsg').textContent=String(e.message||e)});
+</script></body></html>

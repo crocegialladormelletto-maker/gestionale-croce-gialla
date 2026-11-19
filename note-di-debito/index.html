@@ -32,7 +32,7 @@
 </div>
 
 <div id="app" class="hidden">
- <div class="top"><div class="head"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Note di Debito</strong><div id="who" style="font-size:12px;color:#d9e5ee"></div></div><button id="backMain" class="btn secondary">← Gestionale principale</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
+ <div class="top"><div class="head"><div class="brand"><small>CROCE GIALLA EMERGENZA ODV</small><strong>Gestionale Note di Debito</strong><div id="who" style="font-size:12px;color:#d9e5ee"></div></div><a href="../registro-incassi/" class="btn yellow">💰 Registro Incassi</a><button id="backMain" class="btn secondary">← Gestionale principale</button><button id="out" class="btn secondary">Esci</button></div><div class="stripe"></div></div>
  <div class="shell"><div class="layout">
   <aside class="side no-print">
    <button class="nav active" data-view="queue">📥 Da elaborare <span id="cQueue" class="count">0</span></button>
@@ -117,8 +117,9 @@
        <div class="field"><label>Data pagamento</label><input id="dPayDate" type="date"></div>
        </div></details></div>
      </form>
-     <div id="cashEntry" class="section hidden no-print" style="margin-top:14px"><h3>Registra incasso del servizio</h3><p class="muted">Registra qui soltanto un pagamento effettivamente ricevuto. Il saldo viene aggiornato automaticamente, senza duplicare incassi già presenti.</p><div class="grid3"><div class="field"><label for="cashSheet">Foglio viaggio</label><select id="cashSheet"></select></div><div class="field"><label for="cashAmount">Importo incassato €</label><input id="cashAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label for="cashDate">Data incasso</label><input id="cashDate" type="date"></div><div class="field"><label for="cashMethod">Pagato con</label><select id="cashMethod"><option value="POS">POS</option><option value="CONTANTI">Contanti</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO ISTANTANEO">Bonifico istantaneo</option><option value="ALTRO">Altro</option></select></div></div><p id="cashOutstanding" class="muted"></p><button type="button" class="btn green" id="cashSubmit">Registra incasso</button></div>
+     <div id="cashEntry" class="section hidden no-print" style="display:none!important;margin-top:14px"><h3>Registra incasso del servizio</h3><p class="muted">Registra qui soltanto un pagamento effettivamente ricevuto. Il saldo viene aggiornato automaticamente, senza duplicare incassi già presenti.</p><div class="grid3"><div class="field"><label for="cashSheet">Foglio viaggio</label><select id="cashSheet"></select></div><div class="field"><label for="cashAmount">Importo incassato €</label><input id="cashAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label for="cashDate">Data incasso</label><input id="cashDate" type="date"></div><div class="field"><label for="cashMethod">Pagato con</label><select id="cashMethod"><option value="POS">POS</option><option value="CONTANTI">Contanti</option><option value="BONIFICO">Bonifico</option><option value="BONIFICO ISTANTANEO">Bonifico istantaneo</option><option value="ALTRO">Altro</option></select></div></div><p id="cashOutstanding" class="muted"></p><button type="button" class="btn green" id="cashSubmit">Registra incasso</button></div>
      <div class="actions no-print">
+      <a id="openRegistryNote" class="btn yellow hidden" href="../registro-incassi/" style="text-decoration:none">💰 Vai al Registro Incassi</a>
       <button id="save" class="btn secondary">Salva bozza</button>
       <button id="issue" class="btn yellow">✓ Emetti Nota di Debito</button>
       <button id="savePayment" class="btn green">✓ Conferma nota interamente pagata</button>
@@ -292,7 +293,11 @@ function fill(){
  $('save').classList.toggle('hidden',!draft);$('issue').classList.toggle('hidden',!draft);
  const paymentAlreadyRecorded=!!n.data_pagamento;
  $('savePayment').classList.toggle('hidden',draft||paymentAlreadyRecorded);
- $('cashEntry').classList.toggle('hidden',draft||paymentAlreadyRecorded);
+ $('cashEntry').classList.add('hidden');
+ if($('openRegistryNote')){
+  $('openRegistryNote').classList.toggle('hidden',draft||paymentAlreadyRecorded);
+  $('openRegistryNote').href='../registro-incassi/?nota='+encodeURIComponent(n.id);
+ }
  if(!draft&&!paymentAlreadyRecorded)void loadCashEntry();
  $('legacyPayment').classList.add('hidden');
  $('legacyPayment').open=false;
