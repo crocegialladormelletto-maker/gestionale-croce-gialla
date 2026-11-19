@@ -1717,6 +1717,7 @@ document.addEventListener('DOMContentLoaded',()=>{
      <div class="field" id="fvPayDateBox"><label>Data pagamento</label><input id="fvPayDate" type="date"></div>
      <div class="field"><label>Stato contabile collegato</label><input id="fvAccountingState" disabled></div>
     </div>
+    <div id="fvTabletSignal" class="notice" style="margin-top:10px">Segnalazione pagamento tablet: da verificare</div>
     <div id="fvReceiptBox" style="margin-top:12px;border-top:1px solid #dbe5ed;padding-top:12px">
      <h4 style="margin:0 0 6px">📎 Ricevute pagamento</h4>
      <div class="actions" style="align-items:end">
@@ -5331,6 +5332,12 @@ async function loadTravelSheetDetail(id=currentFoglioId){
  }
  $('fvdTitle').textContent='Foglio Viaggio · '+f.numero_foglio;
  $('fvdSubtitle').textContent=(f.tipo_servizio||'Servizio')+' · Mezzo '+f.mezzo;
+ if($('fvTabletSignal')){
+  $('fvTabletSignal').classList.toggle('hidden',is118);
+  $('fvTabletSignal').textContent=f.pagamento_segnalato===true
+   ?('Segnalazione tablet: paziente ha pagato'+(f.metodo_pagamento_segnalato?' con '+f.metodo_pagamento_segnalato:'')+'. Da verificare e confermare in contabilità.')
+   :(f.pagamento_segnalato===false?'Segnalazione tablet: non ha pagato.':'Segnalazione tablet: pagamento non indicato.');
+ }
  $('fvdNumber').textContent=f.numero_foglio||'—';
  $('fvdState').textContent=f.stato||'—';
  $('fvdKm').textContent=f.km_percorsi??'—';
@@ -13159,23 +13166,6 @@ $('tabletImmediateToggle').onclick=async e=>{
  }
 };
 if($('tabletReceiptUpload'))$('tabletReceiptUpload').onclick=()=>uploadPaymentReceipt(tabletCurrentSheet,'tabletReceiptFile','tablet');
-const tabletPayModeField=document.querySelector('#tabletSheetForm [data-ts-field="modalita_pagamento"]');
-if(tabletPayModeField)tabletPayModeField.onchange=()=>{
- // Memorizza esplicitamente la scelta per il foglio corrente, anche se la UI viene ridisegnata.
- if(tabletCurrentSheet?.id&&tabletPayModeField.value) {
-  tabletPayModeField.dataset.cgeSelectedSheet=String(tabletCurrentSheet.id);
-  tabletPayModeField.dataset.cgeSelectedMode=tabletPayModeField.value;
- }
- const dateField=document.querySelector('#tabletSheetForm [data-ts-field="data_pagamento"]');
- if(tabletPayModeField.value&&tabletPayModeField.value!=='BONIFICO DIFFERITO'){
-  if(dateField&&!dateField.value&&['CONTANTI','POS','BONIFICO'].includes(tabletPayModeField.value))dateField.value=todaySafe();
- }
- if(!tabletPayModeField.value||tabletPayModeField.value==='BONIFICO DIFFERITO'){
-  if(dateField)dateField.value='';
- }
- tabletUpdatePaymentDateVisibility();
- tabletToggleReceiptSection();
-};
 $('tabletPriceGroup').onchange=tabletRenderTariffPrices;
 $('tabletPriceSearch').oninput=tabletRenderTariffPrices;
 $('tabletAdType').onchange=tabletApplyImmediateTypeRules;
@@ -13595,7 +13585,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  }
  if(row.pagamento_segnalato!==true)row.metodo_pagamento_segnalato=null;
  if(row.pagamento_segnalato===true&&!row.metodo_pagamento_segnalato)return msg('tabletSheetMsg','Seleziona il metodo segnalato.','warn'),false;
- if(tabletSheetIs118){delete row.pagamento_segnalato;delete row.metodo_pagamento_segnalato;}else row.pagamento_segnalato_il=row.pagamento_segnalato===null?null:new Date().toISOString();
+ if(tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'')){delete row.pagamento_segnalato;delete row.metodo_pagamento_segnalato;}else row.pagamento_segnalato_il=row.pagamento_segnalato===null?null:new Date().toISOString();
  delete row.modalita_pagamento;
  if(tabletCurrentService && !tabletIs118Type(tabletCurrentService.tipo_servizio) && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno' && !isAssistanceManifestation(tabletCurrentService.tipo_servizio)){
   try{
