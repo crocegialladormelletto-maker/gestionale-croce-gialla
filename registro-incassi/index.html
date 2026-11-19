@@ -49,13 +49,28 @@ function selected(){
  if(type==='service'){const x=services.find(s=>s.servizio_id===id);if(!x)return;$('amount').value=Number(x.residuo||0).toFixed(2);$('info').textContent='Dovuto '+money(x.importo_dovuto)+' · Già incassato '+money(x.importo_incassato)+' · Residuo '+money(x.residuo);}
  else{const n=notes.find(x=>x.id===id);if(!n)return;const fs=noteSheets(n).filter(f=>resid(f)>.005);$('sheet').innerHTML=fs.map(f=>'<option value="'+esc(f.id)+'">'+esc(f.numero_foglio)+' · '+esc(money(resid(f)))+'</option>').join('');$('sheet').onchange=()=>{const f=sheets.find(x=>x.id===$('sheet').value);$('amount').value=f?resid(f).toFixed(2):'';$('info').textContent='Nota '+n.numero+' · Totale '+money(n.totale)+' · Residuo del foglio '+(f?money(resid(f)):'—')};$('sheet').onchange();}
 }
+function paymentSheetLabels(p){
+ const explicit=p.foglio_viaggio_id?sheets.find(f=>f.id===p.foglio_viaggio_id):null;
+ if(explicit?.numero_foglio)return [String(explicit.numero_foglio)];
+ const linked=sheets.filter(f=>f.servizio_giornaliero_id&&f.servizio_giornaliero_id===p.servizio_id&&f.numero_foglio);
+ if(linked.length)return [...new Set(linked.map(f=>String(f.numero_foglio)))].sort();
+ const fromService=services.find(x=>x.servizio_id===p.servizio_id);
+ return fromService?.numero_foglio?[String(fromService.numero_foglio)]:[];
+}
+function paymentDisplay(p){
+ const nums=paymentSheetLabels(p);
+ if(nums.length)return nums.map(n=>'<div><strong>'+esc(n)+'</strong></div>').join('');
+ const service=services.find(x=>x.servizio_id===p.servizio_id);
+ const person=service?[service.paziente_cognome,service.paziente_nome].filter(Boolean).join(' '):'';
+ return '<strong>Foglio non collegato</strong>'+(service?'<div class="muted">'+esc(dateIT(service.data_servizio))+' · '+esc(person||service.tipo_servizio||'Servizio')+'</div>':'');
+}
 function render(){
  $('due').textContent=services.filter(x=>Number(x.residuo||0)>.005).length;$('count').textContent=payments.filter(x=>x.stato==='REGISTRATO').length;
  const covered=new Set(payments.filter(x=>x.stato==='REGISTRATO').flatMap(p=>[p.servizio_id,p.foglio_viaggio_id].filter(Boolean)));
  $('signalsCount').textContent=signals.filter(x=>x.pagamento_segnalato===true&&!covered.has(x.id)&&!covered.has(x.servizio_giornaliero_id)).length;
  $('signalRows').innerHTML=signals.slice(0,100).map(x=>'<tr><td>'+esc(x.numero_foglio)+'</td><td>'+esc(dateIT(x.data_servizio))+'</td><td>'+esc([x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' '))+'</td><td>'+esc(x.pagamento_segnalato===true?'Sì (da verificare)':'No')+'</td><td>'+esc(x.metodo_pagamento_segnalato||'—')+'</td><td>'+(x.servizio_giornaliero_id?'<button class="secondary" data-open="'+esc(x.servizio_giornaliero_id)+'">Seleziona servizio</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="6">Nessuna segnalazione</td></tr>';
  $('signalRows').querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{$('origin').value='service';$('search').value='';targets();$('target').value=b.dataset.open;selected();$('target').scrollIntoView({behavior:'smooth'})});
- $('history').innerHTML=payments.slice().sort((a,b)=>String(b.data_pagamento||'').localeCompare(String(a.data_pagamento||''))).slice(0,500).map(p=>'<tr><td>'+esc(dateIT(p.data_pagamento))+'</td><td>'+esc(p.servizio_id||p.foglio_viaggio_id||'—')+'</td><td>'+esc(money(p.importo))+'</td><td>'+esc(p.modalita)+'</td><td>'+esc(p.riferimento||p.note||'—')+'</td><td>'+esc(p.stato)+'</td></tr>').join('')||'<tr><td colspan="6">Nessun movimento</td></tr>';
+ $('history').innerHTML=payments.slice().sort((a,b)=>String(b.data_pagamento||'').localeCompare(String(a.data_pagamento||''))).slice(0,500).map(p=>'<tr><td>'+esc(dateIT(p.data_pagamento))+'</td><td>'+paymentDisplay(p)+'</td><td>'+esc(money(p.importo))+'</td><td>'+esc(p.modalita)+'</td><td>'+esc(p.riferimento||p.note||'—')+'</td><td>'+esc(p.stato)+'</td></tr>').join('')||'<tr><td colspan="6">Nessun movimento</td></tr>';
 }
 async function allPages(table,fields,orderColumn){
  const result=[];
