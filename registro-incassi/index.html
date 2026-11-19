@@ -29,8 +29,8 @@ $('signIn').onclick=async()=>{const r=await sb.auth.signInWithPassword({email:$(
 $('password').onkeydown=e=>{if(e.key==='Enter')$('signIn').click()};
 $('logout').onclick=async()=>{await sb.auth.signOut();login()};
 function isInternalType(value){
- const t=String(value||'').toUpperCase().replace(/[_-]/g,' ').replace(/\\s+/g,' ').trim();
- return /(?:^|\\s)INTERN[OIA](?:\\s|$)/.test(t)||t.includes('SERVIZIO INTERNO')||t.includes('SERVIZI INTERNI');
+ const t=String(value||'').toUpperCase().replace(/[_-]/g,' ').replace(/\s+/g,' ').trim();
+ return /(?:^|\s)INTERN[OIA](?:\s|$)/.test(t)||t.includes('SERVIZIO INTERNO')||t.includes('SERVIZI INTERNI');
 }
 function isInternalService(x){
  if(isInternalType(x?.tipo_servizio))return true;
@@ -40,7 +40,7 @@ function isInternalSheet(f){
  const linked=services.find(x=>x.servizio_id===f?.servizio_giornaliero_id);
  return isInternalType(f?.tipo_servizio)||(linked?isInternalService(linked):false);
 }
-function isEligibleService(x){return isEligibleService(x)&&Number(x?.importo_dovuto||0)>.005}
+function isEligibleService(x){return !isInternalService(x)&&Number(x?.importo_dovuto||0)>.005}
 function isEligibleSheet(f){
  const linked=services.find(x=>x.servizio_id===f?.servizio_giornaliero_id);
  return !isInternalSheet(f)&&Number(linked?.importo_dovuto??f?.totale_servizio??0)>.005;
