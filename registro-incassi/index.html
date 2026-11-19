@@ -28,7 +28,7 @@ async function enter(){
 $('signIn').onclick=async()=>{const r=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(r.error){$('loginMsg').textContent='Credenziali non valide';return}await enter()};
 $('password').onkeydown=e=>{if(e.key==='Enter')$('signIn').click()};
 $('logout').onclick=async()=>{await sb.auth.signOut();login()};
-function isInternalType(value){return /\\bINTERN[OI]\\b|SERVIZIO[_ -]?INTERNO/i.test(String(value||'').replace(/_/g,' '))}
+function isInternalType(value){return /\bINTERN[OI]\b|SERVIZIO[_ -]?INTERNO/i.test(String(value||'').replace(/_/g,' '))}
 function isInternalService(x){return isInternalType(x?.tipo_servizio)}
 function isInternalSheet(f){
  const linked=services.find(x=>x.servizio_id===f?.servizio_giornaliero_id);
@@ -157,6 +157,16 @@ function renderMonthButtons(){
  }).join('')||'<span class="muted">Nessun mese disponibile</span>';
  $('monthButtons').querySelectorAll('[data-month]').forEach(b=>b.onclick=()=>{selectedOverviewMonth=b.dataset.month;renderOverview()});
 }
+function isAssistenza(x){
+ const types=[x?.tipo_servizio,...sheets.filter(f=>f.servizio_giornaliero_id===x?.servizio_id).map(f=>f.tipo_servizio)];
+ return types.some(t=>/ASSISTENZ|MANIFESTAZION|PRESIDIO|EVENTO SPORTIVO/i.test(String(t||'')));
+}
+function displayServicePerson(x){
+ const person=servicePerson(x);
+ if(!isAssistenza(x))return person;
+ const title='Assistenza manifestazione';
+ return person==='Nominativo non presente'?title:title+' · '+person.replace(/ \\(intestatario\\)$/,'');
+}
 function servicePerson(x){
  const direct=[x.paziente_cognome,x.paziente_nome].filter(v=>String(v||'').trim()).join(' ').trim();
  if(direct)return direct;
@@ -185,7 +195,7 @@ function renderOverview(){
  }).filter(r=>{
   if(filter!=='all'&&r.status!==filter)return false;
   if(normalizedDate(r.x.data_servizio).slice(0,7)!==selectedOverviewMonth)return false;
-  const x=r.x,needle=[x.numero_foglio,x.data_servizio,x.paziente_nome,x.paziente_cognome,servicePerson(x),r.note?.numero,r.note?.intestatario].join(' ').toLowerCase();
+  const x=r.x,needle=[x.numero_foglio,x.data_servizio,x.paziente_nome,x.paziente_cognome,displayServicePerson(x),r.note?.numero,r.note?.intestatario].join(' ').toLowerCase();
   return !q||needle.includes(q);
  }).sort((a,b)=>{
   // Date passate: dalla più recente alla più vecchia. Date future: per ultime, dalla più vicina.
@@ -201,7 +211,7 @@ function renderOverview(){
   const future=normalizedDate(x.data_servizio)>today();
   const state=r.status==='unknown'?(future?'📅 Futuro · importo da verificare':'⚪ Importo da verificare'):future&&r.status==='paid'?'🔵 Anticipo registrato':future&&r.status==='partial'?'🔵 Anticipo parziale':future?'📅 Servizio futuro':r.status==='paid'?'✅ Pagato':r.status==='partial'?'🟡 Parziale':'🔴 Da incassare';
   const canPay=r.remaining>.005&&!future;
-  return '<tr><td>'+esc(dateIT(x.data_servizio))+'<div><strong>'+esc(x.numero_foglio||'—')+'</strong></div></td><td>'+esc(servicePerson(x))+'</td><td>'+esc(note?.numero||'—')+'</td><td>'+esc(money(r.due))+'</td><td>'+esc(money(r.paid))+'</td><td>'+esc(money(r.remaining))+'</td><td><strong>'+state+'</strong></td><td>'+esc(p?dateIT(p.data_pagamento)+' · '+p.modalita:'—')+'</td><td>'+(canPay?'<button type="button" class="secondary" data-overview-pay="'+esc(note&&note.stato==='EMESSA'?'note':'service')+'" data-overview-id="'+esc(note&&note.stato==='EMESSA'?note.id:x.servizio_id)+'">Registra pagamento</button>':'<span class="muted">Saldo completo</span>')+'</td></tr>';
+  return '<tr><td>'+esc(dateIT(x.data_servizio))+'<div><strong>'+esc(x.numero_foglio||'—')+'</strong></div></td><td>'+esc(displayServicePerson(x))+'</td><td>'+esc(note?.numero||'—')+'</td><td>'+esc(money(r.due))+'</td><td>'+esc(money(r.paid))+'</td><td>'+esc(money(r.remaining))+'</td><td><strong>'+state+'</strong></td><td>'+esc(p?dateIT(p.data_pagamento)+' · '+p.modalita:'—')+'</td><td>'+(canPay?'<button type="button" class="secondary" data-overview-pay="'+esc(note&&note.stato==='EMESSA'?'note':'service')+'" data-overview-id="'+esc(note&&note.stato==='EMESSA'?note.id:x.servizio_id)+'">Registra pagamento</button>':'<span class="muted">Saldo completo</span>')+'</td></tr>';
  }).join('')||'<tr><td colspan="9">Nessun servizio corrispondente</td></tr>';
  $('overviewRows').querySelectorAll('[data-overview-pay]').forEach(b=>b.onclick=()=>{
   $('origin').value=b.dataset.overviewPay;$('search').value='';targets();$('target').value=b.dataset.overviewId;selected();
