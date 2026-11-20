@@ -111,6 +111,7 @@
        <div class="field"><label for="dPaidWithText">Pagato con</label><textarea id="dPaidWithText" rows="2" placeholder="Es. Contanti, contanti, POS" style="width:100%;resize:vertical"></textarea></div>
        <div class="field"><label>Stato email</label><input id="dEmailState" disabled></div>
       </div><p class="muted" style="font-size:12px">Indica le date e i metodi dei pagamenti. Quando il totale della nota è stato interamente incassato, usa “Conferma nota interamente pagata”. La conferma non crea nuovi incassi.</p>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0;padding:12px;background:#fff9dc;border:1px solid #dcc56c;border-radius:7px"><label for="manualPaidCheck" style="display:flex;align-items:center;gap:9px;font-weight:800;cursor:pointer"><input id="manualPaidCheck" type="checkbox" style="width:22px;height:22px;accent-color:#173a5e"> GIÀ PAGATO (spunta manuale)</label><button id="saveManualPaid" class="btn blue" type="button">Salva spunta</button><span id="manualPaidStatus" class="muted" style="font-size:12px">La spunta modifica il documento PDF, non crea né modifica incassi contabili.</span></div>
       <button id="savePayText" class="btn secondary hidden" type="button">Salva dettagli pagamento</button>
       <details id="legacyPayment" class="hidden" style="margin-top:12px"><summary>Registrazione contabile di un pagamento unico</summary><div class="grid3" style="margin-top:10px">
        <div class="field"><label>Modalità contabile</label><select id="dPayment"><option value="">Da concordare</option><option>CONTANTI</option><option>POS</option><option>BONIFICO</option><option>BONIFICO A VISTA</option><option>BONIFICO DIFFERITO</option><option>ALTRO</option></select></div>
@@ -286,6 +287,8 @@ function fill(){
  for(const [id,k] of Object.entries(map))$(id).value=n[k]??'';
  $('dPayDatesText').value=n.date_pagamento_testo|| (n.data_pagamento?nice(n.data_pagamento):'');
  $('dPaidWithText').value=n.pagato_con_testo||n.modalita_pagamento||'';
+  $('manualPaidCheck').checked=!!(n.gia_pagato_manuale||n.data_pagamento);
+  $('manualPaidStatus').textContent='Spunta salvabile da Stefano, indipendente dalla registrazione contabile.';
  $('dEmailState').value=n.email_stato||'NON_INVIATA';calcTotal();
  const draft=n.stato==='BOZZA';
  ['dDate','dCF','dAddress','dCap','dTown','dProvince','dDescription','dAmount','dDiscount'].forEach(id=>$(id).disabled=!draft);
@@ -439,6 +442,20 @@ async function reconcileExistingNotePayments(n,dates,methods){
  if(confirmed.error)throw confirmed.error;
  return true;
 }
+$('saveManualPaid').onclick=async()=>{
+ if(!active)return;
+ const desired=$('manualPaidCheck').checked,btn=$('saveManualPaid'),id=active.id;
+ if(!desired&&active.data_pagamento){$('manualPaidCheck').checked=true;return msg('detailMsg','La nota risulta già pagata in contabilità: non puoi togliere la spunta senza rettificare prima il pagamento.','err');}
+ btn.disabled=true;
+ try{
+  const r=await sb.rpc('cge_imposta_spunta_pagato_nota',{p_nota_id:id,p_spuntato:desired});
+  if(r.error)throw r.error;
+  active.gia_pagato_manuale=desired;
+  $('manualPaidStatus').textContent=desired?'Spunta salvata: comparirà nel PDF.':'Spunta tolta e salvata.';
+  msg('detailMsg','Casella GIÀ PAGATO '+(desired?'spuntata':'deselezionata')+' e salvata. Nessun nuovo incasso generato.','ok');
+ }catch(e){$('manualPaidCheck').checked=!!(active.gia_pagato_manuale||active.data_pagamento);msg('detailMsg','Salvataggio spunta non riuscito: '+(e.message||String(e)),'err')}
+ finally{btn.disabled=false;}
+};
 $('savePayText').onclick=async()=>{
  if(!active||active.stato!=='EMESSA')return;
  const dates=$('dPayDatesText').value.trim(),methods=$('dPaidWithText').value.trim(),id=active.id;
@@ -639,7 +656,7 @@ $('sendPdfMail').onclick=async()=>{
 function buildApprovedNoteBody(n){
   const euro=x=>money(x).replace('€','').trim();
   const total=Number(n.totale ?? (Number(n.importo||0)-Number(n.sconto||0)));
-  const paid=!!n.data_pagamento && String(n.modalita_pagamento||'').toUpperCase()!=='BONIFICO DIFFERITO';
+  const paid=!!n.gia_pagato_manuale || (!!n.data_pagamento && String(n.modalita_pagamento||'').toUpperCase()!=='BONIFICO DIFFERITO');
   const rows=[
    {cod:'SERV',desc:n.descrizione||'Servizio sanitario',qty:'1',price:euro(n.importo),discount:Number(n.sconto||0)>0?euro(n.sconto):'0,00',amount:euro(total)},
    {cod:'',desc:'',qty:'',price:'',discount:'',amount:''},
