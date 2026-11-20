@@ -13593,9 +13593,23 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
   else if(name==='pagamento_segnalato')row[name]=el.value==='yes'?true:(el.value==='no'?false:null);
   else row[name]=el.value.trim()||null;
  }
- if(row.pagamento_segnalato!==true)row.metodo_pagamento_segnalato=null;
- if(row.pagamento_segnalato===true&&!row.metodo_pagamento_segnalato)return msg('tabletSheetMsg','Seleziona il metodo segnalato.','warn'),false;
- if(tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'')){delete row.pagamento_segnalato;delete row.metodo_pagamento_segnalato;}else row.pagamento_segnalato_il=row.pagamento_segnalato===null?null:new Date().toISOString();
+ // Una selezione assente non deve cancellare il dato già salvato sul server.
+ // La conferma non equivale a registrare un incasso contabile.
+ const paymentSignal118=tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'');
+ if(paymentSignal118){
+  delete row.pagamento_segnalato;
+  delete row.metodo_pagamento_segnalato;
+ }else{
+  const savedSignal=tabletCurrentSheet.pagamento_segnalato;
+  if(row.pagamento_segnalato===null && (savedSignal===true||savedSignal===false)){
+   row.pagamento_segnalato=savedSignal;
+   row.metodo_pagamento_segnalato=savedSignal===true?(tabletCurrentSheet.metodo_pagamento_segnalato||null):null;
+  }
+  if(row.pagamento_segnalato!==true)row.metodo_pagamento_segnalato=null;
+  if(row.pagamento_segnalato===true&&!row.metodo_pagamento_segnalato)
+   return msg('tabletSheetMsg','Seleziona il metodo del pagamento segnalato prima di salvare.','warn'),false;
+  row.pagamento_segnalato_il=row.pagamento_segnalato===null?null:(tabletCurrentSheet.pagamento_segnalato===row.pagamento_segnalato&&tabletCurrentSheet.metodo_pagamento_segnalato===row.metodo_pagamento_segnalato&&tabletCurrentSheet.pagamento_segnalato_il?tabletCurrentSheet.pagamento_segnalato_il:new Date().toISOString());
+ }
  delete row.modalita_pagamento;
  if(tabletCurrentService && !tabletIs118Type(tabletCurrentService.tipo_servizio) && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno' && !isAssistanceManifestation(tabletCurrentService.tipo_servizio)){
   try{
@@ -13705,6 +13719,13 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
    if(destinationCheck.error||!destinationCheck.data||String(destinationCheck.data.destinazione||'').trim()!==String(row.destinazione||'').trim())
     throw new Error('Destinazione 118 non memorizzata sul server. Il foglio resta aperto: riprova senza crearne un altro.');
   }
+  // Verifica che Sì/No e metodo siano davvero persistiti prima di confermare Salva.
+  if(!tabletSheetIs118 && row.pagamento_segnalato!==null){
+   const signalMatches=r.data.pagamento_segnalato===row.pagamento_segnalato;
+   const methodMatches=(r.data.metodo_pagamento_segnalato||null)===(row.metodo_pagamento_segnalato||null);
+   if(!signalMatches||!methodMatches)
+    throw new Error('Segnalazione pagamento NON salvata nel database. Il foglio resta aperto: aggiorna e riprova.');
+  }
   // Controllo finale per tutti i tablet 06/07/08/09: l'importo e un dato
   // del servizio, non un pagamento. In caso di mancata persistenza ripeti
   // solo l'aggiornamento di importo_inserito, senza creare incassi o note.
@@ -13786,11 +13807,18 @@ async function tabletCloseSheet(){
  if(kmStart==='')return msg('tabletSheetMsg','Inserisci i KM di partenza prima di chiudere il Foglio Viaggio.','warn');
  if(kmClose==='')return msg('tabletSheetMsg','Inserisci i KM di chiusura / rientro prima di chiudere il Foglio Viaggio.','warn');
  if(Number(kmClose)<Number(kmStart))return msg('tabletSheetMsg','I KM di chiusura / rientro non possono essere inferiori ai KM di partenza.','warn');
+ const isOrdinaryPaymentCheck=!tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'')&&!String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').toUpperCase().includes('INTERNO')&&!isAssistanceManifestation(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'');
+ if(isOrdinaryPaymentCheck){
+  const sig=document.querySelector('#tabletSheetForm [data-ts-field="pagamento_segnalato"]')?.value||'';
+  if(sig!=='yes'&&sig!=='no')return msg('tabletSheetMsg','Prima di chiudere indica se il paziente ha pagato: Sì oppure No. Non viene registrato alcun incasso automatico.','warn');
+ }
  const saved=await saveTabletSheet(true,false);if(!saved)return;
  // Allinea la scheda locale con la copia effettiva salvata, inclusa la firma privacy.
- const refreshed=await sb.from('fogli_viaggio').select('id,stato,modalita_pagamento,data_pagamento,totale_servizio,privacy_firma_stato,privacy_firma_path,privacy_firma_motivo').eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).maybeSingle();
+ const refreshed=await sb.from('fogli_viaggio').select('id,stato,modalita_pagamento,data_pagamento,totale_servizio,pagamento_segnalato,metodo_pagamento_segnalato,privacy_firma_stato,privacy_firma_path,privacy_firma_motivo').eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).maybeSingle();
  if(refreshed.error||!refreshed.data)return msg('tabletSheetMsg','Impossibile rileggere il foglio salvato: '+(refreshed.error?.message||'foglio non trovato')+'. Riprova dopo Aggiorna, senza crearne un altro.','err');
  tabletCurrentSheet={...tabletCurrentSheet,...refreshed.data};
+ if(isOrdinaryPaymentCheck && (tabletCurrentSheet.pagamento_segnalato===null || tabletCurrentSheet.pagamento_segnalato===undefined || (tabletCurrentSheet.pagamento_segnalato===true&&!tabletCurrentSheet.metodo_pagamento_segnalato)))
+  return msg('tabletSheetMsg','Segnalazione del pagamento assente sul server: chiusura bloccata. Seleziona Sì/No, salva e riprova.','err');
  const closeType=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase();
  const privacyRequired=closeType!=='118'&&!closeType.includes('EMERGENZA')&&!closeType.includes('SERVIZIO INTERNO')&&closeType!=='INTERNO'&&!isAssistanceManifestation(closeType);
  if(privacyRequired){
