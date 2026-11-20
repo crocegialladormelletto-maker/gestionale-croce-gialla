@@ -3530,7 +3530,8 @@ function tabletUpdatePaymentDateVisibility(){
 }
 function tabletToggleReceiptSection(){
  const sec=$('tabletReceiptSection');if(!sec)return;
- const show=false; // Incassi e ricevute amministrative sono gestiti esclusivamente dal gestionale.
+ const tipo=tabletCurrentSheet?.tipo_servizio||tabletCurrentService?.tipo_servizio||'';
+ const show=!!tabletCurrentSheet&&!tabletIs118Type(tipo);
  sec.classList.toggle('hidden',!show);
  if(!show){if($('tabletReceiptFile'))$('tabletReceiptFile').value='';msg('tabletReceiptMsg','')}
 }
@@ -13357,6 +13358,7 @@ async function openTabletDirect118(foglio){
  document.querySelectorAll('#tabletSheetForm [data-ts-field]').forEach(el=>{
   const key=el.dataset.tsField;el.disabled=closed;
   if(el.type==='checkbox')el.checked=!!f[key];
+  else if(key==='pagamento_segnalato')el.value=f[key]===true?'yes':(f[key]===false?'no':'');
   else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
   else el.value=f[key]??'';
  });
