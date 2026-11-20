@@ -412,14 +412,52 @@ $('cashSubmit').onclick=async()=>{
   msg('detailMsg',r.data?.saldo_completo?'Incasso registrato. Nota interamente pagata e spostata tra le Pagate.':'Incasso registrato. Il residuo della nota è stato aggiornato.','ok');
  }catch(e){msg('detailMsg','Registrazione non riuscita: '+(e.message||String(e)),'err');btn.disabled=false;}
 };
+// Conferma automaticamente il saldo SOLO quando la contabilita' contiene
+// gia' pagamenti REGISTRATI che coprono esattamente l'intera nota.
+// Non crea nuovi incassi: evita sia false spunte sia doppie registrazioni.
+async function reconcileExistingNotePayments(n,dates,methods){
+ if(!n||n.stato!=='EMESSA'||n.data_pagamento)return false;
+ const lastDate=lastPaymentDateFromText(dates);
+ if(!lastDate||!methods.trim())return false;
+ const ids=[...new Set([n.foglio_viaggio_id,...noteLinks.filter(l=>l.nota_id===n.id).map(l=>l.foglio_id)].filter(Boolean))];
+ if(!ids.length)return false;
+ const fs=await sb.from('fogli_viaggio').select('id,servizio_giornaliero_id').in('id',ids);
+ if(fs.error||!fs.data||fs.data.length!==ids.length)throw new Error('Impossibile verificare i fogli collegati');
+ const serviceIds=[...new Set(fs.data.map(f=>f.servizio_giornaliero_id).filter(Boolean))];
+ const [bySheet,byService]=await Promise.all([
+  sb.from('pagamenti_servizi').select('id,importo').in('foglio_viaggio_id',ids).eq('stato','REGISTRATO'),
+  serviceIds.length?sb.from('pagamenti_servizi').select('id,importo').in('servizio_id',serviceIds).eq('stato','REGISTRATO'):Promise.resolve({data:[],error:null})
+ ]);
+ if(bySheet.error||byService.error)throw new Error('Impossibile verificare gli incassi contabilizzati');
+ const unique=new Map([...(bySheet.data||[]),...(byService.data||[])].map(p=>[p.id,p]));
+ const received=[...unique.values()].reduce((s,p)=>s+Number(p.importo||0),0);
+ const total=Number(n.totale??(Number(n.importo||0)-Number(n.sconto||0)));
+ if(total<=0||Math.abs(received-total)>0.005)return false;
+ const confirmed=await sb.rpc('cge_aggiorna_dettagli_saldo_nota',{
+  p_nota_id:n.id,p_date_testo:dates,p_metodi_testo:methods,p_conferma:true
+ });
+ if(confirmed.error)throw confirmed.error;
+ return true;
+}
 $('savePayText').onclick=async()=>{
  if(!active||active.stato!=='EMESSA')return;
- const r=await sb.rpc('cge_aggiorna_dettagli_saldo_nota',{
-  p_nota_id:active.id,p_date_testo:$('dPayDatesText').value.trim(),
-  p_metodi_testo:$('dPaidWithText').value.trim(),p_conferma:false
- });
- if(r.error)return msg('detailMsg','Impossibile salvare: '+r.error.message,'err');
- active={...active,...r.data};msg('detailMsg','Dettagli pagamento salvati senza modificare gli incassi.','ok');
+ const dates=$('dPayDatesText').value.trim(),methods=$('dPaidWithText').value.trim(),id=active.id;
+ const btn=$('savePayText');btn.disabled=true;
+ try{
+  const r=await sb.rpc('cge_aggiorna_dettagli_saldo_nota',{
+   p_nota_id:id,p_date_testo:dates,p_metodi_testo:methods,p_conferma:false
+  });
+  if(r.error)throw r.error;
+  active={...active,...r.data};
+  const confirmed=await reconcileExistingNotePayments(active,dates,methods);
+  if(confirmed){
+   await loadAll();await openNote(id);
+   msg('detailMsg','Pagamento gia\\' registrato in contabilita\\': nota confermata PAGATA, casella GIÀ PAGATO spuntata in stampa/PDF. Nessun nuovo incasso creato.','ok');
+  }else{
+   msg('detailMsg','Dettagli salvati. La casella GIÀ PAGATO rimane vuota finché il totale non risulta effettivamente registrato nel Registro Incassi. Nessun nuovo incasso creato.','ok');
+  }
+ }catch(e){msg('detailMsg','Dettagli salvati, ma riconciliazione non completata: '+(e.message||String(e)),'err')}
+ finally{btn.disabled=false;}
 };
 $('issue').onclick=async()=>{
  if(!confirm('Prima dell’emissione hai verificato nel Registro Incassi i pagamenti già ricevuti? Se il servizio non è ancora pagato, NON registrare un incasso fittizio: la nota resterà da saldare.\\n\\nEmettere definitivamente '+active.numero+'?'))return;
