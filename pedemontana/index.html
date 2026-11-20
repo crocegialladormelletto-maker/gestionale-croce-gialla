@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Turni Pedemontana · Croce Gialla</title>
+<style>
+:root{--blue:#16324a;--yellow:#f3c400;--line:#dbe4ec;--bg:#f0f4f8;--orange:#fff0d4;--green:#e5f6ed}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font:14px system-ui,Arial;color:#263745}header{background:var(--blue);border-bottom:5px solid var(--yellow);color:white;padding:18px max(15px,calc((100vw - 1260px)/2));display:flex;align-items:center;gap:15px;flex-wrap:wrap}h1{font-size:25px;margin:3px 0}header small{color:var(--yellow);font-weight:800;letter-spacing:.6px}
+a.back{margin-left:auto;color:var(--blue);background:white;padding:10px 14px;border-radius:9px;text-decoration:none;font-weight:700}
+main{max-width:1260px;margin:18px auto;padding:0 14px}.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:17px;margin-bottom:16px}
+h2{font-size:19px;color:var(--blue);margin:0 0 12px}p{line-height:1.5}.muted{color:#647789}.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+button{border:none;border-radius:8px;padding:10px 13px;background:var(--yellow);color:var(--blue);font:700 14px system-ui;cursor:pointer}
+button.secondary{background:#eaf0f5}button.danger{background:#ffe5e5;color:#9e2626}button:disabled{opacity:.5;cursor:not-allowed}
+input,select{border:1px solid #bac9d5;border-radius:8px;padding:10px;width:100%;font:inherit;background:white}
+label{display:block;font-weight:700;font-size:12px;margin-bottom:5px;color:var(--blue)}.formgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.formgrid .full{grid-column:span 2}
+.cardgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.stat{background:#f6f9fc;border:1px solid var(--line);border-radius:10px;padding:13px}.stat strong{font-size:24px;display:block;color:var(--blue)}
+.calendarWrap{overflow:auto}.calendar{min-width:760px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+.day{border:1px solid var(--line);border-radius:9px;min-height:130px;padding:8px;background:#fff}.day b{display:block;margin-bottom:8px;color:var(--blue)}
+.shift{display:block;border:1px solid #c5dccc;border-left:4px solid #278852;background:var(--green);border-radius:6px;margin:5px 0;padding:7px;font-size:12px;cursor:pointer;width:100%;text-align:left;color:#1c3f31}
+.shift.ten{background:var(--orange);border-color:#efca82;border-left-color:#dc870e;color:#6b4200}.shift.night{background:#eaf0ff;border-color:#bfd0f5;border-left-color:#4d73c5;color:#24406a}
+.shift small{display:block;font-weight:400;margin-top:2px}.day button.add{font-size:11px;padding:5px 8px;background:#e9eff5}
+.tableWrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:710px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:9px}th{color:var(--blue);background:#f6f8fb}
+.notice{border:1px solid #efd28b;background:#fff7e3;border-radius:8px;padding:11px;margin:0 0 13px}.ok{background:#e8f7ee;border-color:#9fd6b3}.actions{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}
+dialog{border:1px solid var(--line);border-radius:12px;padding:20px;width:min(660px,95vw);box-shadow:0 15px 60px #0003}dialog::backdrop{background:#101b28aa}
+@media(max-width:850px){.formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.cardgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.formgrid{grid-template-columns:1fr}.formgrid .full{grid-column:span 1}.cardgrid{grid-template-columns:1fr 1fr}}
+@media print{header .back,.noPrint,.add,dialog{display:none!important}body{background:#fff}main{max-width:none}.panel{break-inside:avoid}.calendar{min-width:0}.day{min-height:90px}button.shift{print-color-adjust:exact}}
+</style></head><body>
+<header><div><small>CROCE GIALLA EMERGENZA ODV</small><h1>🚑 Gestione Turni Pedemontana</h1><div>Ambulanza diurna e presidio infermeria notturno</div></div><a class="back" href="../index.html">← Gestionale</a></header>
+<main>
+<div class="notice" id="scope">VERSIONE DI PROVA — I turni vengono salvati soltanto su questo browser. Non sono condivisi con il gestionale o con gli altri dispositivi. Non inserire dati personali reali per la pianificazione operativa.</div>
+<section class="panel"><div class="cardgrid"><div class="stat">Turni ambulanza<strong id="nAmb">0</strong></div><div class="stat">Turni infermeria<strong id="nInf">0</strong></div><div class="stat">Ore ambulanza<strong id="oreAmb">0</strong></div><div class="stat">Turni scoperti<strong id="missing">0</strong></div></div></section>
+<section class="panel"><div class="toolbar noPrint"><button class="secondary" id="prev">‹ Settimana precedente</button><button id="today">Questa settimana</button><button class="secondary" id="next">Settimana successiva ›</button><button id="new">+ Nuovo turno</button><button class="secondary" id="print">Stampa</button><button class="secondary" id="export">Esporta CSV</button></div><h2 id="weekTitle" style="margin-top:15px"></h2><div class="calendarWrap"><div class="calendar" id="calendar"></div></div></section>
+<section class="panel"><h2>Turni della settimana</h2><div class="tableWrap"><table><thead><tr><th>Data</th><th>Presidio</th><th>Orario</th><th>Autista</th><th>Soccorritore</th><th>Ore</th><th class="noPrint">Azioni</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<section class="panel"><h2>Come funziona</h2><p class="muted">Il turno ambulanza nasce da 8 ore. Il pulsante «+2 ore» prolunga la fine di 2 ore consecutive, fino a 10 complessive; «−2 ore» lo riporta a 8. Il presidio infermeria prevede un soccorritore per 10 ore. La pagina segnala sovrapposizioni dello stesso nominativo tra i turni inseriti qui. La verifica di riposi contrattuali e dei turni nel gestionale principale non è ancora collegata.</p></section>
+</main>
+<dialog id="editor"><form id="form"><h2 id="editTitle">Nuovo turno</h2><input type="hidden" id="id"><div class="formgrid">
+<div><label for="date">Data di inizio</label><input id="date" type="date" required></div>
+<div><label for="type">Presidio</label><select id="type"><option value="amb">Ambulanza (8 ore)</option><option value="inf">Infermeria (10 ore)</option></select></div>
+<div><label for="start">Inizio</label><input id="start" type="time" required value="08:00"></div>
+<div><label for="end">Fine automatica</label><input id="end" readonly></div>
+<div><label for="driver">Autista (ambulanza)</label><input id="driver" placeholder="Nome e cognome" autocomplete="off"></div>
+<div><label for="rescuer">Soccorritore</label><input id="rescuer" placeholder="Nome e cognome" autocomplete="off"></div>
+<div><label for="duration">Durata</label><select id="duration"><option value="8">8 ore</option><option value="10">10 ore</option></select></div>
+<div class="full"><label for="notes">Note</label><input id="notes" placeholder="Informazioni sul turno"></div>
+</div><div class="actions"><button type="submit">Salva turno</button><button type="button" class="secondary" id="cancel">Annulla</button><button type="button" class="danger" id="delete" style="margin-left:auto">Elimina</button></div><div id="validation" role="alert" style="color:#a12828"></div></form></dialog>
+<script>
+(()=>{'use strict';
+const KEY='cge-pedemontana-demo-v1',D=document,$=id=>D.getElementById(id);
+let shifts=[];try{const saved=JSON.parse(localStorage.getItem(KEY)||'[]');if(Array.isArray(saved))shifts=saved}catch(e){alert('Impossibile leggere i turni salvati in questo browser')}
+const iso=d=>{const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
+const dateOf=s=>new Date(s+'T12:00:00'),dayStart=d=>{const x=new Date(d);x.setHours(12,0,0,0);x.setDate(x.getDate()-(x.getDay()+6)%7);return x};
+let monday=dayStart(new Date());
+const pretty=s=>dateOf(s).toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'});
+const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const minutes=s=>{const [h,m]=s.split(':').map(Number);return h*60+m};
+const end=(s,h)=>{let n=minutes(s)+h*60;return String(Math.floor(n/60)%24).padStart(2,'0')+':'+String(n%60).padStart(2,'0')+(n>=1440?' (+1g)':'')};
+const startTime=x=>new Date(x.date+'T'+x.start+':00').getTime();
+const endTime=x=>startTime(x)+x.duration*3600000;
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(shifts));return true}catch(e){alert('Salvataggio non riuscito: memoria browser non disponibile');return false}};
+const overlaps=(a,b)=>startTime(a)<endTime(b)&&startTime(b)<endTime(a);
+const samePerson=(a,b)=>a&&b&&a.trim().toLocaleLowerCase('it')===b.trim().toLocaleLowerCase('it');
+function show(){const dates=Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(d.getDate()+i);return iso(d)});
+$('weekTitle').textContent='Dal '+pretty(dates[0])+' al '+pretty(dates[6]);let arr=shifts.filter(s=>dates.includes(s.date)).sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start));
+$('nAmb').textContent=arr.filter(x=>x.type==='amb').length;$('nInf').textContent=arr.filter(x=>x.type==='inf').length;$('oreAmb').textContent=arr.filter(x=>x.type==='amb').reduce((n,x)=>n+x.duration,0);$('missing').textContent=arr.filter(x=>!x.rescuer||(x.type==='amb'&&!x.driver)).length;
+$('calendar').innerHTML=dates.map(date=>{const d=arr.filter(x=>x.date===date);return '<div class="day"><b>'+escape(pretty(date))+'</b>'+d.map(x=>'<button class="shift '+(x.type==='inf'?'night':x.duration===10?'ten':'')+'" data-edit="'+escape(x.id)+'">'+(x.type==='amb'?'🚑 Ambulanza':'🌙 Infermeria')+' · '+x.duration+'h<small>'+escape(x.start)+'–'+escape(end(x.start,x.duration))+'</small><small>'+escape(x.type==='amb'?([x.driver,x.rescuer].filter(Boolean).join(' / ')||'Equipaggio da assegnare'):(x.rescuer||'Soccorritore da assegnare'))+'</small></button>').join('')+'<button class="add noPrint" data-add="'+date+'">+ Turno</button></div>'}).join('');
+$('rows').innerHTML=arr.map(x=>'<tr><td>'+escape(pretty(x.date))+'</td><td>'+escape(x.type==='amb'?'Ambulanza':'Infermeria')+'</td><td>'+escape(x.start+' – '+end(x.start,x.duration))+'</td><td>'+escape(x.type==='amb'?(x.driver||'Da assegnare'):'—')+'</td><td>'+escape(x.rescuer||'Da assegnare')+'</td><td>'+x.duration+'</td><td class="noPrint"><div class="toolbar"><button class="secondary" data-edit="'+escape(x.id)+'">Modifica</button>'+(x.type==='amb'?'<button data-toggle="'+escape(x.id)+'">'+(x.duration===8?'+2 ore':'−2 ore')+'</button>':'')+'</div></td></tr>').join('')||'<tr><td colspan="7">Nessun turno programmato per questa settimana.</td></tr>';
+}
+function refreshDuration(){const inf=$('type').value==='inf';$('duration').disabled=inf;if(inf)$('duration').value='10';$('driver').disabled=inf;if(inf)$('driver').value='';$('end').value=end($('start').value||'08:00',Number($('duration').value));}
+function edit(id,date){const s=shifts.find(x=>x.id===id);$('form').reset();$('id').value=s?.id||'';$('date').value=s?.date||date||iso(new Date());$('type').value=s?.type||'amb';$('start').value=s?.start||'08:00';$('duration').value=String(s?.duration||8);$('driver').value=s?.driver||'';$('rescuer').value=s?.rescuer||'';$('notes').value=s?.notes||'';$('delete').hidden=!s;$('validation').textContent='';$('editTitle').textContent=s?'Modifica turno':'Nuovo turno';refreshDuration();$('editor').showModal()}
+function conflicts(candidate){const names=[candidate.driver,candidate.rescuer].filter(Boolean);return shifts.filter(s=>s.id!==candidate.id&&overlaps(candidate,s)&&names.some(n=>samePerson(n,s.driver)||samePerson(n,s.rescuer)))}
+function saveCandidate(s){if(s.driver&&s.rescuer&&samePerson(s.driver,s.rescuer)){alert('Autista e soccorritore devono essere persone diverse.');return false}if(conflicts(s).length){alert('Sovrapposizione: uno degli operatori è già assegnato a un altro turno Pedemontana nello stesso orario.');return false}const copy=shifts.slice();const index=copy.findIndex(x=>x.id===s.id);if(index>=0)copy[index]=s;else copy.push(s);const prev=shifts;shifts=copy;if(!persist()){shifts=prev;return false}show();return true}
+$('form').addEventListener('submit',e=>{e.preventDefault();const s={id:$('id').value||('p-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)),date:$('date').value,type:$('type').value,start:$('start').value,duration:$('type').value==='inf'?10:Number($('duration').value),driver:$('driver').value.trim(),rescuer:$('rescuer').value.trim(),notes:$('notes').value.trim()};if(!s.date||!s.start)return; if(saveCandidate(s))$('editor').close()});
+$('type').addEventListener('change',refreshDuration);$('start').addEventListener('change',refreshDuration);$('duration').addEventListener('change',refreshDuration);
+$('cancel').onclick=()=>$('editor').close();$('delete').onclick=()=>{const id=$('id').value;if(!id||!confirm('Eliminare questo turno?'))return;const old=shifts;shifts=shifts.filter(s=>s.id!==id);if(persist()){$('editor').close();show()}else shifts=old};
+$('calendar').onclick=$('rows').onclick=e=>{const editButton=e.target.closest('[data-edit]'),add=e.target.closest('[data-add]'),toggle=e.target.closest('[data-toggle]');if(editButton)edit(editButton.dataset.edit);else if(add)edit(null,add.dataset.add);else if(toggle){const s=shifts.find(x=>x.id===toggle.dataset.toggle);if(s)saveCandidate({...s,duration:s.duration===8?10:8})}};
+$('new').onclick=()=>edit();$('prev').onclick=()=>{monday.setDate(monday.getDate()-7);show()};$('next').onclick=()=>{monday.setDate(monday.getDate()+7);show()};$('today').onclick=()=>{monday=dayStart(new Date());show()};$('print').onclick=()=>window.print();
+$('export').onclick=()=>{const header=['Data','Presidio','Inizio','Fine','Ore','Autista','Soccorritore','Note'];const csv=[header,...shifts.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(s=>[s.date,s.type==='amb'?'Ambulanza':'Infermeria',s.start,end(s.start,s.duration),s.duration,s.driver,s.rescuer,s.notes])].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');const b=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(b),a=D.createElement('a');a.href=url;a.download='turni-pedemontana.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+show();
+})();
+</script></body></html>
