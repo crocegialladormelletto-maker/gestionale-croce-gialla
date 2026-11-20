@@ -452,7 +452,7 @@ $('savePayText').onclick=async()=>{
   const confirmed=await reconcileExistingNotePayments(active,dates,methods);
   if(confirmed){
    await loadAll();await openNote(id);
-   msg('detailMsg','Pagamento gia\\' registrato in contabilita\\': nota confermata PAGATA, casella GIÀ PAGATO spuntata in stampa/PDF. Nessun nuovo incasso creato.','ok');
+   msg('detailMsg','Pagamento già registrato in contabilità: nota confermata PAGATA, casella GIÀ PAGATO spuntata in stampa/PDF. Nessun nuovo incasso creato.','ok');
   }else{
    msg('detailMsg','Dettagli salvati. La casella GIÀ PAGATO rimane vuota finché il totale non risulta effettivamente registrato nel Registro Incassi. Nessun nuovo incasso creato.','ok');
   }
