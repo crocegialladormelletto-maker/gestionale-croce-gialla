@@ -13595,10 +13595,14 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  }
  // Una selezione assente non deve cancellare il dato già salvato sul server.
  // La conferma non equivale a registrare un incasso contabile.
- const paymentSignal118=tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'');
- if(paymentSignal118){
+ const paymentSignalType=String(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio||'').trim().toUpperCase();
+ const paymentSignalExempt=tabletIs118Type(paymentSignalType)||paymentSignalType.includes('INTERNO');
+ if(paymentSignalExempt){
+  // I servizi interni, anche a importo 0, non prevedono un pagamento.
+  // Ignora i campi di segnalazione rimasti nel form o nella cache.
   delete row.pagamento_segnalato;
   delete row.metodo_pagamento_segnalato;
+  delete row.pagamento_segnalato_il;
  }else{
   const savedSignal=tabletCurrentSheet.pagamento_segnalato;
   if(row.pagamento_segnalato===null && (savedSignal===true||savedSignal===false)){
@@ -13720,7 +13724,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
     throw new Error('Destinazione 118 non memorizzata sul server. Il foglio resta aperto: riprova senza crearne un altro.');
   }
   // Verifica che Sì/No e metodo siano davvero persistiti prima di confermare Salva.
-  if(!tabletSheetIs118 && row.pagamento_segnalato!==null){
+  if(!paymentSignalExempt && row.pagamento_segnalato!==null && row.pagamento_segnalato!==undefined){
    const signalMatches=r.data.pagamento_segnalato===row.pagamento_segnalato;
    const methodMatches=(r.data.metodo_pagamento_segnalato||null)===(row.metodo_pagamento_segnalato||null);
    if(!signalMatches||!methodMatches)
