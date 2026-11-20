@@ -25,10 +25,10 @@ dialog{border:1px solid var(--line);border-radius:12px;padding:20px;width:min(66
 @media print{header .back,.noPrint,.add,dialog{display:none!important}body{background:#fff}main{max-width:none}.panel{break-inside:avoid}.calendar{min-width:0}.day{min-height:90px}button.shift{print-color-adjust:exact}}
 </style></head><body>
 <header><div><small>CROCE GIALLA EMERGENZA ODV</small><h1>🚑 Gestione Turni Pedemontana</h1><div>Ambulanza diurna e presidio infermeria notturno</div></div><a class="back" href="../index.html">← Gestionale</a></header>
-<main>
-<div class="notice" id="scope">VERSIONE DI PROVA — Le tendine contengono inizialmente i tre dipendenti conosciuti. Puoi aggiungere altri nominativi con «Aggiungi personale». I turni vengono salvati soltanto su questo browser. Non sono condivisi con il gestionale o con gli altri dispositivi. Non inserire dati personali reali per la pianificazione operativa.</div>
+<section class="panel" id="loginPanel" style="max-width:470px;margin:35px auto"><h2>Accesso gestione Pedemontana</h2><p class="muted">Accedi con le credenziali amministrative del gestionale per caricare il personale attivo.</p><div class="formgrid" style="grid-template-columns:1fr"><div><label>Email</label><input id="loginEmail" type="email"></div><div><label>Password</label><input id="loginPassword" type="password"></div><button id="loginButton">Accedi</button><div id="loginError" role="alert"></div></div></section><main id="appMain" hidden>
+<div class="notice" id="scope">VERSIONE DI PROVA — Volontari e dipendenti attivi vengono letti dall’anagrafica del gestionale. I turni di prova restano salvati soltanto in questo browser e NON sono condivisi. Non sono condivisi con il gestionale o con gli altri dispositivi. Non inserire dati personali reali per la pianificazione operativa.</div>
 <section class="panel"><div class="cardgrid"><div class="stat">Turni ambulanza<strong id="nAmb">0</strong></div><div class="stat">Turni infermeria<strong id="nInf">0</strong></div><div class="stat">Ore ambulanza<strong id="oreAmb">0</strong></div><div class="stat">Turni scoperti<strong id="missing">0</strong></div></div></section>
-<section class="panel"><div class="toolbar noPrint"><button class="secondary" id="prev">‹ Settimana precedente</button><button id="today">Questa settimana</button><button class="secondary" id="next">Settimana successiva ›</button><button id="new">+ Nuovo turno</button><button class="secondary" id="staff">Aggiungi personale</button><button class="secondary" id="print">Stampa</button><button class="secondary" id="export">Esporta CSV</button></div><h2 id="weekTitle" style="margin-top:15px"></h2><div class="calendarWrap"><div class="calendar" id="calendar"></div></div></section>
+<section class="panel"><div class="toolbar noPrint"><button class="secondary" id="prev">‹ Settimana precedente</button><button id="today">Questa settimana</button><button class="secondary" id="next">Settimana successiva ›</button><button id="new">+ Nuovo turno</button><button class="secondary" id="refreshStaff">Aggiorna personale</button><button class="secondary" id="print">Stampa</button><button class="secondary" id="export">Esporta CSV</button></div><h2 id="weekTitle" style="margin-top:15px"></h2><div class="calendarWrap"><div class="calendar" id="calendar"></div></div></section>
 <section class="panel"><h2>Turni della settimana</h2><div class="tableWrap"><table><thead><tr><th>Data</th><th>Presidio</th><th>Orario</th><th>Autista</th><th>Soccorritore</th><th>Ore</th><th class="noPrint">Azioni</th></tr></thead><tbody id="rows"></tbody></table></div></section>
 <section class="panel"><h2>Come funziona</h2><p class="muted">Il turno ambulanza nasce da 8 ore. Il pulsante «+2 ore» prolunga la fine di 2 ore consecutive, fino a 10 complessive; «−2 ore» lo riporta a 8. Il presidio infermeria prevede un soccorritore per 10 ore. La pagina segnala sovrapposizioni dello stesso nominativo tra i turni inseriti qui. La verifica di riposi contrattuali e dei turni nel gestionale principale non è ancora collegata.</p></section>
 </main>
@@ -42,14 +42,59 @@ dialog{border:1px solid var(--line);border-radius:12px;padding:20px;width:min(66
 <div><label for="duration">Durata</label><select id="duration"><option value="8">8 ore</option><option value="10">10 ore</option></select></div>
 <div class="full"><label for="notes">Note</label><input id="notes" placeholder="Informazioni sul turno"></div>
 </div><div class="actions"><button type="submit">Salva turno</button><button type="button" class="secondary" id="cancel">Annulla</button><button type="button" class="danger" id="delete" style="margin-left:auto">Elimina</button></div><div id="validation" role="alert" style="color:#a12828"></div></form></dialog>
-<script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script>
 (()=>{'use strict';
-const KEY='cge-pedemontana-demo-v1',STAFF_KEY='cge-pedemontana-staff-v1',D=document,$=id=>D.getElementById(id);
-const defaultStaff=['Brughera Francesca','Farinaccio Greta','Martinoli Andrea'];
-let staff=defaultStaff.slice();
-try{const v=JSON.parse(localStorage.getItem(STAFF_KEY)||'null');if(Array.isArray(v))staff=[...new Set([...defaultStaff,...v].filter(x=>typeof x==='string'&&x.trim()))].sort((a,b)=>a.localeCompare(b,'it'))}catch(e){}
-function selectStaff(id,value=''){const el=$(id);el.replaceChildren();const blank=D.createElement('option');blank.value='';blank.textContent='Da assegnare';el.append(blank);[...new Set([...staff,...(value?[value]:[])])].sort((a,b)=>a.localeCompare(b,'it')).forEach(name=>{const opt=D.createElement('option');opt.value=name;opt.textContent=name;el.append(opt)});el.value=value;}
-
+const KEY='cge-pedemontana-demo-v1',D=document,$=id=>D.getElementById(id);
+const sb=supabase.createClient('https://ihottewckpwpwqzpxusl.supabase.co','sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+let personnel=[],staffLoaded=false;
+const norm=v=>String(v||'').trim().toLocaleLowerCase('it');
+function activePerson(p){return p.attivo===true&&norm(p.stato_anagrafico)==='attivo'&&!p.data_uscita}
+function roleAllowed(p,role){return (p.roles||[]).includes(role)}
+function selectStaff(id,value=''){
+ const el=$(id),role=id==='driver'?'driver':'rescuer';
+ el.replaceChildren();
+ const blank=D.createElement('option');blank.value='';blank.textContent='Da assegnare';el.append(blank);
+ personnel.filter(p=>roleAllowed(p,role)).sort((a,b)=>a.nome_completo.localeCompare(b.nome_completo,'it')).forEach(p=>{
+  const opt=D.createElement('option');opt.value=p.nome_completo;opt.textContent=p.nome_completo+(p.dipendente?' (Dipendente)':' (Volontario)');el.append(opt);
+ });
+ if(value&&!Array.from(el.options).some(o=>norm(o.value)===norm(value))){const old=D.createElement('option');old.value=value;old.textContent=value+' (assegnazione precedente — verifica qualifica)';old.disabled=true;el.append(old)}
+ el.value=value;
+}
+async function loadPersonnel(){
+ staffLoaded=false;$('refreshStaff').disabled=true;
+ try{
+  const [pr,qr,defs]=await Promise.all([
+   sb.from('personale').select('badge,nome_completo,attivo,stato_anagrafico,data_uscita,dipendente').order('nome_completo'),
+   sb.from('personale_qualifiche').select('badge_personale,codice_qualifica,attiva,valida_dal,valida_al'),
+   sb.from('qualifiche').select('codice,nome,attiva')
+  ]);
+  if(pr.error)throw pr.error;if(qr.error)throw qr.error;if(defs.error)throw defs.error;
+  const today=iso(new Date()),qnames=new Map((defs.data||[]).filter(d=>d.attiva!==false).map(d=>[d.codice,String(d.nome||d.codice)]));
+  personnel=(pr.data||[]).filter(activePerson).map(p=>{
+   const qs=(qr.data||[]).filter(q=>String(q.badge_personale)===String(p.badge)&&q.attiva!==false&&qnames.has(q.codice_qualifica)&&(!q.valida_dal||q.valida_dal<=today)&&(!q.valida_al||q.valida_al>=today)).map(q=>String(q.codice_qualifica)+' '+qnames.get(q.codice_qualifica));
+   return {...p,roles:[...(qs.some(q=>/AUTISTA/i.test(q))?['driver']:[]),...(qs.some(q=>/SOCCORRITORE/i.test(q))?['rescuer']:[])]};
+  }).filter(p=>p.roles.length>0);
+  const driver=$('driver').value,rescuer=$('rescuer').value;
+  selectStaff('driver',driver);selectStaff('rescuer',rescuer);
+  staffLoaded=true;
+  $('scope').textContent='VERSIONE DI PROVA — Anagrafica aggiornata: '+personnel.length+' operatori attivi con almeno una qualifica pertinente. Volontari e dipendenti sono inclusi. I turni si salvano solo su questo browser, non nel gestionale.';
+ }catch(e){personnel=[];selectStaff('driver');selectStaff('rescuer');$('scope').textContent='Impossibile caricare il personale dal gestionale: '+e.message+'. Non inserire nominativi manualmente. Verifica accesso e riprova.'}
+ finally{$('refreshStaff').disabled=false}
+}
+async function enter(){
+ const user=await sb.auth.getUser();
+ if(user.error||!user.data?.user)throw Error('Accesso richiesto');
+ const access=await sb.from('accessi_app').select('attivo,ruolo').eq('user_id',user.data.user.id).maybeSingle();
+ if(access.error||!access.data?.attivo||access.data.ruolo!=='AMMINISTRATORE')throw Error('Accesso riservato agli amministratori');
+ $('loginPanel').hidden=true;$('appMain').hidden=false;
+ await loadPersonnel();
+}
+$('loginButton').onclick=async()=>{
+ $('loginError').textContent='';
+ const r=await sb.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});
+ if(r.error){$('loginError').textContent=r.error.message;return}
+ try{await enter()}catch(e){$('loginError').textContent=e.message}
+};
 let shifts=[];try{const saved=JSON.parse(localStorage.getItem(KEY)||'[]');if(Array.isArray(saved))shifts=saved}catch(e){alert('Impossibile leggere i turni salvati in questo browser')}
 const iso=d=>{const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
 const dateOf=s=>new Date(s+'T12:00:00'),dayStart=d=>{const x=new Date(d);x.setHours(12,0,0,0);x.setDate(x.getDate()-(x.getDay()+6)%7);return x};
@@ -73,12 +118,12 @@ function refreshDuration(){const inf=$('type').value==='inf';$('duration').disab
 function edit(id,date){const s=shifts.find(x=>x.id===id);$('form').reset();selectStaff('driver',s?.driver||'');selectStaff('rescuer',s?.rescuer||'');$('id').value=s?.id||'';$('date').value=s?.date||date||iso(new Date());$('type').value=s?.type||'amb';$('start').value=s?.start||'08:00';$('duration').value=String(s?.duration||8);$('driver').value=s?.driver||'';$('rescuer').value=s?.rescuer||'';$('notes').value=s?.notes||'';$('delete').hidden=!s;$('validation').textContent='';$('editTitle').textContent=s?'Modifica turno':'Nuovo turno';refreshDuration();$('editor').showModal()}
 function conflicts(candidate){const names=[candidate.driver,candidate.rescuer].filter(Boolean);return shifts.filter(s=>s.id!==candidate.id&&overlaps(candidate,s)&&names.some(n=>samePerson(n,s.driver)||samePerson(n,s.rescuer)))}
 function saveCandidate(s){if(s.driver&&s.rescuer&&samePerson(s.driver,s.rescuer)){alert('Autista e soccorritore devono essere persone diverse.');return false}if(conflicts(s).length){alert('Sovrapposizione: uno degli operatori è già assegnato a un altro turno Pedemontana nello stesso orario.');return false}const copy=shifts.slice();const index=copy.findIndex(x=>x.id===s.id);if(index>=0)copy[index]=s;else copy.push(s);const prev=shifts;shifts=copy;if(!persist()){shifts=prev;return false}show();return true}
-$('form').addEventListener('submit',e=>{e.preventDefault();const s={id:$('id').value||('p-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)),date:$('date').value,type:$('type').value,start:$('start').value,duration:$('type').value==='inf'?10:Number($('duration').value),driver:$('driver').value.trim(),rescuer:$('rescuer').value.trim(),notes:$('notes').value.trim()};if(!s.date||!s.start)return; if(saveCandidate(s))$('editor').close()});
+$('form').addEventListener('submit',e=>{e.preventDefault();const s={id:$('id').value||('p-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)),date:$('date').value,type:$('type').value,start:$('start').value,duration:$('type').value==='inf'?10:Number($('duration').value),driver:$('driver').value.trim(),rescuer:$('rescuer').value.trim(),notes:$('notes').value.trim()};if(!s.date||!s.start)return; if(!staffLoaded){$('validation').textContent='Caricare prima il personale dal gestionale';return}if(s.driver&&!personnel.some(p=>norm(p.nome_completo)===norm(s.driver)&&roleAllowed(p,'driver'))){$('validation').textContent='Autista non abilitato o non attivo';return}if(s.rescuer&&!personnel.some(p=>norm(p.nome_completo)===norm(s.rescuer)&&roleAllowed(p,'rescuer'))){$('validation').textContent='Soccorritore non abilitato o non attivo';return}if(saveCandidate(s))$('editor').close()});
 $('type').addEventListener('change',refreshDuration);$('start').addEventListener('change',refreshDuration);$('duration').addEventListener('change',refreshDuration);
 $('cancel').onclick=()=>$('editor').close();$('delete').onclick=()=>{const id=$('id').value;if(!id||!confirm('Eliminare questo turno?'))return;const old=shifts;shifts=shifts.filter(s=>s.id!==id);if(persist()){$('editor').close();show()}else shifts=old};
 $('calendar').onclick=$('rows').onclick=e=>{const editButton=e.target.closest('[data-edit]'),add=e.target.closest('[data-add]'),toggle=e.target.closest('[data-toggle]');if(editButton)edit(editButton.dataset.edit);else if(add)edit(null,add.dataset.add);else if(toggle){const s=shifts.find(x=>x.id===toggle.dataset.toggle);if(s)saveCandidate({...s,duration:s.duration===8?10:8})}};
-$('new').onclick=()=>edit();$('staff').onclick=()=>{const name=prompt('Nome e cognome da aggiungere alle tendine:');if(name===null)return;const clean=name.trim().replace(/\s+/g,' ');if(!clean||clean.length>100)return;if(staff.some(x=>x.toLocaleLowerCase('it')===clean.toLocaleLowerCase('it'))){alert('Nominativo già presente');return}staff.push(clean);staff.sort((a,b)=>a.localeCompare(b,'it'));try{localStorage.setItem(STAFF_KEY,JSON.stringify(staff));selectStaff('driver',$('driver').value);selectStaff('rescuer',$('rescuer').value);alert('Nominativo aggiunto alle tendine di questo browser.')}catch(e){alert('Impossibile salvare il nominativo')}};$('prev').onclick=()=>{monday.setDate(monday.getDate()-7);show()};$('next').onclick=()=>{monday.setDate(monday.getDate()+7);show()};$('today').onclick=()=>{monday=dayStart(new Date());show()};$('print').onclick=()=>window.print();
+$('new').onclick=()=>edit();$('refreshStaff').onclick=()=>loadPersonnel();$('prev').onclick=()=>{monday.setDate(monday.getDate()-7);show()};$('next').onclick=()=>{monday.setDate(monday.getDate()+7);show()};$('today').onclick=()=>{monday=dayStart(new Date());show()};$('print').onclick=()=>window.print();
 $('export').onclick=()=>{const header=['Data','Presidio','Inizio','Fine','Ore','Autista','Soccorritore','Note'];const csv=[header,...shifts.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(s=>[s.date,s.type==='amb'?'Ambulanza':'Infermeria',s.start,end(s.start,s.duration),s.duration,s.driver,s.rescuer,s.notes])].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');const b=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(b),a=D.createElement('a');a.href=url;a.download='turni-pedemontana.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
-show();
+show();sb.auth.getSession().then(r=>{if(r.data?.session)enter().catch(e=>{$('loginError').textContent=e.message})});
 })();
 </script></body></html>
