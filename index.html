@@ -935,7 +935,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   <div class="ops-kpi-card"><small>SERVIZI OGGI</small><b id="dashOpsServiceCount">0</b></div>
   <div class="ops-kpi-card"><small>FOGLI APERTI</small><b id="dashOpsTravelOpen">0</b></div>
   <div class="ops-kpi-card"><small>FOGLI CHIUSI</small><b id="dashOpsTravelClosed">0</b></div>
-  <div class="ops-kpi-card" data-admin-only="true"><small>NOTE DA CREARE</small><b id="dashOpsNotesToCreate">0</b></div><div class="ops-kpi-card" data-admin-only="true"><small>FATTURE ARUBA</small><b id="dashOpsArubaToCreate">0</b></div>
+<div class="ops-kpi-card" data-admin-only="true"><small>FATTURE ARUBA</small><b id="dashOpsArubaToCreate">0</b></div>
   <div class="ops-kpi-card"><small>SCADENZE URGENTI</small><b id="dashOpsUrgentExpiry">0</b></div>
   <div class="ops-kpi-card ops-kpi-alert"><small>PROBLEMI DA VERIFICARE</small><b id="dashOpsProblemCount">0</b></div>
  </div>
@@ -967,10 +967,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   <section class="section ops-card">
    <div class="ops-title"><h3>📄 Fogli viaggio</h3><button type="button" class="btn secondary jump" data-v="travelSheets">Apri fogli viaggio</button></div>
    <div id="dashTodayTravel"></div>
-  </section>
-  <section class="section ops-card" data-admin-only="true">
-   <div class="ops-title"><h3>🧾 Note di Debito da creare</h3><button type="button" id="dashOpenDebitNotes" class="btn secondary">Apri Note di Debito</button></div>
-   <div id="dashDebitNotesQueue"></div>
   </section>
   <section class="section ops-card" data-admin-only="true">
    <div class="ops-title"><h3>🧮 Fatture Aruba da emettere</h3><span id="dashArubaBadge" class="pill">0</span></div>
@@ -6464,20 +6460,11 @@ async function loadOperationalDashboard(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return;
  const day=todaySafe(),now=new Date();
  msg('dashOpsMsg','Aggiornamento quadro operativo...');
- const noteSheetsPromise=prof?.ruolo==='AMMINISTRATORE'
-  ?sb.from('fogli_viaggio').select('id,numero_foglio,data_servizio,mezzo,tipo_servizio,paziente_nome,paziente_cognome,destinazione,totale_servizio,stato,servizio_giornaliero_id').eq('stato','CHIUSO').neq('tipo_servizio','118').order('data_servizio',{ascending:false}).limit(500)
-  :Promise.resolve({data:[],error:null});
- const notesPromise=prof?.ruolo==='AMMINISTRATORE'
-  ?sb.from('note_di_debito').select('id,foglio_viaggio_id,stato').limit(1000)
-  :Promise.resolve({data:[],error:null});
- const debitPaymentsPromise=prof?.ruolo==='AMMINISTRATORE'
-  ?sb.from('pagamenti_servizi').select('servizio_id,importo,modalita,data_pagamento,stato').eq('stato','REGISTRATO').limit(2000)
-  :Promise.resolve({data:[],error:null});
  const hoursPromise=prof?.ruolo==='AMMINISTRATORE'?dashMonthlyHours(day).catch(error=>({error})):Promise.resolve(null);
  const adminDocsPromise=prof?.ruolo==='AMMINISTRATORE'
   ?sb.from('servizi_giornalieri').select('id,foglio_viaggio_id,numero_foglio,data_servizio,mezzo,stato_gestionale,tipo_servizio,tipo_servizio_altro,destinazione,ospedale_destinazione,intestatario_fatturazione,importo_previsto,importo_calcolato,importo_finale,documento_da_emettere,fattura_aruba_emessa,fattura_aruba_emessa_il').neq('stato_gestionale','ANNULLATO').order('data_servizio',{ascending:false}).limit(1000)
   :Promise.resolve({data:[],error:null});
- const [emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,hoursData,adminDocs,debitPayments,vehicleShifts]=await Promise.all([
+ const [emg,dim,ass,sv,fg,exp,mz,hoursData,adminDocs,vehicleShifts]=await Promise.all([
   sb.rpc('cge_emergenza_turni_v2',{p_dal:day,p_al:day}),
   sb.rpc('cge_dimissioni_turni',{p_dal:day,p_al:day}),
   sb.rpc('cge_assistenza_fasce_turni',{p_dal:day,p_al:day}),
@@ -6485,36 +6472,16 @@ async function loadOperationalDashboard(){
   sb.from('fogli_viaggio').select('id,numero_foglio,stato,mezzo,tipo_servizio,servizio_giornaliero_id,data_servizio,creato_il').eq('data_servizio',day).order('creato_il'),
   sb.from('v_mezzi_scadenze_gestionale').select('*').in('stato_scadenza',['SCADUTA','ENTRO_30_GIORNI']).order('data_scadenza').limit(20),
   sb.from('mezzi').select('codice,targa,tipologia,attivo,stato_operativo,km_attuali').order('codice'),
-  noteSheetsPromise,
-  notesPromise,
   hoursPromise,
   adminDocsPromise,
-  debitPaymentsPromise,
   sb.rpc('cge_mezzi_turni_assegnati',{p_giorno:day})
  ]);
- const errors=[emg,dim,ass,sv,fg,exp,mz,noteSheets,noteRows,adminDocs,debitPayments,vehicleShifts].filter(x=>x?.error).map(x=>x.error.message);
+ const errors=[emg,dim,ass,sv,fg,exp,mz,adminDocs,vehicleShifts].filter(x=>x?.error).map(x=>x.error.message);
  if(hoursData?.error)errors.push('Ore volontari: '+(hoursData.error.message||String(hoursData.error)));
  const emgRows=emg.data||[],dimRows=dim.data||[],assRows=ass.data||[],services=sv.data||[],fogli=fg.data||[],expRows=exp.data||[],mezzi=mz.data||[];
  // Il quadro operativo mostra solo servizi ancora da svolgere o in corso; quelli chiusi restano consultabili negli archivi.
  const activeTodayServices=services.filter(x=>!['CHIUSO','TERMINATO','COMPLETATO','CONTABILIZZATO','ANNULLATO'].includes(String(x.stato_gestionale||'').trim().toUpperCase())&&!['CHIUSO','COMPLETATO','ANNULLATO'].includes(String(x.stato_operativo||'').trim().toUpperCase()));
- const noteIds=new Set((noteRows.data||[]).filter(x=>String(x.stato||'').trim().toUpperCase()==='EMESSA').map(x=>x.foglio_viaggio_id).filter(Boolean));
  const docsRows=adminDocs.data||[];
- const docByService=new Map(docsRows.map(x=>[x.id,x]));
- const debitPaidByService=new Map();
- (debitPayments.data||[]).forEach(p=>{
-  if(!p.servizio_id)return;
-  const group=debitPaidByService.get(p.servizio_id)||{total:0,modes:new Set()};
-  group.total+=Number(p.importo)||0;
-  if(p.modalita)group.modes.add(p.modalita);
-  debitPaidByService.set(p.servizio_id,group);
- });
- const debitQueue=(noteSheets.data||[]).filter(x=>{
-  if(noteIds.has(x.id))return false;
-  const t=String(x.tipo_servizio||'').trim().toUpperCase();
-  if(t==='SERVIZIO INTERNO'||t==='INTERNO'||t.includes('SERVIZIO INTERNO'))return false;
-  const doc=x.servizio_giornaliero_id?docByService.get(x.servizio_giornaliero_id):null;
-  return (doc?.documento_da_emettere||'NOTA_DEBITO')==='NOTA_DEBITO';
- });
  const arubaPending=docsRows.filter(x=>x.documento_da_emettere==='FATTURA_ARUBA'&&!x.fattura_aruba_emessa);
  const dormellettoPending=arubaPending.filter(isDormellettoCalcioAruba);
  const arubaQueue=arubaPending.filter(x=>!isDormellettoCalcioAruba(x) && (x.foglio_viaggio_id || ['DA CONTABILIZZARE','CHIUSO','COMPLETATO'].includes(String(x.stato_gestionale||'').toUpperCase()))).sort((a,b)=>String(b.data_servizio||'').localeCompare(String(a.data_servizio||'')));
@@ -6533,7 +6500,6 @@ async function loadOperationalDashboard(){
  $('dashOpsServiceCount').textContent=String(activeTodayServices.length);
  $('dashOpsTravelOpen').textContent=String(fogli.filter(x=>x.stato==='APERTO').length);
  $('dashOpsTravelClosed').textContent=String(fogli.filter(x=>x.stato==='CHIUSO').length);
- if($('dashOpsNotesToCreate'))$('dashOpsNotesToCreate').textContent=prof?.ruolo==='AMMINISTRATORE'?String(debitQueue.length):'—';
  if($('dashOpsArubaToCreate'))$('dashOpsArubaToCreate').textContent=prof?.ruolo==='AMMINISTRATORE'?String(arubaCount):'—';
  if($('dashOpsUrgentExpiry'))$('dashOpsUrgentExpiry').textContent=String(expRows.length);
 
@@ -6668,22 +6634,6 @@ async function loadOperationalDashboard(){
   '<div class="muted">'+esc(x.tipo_servizio||'Servizio')+'</div></div>'
  ).join(''):'<div class="ops-empty">Nessun foglio viaggio creato oggi.</div>';
 
- if($('dashDebitNotesQueue')){
-  $('dashDebitNotesQueue').innerHTML=prof?.ruolo!=='AMMINISTRATORE'
-   ?'<div class="ops-empty">Area riservata all’Amministrazione.</div>'
-   :debitQueue.length?debitQueue.slice(0,8).map(x=>{
-     const name=[x.paziente_cognome,x.paziente_nome].filter(Boolean).join(' ')||'Intestatario da verificare';
-     return '<div class="ops-row ops-row-warn"><div class="ops-crew-line"><strong>'+esc(x.numero_foglio||'Foglio senza numero')+' · '+esc(x.data_servizio||'')+'</strong><span class="pill">'+esc(x.mezzo||'—')+'</span></div>'+
-      '<div class="muted">'+esc(name)+' · '+esc(x.tipo_servizio||'Servizio')+(x.destinazione?' · '+esc(x.destinazione):'')+'</div>'+
-      '<div class="muted">Totale servizio: '+euro(x.totale_servizio||0)+
-      (debitPaidByService.has(x.servizio_giornaliero_id)
-       ?' · <b>Incassato: '+euro(debitPaidByService.get(x.servizio_giornaliero_id).total)+
-        ' ('+esc([...debitPaidByService.get(x.servizio_giornaliero_id).modes].join(', ')||'metodo non indicato')+')</b>'
-       :' · Incasso non registrato')+
-      (x.numero_foglio==='FV-2026-09-000282'?'<div class="muted">Di cui €110 trasporto + €20 ritiro referti (annotazione amministrativa)</div>':'')+
-      '</div></div>';
-    }).join(''):'<div class="ops-row ops-row-ok"><strong>✅ Nessun Foglio Viaggio in attesa di Nota di Debito.</strong></div>';
- }
  if($('dashArubaQueue')){
   if($('dashArubaBadge'))$('dashArubaBadge').textContent=String(arubaCount);
   const bimestreHtml=arubaBimestri.map(g=>{
@@ -7573,7 +7523,6 @@ async function dashboard(){
  $('nextExp').innerHTML=exp.length?exp.map(x=>'<div class="box"><b>Mezzo '+esc(x.mezzo)+' · '+esc(x.tipo_scadenza)+'</b><br>'+esc(x.data_scadenza)+' · '+esc(x.descrizione||'')+' <span class="pill '+(x.stato_scadenza==='SCADUTA'?'r':'')+'">'+esc(x.stato_scadenza)+'</span></div>').join(''):'<div class="notice">Nessuna scadenza inserita.</div>';
 }
 $('dashOpsRefresh').onclick=loadOperationalDashboard;
-if($('dashOpenDebitNotes'))$('dashOpenDebitNotes').onclick=()=>location.href='note-di-debito/';
 if($('navArubaInvoices'))$('navArubaInvoices').onclick=async()=>{await view('dash');await loadOperationalDashboard();const el=$('dashArubaQueue')?.closest('section');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
 if($('accGoSummary'))$('accGoSummary').onclick=()=>{const el=$('accDue')?.closest('.stats');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
 $('dashOpenCandidates').onclick=()=>openPendingAssistance();
