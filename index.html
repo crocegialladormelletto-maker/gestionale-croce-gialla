@@ -11054,14 +11054,18 @@ async function routeCalcSaveCustomerQuote(){
 
  let r;
  if(rcCurrentCustomerQuoteId){
+   const current=await sb.from('preventivi_clienti').select('stato').eq('id',rcCurrentCustomerQuoteId).single();
+   if(current.error)return msg('rcQuoteArchiveMsg','Impossibile verificare la bozza: '+current.error.message,'err');
+   if(String(current.data.stato||'BOZZA')!=='BOZZA')return msg('rcQuoteArchiveMsg','Il preventivo non è più in bozza. Non è stato modificato.','warn');
    r=await sb.from('preventivi_clienti')
-    .update({...row,note:routeCalcPresidiNote(routeCalcPaymentText(rcCurrentCustomerQuoteNumber)),updated_at:new Date().toISOString()})
-    .eq('id',rcCurrentCustomerQuoteId)
+    .update({...row,stato:'BOZZA',note:routeCalcPresidiNote(routeCalcPaymentText(rcCurrentCustomerQuoteNumber)),updated_at:new Date().toISOString()})
+    .eq('id',rcCurrentCustomerQuoteId).eq('stato','BOZZA')
     .select('id,numero_progressivo,data_preventivo,stato').single();
  }else{
    r=await sb.from('preventivi_clienti').insert(row).select('id,numero_progressivo,data_preventivo,stato').single();
  }
  if(r.error)return msg('rcQuoteArchiveMsg','Impossibile salvare il preventivo: '+r.error.message,'err');
+ if(!r.data)return msg('rcQuoteArchiveMsg','Bozza modificata da un altro utente: ricarica l’archivio prima di salvare.','warn');
 
  rcCurrentCustomerQuoteId=r.data.id;
  rcCurrentCustomerQuoteNumber=r.data.numero_progressivo;
@@ -11104,6 +11108,7 @@ async function routeCalcLoadQuoteArchive(){
    '<td>'+euro(x.anticipo_richiesto)+'</td>'+
    '<td><select onchange="routeCalcUpdateCustomerQuoteStatus(\''+x.id+'\',this.value)">'+opts+'</select></td>'+
    '<td><div class="actions">'+
+    (st==='BOZZA'?'<button class="btn yellow" type="button" onclick="routeCalcEditDraftQuote(\''+x.id+'\')">✏️ Modifica bozza</button>':'')+
     '<button class="btn secondary" type="button" onclick="routeCalcPrintArchivedQuote(\''+x.id+'\')">🖨 Stampa</button>'+
     (prof?.ruolo==='AMMINISTRATORE'?'<button class="btn danger" type="button" onclick="routeCalcDeleteCustomerQuote(\''+x.id+'\','+Number(x.numero_progressivo||0)+')">Elimina</button>':'')+
    '</div></td>'+
@@ -11126,10 +11131,11 @@ async function routeCalcDeleteCustomerQuote(id,num){
  await routeCalcLoadQuoteArchive();
  msg('rcQuoteArchiveMsg','Preventivo n° '+num+' rimosso dall’archivio.','ok');
 }
-async function routeCalcPrintArchivedQuote(id){
+async function routeCalcOpenArchivedQuote(id,printAfterLoad=false){
  const r=await sb.from('preventivi_clienti').select('*').eq('id',id).single();
  if(r.error)return msg('rcQuoteArchiveMsg','Preventivo non disponibile: '+r.error.message,'err');
  const x=r.data;
+ if(!printAfterLoad && String(x.stato||'BOZZA')!=='BOZZA')return msg('rcQuoteArchiveMsg','Puoi modificare soltanto i preventivi in BOZZA.','warn');
  rcCurrentCustomerQuoteId=x.id;
  rcCurrentCustomerQuoteNumber=x.numero_progressivo;
  if($('rcQuoteNumber'))$('rcQuoteNumber').value=routeCalcFormatQuoteNumber(x.numero_progressivo,x.data_preventivo);
@@ -11152,8 +11158,12 @@ async function routeCalcPrintArchivedQuote(id){
  $('rcSuggested').textContent=euro(x.importo_totale);
  $('rcSuggested').dataset.value=Number(x.importo_totale||0).toFixed(2);
  $('rcAdvanceSuggested').textContent=euro(x.anticipo_richiesto);
- routeCalcPrintQuote();
+ if(printAfterLoad)return routeCalcPrintQuote();
+ document.getElementById('rcQuoteCustomer')?.scrollIntoView({behavior:'smooth',block:'center'});
+ msg('rcQuoteArchiveMsg','Bozza '+routeCalcFormatQuoteNumber(x.numero_progressivo,x.data_preventivo)+' aperta. Modifica i dati e premi “Salva preventivo cliente”: manterrà lo stesso numero.','ok');
 }
+async function routeCalcEditDraftQuote(id){return routeCalcOpenArchivedQuote(id,false);}
+async function routeCalcPrintArchivedQuote(id){return routeCalcOpenArchivedQuote(id,true);}
 function routeCalcQuoteDate(){
  return new Date().toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
