@@ -2422,7 +2422,8 @@ Causale: numero preventivo</textarea>
    <button id="rcQuoteArchiveRefresh" type="button" class="btn secondary">↻ Aggiorna archivio</button>
   </div>
   <div id="rcQuoteArchiveMsg"></div>
-  <div class="table" style="margin-top:10px"><table>
+  <div class="table" style="margin-top:10px;overflow-x:auto"><table style="min-width:1230px;width:100%;table-layout:fixed">
+   <colgroup><col style="width:100px"><col style="width:98px"><col style="width:215px"><col style="width:260px"><col style="width:110px"><col style="width:90px"><col style="width:90px"><col style="width:145px"><col style="width:150px"></colgroup>
    <thead><tr><th>N°</th><th>Data</th><th>Cliente</th><th>Percorso</th><th>Mezzo</th><th>Importo</th><th>Anticipo</th><th>Stato</th><th>Azioni</th></tr></thead>
    <tbody id="rcQuoteArchiveBody"></tbody>
   </table></div>
@@ -11117,6 +11118,14 @@ async function routeCalcSaveCustomerQuote(){
  await routeCalcLoadQuoteArchive();
  return r.data;
 }
+function routeCalcArchiveAddress(value){
+ const raw=String(value||'');
+ if(!raw.startsWith('INDIRIZZO_STRUTTURATO_V1|'))return raw;
+ try{
+  const a=JSON.parse(raw.slice('INDIRIZZO_STRUTTURATO_V1|'.length));
+  return [[a.street,a.civic].filter(Boolean).join(' '),[a.zip,a.city].filter(Boolean).join(' '),a.province?'('+a.province+')':''].filter(Boolean).join(', ');
+ }catch(e){return 'Indirizzo non leggibile';}
+}
 async function routeCalcLoadQuoteArchive(){
  if(!$('rcQuoteArchiveBody'))return;
  const r=await sb.from('preventivi_clienti').select('*').eq('attivo',true).order('numero_progressivo',{ascending:false}).limit(200);
@@ -11133,13 +11142,13 @@ async function routeCalcLoadQuoteArchive(){
    '<td>'+esc(x.data_preventivo||'')+'</td>'+
    '<td>'+esc(x.cliente||'—')+
    (x.codice_fiscale?'<br><span class="muted">CF '+esc(x.codice_fiscale)+'</span>':'')+
-   (x.indirizzo_cliente?'<br><span class="muted">'+esc(x.indirizzo_cliente)+'</span>':'')+
+   (x.indirizzo_cliente?'<br><span class="muted">'+esc(routeCalcArchiveAddress(x.indirizzo_cliente))+'</span>':'')+
    (x.email?'<br><span class="muted">'+esc(x.email)+'</span>':'')+'</td>'+
    '<td>'+esc(x.percorso||'—')+'<br><span class="muted">'+Number(x.km_totali||0).toFixed(1)+' km</span></td>'+
    '<td>'+esc(x.tipo_mezzo||'—')+'</td>'+
    '<td>'+euro(x.importo_totale)+'</td>'+
    '<td>'+euro(x.anticipo_richiesto)+'</td>'+
-   '<td><select onchange="routeCalcUpdateCustomerQuoteStatus(\''+x.id+'\',this.value)">'+opts+'</select></td>'+
+   '<td><select aria-label="Stato preventivo" style="display:block;width:100%;min-width:132px;max-width:100%;box-sizing:border-box;padding:9px 28px 9px 10px;font-weight:700;white-space:nowrap" onchange="routeCalcUpdateCustomerQuoteStatus(\''+x.id+'\',this.value)">'+opts+'</select></td>'+
    '<td><div class="actions">'+
     (st==='BOZZA'?'<button class="btn yellow" type="button" onclick="routeCalcEditDraftQuote(\''+x.id+'\')">✏️ Modifica bozza</button>':'')+
     '<button class="btn secondary" type="button" onclick="routeCalcPrintArchivedQuote(\''+x.id+'\')">🖨 Stampa</button>'+
