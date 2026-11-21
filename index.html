@@ -3895,14 +3895,17 @@ function dashboardCommitmentTime(x){
  if(b)return 'fino alle '+b;
  return 'Orario non indicato';
 }
+window.cgeEmployeeCommitmentsRequestId=0;
 async function refreshDashboardEmployeeCommitments(){
  const box=$('dashEmployeeCommitments'),items=$('dashEmployeeCommitmentsItems'),count=$('dashEmployeeCommitmentsCount');
  if(!box||!items||!count)return;
- box.classList.add('hidden');
- box.classList.remove('dash-commitments-pulse');
- count.textContent='0';
- items.innerHTML='';
- if(!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo))return;
+ // Non nascondere il riquadro durante il caricamento: il refresh non deve farlo sparire.
+ if(!prof||!['AMMINISTRATORE','CENTRALINO'].includes(prof.ruolo)){
+  box.classList.add('hidden');
+  box.classList.remove('dash-commitments-pulse');
+  return;
+ }
+ const requestId=++window.cgeEmployeeCommitmentsRequestId;
  const day=todaySafe();
  const horizonDate=new Date(day+'T12:00:00');horizonDate.setDate(horizonDate.getDate()+7);
  const horizon=[horizonDate.getFullYear(),String(horizonDate.getMonth()+1).padStart(2,'0'),String(horizonDate.getDate()).padStart(2,'0')].join('-');
@@ -3914,11 +3917,13 @@ async function refreshDashboardEmployeeCommitments(){
    .order('data_scadenza',{ascending:true}).order('ora_appuntamento',{ascending:true})
  ]);
  if(legacy.error||personal.error){
+  if(requestId!==window.cgeEmployeeCommitmentsRequestId)return;
   const err=legacy.error||personal.error;
-  box.classList.remove('hidden');count.textContent='!';
+  box.classList.remove('hidden');box.classList.remove('dash-commitments-pulse');count.textContent='!';
   items.innerHTML='<div class="notice warn">Impossibile caricare gli impegni dipendenti: '+esc(err.message)+'</div>';
   return;
  }
+ if(requestId!==window.cgeEmployeeCommitmentsRequestId)return;
  const now=new Date(),nowMinutes=now.getHours()*60+now.getMinutes();
  const toMin=v=>{const t=String(v||'').slice(0,5);if(!/^\d{2}:\d{2}$/.test(t))return null;const [h,m]=t.split(':').map(Number);return h*60+m};
  const rows=[
@@ -3934,11 +3939,11 @@ async function refreshDashboardEmployeeCommitments(){
  }).sort((a,b)=>String(a.data||day).localeCompare(String(b.data||day))||String(a.inizio||'').localeCompare(String(b.inizio||'')));
  count.textContent=String(rows.length);
  box.classList.remove('hidden');
+ box.classList.toggle('dash-commitments-pulse',rows.length>0);
  if(rows.length===0){
-  box.classList.add('hidden');
+  items.innerHTML='<div class="muted">Nessun impegno programmato nei prossimi 7 giorni.</div>';
   return;
  }
- box.classList.add('dash-commitments-pulse');
  items.innerHTML=rows.map(x=>{
   const p=(people||[]).find(v=>String(v.badge)===String(x.badge));
   const nome=x.nome||p?.nome_completo||('Badge '+x.badge);
