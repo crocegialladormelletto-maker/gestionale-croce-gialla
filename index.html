@@ -796,6 +796,15 @@ document.addEventListener('DOMContentLoaded',()=>{
   50%{transform:scale(1.06);box-shadow:0 0 0 9px rgba(220,38,38,0);filter:brightness(1.2)}
 }
 .tablet-118-blink{animation:tablet118Pulse 1.15s ease-in-out infinite}
+
+/* Dashboard essenziale: dettagli secondari espandibili solo su richiesta. */
+.ops-compact-detail > summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:800;color:#16324a;padding:3px 0;}
+.ops-compact-detail > summary::-webkit-details-marker{display:none;}
+.ops-compact-detail > summary::before{content:"▸";color:#b28b00;font-size:16px;margin-right:4px;}
+.ops-compact-detail[open] > summary::before{content:"▾";}
+.ops-compact-detail > summary .ops-collapse-hint{font-size:12px;font-weight:500;color:#667788;}
+.ops-compact-detail[open] > summary{padding-bottom:12px;border-bottom:1px solid #d9e2ea;margin-bottom:10px;}
+.ops-compact-detail > .ops-title{justify-content:flex-end;margin-bottom:10px;}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.57</div></div><div class="loginbody">
@@ -964,18 +973,20 @@ document.addEventListener('DOMContentLoaded',()=>{
    <div class="ops-title"><h3>🚑 Servizi di oggi</h3><button type="button" class="btn secondary jump" data-v="services">Apri servizi</button></div>
    <div id="dashTodayServices"></div>
   </section>
-  <section class="section ops-card">
-   <div class="ops-title"><h3>📄 Fogli viaggio</h3><button type="button" class="btn secondary jump" data-v="travelSheets">Apri fogli viaggio</button></div>
+  <details class="section ops-card ops-compact-detail">
+   <summary>📄 Fogli viaggio di oggi <span class="ops-collapse-hint">Mostra dettagli</span></summary>
+   <div class="ops-title"><button type="button" class="btn secondary jump" data-v="travelSheets">Apri fogli viaggio</button></div>
    <div id="dashTodayTravel"></div>
-  </section>
-  <section class="section ops-card" data-admin-only="true">
-   <div class="ops-title"><h3>🧮 Fatture Aruba da emettere</h3><span id="dashArubaBadge" class="pill">0</span></div>
+  </details>
+  <details class="section ops-card ops-compact-detail" data-admin-only="true">
+   <summary>🧮 Fatture Aruba da emettere <span id="dashArubaBadge" class="pill">0</span></summary>
    <div id="dashArubaQueue"></div>
-  </section>
-  <section class="section ops-card">
-   <div class="ops-title"><h3>⏰ Scadenze urgenti personale</h3><button type="button" class="btn secondary jump" data-v="personnelExpiries">Apri scadenze personale</button></div>
+  </details>
+  <details class="section ops-card ops-compact-detail">
+   <summary>⏰ Scadenze personale <span class="ops-collapse-hint">Mostra dettagli</span></summary>
+   <div class="ops-title"><button type="button" class="btn secondary jump" data-v="personnelExpiries">Apri scadenze personale</button></div>
    <div id="dashUrgentExpiries"></div>
-  </section>
+  </details>
   <section class="section ops-card">
    <div class="ops-title"><h3>⚠️ Problemi da verificare</h3><span id="dashOpsProblemBadge" class="pill g">Nessuno</span></div>
    <div id="dashTodayProblems"></div>
