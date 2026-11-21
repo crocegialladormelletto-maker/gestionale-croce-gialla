@@ -2302,8 +2302,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   <div class="grid4">
    <div class="field"><label>Tipo mezzo</label><select id="rcVehicleType"><option value="AMBULANZA">Ambulanza</option><option value="TRASPORTO SEMPLICE">Trasporto semplice</option></select></div>
    <div class="field"><label>Km totali</label><input id="rcKm" type="number" min="0" step="0.1" placeholder="Calcolati o inseriti manualmente"></div>
-   <div class="field"><label>Costo chilometrico €/km</label><input id="rcKmRate" type="number" min="0" step="0.01" value="1.20" readonly></div>
-   <div class="field"><label>Diritto di chiamata €</label><input id="rcFixed" type="number" min="0" step="1" value="20" readonly></div>
+   <div class="field"><label>Costo chilometrico €/km</label><input id="rcKmRate" type="number" min="0" step="0.01" value="1.20"></div>
+   <div class="field"><label>Diritto di chiamata €</label><input id="rcFixed" type="number" min="0" step="0.01" value="20"></div>
    <div class="field"><label>Autostrada / pedaggi €</label><input id="rcTolls" type="number" min="0" step="0.10" value="0"><div class="muted" id="rcTollSource" style="margin-top:5px">Da calcolare</div></div>
    <div class="field"><label>Km autostrada stimati</label><input id="rcMotorwayKm" type="number" min="0" step="0.1" value="0" placeholder="Calcolati automaticamente · modificabili"></div>
    <div class="field"><label>Tariffa stima €/km autostrada</label><input id="rcTollKmRate" type="number" min="0" step="0.001" value="0.090"></div>
@@ -2317,6 +2317,11 @@ document.addEventListener('DOMContentLoaded',()=>{
    <div class="field"><label>Fermo mezzo (ore)</label><input id="rcStopHours" type="number" min="0" step="0.5" value="0"></div>
    <div class="field"><label>Fermo mezzo €/ora</label><input id="rcStopRate" type="number" min="0" step="1" value="20" readonly></div>
    <div class="field"><label>Margine da applicare %</label><input id="rcMargin" type="number" min="0" step="1" value="0"></div>
+  </div>
+  <div class="grid3" style="margin-top:12px;padding:12px;border:1px solid #d2dfe9;border-radius:9px;background:#fffdf1">
+   <div class="field"><label>Tipo di sconto</label><select id="rcDiscountType"><option value="NONE">Nessuno sconto</option><option value="PERCENT">Percentuale (%)</option><option value="EURO">Importo fisso (€)</option></select></div>
+   <div class="field"><label>Valore sconto</label><input id="rcDiscountValue" type="number" min="0" step="0.01" value="0"></div>
+   <div class="field"><label>Sconto applicato</label><div id="rcDiscountShown" style="padding:10px 0;font-weight:800">€ 0,00</div></div>
   </div>
  </div>
 
@@ -10167,7 +10172,6 @@ function routeCalcApplyVehicleRates(){
 }
 function routeCalcRecompute(){
  if(!$('rcKm'))return;
- routeCalcApplyVehicleRates();
  const km=routeCalcNum('rcKm'),kmRate=routeCalcNum('rcKmRate'),fixed=routeCalcNum('rcFixed'),
   tolls=routeCalcNum('rcTolls'),vignetteRaw=routeCalcNum('rcVignetteCost'),
   vignette=$('rcVignetteOwned')?.checked?0:vignetteRaw,
@@ -10180,7 +10184,13 @@ function routeCalcRecompute(){
  const liveCosts=tolls+vignette+tunnelCost+fuelCost+equipment;
  const operationalBase=kmCost+fixed+stopCost;
  const total=operationalBase+liveCosts;
- const suggested=total*(1+margin/100);
+ const beforeDiscount=total*(1+margin/100);
+ const discountType=$('rcDiscountType')?.value||'NONE';
+ const enteredDiscount=routeCalcNum('rcDiscountValue');
+ const discount=discountType==='PERCENT'?beforeDiscount*Math.min(100,enteredDiscount)/100:discountType==='EURO'?Math.min(beforeDiscount,enteredDiscount):0;
+ const suggested=Math.max(0,beforeDiscount-discount);
+ if($('rcDiscountShown'))$('rcDiscountShown').textContent=euro(discount);
+ if($('rcSuggested')){$('rcSuggested').dataset.beforeDiscount=beforeDiscount.toFixed(2);$('rcSuggested').dataset.discount=discount.toFixed(2)}
  const advanceRaw=liveCosts+(operationalBase*0.30);
  const advance=Math.min(suggested,Math.ceil(advanceRaw/10)*10);
  $('rcKmCost').textContent=euro(kmCost);
@@ -10214,7 +10224,8 @@ function routeCalcRecompute(){
   (fuelCost?' · carburante '+euro(fuelCost)+' ('+fuelPrice.toFixed(3)+' €/l)':'')+
   (stopHours?' · fermo '+stopHours.toFixed(1)+' h × '+euro(stopRate)+'/h':'')+
   (equipment?' · dotazioni '+euro(equipment):'')+
-  (margin?' · margine '+margin.toFixed(0)+'%':''):
+  (margin?' · margine '+margin.toFixed(0)+'%':'')+
+  (discount?' · sconto −'+euro(discount):''):
   'Inserisci o calcola i chilometri per ottenere la stima.';
 }
 
@@ -10891,6 +10902,8 @@ function routeCalcReset(){
  if($('rcReturn'))$('rcReturn').checked=true;
  if($('rcChair'))$('rcChair').checked=false;if($('rcBariatric'))$('rcBariatric').checked=false;
  if($('rcVehicleType'))$('rcVehicleType').value='AMBULANZA';
+ if($('rcDiscountType'))$('rcDiscountType').value='NONE';
+ if($('rcDiscountValue'))$('rcDiscountValue').value='0';
  ['rcTolls','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).value='0'});
  if($('rcConsumption'))$('rcConsumption').value='12';
  routeCalcApplyVehicleRates();
@@ -10973,12 +10986,25 @@ function routeCalcFormatQuoteNumber(num,dateValue){
  const y=String(dateValue||today()).slice(0,4);
  return n>0?'PREV-'+y+'-'+String(n).padStart(5,'0'):'Da assegnare al salvataggio';
 }
+function routeCalcDiscountSettings(){
+ return {kmRate:routeCalcNum('rcKmRate'),fixed:routeCalcNum('rcFixed'),discountType:$('rcDiscountType')?.value||'NONE',discountValue:routeCalcNum('rcDiscountValue')};
+}
+function routeCalcReadDiscountSettings(note){
+ const marker='[CONDIZIONI ECONOMICHE V1]';
+ const rest=String(note||'').split(marker)[1];
+ if(!rest)return null;
+ try{return JSON.parse(rest.split('\n[')[0].trim())}catch(e){return null}
+}
+function routeCalcQuoteNote(base){
+ const presidi=$('rcQuotePresidi')?.value.trim()||'';
+ return base+(presidi?'\n\n[PRESIDI COMPRESI]\n'+presidi:'')+'\n\n[CONDIZIONI ECONOMICHE V1]\n'+JSON.stringify(routeCalcDiscountSettings());
+}
 function routeCalcPresidiNote(base){
  const presidi=$('rcQuotePresidi')?.value.trim()||'';
  return base+(presidi?'\n\n[PRESIDI COMPRESI]\n'+presidi:'');
 }
 function routeCalcReadPresidi(note){
- return String(note||'').split('[PRESIDI COMPRESI]\n')[1]?.trim()||'';
+ return String(note||'').split('[PRESIDI COMPRESI]\n')[1]?.split('\n[CONDIZIONI ECONOMICHE V1]')[0]?.trim()||'';
 }
 function routeCalcPaymentText(num,dateValue){
  const qn=routeCalcFormatQuoteNumber(num,dateValue);
@@ -11042,7 +11068,7 @@ function routeCalcCustomerQuoteData(){
    km_totali:routeCalcNum('rcKm'),
    importo_totale:amount,
    anticipo_richiesto:advance,
-   note:routeCalcPresidiNote(routeCalcPaymentText(rcCurrentCustomerQuoteNumber)),
+   note:routeCalcQuoteNote(routeCalcPaymentText(rcCurrentCustomerQuoteNumber)),
    stato:'BOZZA',
    attivo:true
  };
@@ -11059,7 +11085,7 @@ async function routeCalcSaveCustomerQuote(){
    if(current.error)return msg('rcQuoteArchiveMsg','Impossibile verificare la bozza: '+current.error.message,'err');
    if(String(current.data.stato||'BOZZA')!=='BOZZA')return msg('rcQuoteArchiveMsg','Il preventivo non è più in bozza. Non è stato modificato.','warn');
    r=await sb.from('preventivi_clienti')
-    .update({...row,stato:'BOZZA',note:routeCalcPresidiNote(routeCalcPaymentText(rcCurrentCustomerQuoteNumber)),updated_at:new Date().toISOString()})
+    .update({...row,stato:'BOZZA',note:routeCalcQuoteNote(routeCalcPaymentText(rcCurrentCustomerQuoteNumber)),updated_at:new Date().toISOString()})
     .eq('id',rcCurrentCustomerQuoteId).eq('stato','BOZZA')
     .select('id,numero_progressivo,data_preventivo,stato').single();
  }else{
@@ -11072,7 +11098,7 @@ async function routeCalcSaveCustomerQuote(){
  rcCurrentCustomerQuoteNumber=r.data.numero_progressivo;
 
  // Salva anche nel record la causale definitiva con il numero progressivo assegnato.
- const definitivePayment=routeCalcPresidiNote(routeCalcPaymentText(r.data.numero_progressivo,r.data.data_preventivo));
+ const definitivePayment=routeCalcQuoteNote(routeCalcPaymentText(r.data.numero_progressivo,r.data.data_preventivo));
  await sb.from('preventivi_clienti')
   .update({note:definitivePayment,updated_at:new Date().toISOString()})
   .eq('id',r.data.id);
@@ -11147,6 +11173,17 @@ async function routeCalcOpenArchivedQuote(id,printAfterLoad=false){
  $('rcQuoteEmail').value=x.email||'';
  $('rcQuotePhone').value=x.telefono||'';
  $('rcQuotePresidi').value=routeCalcReadPresidi(x.note);
+ const terms=routeCalcReadDiscountSettings(x.note);
+ if(terms){
+  $('rcKmRate').value=terms.kmRate??$('rcKmRate').value;
+  $('rcFixed').value=terms.fixed??$('rcFixed').value;
+  $('rcDiscountType').value=terms.discountType||'NONE';
+  $('rcDiscountValue').value=terms.discountValue||0;
+ }else{
+  routeCalcApplyVehicleRates();
+  $('rcDiscountType').value='NONE';
+  $('rcDiscountValue').value=0;
+ }
  $('rcQuoteNotes').value=routeCalcPaymentText(x.numero_progressivo,x.data_preventivo);
  $('rcStart').value=x.origine||'';
  $('rcLoad').value=x.via||'';
@@ -11154,7 +11191,6 @@ async function routeCalcOpenArchivedQuote(id,printAfterLoad=false){
  $('rcReturn').checked=!!x.andata_ritorno;
  $('rcVehicleType').value=x.tipo_mezzo||'AMBULANZA';
  $('rcKm').value=Number(x.km_totali||0).toFixed(1);
- routeCalcApplyVehicleRates();
  routeCalcRecompute();
  $('rcSuggested').textContent=euro(x.importo_totale);
  $('rcSuggested').dataset.value=Number(x.importo_totale||0).toFixed(2);
@@ -11171,6 +11207,10 @@ function routeCalcQuoteDate(){
 async function routeCalcPrintQuote(downloadPdf=false){
  const amount=Number($('rcSuggested')?.dataset.value||0);
  const advanceText=$('rcAdvanceSuggested')?.textContent||euro(0);
+ const discount=Number($('rcSuggested')?.dataset.discount||0);
+ const beforeDiscount=Number($('rcSuggested')?.dataset.beforeDiscount||amount);
+ const discountType=$('rcDiscountType')?.value||'NONE';
+ const discountValue=routeCalcNum('rcDiscountValue');
  const customer=$('rcQuoteCustomer')?.value.trim()||'Cliente';
  const cf=$('rcQuoteCf')?.value.trim().toUpperCase()||'';
  const address=routeCalcQuoteAddress();
@@ -11267,6 +11307,15 @@ async function routeCalcPrintQuote(downloadPdf=false){
   '</div>'+
  '</div>'+
 
+ '<div class="section" style="margin-top:12px">'+
+  '<div class="section-title">Dettaglio economico</div>'+
+  '<div class="section-body"><div class="grid2">'+
+   '<div><div class="label">Tariffa al km</div><div class="value">'+euro(routeCalcNum('rcKmRate'))+' / km</div></div>'+
+   '<div><div class="label">Diritto di chiamata</div><div class="value">'+euro(routeCalcNum('rcFixed'))+'</div></div>'+
+  '</div>'+
+  (discount>0?'<div style="margin-top:9px;border-top:1px solid #dae3ee;padding-top:8px"><div class="label">Importo prima dello sconto</div><div class="value">'+euro(beforeDiscount)+'</div><div class="label" style="margin-top:5px">Sconto '+(discountType==='PERCENT'?'('+discountValue+'%)':'applicato')+'</div><div class="value">− '+euro(discount)+'</div></div>':'')+
+  '</div></div>'+
+ '</div>'+
  '<div class="money-row">'+
   '<div class="total"><div class="money-label">Importo preventivato</div><div class="amount">'+euro(amount)+'</div><div class="small">Importo complessivo previsto per il servizio indicato.</div></div>'+
   '<div class="advance"><div class="money-label">Anticipo richiesto</div><div class="amount">'+esc(advanceText)+'</div><div class="small">L’anticipo viene imputato al saldo finale del servizio.</div><div class="clause"><strong>L’anticipo non verrà restituito in caso di disdetta nelle 36 ore precedenti il servizio.</strong></div></div>'+
@@ -11327,10 +11376,12 @@ if($('rcPrintQuote'))$('rcPrintQuote').onclick=()=>routeCalcPrintQuote(false);
 if($('rcDownloadQuote'))$('rcDownloadQuote').onclick=()=>routeCalcPrintQuote(true);
 if($('rcQuoteArchiveRefresh'))$('rcQuoteArchiveRefresh').onclick=routeCalcLoadQuoteArchive;
 if($('rcUseService'))$('rcUseService').onclick=routeCalcUseInService;
-['rcKm','rcTolls','rcVignetteCost','rcTunnelCost','rcFuelPrice','rcConsumption','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
+['rcKm','rcKmRate','rcFixed','rcDiscountType','rcDiscountValue','rcTolls','rcVignetteCost','rcTunnelCost','rcFuelPrice','rcConsumption','rcStopHours','rcMargin'].forEach(id=>{if($(id))$(id).oninput=routeCalcRecompute});
 if($('rcTollKmRate'))$('rcTollKmRate').oninput=()=>{const mk=routeCalcNum('rcMotorwayKm');if(!$('rcTollSource').textContent.startsWith('✓'))routeCalcResolveToll(mk);else routeCalcRecompute()};
 if($('rcMotorwayKm'))$('rcMotorwayKm').oninput=()=>{const mk=routeCalcNum('rcMotorwayKm');if(!$('rcTollSource').textContent.startsWith('✓'))routeCalcResolveToll(mk);else routeCalcRecompute()};
-['rcVehicleType','rcReturn','rcChair','rcBariatric','rcVignetteOwned'].forEach(id=>{if($(id))$(id).onchange=routeCalcRecompute});
+['rcReturn','rcChair','rcBariatric','rcVignetteOwned'].forEach(id=>{if($(id))$(id).onchange=routeCalcRecompute});
+if($('rcVehicleType'))$('rcVehicleType').onchange=()=>{routeCalcApplyVehicleRates();routeCalcRecompute()};
+routeCalcApplyVehicleRates();
 routeCalcRecompute();
 routeCalcUpdateFuelPrice(false);
 
