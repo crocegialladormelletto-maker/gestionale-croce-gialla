@@ -944,7 +944,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   <div class="ops-kpi-card"><small>SERVIZI OGGI</small><b id="dashOpsServiceCount">0</b></div>
   <div class="ops-kpi-card"><small>FOGLI APERTI</small><b id="dashOpsTravelOpen">0</b></div>
   <div class="ops-kpi-card"><small>FOGLI CHIUSI</small><b id="dashOpsTravelClosed">0</b></div>
-<div class="ops-kpi-card" data-admin-only="true"><small>FATTURE ARUBA</small><b id="dashOpsArubaToCreate">0</b></div>
+
   <div class="ops-kpi-card"><small>SCADENZE URGENTI</small><b id="dashOpsUrgentExpiry">0</b></div>
   <div class="ops-kpi-card ops-kpi-alert"><small>PROBLEMI DA VERIFICARE</small><b id="dashOpsProblemCount">0</b></div>
  </div>
@@ -977,10 +977,6 @@ document.addEventListener('DOMContentLoaded',()=>{
    <summary>📄 Fogli viaggio di oggi <span class="ops-collapse-hint">Mostra dettagli</span></summary>
    <div class="ops-title"><button type="button" class="btn secondary jump" data-v="travelSheets">Apri fogli viaggio</button></div>
    <div id="dashTodayTravel"></div>
-  </details>
-  <details class="section ops-card ops-compact-detail" data-admin-only="true">
-   <summary>🧮 Fatture Aruba da emettere <span id="dashArubaBadge" class="pill">0</span></summary>
-   <div id="dashArubaQueue"></div>
   </details>
   <details class="section ops-card ops-compact-detail">
    <summary>⏰ Scadenze personale <span class="ops-collapse-hint">Mostra dettagli</span></summary>
@@ -2673,7 +2669,7 @@ Causale: numero preventivo</textarea>
  <div class="grid2" style="gap:12px">
   <div class="box"><h3>🧾 Note di Debito</h3><p class="muted">Emissione, archivio, pagamenti e report mensili.</p><button type="button" class="btn yellow jump" data-href="note-di-debito/">Apri Note di Debito</button></div>
   <div class="box"><h3>📑 Archivio ricevute</h3><p class="muted">Ricevute contanti e POS dei fogli viaggio, consultazione e ricerca.</p><button type="button" class="btn secondary jump" data-v="paymentReceipts">Apri Archivio ricevute</button></div>
-  <div class="box"><h3>🧮 Fatture Aruba da emettere</h3><p class="muted">Accedi all'elenco delle fatture ancora da emettere, attualmente mostrato nel quadro operativo.</p><button type="button" class="btn blue" id="navArubaInvoices">Apri fatture da emettere</button></div>
+  <div class="box"><h3>🧮 Fatture Aruba da emettere <span id="dashArubaBadge" class="pill">0</span></h3><p class="muted">Elenco fatture da emettere, con conferma di emissione e gestione bimestri.</p><button type="button" class="btn blue" id="navArubaInvoices">Visualizza fatture da emettere</button><details id="accArubaPanel" style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;color:#16324a">Elenco fatture Aruba</summary><div id="dashArubaQueue" style="margin-top:12px"><div class="muted">Apri l'elenco per aggiornare i dati.</div></div></details></div>
   <div class="box"><h3>💰 Riepilogo contabile</h3><p class="muted">Situazione incassi, da incassare, fatture già emesse e pagamenti.</p><button type="button" class="btn secondary" id="accGoSummary">Vai al riepilogo</button></div>
  </div>
 </div>
@@ -6511,7 +6507,6 @@ async function loadOperationalDashboard(){
  $('dashOpsServiceCount').textContent=String(activeTodayServices.length);
  $('dashOpsTravelOpen').textContent=String(fogli.filter(x=>x.stato==='APERTO').length);
  $('dashOpsTravelClosed').textContent=String(fogli.filter(x=>x.stato==='CHIUSO').length);
- if($('dashOpsArubaToCreate'))$('dashOpsArubaToCreate').textContent=prof?.ruolo==='AMMINISTRATORE'?String(arubaCount):'—';
  if($('dashOpsUrgentExpiry'))$('dashOpsUrgentExpiry').textContent=String(expRows.length);
 
  const activeEmergencyFascia=dashOpsCurrentEmergencyFascia();
@@ -7534,7 +7529,7 @@ async function dashboard(){
  $('nextExp').innerHTML=exp.length?exp.map(x=>'<div class="box"><b>Mezzo '+esc(x.mezzo)+' · '+esc(x.tipo_scadenza)+'</b><br>'+esc(x.data_scadenza)+' · '+esc(x.descrizione||'')+' <span class="pill '+(x.stato_scadenza==='SCADUTA'?'r':'')+'">'+esc(x.stato_scadenza)+'</span></div>').join(''):'<div class="notice">Nessuna scadenza inserita.</div>';
 }
 $('dashOpsRefresh').onclick=loadOperationalDashboard;
-if($('navArubaInvoices'))$('navArubaInvoices').onclick=async()=>{await view('dash');await loadOperationalDashboard();const el=$('dashArubaQueue')?.closest('section');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
+if($('navArubaInvoices'))$('navArubaInvoices').onclick=async()=>{const panel=$('accArubaPanel');if(panel)panel.open=true;await loadOperationalDashboard();panel?.scrollIntoView({behavior:'smooth',block:'nearest'});};
 if($('accGoSummary'))$('accGoSummary').onclick=()=>{const el=$('accDue')?.closest('.stats');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
 $('dashOpenCandidates').onclick=()=>openPendingAssistance();
 $('dashCriticalAssistanceOpen').onclick=()=>view('assistance');
