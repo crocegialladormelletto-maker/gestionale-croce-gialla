@@ -11242,7 +11242,7 @@ async function routeCalcDownloadPdfDirect(){
   function pageFooter(){
    pdf.setDrawColor(220,229,238);pdf.line(left,283,right,283);
    lineText('Croce Gialla Emergenza ODV · Preventivo '+number,left,290,8,false,muted);
-   lineText('Pag. '+page,right,290,8,false,muted,{align:'right'});
+   pdf.setFont('helvetica','normal');pdf.setFontSize(8);color(muted);pdf.text('Pag. '+page,right,290,{align:'right'});
   }
   function nextPage(){
    pageFooter();pdf.addPage();page++;y=18;
