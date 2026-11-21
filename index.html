@@ -805,6 +805,32 @@ document.addEventListener('DOMContentLoaded',()=>{
 .ops-compact-detail > summary .ops-collapse-hint{font-size:12px;font-weight:500;color:#667788;}
 .ops-compact-detail[open] > summary{padding-bottom:12px;border-bottom:1px solid #d9e2ea;margin-bottom:10px;}
 .ops-compact-detail > .ops-title{justify-content:flex-end;margin-bottom:10px;}
+
+/* Dashboard operativa essenziale: conserva i componenti legacy per compatibilità,
+   ma presenta subito il quadro dei turni, dei mezzi e delle criticità. */
+#dash.dash-essential > .pad {display:flex;flex-direction:column;gap:12px;}
+#dash.dash-essential #dashEssentialBoard {order:-10;margin-top:0;}
+#dash.dash-essential #cgeDashboardAgendas,
+#dash.dash-essential #dashEmployeeCommitments,
+#dash.dash-essential #dashFinanceStats,
+#dash.dash-essential #dashLegacyDueStat,
+#dash.dash-essential .pad > .stats,
+#dash.dash-essential .pad > .dim-dash-layout,
+#dash.dash-essential #dashHoursSection,
+#dash.dash-essential #dashEssentialBoard .ops-kpi {display:none!important;}
+#dash.dash-essential #dashEssentialBoard .ops-board {grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+#dash.dash-essential #dashEssentialBoard .ops-smart-grid {grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;}
+#dash.dash-essential #dashEssentialBoard .ops-vehicles {margin-top:12px;}
+#dash.dash-essential #dashEssentialBoard .ops-vehicle-grid {gap:8px;}
+#dash.dash-essential #dashEssentialBoard .ops-card {margin:0;min-width:0;}
+#dash.dash-essential #dashEssentialBoard .ops-board-head {margin-bottom:10px;}
+#dash.dash-essential #dashSmartHours {cursor:pointer;}
+#dash.dash-essential #dashSmartHours:hover {outline:2px solid #f3c400;}
+#dash.dash-essential #dashPersonnelExpiryAlert.hidden {display:none!important;}
+#dash.dash-essential #dashPersonnelExpiryAlert:not(.hidden) {order:-9;}
+#dash.dash-essential #pn2027Reminder {order:2;}
+#dash.dash-essential #dashEssentialBoard .ops-compact-detail {align-self:start;}
+@media(max-width:800px){#dash.dash-essential #dashEssentialBoard .ops-board{grid-template-columns:1fr;}}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.57</div></div><div class="loginbody">
@@ -902,7 +928,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <section id="agendaPres" class="surface hidden" data-admin-only="true" style="padding:22px"><h2>Appuntamenti Presidente</h2><div id="agendaPresMsg"></div></section>
 <section id="agendaEvents" class="surface hidden" style="padding:22px"><h2>Eventi e manifestazioni</h2><div id="agendaEventsMsg"></div></section>
-<section id="dash" class="surface"><div class="hero"><h1>Dashboard</h1><p>Quadro operativo e amministrativo.</p><div class="actions"><button class="btn yellow jump" data-v="new">✚ Nuovo servizio</button><button class="btn yellow" id="dashDuplicateService" type="button">📑 Duplica servizio</button><button class="btn secondary jump" data-v="services">Servizi</button><button class="btn secondary jump" data-v="shifts">Turni</button><button class="btn secondary jump" data-v="emergency">🚨 Turnario Emergenza</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button><button class="btn secondary jump" data-v="communications">📣 Scrivi ai volontari</button></div></div><div class="pad">
+<section id="dash" class="surface dash-essential"><div class="hero"><h1>Dashboard operativa</h1><p>Situazione immediata di equipaggi, mezzi e criticità. I servizi si consultano nei calendari.</p><div class="actions"><button class="btn yellow jump" data-v="calendar">📅 Calendario servizi</button><button class="btn secondary jump" data-v="emergency">🚨 Emergenza 118</button><button class="btn secondary jump" data-v="assistance">🎪 Assistenze</button><button class="btn secondary jump" data-v="shifts">👥 Turni</button><button class="btn secondary jump" data-v="new">✚ Nuovo servizio</button><button class="btn secondary" id="dashDuplicateService" type="button">📑 Duplica</button><button class="btn secondary jump" data-v="communications">📣 Comunicazioni</button></div></div><div class="pad">
 <div id="cgeDashboardAgendas" class="grid2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:16px">
  <div id="cgeDashPresidentBox" data-admin-only="true" class="card" style="padding:16px;border-top:5px solid #ffdb17">
   <h3>📅 Appuntamenti Presidente</h3><div id="cgeDashPresidentList">Caricamento appuntamenti...</div>
@@ -934,9 +960,9 @@ document.addEventListener('DOMContentLoaded',()=>{
  <div class="stat"><small>💰 INCASSATO · NOTE DI DEBITO</small><b id="s9">€ 0</b><span class="muted" id="s9Count">0 note pagate</span></div>
  <div class="stat"><small>⏳ DA INCASSARE · NOTE DI DEBITO</small><b id="s10">€ 0</b><span class="muted" id="s10Count">0 note emesse</span></div>
 </div>
-<div class="ops-board-wrap">
+<div class="ops-board-wrap" id="dashEssentialBoard">
  <div class="ops-board-head">
-  <div><h2>📡 Quadro operativo di oggi</h2><div class="muted">Equipaggi, mezzi, servizi, fogli viaggio e criticità in un'unica schermata.</div></div>
+  <div><h2>📡 Situazione operativa di oggi</h2><div class="muted">Solo copertura turni, disponibilità mezzi e interventi necessari.</div></div>
   <div class="actions"><span id="dashOpsUpdated" class="pill b">Aggiornamento…</span><button id="dashOpsRefresh" type="button" class="btn secondary">↻ Aggiorna quadro</button></div>
  </div>
  <div class="ops-kpi">
@@ -954,7 +980,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   <div class="ops-smart-card" id="dashSmartDischarges"><small>🚑 DIMISSIONI OGGI</small><b id="dashSmartDischargesValue">—</b><span id="dashSmartDischargesInfo">Verifica in corso…</span></div>
   <div class="ops-smart-card" id="dashSmartAssistance"><small>🎪 ASSISTENZE OGGI</small><b id="dashSmartAssistanceValue">—</b><span id="dashSmartAssistanceInfo">Verifica in corso…</span></div>
   <div class="ops-smart-card" id="dashSmartVehicles"><small>🚐 MEZZI DISPONIBILI</small><b id="dashSmartVehiclesValue">—</b><span id="dashSmartVehiclesInfo">Situazione attuale</span></div>
-  <div class="ops-smart-card" id="dashSmartHours" data-admin-only="true"><small>👥 SOTTO 28 ORE</small><b id="dashSmartHoursValue">—</b><span id="dashSmartHoursInfo">Mese corrente</span></div>
+  <div class="ops-smart-card" id="dashSmartHours" data-admin-only="true" role="button" tabindex="0" title="Apri le statistiche volontari"><small>👥 SOTTO 28 ORE</small><b id="dashSmartHoursValue">—</b><span id="dashSmartHoursInfo">Apri Statistiche per il dettaglio</span></div>
  </div>
  <section class="section" data-admin-only="true" id="dashHoursSection">
   <div class="ops-title"><div><h3>⏱ Volontari sotto le 28 ore mensili</h3><span class="muted">Calcolo su turni e servizi effettivamente svolti, evitando i doppi conteggi.</span></div><button type="button" class="btn secondary jump" data-v="statistics">Apri Statistiche</button></div>
@@ -969,15 +995,8 @@ document.addEventListener('DOMContentLoaded',()=>{
    <div class="ops-title"><h3>👥 Equipaggi di oggi</h3><button type="button" class="btn secondary jump" data-v="emergency">Apri turnari</button></div>
    <div id="dashTodayCrews"></div>
   </section>
-  <section class="section ops-card">
-   <div class="ops-title"><h3>🚑 Servizi di oggi</h3><button type="button" class="btn secondary jump" data-v="services">Apri servizi</button></div>
-   <div id="dashTodayServices"></div>
-  </section>
-  <details class="section ops-card ops-compact-detail">
-   <summary>📄 Fogli viaggio di oggi <span class="ops-collapse-hint">Mostra dettagli</span></summary>
-   <div class="ops-title"><button type="button" class="btn secondary jump" data-v="travelSheets">Apri fogli viaggio</button></div>
-   <div id="dashTodayTravel"></div>
-  </details>
+  <div id="dashTodayServices" hidden></div>
+  <div id="dashTodayTravel" hidden></div>
   <details class="section ops-card ops-compact-detail">
    <summary>⏰ Scadenze personale <span class="ops-collapse-hint">Mostra dettagli</span></summary>
    <div class="ops-title"><button type="button" class="btn secondary jump" data-v="personnelExpiries">Apri scadenze personale</button></div>
@@ -7531,6 +7550,7 @@ async function dashboard(){
 $('dashOpsRefresh').onclick=loadOperationalDashboard;
 if($('navArubaInvoices'))$('navArubaInvoices').onclick=async()=>{const panel=$('accArubaPanel');if(panel)panel.open=true;await loadOperationalDashboard();panel?.scrollIntoView({behavior:'smooth',block:'nearest'});};
 if($('accGoSummary'))$('accGoSummary').onclick=()=>{const el=$('accDue')?.closest('.stats');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
+if($('dashSmartHours')){const goStats=()=>view('statistics');$('dashSmartHours').onclick=goStats;$('dashSmartHours').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goStats();}};}
 $('dashOpenCandidates').onclick=()=>openPendingAssistance();
 $('dashCriticalAssistanceOpen').onclick=()=>view('assistance');
 
