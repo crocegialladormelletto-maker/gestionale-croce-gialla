@@ -831,6 +831,22 @@ document.addEventListener('DOMContentLoaded',()=>{
 #dash.dash-essential #pn2027Reminder {order:2;}
 #dash.dash-essential #dashEssentialBoard .ops-compact-detail {align-self:start;}
 @media(max-width:800px){#dash.dash-essential #dashEssentialBoard .ops-board{grid-template-columns:1fr;}}
+
+/* Evidenzia il riquadro scadenze personale solo con avvisi attivi. */
+#dashPersonnelExpiriesCard.dash-personnel-expiry-flash{
+ border:2px solid #dc2626;
+ animation:dashExpiryCardPulse 1.25s ease-in-out infinite;
+}
+#dashPersonnelExpiriesCard.dash-personnel-expiry-flash > summary{
+ color:#991b1b;
+}
+@keyframes dashExpiryCardPulse{
+ 0%,100%{background:#fff7f7;border-color:#dc2626;box-shadow:0 0 0 0 rgba(220,38,38,.08)}
+ 50%{background:#fecaca;border-color:#991b1b;box-shadow:0 0 0 5px rgba(220,38,38,.16)}
+}
+@media (prefers-reduced-motion:reduce){
+ #dashPersonnelExpiriesCard.dash-personnel-expiry-flash{animation:none;background:#fee2e2;border-color:#dc2626}
+}
 </style></head><body>
 
 <div id="login" class="login"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.57</div></div><div class="loginbody">
@@ -997,8 +1013,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   </section>
   <div id="dashTodayServices" hidden></div>
   <div id="dashTodayTravel" hidden></div>
-  <details class="section ops-card ops-compact-detail">
-   <summary>⏰ Scadenze personale <span class="ops-collapse-hint">Mostra dettagli</span></summary>
+  <details id="dashPersonnelExpiriesCard" class="section ops-card ops-compact-detail">
+   <summary>⏰ Scadenze personale <span id="dashPersonnelExpiriesBadge" class="pill" aria-live="polite">Nessuna urgenza</span></summary>
    <div class="ops-title"><button type="button" class="btn secondary jump" data-v="personnelExpiries">Apri scadenze personale</button></div>
    <div id="dashUrgentExpiries"></div>
   </details>
@@ -3836,6 +3852,9 @@ function renderDashboardPersonnelExpiryAlert(){
  const active=personnelExpiryRows.filter(x=>x.stato==='ATTIVA'&&!isPersonalPersonnelItem(x));
  const alerts=active.filter(x=>{const d=personnelExpiryDays(x.data_scadenza);return d!==null&&d<=Number(x.giorni_preavviso??30)}).sort((a,b)=>String(a.data_scadenza).localeCompare(String(b.data_scadenza)));
  box.classList.toggle('hidden',alerts.length===0);
+ const card=$('dashPersonnelExpiriesCard'),badge=$('dashPersonnelExpiriesBadge');
+ if(card)card.classList.toggle('dash-personnel-expiry-flash',alerts.length>0);
+ if(badge){badge.textContent=alerts.length?alerts.length+' da controllare':'Nessuna urgenza';badge.classList.toggle('r',alerts.length>0);badge.classList.toggle('g',alerts.length===0);}
  countEl.textContent=String(alerts.length);
  itemsEl.innerHTML=alerts.slice(0,5).map(x=>{
   const d=personnelExpiryDays(x.data_scadenza);
