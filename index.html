@@ -2385,6 +2385,11 @@ document.addEventListener('DOMContentLoaded',()=>{
    <div class="field"><label>Stato</label><input id="rcQuoteState" value="BOZZA" readonly></div>
   </div>
   <div class="field" style="margin-top:10px">
+   <label>Presidi e dotazioni sanitarie necessari durante il trasporto (compresi nel prezzo)</label>
+   <textarea id="rcQuotePresidi" rows="3" placeholder="Es. Ossigeno durante il trasporto, secondo prescrizione sanitaria"></textarea>
+   <div class="muted">Quanto indicato sarà riportato nel preventivo come compreso nell’importo complessivo.</div>
+  </div>
+  <div class="field" style="margin-top:10px">
    <label>Metodo di pagamento</label>
    <textarea id="rcQuoteNotes" rows="8" readonly>Intestato a Croce Gialla Emergenza ODV
 Banca: Unicredit
@@ -10872,7 +10877,7 @@ function routeCalcReset(){
  if($('rcVignetteSource'))$('rcVignetteSource').textContent='Nessuna vignetta rilevata';
  if($('rcTunnelSource'))$('rcTunnelSource').textContent='Nessun traforo rilevato';
  if($('rcSavedQuoteInfo'))$('rcSavedQuoteInfo').textContent='Nessun preventivo salvato caricato.';
- ['rcQuoteCustomer','rcQuoteCf','rcQuoteAddress','rcQuoteEmail','rcQuotePhone'].forEach(id=>{if($(id))$(id).value=''});
+ ['rcQuoteCustomer','rcQuoteCf','rcQuoteAddress','rcQuoteEmail','rcQuotePhone','rcQuotePresidi'].forEach(id=>{if($(id))$(id).value=''});
  rcCurrentCustomerQuoteId=null;rcCurrentCustomerQuoteNumber=null;
  if($('rcQuoteState'))$('rcQuoteState').value='BOZZA';
  routeCalcRefreshPaymentBox();
@@ -10963,6 +10968,13 @@ function routeCalcFormatQuoteNumber(num,dateValue){
  const y=String(dateValue||today()).slice(0,4);
  return n>0?'PREV-'+y+'-'+String(n).padStart(5,'0'):'Da assegnare al salvataggio';
 }
+function routeCalcPresidiNote(base){
+ const presidi=$('rcQuotePresidi')?.value.trim()||'';
+ return base+(presidi?'\n\n[PRESIDI COMPRESI]\n'+presidi:'');
+}
+function routeCalcReadPresidi(note){
+ return String(note||'').split('[PRESIDI COMPRESI]\n')[1]?.trim()||'';
+}
 function routeCalcPaymentText(num,dateValue){
  const qn=routeCalcFormatQuoteNumber(num,dateValue);
  return 'Intestato a Croce Gialla Emergenza ODV\n'+
@@ -10999,7 +11011,7 @@ function routeCalcCustomerQuoteData(){
    km_totali:routeCalcNum('rcKm'),
    importo_totale:amount,
    anticipo_richiesto:advance,
-   note:routeCalcPaymentText(rcCurrentCustomerQuoteNumber),
+   note:routeCalcPresidiNote(routeCalcPaymentText(rcCurrentCustomerQuoteNumber)),
    stato:'BOZZA',
    attivo:true
  };
@@ -11013,7 +11025,7 @@ async function routeCalcSaveCustomerQuote(){
  let r;
  if(rcCurrentCustomerQuoteId){
    r=await sb.from('preventivi_clienti')
-    .update({...row,note:routeCalcPaymentText(rcCurrentCustomerQuoteNumber),updated_at:new Date().toISOString()})
+    .update({...row,note:routeCalcPresidiNote(routeCalcPaymentText(rcCurrentCustomerQuoteNumber)),updated_at:new Date().toISOString()})
     .eq('id',rcCurrentCustomerQuoteId)
     .select('id,numero_progressivo,data_preventivo,stato').single();
  }else{
@@ -11025,7 +11037,7 @@ async function routeCalcSaveCustomerQuote(){
  rcCurrentCustomerQuoteNumber=r.data.numero_progressivo;
 
  // Salva anche nel record la causale definitiva con il numero progressivo assegnato.
- const definitivePayment=routeCalcPaymentText(r.data.numero_progressivo,r.data.data_preventivo);
+ const definitivePayment=routeCalcPresidiNote(routeCalcPaymentText(r.data.numero_progressivo,r.data.data_preventivo));
  await sb.from('preventivi_clienti')
   .update({note:definitivePayment,updated_at:new Date().toISOString()})
   .eq('id',r.data.id);
@@ -11097,6 +11109,7 @@ async function routeCalcPrintArchivedQuote(id){
  $('rcQuoteAddress').value=x.indirizzo_cliente||'';
  $('rcQuoteEmail').value=x.email||'';
  $('rcQuotePhone').value=x.telefono||'';
+ $('rcQuotePresidi').value=routeCalcReadPresidi(x.note);
  $('rcQuoteNotes').value=routeCalcPaymentText(x.numero_progressivo,x.data_preventivo);
  $('rcStart').value=x.origine||'';
  $('rcLoad').value=x.via||'';
@@ -11122,6 +11135,7 @@ async function routeCalcPrintQuote(){
  const address=$('rcQuoteAddress')?.value.trim()||'';
  const email=$('rcQuoteEmail')?.value.trim()||'';
  const phone=$('rcQuotePhone')?.value.trim()||'';
+ const presidi=$('rcQuotePresidi')?.value.trim()||'';
  const km=routeCalcNum('rcKm');
  const dest=$('rcDest')?.value.trim()||'—';
  if(!amount||!km||dest==='—')return msg('rcMsg','Calcola prima il percorso e l’importo del preventivo.','warn');
@@ -11208,6 +11222,7 @@ async function routeCalcPrintQuote(){
    '</div>'+
    '<div style="margin-top:11px"><div class="label">Percorso previsto</div><div class="route">'+esc(route)+'</div></div>'+
    (extras.length?'<div style="margin-top:11px"><div class="label">Dotazioni richieste</div><div class="value">'+esc(extras.join(' · '))+'</div></div>':'')+
+   (presidi?'<div style="margin-top:11px"><div class="label">Presidi e dotazioni sanitarie compresi nel prezzo</div><div class="value" style="white-space:pre-wrap">'+esc(presidi)+'</div></div>':'')+
   '</div>'+
  '</div>'+
 
@@ -11218,15 +11233,14 @@ async function routeCalcPrintQuote(){
 
  '<div class="confirm">Il presente preventivo deve essere confermato via e-mail a trasporti@crocegiallaemergenza.it</div>'+
 
+ '<div class="section" style="margin-top:16px">'+
+  '<div class="section-title">Accettazione del preventivo</div>'+
+  '<div class="section-body" style="padding-top:20px;padding-bottom:20px"><div class="grid2"><div>Data: __________________</div><div>Firma per accettazione: ____________________________</div></div></div>'+
+ '</div>'+
  '<div class="footer-zone">'+
   '<div class="payment">'+
    '<h3>Metodo di pagamento</h3>'+
    '<div class="payment-lines">'+esc(paymentText)+'</div>'+
-  '</div>'+
-  '<div class="five">'+
-   '<div class="five-title">Sostieni Croce Gialla Emergenza ODV con il tuo 5×1000</div>'+
-   '<div class="five-desc">Un gesto che non costa nulla e ci aiuta a mantenere efficienti mezzi, attrezzature e servizi per il territorio.</div>'+
-   '<div class="five-cf">Codice fiscale: 91023880031</div>'+
   '</div>'+
  '</div>'+
 
