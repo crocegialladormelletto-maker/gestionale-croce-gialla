@@ -11317,7 +11317,8 @@ async function routeCalcDownloadPdfDirect(){
   section('Dettaglio economico');
   pair('Tariffa al km',euro(routeCalcNum('rcKmRate'))+' / km','Diritto di chiamata',euro(routeCalcNum('rcFixed')));
   const discount=Number($('rcSuggested')?.dataset.discount||0);
-  const beforeDiscount=Number($('rcSuggested')?.dataset.beforeDiscount||amount);
+  // Importo lordo coerente con il totale registrato e lo sconto mostrato.
+  const beforeDiscount=Number((amount+discount).toFixed(2));
   if(discount>0){
    field('Importo prima dello sconto',euro(beforeDiscount));
    const discountDescription=$('rcDiscountType')?.value==='PERCENT'?'Sconto ('+routeCalcNum('rcDiscountValue')+'%)':'Sconto applicato';
@@ -11326,7 +11327,9 @@ async function routeCalcDownloadPdfDirect(){
   need(23);pdf.setFillColor(246,249,254);pdf.setDrawColor(...yellow);pdf.setLineWidth(.5);
   pdf.roundedRect(left,y-4,width,19,2,2,'FD');
   lineText('TOTALE PREVENTIVO',left+5,y+3,10,true,blue);
-  lineText(euro(amount),right-5,y+7,17,true,blue);y+=24;
+  // Valore allineato a destra: non deve uscire dal riquadro A4.
+  pdf.setFont('helvetica','bold');pdf.setFontSize(17);color(blue);
+  pdf.text(euro(amount),right-5,y+7,{align:'right'});y+=24;
   const advanceText=$('rcAdvanceSuggested')?.textContent||euro(0);
   field('Anticipo richiesto',advanceText);
   wrap('L’anticipo viene imputato al saldo finale. Non viene restituito in caso di disdetta nelle 36 ore precedenti il servizio.',{size:9,leading:4.5,color:muted});
