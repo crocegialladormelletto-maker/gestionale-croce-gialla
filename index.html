@@ -811,7 +811,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 #dash.dash-essential > .pad {display:flex;flex-direction:column;gap:12px;}
 #dash.dash-essential #dashEssentialBoard {order:-10;margin-top:0;}
 #dash.dash-essential #cgeDashboardAgendas,
-#dash.dash-essential #dashEmployeeCommitments,
 #dash.dash-essential #dashFinanceStats,
 #dash.dash-essential #dashLegacyDueStat,
 #dash.dash-essential .pad > .stats,
@@ -828,6 +827,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 #dash.dash-essential #dashSmartHours:hover {outline:2px solid #f3c400;}
 #dash.dash-essential #dashPersonnelExpiryAlert.hidden {display:none!important;}
 #dash.dash-essential #dashPersonnelExpiryAlert:not(.hidden) {order:-9;}
+#dash.dash-essential #dashEmployeeCommitments:not(.hidden) {order:-8;display:block!important;}
+#dash.dash-essential #dashEmployeeCommitments.hidden {display:none!important;}
 #dash.dash-essential #pn2027Reminder {order:2;}
 #dash.dash-essential #dashEssentialBoard .ops-compact-detail {align-self:start;}
 @media(max-width:800px){#dash.dash-essential #dashEssentialBoard .ops-board{grid-template-columns:1fr;}}
@@ -3934,7 +3935,7 @@ async function refreshDashboardEmployeeCommitments(){
  count.textContent=String(rows.length);
  box.classList.remove('hidden');
  if(rows.length===0){
-  items.innerHTML='<div class="muted">Nessun impegno previsto nei prossimi 7 giorni. Usa «Gestisci impegni» per consultarli o inserirne di nuovi.</div>';
+  box.classList.add('hidden');
   return;
  }
  box.classList.add('dash-commitments-pulse');
