@@ -2376,7 +2376,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   <div class="grid3" style="margin-top:10px">
    <div class="field"><label>Cliente / destinatario</label><input id="rcQuoteCustomer" placeholder="Nome, cognome, RSA, struttura..."></div>
    <div class="field"><label>Codice fiscale</label><input id="rcQuoteCf" maxlength="16" style="text-transform:uppercase" placeholder="Codice fiscale"></div>
-   <div class="field"><label>Indirizzo completo</label><input id="rcQuoteAddress" placeholder="Via, numero civico, CAP, Comune, Provincia"></div>
+   <div class="field"><label>Via / Piazza</label><input id="rcQuoteStreet" placeholder="Es. Via Roma"></div>
+   <div class="field"><label>Numero civico</label><input id="rcQuoteCivic" placeholder="Es. 12/A"></div>
+   <div class="field"><label>CAP</label><input id="rcQuoteZip" inputmode="numeric" maxlength="5" placeholder="Es. 28040"></div>
+   <div class="field"><label>Comune</label><input id="rcQuoteCity" placeholder="Es. Dormelletto"></div>
+   <div class="field"><label>Provincia</label><input id="rcQuoteProvince" maxlength="2" placeholder="Es. NO" style="text-transform:uppercase"></div>
    <div class="field"><label>E-mail cliente</label><input id="rcQuoteEmail" type="email" placeholder="cliente@email.it"></div>
    <div class="field"><label>Telefono</label><input id="rcQuotePhone" placeholder="Facoltativo"></div>
   </div>
@@ -10877,7 +10881,7 @@ function routeCalcReset(){
  if($('rcVignetteSource'))$('rcVignetteSource').textContent='Nessuna vignetta rilevata';
  if($('rcTunnelSource'))$('rcTunnelSource').textContent='Nessun traforo rilevato';
  if($('rcSavedQuoteInfo'))$('rcSavedQuoteInfo').textContent='Nessun preventivo salvato caricato.';
- ['rcQuoteCustomer','rcQuoteCf','rcQuoteAddress','rcQuoteEmail','rcQuotePhone','rcQuotePresidi'].forEach(id=>{if($(id))$(id).value=''});
+ ['rcQuoteCustomer','rcQuoteCf','rcQuoteStreet','rcQuoteCivic','rcQuoteZip','rcQuoteCity','rcQuoteProvince','rcQuoteEmail','rcQuotePhone','rcQuotePresidi'].forEach(id=>{if($(id))$(id).value=''});
  rcCurrentCustomerQuoteId=null;rcCurrentCustomerQuoteNumber=null;
  if($('rcQuoteState'))$('rcQuoteState').value='BOZZA';
  routeCalcRefreshPaymentBox();
@@ -10987,6 +10991,32 @@ function routeCalcRefreshPaymentBox(){
  if($('rcQuoteNumber'))$('rcQuoteNumber').value=routeCalcFormatQuoteNumber(rcCurrentCustomerQuoteNumber);
  if($('rcQuoteNotes'))$('rcQuoteNotes').value=routeCalcPaymentText(rcCurrentCustomerQuoteNumber);
 }
+function routeCalcQuoteAddressFields(){return {
+ street:$('rcQuoteStreet')?.value.trim()||'',
+ civic:$('rcQuoteCivic')?.value.trim()||'',
+ zip:$('rcQuoteZip')?.value.trim()||'',
+ city:$('rcQuoteCity')?.value.trim()||'',
+ province:$('rcQuoteProvince')?.value.trim().toUpperCase()||''
+};}
+function routeCalcQuoteAddress(){const a=routeCalcQuoteAddressFields();
+ return [[a.street,a.civic].filter(Boolean).join(' '),[a.zip,a.city].filter(Boolean).join(' '),a.province?'('+a.province+')':''].filter(Boolean).join(', ');
+}
+function routeCalcQuoteAddressForStorage(){
+ const a=routeCalcQuoteAddressFields();
+ return Object.values(a).some(Boolean)?'INDIRIZZO_STRUTTURATO_V1|'+JSON.stringify(a):null;
+}
+function routeCalcRestoreQuoteAddress(saved){
+ const ids=['rcQuoteStreet','rcQuoteCivic','rcQuoteZip','rcQuoteCity','rcQuoteProvince'];
+ ids.forEach(id=>{if($(id))$(id).value='';});
+ if(!saved)return;
+ let a;
+ if(String(saved).startsWith('INDIRIZZO_STRUTTURATO_V1|')){
+  try{a=JSON.parse(String(saved).slice('INDIRIZZO_STRUTTURATO_V1|'.length));}catch(e){}
+ }
+ if(a&&typeof a==='object'){
+  [['rcQuoteStreet','street'],['rcQuoteCivic','civic'],['rcQuoteZip','zip'],['rcQuoteCity','city'],['rcQuoteProvince','province']].forEach(([id,key])=>{$(id).value=a[key]||'';});
+ }else{$('rcQuoteStreet').value=String(saved);}
+}
 function routeCalcCustomerQuoteData(){
  const amount=Number($('rcSuggested')?.dataset.value||0);
  const advanceText=$('rcAdvanceSuggested')?.textContent||'€ 0,00';
@@ -10999,7 +11029,7 @@ function routeCalcCustomerQuoteData(){
  return {
    cliente:$('rcQuoteCustomer')?.value.trim()||'',
    codice_fiscale:$('rcQuoteCf')?.value.trim().toUpperCase()||null,
-   indirizzo_cliente:$('rcQuoteAddress')?.value.trim()||null,
+   indirizzo_cliente:routeCalcQuoteAddressForStorage(),
    email:$('rcQuoteEmail')?.value.trim()||null,
    telefono:$('rcQuotePhone')?.value.trim()||null,
    origine:start,
@@ -11106,7 +11136,7 @@ async function routeCalcPrintArchivedQuote(id){
  if($('rcQuoteState'))$('rcQuoteState').value=x.stato||'BOZZA';
  $('rcQuoteCustomer').value=x.cliente||'';
  $('rcQuoteCf').value=x.codice_fiscale||'';
- $('rcQuoteAddress').value=x.indirizzo_cliente||'';
+ routeCalcRestoreQuoteAddress(x.indirizzo_cliente);
  $('rcQuoteEmail').value=x.email||'';
  $('rcQuotePhone').value=x.telefono||'';
  $('rcQuotePresidi').value=routeCalcReadPresidi(x.note);
@@ -11132,7 +11162,7 @@ async function routeCalcPrintQuote(){
  const advanceText=$('rcAdvanceSuggested')?.textContent||euro(0);
  const customer=$('rcQuoteCustomer')?.value.trim()||'Cliente';
  const cf=$('rcQuoteCf')?.value.trim().toUpperCase()||'';
- const address=$('rcQuoteAddress')?.value.trim()||'';
+ const address=routeCalcQuoteAddress();
  const email=$('rcQuoteEmail')?.value.trim()||'';
  const phone=$('rcQuotePhone')?.value.trim()||'';
  const presidi=$('rcQuotePresidi')?.value.trim()||'';
@@ -11275,7 +11305,7 @@ if($('rcLoadSavedQuote'))$('rcLoadSavedQuote').onclick=()=>routeCalcLoadSavedQuo
 if($('rcSaveQuote'))$('rcSaveQuote').onclick=routeCalcSaveQuote;
 if($('rcSaveCustomerQuote'))$('rcNewCustomerQuote').onclick=()=>{
  rcCurrentCustomerQuoteId=null;rcCurrentCustomerQuoteNumber=null;
- ['rcQuoteCustomer','rcQuoteCf','rcQuoteAddress','rcQuoteEmail','rcQuotePhone'].forEach(id=>{if($(id))$(id).value=''});
+ ['rcQuoteCustomer','rcQuoteCf','rcQuoteStreet','rcQuoteCivic','rcQuoteZip','rcQuoteCity','rcQuoteProvince','rcQuoteEmail','rcQuotePhone'].forEach(id=>{if($(id))$(id).value=''});
  if($('rcQuoteNumber'))$('rcQuoteNumber').value='Da assegnare al salvataggio';
  if($('rcQuoteState'))$('rcQuoteState').value='BOZZA';
  routeCalcRefreshPaymentBox();
