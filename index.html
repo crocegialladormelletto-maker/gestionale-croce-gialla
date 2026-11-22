@@ -853,7 +853,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 }
 </style></head><body>
 
-<div id="login" class="login cge-initializing"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.57</div></div><div class="loginbody">
+<div id="login" class="login hidden cge-initializing"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.57</div></div><div class="loginbody">
 <div id="staffLoginBlock">
  <div class="field"><label>Email</label><input id="email" name="cge-admin-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div class="field"><label>Password</label><input id="pw" name="cge-admin-password" type="password" autocomplete="new-password"></div>
  <button id="go" class="btn yellow" style="width:100%">Accedi</button><div id="lmsg"></div>
@@ -14854,7 +14854,13 @@ try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&
   msg(isTabletOnlyMode()?'tloginmsg':'lmsg','Impossibile riprendere la sessione: '+(e?.message||String(e)),'err');
  }finally{
   // Mostra il login solo dopo aver stabilito se la sessione esiste.
-  $('login')?.classList.remove('cge-initializing');
+  const activeArea=['app','volApp','monitorApp','tabletApp'].some(id=>{const el=$(id);return el&&!el.classList.contains('hidden')});
+  const loginEl=$('login');
+  if(loginEl){
+   loginEl.classList.remove('cge-initializing');
+   // Se la sessione è valida il login non deve apparire neppure per un frame.
+   loginEl.classList.toggle('hidden',activeArea);
+  }
   document.body.classList.add('cge-auth-ready');
  }
 })();
