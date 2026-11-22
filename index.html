@@ -4,6 +4,9 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Croce Gialla Emergenza</title>
+<style>/* Evita il flash del modulo di accesso durante il ripristino della sessione. */
+body:not(.cge-auth-ready) #login{visibility:hidden!important;}
+</style>
 <meta name="theme-color" content="#12375d">
 <link rel="stylesheet" href="agenda-calendar.css?v=1">
 <meta name="application-name" content="Croce Gialla Emergenza">
@@ -14849,6 +14852,8 @@ try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&
   if(session)await enter(session.user,session.access_token);
  }catch(e){
   msg(isTabletOnlyMode()?'tloginmsg':'lmsg','Impossibile riprendere la sessione: '+(e?.message||String(e)),'err');
+ }finally{
+  document.body.classList.add('cge-auth-ready');
  }
 })();
 </script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20261109-personale1"></script><!-- Calendario ordinario volontari già definito nello script principale: caricamento duplicato disattivato. --><script src="agenda.js?v=6"></script><script src="turni-disponibilita.js?v=20261101-equipaggi1"></script><script src="stampa-riepiloghi-mensili.js?v=20261101-fix-finemese"></script>
