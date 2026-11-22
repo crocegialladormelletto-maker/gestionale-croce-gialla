@@ -832,7 +832,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 #dash.dash-essential #dashSmartHours:hover {outline:2px solid #f3c400;}
 #dash.dash-essential #dashPersonnelExpiryAlert.hidden {display:none!important;}
 #dash.dash-essential #dashPersonnelExpiryAlert:not(.hidden) {order:-9;}
-#dash.dash-essential #dashEmployeeCommitments:not(.hidden) {order:-8;display:block!important;}
+#dash.dash-essential #dashEmployeeCommitments:not(.hidden) {order:-12;display:block!important;position:relative;z-index:1;margin:0;}
+#dash.dash-essential #dashEmployeeCommitments .actions {align-items:center;}
+#dash.dash-essential #dashEmployeeCommitments.dash-commitments-pulse {animation:dashCommitmentsSteady 1.5s ease-in-out infinite!important;transform:none!important;}
+@keyframes dashCommitmentsSteady {0%,100%{border-color:#eab308;background:#fffbeb;box-shadow:0 0 0 0 rgba(234,179,8,0)}50%{border-color:#dc2626;background:#fef3c7;box-shadow:0 0 0 3px rgba(234,179,8,.26)}}
 #dash.dash-essential #dashEmployeeCommitments.hidden {display:none!important;}
 #dash.dash-essential #pn2027Reminder {order:2;}
 #dash.dash-essential #dashEssentialBoard .ops-compact-detail {align-self:start;}
