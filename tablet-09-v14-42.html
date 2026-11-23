@@ -3860,9 +3860,12 @@ function applyRoleUI(){
  if($('servicePayHead'))$('servicePayHead').classList.toggle('hidden',isCentral);
  if($('fvTotalHead'))$('fvTotalHead').classList.toggle('hidden',isCentral);
 }
-async function enter(){
- const u=await sb.auth.getUser();if(!u.data.user)return;
- const r=await sb.from('accessi_app').select('nome,ruolo,attivo,badge_personale,mezzo').single();
+async function enter(loginUser=null){
+ // Dopo signInWithPassword l'utente e' gia verificato: evitare una seconda
+ // richiesta getUser che puo' bloccarsi in PWA con sessioni persistenti.
+ const u=loginUser?{data:{user:loginUser}}:await sb.auth.getUser();
+ if(!u.data.user)throw new Error('Sessione non disponibile. Riprova l’accesso.');
+ const r=await sb.from('accessi_app').select('nome,ruolo,attivo,badge_personale,mezzo').eq('user_id',u.data.user.id).maybeSingle();
  if(r.error||!r.data?.attivo){
  const role=String(r.data?.ruolo||'').toUpperCase();
  const target=isTabletOnlyMode()?'tloginmsg':isVolunteerOnlyMode()?'vlmsg':role==='CENTRALINO'?'cloginmsg':'lmsg';
@@ -3921,8 +3924,8 @@ $('tgo').onclick=async()=>{
   const r=await Promise.race([sb.auth.signInWithPassword({email:user+'@crocegiallaemergenza.it',password:pass}),timeout(18000)]);
   if(r.error)throw new Error('CREDENZIALI');
   msg('tloginmsg','Credenziali corrette. Caricamento servizi del mezzo...');
-  await Promise.race([enter(),timeout(22000)]);
-  if(!$('login').classList.contains('hidden'))msg('tloginmsg','Accesso non completato. Controlla la connessione e riprova.','err');
+  await Promise.race([enter(r.data.user),timeout(22000)]);
+  if(!$('login').classList.contains('hidden'))msg('tloginmsg','Accesso non completato. Verifica la connessione al database e riprova.','err');
  }catch(e){
   const message=e.message==='TEMPO_SCADUTO'
    ?'Connessione lenta o bloccata: accesso non completato. Controlla Internet, aggiorna la pagina e riprova.'
