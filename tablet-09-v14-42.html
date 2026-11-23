@@ -2877,6 +2877,11 @@ Causale: numero preventivo</textarea>
     <h3 class="tablet-section-title" style="margin-top:20px">Importo del servizio</h3><div class="notice">Indica soltanto la cifra del trasporto. Metodo, data e registrazione del pagamento sono gestiti dall’amministrazione nel gestionale.</div>
     <div class="tablet-fields">
      <div class="field"><label>Importo servizio € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito"></div>
+     <div class="field"><label for="tabletPaymentReported">Il paziente ha pagato? (facoltativo)</label>
+      <select id="tabletPaymentReported"><option value="">Non indicato</option><option value="true">Sì</option><option value="false">No</option></select>
+      <small>Segnalazione per l'amministrazione, NON registra l'incasso e NON blocca la chiusura.</small>
+      <div id="tabletPaymentReportedMsg" class="muted" aria-live="polite"></div>
+     </div>
     </div>
     <div id="tabletReceiptSection" class="section hidden" style="margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
      <h3 style="margin-top:0">📎 Ricevuta pagamento</h3>
@@ -11241,6 +11246,7 @@ async function openTabletArchiveSheet(f){
   else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
   else el.value=f[key]??'';
  });
+ tabletShowPaymentReport(f);
  if(is118){
   if($('tablet118From')){$('tablet118From').value=f.luogo_partenza||'';$('tablet118From').disabled=true;}
   if($('tablet118Load')){$('tablet118Load').value=f.luogo_carico||'';$('tablet118Load').disabled=true;}
@@ -11758,6 +11764,7 @@ async function openTabletDirect118(foglio){
   else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
   else el.value=f[key]??'';
  });
+ tabletShowPaymentReport(f);
  tabletUpdatePaymentDateVisibility();
  tabletToggleReceiptSection();
  $('tabletSaveSheet').classList.toggle('hidden',closed);
@@ -11877,6 +11884,7 @@ async function loadTabletSheet(serviceId){
  else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
  else el.value=f[key]??'';
  });
+ tabletShowPaymentReport(f);
  if(!tabletSheetIs118&&tabletCurrentService){
   if($('tabletPatientFirst'))$('tabletPatientFirst').value=tabletCurrentService.paziente_nome||f.paziente_nome||'';
   if($('tabletPatientLast'))$('tabletPatientLast').value=f.paziente_cognome||tabletCurrentService.paziente_cognome||'';
@@ -11975,6 +11983,44 @@ function tabletCalcSheet(){
  const kmTotal=document.getElementById('tabletKmTotal');
  if(kmTotal)kmTotal.value=kmA!==''&&kmB!==''&&Number(kmB)>=Number(kmA)?String(Number(kmB)-Number(kmA)):'—';
 }
+// La segnalazione del pagamento e' autonoma dal salvataggio operativo.
+// Non e' un incasso e NON e' mai un prerequisito per chiudere il foglio.
+function tabletShowPaymentReport(f){
+ const el=$('tabletPaymentReported'),info=$('tabletPaymentReportedMsg');
+ if(!el)return;
+ el.value=f?.pagamento_segnalato===true?'true':f?.pagamento_segnalato===false?'false':'';
+ el.disabled=!f||f.stato==='CHIUSO'||tabletIs118Type(f.tipo_servizio||tabletCurrentService?.tipo_servizio||'');
+ if(info)info.textContent='';
+}
+if($('tabletPaymentReported'))$('tabletPaymentReported').addEventListener('change',async function(){
+ const el=this,info=$('tabletPaymentReportedMsg'),sheet=tabletCurrentSheet;
+ if(!sheet||sheet.stato==='CHIUSO')return;
+ const currentId=sheet.id, currentVehicle=String(tabletMezzo);
+ const answer=el.value===''?null:el.value==='true';
+ if(info)info.textContent='Salvataggio segnalazione...';
+ // Non modificare modalita_pagamento, data_pagamento, stato o importi.
+ // Nessun errore di questa richiesta deve interferire con Salva o Chiudi.
+ try{
+  const res=await Promise.race([
+   sb.from('fogli_viaggio').update({
+    pagamento_segnalato:answer,
+    pagamento_segnalato_il:answer===null?null:new Date().toISOString()
+   }).eq('id',currentId).eq('mezzo',currentVehicle).eq('stato','APERTO')
+    .select('id,pagamento_segnalato,pagamento_segnalato_il').maybeSingle(),
+   new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo di risposta scaduto')),6500))
+  ]);
+  if(res.error)throw res.error;
+  if(!res.data||res.data.pagamento_segnalato!==answer)
+    throw new Error('La segnalazione non risulta confermata.');
+  if(tabletCurrentSheet?.id===currentId)
+   tabletCurrentSheet={...tabletCurrentSheet,pagamento_segnalato:res.data.pagamento_segnalato,pagamento_segnalato_il:res.data.pagamento_segnalato_il};
+  if(info&&tabletCurrentSheet?.id===currentId)info.textContent='Segnalazione memorizzata. La chiusura del foglio rimane indipendente.';
+ }catch(e){
+  if(info&&tabletCurrentSheet?.id===currentId)
+   info.textContent='Segnalazione non salvata ('+(e.message||String(e))+'). Il foglio può essere chiuso comunque.';
+ }
+});
+
 async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  if(!tabletCurrentSheet||tabletCurrentSheet.stato==='CHIUSO'||tabletBusy)return false;
  const row={};
