@@ -11991,7 +11991,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  for(const el of document.querySelectorAll('#tabletSheetForm [data-ts-field]')){
   const name=el.dataset.tsField;
   if(name==='pagamento_segnalato')row[name]=el.value===''?null:el.value==='true';
-  if(el.type==='checkbox')row[name]=el.checked;
+  else if(el.type==='checkbox')row[name]=el.checked;
   else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
  }
