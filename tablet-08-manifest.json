@@ -3,7 +3,7 @@
   "name": "Croce Gialla Emergenza · Tablet 08",
   "short_name": "Tablet 08",
   "description": "Trasporti ordinari, dimissioni e assistenze - mezzo 08",
-  "start_url": "/gestionale-croce-gialla/?area=tablet&mezzo=08&source=pwa",
+  "start_url": "/gestionale-croce-gialla/apri-tablet-08.html?source=pwa",
   "scope": "/gestionale-croce-gialla/",
   "display": "standalone",
   "orientation": "any",
