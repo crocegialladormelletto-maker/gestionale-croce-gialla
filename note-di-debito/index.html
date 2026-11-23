@@ -91,7 +91,7 @@
        <div class="field"><label>Data documento</label><input id="dDate" type="date"></div>
        <div class="field"><label>Data servizio</label><input id="dServiceDate" type="date" disabled></div>
        <div class="field"><label>Intestatario *</label><input id="dName"></div>
-       <div class="field"><label>Codice fiscale / P. IVA</label><input id="dCF"></div>
+       <div class="field"><label>Codice fiscale / P. IVA</label><input id="dCF" maxlength="16" autocomplete="off"><button type="button" id="saveIssuedCF" class="btn yellow hidden" style="margin-top:5px">Salva codice fiscale</button></div>
        <div class="field"><label>Indirizzo</label><input id="dAddress"></div>
        <div class="field"><label>CAP</label><input id="dCap"></div>
        <div class="field"><label>Comune</label><input id="dTown"></div>
@@ -291,8 +291,10 @@ function fill(){
   $('manualPaidStatus').textContent='Spunta salvabile da Stefano, indipendente dalla registrazione contabile.';
  $('dEmailState').value=n.email_stato||'NON_INVIATA';calcTotal();
  const draft=n.stato==='BOZZA';
- ['dDate','dCF','dAddress','dCap','dTown','dProvince','dDescription','dAmount','dDiscount'].forEach(id=>$(id).disabled=!draft);
+ ['dDate','dAddress','dCap','dTown','dProvince','dDescription','dAmount','dDiscount'].forEach(id=>$(id).disabled=!draft);
  $('dName').disabled=false;
+ $('dCF').disabled=false;
+ $('saveIssuedCF').classList.toggle('hidden',draft);
  $('saveCorrectedRecipient').classList.toggle('hidden',draft);
  $('dEmail').disabled=false;
  $('saveRecipientEmail').classList.toggle('hidden',draft);
@@ -358,7 +360,7 @@ function updateRecipientSelector(){
  };
  $('dRecipientHelp').textContent=editable
   ?'Puoi modificare i dati nei campi qui sotto e salvarli nella bozza. Gli intestatari usati in altre note sono richiamabili dal menu.'
-  :'Nota emessa: intestatario non modificabile.';
+  :'Nota emessa: puoi integrare il codice fiscale e correggere l’intestatario con gli appositi pulsanti.';
 }
 function calcTotal(){$('dTotal').textContent=money(Math.max(0,Number($('dAmount').value||0)-Number($('dDiscount').value||0)))}
 $('dAmount').oninput=calcTotal;$('dDiscount').oninput=calcTotal;
@@ -532,6 +534,21 @@ $('savePayment').onclick=async()=>{
  }catch(e){
   msg('detailMsg','Non è stato possibile confermare il saldo: '+(e.message||String(e)),'err');
  }finally{button.disabled=false;}
+};
+$('saveIssuedCF').onclick=async()=>{
+ if(!active||active.stato!=='EMESSA')return;
+ const cf=$('dCF').value.trim().toUpperCase().replace(/\s+/g,'');
+ if(!/^([A-Z0-9]{16}|[0-9]{11})$/.test(cf))return msg('detailMsg','Inserisci un codice fiscale di 16 caratteri oppure una partita IVA di 11 cifre.','err');
+ if(cf===String(active.cf_piva||'').toUpperCase())return msg('detailMsg','Il codice fiscale è già salvato.','ok');
+ if(!confirm('Integrare il codice fiscale / P. IVA nella nota già emessa '+active.numero+'?\n\nNumero, data, importo, intestatario e pagamenti rimarranno invariati.'))return;
+ const btn=$('saveIssuedCF');btn.disabled=true;
+ try{
+  const r=await sb.rpc('cge_rettifica_cf_nota_emessa',{p_nota_id:active.id,p_cf_piva:cf});
+  if(r.error)throw r.error;
+  const id=active.id;await loadAll();await openNote(id);
+  msg('detailMsg','Codice fiscale salvato sulla nota emessa. Puoi scaricare il PDF aggiornato e, se necessario, reinviarlo.','ok');
+ }catch(e){msg('detailMsg','Codice fiscale non salvato: '+(e.message||String(e)),'err')}
+ finally{btn.disabled=false;}
 };
 $('saveCorrectedRecipient').onclick=async()=>{
  if(!active||active.stato!=='EMESSA')return;
