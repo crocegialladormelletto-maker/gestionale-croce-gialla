@@ -3865,7 +3865,8 @@ async function enter(loginUser=null){
  // richiesta getUser che puo' bloccarsi in PWA con sessioni persistenti.
  const u=loginUser?{data:{user:loginUser}}:await sb.auth.getUser();
  if(!u.data.user)throw new Error('Sessione non disponibile. Riprova l’accesso.');
- const r=await sb.from('accessi_app').select('nome,ruolo,attivo,badge_personale,mezzo').eq('user_id',u.data.user.id).maybeSingle();
+ const profileTimeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Profilo tablet non caricato: controllare la connessione al database.')),12000));
+ const r=await Promise.race([sb.from('accessi_app').select('nome,ruolo,attivo,badge_personale,mezzo').eq('user_id',u.data.user.id).maybeSingle(),profileTimeout]);
  if(r.error||!r.data?.attivo){
  const role=String(r.data?.ruolo||'').toUpperCase();
  const target=isTabletOnlyMode()?'tloginmsg':isVolunteerOnlyMode()?'vlmsg':role==='CENTRALINO'?'cloginmsg':'lmsg';
@@ -3898,7 +3899,11 @@ async function enter(loginUser=null){
  }
  if(r.data.ruolo==='TABLET'&&/^0[6-9]$/.test(r.data.mezzo||'')){
   $('app').classList.add('hidden');$('volApp').classList.add('hidden');$('monitorApp').classList.add('hidden');$('tabletApp').classList.remove('hidden');
-  tabletMezzo=r.data.mezzo;await startTabletArea();return;
+  tabletMezzo=r.data.mezzo;
+  // Mostra subito la schermata del mezzo: il caricamento remoto non deve trattenere il login.
+  msg('tabletMsg','Accesso effettuato. Caricamento dei servizi del mezzo '+tabletMezzo+'...');
+  startTabletArea().catch(e=>msg('tabletMsg','Accesso effettuato, ma caricamento servizi non riuscito: '+(e.message||String(e))+'. Usa Aggiorna servizi.','err'));
+  return;
  }
  if(r.data.ruolo==='VOLONTARIO'&&r.data.badge_personale){
   volunteerBadge=r.data.badge_personale;$('app').classList.add('hidden');$('monitorApp').classList.add('hidden');$('tabletApp').classList.add('hidden');$('volApp').classList.remove('hidden');$('vwho').textContent=(prof.nome||'Volontario')+' · badge '+volunteerBadge;
@@ -3924,7 +3929,7 @@ $('tgo').onclick=async()=>{
   const r=await Promise.race([sb.auth.signInWithPassword({email:user+'@crocegiallaemergenza.it',password:pass}),timeout(18000)]);
   if(r.error)throw new Error('CREDENZIALI');
   msg('tloginmsg','Credenziali corrette. Caricamento servizi del mezzo...');
-  await Promise.race([enter(r.data.user),timeout(22000)]);
+  await Promise.race([enter(r.data.user),timeout(18000)]);
   if(!$('login').classList.contains('hidden'))msg('tloginmsg','Accesso non completato. Verifica la connessione al database e riprova.','err');
  }catch(e){
   const message=e.message==='TEMPO_SCADUTO'
@@ -11120,18 +11125,8 @@ function renderTabletDirect118(){
 }
 async function tabletRefreshList(){
  if(!tabletMezzo||tabletBusy)return;
- let session=(await sb.auth.getSession()).data.session;
- if(!session){
-  const refreshed=await sb.auth.refreshSession();
-  session=refreshed.data.session;
- }
- if(!session){
-  stopTabletArea();
-  msg('tabletMsg','Sessione del tablet scaduta. Accedi di nuovo con le credenziali del mezzo.','warn');
-  $('tabletApp').classList.add('hidden');
-  $('login').classList.remove('hidden');
-  return;
- }
+ // L'autenticazione è già avvenuta in enter(). Evita getSession/refreshSession
+ // che possono contendersi il lock di Supabase e bloccare tutte le richieste.
  const r=await sb.from('servizi_giornalieri').select('id,data_servizio,mezzo,tipo_servizio,tipo_servizio_altro,ora_partenza_prevista,ora_carico_paziente_prevista,ora_arrivo_destinazione_prevista,ora_inizio_assistenza_prevista,ora_fine_assistenza_prevista,ora_rientro_previsto,ora_partenza_effettiva,ora_carico_paziente_effettiva,ora_rientro_effettivo,luogo_partenza,indirizzo_partenza,luogo_carico_paziente,indirizzo_carico_paziente,destinazione,indirizzo_destinazione,ospedale_destinazione,paziente_nome,paziente_cognome,data_nascita,codice_fiscale,paziente_indirizzo,paziente_email,telefono,note,stato,stato_gestionale,equipaggio_minimo,capo_servizio_obbligatorio,foglio_viaggio_id,numero_foglio,importo_previsto,importo_finale,modalita_tariffaria,documento_da_emettere').eq('mezzo',tabletMezzo).gte('data_servizio',tabletShiftDays(-7)).lte('data_servizio',tabletShiftDays(365)).order('data_servizio',{ascending:true}).order('ora_partenza_prevista',{ascending:true});
  if(r.error)return msg('tabletMsg','Aggiornamento non riuscito: '+r.error.message,'err');
  tabletServices=r.data||[];
@@ -11597,10 +11592,12 @@ $('tabletImmediateForm').onsubmit=async e=>{e.preventDefault();await tabletCreat
 
 async function startTabletArea(){
  stopTabletArea();
- const tabletVehicleResult=await sb.from('mezzi').select('codice,targa,tipologia,attivo,stato_operativo,km_attuali').eq('codice',tabletMezzo).maybeSingle();
- if(!tabletVehicleResult.error&&tabletVehicleResult.data){
-  vehicles=[...vehicles.filter(v=>String(v.codice)!==String(tabletMezzo)),tabletVehicleResult.data];
- }
+ // I dati del mezzo sono accessori: se la richiesta è lenta non bloccano l'apertura dell'app.
+ sb.from('mezzi').select('codice,targa,tipologia,attivo,stato_operativo,km_attuali').eq('codice',tabletMezzo).maybeSingle().then(tabletVehicleResult=>{
+  if(!tabletVehicleResult.error&&tabletVehicleResult.data){
+   vehicles=[...vehicles.filter(v=>String(v.codice)!==String(tabletMezzo)),tabletVehicleResult.data];
+  }
+ }).catch(()=>{});
  $('tabletTitle').textContent='Tablet mezzo '+tabletMezzo;$('tabletWho').textContent='Solo servizi assegnati al mezzo '+tabletMezzo;
  if($('tabletChecklist07'))$('tabletChecklist07').style.display=(['07','08','09'].includes(String(tabletMezzo))?'inline-flex':'none');
  if($('tabletNew118'))$('tabletNew118').style.display=(['07','09'].includes(String(tabletMezzo))?'inline-flex':'none');
@@ -12817,7 +12814,11 @@ if('serviceWorker' in navigator){
 }
 applyVolunteerOnlyLogin();refreshPwaInstallUI();
 try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&$('vbadge')){$('vbadge').value=remembered;$('vremember').checked=true}}catch(_){}
-(async()=>{const s=await sb.auth.getSession();if(s.data.session)enter()})();
+// Il ripristino automatico della sessione non deve bloccare un login manuale
+// con getSession e enter contemporanei. Su tablet l'utente accede dal modulo.
+if(!isTabletOnlyMode()){
+ (async()=>{try{const s=await sb.auth.getSession();if(s.data.session)await enter()}catch(e){console.warn('Ripristino accesso:',e)}})();
+}
 </script><script src="/gestionale-croce-gialla/ordinary-calendar.js?v=20261003c"></script><script src="/gestionale-croce-gialla/ordinary-volunteer.js?v=20260924c"></script></body></html>
 <style>.nav[data-v="training"]{background:#65a30d;border-color:#4d7c0f;color:#fff}
 /* Dashboard: colori forzati pulsanti rapidi */
