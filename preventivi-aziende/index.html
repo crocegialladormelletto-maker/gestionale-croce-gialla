@@ -37,9 +37,63 @@ function fill(d={}){ids.forEach(id=>$(id).value=d[id]??(id==='quoteStatus'?'BOZZ
 function newQuote(){if(currentId&&!confirm('Aprire un nuovo preventivo? Salva prima le modifiche.'))return;currentId=null;fill({date:new Date().toLocaleDateString('en-CA')});$('number').value='Da assegnare al salvataggio';notice('Nuovo preventivo aziendale.')}
 async function user(){const r=await db.auth.getUser();if(r.error||!r.data.user)throw Error('Accesso non disponibile. Apri prima il gestionale ed effettua il login.');return r.data.user}
 async function saveQuote(){try{const u=await user(),d=payload();if(!d.company.trim())throw Error('Inserisci la ragione sociale.');if(d.vat&&!/^[0-9]{11}$/.test(d.vat))throw Error('La Partita IVA deve contenere 11 cifre.');const row={ragione_sociale:d.company.trim(),partita_iva:d.vat||null,codice_fiscale:d.tax||null,data_preventivo:d.date||null,stato:d.quoteStatus,contenuto:d,aggiornato_il:new Date().toISOString()};const q=currentId?db.from('preventivi_aziende').update(row).eq('id',currentId):db.from('preventivi_aziende').insert({...row,creato_da:u.id});const r=await q.select('id').single();if(r.error)throw r.error;currentId=r.data.id;$('number').value=num(currentId);notice('✓ Preventivo '+num(currentId)+' salvato nel gestionale.');}catch(e){notice('Salvataggio non riuscito: '+e.message)}}
-function renderPDF(){const d=payload(),sum=recalc(),dt=d.date?d.date.split('-').reverse().join('/'):'—';const line=[d.street,d.civic].filter(Boolean).join(', '),town=[d.zip,d.city,d.province?'('+d.province.toUpperCase()+')':''].filter(Boolean).join(' ');const li=(name,v)=>v?'<div><b>'+name+':</b> '+esc(v).replace(/\n/g,'<br>')+'</div>':'';const serviceItems=d.items.filter(i=>i.what.trim());$('pdf').innerHTML='<div class="top"><div style="display:flex;align-items:center;gap:15px"><img src="'+LOGO_CGE+'" alt="Logo Croce Gialla Emergenza ODV" style="width:100px;height:100px;object-fit:contain;flex-shrink:0"><div><h1>CROCE GIALLA EMERGENZA ODV</h1><div class="sub">Via I Maggio 1 · 28040 Dormelletto (NO)<br>C.F. 91023880031 · P.IVA 02809130038<br>Tel. 0322 282730<br>crocegialladormelletto@crocegiallaemergenza.it</div></div></div><div style="text-align:right"><b style="font-size:18px">PREVENTIVO</b><div>'+esc(currentId?num(currentId):'BOZZA')+'</div><div>Data: '+dt+'</div></div></div><div class="recipient"><b>Spett.le '+esc(d.company||'Azienda destinataria')+'</b><br>'+esc(line)+'<br>'+esc(town)+li('Partita IVA',d.vat)+li('Codice fiscale',d.tax)+li('Alla cortese attenzione di',d.attention)+'</div>'+ (d.subject?'<h2>OGGETTO</h2><p>'+esc(d.subject)+'</p>':'')+(d.description?'<h2>DESCRIZIONE DEL SERVIZIO</h2><p>'+esc(d.description).replace(/\n/g,'<br>')+'</p>':'')+(serviceItems.length?'<h2>OFFERTA ECONOMICA</h2><table><thead><tr><th>Servizio</th><th>Quantità</th><th>Importo unitario</th><th>Totale</th></tr></thead><tbody>'+serviceItems.map(i=>'<tr><td>'+esc(i.what)+'</td><td>'+i.qty+'</td><td>'+money(i.price)+'</td><td>'+money(i.qty*i.price)+'</td></tr>').join('')+'</tbody></table><div class="tot">Imponibile: '+money(sum)+'<br>IVA (0%): '+money(0)+'<br>Totale preventivo: '+money(sum)+'</div>':'')+(d.duration||d.start?'<h2>PERIODO E DURATA</h2>'+li('Durata',d.duration)+li('Decorrenza',d.start):'')+'<h2>REGIME FISCALE E IVA</h2>'+li('Regime fiscale',d.taxRegime)+li('IVA 0% - Riferimento normativo',d.vatRule)+(d.notes||d.payment?'<h2>CONDIZIONI</h2>'+li('Note',d.notes)+li('Pagamento',d.payment):'')+'<div class="sign"><div>Per accettazione dell’azienda:<br><br>______________________________</div><div>Data:<br><br>____________________</div></div><div class="sub" style="text-align:center;margin-top:28px">Croce Gialla Emergenza ODV · Dormelletto (NO)</div>'}
-async function downloadPDF(){try{if(typeof html2pdf!=='function')throw Error('Libreria PDF non disponibile');renderPDF();const clone=$('pdf').cloneNode(true);clone.id='pdf-export';clone.style.width='770px';clone.style.padding='18px';await html2pdf().set({margin:[12,13,15,13],filename:(currentId?num(currentId):'BOZZA')+'_'+($('company').value||'azienda').replace(/[^a-zA-Z0-9-]/g,'-').slice(0,40)+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,backgroundColor:'#fff',scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:['tr','.top','.recipient','.sign']}}).from(clone).save();notice('PDF generato: '+(currentId?num(currentId):'bozza non numerata'))}catch(e){notice('Errore PDF: '+e.message)}}
-function printPDF(){renderPDF();const el=$('pdf');const style=document.createElement('style');style.id='tempprint';style.textContent='@media print{#printHolder{display:block!important;position:static!important;left:auto!important;width:auto!important}#pdf{display:block!important}}';document.head.append(style);window.print();style.remove()}
+function renderPDF(){const d=payload(),sum=recalc(),dt=d.date?d.date.split('-').reverse().join('/'):'—';const line=[d.street,d.civic].filter(Boolean).join(', '),town=[d.zip,d.city,d.province?'('+d.province.toUpperCase()+')':''].filter(Boolean).join(' ');const li=(name,v)=>v?'<div><b>'+name+':</b> '+esc(v).replace(/\n/g,'<br>')+'</div>':'';const serviceItems=d.items.filter(i=>i.what.trim());$('pdf').innerHTML='<div class="top"><div style="display:flex;align-items:center;gap:15px"><img src="'+LOGO_CGE+'" alt="Logo Croce Gialla Emergenza ODV" style="width:100px;height:100px;object-fit:contain;flex-shrink:0"><div><h1>CROCE GIALLA EMERGENZA ODV</h1><div class="sub">Via I Maggio 1 · 28040 Dormelletto (NO)<br>C.F. 91023880031 · P.IVA 02809130038<br>Tel. 0322 282730<br>crocegialladormelletto@crocegiallaemergenza.it</div></div></div><div style="text-align:right"><b style="font-size:18px">PREVENTIVO</b><div>'+esc(currentId?num(currentId):'BOZZA')+'</div><div>Data: '+dt+'</div></div></div><div class="recipient"><b>Spett.le '+esc(d.company||'Azienda destinataria')+'</b><br>'+esc(line)+'<br>'+esc(town)+li('Partita IVA',d.vat)+li('Codice fiscale',d.tax)+li('Alla cortese attenzione di',d.attention)+'</div>'+ (d.subject?'<h2>OGGETTO</h2><p>'+esc(d.subject)+'</p>':'')+(d.description?'<h2>DESCRIZIONE DEL SERVIZIO</h2><p>'+esc(d.description).replace(/\n/g,'<br>')+'</p>':'')+(serviceItems.length?'<h2>OFFERTA ECONOMICA</h2><table><thead><tr><th>Servizio</th><th>Quantità</th><th>Importo unitario</th><th>Totale</th></tr></thead><tbody>'+serviceItems.map(i=>'<tr><td>'+esc(i.what)+'</td><td>'+i.qty+'</td><td>'+money(i.price)+'</td><td>'+money(i.qty*i.price)+'</td></tr>').join('')+'</tbody></table><div class="tot">Imponibile: '+money(sum)+'<br>IVA (0%): '+money(0)+'<br>Totale preventivo: '+money(sum)+'</div>':'')+(d.duration||d.start?'<h2>PERIODO E DURATA</h2>'+li('Durata',d.duration)+li('Decorrenza',d.start):'')+'<h2>REGIME FISCALE E IVA</h2>'+li('Regime fiscale',d.taxRegime)+li('IVA 0% - Riferimento normativo',d.vatRule)+(d.notes||d.payment?'<h2>CONDIZIONI</h2>'+li('Note',d.notes)+li('Pagamento',d.payment):'')+'<div class="sign"><div>Per accettazione dell’azienda:<br><br>______________________________</div><div>Data:<br><br>____________________</div></div>'}
+
+async function makeQuoteCanvas(){
+ renderPDF();
+ const root=$('pdf');
+ await Promise.all([...root.querySelectorAll('img')].map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;})));
+ if(typeof html2canvas!=='function')throw new Error('Libreria di stampa non disponibile.');
+ return html2canvas(root,{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0,windowWidth:1100});
+}
+function fitOnA4(canvas){
+ const maxW=188,maxH=267,mmPerPx=Math.min(maxW/canvas.width,maxH/canvas.height);
+ return {w:canvas.width*mmPerPx,h:canvas.height*mmPerPx};
+}
+async function downloadPDF(){
+ try{
+  if(typeof html2pdf!=='function')throw new Error('Libreria PDF non disponibile.');
+  const canvas=await makeQuoteCanvas(),dims=fitOnA4(canvas);
+  const img=document.createElement('img');
+  img.src=canvas.toDataURL('image/png');
+  img.alt='Preventivo Croce Gialla completo di logo';
+  img.style.cssText='display:block;width:'+dims.w+'mm;height:'+dims.h+'mm;margin:0;';
+  await img.decode();
+  const wrap=document.createElement('div');
+  wrap.style.cssText='background:#fff;width:'+dims.w+'mm;height:'+dims.h+'mm;overflow:hidden;';
+  wrap.append(img);
+  await html2pdf().set({
+   margin:[10,10,10,10],
+   filename:(currentId?num(currentId):'BOZZA')+'_'+($('company').value||'azienda').replace(/[^a-zA-Z0-9-]/g,'-').slice(0,40)+'.pdf',
+   image:{type:'jpeg',quality:0.98},
+   html2canvas:{scale:2,backgroundColor:'#ffffff'},
+   jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+   pagebreak:{mode:['avoid-all'],avoid:['img']}
+  }).from(wrap).save();
+  notice('PDF creato con logo su un solo foglio A4.');
+ }catch(e){notice('Errore PDF: '+e.message);}
+}
+async function printPDF(){
+ let image=null,style=null;
+ try{
+  const canvas=await makeQuoteCanvas(),dims=fitOnA4(canvas);
+  image=document.createElement('img');
+  image.src=canvas.toDataURL('image/png');
+  image.alt='Preventivo Croce Gialla';
+  image.id='singlePageQuotePrint';
+  image.style.cssText='display:none;';
+  document.body.append(image);
+  await image.decode();
+  style=document.createElement('style');
+  style.id='singlePageQuotePrintStyle';
+  style.textContent='@page{size:A4 portrait;margin:10mm}@media print{body{margin:0!important;background:white!important}header,main,#printHolder{display:none!important}#singlePageQuotePrint{display:block!important;position:static!important;width:'+dims.w+'mm!important;height:'+dims.h+'mm!important;max-width:100%!important;object-fit:contain!important;margin:0 auto!important;break-inside:avoid!important;page-break-inside:avoid!important}}';
+  document.head.append(style);
+  const cleanup=()=>{image?.remove();style?.remove();window.removeEventListener('afterprint',cleanup)};
+  window.addEventListener('afterprint',cleanup,{once:true});
+  window.print();
+  cleanup();
+ }catch(e){image?.remove();style?.remove();notice('Stampa non riuscita: '+e.message);}
+}
 async function loadArchive(){try{await user();const r=await db.from('preventivi_aziende').select('id,ragione_sociale,data_preventivo,stato,contenuto').order('id',{ascending:false}).limit(300);if(r.error)throw r.error;archive=r.data||[];$('archivePanel').classList.remove('hide');showArchive();$('archivePanel').scrollIntoView({behavior:'smooth'});}catch(e){notice('Impossibile aprire archivio: '+e.message)}}
 function showArchive(){let q=$('filter').value.toLowerCase().trim();$('archiveResults').replaceChildren();let list=archive.filter(x=>x.ragione_sociale.toLowerCase().includes(q)||num(x.id).toLowerCase().includes(q));if(!list.length){$('archiveResults').textContent='Nessun preventivo trovato.';return}list.forEach(x=>{let div=document.createElement('div');div.className='archive-row';let txt=document.createElement('span');txt.textContent=num(x.id)+' · '+x.ragione_sociale+' · '+(x.data_preventivo||'')+' · '+x.stato;let btn=document.createElement('button');btn.className='secondary';btn.textContent='Apri / modifica';btn.onclick=()=>{currentId=x.id;fill(x.contenuto||{});$('number').value=num(x.id);$('archivePanel').classList.add('hide');window.scrollTo(0,0);notice('Preventivo '+num(x.id)+' aperto: puoi modificarlo e salvarlo.')};div.append(txt,btn);$('archiveResults').append(div)})}
 newQuote();
