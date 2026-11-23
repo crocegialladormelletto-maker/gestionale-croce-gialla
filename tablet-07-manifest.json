@@ -3,7 +3,7 @@
   "name": "Croce Gialla · Tablet 07",
   "short_name": "Tablet 07",
   "description": "Gestione viaggi e checklist Ambulanza 07",
-  "start_url": "/gestionale-croce-gialla/?area=tablet&mezzo=07",
+  "start_url": "/gestionale-croce-gialla/tablet-09-v14-42.html?area=tablet&mezzo=07&source=pwa",
   "scope": "/gestionale-croce-gialla/",
   "display": "standalone",
   "orientation": "any",
