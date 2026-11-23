@@ -1,5 +1,5 @@
 // Service Worker App Volontari - configurazione stabile
-const CACHE_NAME = 'cge-volontari-static-v52';
+const CACHE_NAME = 'cge-volontari-static-v53';
 const APP_BASE = '/gestionale-croce-gialla/';
 const STATIC_ASSETS = [
   APP_BASE + 'app-volontari.html',
@@ -41,10 +41,18 @@ self.addEventListener('fetch', event => {
     const isTablet = (url.pathname === APP_BASE || url.pathname === APP_BASE + 'index.html')
       && url.searchParams.get('area') === 'tablet'
       && /^0[6-9]$/.test(url.searchParams.get('mezzo') || '');
-    const freshUrl = isTablet ? new URL(request.url) : null;
-    if (freshUrl) freshUrl.searchParams.set('_cge_app_build', '14.85-tablet-ricevuta-segnalazione');
+    // Le app tablet gia installate possono conservare il vecchio start_url.
+    // Instrada anche quelle alla pagina tablet corretta, senza perdere sessione o dati.
+    if (isTablet) {
+      const current = new URL(request.url);
+      const updated = new URL(APP_BASE + 'tablet-09-v14-42.html', current.origin);
+      for (const [key, value] of current.searchParams) updated.searchParams.set(key, value);
+      updated.searchParams.set('_cge_app_build', '14.86-tablet-pagamento');
+      event.respondWith(Promise.resolve(Response.redirect(updated.href, 302)));
+      return;
+    }
     event.respondWith(
-      fetch(freshUrl ? freshUrl.href : request, {cache:'no-store'}).catch(async () => {
+      fetch(request, {cache:'no-store'}).catch(async () => {
         if (url.pathname === APP_BASE + 'app-volontari.html') {
           const cached = await caches.match(APP_BASE + 'app-volontari.html');
           if (cached) return cached;
