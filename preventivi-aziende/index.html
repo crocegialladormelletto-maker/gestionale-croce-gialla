@@ -2,6 +2,7 @@
 <html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Preventivi aziende | Croce Gialla Emergenza</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root{font-family:Arial,Helvetica,sans-serif;color:#153459;background:#f0f4fa}*{box-sizing:border-box}body{margin:0}header{background:#103b70;color:#fff;border-bottom:6px solid #f2cf28;padding:20px max(20px,calc((100vw - 1120px)/2))}header h1{margin:0;font-size:25px}header p{margin:7px 0 0}main{max-width:1120px;margin:22px auto;padding:0 16px 40px}.panel{background:#fff;border:1px solid #d7e1ed;border-radius:13px;padding:20px;margin:15px 0;box-shadow:0 2px 8px #1534590a}h2{margin:0 0 16px;font-size:19px;color:#123c70}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}label{font-size:13px;font-weight:700;display:block;margin-bottom:5px}input,select,textarea{width:100%;border:1px solid #bccbdd;border-radius:7px;padding:11px;font:inherit;color:#173554;background:white}textarea{min-height:82px;resize:vertical}button{cursor:pointer;background:#123c70;border:0;color:white;border-radius:7px;padding:11px 16px;font-weight:700}button:hover{filter:brightness(1.15)}button.secondary{background:#e9eff8;color:#123c70}button.danger{background:#b72b36}.actions{display:flex;gap:9px;flex-wrap:wrap}.notice{font-size:13px;color:#486381}.status{margin:15px 0;font-size:14px;font-weight:600}table{border-collapse:collapse;width:100%;margin:10px 0}th,td{text-align:left;border-bottom:1px solid #dde6ef;padding:9px;font-size:13px}td input{min-width:100px}td:last-child{width:70px}#pdf{background:white;color:#162c46;padding:30px;max-width:900px;margin:auto;line-height:1.4}#pdf .top{border-bottom:5px solid #e8c62e;padding-bottom:14px;display:flex;justify-content:space-between;align-items:start;gap:20px}#pdf h1{font-size:20px;margin:0;color:#123c70}#pdf .sub{font-size:11px}#pdf h2{font-size:15px;border-bottom:1px solid #bccbda;margin-top:26px;padding-bottom:5px}#pdf table th{background:#eff3f8}#pdf .recipient{margin-top:25px}#pdf .sign{display:flex;justify-content:space-between;margin-top:35px;gap:30px}#pdf .tot{font-size:20px;font-weight:bold;text-align:right;margin-top:12px}.archive-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #dfe7f0;padding:10px 0}.archive-row button{white-space:nowrap}#printHolder{position:absolute;left:-20000px;width:800px}.nowrap{white-space:nowrap}.hide{display:none}a{color:#ffd732} @media(max-width:760px){.grid,.two{grid-template-columns:1fr}.panel{padding:14px}table{display:block;overflow-x:auto}#pdf{padding:20px}}@media print{header,main,#printHolder{display:none!important}#pdf{display:block!important;max-width:none;margin:0;padding:0}}
@@ -73,8 +74,15 @@ async function makeQuoteCanvas(){
  renderPDF();
  const root=$('pdf');
  await Promise.all([...root.querySelectorAll('img')].map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;})));
- if(typeof html2canvas!=='function')throw new Error('Libreria di stampa non disponibile.');
- return html2canvas(root,{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0,windowWidth:1100});
+ // La libreria di cattura viene caricata separatamente; html2pdf include un fallback.
+ const capture={scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0,windowWidth:1100};
+ if(typeof window.html2canvas==='function') return window.html2canvas(root,capture);
+ if(typeof window.html2pdf==='function'){
+  const worker=window.html2pdf().set({html2canvas:capture}).from(root);
+  await worker.toCanvas();
+  return worker.get('canvas');
+ }
+ throw new Error('Impossibile caricare le librerie PDF. Verifica la connessione e riprova.');
 }
 function fitOnA4(canvas){
  const maxW=188,maxH=267,mmPerPx=Math.min(maxW/canvas.width,maxH/canvas.height);
