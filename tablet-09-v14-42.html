@@ -2889,6 +2889,7 @@ Causale: numero preventivo</textarea>
     <h3 class="tablet-section-title" style="margin-top:20px">Importo del servizio</h3><div class="notice">Indica soltanto la cifra del trasporto. Metodo, data e registrazione del pagamento sono gestiti dall’amministrazione nel gestionale.</div>
     <div class="tablet-fields">
      <div class="field"><label>Importo servizio € (0 se non dovuto)</label><input type="number" min="0" step="0.01" data-ts-field="importo_inserito"></div>
+     <div class="field"><label>Il paziente ha pagato?</label><select id="tabletPaymentReported" data-ts-field="pagamento_segnalato"><option value="">Da indicare</option><option value="true">Sì</option><option value="false">No</option></select><small>Segnalazione del tablet, non registrazione contabile.</small></div>
     </div>
     <div id="tabletReceiptSection" class="section hidden" style="margin-top:12px;background:#fffdf0;border:1px solid #f0d85a">
      <h3 style="margin-top:0">📎 Ricevuta pagamento</h3>
@@ -11245,6 +11246,7 @@ async function openTabletArchiveSheet(f){
   const key=el.dataset.tsField;el.disabled=true;
   if(el.type==='checkbox')el.checked=!!f[key];
   else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
+  else if(key==='pagamento_segnalato')el.value=f[key]===true?'true':f[key]===false?'false':'';
   else el.value=f[key]??'';
  });
  if(is118){
@@ -11760,6 +11762,7 @@ async function openTabletDirect118(foglio){
   const key=el.dataset.tsField;el.disabled=closed;
   if(el.type==='checkbox')el.checked=!!f[key];
   else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
+  else if(key==='pagamento_segnalato')el.value=f[key]===true?'true':f[key]===false?'false':'';
   else el.value=f[key]??'';
  });
  tabletUpdatePaymentDateVisibility();
@@ -11879,6 +11882,7 @@ async function loadTabletSheet(serviceId){
  const key=el.dataset.tsField;el.disabled=closed;
  if(el.type==='checkbox')el.checked=!!f[key];
  else if(el.type==='time')el.value=tabletFmt(f[key])==='—'?'':tabletFmt(f[key]);
+ else if(key==='pagamento_segnalato')el.value=f[key]===true?'true':f[key]===false?'false':'';
  else el.value=f[key]??'';
  });
  if(!tabletSheetIs118&&tabletCurrentService){
@@ -11986,6 +11990,7 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  let privacySaveError=null;
  for(const el of document.querySelectorAll('#tabletSheetForm [data-ts-field]')){
   const name=el.dataset.tsField;
+  if(name==='pagamento_segnalato')row[name]=el.value===''?null:el.value==='true';
   if(el.type==='checkbox')row[name]=el.checked;
   else if(el.type==='number'){row[name]=el.value===''?null:Number(el.value);if(row[name]!==null&&!Number.isFinite(row[name]))return msg('tabletSheetMsg','Controlla gli importi o i chilometri.','warn'),false}
   else row[name]=el.value.trim()||null;
@@ -11994,6 +11999,15 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  // e sono modificabili esclusivamente dal gestionale amministrativo.
  // La registrazione pagamenti compete esclusivamente all'amministrazione.
  // Il tablet non legge, modifica o sincronizza modalita e data di pagamento.
+ // Il Sì/No è una segnalazione, non crea incassi.
+ if(row.pagamento_segnalato===true){
+  row.metodo_pagamento_segnalato=tabletCurrentSheet?.metodo_pagamento_segnalato||tabletCurrentSheet?.modalita_pagamento||null;
+  row.pagamento_segnalato_il=tabletCurrentSheet?.pagamento_segnalato_il||new Date().toISOString();
+ }else{
+  row.metodo_pagamento_segnalato=null;
+  row.pagamento_segnalato_il=null;
+ }
+
  delete row.modalita_pagamento;
  delete row.data_pagamento;
  if(tabletCurrentService && !tabletIs118Type(tabletCurrentService.tipo_servizio) && String(tabletCurrentService.tipo_servizio||'')!=='Servizio interno' && !isAssistanceManifestation(tabletCurrentService.tipo_servizio)){
@@ -12064,6 +12078,9 @@ async function saveTabletSheet(silent=false,skipPatientServiceSync=false){
  try{
   const r=await sb.from('fogli_viaggio').update(row).eq('id',tabletCurrentSheet.id).eq('mezzo',tabletMezzo).eq('stato','APERTO').select('id,importo_inserito,totale_servizio').maybeSingle();
   if(r.error)throw r.error;if(!r.data)throw new Error('Foglio Viaggio non più modificabile; aggiorna i dati.');
+  const paymentCheck=await sb.from('fogli_viaggio').select('pagamento_segnalato').eq('id',tabletCurrentSheet.id).maybeSingle();
+  if(paymentCheck.error||!paymentCheck.data||paymentCheck.data.pagamento_segnalato!==row.pagamento_segnalato)
+   throw new Error('La risposta sul pagamento non è stata memorizzata nel database. Riprova.');
   // Controllo effettivo dei dati contabili persistiti: mai confermare un salvataggio incompleto.
   if(!tabletIs118Type(tabletCurrentService?.tipo_servizio||tabletCurrentSheet?.tipo_servizio)){
    if(row.importo_inserito!==null&&row.importo_inserito!==undefined&&Number(r.data.importo_inserito)!==Number(row.importo_inserito))
