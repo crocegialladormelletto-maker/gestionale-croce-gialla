@@ -1,0 +1,71 @@
+name: Aggiungi pulsante Preventivi aziende
+on:
+  push:
+    paths:
+      - '.github/workflows/add-preventivi-aziende.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  add-menu-link:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Inserisci link nel menu laterale
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("index.html")
+          s=p.read_text(encoding="utf-8")
+          marker="cge-preventivi-aziende-menu-20261123"
+          if marker in s:
+              print("Pulsante gia presente")
+              raise SystemExit(0)
+          script=r"""
+          <script id="cge-preventivi-aziende-menu-20261123">
+          (() => {
+            const go = () => { window.location.href = 'preventivi-aziende/index.html'; };
+            function addLink() {
+              if (document.getElementById('cge-preventivi-aziende-link')) return;
+              const elements = [...document.querySelectorAll('aside a, aside button, nav a, nav button, .sidebar a, .sidebar button, #sidebar a, #sidebar button')];
+              const original = elements.find(el => (el.textContent || '').trim().toLowerCase().includes('preventiv') && !(el.textContent || '').toLowerCase().includes('aziend'));
+              if (!original) return;
+              const el = original.cloneNode(true);
+              el.id = 'cge-preventivi-aziende-link';
+              el.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+              el.removeAttribute('onclick');
+              el.removeAttribute('data-page');
+              el.removeAttribute('data-section');
+              el.removeAttribute('aria-current');
+              el.removeAttribute('href');
+              el.querySelectorAll('[onclick]').forEach(n => n.removeAttribute('onclick'));
+              let label = el.querySelector('.menu-text, .nav-label, .label, span');
+              if (label) label.textContent = 'Preventivi aziende';
+              else el.textContent = '🏢 Preventivi aziende';
+              el.style.cursor='pointer';
+              el.addEventListener('click', e => {e.preventDefault();e.stopPropagation();go();},true);
+              original.insertAdjacentElement('afterend',el);
+            }
+            if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',addLink);
+            else addLink();
+            new MutationObserver(addLink).observe(document.body,{childList:true,subtree:true});
+          })();
+          </script>
+          """
+          if '</body>' not in s.lower():
+              raise SystemExit('Tag body non trovato')
+          i=s.lower().rfind('</body>')
+          s=s[:i]+script+s[i:]
+          p.write_text(s,encoding="utf-8")
+          PY
+      - name: Salva aggiornamento
+        run: |
+          git config user.name "CGE GitHub Actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Aggiungi Preventivi aziende nel menu laterale"
+            git push
+          fi
