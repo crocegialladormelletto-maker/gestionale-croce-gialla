@@ -3112,7 +3112,15 @@ Causale: numero preventivo</textarea>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
 <script>
 const SUPABASE_URL='https://ihottewckpwpwqzpxusl.supabase.co', KEY='sb_publishable_K7aTp6hLR_Pcpn7UGvArLg_DEgBjlH4';
-const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+// Sessione tablet separata dalla sessione del gestionale: evita conflitti
+// fra PWA installate, schede aperte e login condivisi sullo stesso dominio.
+const tabletAuthArea=new URLSearchParams(location.search).get('area')==='tablet';
+const sb=supabase.createClient(SUPABASE_URL,KEY,{auth:{
+ persistSession:true,
+ autoRefreshToken:true,
+ detectSessionInUrl:false,
+ ...(tabletAuthArea?{storageKey:'cge-tablet-session-v20261123'}:{})
+}});
 const LOGO_URL="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70";
 document.querySelectorAll('.js-logo').forEach(img=>{img.src=LOGO_URL});
 let tariffViewCode='DEA_BORGOMANERO',tariffManagementRows=[];let personnelExpiryRows=[];
