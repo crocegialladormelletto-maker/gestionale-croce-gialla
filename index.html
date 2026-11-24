@@ -5705,15 +5705,15 @@ async function correctClosedSheetAccounting(){
  if(mode===null)return;
  const paymentMode=mode.trim().toUpperCase();
  if(!['POS','CONTANTI','BONIFICO','BONIFICO DIFFERITO','ALTRO'].includes(paymentMode))return msg('fvDetailMsg','Metodo pagamento non riconosciuto.','warn');
- const day=prompt('Data pagamento (AAAA-MM-GG):',f.data_pagamento||f.data_servizio||'');
+ const day=paymentMode==='BONIFICO DIFFERITO'?'':prompt('Data effettiva pagamento (AAAA-MM-GG):',f.data_pagamento||'');
  if(day===null)return;
- if(!/^\d{4}-\d{2}-\d{2}$/.test(day.trim()))return msg('fvDetailMsg','Data non valida.','warn');
+ if(paymentMode!=='BONIFICO DIFFERITO'&&!/^\d{4}-\d{2}-\d{2}$/.test(day.trim()))return msg('fvDetailMsg','Data non valida.','warn');
  const reason=prompt('Motivazione amministrativa obbligatoria della correzione (minimo 12 caratteri):','Allineamento ricevuta, incasso e foglio viaggio');
  if(reason===null)return;
  if(reason.trim().length<12)return msg('fvDetailMsg','Specifica una motivazione dettagliata.','warn');
  if(!confirm('Correggere SOLO i dati contabili del foglio '+f.numero_foglio+' a '+euro(amount)+' con '+paymentMode+'? Il pagamento NON verrà registrato nuovamente.'))return;
  msg('fvDetailMsg','Verifica amministrativa dell’incasso e correzione in corso...');
- const result=await sb.rpc('cge_amministratore_correggi_contabilita_foglio',{p_foglio:f.id,p_totale:amount,p_metodo:paymentMode,p_data:day.trim(),p_motivo:reason.trim()});
+ const result=await sb.rpc('cge_amministratore_correggi_contabilita_foglio',{p_foglio:f.id,p_totale:amount,p_metodo:paymentMode,p_data:day.trim()||null,p_motivo:reason.trim()});
  if(result.error)return msg('fvDetailMsg','Correzione non eseguita: '+result.error.message,'err');
  await loadTravelSheetDetail(f.id);
  msg('fvDetailMsg','Dati contabili corretti con tracciamento amministrativo. Nessun nuovo incasso generato.','ok');
