@@ -6,6 +6,7 @@ function ordType(value){
  const t=String(value||'').trim().toLocaleUpperCase('it-IT');
  return t==='VISITA'?'VISITA':t==='TRASFERIMENTO'?'TRASFERIMENTO':
  t==='DIMISSIONE'?'DIMISSIONE':
+ t==='RICOVERO'?'RICOVERO':t==='DAY HOSPITAL'?'DAY HOSPITAL':
  (t==='TRASPORTO SEMPLICE'||t.startsWith('TRASPORTO SEMPLICE '))?'TRASPORTO SEMPLICE':'';
 }
 function ordVisible(){
