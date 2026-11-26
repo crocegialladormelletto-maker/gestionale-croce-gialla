@@ -2025,7 +2025,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  <label class="check" style="margin-top:9px"><input type="checkbox" id="patientRemember"> Salva nuovo paziente in anagrafica</label>
  <p class="muted">L’anagrafica conserva nome, cognome, codice fiscale, data di nascita, telefono, indirizzo ed e-mail; non contiene diagnosi o dati clinici.</p>
 </div><div class="grid3"><div class="field"><label>Nome</label><input id="pn"></div><div class="field"><label>Cognome</label><input id="pc"></div><div class="field"><label>Codice fiscale</label><input id="cf" maxlength="16"></div><div class="field"><label>Data nascita</label><input id="dn" type="date"></div><div class="field"><label>Telefono</label><input id="tel"></div>
-<div class="field"><label>Indirizzo paziente</label><input id="patientAddress" maxlength="400" autocomplete="street-address"></div>
+<div class="field" style="grid-column:1/-1"><label>Indirizzo paziente (residenza)</label><div class="grid3"><div class="field"><label for="serviceResVia">Via / Piazza</label><input id="serviceResVia" autocomplete="address-line1"></div><div class="field"><label for="serviceResCivico">Numero civico</label><input id="serviceResCivico"></div><div class="field"><label for="serviceResComune">Comune</label><input id="serviceResComune" autocomplete="address-level2"></div><div class="field"><label for="serviceResCap">CAP</label><input id="serviceResCap" maxlength="5" inputmode="numeric" autocomplete="postal-code"></div><div class="field"><label for="serviceResProvincia">Provincia</label><input id="serviceResProvincia" maxlength="2" style="text-transform:uppercase" autocomplete="address-level1"></div></div><input id="patientAddress" type="hidden"><div id="serviceResLegacyNotice" class="muted hidden">Indirizzo storico riportato nella casella Via/Piazza: verifica e separa i dettagli se necessario.</div></div>
 <div class="field"><label>E-mail paziente</label><input id="patientEmail" type="email" maxlength="254" autocomplete="email"></div></div></div>
 <div class="section hidden" id="newEventContactSection"><h3>Referente manifestazione</h3><div class="grid2"><div class="field"><label>Nome referente</label><input id="eventRefName" maxlength="120" placeholder="Referente sul posto"></div><div class="field"><label>Telefono referente</label><input id="eventRefPhone" type="tel" maxlength="40" placeholder="Recapito del referente"></div></div></div>
 <div class="section"><h3>Percorso</h3><div class="grid2"><div class="field"><label>Luogo partenza</label><input id="lp"></div><div class="field"><label>Indirizzo partenza</label><input id="ip"></div><div class="field" id="newLoadPlaceField"><label>Luogo carico paziente</label><input id="loadPlace" placeholder="Es. domicilio, RSA, ospedale"></div><div class="field" id="newLoadAddressField"><label>Indirizzo carico paziente</label><input id="loadAddress" placeholder="Via, numero civico, Comune"></div><div class="field"><label id="newDestinationLabel">Destinazione</label><input id="dest"></div><div class="field"><label id="newDestinationAddressLabel">Indirizzo destinazione</label><input id="idest"></div></div><div class="field" style="margin-top:9px"><label id="newStructureLabel">Ospedale / RSA / struttura</label><input id="strutt"></div></div>
@@ -3655,6 +3655,7 @@ function resetNewServiceForm(){
  $('tarNight').value='false';
  $('tarChangeType').value='NONE';$('tarChangeValue').value='';$('tarChangeValue').disabled=true;$('tarAdjustment').classList.add('hidden');$('tarBasePrice').value='—';$('imp').readOnly=false;
  servicePatientId=null;patientLookupRows=[];
+ $('serviceResLegacyNotice').classList.add('hidden');
  $('patientLookupResults').innerHTML='';
  $('patientLookupText').value='';
  msg('patientLookupMsg','');msg('fmsg','');
@@ -3739,7 +3740,7 @@ function duplicatePrepareNewForm(service,opts){
  $('cf').value=service.codice_fiscale||'';
  $('dn').value=service.data_nascita||'';
  $('tel').value=service.telefono||'';
- $('patientAddress').value=service.paziente_indirizzo||'';
+ fillServiceResidence(null,service.paziente_indirizzo||'');
  $('patientEmail').value=service.paziente_email||'';
  $('patientRemember').checked=false;
  if(servicePatientId)msg('patientLookupMsg','Paziente collegato alla stessa anagrafica del servizio originale.','ok');
@@ -8255,8 +8256,14 @@ function patientFormRow(){
  for(const [k,v] of Object.entries(pickup))row['ritiro_'+k]=v;
  return row;
 }
+const serviceResidenceFields=[['via','Via'],['civico','Civico'],['comune','Comune'],['cap','Cap'],['provincia','Provincia']];
+function serviceResidenceParts(){return Object.fromEntries(serviceResidenceFields.map(([key,ui])=>[key,$('serviceRes'+ui).value.trim()||null]));}
+function syncServiceResidence(){const a=serviceResidenceParts();$('patientAddress').value=patientResidenceAddress(Object.fromEntries(Object.entries(a).map(([k,v])=>['residenza_'+k,k==='provincia'?(v||'').toUpperCase():v])));}
+function fillServiceResidence(p,legacy=''){const structured=p&&serviceResidenceFields.some(([key])=>p['residenza_'+key]);serviceResidenceFields.forEach(([key,ui])=>{$('serviceRes'+ui).value=structured?(p['residenza_'+key]||''):key==='via'?(legacy||p?.indirizzo||''):'';});const raw=legacy||p?.indirizzo||'';$('serviceResLegacyNotice').classList.toggle('hidden',!raw||(structured&&p.residenza_via!==raw));syncServiceResidence();}
+serviceResidenceFields.forEach(([,ui])=>$('serviceRes'+ui).addEventListener('input',()=>{syncServiceResidence();$('serviceResLegacyNotice').classList.add('hidden');}));
 function patientServiceRow(){
- return {nome:$('pn').value.trim(),cognome:$('pc').value.trim(),
+ const residence=serviceResidenceParts();syncServiceResidence();
+ return {...Object.fromEntries(Object.entries(residence).map(([k,v])=>['residenza_'+k,k==='provincia'?(v?.toUpperCase()||null):v])),nome:$('pn').value.trim(),cognome:$('pc').value.trim(),
  codice_fiscale:$('cf').value.trim().toUpperCase()||null,
  data_nascita:$('dn').value||null,telefono:$('tel').value.trim()||null,
  indirizzo:$('patientAddress').value.trim()||null,email:$('patientEmail').value.trim().toLowerCase()||null};
@@ -8303,7 +8310,7 @@ function usePatientForService(p){
  servicePatientId=p.id;
  $('pn').value=p.nome||'';$('pc').value=p.cognome||'';$('cf').value=p.codice_fiscale||'';
  $('dn').value=p.data_nascita||'';$('tel').value=p.telefono||'';
- $('patientAddress').value=patientResidenceAddress(p);$('patientEmail').value=p.email||'';
+ fillServiceResidence(p);$('patientEmail').value=p.email||'';
  $('loadAddress').value=patientPickupAddress(p)||patientResidenceAddress(p);
  $('patientRemember').checked=false;
  msg('patientLookupMsg','Anagrafica richiamata: '+patientCardLabel(p),'ok');
@@ -8332,7 +8339,7 @@ $('patientLookupButton').onclick=patientLookupSearch;
 $('patientLookupText').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();patientLookupSearch()}};
 $('patientClearButton').onclick=()=>{
  servicePatientId=null;patientLookupRows=[];
- ['pn','pc','cf','dn','tel','patientAddress','patientEmail','patientLookupText','loadAddress'].forEach(id=>$(id).value='');
+ ['pn','pc','cf','dn','tel','patientAddress','patientEmail','patientLookupText','loadAddress'].forEach(id=>$(id).value='');fillServiceResidence(null);
  $('patientRemember').checked=false;$('patientLookupResults').innerHTML='';
  msg('patientLookupMsg','Nuovo paziente: compila i dati e scegli se memorizzarli.');
 };
