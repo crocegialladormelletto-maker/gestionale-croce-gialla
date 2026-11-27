@@ -12152,10 +12152,24 @@ function pnRender(){
  pnRenderAnnualReport();
  pnRenderClosure();
 }
+function pnRenderRecurring(){
+ const body=$('pnRecurringBody');if(!body)return;
+ body.innerHTML=pnRecurring.length?pnRecurring.map(x=>{
+  const supplier=pnSuppliers.find(s=>String(s.id)===String(x.fornitore_id));
+  const period=pnRecurringPeriodKey(x,today());
+  const recorded=pnMov.some(m=>String(m.spesa_ricorrente_id)===String(x.id)&&m.periodo_ricorrenza===period);
+  const blocked=today()<PN_START_DATE||pnIsMonthClosed(pnMonthKeyFromDate(today()))||recorded;
+  return '<tr><td>'+esc(x.descrizione||'')+'</td><td>'+esc(supplier?.denominazione||'—')+'</td><td>'+esc(pnCatName(x.categoria_codice))+'</td><td>'+esc(x.frequenza||'')+'</td><td>'+esc(pnContoName(x.conto_codice))+'</td><td class="num">'+euro(x.importo_predefinito||0)+'</td><td><div class="actions"><button type="button" class="btn yellow" data-pn-recurring-create="'+esc(x.id)+'" '+(blocked?'disabled':'')+'>'+(recorded?'Già registrata':'Registra spesa')+'</button><button type="button" class="btn danger" data-pn-recurring-delete="'+esc(x.id)+'">Disattiva</button></div></td></tr>';
+ }).join(''):'<tr><td colspan="7">Nessuna spesa ricorrente configurata.</td></tr>';
+ body.querySelectorAll('[data-pn-recurring-create]').forEach(btn=>btn.onclick=()=>pnCreateRecurringMovement(btn.dataset.pnRecurringCreate));
+ body.querySelectorAll('[data-pn-recurring-delete]').forEach(btn=>btn.onclick=()=>pnDeleteRecurring(btn.dataset.pnRecurringDelete));
+}
 async function loadPrimaNota(){
  if(prof?.ruolo!=='AMMINISTRATORE'){selectView('dash');return}
  msg('pnMsg','Caricamento Prima Nota...');
- const [a,b,c,d,e,f,g]=await Promise.all([
+ let pnTimeout;
+ try {
+ const [a,b,c,d,e,f,g]=await Promise.race([Promise.all([
   sb.from('contabilita_categorie').select('*').eq('attiva',true).order('ordine',{ascending:true}),
   sb.from('contabilita_conti').select('*').eq('attivo',true).order('codice',{ascending:true}),
   sb.from('contabilita_movimenti').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(3000),
@@ -12163,7 +12177,8 @@ async function loadPrimaNota(){
   sb.from('contabilita_clienti').select('*').order('denominazione',{ascending:true}),
   sb.from('contabilita_fornitori').select('*').order('denominazione',{ascending:true}),
   sb.from('contabilita_spese_ricorrenti').select('*').eq('attiva',true).order('descrizione',{ascending:true})
- ]);
+ ]),new Promise((_,reject)=>{pnTimeout=setTimeout(()=>reject(new Error('Il server non ha risposto entro 20 secondi. Riprova ad aprire Prima Nota.')),20000)})]);
+ clearTimeout(pnTimeout);
  const err=a.error||b.error||c.error||d.error||e.error||f.error||g.error;
  if(err)return msg('pnMsg','Impossibile caricare la Prima Nota: '+err.message,'err');
  pnCats=(a.data||[]).slice().sort((x,y)=>(Number(x.ordine||0)-Number(y.ordine||0))||String(x.nome).localeCompare(String(y.nome),'it'));
@@ -12178,8 +12193,10 @@ async function loadPrimaNota(){
  if(!$('pnMonth').value||$('pnMonth').value<PN_START_MONTH)$('pnMonth').value=(today().slice(0,7)<PN_START_MONTH?PN_START_MONTH:today().slice(0,7));
  if(!$('pnData').value||$('pnData').value<PN_START_DATE)pnReset();
  pnRender();
- pnRunStartupCheck();
+ await pnRunStartupCheck();
  msg('pnMsg',today()>=PN_START_DATE?'':'Prima Nota predisposta: le registrazioni saranno abilitate dal 1° gennaio 2027.','warn');
+ } catch(err){ console.error('Prima Nota:',err);msg('pnMsg','Impossibile completare il caricamento della Prima Nota: '+(err?.message||String(err)),'err'); }
+ finally {clearTimeout(pnTimeout);}
 }
 function pnEdit(id){
  if(today()<PN_START_DATE)return msg('pnMsg','Le modifiche saranno abilitate dal 1° gennaio 2027.','warn');
