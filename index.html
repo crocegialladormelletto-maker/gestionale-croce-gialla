@@ -871,6 +871,14 @@ document.addEventListener('DOMContentLoaded',()=>{
 @media(max-width:900px){#primaNota .grid2,#primaNota .grid3{grid-template-columns:minmax(0,1fr)}}
 </style>
 <style id="pn-directory-style">#primaNota .pn-directory-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}#primaNota .pn-directory{padding:0;min-width:0}#primaNota .pn-directory summary{cursor:pointer;background:#ffdb17;color:#12375d;font-weight:800;padding:12px;border-radius:11px;list-style-position:inside}#primaNota .pn-directory[open] summary{border-radius:11px 11px 0 0}#primaNota .pn-directory[open],#primaNota .pn-directory-stack>.box:not(details){grid-column:1/-1}#primaNota .pn-directory-content{padding:12px;min-width:0}#primaNota .pn-directory-content>div{min-width:0;max-width:100%}@media(max-width:600px){#primaNota .pn-directory-stack{grid-template-columns:minmax(0,1fr)}}</style>
+<style id="pn-navigation-style">
+#primaNota .pn-nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:8px;margin:12px 0}
+#primaNota .pn-nav button{white-space:normal;text-align:center;background:#12375d;color:#fff}
+#primaNota .pn-nav button.yellow,#primaNota .pn-nav button[aria-pressed="true"]{background:#ffdb17;color:#12375d}
+#primaNota.pn-nav-ready [data-pn-view]:not(.pn-view-active),#primaNota.pn-nav-ready [data-pn-directory]:not(.pn-view-active){display:none!important}
+#primaNota.pn-nav-ready .pn-directory-stack{grid-template-columns:minmax(0,1fr)}
+#primaNota.pn-nav-ready [data-pn-directory].pn-view-active{grid-column:1/-1}
+</style>
 </head><body>
 
 <div id="login" class="login hidden cge-initializing"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.57</div></div><div class="loginbody">
@@ -2483,7 +2491,8 @@ Causale: numero preventivo</textarea>
    <div class="stat"><small>PERIODO</small><b id="pnPeriodo" style="font-size:16px">—</b></div>
   </div>
 
-  <div class="section">
+  <div class="pn-nav" role="group" aria-label="Navigazione Prima Nota"><button type="button" class="btn yellow" data-pn-nav="new" aria-pressed="false">➕ Nuovo movimento</button><button type="button" class="btn secondary" data-pn-nav="register" aria-pressed="false">📋 Registro movimenti</button><button type="button" class="btn secondary" data-pn-nav="clients" aria-pressed="false">👥 Clienti</button><button type="button" class="btn secondary" data-pn-nav="suppliers" aria-pressed="false">🏢 Fornitori</button><button type="button" class="btn secondary" data-pn-nav="recurring" aria-pressed="false">🔄 Spese ricorrenti</button><button type="button" class="btn secondary" data-pn-nav="cash" aria-pressed="false">🏦 Cassa e Banca</button><button type="button" class="btn secondary" data-pn-nav="report" aria-pressed="false">📊 Report e statistiche</button><button type="button" class="btn secondary" data-pn-nav="closure" aria-pressed="false">🔒 Chiusure mensili</button><button type="button" class="btn secondary" data-pn-nav="config" aria-pressed="false">⚙️ Configurazione iniziale</button><button type="button" class="btn secondary" data-pn-nav="home" aria-pressed="true">⌂ Riepilogo</button></div>
+  <div data-pn-view="config" class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
     <div><h3 style="margin:0">🚀 Configurazione iniziale 2027</h3><div class="muted">Controlla che la Prima Nota sia pronta prima dell'avvio operativo del 1° gennaio 2027.</div></div>
     <span id="pnStartupOverall" class="pill b">VERIFICA</span>
@@ -2508,7 +2517,7 @@ Causale: numero preventivo</textarea>
    <div id="pnDryTestResult" style="margin-top:10px"></div>
   </div>
 
-  <div class="section pn-year-report">
+  <div data-pn-view="report" class="section pn-year-report">
    <div class="actions" style="justify-content:space-between;align-items:center">
     <div><h3 style="margin:0">📊 Dashboard e Report annuale 2027</h3><div class="muted">Riepilogo economico dell'anno con andamento mensile, categorie, Cassa/Banca e controlli amministrativi.</div></div>
     <div class="actions">
@@ -2563,7 +2572,7 @@ Causale: numero preventivo</textarea>
    </div>
   </div>
 
-  <div class="section">
+  <div data-pn-view="cash" class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
     <div><h3 style="margin:0">🏦 Cassa e Banca</h3><div class="muted">Imposta i saldi reali di apertura al 01/01/2027 e controlla i movimenti bancari da riconciliare.</div></div>
     <span class="pill b">Saldo iniziale 01/01/2027</span>
@@ -2584,13 +2593,13 @@ Causale: numero preventivo</textarea>
    </div>
   </div>
 
-  <div class="section">
+  <div data-pn-view="directory" class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
     <div><h3 style="margin:0">🏷️ Anagrafiche e spese ricorrenti</h3><div class="muted">Apri le anagrafiche soltanto quando ti servono.</div></div>
    </div>
 
    <div class="pn-directory-stack" style="margin-top:10px">
-    <details class="box pn-directory"><summary>👥 Clienti</summary><div class="pn-directory-content">
+    <details data-pn-directory="clients" class="box pn-directory"><summary>👥 Clienti</summary><div class="pn-directory-content">
      <h3 style="margin-top:0">Cliente</h3>
      <div class="field"><label>Denominazione / Nome e cognome</label><input id="pnClientName" placeholder="Es. Mario Rossi / RSA / Ente"></div>
      <div class="grid2">
@@ -2612,7 +2621,7 @@ Causale: numero preventivo</textarea>
      <div id="pnClientList" style="margin-top:10px"></div>
     </div></details>
 
-    <details class="box pn-directory"><summary>🏢 Fornitori</summary><div class="pn-directory-content">
+    <details data-pn-directory="suppliers" class="box pn-directory"><summary>🏢 Fornitori</summary><div class="pn-directory-content">
      <h3 style="margin-top:0">Fornitore</h3>
      <div class="field"><label>Denominazione</label><input id="pnSupplierName" placeholder="Es. Fornitore energia"></div>
      <div class="grid2">
@@ -2635,7 +2644,7 @@ Causale: numero preventivo</textarea>
      <div id="pnSupplierList" style="margin-top:10px"></div>
     </div></details>
 
-    <div class="box">
+    <div data-pn-directory="recurring" class="box">
      <h3 style="margin-top:0">Spesa ricorrente</h3>
      <div class="field"><label>Descrizione</label><input id="pnRecurringDesc" placeholder="Es. Affitto sede"></div>
      <div class="grid2">
@@ -2654,10 +2663,10 @@ Causale: numero preventivo</textarea>
     </div>
    </div>
 
-   <div class="table" style="margin-top:12px"><table><thead><tr><th>Spesa</th><th>Fornitore</th><th>Categoria</th><th>Frequenza</th><th>Conto</th><th class="num">Importo</th><th>Azioni</th></tr></thead><tbody id="pnRecurringBody"></tbody></table></div>
+   <div data-pn-directory="recurring" class="table" style="margin-top:12px"><table><thead><tr><th>Spesa</th><th>Fornitore</th><th>Categoria</th><th>Frequenza</th><th>Conto</th><th class="num">Importo</th><th>Azioni</th></tr></thead><tbody id="pnRecurringBody"></tbody></table></div>
   </div>
 
-  <div class="section">
+  <div data-pn-view="closure" class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
     <div>
      <h3 style="margin:0">🔒 Chiusura mensile e stampa</h3>
@@ -2673,7 +2682,7 @@ Causale: numero preventivo</textarea>
    <div id="pnClosureMsg"></div>
   </div>
 
-  <div class="section">
+  <div data-pn-view="new" class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
     <div><h3 id="pnFormTitle" style="margin:0">➕ Nuovo movimento</h3><div class="muted">Il numero Prima Nota viene assegnato automaticamente al salvataggio.</div></div>
     <button id="pnRefresh" type="button" class="btn secondary">↻ Aggiorna</button>
@@ -2713,7 +2722,7 @@ Causale: numero preventivo</textarea>
    <div id="pnAttachmentList" style="margin-top:10px"></div>
   </div>
 
-  <div class="section">
+  <div data-pn-view="register" class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
     <div><h3 style="margin:0">🔎 Ricerca e filtri</h3><div class="muted">Filtra i movimenti senza modificare i totali generali di Cassa e Banca.</div></div>
     <button id="pnFiltersClear" type="button" class="btn secondary">Azzera filtri</button>
@@ -2728,7 +2737,7 @@ Causale: numero preventivo</textarea>
    </div>
   </div>
 
-  <div class="section">
+  <div data-pn-view="register" class="section">
    <div class="actions" style="justify-content:space-between;align-items:end">
     <div><h3 style="margin:0">Movimenti registrati</h3><div class="muted"><span id="pnShownCount">0</span> movimenti visualizzati.</div></div>
    </div>
@@ -12168,6 +12177,7 @@ function pnEdit(id){
  $('pnCausale').value=x.causale||'';$('pnImporto').value=x.importo??'';$('pnMetodo').value=x.metodo_pagamento||'Bonifico';$('pnConto').value=x.conto_codice||'';
  $('pnSubjectType').value=x.cliente_id?'CLIENTE':(x.fornitore_id?'FORNITORE':'');$('pnSubjectSearch').value='';pnFillSubjects();$('pnSubjectSelect').value=x.cliente_id||x.fornitore_id||'';
  $('pnSoggetto').value=x.soggetto||'';$('pnDocumento').value=x.numero_documento||'';$('pnNote').value=x.note||'';
+ if(window.pnNavigateView)window.pnNavigateView('new');
  $('pnFormTitle').textContent='✏️ Modifica '+(x.numero_movimento||'movimento');
  $('pnSave').textContent='💾 Salva modifiche';$('pnCancelEdit').classList.remove('hidden');
  pnApplyOperationalState();
@@ -12254,6 +12264,7 @@ async function pnOpenAttachments(id){
  const x=pnMov.find(r=>String(r.id)===String(id));if(!x)return;
  pnAttachmentMovementId=x.id;
  $('pnAttachmentNumber').textContent=x.numero_movimento||'';
+ if(window.pnNavigateView)window.pnNavigateView('register');
  $('pnAttachmentPanel').classList.remove('hidden');
  $('pnAttachmentFile').value='';
  pnAttachmentSetLocked(pnMovementClosed(x));
@@ -14921,6 +14932,21 @@ try{const remembered=localStorage.getItem('cge_volunteer_badge');if(remembered&&
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',addLink);
   else addLink();
   new MutationObserver(addLink).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+<script id="pn-navigation-script">
+(function(){
+ const root=document.getElementById('primaNota');if(!root)return;
+ const views=[...root.querySelectorAll('[data-pn-view]')],dirs=[...root.querySelectorAll('[data-pn-directory]')],buttons=[...root.querySelectorAll('[data-pn-nav]')];
+ window.pnNavigateView=function(key){
+ const directory=['clients','suppliers','recurring'].includes(key);
+ views.forEach(el=>el.classList.toggle('pn-view-active',el.dataset.pnView===(directory?'directory':key)));
+ dirs.forEach(el=>{const active=el.dataset.pnDirectory===key;el.classList.toggle('pn-view-active',active);if(el.tagName==='DETAILS')el.open=active;});
+ buttons.forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.pnNav===key)));
+ root.classList.add('pn-nav-ready');
+ };
+ buttons.forEach(el=>el.addEventListener('click',()=>window.pnNavigateView(el.dataset.pnNav)));
+ window.pnNavigateView('home');
 })();
 </script>
 </body></html>
