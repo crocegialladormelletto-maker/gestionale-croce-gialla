@@ -4079,26 +4079,40 @@ setInterval(()=>{
  refreshDashboardEmployeeCommitments();
 },60000);
 
+let cgeAuthRecovery=null;
 async function checkGestionaleAuth(){
  if(!['AMMINISTRATORE','CENTRALINO'].includes(prof?.ruolo))return true;
- // Il ruolo è già stato autorizzato da accessi_app al login.
- // Evitare getSession()/refreshSession() ad ogni click: possono restare in attesa
- // del lock di autenticazione e bloccare tutta la dashboard.
- let session=null;
- try{
-  const raw=localStorage.getItem('sb-ihottewckpwpwqzpxusl-auth-token');
-  session=raw?JSON.parse(raw):null;
- }catch(_){}
  const authorizedUserId=String(cgeAuthorizedUserId||'');
- const storedUserId=String(session?.user?.id||'');
- const tokenExpires=Number(session?.expires_at||0);
- if(authorizedUserId&&storedUserId===authorizedUserId&&session?.access_token&&
-    tokenExpires>Math.floor(Date.now()/1000)+15)return true;
- // Se la sessione è scaduta o non coincide, non aprire altre sezioni.
- // Non cancellare i dati e non avviare una nuova richiesta di autenticazione bloccante.
- alert('La sessione di accesso non risulta valida o è scaduta. Accedi nuovamente dal gestionale. I dati salvati non sono stati modificati.');
- $('app').classList.add('hidden');
- $('login').classList.remove('hidden');
+ const readStored=()=>{
+  try{return JSON.parse(localStorage.getItem('sb-ihottewckpwpwqzpxusl-auth-token')||'null')}catch(_){return null}
+ };
+ const valid=s=>!!(authorizedUserId&&String(s?.user?.id||'')===authorizedUserId&&s?.access_token&&Number(s.expires_at||0)>Math.floor(Date.now()/1000));
+ const rejectSession=()=>{
+  $('app').classList.add('hidden');
+  $('login').classList.remove('hidden');
+  msg(prof?.ruolo==='CENTRALINO'?'cloginmsg':'lmsg','Sessione terminata o account cambiato. Accedi nuovamente.','warn');
+  return false;
+ };
+ const stored=readStored();
+ if(stored?.user?.id&&String(stored.user.id)!==authorizedUserId)return rejectSession();
+ if(valid(stored))return true;
+ // Supabase coordina il rinnovo tra schede. Non confondere un errore temporaneo con un logout.
+ if(!cgeAuthRecovery){
+  cgeAuthRecovery=(async()=>{
+   try{return await sb.auth.getSession()}catch(error){return {error}}
+  })().finally(()=>{cgeAuthRecovery=null});
+ }
+ let timer;
+ const result=await Promise.race([cgeAuthRecovery,new Promise(resolve=>{timer=setTimeout(()=>resolve({temporary:true}),6000)})]).finally(()=>clearTimeout(timer));
+ const latest=readStored();
+ if(latest?.user?.id&&String(latest.user.id)!==authorizedUserId)return rejectSession();
+ if(valid(latest))return true;
+ const session=result?.data?.session;
+ if(session?.user?.id&&String(session.user.id)!==authorizedUserId)return rejectSession();
+ if(valid(session))return true;
+ const code=String(result?.error?.code||'');
+ if(!result?.temporary&&((!result?.error&&!session)||['refresh_token_not_found','refresh_token_already_used','session_not_found','session_expired','user_not_found'].includes(code)))return rejectSession();
+ alert('Verifica della sessione temporaneamente non disponibile. La schermata corrente resta aperta: riprova tra qualche secondo.');
  return false;
 }
 async function view(v,options={}){
@@ -14869,7 +14883,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredIns
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;refreshPwaInstallUI()});
 if($('pwaInstallBtn'))$('pwaInstallBtn').onclick=requestPwaInstall;
 if($('pwaInstallShort'))$('pwaInstallShort').onclick=requestPwaInstall;
-const CGE_APP_BUILD='14.83-tablet-payment-signal';
+const CGE_APP_BUILD='14.84-session-recovery';
 async function cgeUpdateServiceWorker(){
  if(!('serviceWorker' in navigator))return;
  try{
