@@ -870,6 +870,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 #primaNota .actions{flex-wrap:wrap}
 @media(max-width:900px){#primaNota .grid2,#primaNota .grid3{grid-template-columns:minmax(0,1fr)}}
 </style>
+<style id="pn-directory-style">#primaNota .pn-directory-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}#primaNota .pn-directory{padding:0;min-width:0}#primaNota .pn-directory summary{cursor:pointer;background:#ffdb17;color:#12375d;font-weight:800;padding:12px;border-radius:11px;list-style-position:inside}#primaNota .pn-directory[open] summary{border-radius:11px 11px 0 0}#primaNota .pn-directory[open],#primaNota .pn-directory-stack>.box:not(details){grid-column:1/-1}#primaNota .pn-directory-content{padding:12px;min-width:0}#primaNota .pn-directory-content>div{min-width:0;max-width:100%}@media(max-width:600px){#primaNota .pn-directory-stack{grid-template-columns:minmax(0,1fr)}}</style>
 </head><body>
 
 <div id="login" class="login hidden cge-initializing"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.57</div></div><div class="loginbody">
@@ -2585,11 +2586,11 @@ Causale: numero preventivo</textarea>
 
   <div class="section">
    <div class="actions" style="justify-content:space-between;align-items:center">
-    <div><h3 style="margin:0">🏷️ Fornitori e spese ricorrenti</h3><div class="muted">Salva i fornitori abituali e prepara modelli per affitto, utenze, assicurazioni, carburante, manutenzioni e altre spese periodiche.</div></div>
+    <div><h3 style="margin:0">🏷️ Anagrafiche e spese ricorrenti</h3><div class="muted">Apri le anagrafiche soltanto quando ti servono.</div></div>
    </div>
 
-   <div class="grid2" style="margin-top:10px">
-    <div class="box">
+   <div class="pn-directory-stack" style="margin-top:10px">
+    <details class="box pn-directory"><summary>👥 Clienti</summary><div class="pn-directory-content">
      <h3 style="margin-top:0">Cliente</h3>
      <div class="field"><label>Denominazione / Nome e cognome</label><input id="pnClientName" placeholder="Es. Mario Rossi / RSA / Ente"></div>
      <div class="grid2">
@@ -2609,9 +2610,9 @@ Causale: numero preventivo</textarea>
       <div class="field"><label>Stato</label><select id="pnClientStatus"><option value="ACTIVE">Attivi</option><option value="INACTIVE">Disattivati</option><option value="ALL">Tutti</option></select></div>
      </div>
      <div id="pnClientList" style="margin-top:10px"></div>
-    </div>
+    </div></details>
 
-    <div class="box">
+    <details class="box pn-directory"><summary>🏢 Fornitori</summary><div class="pn-directory-content">
      <h3 style="margin-top:0">Fornitore</h3>
      <div class="field"><label>Denominazione</label><input id="pnSupplierName" placeholder="Es. Fornitore energia"></div>
      <div class="grid2">
@@ -2632,7 +2633,7 @@ Causale: numero preventivo</textarea>
       <div class="field"><label>Stato</label><select id="pnSupplierStatus"><option value="ACTIVE">Attivi</option><option value="INACTIVE">Disattivati</option><option value="ALL">Tutti</option></select></div>
      </div>
      <div id="pnSupplierList" style="margin-top:10px"></div>
-    </div>
+    </div></details>
 
     <div class="box">
      <h3 style="margin-top:0">Spesa ricorrente</h3>
