@@ -856,7 +856,21 @@ document.addEventListener('DOMContentLoaded',()=>{
 @media (prefers-reduced-motion:reduce){
  #dashPersonnelExpiriesCard.dash-personnel-expiry-flash{animation:none;background:#fee2e2;border-color:#dc2626}
 }
-</style></head><body>
+</style><style id="pn-responsive-layout-20261127">
+/* Prima Nota: layout responsivo, senza modifiche alla logica contabile. */
+#primaNota,#primaNota .pad,#primaNota .section,#primaNota .box,#primaNota .stat{min-width:0;max-width:100%;box-sizing:border-box}
+#primaNota .grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
+#primaNota .grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
+#primaNota .stats{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
+#primaNota .stat b,#primaNota .stat small{overflow-wrap:anywhere}
+#primaNota .table{min-width:0;max-width:100%;overflow-x:auto}
+#primaNota .pn-year-report .table table{min-width:0;width:100%;table-layout:auto}
+#primaNota .pn-year-report .table th,#primaNota .pn-year-report .table td{white-space:normal;overflow-wrap:anywhere}
+#primaNota .pn-year-overview{grid-template-columns:minmax(0,1fr)}
+#primaNota .actions{flex-wrap:wrap}
+@media(max-width:900px){#primaNota .grid2,#primaNota .grid3{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head><body>
 
 <div id="login" class="login hidden cge-initializing"><div class="card"><div class="loginhead"><img class="crest-img js-logo" src="https://primary.jwwb.nl/public/s/b/j/temp-jdsqfuxejozahvwvidxb/logo-ridimensionato-no-sfondo-high.png?enable=upscale&enable-io=true&height=70" alt="Logo Croce Gialla Emergenza ODV"><h2 id="loginTitle">Gestionale Croce Gialla</h2><div id="loginSubtitle">Versione 14.57</div></div><div class="loginbody">
 <div id="staffLoginBlock">
@@ -2493,7 +2507,7 @@ Causale: numero preventivo</textarea>
    <div id="pnDryTestResult" style="margin-top:10px"></div>
   </div>
 
-  <div class="section">
+  <div class="section pn-year-report">
    <div class="actions" style="justify-content:space-between;align-items:center">
     <div><h3 style="margin:0">📊 Dashboard e Report annuale 2027</h3><div class="muted">Riepilogo economico dell'anno con andamento mensile, categorie, Cassa/Banca e controlli amministrativi.</div></div>
     <div class="actions">
@@ -2509,7 +2523,7 @@ Causale: numero preventivo</textarea>
     <div class="stat"><small>MOVIMENTI ANNO</small><b id="pnYearCount">0</b></div>
    </div>
 
-   <div class="grid2" style="margin-top:12px">
+   <div class="grid2 pn-year-overview" style="margin-top:12px">
     <div class="box">
      <h3 style="margin-top:0">Andamento mensile</h3>
      <div class="table"><table><thead><tr><th>Mese</th><th class="num">Entrate</th><th class="num">Uscite</th><th class="num">Saldo</th><th>Stato</th></tr></thead><tbody id="pnYearMonthBody"></tbody></table></div>
